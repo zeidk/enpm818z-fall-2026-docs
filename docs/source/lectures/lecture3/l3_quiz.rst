@@ -2,9 +2,11 @@
 Quiz
 ====================================================
 
-This quiz covers the key concepts from Lecture 3: Python Fundamentals -- Part II,
-including loops, the ``range()`` function, iterables, lists, tuples,
-dictionaries, sets, and comprehensions.
+This quiz covers the key concepts from Lecture 3: Perception I -- Object
+Detection (YOLO to DETR). Topics include the role of perception in the AV
+stack, perception taxonomy, the deep learning revolution, YOLO architecture
+and evolution, DETR and transformer-based detection, and the comparison
+between CNN-based and transformer-based approaches.
 
 .. note::
 
@@ -20,494 +22,572 @@ dictionaries, sets, and comprehensions.
 ----
 
 
-Multiple Choice
-===============
+Multiple Choice (Questions 1-15)
+=================================
 
 .. admonition:: Question 1
    :class: hint
 
-   What is the output of ``list(range(2, 10, 3))``?
+   What is the primary role of perception in the AV stack?
 
-   A. ``[2, 5, 8, 11]``
+   A. To control the vehicle's steering and throttle.
 
-   B. ``[2, 5, 8]``
+   B. To transform raw sensor data into a structured, semantic understanding
+      of the environment.
 
-   C. ``[2, 4, 6, 8]``
+   C. To plan the vehicle's trajectory through an intersection.
 
-   D. ``[3, 6, 9]``
+   D. To calibrate sensors before each drive.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``[2, 5, 8]``
+   **B** -- To transform raw sensor data into a structured, semantic
+   understanding of the environment.
 
-   ``range(2, 10, 3)`` starts at 2, increments by 3, and stops before 10. Values: 2, 5, 8 (11 would exceed 10).
+   Perception bridges sensing (raw data acquisition) and planning (decision-
+   making). It converts unstructured sensor data into structured outputs
+   like detected objects, lane geometry, and free space.
 
 
 .. admonition:: Question 2
    :class: hint
 
-   Which of the following correctly creates an empty set?
+   Which perception task assigns a **unique ID and pixel mask** to each
+   individual object in the scene?
 
-   A. ``empty = {}``
+   A. Semantic segmentation
 
-   B. ``empty = set()``
+   B. Object detection
 
-   C. ``empty = []``
+   C. Instance segmentation
 
-   D. ``empty = set{}``
+   D. Panoptic segmentation
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``empty = set()``
+   **C** -- Instance segmentation
 
-   ``{}`` creates an empty dictionary, not a set. Use ``set()`` for an empty set.
+   Instance segmentation gives each object a unique ID and pixel-level mask.
+   Semantic segmentation labels all pixels by class (but doesn't distinguish
+   individual objects). Panoptic segmentation combines both.
 
 
 .. admonition:: Question 3
    :class: hint
 
-   What is the output of the following code?
+   What was the key innovation of YOLO v1 (2015) compared to two-stage
+   detectors like Faster R-CNN?
 
-   .. code-block:: python
+   A. It used a transformer encoder.
 
-      nums = [1, 2, 3]
-      result = nums.append(4)
-      print(result)
+   B. It framed detection as a single regression problem -- one forward
+      pass predicts all bounding boxes and classes.
 
-   A. ``[1, 2, 3, 4]``
+   C. It used anchor-free detection.
 
-   B. ``4``
-
-   C. ``None``
-
-   D. ``[4]``
+   D. It eliminated the need for training data.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- ``None``
+   **B** -- It framed detection as a single regression problem -- one
+   forward pass predicts all bounding boxes and classes.
 
-   ``append()`` modifies the list in-place and returns ``None``. The list is changed, but the return value is ``None``.
+   Two-stage detectors (Faster R-CNN) first propose regions, then classify
+   them. YOLO processes the entire image in a single pass, making it
+   dramatically faster and enabling real-time detection.
 
 
 .. admonition:: Question 4
    :class: hint
 
-   Which method would you use to safely access a dictionary key that might not exist?
+   In YOLO's backbone-neck-head architecture, what is the role of the
+   **neck** (e.g., FPN + PAN)?
 
-   A. ``dict[key]``
+   A. Extract features from the raw image.
 
-   B. ``dict.get(key)``
+   B. Fuse features across multiple scales to detect objects of different
+      sizes.
 
-   C. ``dict.find(key)``
+   C. Produce the final bounding box predictions.
 
-   D. ``dict.access(key)``
+   D. Apply non-maximum suppression.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``dict.get(key)``
+   **B** -- Fuse features across multiple scales to detect objects of
+   different sizes.
 
-   ``.get()`` returns ``None`` (or a default value) if the key doesn't exist, while ``dict[key]`` raises ``KeyError``.
+   The neck combines high-resolution features (good for small objects) with
+   semantically rich features (good for large objects) through FPN (top-down)
+   and PAN (bottom-up) pathways. Output scales: 80x80, 40x40, 20x20.
 
 
 .. admonition:: Question 5
    :class: hint
 
-   What is the output of ``(1, 2, 3) + (4, 5)``?
+   Starting from YOLOv8, what major architectural change was introduced?
 
-   A. ``[1, 2, 3, 4, 5]``
+   A. Switching from CNN to transformer backbone.
 
-   B. ``(1, 2, 3, 4, 5)``
+   B. Anchor-free detection with a decoupled head.
 
-   C. ``TypeError``
+   C. Removing the neck entirely.
 
-   D. ``((1, 2, 3), (4, 5))``
+   D. Using only a single detection scale.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``(1, 2, 3, 4, 5)``
+   **B** -- Anchor-free detection with a decoupled head.
 
-   The ``+`` operator concatenates tuples, creating a new tuple with all elements.
+   YOLOv8 eliminated predefined anchor boxes, instead directly predicting
+   (x,y,w,h) with separate (decoupled) branches for classification and
+   localization. This simplifies the architecture and improves flexibility.
 
 
 .. admonition:: Question 6
    :class: hint
 
-   What does the ``else`` clause do when attached to a ``for`` loop?
+   What does DETR use instead of anchor boxes and NMS?
 
-   A. Executes if the loop encounters an error.
+   A. Region proposals and selective search.
 
-   B. Executes if the loop completes without hitting ``break``.
+   B. Learned object queries and bipartite matching via the Hungarian
+      algorithm.
 
-   C. Executes on every iteration after the main body.
+   C. Grid cells with fixed aspect ratios.
 
-   D. Executes if the loop body is empty.
+   D. K-means clustering of bounding boxes.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Executes if the loop completes without hitting ``break``.
+   **B** -- Learned object queries and bipartite matching via the Hungarian
+   algorithm.
 
-   The ``else`` clause runs only if the loop exits normally (not via ``break``). Useful for search patterns.
+   DETR uses N learned object queries (e.g., 100) that attend to image
+   features via cross-attention. During training, the Hungarian algorithm
+   finds the optimal one-to-one assignment between predictions and ground
+   truth, eliminating duplicate detections without NMS.
 
 
 .. admonition:: Question 7
    :class: hint
 
-   What is the output of the following list comprehension?
+   What is the key advantage of DETR's transformer encoder over a CNN?
 
-   .. code-block:: python
+   A. It processes images faster than any CNN.
 
-      result = [x * 2 for x in range(5) if x % 2 == 0]
-      print(result)
+   B. It captures **global context** -- every position attends to all other
+      positions via self-attention.
 
-   A. ``[0, 2, 4, 6, 8]``
+   C. It uses less GPU memory.
 
-   B. ``[0, 4, 8]``
-
-   C. ``[2, 4, 6, 8, 10]``
-
-   D. ``[0, 2, 4]``
+   D. It does not require any training data.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``[0, 4, 8]``
+   **B** -- It captures global context -- every position attends to all
+   other positions via self-attention.
 
-   The comprehension filters for even numbers (0, 2, 4) and doubles them (0, 4, 8).
+   CNNs have a limited receptive field determined by kernel size and depth.
+   Transformers use self-attention to model relationships between all spatial
+   positions simultaneously, enabling global reasoning from the first layer.
 
 
 .. admonition:: Question 8
    :class: hint
 
-   Given ``a = {1, 2, 3}`` and ``b = {2, 3, 4}``, what is ``a & b``?
+   What problem does **Deformable DETR** solve compared to the original
+   DETR?
 
-   A. ``{1, 2, 3, 4}``
+   A. It adds anchor boxes back to the architecture.
 
-   B. ``{2, 3}``
+   B. It uses deformable attention to attend to sparse key positions,
+      achieving 10x faster convergence and better small object detection.
 
-   C. ``{1, 4}``
+   C. It replaces the transformer with a CNN.
 
-   D. ``{1}``
+   D. It removes the bipartite matching loss.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``{2, 3}``
+   **B** -- It uses deformable attention to attend to sparse key positions,
+   achieving 10x faster convergence and better small object detection.
 
-   ``&`` is the intersection operator, returning elements present in both sets.
+   Original DETR attends to all positions (quadratic cost) and converges
+   slowly (500 epochs). Deformable DETR samples a small set of key
+   positions around a reference point, dramatically reducing computation
+   and improving performance on small objects.
 
 
 .. admonition:: Question 9
    :class: hint
 
-   What is the correct way to create a single-element tuple?
+   What is **mAP@0.5:0.95** and why is it a stricter metric than
+   mAP@0.5?
 
-   A. ``t = (42)``
+   A. It measures speed at different batch sizes.
 
-   B. ``t = (42,)``
+   B. It averages precision across IoU thresholds from 0.5 to 0.95,
+      requiring tighter bounding box alignment.
 
-   C. ``t = tuple(42)``
+   C. It counts only detections with confidence above 0.95.
 
-   D. ``t = [42]``
+   D. It measures recall at 50% to 95% thresholds.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``t = (42,)``
+   **B** -- It averages precision across IoU thresholds from 0.5 to 0.95,
+   requiring tighter bounding box alignment.
 
-   The trailing comma is required for single-element tuples. ``(42)`` is just the integer 42 in parentheses.
+   mAP@0.5 only requires 50% overlap between predicted and ground truth
+   boxes. mAP@0.5:0.95 averages across thresholds (0.5, 0.55, ..., 0.95),
+   penalizing imprecise localization. It is the primary COCO benchmark.
 
 
 .. admonition:: Question 10
    :class: hint
 
-   What does the ``continue`` statement do inside a loop?
+   Which YOLO loss component penalizes the overlap, center distance, and
+   aspect ratio between predicted and ground truth boxes simultaneously?
 
-   A. Exits the loop entirely.
+   A. Binary cross-entropy loss.
 
-   B. Skips to the next iteration of the loop.
+   B. Mean squared error loss.
 
-   C. Restarts the loop from the beginning.
+   C. CIoU (Complete Intersection over Union) loss.
 
-   D. Pauses the loop until a condition is met.
+   D. Focal loss.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Skips to the next iteration of the loop.
+   **C** -- CIoU (Complete Intersection over Union) loss.
 
-   ``continue`` immediately starts the next iteration, skipping any remaining code in the current iteration.
+   CIoU combines IoU with penalties for center point distance and aspect
+   ratio difference, providing a more informative gradient signal than
+   simple IoU or L1/L2 losses for bounding box regression.
 
 
 .. admonition:: Question 11
    :class: hint
 
-   What is the output of the following code?
+   Why did traditional CV methods (HOG + SVM, SIFT) fail for robust AV
+   perception?
 
-   .. code-block:: python
+   A. They were too computationally expensive.
 
-      d = {"a": 1, "b": 2}
-      print(list(d.keys()))
+   B. They required manual feature engineering, were fragile to appearance
+      variation, and could not generalize across diverse conditions.
 
-   A. ``["a", "b"]``
+   C. They only worked with LiDAR data.
 
-   B. ``[1, 2]``
-
-   C. ``[("a", 1), ("b", 2)]``
-
-   D. ``{"a", "b"}``
+   D. They achieved higher accuracy than deep learning.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **A** -- ``["a", "b"]``
+   **B** -- They required manual feature engineering, were fragile to
+   appearance variation, and could not generalize across diverse conditions.
 
-   ``.keys()`` returns a view of dictionary keys, which ``list()`` converts to a list.
+   Hand-crafted features like HOG work in controlled settings but fail under
+   varying lighting, weather, viewpoints, and object appearance. Deep
+   learning learns features automatically from data, enabling much better
+   generalization.
 
 
 .. admonition:: Question 12
    :class: hint
 
-   Why is ``range()`` considered memory efficient?
+   What event is widely considered the start of the deep learning
+   revolution in computer vision?
 
-   A. It stores all values in compressed format.
+   A. The release of OpenCV in 2000.
 
-   B. It generates values on demand (lazy evaluation).
+   B. AlexNet winning the ImageNet competition in 2012.
 
-   C. It uses special integer optimization.
+   C. The invention of the Kalman Filter in 1960.
 
-   D. It automatically garbage collects unused values.
+   D. The first self-driving car demo by DARPA in 2005.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- It generates values on demand (lazy evaluation).
+   **B** -- AlexNet winning the ImageNet competition in 2012.
 
-   ``range()`` only stores start, stop, and step (48 bytes total). Values are computed when needed.
+   AlexNet was the first GPU-trained CNN to win ImageNet by a large margin,
+   reducing top-5 error from 26% to 16%. This demonstrated that deep
+   convolutional networks could dramatically outperform hand-crafted
+   features.
 
 
 .. admonition:: Question 13
    :class: hint
 
-   What is the output of the following code?
+   In the YOLO dataset format, what do the five values per line represent?
 
-   .. code-block:: python
+   A. ``<image_id> <x_min> <y_min> <x_max> <y_max>``
 
-      from copy import copy
-      a = [1, [2, 3]]
-      b = copy(a)
-      b[1].append(4)
-      print(a)
+   B. ``<class_id> <x_center> <y_center> <width> <height>`` (normalized)
 
-   A. ``[1, [2, 3]]``
+   C. ``<class_name> <confidence> <x> <y> <area>``
 
-   B. ``[1, [2, 3, 4]]``
-
-   C. ``[1, [4]]``
-
-   D. ``TypeError``
+   D. ``<class_id> <top_left_x> <top_left_y> <bottom_right_x> <bottom_right_y>``
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``[1, [2, 3, 4]]``
+   **B** -- ``<class_id> <x_center> <y_center> <width> <height>`` (normalized)
 
-   Shallow copy copies references to nested objects. ``b[1]`` and ``a[1]`` point to the same inner list.
+   YOLO format uses center coordinates and dimensions, all normalized to
+   [0, 1] relative to image dimensions. One line per object, one label
+   file per image.
 
 
 .. admonition:: Question 14
    :class: hint
 
-   Which of the following is NOT a valid way to iterate over a dictionary's key-value pairs?
+   What does **RT-DETR** achieve that the original DETR could not?
 
-   A. ``for k, v in d.items():``
+   A. Higher accuracy than any other detector.
 
-   B. ``for k in d: v = d[k]``
+   B. Real-time inference speed competitive with YOLO, while maintaining
+      the NMS-free transformer architecture.
 
-   C. ``for k, v in d:``
+   C. Training without any labeled data.
 
-   D. ``for (k, v) in d.items():``
+   D. Detection of 3D bounding boxes from monocular images.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- ``for k, v in d:``
+   **B** -- Real-time inference speed competitive with YOLO, while
+   maintaining the NMS-free transformer architecture.
 
-   Iterating directly over a dictionary yields only keys, not key-value pairs. Use ``.items()`` for pairs.
+   The original DETR was slow and required 500 epochs to converge. RT-DETR
+   uses an efficient hybrid encoder to achieve real-time speed while keeping
+   the clean end-to-end design (no anchors, no NMS).
 
 
 .. admonition:: Question 15
    :class: hint
 
-   What is the output of ``[1, 2, 3][1:1]``?
+   At 60 mph (27 m/s), how far does a vehicle travel during 100 ms of
+   perception latency?
 
-   A. ``[1]``
+   A. 0.27 m
 
-   B. ``[2]``
+   B. 2.7 m
 
-   C. ``[]``
+   C. 27 m
 
-   D. ``[1, 2]``
+   D. 100 m
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- ``[]``
+   **B** -- 2.7 m
 
-   Slice ``[1:1]`` has start equal to stop, resulting in an empty list.
+   At 27 m/s, the vehicle travels 27 x 0.1 = 2.7 meters during 100 ms.
+   This illustrates why perception latency is safety-critical -- every
+   millisecond matters for reaction distance.
 
 
 ----
 
 
-True or False
-=============
+True or False (Questions 16-25)
+================================
 
 .. admonition:: Question 16
    :class: hint
 
-   **True or False:** Lists in Python are mutable, meaning you can change their elements after creation.
+   **True or False:** YOLO is a two-stage detector that first proposes
+   regions, then classifies them.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **True**
+   **False**
 
-   Lists are mutable. You can modify, add, or remove elements using methods like ``append()``, ``pop()``, or direct index assignment.
+   YOLO is a single-stage detector. It predicts all bounding boxes and
+   class probabilities in a single forward pass, without a separate region
+   proposal step. Two-stage detectors like Faster R-CNN use the region
+   proposal approach.
 
 
 .. admonition:: Question 17
    :class: hint
 
-   **True or False:** Dictionaries in Python 3.7+ maintain insertion order.
+   **True or False:** DETR requires Non-Maximum Suppression (NMS) as a
+   post-processing step.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **True**
+   **False**
 
-   Since Python 3.7, dictionaries maintain insertion order as part of the language specification.
+   DETR eliminates NMS by using bipartite matching (Hungarian algorithm)
+   during training, which ensures each prediction corresponds to at most
+   one ground truth object. This produces non-duplicate predictions by
+   design.
 
 
 .. admonition:: Question 18
    :class: hint
 
-   **True or False:** The expression ``5 in range(1, 10, 2)`` evaluates to ``True``.
+   **True or False:** Transfer learning means training a model from scratch
+   on your target dataset.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **True**
+   **False**
 
-   ``range(1, 10, 2)`` produces the sequence 1, 3, 5, 7, 9. The value 5 is in this range, so the expression evaluates to ``True``. The ``in`` operator on range objects runs in O(1) constant time.
+   Transfer learning means starting with a model pre-trained on a large
+   dataset (e.g., COCO, ImageNet) and fine-tuning it on your target
+   dataset. This leverages learned features and typically requires less
+   data and training time than training from scratch.
 
 
 .. admonition:: Question 19
    :class: hint
 
-   **True or False:** Tuples can be used as dictionary keys because they are immutable and hashable.
+   **True or False:** Semantic segmentation distinguishes between
+   individual instances of the same class (e.g., car #1 vs. car #2).
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **True**
+   **False**
 
-   Tuples are immutable and hashable (if all their elements are hashable), making them valid dictionary keys.
+   Semantic segmentation assigns a class label to every pixel but does
+   not distinguish individual instances. All car pixels get the same
+   "car" label. Instance segmentation is needed to separate individual
+   objects of the same class.
 
 
 .. admonition:: Question 20
    :class: hint
 
-   **True or False:** ``enumerate()`` returns a list of tuples containing index-value pairs.
+   **True or False:** ResNet's key innovation was residual connections
+   (skip connections) that enabled training of much deeper networks.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **True**
 
-   ``enumerate()`` returns an enumerate object (an iterator), not a list. Convert with ``list()`` to get a list of tuples.
+   Residual connections allow gradients to flow directly through skip
+   paths, solving the vanishing gradient problem in very deep networks.
+   This enabled training of 50--152+ layer networks without degradation,
+   a breakthrough that underpins most modern CNN architectures.
 
 
 .. admonition:: Question 21
    :class: hint
 
-   **True or False:** The ``pop()`` method on a list modifies the list in-place and returns the removed element.
+   **True or False:** In DETR, object queries are learned parameters that
+   each specialize in detecting one object in the scene.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **True**
 
-   ``pop()`` removes an element at a given index (default: last), modifies the list in-place, and returns the removed value.
+   DETR uses N learned object queries (typically 100) as inputs to the
+   transformer decoder. Each query attends to the encoder output via
+   cross-attention and specializes in detecting one object (or predicting
+   "no object"). They are learned during training.
 
 
 .. admonition:: Question 22
    :class: hint
 
-   **True or False:** Set elements must be unique, but they can be of any type including lists.
+   **True or False:** YOLO's FPN (Feature Pyramid Network) neck enables
+   detection of objects at multiple scales by fusing features from
+   different backbone layers.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **True**
 
-   Set elements must be hashable. Lists are mutable and unhashable, so they cannot be set elements.
+   FPN creates a top-down pathway that combines semantically rich
+   low-resolution features with high-resolution features via lateral
+   connections. This allows the network to detect both large objects
+   (at coarse scales) and small objects (at fine scales).
 
 
 .. admonition:: Question 23
    :class: hint
 
-   **True or False:** The expression ``range(5) == range(0, 5, 1)`` evaluates to ``True``.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**
-
-   Two ranges are equal if they produce the same sequence. ``range(5)`` and ``range(0, 5, 1)`` both produce ``[0, 1, 2, 3, 4]``.
-
-
-.. admonition:: Question 24
-   :class: hint
-
-   **True or False:** Using ``a = b`` where ``b`` is a list creates an independent copy of the list.
+   **True or False:** Transformers are more data-efficient than CNNs,
+   requiring less training data to achieve good performance.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   ``a = b`` creates an alias -- both names reference the same object. Use ``copy()`` or slicing for an independent copy.
+   Transformers are generally more data-hungry than CNNs because they lack
+   the built-in inductive biases of convolutions (locality, translation
+   equivariance). They need larger datasets to learn spatial relationships
+   that CNNs capture by design.
+
+
+.. admonition:: Question 24
+   :class: hint
+
+   **True or False:** Precision measures the fraction of real objects that
+   the detector successfully found.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False**
+
+   Precision measures the fraction of detections that are correct:
+   TP / (TP + FP). The metric described (fraction of real objects found)
+   is **recall**: TP / (TP + FN).
 
 
 .. admonition:: Question 25
    :class: hint
 
-   **True or False:** Dictionary comprehensions can include conditional filtering similar to list comprehensions.
+   **True or False:** The same ROS 2 node pattern (subscribe to image,
+   run inference, publish detections) works for both YOLO and DETR.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **True**
 
-   Dictionary comprehensions support ``if`` conditions: ``{k: v for k, v in items if condition}``.
+   The ROS 2 integration pattern is model-agnostic. The node subscribes to
+   ``/carla/camera/image``, converts the image, runs inference (regardless
+   of whether the model is YOLO or DETR), and publishes a
+   ``Detection2DArray`` message.
 
 
 ----
 
 
-Essay Questions
-===============
+Essay Questions (Questions 26-30)
+==================================
 
 .. admonition:: Question 26
    :class: hint
 
-   **Explain the difference between shallow copy and deep copy for nested lists.** Provide an example showing when shallow copy might cause unexpected behavior.
+   **Compare YOLO and DETR** across at least four dimensions. In what
+   scenarios would you choose one over the other for an AV application?
 
    *(2-4 sentences)*
 
@@ -516,16 +596,21 @@ Essay Questions
 
    *Key points to include:*
 
-   - Shallow copy creates a new object but copies references to nested objects, not the objects themselves.
-   - Deep copy recursively copies all nested objects, creating completely independent copies.
-   - Example: ``a = [1, [2, 3]]; b = copy(a); b[1].append(4)`` modifies both ``a`` and ``b``'s inner list.
-   - Use ``deepcopy()`` when you need truly independent copies of nested structures.
+   - YOLO: CNN-based, local context, fast (1-5 ms), requires NMS (except
+     v10), mature and production-ready.
+   - DETR: Transformer-based, global context, cleaner design (no anchors,
+     no NMS), needs more training data, slower (improving with RT-DETR).
+   - Choose YOLO for real-time production systems where latency is critical.
+   - Choose DETR when global reasoning matters (e.g., detecting heavily
+     occluded objects, complex scenes) and compute budget allows it.
 
 
 .. admonition:: Question 27
    :class: hint
 
-   **Describe when you would choose a tuple over a list.** Give at least two practical scenarios where tuples are the better choice.
+   **Explain how bipartite matching in DETR eliminates the need for NMS.**
+   What problem does NMS solve in YOLO, and why doesn't DETR have this
+   problem?
 
    *(2-4 sentences)*
 
@@ -534,17 +619,21 @@ Essay Questions
 
    *Key points to include:*
 
-   - Tuples are immutable, making them hashable and usable as dictionary keys.
-   - Use tuples for fixed collections where the data shouldn't change (coordinates, RGB values, database records).
-   - Tuples signal intent -- readers know the data is meant to be constant.
-   - Tuples are slightly faster than lists and use less memory.
-   - Example scenarios: function returning multiple values, dictionary keys, data that represents a fixed record.
+   - YOLO produces many overlapping predictions for the same object. NMS
+     removes duplicates by suppressing lower-confidence boxes that overlap
+     with a higher-confidence box.
+   - DETR uses the Hungarian algorithm during training to enforce a
+     one-to-one assignment between predictions and ground truth objects.
+   - Each object query learns to detect at most one object, so duplicate
+     predictions do not arise by design.
 
 
 .. admonition:: Question 28
    :class: hint
 
-   **Explain why** ``range()`` **is memory efficient compared to creating a list of the same values.** How does this affect performance when iterating over large sequences?
+   **Explain the YOLO backbone-neck-head architecture.** What does each
+   component do, and why is multi-scale feature fusion important for AV
+   perception?
 
    *(2-4 sentences)*
 
@@ -553,35 +642,20 @@ Essay Questions
 
    *Key points to include:*
 
-   - ``range()`` is a lazy iterator that only stores start, stop, and step (48 bytes regardless of size).
-   - A list stores every value in memory (8+ bytes per integer).
-   - For ``range(1000000)``: range uses 48 bytes; equivalent list uses ~8 MB.
-   - This matters when iterating over large sequences -- ``range()`` has constant memory usage.
+   - Backbone: Extracts hierarchical features from the image (edges ->
+     textures -> object parts -> objects).
+   - Neck (FPN + PAN): Fuses features across scales so the detector can
+     handle objects of different sizes.
+   - Head: Produces final bounding box and class predictions.
+   - Multi-scale fusion is critical for AV perception because the scene
+     contains both large nearby vehicles and small distant pedestrians.
 
 
 .. admonition:: Question 29
    :class: hint
 
-   **Compare and contrast** ``for`` **loops and** ``while`` **loops.** When would you prefer one over the other? Provide an example use case for each.
-
-   *(3-5 sentences)*
-
-.. dropdown:: Answer Guidelines
-   :class-container: sd-border-success
-
-   *Key points to include:*
-
-   - ``for`` loops iterate over known sequences or ranges -- best when you know how many iterations.
-   - ``while`` loops continue until a condition is false -- best when iteration count is unknown.
-   - ``for`` is preferred for iterating over collections (lists, strings, dicts).
-   - ``while`` is preferred for user input validation, reading until EOF, or state-based loops.
-   - Example ``for``: processing each item in a list. Example ``while``: prompting until valid input.
-
-
-.. admonition:: Question 30
-   :class: hint
-
-   **Explain the difference between in-place and out-of-place operations using list methods as examples.** Why is it important to know which type a method uses?
+   **Why did deep learning replace traditional CV methods** (HOG, SIFT,
+   etc.) for AV perception? What were the key enablers of this transition?
 
    *(2-4 sentences)*
 
@@ -590,7 +664,33 @@ Essay Questions
 
    *Key points to include:*
 
-   - In-place methods modify the original object and return ``None`` (e.g., ``list.sort()``, ``list.append()``).
-   - Out-of-place methods return a new object, leaving the original unchanged (e.g., ``sorted()``, ``str.upper()``).
-   - Important because assigning an in-place result often leads to bugs: ``x = x.sort()`` sets ``x`` to ``None``.
-   - Check documentation or test return values to know which type a method uses.
+   - Traditional methods required hand-crafted features that were fragile
+     and couldn't generalize across diverse conditions.
+   - Deep learning learns features automatically from data, adapting to
+     variation in lighting, weather, viewpoints, and object appearance.
+   - Key enablers: large-scale datasets (ImageNet, COCO), GPU acceleration,
+     improved training techniques (batch norm, residual connections), and
+     transfer learning.
+
+
+.. admonition:: Question 30
+   :class: hint
+
+   **Describe how you would deploy a YOLO-based perception node** in a
+   ROS 2 system connected to CARLA. What topics would it subscribe to
+   and publish?
+
+   *(2-4 sentences)*
+
+.. dropdown:: Answer Guidelines
+   :class-container: sd-border-success
+
+   *Key points to include:*
+
+   - The node subscribes to ``/carla/camera/image`` (``sensor_msgs/Image``).
+   - In the callback, it converts the ROS image to OpenCV format using
+     ``cv_bridge``, runs YOLO inference, and constructs a
+     ``Detection2DArray`` message with bounding boxes and class labels.
+   - It publishes detections on a topic like ``/perception/detections``.
+   - This same pattern works for any detector (YOLO, DETR, etc.) since the
+     ROS 2 interface is model-agnostic.

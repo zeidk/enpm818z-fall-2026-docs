@@ -1,252 +1,69 @@
+====================================================
 References
-==========
+====================================================
 
 
-.. dropdown:: 🏛️ Lecture 3
-    :class-container: sd-border-secondary
-    :open:
+.. dropdown:: Object Detection
+   :class-container: sd-border-secondary
+   :open:
 
-    .. card::
-        :class-card: sd-border-secondary
+   - Redmon, J. et al. (2016). *You Only Look Once: Unified, Real-Time Object Detection.* CVPR.
+   - Redmon, J. & Farhadi, A. (2018). *YOLOv3: An Incremental Improvement.* arXiv:1804.02767.
+   - Bochkovskiy, A. et al. (2020). *YOLOv4: Optimal Speed and Accuracy of Object Detection.* arXiv:2004.10934.
+   - `Ultralytics YOLOv8 Documentation <https://docs.ultralytics.com/>`_
+   - Carion, N. et al. (2020). `End-to-End Object Detection with Transformers (DETR) <https://arxiv.org/abs/2005.12872>`_. ECCV.
+   - Zhu, X. et al. (2021). `Deformable DETR <https://arxiv.org/abs/2010.04159>`_. ICLR.
+   - Zhang, H. et al. (2023). `DINO: DETR with Improved DeNoising Anchor Boxes <https://arxiv.org/abs/2203.03605>`_. ICLR.
+   - Zhao, Y. et al. (2024). `RT-DETR: DETRs Beat YOLOs on Real-time Object Detection <https://arxiv.org/abs/2304.08069>`_.
 
-        **ENPM605 — L3: Python Fundamentals — Part II**
 
-        Covers loops (``for``, ``while``), the ``range()`` function, iterables, in-place vs out-of-place operations, lists and list comprehensions, tuples and unpacking, dictionaries, and sets with mathematical operations.
+.. dropdown:: Deep Learning Foundations
+   :class-container: sd-border-secondary
 
+   - Krizhevsky, A. et al. (2012). *ImageNet Classification with Deep Convolutional Neural Networks (AlexNet).* NeurIPS.
+   - Simonyan, K. & Zisserman, A. (2015). *Very Deep Convolutional Networks for Large-Scale Image Recognition (VGGNet).* ICLR.
+   - He, K. et al. (2016). *Deep Residual Learning for Image Recognition (ResNet).* CVPR.
+   - Vaswani, A. et al. (2017). `Attention Is All You Need <https://arxiv.org/abs/1706.03762>`_. NeurIPS.
+   - Dosovitskiy, A. et al. (2021). `An Image Is Worth 16x16 Words: Transformers for Image Recognition (ViT) <https://arxiv.org/abs/2010.11929>`_. ICLR.
 
-.. dropdown:: 🐍 Python Language References
-    :class-container: sd-border-secondary
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+.. dropdown:: Segmentation and Tracking
+   :class-container: sd-border-secondary
 
-        .. grid-item-card:: 🔄 for Statements
-            :link: https://docs.python.org/3/tutorial/controlflow.html#for-statements
-            :class-card: sd-border-secondary
+   - Long, J. et al. (2015). *Fully Convolutional Networks for Semantic Segmentation (FCN).* CVPR.
+   - Ronneberger, O. et al. (2015). *U-Net: Convolutional Networks for Biomedical Image Segmentation.* MICCAI.
+   - He, K. et al. (2017). *Mask R-CNN.* ICCV.
+   - Chen, L.-C. et al. (2018). *DeepLab: Semantic Image Segmentation with Deep Convolutional Nets, Atrous Convolution, and Fully Connected CRFs.* IEEE TPAMI.
+   - Wojke, N. et al. (2017). *Simple Online and Realtime Tracking with a Deep Association Metric (DeepSORT).* ICIP.
+   - Zhang, Y. et al. (2022). *ByteTrack: Multi-Object Tracking by Associating Every Detection Box.* ECCV.
 
-            **Tutorial — Control Flow**
 
-            ``for`` loops, iteration over sequences, and the ``range()`` function.
+.. dropdown:: Datasets and Benchmarks
+   :class-container: sd-border-secondary
 
-            +++
+   - `COCO Dataset <https://cocodataset.org/>`_ -- 330K images, 80 object categories.
+   - `ImageNet <https://www.image-net.org/>`_ -- 14M images, 1000 classes.
+   - `KITTI Vision Benchmark <https://www.cvlibs.net/datasets/kitti/>`_ -- Autonomous driving benchmark.
+   - `nuScenes <https://www.nuscenes.org/>`_ -- 1000 driving scenes, 3D annotations.
+   - `Cityscapes <https://www.cityscapes-dataset.com/>`_ -- Urban scene understanding.
+   - `Waymo Open Dataset <https://waymo.com/open/>`_ -- Large-scale driving dataset.
 
-            - Loop syntax
-            - ``break`` and ``continue``
-            - ``else`` clause
 
-        .. grid-item-card:: 🔢 The range Type
-            :link: https://docs.python.org/3/library/stdtypes.html#range
-            :class-card: sd-border-secondary
+.. dropdown:: Tools and Frameworks
+   :class-container: sd-border-secondary
 
-            **Standard Library — range**
+   - `Ultralytics (YOLOv8) <https://docs.ultralytics.com/>`_
+   - `Hugging Face Transformers <https://huggingface.co/docs/transformers/>`_ -- DETR models.
+   - `NVIDIA TensorRT <https://developer.nvidia.com/tensorrt>`_ -- Inference optimization.
+   - `ONNX Runtime <https://onnxruntime.ai/>`_ -- Cross-platform inference.
+   - `CVAT <https://www.cvat.ai/>`_ -- Annotation tool.
+   - `Roboflow <https://roboflow.com/>`_ -- Dataset management and augmentation.
+   - `ROS 2 vision_msgs <https://github.com/ros-perception/vision_msgs>`_ -- Standard detection messages.
 
-            Complete reference for ``range()`` objects and their properties.
 
-            +++
+.. dropdown:: Textbooks
+   :class-container: sd-border-secondary
 
-            - Memory efficiency
-            - Indexing and slicing
-            - Membership testing
-
-        .. grid-item-card:: 📋 Lists
-            :link: https://docs.python.org/3/tutorial/datastructures.html#more-on-lists
-            :class-card: sd-border-secondary
-
-            **Tutorial — Data Structures**
-
-            List methods, list comprehensions, and common operations.
-
-            +++
-
-            - ``append()``, ``extend()``, ``insert()``
-            - ``sort()``, ``reverse()``
-            - List comprehensions
-
-        .. grid-item-card:: 📦 Tuples and Sequences
-            :link: https://docs.python.org/3/tutorial/datastructures.html#tuples-and-sequences
-            :class-card: sd-border-secondary
-
-            **Tutorial — Data Structures**
-
-            Tuple creation, unpacking, and use cases.
-
-            +++
-
-            - Tuple packing/unpacking
-            - Immutability
-            - Single-element tuples
-
-        .. grid-item-card:: 📖 Dictionaries
-            :link: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
-            :class-card: sd-border-secondary
-
-            **Tutorial — Data Structures**
-
-            Dictionary creation, access patterns, and iteration.
-
-            +++
-
-            - Key-value pairs
-            - ``get()``, ``keys()``, ``values()``, ``items()``
-            - Dictionary comprehensions
-
-        .. grid-item-card:: 🎯 Sets
-            :link: https://docs.python.org/3/tutorial/datastructures.html#sets
-            :class-card: sd-border-secondary
-
-            **Tutorial — Data Structures**
-
-            Set operations, methods, and use cases.
-
-            +++
-
-            - Union, intersection, difference
-            - ``add()``, ``remove()``, ``discard()``
-            - Set comprehensions
-
-        .. grid-item-card:: 📋 Sequence Types
-            :link: https://docs.python.org/3/library/stdtypes.html#sequence-types-list-tuple-range
-            :class-card: sd-border-secondary
-
-            **Standard Library — Sequences**
-
-            Complete reference for list, tuple, and range types.
-
-            +++
-
-            - Common operations
-            - Mutable vs immutable
-            - Slicing syntax
-
-        .. grid-item-card:: 📖 Mapping Types
-            :link: https://docs.python.org/3/library/stdtypes.html#mapping-types-dict
-            :class-card: sd-border-secondary
-
-            **Standard Library — dict**
-
-            Complete reference for dictionary methods and operations.
-
-            +++
-
-            - All dict methods
-            - View objects
-            - Ordering guarantee
-
-        .. grid-item-card:: 🎯 Set Types
-            :link: https://docs.python.org/3/library/stdtypes.html#set-types-set-frozenset
-            :class-card: sd-border-secondary
-
-            **Standard Library — set**
-
-            Complete reference for set and frozenset operations.
-
-            +++
-
-            - Mathematical operations
-            - Modification methods
-            - Frozenset (immutable)
-
-        .. grid-item-card:: 📋 Copy Module
-            :link: https://docs.python.org/3/library/copy.html
-            :class-card: sd-border-secondary
-
-            **Standard Library — copy**
-
-            Shallow and deep copy operations for compound objects.
-
-            +++
-
-            - ``copy()`` vs ``deepcopy()``
-            - Handling nested objects
-            - Custom copy behavior
-
-
-.. dropdown:: 📏 Style and Best Practices
-    :class-container: sd-border-secondary
-
-    .. grid:: 1 1 2 2
-        :gutter: 2
-
-        .. grid-item-card:: 📏 PEP 8 — Style Guide
-            :link: https://peps.python.org/pep-0008/
-            :class-card: sd-border-secondary
-
-            **Coding Conventions**
-
-            Guidelines for loops, comprehensions, and collection usage.
-
-            +++
-
-            - Loop variable naming
-            - Comprehension line length
-            - Whitespace in collections
-
-        .. grid-item-card:: 📝 PEP 274 — Dict Comprehensions
-            :link: https://peps.python.org/pep-0274/
-            :class-card: sd-border-secondary
-
-            **Dictionary Comprehensions**
-
-            The PEP that introduced dictionary comprehension syntax.
-
-            +++
-
-            - Syntax specification
-            - Use cases
-            - Performance notes
-
-        .. grid-item-card:: 📝 PEP 3132 — Extended Unpacking
-            :link: https://peps.python.org/pep-3132/
-            :class-card: sd-border-secondary
-
-            **Extended Iterable Unpacking**
-
-            The PEP that introduced ``*rest`` syntax for unpacking.
-
-            +++
-
-            - Star expressions
-            - Multiple assignment
-            - Use cases
-
-
-.. dropdown:: 📚 Recommended Reading
-    :class-container: sd-border-secondary
-
-    .. grid:: 1 1 2 2
-        :gutter: 2
-
-        .. grid-item-card:: 📘 Python Official Tutorial
-            :link: https://docs.python.org/3/tutorial/
-            :class-card: sd-border-secondary
-
-            **Getting Started**
-
-            Sections 4 (control flow) and 5 (data structures) cover this lecture's topics.
-
-            +++
-
-            - Loops and conditionals
-            - Lists, tuples, dicts, sets
-            - Comprehensions
-
-        .. grid-item-card:: Mark Lutz
-            :class-card: sd-border-secondary
-
-            **Learning Python (5th Edition)**
-
-            Chapters 8–14 cover iteration, lists, dictionaries, tuples, and comprehensions in depth.
-
-        .. grid-item-card:: Luciano Ramalho
-            :class-card: sd-border-secondary
-
-            **Fluent Python (2nd Edition)**
-
-            Part II covers sequences, dictionaries, sets, and their protocols. Excellent for understanding Python's data model.
-
-        .. grid-item-card:: Brett Slatkin
-            :class-card: sd-border-secondary
-
-            **Effective Python (2nd Edition)**
-
-            Items 11–18 cover comprehensions, generators, and iteration best practices.
+   - Goodfellow, I., Bengio, Y., & Courville, A. (2016). *Deep Learning.* MIT Press.
+   - Szeliski, R. (2022). *Computer Vision: Algorithms and Applications (2nd Edition).* Springer.
+   - Prince, S. (2023). *Understanding Deep Learning.* MIT Press.

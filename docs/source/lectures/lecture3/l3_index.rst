@@ -1,11 +1,16 @@
 ====================================================
-L3: Python Fundamentals — Part II
+L3: Perception I -- Object Detection (YOLO to DETR)
 ====================================================
 
 Overview
 --------
 
-This lecture covers Python's essential data structures and control flow mechanisms: loops with ``for`` and ``while``, the versatile ``range()`` function, and the four fundamental collection types — lists, tuples, dictionaries, and sets. You will learn iteration patterns, list comprehensions, and how to choose the right data structure for different tasks.
+This lecture covers the foundations of visual perception for autonomous driving,
+progressing from traditional computer vision to modern deep learning approaches.
+You will learn how perception fits into the AV stack, understand the taxonomy
+of perception tasks, and study two landmark object detection architectures:
+YOLO (CNN-based) and DETR (transformer-based). The lecture concludes with a
+hands-on comparison of both models on CARLA data.
 
 
 Learning Objectives
@@ -13,13 +18,19 @@ Learning Objectives
 
 By the end of this lecture, you will be able to:
 
-- Write loops using ``for`` and ``while`` statements with ``break``, ``continue``, and ``else``.
-- Master the ``range()`` function and its memory-efficient properties.
-- Understand iterables and distinguish between in-place and out-of-place operations.
-- Create, modify, and iterate over lists using methods and comprehensions.
-- Work with tuples, understand immutability, and apply tuple unpacking.
-- Implement dictionaries for key-value storage and iteration.
-- Use sets for unique collection management and mathematical set operations.
+- Define perception and explain its role in the AV stack (sensing ->
+  perception -> planning -> control).
+- Describe the taxonomy of perception tasks: low-level processing, mid-level
+  understanding, and high-level reasoning.
+- Explain why traditional CV methods (HOG, SIFT) failed for robust AV
+  perception and how deep learning changed the field.
+- Trace the YOLO architecture evolution from v1 (2015) to v11 (2024).
+- Explain the backbone-neck-head architecture and the difference between
+  anchor-based and anchor-free detection.
+- Describe the DETR architecture: encoder-decoder transformer, object queries,
+  and bipartite matching.
+- Compare YOLO and DETR on speed, accuracy, and failure modes.
+- Train and deploy an object detector on CARLA data as a ROS 2 node.
 
 
 Contents
@@ -30,22 +41,20 @@ Contents
    :titlesonly:
 
    l3_lecture
-   l3_exercises
    l3_quiz
    l3_references
+
 
 Next Steps
 ----------
 
-- In the next lecture, we will cover Functions:
+- In the next lecture, we will cover **Perception II: BEV Perception &
+  Occupancy Networks**:
 
-  - Defining and calling functions
-  - Parameters and arguments
-  - Return values
-  - Scope and namespaces
-  - Type hints
-  - Docstrings
+  - Bird's-Eye View representation and why it matters for AV planning.
+  - BEVFormer and camera-to-BEV projection.
+  - 3D occupancy networks.
 
-- Review and experiment with all code snippets and exercises from today's lecture.
-- Practice using lists, dictionaries, and loops together.
-- Start reading `Python Official Tutorial <https://docs.python.org/3/tutorial/>`_ — Sections 4 and 5.
+- Start working on **A2: Object Detection -- YOLO vs. DETR** (posted Week 6).
+- Read the `Ultralytics YOLOv8 documentation <https://docs.ultralytics.com/>`_.
+- Read the `DETR paper <https://arxiv.org/abs/2005.12872>`_ (Carion et al., 2020).

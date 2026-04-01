@@ -2,9 +2,10 @@
 Quiz
 ====================================================
 
-This quiz covers the key concepts from Lecture 2: Python Fundamentals -- Part I,
-including packages and modules, indentation, Boolean types, operators, numeric
-types, strings, and control flow.
+This quiz covers the key concepts from Lecture 2: Sensor Technologies &
+Calibration. Topics include camera systems, LiDAR, RADAR, IMU, GNSS, the
+complementarity principle, intrinsic and extrinsic calibration, sensor
+placement, and failure mode analysis.
 
 .. note::
 
@@ -20,505 +21,582 @@ types, strings, and control flow.
 ----
 
 
-Multiple Choice
-===============
+Multiple Choice (Questions 1-15)
+=================================
 
 .. admonition:: Question 1
    :class: hint
 
-   What is the difference between a **module** and a **package** in Python?
+   According to the complementarity principle, why is multi-sensor fusion
+   essential for autonomous driving?
 
-   A. A module is a folder; a package is a single ``.py`` file.
+   A. A single sensor is too expensive for production vehicles.
 
-   B. A module is a single ``.py`` file; a package is a folder containing ``.py`` files with an ``__init__.py``.
+   B. No single sensor technology can meet all perception requirements;
+      different sensors have complementary strengths and weaknesses.
 
-   C. A module contains only functions; a package contains only classes.
+   C. Regulations require at least three sensor types on every AV.
 
-   D. There is no difference; the terms are interchangeable.
+   D. Fusion is only needed for Level 5 vehicles.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- A module is a single ``.py`` file; a package is a folder containing ``.py`` files with an ``__init__.py``.
+   **B** -- No single sensor technology can meet all perception requirements;
+   different sensors have complementary strengths and weaknesses.
 
-   A module is any single Python file that can be imported. A package is a directory containing one or more modules plus an ``__init__.py`` file (which can be empty) that marks it as a package.
+   Cameras provide rich semantics but lack depth. LiDAR provides precise 3D
+   geometry but cannot read signs. RADAR works in all weather but has poor
+   angular resolution. Combining them creates a system more capable than any
+   individual sensor.
 
 
 .. admonition:: Question 2
    :class: hint
 
-   Which import approach is **recommended** for clarity and avoiding namespace pollution?
+   Which sensor is the **only** one that can reliably read traffic lights
+   and signs?
 
-   A. ``import shape.square``
+   A. LiDAR
 
-   B. ``from shape.square import *``
+   B. RADAR
 
-   C. ``from shape.square import compute_area, compute_perimeter``
+   C. Camera
 
-   D. ``import shape.square as s``
+   D. IMU
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- ``from shape.square import compute_area, compute_perimeter``
+   **C** -- Camera
 
-   This approach explicitly imports only the names you need, making it clear where each function comes from and avoiding namespace pollution. Wildcards (``*``) can silently overwrite existing names.
+   Cameras capture color and fine detail, making them the only sensor capable
+   of interpreting traffic light states (red/yellow/green) and reading text
+   on traffic signs.
 
 
 .. admonition:: Question 3
    :class: hint
 
-   What is the output of the following code?
+   What does LiDAR's Time-of-Flight (ToF) principle measure?
 
-   .. code-block:: python
+   A. The frequency shift of a reflected laser beam.
 
-      print(17 // 5)
-      print(17 % 5)
+   B. The round-trip time of a laser pulse to calculate distance.
 
-   A. ``3`` and ``2``
+   C. The intensity of reflected infrared light.
 
-   B. ``3.4`` and ``2``
-
-   C. ``3`` and ``0.4``
-
-   D. ``4`` and ``2``
+   D. The phase difference between emitted and received waves.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **A** -- ``3`` and ``2``
+   **B** -- The round-trip time of a laser pulse to calculate distance.
 
-   ``17 // 5`` is floor division, which returns ``3`` (the quotient rounded down). ``17 % 5`` is the modulus operator, which returns ``2`` (the remainder).
+   LiDAR emits a laser pulse, measures the time for it to reflect back, and
+   computes distance as ``(c x delta_t) / 2``, where ``c`` is the speed of
+   light and ``delta_t`` is the round-trip time.
 
 
 .. admonition:: Question 4
    :class: hint
 
-   Which of the following values is considered **truthy** in Python?
+   What is RADAR's **main weakness** compared to cameras and LiDAR?
 
-   A. ``0``
+   A. It cannot operate in rain or fog.
 
-   B. ``""`` (empty string)
+   B. It has poor angular resolution, making it hard to distinguish nearby
+      objects.
 
-   C. ``[]`` (empty list)
+   C. It cannot measure velocity.
 
-   D. ``" "`` (string with a single space)
+   D. It requires active illumination.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **D** -- ``" "`` (string with a single space)
+   **B** -- It has poor angular resolution, making it hard to distinguish
+   nearby objects.
 
-   A string containing a space is non-empty and therefore truthy. Empty containers (``[]``, ``""``) and zero values (``0``) are falsy.
+   RADAR's angular resolution (1-10 degrees) is far coarser than cameras
+   or LiDAR. Two objects at the same distance but different lateral
+   positions may appear as a single "blob." This is why imaging radar
+   (79 GHz) is being developed.
 
 
 .. admonition:: Question 5
    :class: hint
 
-   What is the output of the following code?
+   Why do many RADAR systems filter out stationary objects, and what safety
+   risk does this create?
 
-   .. code-block:: python
+   A. Stationary objects overwhelm the processor; risk of detecting too many
+      false positives.
 
-      print(0 or "default")
-      print("hello" and "world")
+   B. Stationary objects produce no Doppler shift and are indistinguishable
+      from clutter; risk of not detecting stopped vehicles ahead.
 
-   A. ``0`` and ``"hello"``
+   C. RADAR cannot physically detect stationary objects.
 
-   B. ``"default"`` and ``"world"``
-
-   C. ``False`` and ``True``
-
-   D. ``"default"`` and ``"hello"``
+   D. Filtering improves angular resolution at the cost of range.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``"default"`` and ``"world"``
+   **B** -- Stationary objects produce no Doppler shift and are
+   indistinguishable from clutter; risk of not detecting stopped vehicles
+   ahead.
 
-   The ``or`` operator returns the first truthy value (``"default"`` since ``0`` is falsy). The ``and`` operator returns the last value if all are truthy (``"world"``), or the first falsy value otherwise.
+   Moving objects create a clear Doppler frequency shift, making them easy
+   to separate from background. Stationary objects have no shift and blend
+   into environmental clutter (guardrails, signs), so many RADAR systems
+   filter them out -- creating a known safety risk for stopped-vehicle
+   detection.
 
 
 .. admonition:: Question 6
    :class: hint
 
-   What is the correct way to check if a variable ``x`` is ``None``?
+   What is the primary weakness of IMU-based navigation?
 
-   A. ``if x == None:``
+   A. It cannot measure angular velocity.
 
-   B. ``if x is None:``
+   B. Small measurement errors integrate over time, causing unbounded
+      position drift.
 
-   C. ``if x = None:``
+   C. It only works at frequencies below 10 Hz.
 
-   D. ``if x.is_none():``
+   D. It requires satellite signals to function.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``if x is None:``
+   **B** -- Small measurement errors integrate over time, causing unbounded
+   position drift.
 
-   The ``is`` operator checks identity (same object in memory). For ``None``, this is the correct approach since there is only one ``None`` object in Python. Using ``==`` would work but is not idiomatic.
+   IMU errors are integrated twice to get position (acceleration -> velocity
+   -> position), so even tiny bias errors grow quadratically with time. This
+   is why IMU is always paired with GNSS or other absolute references.
 
 
 .. admonition:: Question 7
    :class: hint
 
-   Given the string ``greeting = "hello"``, what does ``greeting[-2]`` return?
+   In the stereo depth formula ``depth = (B x f) / d``, what does ``d``
+   represent?
 
-   A. ``"h"``
+   A. The distance between the two cameras.
 
-   B. ``"o"``
+   B. The focal length in pixels.
 
-   C. ``"l"``
+   C. The disparity -- pixel position difference between left and right
+      image projections.
 
-   D. ``"e"``
+   D. The diameter of the detected object.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- ``"l"``
+   **C** -- The disparity -- pixel position difference between left and
+   right image projections.
 
-   Negative indices count from the end. ``greeting[-1]`` is ``"o"``, so ``greeting[-2]`` is the second-to-last character, ``"l"``.
+   Disparity is the horizontal pixel difference between where the same
+   point appears in the left and right camera images. Larger disparity
+   means the object is closer; smaller disparity means it is farther away.
 
 
 .. admonition:: Question 8
    :class: hint
 
-   What is the output of ``"hello"[1:4]``?
+   What does the **intrinsic calibration matrix** (K) encode?
 
-   A. ``"hel"``
+   A. The position and orientation of the camera relative to the vehicle.
 
-   B. ``"ell"``
+   B. The focal lengths, principal point, and lens distortion of the camera.
 
-   C. ``"ello"``
+   C. The transformation between LiDAR and camera coordinate frames.
 
-   D. ``"hell"``
+   D. The timestamp synchronization offset between sensors.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``"ell"``
+   **B** -- The focal lengths, principal point, and lens distortion of
+   the camera.
 
-   Slicing ``[1:4]`` extracts characters at indices 1, 2, and 3 (stop index is exclusive). From ``"hello"``, these are ``"e"``, ``"l"``, ``"l"``.
+   The intrinsic matrix K contains ``fx, fy`` (focal lengths in pixels)
+   and ``cx, cy`` (principal point). Distortion coefficients
+   (``k1, k2, k3, p1, p2``) are also determined during intrinsic
+   calibration.
 
 
 .. admonition:: Question 9
    :class: hint
 
-   Which of the following correctly reverses the string ``"Python"`` using slicing?
+   Why is extrinsic calibration critical for multi-sensor fusion?
 
-   A. ``"Python"[::1]``
+   A. It determines which sensor is most accurate.
 
-   B. ``"Python"[::-1]``
+   B. It provides the 6-DOF transformation between sensors, allowing
+      detections to be projected into a common coordinate frame.
 
-   C. ``"Python"[-1::]``
+   C. It calibrates the clock synchronization between sensors.
 
-   D. ``"Python"[0:-1:-1]``
+   D. It adjusts sensor firmware to match vehicle specifications.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``"Python"[::-1]``
+   **B** -- It provides the 6-DOF transformation between sensors, allowing
+   detections to be projected into a common coordinate frame.
 
-   A stride of ``-1`` reverses the string. The result is ``"nohtyP"``.
+   Without accurate extrinsic calibration, a LiDAR point cloud and a camera
+   image cannot be aligned. A 1-degree rotation error at 100 m range
+   produces a 1.7 m positional error.
 
 
 .. admonition:: Question 10
    :class: hint
 
-   What is the output of the following code?
+   Which LiDAR type is better suited for **mass production** in consumer
+   vehicles?
 
-   .. code-block:: python
+   A. Mechanical spinning LiDAR.
 
-      x = 5
-      print(1 < x < 10)
+   B. Solid-state LiDAR.
 
-   A. ``True``
+   C. Flash LiDAR.
 
-   B. ``False``
-
-   C. ``SyntaxError``
-
-   D. ``5``
+   D. All types are equally suited.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **A** -- ``True``
+   **B** -- Solid-state LiDAR.
 
-   Python supports chained comparisons. ``1 < x < 10`` is equivalent to ``1 < x and x < 10``. Since ``x = 5``, both conditions are true.
+   Solid-state LiDARs (MEMS mirrors or electronic beam steering) have no
+   large moving parts, making them compact, robust, and affordable for
+   mass production. Examples include Luminar (Volvo/Mercedes) and Innoviz
+   (BMW). The trade-off is limited FOV compared to 360-degree mechanical
+   spinning units.
 
 
 .. admonition:: Question 11
    :class: hint
 
-   Why should you avoid comparing floats with ``==``?
+   A camera's dynamic range is rated at 120 dB. What does this mean?
 
-   A. Python does not support float comparisons.
+   A. It can detect objects at 120 meters.
 
-   B. Floats are stored with limited precision, causing rounding errors.
+   B. It can handle highlights 1 million times brighter than shadows in
+      the same scene.
 
-   C. The ``==`` operator only works with integers.
+   C. It captures 120 frames per second.
 
-   D. Comparing floats raises a ``TypeError``.
+   D. It has a 120-degree field of view.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Floats are stored with limited precision, causing rounding errors.
+   **B** -- It can handle highlights 1 million times brighter than shadows
+   in the same scene.
 
-   Floating-point numbers use IEEE 754 representation, which cannot exactly represent all decimal values. For example, ``0.1 + 0.2 == 0.3`` returns ``False``. Use ``math.isclose()`` instead.
+   Dynamic range measures the ratio between the brightest and darkest
+   elements a sensor can capture simultaneously. Every 20 dB represents a
+   10-fold increase, so 120 dB = 10^6 = one million to one ratio.
 
 
 .. admonition:: Question 12
    :class: hint
 
-   What does the ``__name__`` variable contain when a Python script is run directly?
+   What is a **Minimal Risk Condition (MRC)** maneuver?
 
-   A. The filename of the script.
+   A. Operating the vehicle at minimum speed on the highway.
 
-   B. ``"__main__"``
+   B. A pre-planned safe response when a critical sensor fails, such as
+      pulling over to the side of the road.
 
-   C. ``None``
+   C. Running the perception system at reduced resolution.
 
-   D. The module's import path.
+   D. Switching from ADS mode to ADAS mode.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``"__main__"``
+   **B** -- A pre-planned safe response when a critical sensor fails, such
+   as pulling over to the side of the road.
 
-   When a script is run directly, Python sets its ``__name__`` variable to ``"__main__"``. When imported as a module, ``__name__`` is set to the module's name.
+   An MRC maneuver brings the vehicle to a safe state when the system
+   detects it can no longer operate safely (e.g., critical sensor failure,
+   exiting ODD). This is a key requirement for Level 3+ systems.
 
 
 .. admonition:: Question 13
    :class: hint
 
-   Which string formatting method is **recommended** for Python 3.6+?
+   Which company uses a **vision-only** approach with no LiDAR or RADAR?
 
-   A. ``"Name: %s" % name``
+   A. Waymo
 
-   B. ``"Name: {}".format(name)``
+   B. Aurora
 
-   C. ``f"Name: {name}"``
+   C. Tesla
 
-   D. ``"Name: " + name``
+   D. Cruise
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- ``f"Name: {name}"``
+   **C** -- Tesla
 
-   F-strings (formatted string literals) are the recommended approach for Python 3.6+. They are faster, more readable, and support inline expressions.
+   Tesla removed both RADAR and ultrasonic sensors, relying entirely on
+   8 cameras. Their philosophy is that vision (with sufficient AI) can
+   handle all perception tasks. This contrasts with Waymo (29 cameras +
+   5 LiDARs + 6 RADARs) and other multi-sensor approaches.
 
 
 .. admonition:: Question 14
    :class: hint
 
-   What is the output of the following code?
+   Why is IMU + GNSS fusion a textbook application of the Kalman Filter?
 
-   .. code-block:: python
+   A. Both sensors produce identical measurements.
 
-      a = [1, 2, 3]
-      b = [1, 2, 3]
-      print(a == b)
-      print(a is b)
+   B. IMU provides high-frequency relative updates while GNSS provides
+      low-frequency absolute corrections -- perfectly complementary for
+      the predict-update cycle.
 
-   A. ``True`` and ``True``
+   C. The Kalman Filter was originally invented for IMU processing.
 
-   B. ``True`` and ``False``
-
-   C. ``False`` and ``True``
-
-   D. ``False`` and ``False``
+   D. GNSS signals are always Gaussian distributed.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``True`` and ``False``
+   **B** -- IMU provides high-frequency relative updates while GNSS
+   provides low-frequency absolute corrections -- perfectly complementary
+   for the predict-update cycle.
 
-   ``a == b`` compares values (both lists contain the same elements, so ``True``). ``a is b`` compares identity (they are different objects in memory, so ``False``).
+   The IMU drives the prediction step (high-rate motion estimate that
+   drifts over time), while GNSS drives the update step (low-rate
+   absolute position that corrects the drift). This maps directly to
+   the Kalman Filter's predict-update architecture.
 
 
 .. admonition:: Question 15
    :class: hint
 
-   What is the output of the following code?
+   What is the main advantage of **imaging radar** (79 GHz) over
+   conventional automotive radar (77 GHz)?
 
-   .. code-block:: python
+   A. Longer detection range.
 
-      score = 75
-      if score >= 90:
-          grade = "A"
-      elif score >= 80:
-          grade = "B"
-      elif score >= 70:
-          grade = "C"
-      else:
-          grade = "F"
-      print(grade)
+   B. Higher angular resolution from a larger antenna array.
 
-   A. ``"A"``
+   C. Lower manufacturing cost.
 
-   B. ``"B"``
-
-   C. ``"C"``
-
-   D. ``"F"``
+   D. Better velocity accuracy.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- ``"C"``
+   **B** -- Higher angular resolution from a larger antenna array.
 
-   The conditions are evaluated in order. ``75 >= 90`` is ``False``, ``75 >= 80`` is ``False``, but ``75 >= 70`` is ``True``, so ``grade`` is assigned ``"C"``.
+   Imaging radar uses a larger antenna array at 79 GHz to achieve
+   significantly better angular resolution, allowing it to better
+   distinguish between nearby objects. Example: Continental ARS540.
 
 
 ----
 
 
-True or False
-=============
+True or False (Questions 16-25)
+================================
 
 .. admonition:: Question 16
    :class: hint
 
-   **True or False:** Python uses braces ``{}`` to define code blocks, similar to C++ and Java.
+   **True or False:** Cameras provide direct depth measurement without any
+   additional processing or second camera.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   Python uses indentation (whitespace) to define code blocks, not braces. This is a fundamental difference from C-style languages.
+   A single (monocular) camera captures 2D images with no direct depth
+   information. Depth can be estimated via stereo vision (two cameras) or
+   inferred using deep neural networks, but neither is a direct measurement
+   like LiDAR's time-of-flight.
 
 
 .. admonition:: Question 17
    :class: hint
 
-   **True or False:** The expression ``not []`` evaluates to ``True`` because an empty list is falsy.
+   **True or False:** RADAR can directly measure the velocity of a moving
+   target using the Doppler effect.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **True**
 
-   An empty list ``[]`` is falsy in Python. The ``not`` operator inverts the Boolean value, so ``not []`` evaluates to ``True``.
+   Moving objects cause a frequency shift in the reflected RADAR signal
+   (Doppler effect), which directly encodes the object's radial velocity.
+   This is one of RADAR's key advantages over cameras and LiDAR.
 
 
 .. admonition:: Question 18
    :class: hint
 
-   **True or False:** In Python, strings are mutable, meaning you can change individual characters after creation.
+   **True or False:** Solid-state LiDAR provides a full 360-degree field
+   of view.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   Strings in Python are immutable. You cannot change individual characters; instead, you must create a new string. Attempting ``s[0] = "X"`` raises a ``TypeError``.
+   Solid-state LiDARs typically provide a limited forward-facing field of
+   view (e.g., 120 degrees). Only mechanical spinning LiDARs achieve full
+   360-degree coverage. Multiple solid-state units can be combined for
+   wider coverage.
 
 
 .. admonition:: Question 19
    :class: hint
 
-   **True or False:** The ``in`` operator can be used to check if a substring exists within a string.
+   **True or False:** GNSS works reliably in tunnels, underground parking
+   garages, and dense urban canyons.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **True**
+   **False**
 
-   The ``in`` operator works with strings to check for substrings. For example, ``"ell" in "hello"`` returns ``True``.
+   GNSS requires line-of-sight to satellites. Signals are blocked in
+   tunnels and garages, and suffer multipath reflections in urban canyons
+   (buildings reflect signals, causing position errors). This is why
+   IMU and other localization methods supplement GNSS.
 
 
 .. admonition:: Question 20
    :class: hint
 
-   **True or False:** Python integers have unlimited precision, meaning they can grow arbitrarily large.
+   **True or False:** A reprojection error greater than 2 pixels during
+   intrinsic calibration validation typically indicates poor calibration
+   quality.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **True**
 
-   Unlike many languages where integers have fixed sizes (32-bit or 64-bit), Python integers can grow to arbitrary size, limited only by available memory.
+   Reprojection error measures how accurately known 3D points (e.g.,
+   checkerboard corners) are projected back onto the image using the
+   calibrated parameters. Values above 2 pixels suggest calibration
+   issues that will degrade downstream perception and fusion.
 
 
 .. admonition:: Question 21
    :class: hint
 
-   **True or False:** The expression ``10 // -3`` evaluates to ``-3`` because floor division rounds toward negative infinity.
+   **True or False:** Waymo and Tesla use the same sensor philosophy for
+   their autonomous driving systems.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   ``10 // -3`` evaluates to ``-4``, not ``-3``. Floor division rounds toward negative infinity, so ``-3.33...`` rounds down to ``-4``.
+   Waymo uses a LiDAR-centric approach with 29 cameras, 5 LiDARs, and
+   6 RADARs. Tesla uses a vision-only approach with 8 cameras and no
+   LiDAR or RADAR. These represent fundamentally different philosophies
+   in the AV industry.
 
 
 .. admonition:: Question 22
    :class: hint
 
-   **True or False:** Wildcard imports (``from module import *``) are recommended because they save typing.
+   **True or False:** The forward direction of an AV should have redundant
+   sensing with at least two different sensor modalities.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **True**
 
-   Wildcard imports should be avoided because they pollute the namespace and can silently overwrite existing names, making code harder to understand and debug.
+   The forward direction is the most safety-critical zone. Redundancy
+   across modalities (e.g., Camera + LiDAR + RADAR) ensures that if one
+   sensor is degraded (e.g., camera blinded by sun), others can still
+   detect obstacles.
 
 
 .. admonition:: Question 23
    :class: hint
 
-   **True or False:** The conditional expression ``status = "adult" if age >= 18 else "minor"`` is valid Python syntax.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**
-
-   This is Python's conditional (ternary) expression syntax. It assigns ``"adult"`` if the condition is true, otherwise ``"minor"``.
-
-
-.. admonition:: Question 24
-   :class: hint
-
-   **True or False:** Adding a path to ``sys.path`` makes packages discoverable for all future Python sessions.
+   **True or False:** Monocular depth estimation using deep learning
+   provides the same level of accuracy as LiDAR time-of-flight
+   measurements.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   ``sys.path.insert()`` only affects the current Python session. The path resets when you start a new Python interpreter. For persistent changes, use ``PYTHONPATH``, ``.pth`` files, or ``pip install -e``.
+   Monocular depth estimation is an inference (not a measurement) and
+   suffers from scale ambiguity and dependence on training data. LiDAR
+   provides direct, precise measurements (+/- 2-5 cm). Neural depth
+   estimation is useful but fundamentally less accurate.
 
 
-.. admonition:: Question 25
+.. admonition:: Question 24
    :class: hint
 
-   **True or False:** The ``bool`` type in Python is a subclass of ``int``, where ``True`` equals ``1`` and ``False`` equals ``0``.
+   **True or False:** Extrinsic calibration determines the transformation
+   between a sensor and the vehicle's coordinate frame.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **True**
 
-   ``bool`` is indeed a subclass of ``int``. You can verify this with ``isinstance(True, int)`` which returns ``True``. Arithmetic with Booleans is valid: ``True + True == 2``.
+   Extrinsic calibration determines the 6-DOF transformation (3D rotation
+   + 3D translation) between sensors, or between a sensor and the vehicle
+   body frame. This is essential for projecting data from different sensors
+   into a common reference frame for fusion.
+
+
+.. admonition:: Question 25
+   :class: hint
+
+   **True or False:** In degraded mode operation, an AV should immediately
+   shut down all systems and stop in place.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False**
+
+   Degraded mode operation means the AV continues with reduced capability
+   (e.g., lower speed, disabled lane-keeping) using the remaining
+   functional sensors. If the degradation is severe, the vehicle executes
+   a Minimal Risk Condition (MRC) maneuver such as safely pulling over --
+   not an abrupt stop, which could be dangerous.
 
 
 ----
 
 
-Essay Questions
-===============
+Essay Questions (Questions 26-30)
+==================================
 
 .. admonition:: Question 26
    :class: hint
 
-   **Explain why wildcard imports (** ``from module import *`` **) should be avoided.** Describe the problem of namespace pollution and provide an example of how it can cause bugs.
+   **Compare and contrast cameras, LiDAR, and RADAR** across at least four
+   dimensions (e.g., resolution, weather robustness, cost, depth
+   measurement). Explain why all three are typically used together.
 
    *(2-4 sentences)*
 
@@ -527,16 +605,21 @@ Essay Questions
 
    *Key points to include:*
 
-   - Wildcard imports (``from module import *``) bring all public names from a module into the current namespace.
-   - This causes namespace pollution where names from different modules can silently overwrite each other.
-   - Example: If both ``shape.square`` and ``shape.circle`` define ``compute_area()``, the second import overwrites the first without warning.
-   - Best practice is to use explicit named imports so it's clear where each function originated.
+   - Cameras: High resolution, rich semantics, low cost, but no direct
+     depth and poor in adverse weather.
+   - LiDAR: Precise 3D geometry, lighting-independent, but expensive and
+     degraded by rain/fog.
+   - RADAR: All-weather, direct velocity, but poor angular resolution and
+     limited classification.
+   - Together they cover each other's weaknesses: cameras for semantics,
+     LiDAR for geometry, RADAR for weather robustness and velocity.
 
 
 .. admonition:: Question 27
    :class: hint
 
-   **Describe how Python's short-circuit evaluation works with** ``and`` **and** ``or`` **operators.** Explain what values these operators return when used with non-Boolean operands and provide an example use case.
+   **Explain the difference between intrinsic and extrinsic calibration.**
+   Why is each necessary, and what happens if either is inaccurate?
 
    *(2-4 sentences)*
 
@@ -545,16 +628,22 @@ Essay Questions
 
    *Key points to include:*
 
-   - ``and`` returns the first falsy value, or the last value if all are truthy.
-   - ``or`` returns the first truthy value, or the last value if all are falsy.
-   - These operators return the actual operand, not necessarily ``True`` or ``False``.
-   - Common pattern: ``name = user_input or "Anonymous"`` provides a default value when ``user_input`` is empty or falsy.
+   - Intrinsic calibration determines a camera's internal parameters
+     (focal length, principal point, distortion). Without it, images are
+     geometrically distorted.
+   - Extrinsic calibration determines the spatial relationship (rotation
+     + translation) between sensors. Without it, LiDAR points cannot be
+     correctly projected onto camera images.
+   - Poor intrinsic calibration distorts measurements within a single
+     sensor. Poor extrinsic calibration misaligns data across sensors,
+     causing fusion failures.
 
 
 .. admonition:: Question 28
    :class: hint
 
-   **Explain the difference between** ``==`` **and** ``is`` **operators.** When should you use each one, and why is ``is`` recommended for ``None`` checks?
+   **Describe the IMU + GNSS fusion strategy.** Explain the role of each
+   sensor and why they are complementary.
 
    *(2-4 sentences)*
 
@@ -563,34 +652,21 @@ Essay Questions
 
    *Key points to include:*
 
-   - ``==`` compares values (whether two objects have the same content).
-   - ``is`` compares identity (whether two references point to the same object in memory).
-   - Use ``is`` for ``None`` checks because there is exactly one ``None`` object in Python, making identity comparison both correct and idiomatic.
-   - Never rely on ``is`` for integers or strings due to interning optimizations that vary by implementation.
+   - IMU provides high-frequency (>100 Hz) relative motion updates but
+     drifts over time due to integration of small errors.
+   - GNSS provides low-frequency (1-20 Hz) absolute position that does
+     not drift but is unavailable in tunnels/canyons.
+   - They are fused using a Kalman Filter: IMU drives the prediction step
+     (smooth, fast, drifting) and GNSS drives the update step (slow but
+     drift-correcting).
 
 
 .. admonition:: Question 29
    :class: hint
 
-   **Describe three methods for making Python packages discoverable** (i.e., available for import from anywhere). For each method, explain when it would be most appropriate to use.
-
-   *(3-5 sentences)*
-
-.. dropdown:: Answer Guidelines
-   :class-container: sd-border-success
-
-   *Key points to include:*
-
-   - ``sys.path.insert()``: Adds path for the current script only; good for quick fixes and sibling packages.
-   - ``PYTHONPATH`` environment variable: Affects the terminal session; good for development and testing.
-   - ``.pth`` files in site-packages: System-wide and permanent; good for shared libraries across projects.
-   - ``pip install -e .`` (editable install): Most robust and professional approach; works from anywhere and changes take effect immediately without reinstalling.
-
-
-.. admonition:: Question 30
-   :class: hint
-
-   **Explain string slicing syntax** ``[start:stop:stride]`` **and demonstrate how to extract a substring and reverse a string.** Use the string ``"Python"`` in your examples.
+   **You have a $5,000 sensor budget.** Design a sensor configuration for
+   an urban robotaxi operating in a dense city. Justify your choices and
+   explain what you had to sacrifice.
 
    *(2-4 sentences)*
 
@@ -599,7 +675,35 @@ Essay Questions
 
    *Key points to include:*
 
-   - Syntax: ``[start:stop:stride]`` where start is inclusive, stop is exclusive, and stride is the step size.
-   - Extracting substring: ``"Python"[0:2]`` returns ``"Py"``; ``"Python"[2:]`` returns ``"thon"``.
-   - Reversing: ``"Python"[::-1]`` returns ``"nohtyP"`` because a stride of ``-1`` steps backward through the string.
-   - Defaults: start defaults to 0, stop defaults to end, stride defaults to 1.
+   - Urban driving requires 360-degree awareness for pedestrians, cyclists,
+     and cross-traffic at intersections.
+   - Prioritize surround-view cameras (4-6 cameras, ~$1,500) and corner
+     RADARs (4 units, ~$2,000) for complete coverage.
+   - Add a basic forward ADAS module (~$500) for AEB.
+   - LiDAR is likely sacrificed due to cost, which weakens 3D geometry
+     precision -- acknowledge this trade-off.
+
+
+.. admonition:: Question 30
+   :class: hint
+
+   **Explain the concept of failure mode analysis** in the context of AV
+   sensor systems. What are single points of failure, degraded mode
+   operation, and MRC maneuvers?
+
+   *(2-4 sentences)*
+
+.. dropdown:: Answer Guidelines
+   :class-container: sd-border-success
+
+   *Key points to include:*
+
+   - A single point of failure is any component whose failure causes the
+     entire system to fail. AV design avoids this through redundancy.
+   - Degraded mode operation means continuing with reduced capability
+     when a sensor fails (e.g., RADAR-only ACC at lower speed).
+   - An MRC (Minimal Risk Condition) maneuver is a pre-planned safe
+     response when the system can no longer operate safely (e.g., safely
+     pulling over and stopping).
+   - Continuous self-diagnostics detect failures and trigger the
+     appropriate response.

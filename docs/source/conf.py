@@ -68,6 +68,7 @@ html_theme_options = {
     # Light/dark mode toggle
     "navbar_end": ["theme-switcher", "navbar-icon-links"],
     # Navigation
+    "header_links_before_dropdown": 7,
     "navigation_depth": 3,
     "show_nav_level": 1,
     "show_toc_level": 1,

@@ -1,11 +1,17 @@
 ====================================================
-L2: Python Fundamentals — Part I
+L2: Sensor Technologies & Calibration
 ====================================================
 
 Overview
 --------
 
-This lecture covers the building blocks of Python programming: organizing code into packages and modules, working with operators and Boolean logic, manipulating strings with indexing and slicing, and writing conditional logic with ``if``/``elif``/``else``. Along the way, you will learn Python's indentation rules, numeric type details, and string formatting with f-strings.
+This lecture provides a deep dive into the sensor technologies that enable
+autonomous driving. You will learn about the operating principles, strengths,
+and limitations of cameras, LiDAR, RADAR, IMU, and GNSS. The lecture covers
+the complementarity principle -- why no single sensor is sufficient -- and
+introduces sensor calibration (intrinsic and extrinsic) as a prerequisite for
+multi-sensor fusion. System-level design considerations including sensor
+placement, coverage, and failure mode analysis are also discussed.
 
 
 Learning Objectives
@@ -13,11 +19,17 @@ Learning Objectives
 
 By the end of this lecture, you will be able to:
 
-- Distinguish between packages and modules and use different import strategies.
-- Apply arithmetic, relational, logical, membership, and identity operators.
-- Use the Boolean type and truth-testing rules for control flow.
-- Manipulate strings using indexing, slicing, methods, and f-strings.
-- Write conditional logic with ``if``/``elif``/``else`` statements.
+- Identify and compare the five core sensor technologies used in autonomous
+  driving (Camera, LiDAR, RADAR, IMU, GNSS).
+- Explain the complementarity principle and why multi-sensor systems are
+  essential.
+- Describe the operating principles of each sensor: image formation, time-of-
+  flight, Doppler effect, inertial measurement, and satellite positioning.
+- List the key technical specifications and performance limitations of each
+  sensor.
+- Explain intrinsic and extrinsic calibration and why they matter for fusion.
+- Analyze system-level design trade-offs: sensor placement, coverage
+  requirements, and failure mode analysis.
 
 
 Contents
@@ -28,20 +40,20 @@ Contents
    :titlesonly:
 
    l2_lecture
-   l2_exercises
    l2_quiz
    l2_references
+
 
 Next Steps
 ----------
 
-- In the next lecture, we will continue with Python Fundamentals — Part II:
+- In the next lecture, we will cover **Perception I: Object Detection
+  (YOLO to DETR)**:
 
-  - Lists and list methods.
-  - Tuples and unpacking.
-  - Dictionaries and sets.
-  - Loops (``for``, ``while``).
-  - List comprehensions.
+  - CNN fundamentals and the deep learning revolution in perception.
+  - YOLO architecture: backbone, neck, head.
+  - Transformer-based detection with DETR.
+  - Head-to-head comparison on CARLA data.
 
-- Review and experiment with all code snippets and exercises from today's lecture.
-- Start reading `Python Official Tutorial <https://docs.python.org/3/tutorial/>`_ — Sections 3, 4, and 5.
+- Complete the CARLA sensor data collection exercise from this lecture.
+- Read the `CARLA Sensor Reference <https://carla.readthedocs.io/en/0.9.16/ref_sensors/>`_.

@@ -1,238 +1,48 @@
+====================================================
 References
-==========
+====================================================
 
 
-.. dropdown:: 🏛️ Lecture 2
-    :class-container: sd-border-secondary
-    :open:
+.. dropdown:: Sensor Technologies
+   :class-container: sd-border-secondary
+   :open:
 
-    .. card::
-        :class-card: sd-border-secondary
+   - Luo, R. C. & Kay, M. G. (1989). *Multisensor Integration and Fusion in Intelligent Systems.* IEEE Transactions on Systems, Man, and Cybernetics, 19(5).
+   - `CARLA Sensor Reference (0.9.16) <https://carla.readthedocs.io/en/0.9.16/ref_sensors/>`_
+   - `Velodyne LiDAR <https://velodynelidar.com/>`_
+   - `Luminar Technologies <https://www.luminartech.com/>`_
+   - `Continental ARS540 Imaging Radar <https://www.continental-automotive.com/>`_
 
-        **ENPM605 — L2: Python Fundamentals — Part I**
 
-        Covers packages and modules, indentation, Boolean type and truthiness, operators (arithmetic, relational, logical, membership, identity), numeric types and interning, strings (formatting, methods, indexing, slicing), and control flow.
+.. dropdown:: Calibration
+   :class-container: sd-border-secondary
 
+   - `OpenCV Camera Calibration Tutorial <https://docs.opencv.org/4.x/dc/dbb/tutorial_py_calibration.html>`_
+   - `Kalibr: Visual-Inertial Calibration <https://github.com/ethz-asl/kalibr>`_
+   - `Autoware Calibration Tools <https://autowarefoundation.github.io/autoware-documentation/main/>`_
+   - Zhang, Z. (2000). *A Flexible New Technique for Camera Calibration.* IEEE TPAMI, 22(11).
 
-.. dropdown:: 🐍 Python Language References
-    :class-container: sd-border-secondary
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+.. dropdown:: Depth Estimation
+   :class-container: sd-border-secondary
 
-        .. grid-item-card:: 📦 Modules and Packages
-            :link: https://docs.python.org/3/tutorial/modules.html
-            :class-card: sd-border-secondary
+   - Scharstein, D. & Szeliski, R. (2002). *A Taxonomy and Evaluation of Dense Two-Frame Stereo Correspondence Algorithms.* IJCV, 47(1-3).
+   - Eigen, D. et al. (2014). *Depth Map Prediction from a Single Image Using a Multi-Scale Deep Network.* NeurIPS.
+   - Godard, C. et al. (2019). *Digging Into Self-Supervised Monocular Depth Estimation.* ICCV.
 
-            **Tutorial — Section 6**
 
-            Modules, packages, ``__init__.py``, and ``sys.path``.
+.. dropdown:: Industry References
+   :class-container: sd-border-secondary
 
-            +++
+   - `Waymo Safety Report <https://waymo.com/safety/>`_
+   - `Tesla Autopilot & FSD <https://www.tesla.com/autopilot>`_
+   - `Mobileye Technology <https://www.mobileye.com/>`_
+   - `Aurora Innovation <https://aurora.tech/>`_
 
-            - Import statements
-            - Package structure
-            - Module search path
 
-        .. grid-item-card:: 📦 The Import System
-            :link: https://docs.python.org/3/reference/import.html
-            :class-card: sd-border-secondary
+.. dropdown:: Textbooks
+   :class-container: sd-border-secondary
 
-            **Language Reference — Import**
-
-            Complete reference for Python's import machinery.
-
-            +++
-
-            - Module search path
-            - Finders and loaders
-            - Namespace packages
-
-        .. grid-item-card:: 📘 Expressions and Operators
-            :link: https://docs.python.org/3/reference/expressions.html
-            :class-card: sd-border-secondary
-
-            **Language Reference — Expressions**
-
-            Complete reference for Python expressions and operator precedence.
-
-            +++
-
-            - Arithmetic operators
-            - Comparison chaining
-            - Boolean operations
-
-        .. grid-item-card:: ✅ Truth Value Testing
-            :link: https://docs.python.org/3/library/stdtypes.html#truth-value-testing
-            :class-card: sd-border-secondary
-
-            **Standard Library — Truth Value Testing**
-
-            Rules for which objects are truthy and falsy.
-
-            +++
-
-            - Falsy values
-            - ``bool()`` function
-            - Custom truthiness
-
-        .. grid-item-card:: 🔤 String Methods
-            :link: https://docs.python.org/3/library/stdtypes.html#string-methods
-            :class-card: sd-border-secondary
-
-            **Standard Library — str**
-
-            Complete reference for all built-in string methods.
-
-            +++
-
-            - ``.split()``, ``.join()``, ``.strip()``
-            - ``.find()``, ``.replace()``, ``.count()``
-            - ``.upper()``, ``.lower()``, ``.startswith()``
-
-        .. grid-item-card:: 📐 Format Specification
-            :link: https://docs.python.org/3/library/string.html#formatspec
-            :class-card: sd-border-secondary
-
-            **Format Specification Mini-Language**
-
-            Detailed rules for f-string format specifiers.
-
-            +++
-
-            - Alignment (``<``, ``>``, ``^``)
-            - Precision (``.2f``)
-            - Fill and width
-
-        .. grid-item-card:: 🔢 Numeric Types
-            :link: https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex
-            :class-card: sd-border-secondary
-
-            **Standard Library — Numeric Types**
-
-            Reference for ``int``, ``float``, and ``complex`` operations.
-
-            +++
-
-            - Unlimited precision integers
-            - IEEE 754 floating-point
-            - ``math.isclose()``
-
-        .. grid-item-card:: 🔢 Floating-Point Arithmetic
-            :link: https://docs.python.org/3/tutorial/floatingpoint.html
-            :class-card: sd-border-secondary
-
-            **Tutorial — Floating-Point Issues**
-
-            Why ``0.1 + 0.2 != 0.3`` and how to handle it.
-
-            +++
-
-            - IEEE 754 representation
-            - Precision limitations
-            - ``decimal`` module
-
-        .. grid-item-card:: 🔀 Control Flow
-            :link: https://docs.python.org/3/tutorial/controlflow.html
-            :class-card: sd-border-secondary
-
-            **Tutorial — Section 4**
-
-            ``if`` statements, ``for`` and ``while`` loops, and more.
-
-            +++
-
-            - ``if``/``elif``/``else``
-            - Ternary expressions
-            - ``match``/``case`` (3.10+)
-
-
-.. dropdown:: 📏 Style and Best Practices
-    :class-container: sd-border-secondary
-
-    .. grid:: 1 1 2 2
-        :gutter: 2
-
-        .. grid-item-card:: 📏 PEP 8 — Style Guide
-            :link: https://peps.python.org/pep-0008/
-            :class-card: sd-border-secondary
-
-            **Coding Conventions**
-
-            Indentation (4 spaces), naming conventions, import ordering, and line length.
-
-            +++
-
-            - Indentation rules
-            - Import grouping
-            - Whitespace conventions
-
-        .. grid-item-card:: 📝 PEP 328 — Imports
-            :link: https://peps.python.org/pep-0328/
-            :class-card: sd-border-secondary
-
-            **Multi-Line and Absolute/Relative Imports**
-
-            The PEP that formalized Python's import system conventions.
-
-            +++
-
-            - Absolute imports
-            - Relative imports
-            - Multi-line imports
-
-        .. grid-item-card:: 📝 PEP 498 — f-strings
-            :link: https://peps.python.org/pep-0498/
-            :class-card: sd-border-secondary
-
-            **Literal String Interpolation**
-
-            The PEP that introduced formatted string literals in Python 3.6.
-
-            +++
-
-            - Rationale and syntax
-            - Expression evaluation
-            - Format specifiers
-
-
-.. dropdown:: 📚 Recommended Reading
-    :class-container: sd-border-secondary
-
-    .. grid:: 1 1 2 2
-        :gutter: 2
-
-        .. grid-item-card:: 📘 Python Official Tutorial
-            :link: https://docs.python.org/3/tutorial/
-            :class-card: sd-border-secondary
-
-            **Getting Started**
-
-            Sections 3 (informal introduction), 4 (control flow), and 5 (data structures).
-
-            +++
-
-            - Variables and types
-            - Control flow
-            - Data structures
-
-        .. grid-item-card:: Mark Lutz
-            :class-card: sd-border-secondary
-
-            **Learning Python (5th Edition)**
-
-            Chapters 4–7 cover core types: numbers, strings, lists, and dictionaries.
-
-        .. grid-item-card:: Luciano Ramalho
-            :class-card: sd-border-secondary
-
-            **Fluent Python (2nd Edition)**
-
-            Chapters 2 (sequences) and 4 (Unicode and bytes) provide advanced string and sequence coverage.
-
-        .. grid-item-card:: Brett Slatkin
-            :class-card: sd-border-secondary
-
-            **Effective Python (2nd Edition)**
-
-            Items 1–10 cover Pythonic thinking including f-strings, slicing, and truthiness patterns.
+   - Thrun, S., Burgard, W., & Fox, D. (2005). *Probabilistic Robotics.* MIT Press.
+   - Hartley, R. & Zisserman, A. (2004). *Multiple View Geometry in Computer Vision.* Cambridge University Press.
+   - Siciliano, B. & Khatib, O. (Eds.) (2016). *Springer Handbook of Robotics.* Springer.

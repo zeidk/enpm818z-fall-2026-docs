@@ -72,3 +72,5 @@ Contents
    :titlesonly:
 
    lecture1/l1_index
+   lecture2/l2_index
+   lecture3/l3_index
