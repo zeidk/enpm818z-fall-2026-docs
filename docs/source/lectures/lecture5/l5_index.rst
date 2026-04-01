@@ -1,52 +1,53 @@
-====================================================
-L5: Advanced Functions
-====================================================
+========================================================================
+L5: Perception III -- Segmentation, Tracking & Temporal Reasoning
+========================================================================
 
 Overview
 --------
 
-This lecture explores advanced function concepts in Python, building on the fundamentals from L4. You will learn about programming paradigms (procedural, functional, object-oriented), first-class functions, lambda expressions, closures, callables, decorators, and partial functions. These concepts are essential for writing clean, reusable, and composable Python code and form the foundation for object-oriented programming in later lectures.
-
+This lecture completes the perception pipeline by covering two essential tasks
+that go beyond object detection: **segmentation** (assigning semantic meaning
+to every pixel or instance in the scene) and **multi-object tracking** (linking
+detections across frames to maintain consistent object identities over time).
+You will also study how temporal context -- reasoning over sequences of frames
+rather than single images -- significantly improves perception quality and
+enables velocity estimation for downstream prediction.
 
 Learning Objectives
 -------------------
 
 By the end of this lecture, you will be able to:
 
-- Distinguish imperative, functional, and object-oriented programming paradigms.
-- Use functions as first-class objects: assign, pass, and return them.
-- Write anonymous functions with ``lambda`` and understand their limitations.
-- Explain closures and how inner functions capture enclosing state.
-- Make objects callable with the ``__call__`` dunder method.
-- Write and apply decorators to extend function behavior.
-- Stack multiple decorators and preserve function metadata with ``functools.wraps``.
-- Create partial functions using ``functools.partial``.
-- Use built-in higher-order functions: ``map``, ``filter``, and ``sorted`` with ``key``.
-
-
-Contents
---------
+- Distinguish semantic, instance, and panoptic segmentation and explain when
+  each is appropriate.
+- Describe the U-Net and DeepLabv3+ architectures for semantic segmentation.
+- Explain driveable surface and lane detection as specialized segmentation tasks.
+- Formulate the multi-object tracking (MOT) problem and the tracking-by-detection
+  paradigm.
+- Describe the SORT, DeepSORT, and ByteTrack algorithms and their key design
+  choices.
+- Evaluate tracking performance using MOTA, MOTP, and IDF1 metrics.
+- Explain how temporal reasoning -- using sequences of frames -- improves
+  perception beyond single-frame methods.
+- Describe how segmentation and tracking integrate with the L3-L4 perception
+  pipeline.
 
 .. toctree::
+   :hidden:
    :maxdepth: 2
    :titlesonly:
 
    l5_lecture
-   l5_exercises
    l5_quiz
    l5_references
 
 Next Steps
 ----------
 
-- In the next lecture, we will cover Object-Oriented Programming I:
-
-  - Classes and objects
-  - Attributes and methods
-  - Constructors and ``__init__``
-  - Encapsulation and properties
-  - Dunder methods
-
-- Review and experiment with all code snippets and exercises from today's lecture.
-- Practice writing decorators and closures.
-- Read `Real Python: Python Classes <https://realpython.com/python-classes/>`_.
+- The next lecture covers **Multi-Sensor Fusion**: Kalman filter theory (KF,
+  EKF, UKF), particle filters, data association, and modern deep learning
+  fusion approaches combining camera, LiDAR, and RADAR.
+- Review the ByteTrack paper: Zhang et al. (2022) for an efficient, highly
+  accurate modern tracker used in production systems.
+- Explore the MOTChallenge benchmark at `https://motchallenge.net
+  <https://motchallenge.net>`_ to understand evaluation protocols.

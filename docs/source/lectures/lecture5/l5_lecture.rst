@@ -3,1021 +3,482 @@ Lecture
 ====================================================
 
 
+Semantic Segmentation
+----------------------
 
-Programming Paradigms
-====================================================
+Object detection from L3 gives us **where objects are** (bounding boxes) but
+not **what every pixel is**. Semantic segmentation provides a dense,
+pixel-level classification that is essential for understanding driveable space,
+lane structure, and arbitrary obstacles.
 
-Different ways to organize and think about code.
+.. admonition:: Definition
+   :class: note
 
-Refer to ``paradigms_demo.py`` to follow along with the examples below.
+   **Semantic segmentation** assigns a class label to every pixel in an image.
+   Unlike detection, there is no "instance" concept -- all pixels belonging to
+   the same class receive the same label, regardless of how many separate
+   objects there are.
 
+The Segmentation Pipeline
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. dropdown:: What Is a Programming Paradigm?
-   :open:
+.. list-table::
+   :widths: 20 80
+   :class: compact-table
 
-   A **programming paradigm** is a fundamental style or approach to organizing and structuring code. It defines how you think about problems and express solutions.
+   * - **Input**
+     - RGB image :math:`I \in \mathbb{R}^{H \times W \times 3}`
+   * - **Output**
+     - Label map :math:`S \in \{1, \ldots, K\}^{H \times W}`, one label per pixel
+   * - **Loss**
+     - Pixel-wise cross-entropy (or weighted variant for class imbalance)
+   * - **Metric**
+     - Mean IoU (mIoU) across all classes
 
-   **Three Major Paradigms**
 
-   - **Procedural** -- You tell the computer *how* to do something step by step. Code is organized around statements that change program state.
-   - **Object-Oriented (OOP)** -- You organize code around objects that bundle data (attributes) and behavior (methods). Emphasis on encapsulation, inheritance, and polymorphism.
-   - **Functional** -- You express computation as the evaluation of mathematical functions. Emphasis on immutability, pure functions, and avoiding side effects.
+U-Net Architecture
+~~~~~~~~~~~~~~~~~~~
 
-   .. note::
+U-Net (Ronneberger et al., 2015), originally designed for medical imaging, has
+become a standard backbone for segmentation due to its **encoder-decoder
+structure with skip connections**.
 
-      Python is a **multi-paradigm** language. You can mix procedural, object-oriented, and functional styles in the same program.
+.. code-block:: text
 
+   Encoder (Contracting Path)        Decoder (Expanding Path)
+   ─────────────────────────         ──────────────────────────
+   Input (H x W x 3)                 Logits (H x W x K)
+       │ Conv + Pool                      │ Up-Conv + Conv
+   H/2 x W/2 x 64          ──skip──   H/2 x W/2 x 64
+       │ Conv + Pool                      │ Up-Conv + Conv
+   H/4 x W/4 x 128         ──skip──   H/4 x W/4 x 128
+       │ Conv + Pool                      │ Up-Conv + Conv
+   H/8 x W/8 x 256         ──skip──   H/8 x W/8 x 256
+       │ Conv + Pool                      │ Up-Conv + Conv
+   H/16 x W/16 x 512       ──skip──   H/16 x W/16 x 512
+       │ Bottleneck (H/32 x W/32 x 1024) │
 
-.. dropdown:: Comparing Approaches
-   :open:
+Key properties:
 
-   **Same Problem, Three Paradigms**
+- **Skip connections** concatenate encoder feature maps with decoder feature
+  maps at the same resolution, preserving fine spatial detail.
+- **No fully connected layers** -- the network is fully convolutional, allowing
+  arbitrary input sizes.
+- **Symmetric structure** enables pixel-precise localization from high-level
+  semantic features.
 
-   Task: Given a list of numbers, compute the sum of all even numbers.
 
-   .. code-block:: python
+DeepLabv3+ Architecture
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-      # Imperative
-      nums = [1, 2, 3, 4, 5, 6]
-      total = 0
-      for n in nums:
-          if n % 2 == 0:
-              total += n
-      print(total)  # 12
+DeepLabv3+ (Chen et al., 2018) uses **atrous (dilated) convolutions** and
+**Atrous Spatial Pyramid Pooling (ASPP)** to capture multi-scale context
+without reducing spatial resolution.
 
-   .. code-block:: python
+.. tab-set::
 
-      # Functional
-      nums = [1, 2, 3, 4, 5, 6]
-      total = sum(filter(
-          lambda x: x % 2 == 0,
-          nums
-      ))
-      print(total)  # 12
+   .. tab-item:: Dilated Convolutions
 
-   .. code-block:: python
+      Standard convolution at stride 2 reduces spatial resolution. Dilated
+      convolutions insert "holes" (zeros) between kernel weights, increasing
+      the **receptive field** without downsampling:
 
-      # Object-Oriented
-      class NumberProcessor:
-          def __init__(self, numbers: list[int]):
-              self._numbers = numbers
+      .. math::
 
-          def sum_even(self) -> int:
-              return sum(n for n in self._numbers if n % 2 == 0)
+         y[i] = \sum_k x[i + r \cdot k] \cdot w[k]
 
-      processor = NumberProcessor([1, 2, 3, 4, 5, 6])
-      print(processor.sum_even())  # 12
+      where :math:`r` is the dilation rate. Rate :math:`r=2` doubles the
+      receptive field with the same number of parameters.
 
+   .. tab-item:: ASPP
 
-.. dropdown:: Key Principles of Functional Programming
-   :open:
+      Atrous Spatial Pyramid Pooling applies parallel dilated convolutions
+      at multiple rates (e.g., 6, 12, 18) and pools at different scales,
+      then concatenates the results. This captures objects at multiple scales
+      in a single forward pass.
 
-   Functional programming is built on a small set of principles that promote predictable, testable, and composable code.
+   .. tab-item:: Encoder-Decoder
 
-   - **Pure Functions** -- A function whose output depends only on its inputs and produces no side effects (no modifying external state, no I/O). Given the same inputs, a pure function always returns the same output.
+      DeepLabv3+ adds a lightweight decoder on top of the ASPP module:
 
-     - Think of a mathematical function like f(x) = x^2 + 1: for any input x, the output is always the same, and computing f(3) = 10 does not change anything else in the world.
+      1. ASPP encoder produces low-resolution features.
+      2. Low-level encoder features (1/4 resolution) are extracted via a
+         1x1 conv.
+      3. Upsampled ASPP features are concatenated with low-level features.
+      4. Two 3x3 convolutions refine boundaries.
+      5. Bilinear upsampling to full resolution.
 
-   - **Immutability** -- Data is not modified after creation. Instead of changing an object, you create a new one.
 
-     - For example, rather than sorting a list in place with ``my_list.sort()``, a functional approach uses ``sorted(my_list)`` to produce a new sorted list while leaving the original unchanged.
+Driveable Surface and Lane Detection
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   - **First-Class Functions** -- Functions can be assigned to variables, passed as arguments, and returned from other functions.
-   - **Higher-Order Functions** -- Functions that take other functions as arguments or return functions as results.
-   - **Avoiding Side Effects** -- Minimize or isolate operations that change state outside the function's scope.
+Two specialized segmentation tasks critical for AV systems:
 
-   **Example: Pure vs. Impure**
+.. grid:: 1 2 2 2
+   :gutter: 3
 
-   .. code-block:: python
+   .. grid-item-card:: Driveable Surface
+      :class-card: sd-border-info
 
-      # Pure function (no side effects, depends only on inputs)
-      def add(a: int, b: int) -> int:
-          return a + b
+      Segment all pixels belonging to navigable road surface. Key challenges:
+      varying lighting, wet roads (reflections), construction zones, unmarked
+      rural roads. Often implemented as a binary segmentation (driveable /
+      not-driveable).
 
+   .. grid-item-card:: Lane Detection
+      :class-card: sd-border-info
 
-      # Impure function (side effect: modifies external state)
-      results = []
+      Detect lane markings as pixel masks or parametric curves. Methods range
+      from simple Hough-transform line detection to deep learning approaches
+      (LaneNet, CLRNet) that predict lane curves with instance-level grouping.
 
-      def add_and_store(a: int, b: int) -> int:
-          result = a + b
-          results.append(result)  # Side effect!
-          return result
+.. admonition:: Tip: BEV Segmentation
+   :class: tip
 
+   Both tasks benefit enormously from the BEV representation (L4). Perspective
+   foreshortening makes lane width and curvature appear non-uniform. In BEV,
+   lanes are uniform-width curves -- simpler to predict and post-process.
 
-Callables
-====================================================
 
-Objects that behave like functions.
+Instance and Panoptic Segmentation
+------------------------------------
 
-Refer to ``callables_demo.py`` to follow along with the examples below.
+.. list-table::
+   :widths: 25 38 37
+   :header-rows: 1
+   :class: compact-table
 
+   * - Task
+     - What it produces
+     - Distinguishes instances?
+   * - Semantic segmentation
+     - Per-pixel class label
+     - No
+   * - Instance segmentation
+     - Per-pixel class + instance ID for "things"
+     - Yes (for countable objects)
+   * - Panoptic segmentation
+     - Per-pixel class label for all pixels; instance IDs for "things"
+     - Yes (unified)
 
-.. dropdown:: What Is a Callable?
-   :open:
+Mask R-CNN
+~~~~~~~~~~~
 
-   A **callable** is any object that can be called using parentheses ``()``. In Python, several types of objects are callable:
+Mask R-CNN (He et al., 2017) extends Faster R-CNN by adding a **mask head** --
+a small fully convolutional network that predicts a binary segmentation mask
+for each detected bounding box:
 
-   - **Functions** defined with ``def``
-   - **Lambda** expressions
-   - **Classes** (calling a class creates an instance)
-   - **Instances** of classes that define the ``__call__`` method
-   - **Built-in functions** like ``len``, ``print``, ``range``
+1. **Region Proposal Network (RPN)** -- proposes candidate bounding boxes.
+2. **RoIAlign** -- extracts aligned feature maps from each proposal.
+3. **Box and class heads** -- predict refined box and class (as in Faster R-CNN).
+4. **Mask head** -- predicts a :math:`28 \times 28` binary mask per class for
+   each proposal, applied in parallel with the box head.
 
-   .. code-block:: python
+.. math::
 
-      def do_nothing():
-          pass
+   \mathcal{L} = \mathcal{L}_{cls} + \mathcal{L}_{box} + \mathcal{L}_{mask}
 
-      print(callable(do_nothing))  # True
-      print(callable(lambda x: x))  # True
-      print(callable(int))  # True (classes are callable)
-      print(callable(42))  # False (integers are not callable)
-      print(callable("hello"))  # False
+Panoptic Segmentation
+~~~~~~~~~~~~~~~~~~~~~~
 
+Panoptic segmentation unifies semantic and instance segmentation:
 
-First-Class Functions
-====================================================
+- **"Things"** (countable objects: cars, pedestrians): assigned instance IDs.
+- **"Stuff"** (amorphous regions: road, sky, vegetation): assigned class label only.
 
-Functions as objects you can assign, pass, and return.
+The **Panoptic Quality (PQ)** metric:
 
-Refer to ``first_class_demo.py`` to follow along with the examples below.
+.. math::
 
+   \text{PQ} = \frac{\sum_{(p,g) \in TP} \text{IoU}(p,g)}
+                {|TP| + \frac{1}{2}|FP| + \frac{1}{2}|FN|}
+              = \underbrace{\frac{|TP|}{|TP| + \frac{1}{2}|FP| + \frac{1}{2}|FN|}}_{\text{SQ-like recognition}}
+                \times
+                \underbrace{\frac{\sum \text{IoU}}{|TP|}}_{\text{SQ segmentation quality}}
 
-.. dropdown:: What Does "First-Class" Mean?
-   :open:
 
-   In Python, functions are **first-class objects**. This means functions can be treated just like any other object (integers, strings, lists). Specifically, functions can be:
+Multi-Object Tracking (MOT)
+-----------------------------
 
-   - **Assigned to variables** -- Store a function reference in a variable name.
-   - **Passed as arguments** -- Hand a function to another function as a parameter.
-   - **Returned from functions** -- Have a function produce another function as output.
-   - **Stored in data structures** -- Put functions in lists, dictionaries, or other containers.
+Detection gives us objects in a single frame. **Multi-Object Tracking (MOT)**
+maintains consistent identities for all objects across a video sequence.
 
-   .. code-block:: python
+Problem Formulation
+~~~~~~~~~~~~~~~~~~~~
 
-      def compute_square(x):
-          return x**2
+Given detections :math:`\mathcal{D}_t = \{d_1, d_2, \ldots\}` at each frame
+:math:`t`, produce **tracks** :math:`\mathcal{T} = \{T_1, T_2, \ldots\}` where
+each track is a sequence of states associated with the same physical object:
 
-      # Assigning a function to a variable
-      f = compute_square  # No parentheses! f is now the function object
-      print(f(5))  # 25
-      print(type(f))  # <class 'function'>
+.. math::
 
-   .. warning::
+   T_i = \{(t, s_t^i) : t \in [t_{start}^i, t_{end}^i]\}
 
-      ``f = compute_square`` assigns the function object. ``f = compute_square()`` calls the function and assigns the return value. These are very different!
+where :math:`s_t^i` is the state (position, velocity, class) of track :math:`i`
+at time :math:`t`.
 
-   .. tip::
+Challenges: occlusion, similar-looking objects, appearance changes, variable
+frame rate, missed detections, false positives from the detector.
 
-      When debugging callbacks or higher-order functions, print the function object itself (not its return value) to verify you are passing the right function. For example, ``print(do_nothing)`` shows ``<function do_nothing at 0x...>``, while ``print(do_nothing())`` calls the function and prints its return value.
 
+SORT: Simple Online and Realtime Tracking
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. dropdown:: Passing Functions as Arguments
-   :open:
+SORT (Bewley et al., 2016) is a minimal, highly efficient tracker built on
+two components:
 
-   **Callbacks and Higher-Order Functions**
+.. tab-set::
 
-   A **higher-order function** is a function that takes another function as an argument or returns one. The function passed in is sometimes called a **callback**.
+   .. tab-item:: Kalman Filter State
 
-   .. code-block:: python
+      Each track maintains a Kalman Filter state:
 
-      def apply_operation(func, a, b):
-          """Apply the given function to a and b."""
-          return func(a, b)
+      .. math::
 
-      def add(x, y):
-          return x + y
+         \mathbf{x} = [u, v, s, r, \dot{u}, \dot{v}, \dot{s}]^T
 
-      def multiply(x, y):
-          return x * y
+      where :math:`(u, v)` is the bounding box center, :math:`s` is scale
+      (area), :math:`r` is aspect ratio (constant), and the dots denote
+      velocities. The state is propagated with a constant-velocity model.
 
-      print(apply_operation(add, 3, 4))  # 7
-      print(apply_operation(multiply, 3, 4))  # 12
+   .. tab-item:: Hungarian Algorithm
 
-   .. note::
+      At each frame, detections and tracks are associated using the **Hungarian
+      algorithm** (optimal bipartite matching) on an IoU cost matrix:
 
-      **Robotics Application**: Callbacks are commonly used in ROS 2 subscriber nodes, where you pass a function that is invoked each time a new message arrives on a topic.
+      .. math::
 
+         C_{ij} = 1 - \text{IoU}(\hat{b}_i, d_j)
 
-.. dropdown:: Returning Functions
-   :open:
+      where :math:`\hat{b}_i` is the predicted bounding box of track :math:`i`
+      and :math:`d_j` is detection :math:`j`. Pairs below a minimum IoU
+      threshold are rejected.
 
-   **Factory Functions**
+   .. tab-item:: Track Management
 
-   A function can create and return a new function. This is the foundation for closures and decorators, which we will cover later in this lecture.
+      - **New track**: created for unmatched detections.
+      - **Confirmed track**: promoted after 3 consecutive matches.
+      - **Dead track**: removed after :math:`T_{lost}` frames without a match.
 
-   .. code-block:: python
+SORT achieves real-time tracking (260 Hz on a standard CPU for 6 tracks)
+but re-assigns IDs after occlusion because it uses no appearance features.
 
-      def make_multiplier(factor):
-          """Return a function that multiplies its input by factor."""
-          def multiply_value(x):
-              return x * factor
-          return multiply_value  # Return the inner function object
 
-      double = make_multiplier(2)
-      triple = make_multiplier(3)
+DeepSORT
+~~~~~~~~~
 
-      print(double(5))  # 10
-      print(triple(5))  # 15
-      print(type(double))  # <class 'function'>
+DeepSORT (Wojke et al., 2017) extends SORT with a **deep appearance
+descriptor** to handle re-identification after occlusion:
 
-   .. note::
+1. A CNN (trained on person re-ID datasets) extracts a 128-dimensional
+   appearance embedding for each detection crop.
+2. Each track maintains a **gallery** of the last 100 appearance embeddings.
+3. The cost matrix combines IoU distance and **cosine appearance distance**:
 
-      **Key Insight**: Each call to ``make_multiplier`` creates a new ``multiply_value`` function with its own ``factor`` value. The inner function "remembers" the value of ``factor`` even after ``make_multiplier`` has returned. This is a closure.
+   .. math::
 
+      C_{ij} = \lambda \cdot d_{appear}(i, j) + (1 - \lambda) \cdot d_{IoU}(i, j)
 
-.. dropdown:: Functions in Data Structures
-   :open:
+4. Tracks are confirmed/tentative/deleted as in SORT.
 
-   **Storing Functions in Collections**
+The appearance matching allows DeepSORT to correctly re-identify an object
+returning from a long occlusion, at the cost of slightly higher compute.
 
-   Since functions are objects, they can be stored in lists, dictionaries, and other data structures. This pattern is useful for dispatch tables and plugin systems.
 
-   .. code-block:: python
+ByteTrack
+~~~~~~~~~~
 
-      def add(a, b):
-          return a + b
+ByteTrack (Zhang et al., 2022) addresses a fundamental issue in tracking:
+SORT and DeepSORT only associate **high-confidence** detections with tracks,
+discarding low-confidence detections as noise.
 
-      def multiply(a, b):
-          return a * b
+ByteTrack's insight: **low-confidence detections often correspond to occluded
+or distant objects** -- exactly the objects most likely to cause ID switches.
 
-      # Dispatch table: map operation names to functions
-      operations = {
-          "add": add,
-          "multiply": multiply,
-      }
+.. admonition:: ByteTrack Algorithm
+   :class: note
 
-      op_name = "multiply"
-      result = operations[op_name](6, 7)
-      print(f"{op_name}(6, 7) = {result}")  # multiply(6, 7) = 42
+   1. Run detector; split detections into high-score (:math:`\tau_{high} = 0.6`)
+      and low-score (:math:`\tau_{low} = 0.1` to :math:`\tau_{high}`).
+   2. **First association**: match high-score detections to all tracks via
+      IoU-based Hungarian matching.
+   3. **Second association**: match low-score detections to **unmatched tracks**
+      from step 2 -- recovering occluded objects.
+   4. Initialize new tracks from unmatched high-score detections only.
 
+ByteTrack achieves state-of-the-art on MOT17 (80.3 MOTA, 77.3 IDF1) at
+30 FPS, with no appearance model required.
 
-.. dropdown:: Built-in Higher-Order Functions: ``map``
-   :open:
 
-   **``map``: Apply a Function to Every Element**
+Tracking Metrics
+~~~~~~~~~~~~~~~~~
 
-   ``map(func, iterable)`` applies ``func`` to each element and returns a lazy iterator. Wrap the result in ``list()`` to see all values.
+.. list-table::
+   :widths: 15 40 45
+   :header-rows: 1
+   :class: compact-table
 
-   .. code-block:: python
+   * - Metric
+     - Formula
+     - Interpretation
+   * - **MOTA**
+     - :math:`1 - \frac{\sum_t (FN_t + FP_t + IDSW_t)}{\sum_t GT_t}`
+     - Overall tracking accuracy; penalizes FN, FP, and ID switches. Range: :math:`(-\infty, 1]`.
+   * - **MOTP**
+     - :math:`\frac{\sum_{i,t} d_t^i}{\sum_t c_t}`
+     - Average localization precision for matched pairs (IoU or distance). Higher = better.
+   * - **IDF1**
+     - :math:`\frac{2 \cdot IDTP}{2 \cdot IDTP + IDFP + IDFN}`
+     - F1 score for correct identity assignments. Emphasizes consistent ID maintenance.
+   * - **HOTA**
+     - Geometric mean of detection and association accuracy
+     - Balances detection quality and track association quality equally.
 
-      def compute_square(x):
-          return x**2
+.. admonition:: Metric Intuition
+   :class: tip
 
-      nums = [1, 2, 3, 4, 5]
-      squared = list(map(compute_square, nums))
-      print(squared)  # [1, 4, 9, 16, 25]
+   - MOTA is dominated by detection quality (FP/FN). A perfect detector with
+     random IDs can still score high MOTA.
+   - IDF1 better captures ID consistency -- important for downstream tasks
+     like trajectory prediction.
+   - HOTA (newer metric) explicitly balances both.
 
-      # Also works with built-in functions
-      words = ["hello", "world"]
-      upper_words = list(map(str.upper, words))
-      print(upper_words)  # ['HELLO', 'WORLD']
 
-   .. note::
+Temporal Reasoning
+-------------------
 
-      ``map`` returns a lazy iterator, not a list. Wrap it in ``list()`` to materialize the results. We will see a more concise way to write the function argument when we cover **lambda functions** later in this lecture.
+Single-frame perception has fundamental limits: a fast-moving car is a static
+snapshot, an occluded pedestrian is invisible, noise has no temporal structure.
+**Temporal reasoning** uses multiple frames to overcome these limits.
 
+Why Temporal Context Matters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. dropdown:: Built-in Higher-Order Functions: ``filter``
-   :open:
+.. grid:: 1 2 2 3
+   :gutter: 3
 
-   **``filter``: Keep Elements That Satisfy a Condition**
+   .. grid-item-card:: Velocity Estimation
+      :class-card: sd-border-success
 
-   ``filter(func, iterable)`` keeps only the elements for which ``func`` returns ``True``.
+      Observing the same object across consecutive frames provides direct
+      velocity estimates via optical flow or Kalman filter -- impossible from
+      a single frame without additional assumptions.
 
-   .. code-block:: python
+   .. grid-item-card:: Occlusion Handling
+      :class-card: sd-border-success
 
-      def check_even(x):
-          return x % 2 == 0
+      An object occluded in frame :math:`t` was visible in frame :math:`t-1`.
+      Temporal models can propagate its estimated state through occlusion gaps.
 
-      nums = [1, 2, 3, 4, 5, 6]
-      evens = list(filter(check_even, nums))
-      print(evens)  # [2, 4, 6]
+   .. grid-item-card:: Noise Reduction
+      :class-card: sd-border-success
 
-      def check_positive(x):
-          return x > 0
+      Random detection noise is uncorrelated across frames. Temporal smoothing
+      (Kalman filter, temporal attention) averages out noise while preserving
+      true object motion.
 
-      readings = [12.5, -3.1, 8.0, -0.5, 15.2]
-      valid = list(filter(check_positive, readings))
-      print(valid)  # [12.5, 8.0, 15.2]
+Methods for Temporal Perception
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   .. note::
+.. list-table::
+   :widths: 25 75
+   :header-rows: 1
+   :class: compact-table
 
-      Like ``map``, ``filter`` also returns a lazy iterator. If ``func`` is ``None``, ``filter`` removes all falsy values (``0``, ``""``, ``None``, etc.).
+   * - Method
+     - Mechanism
+   * - **Recurrent Networks (LSTM/GRU)**
+     - Maintain a hidden state that accumulates frame history. Used in
+       early video object detection models.
+   * - **3D Convolutions**
+     - Apply convolutions along both spatial and temporal dimensions
+       simultaneously (C3D, SlowFast, Video Swin).
+   * - **Temporal BEV Attention**
+     - BEVFormer-style: warp previous BEV frame to current ego pose, then
+       cross-attend with current queries (most practical for AV systems).
+   * - **Optical Flow**
+     - Estimate dense pixel motion between frames; used to warp features
+       or as an explicit velocity prior.
 
+Tracking-by-Detection Paradigm
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. dropdown:: Built-in Higher-Order Functions: ``sorted`` with ``key``
-   :open:
+The dominant MOT paradigm in autonomous driving:
 
-   **``sorted``: Sort by a Custom Criterion**
+.. code-block:: text
 
-   The ``key`` parameter of ``sorted`` accepts a function that extracts a comparison value from each element.
+   Frame t:
+   ┌──────────────┐     ┌──────────────────┐     ┌────────────────────┐
+   │  Detector    │────>│  State Predictor │────>│  Data Association  │
+   │  (YOLO,      │     │  (Kalman Filter) │     │  (Hungarian Algo / │
+   │   DETR, etc) │     │  Predict track   │     │   Appearance dist) │
+   └──────────────┘     │  positions to t  │     └────────┬───────────┘
+                        └──────────────────┘              │
+                                                   ┌──────▼──────────┐
+                                                   │  Track Update   │
+                                                   │  + Management   │
+                                                   │  (new/dead)     │
+                                                   └─────────────────┘
 
-   .. code-block:: python
+The detector is completely independent of the tracker. This means improving
+either component independently improves overall tracking.
 
-      # Sort strings by length
-      words = ["banana", "apple", "cherry", "date"]
-      by_length = sorted(words, key=len)
-      print(by_length)  # ['date', 'apple', 'banana', 'cherry']
 
-      # Sort tuples by second element using a named function
-      def extract_score(pair):
-          return pair[1]
+Integration with the L3-L4 Pipeline
+-------------------------------------
 
-      students = [("Alice", 88), ("Bob", 95), ("Charlie", 72)]
-      by_score = sorted(students, key=extract_score)
-      print(by_score)  # [('Charlie', 72), ('Alice', 88), ('Bob', 95)]
+The full perception pipeline for autonomous driving:
 
-      # Reverse order
-      by_score_desc = sorted(students, key=extract_score, reverse=True)
-      print(by_score_desc)  # [('Bob', 95), ('Alice', 88), ('Charlie', 72)]
+.. list-table::
+   :widths: 15 85
+   :class: compact-table
 
+   * - **L3**
+     - Raw sensor inputs → 3D object detection (LiDAR PointPillars/VoxelNet,
+       camera DETR/YOLO) → 3D bounding boxes with class and confidence.
+   * - **L4**
+     - Multi-camera images → BEV feature construction (LSS, BEVFormer) →
+       BEV detection heads → 3D boxes or occupancy voxels in ego frame.
+   * - **L5 (segmentation)**
+     - Camera images → semantic/panoptic segmentation → driveable surface mask,
+       lane lines, free space boundaries. BEV projection for planning.
+   * - **L5 (tracking)**
+     - 3D bounding boxes from L3/L4 → Kalman filter state prediction →
+       Hungarian / ByteTrack association → confirmed tracks with IDs and
+       velocity estimates.
+   * - **Output**
+     - Per-object tracks with state history: position, velocity, orientation,
+       class, ID. Input to prediction and planning modules.
 
-.. dropdown:: List Comprehensions vs. ``map``/``filter``
-   :open:
+.. admonition:: Real-World Performance Trade-offs
+   :class: warning
 
-   List comprehensions are often more readable than ``map`` and ``filter``, especially for simple transformations.
-
-   .. code-block:: python
-
-      nums = [1, 2, 3, 4, 5]
-
-      # Using map + filter
-      result_1 = list(map(lambda x: x ** 2, filter(lambda x: x % 2 == 0, nums)))
-      print(result_1)  # [4, 16]
-
-      # Using list comprehension (preferred)
-      result_2 = [x ** 2 for x in nums if x % 2 == 0]
-      print(result_2)  # [4, 16]
-
-   .. note::
-
-      **Guideline**: Prefer list comprehensions when the transformation is simple and the ``lambda`` would be short. Use ``map``/``filter`` when you already have a named function to pass.
-
-
-Lambda Functions
-====================================================
-
-Small, anonymous, single-expression functions.
-
-Refer to ``lambda_demo.py`` to follow along with the examples below.
-
-
-.. dropdown:: Definition and Syntax
-   :open:
-
-   **What Is a Lambda?**
-
-   A **lambda** is a small anonymous function defined with the ``lambda`` keyword. It can take any number of parameters but contains only a **single expression** (no statements, no multi-line logic).
-
-   .. note::
-
-      **Syntax**: ``lambda parameters: expression``
-
-   .. code-block:: python
-
-      # Regular function
-      def add(a, b):
-          return a + b
-
-      # Equivalent lambda
-      add_lambda = lambda a, b: a + b
-
-      print(add(3, 4))  # 7
-      print(add_lambda(3, 4))  # 7
-
-   .. warning::
-
-      Assigning a lambda to a variable (like ``add_lambda = lambda ...``) is discouraged by PEP 8. If you need a named function, use ``def``. Lambdas are intended for short, inline use.
-
-
-.. dropdown:: Common Use Cases: Inline Sorting Keys
-   :open:
-
-   Lambdas are most commonly used as short, throwaway functions for arguments like ``key`` in ``sorted``.
-
-   .. code-block:: python
-
-      # Sort a list of tuples by the second element
-      pairs = [(1, "banana"), (3, "apple"), (2, "cherry")]
-      sorted_pairs = sorted(pairs, key=lambda pair: pair[1])
-      print(sorted_pairs)
-      # [(3, 'apple'), (1, 'banana'), (2, 'cherry')]
-
-      # Sort robots by speed (descending)
-      robots = [
-          {"name": "TurtleBot", "speed": 0.26},
-          {"name": "Spot", "speed": 1.6},
-          {"name": "Atlas", "speed": 2.5},
-      ]
-      fastest_first = sorted(robots, key=lambda r: r["speed"], reverse=True)
-      for r in fastest_first:
-          print(f"  {r['name']}: {r['speed']} m/s")
-
-
-.. dropdown:: Common Use Cases: ``map`` and ``filter``
-   :open:
-
-   .. code-block:: python
-
-      # Convert sensor readings from Celsius to Fahrenheit
-      celsius = [0.0, 20.0, 37.5, 100.0]
-      fahrenheit = list(map(lambda c: c * 9 / 5 + 32, celsius))
-      print(fahrenheit)  # [32.0, 68.0, 99.5, 212.0]
-
-      # Filter out negative sensor readings
-      readings = [12.5, -3.1, 8.0, -0.5, 15.2]
-      valid = list(filter(lambda x: x >= 0, readings))
-      print(valid)  # [12.5, 8.0, 15.2]
-
-   **Lambda with Default Arguments**
-
-   .. code-block:: python
-
-      # Lambda with a default parameter
-      compute_power = lambda base, exp=2: base**exp
-      print(compute_power(3))  # 9
-      print(compute_power(3, 3))  # 27
-
-
-.. dropdown:: Limitations
-   :open:
-
-   **What Lambdas Cannot Do**
-
-   Lambdas are restricted to a single expression. They cannot contain:
-
-   - **Statements** -- No ``if``/``else`` blocks (but conditional *expressions* are allowed), no ``for``/``while`` loops, no ``try``/``except``.
-   - **Assignments** -- No ``x = ...`` inside a lambda.
-   - **Multiple expressions** -- Only one expression is evaluated and returned.
-   - **Docstrings** -- Lambdas cannot have documentation strings.
-   - **Type hints** -- Lambda parameters cannot be annotated.
-
-   .. code-block:: python
-
-      # Conditional expression in a lambda (valid)
-      classify = lambda x: "positive" if x > 0 else "non-positive"
-      print(classify(5))  # "positive"
-      print(classify(-3))  # "non-positive"
-
-      # Multi-line logic is NOT possible in a lambda
-      # Use a regular function instead
-
-   .. note::
-
-      **Rule of Thumb**: If a lambda is hard to read on one line, use a ``def`` function instead.
-
-
-Closures
-====================================================
-
-Functions that remember their enclosing scope.
-
-Refer to ``closures_demo.py`` to follow along with the examples below.
-
-
-.. dropdown:: What Is a Closure?
-   :open:
-
-   A **closure** is a function that retains access to variables from its enclosing scope, even after the enclosing function has finished executing. Three conditions must be met:
-
-   - There must be a **nested function** (a function defined inside another function).
-   - The nested function must **reference a variable** from the enclosing function's scope (a "free variable").
-   - The enclosing function must **return** the nested function.
-
-   .. code-block:: python
-
-      def make_greeter(greeting):
-          """Return a function that greets with the given greeting."""
-          def greet(name):
-              return f"{greeting}, {name}!"
-          return greet
-
-      hello = make_greeter("Hello")
-      howdy = make_greeter("Howdy")
-
-      print(hello("Alice"))  # Hello, Alice!
-      print(howdy("Bob"))  # Howdy, Bob!
-
-
-.. dropdown:: Practical Example: Logger Factory
-   :open:
-
-   **Configurable Logger**
-
-   Closures are useful for creating pre-configured utility functions.
-
-   .. code-block:: python
-
-      def make_logger(prefix: str):
-          """Return a logging function with a fixed prefix."""
-          def log(message: str) -> None:
-              print(f"[{prefix}] {message}")
-          return log
-
-      info = make_logger("INFO")
-      error = make_logger("ERROR")
-      debug = make_logger("DEBUG")
-
-      info("System started")  # [INFO] System started
-      error("Sensor timeout")  # [ERROR] Sensor timeout
-      debug("x = 42")  # [DEBUG] x = 42
-
-
-.. dropdown:: Stateful Closures
-   :open:
-
-   Closures can maintain mutable state across calls without using global variables or classes. Use ``nonlocal`` to modify the captured variable.
-
-   .. code-block:: python
-
-      def make_counter(start=0):
-          """Return a counter function that increments on each call."""
-          count = start
-
-          def increment():
-              nonlocal count
-              count += 1
-              return count
-          return increment
-
-      counter_a = make_counter()
-      print(counter_a())  # 1
-      print(counter_a())  # 2
-      print(counter_a())  # 3
-
-      counter_b = make_counter(10)
-      print(counter_b())  # 11
-
-   .. note::
-
-      Each call to ``make_counter`` creates an independent closure with its own ``count`` variable. The two counters do not share state.
-
-
-.. dropdown:: How Closures Capture State
-   :open:
-
-   Understanding the mechanism behind closures helps explain why they work even after the enclosing function returns.
-
-   **Step 1: Python Inserts a Cell Object**
-
-   During ``make_counter(start=0)``, Python sees that the inner function ``increment()`` references ``count`` from the enclosing scope. Instead of letting ``count`` point directly to the integer ``0``, Python inserts a **cell object** between them. This indirection exists so that both the enclosing scope and the inner function can share the same variable.
-
-   **Step 2: ``make_counter`` Returns the Inner Function**
-
-   When ``make_counter`` executes ``return increment``, Python attaches the cell object to the function's ``__closure__`` tuple. Now two references point to the same cell: the local variable ``count`` (from the still-active scope) and ``counter_a.__closure__``.
-
-   **Step 3: Scope Is Discarded, Cell Survives**
-
-   After ``make_counter`` returns, its local scope and the ``count`` variable are discarded. However, the cell object is **not** garbage collected because ``counter_a.__closure__`` still references it, and the ``int(0)`` stays alive because the cell's ``cell_contents`` still references it.
-
-   **Step 4: Each Call Mutates the Cell**
-
-   Each call to ``counter_a()`` follows the same steps: read ``cell_contents``, compute the increment, write the new value back, and return. The ``nonlocal count`` declaration tells Python to modify the cell's contents in place rather than creating a new local variable.
-
-
-Decorators
-====================================================
-
-Wrapping functions to extend their behavior without modification.
-
-Refer to ``decorators_demo.py`` to follow along with the examples below.
-
-
-.. dropdown:: What Is a Decorator?
-   :open:
-
-   A **decorator** is a function that takes another function as input, adds some functionality, and returns a new function. Decorators allow you to extend or modify the behavior of functions without changing their source code.
-
-   **The Manual Way (Without ``@`` Syntax)**
-
-   .. code-block:: python
-
-      def trace_calls(func):
-          def wrapper():
-              print("Before the function call")
-              func()
-              print("After the function call")
-          return wrapper
-
-      def say_hello():
-          print("Hello!")
-
-      # Manually applying the decorator
-      say_hello = trace_calls(say_hello)
-      say_hello()
-      # Before the function call
-      # Hello!
-      # After the function call
-
-
-.. dropdown:: The ``@`` Syntax
-   :open:
-
-   **Syntactic Sugar**
-
-   The ``@decorator`` syntax is shorthand for applying a decorator. It is placed directly above the function definition.
-
-   .. code-block:: python
-
-      def trace_calls(func):
-          def wrapper():
-              print("Before the function call")
-              func()
-              print("After the function call")
-          return wrapper
-
-      @trace_calls
-      def say_hello():
-          print("Hello!")
-
-      # This is equivalent to: say_hello = trace_calls(say_hello)
-      say_hello()
-      # Before the function call
-      # Hello!
-      # After the function call
-
-
-.. dropdown:: Handling Arguments
-   :open:
-
-   Our ``trace_calls`` from the previous section defines ``wrapper()`` with no parameters. What happens if we try to decorate a function that takes arguments?
-
-   .. code-block:: python
-
-      @trace_calls
-      def greet(name):
-          print(f"Hello, {name}!")
-
-      greet("Alice")
-      # TypeError: wrapper() takes 0 positional arguments but 1 was given
-
-   .. warning::
-
-      After decoration, ``greet`` is replaced by ``wrapper``. When we call ``greet("Alice")``, Python actually calls ``wrapper("Alice")``, but ``wrapper`` accepts no arguments. We need a more flexible approach.
-
-   **Decorating Functions with Arguments**
-
-   To make a decorator work with *any* function, the wrapper should accept ``*args`` and ``**kwargs``.
-
-   .. code-block:: python
-
-      def trace_calls(func):
-          def wrapper(*args, **kwargs):
-              print(f"Before calling {func.__name__}")
-              result = func(*args, **kwargs)
-              print(f"After calling {func.__name__}")
-              return result
-          return wrapper
-
-      @trace_calls
-      def greet(name):
-          print(f"Hello, {name}!")
-
-      @trace_calls
-      def say_hello():
-          print("Hello!")
-
-      greet("Alice")
-      say_hello()
-
-
-.. dropdown:: Preserving Metadata
-   :open:
-
-   **The Problem: Metadata Is Lost**
-
-   When you wrap a function with a decorator, the wrapper replaces the original function. This means the original function's name, docstring, and other metadata are lost.
-
-   .. code-block:: python
-
-      import time
-
-      def measure_time(func):
-          """Measure and print the execution time of a function."""
-          def wrapper(*args, **kwargs):
-              start = time.perf_counter()
-              result = func(*args, **kwargs)
-              elapsed = time.perf_counter() - start
-              print(f"{func.__name__} took {elapsed:.4f}s")
-              return result
-          return wrapper
-
-      @measure_time
-      def compute_sum(n: int) -> int:
-          """Compute sum of range(n)."""
-          return sum(range(n))
-
-      print(compute_sum.__name__)  # 'wrapper'  (not 'compute_sum'!)
-      print(compute_sum.__doc__)   # None       (docstring is lost!)
-
-   **The Fix: ``functools.wraps``**
-
-   ``functools.wraps`` is itself a decorator that you apply to your wrapper function. It copies the original function's ``__name__``, ``__doc__``, ``__module__``, and other attributes onto the wrapper so that introspection tools see the original function's identity.
-
-   .. code-block:: python
-
-      from functools import wraps
-      import time
-
-      def measure_time(func):
-          @wraps(func)  # Copies metadata from func to wrapper
-          def wrapper(*args, **kwargs):
-              start = time.perf_counter()
-              result = func(*args, **kwargs)
-              elapsed = time.perf_counter() - start
-              print(f"{func.__name__} took {elapsed:.4f}s")
-              return result
-          return wrapper
-
-      @measure_time
-      def compute_sum(n: int) -> int:
-          """Compute sum of range(n)."""
-          return sum(range(n))
-
-      print(compute_sum.__name__)  # 'compute_sum'
-      print(compute_sum.__doc__)   # 'Compute sum of range(n).'
-
-   .. warning::
-
-      Always use ``@functools.wraps(func)`` in your wrapper functions. Without it, debugging tools, documentation generators, and introspection code will show the wrong function name and docstring.
-
-
-.. dropdown:: Stacking Decorators
-   :open:
-
-   **Applying Multiple Decorators**
-
-   Multiple decorators can be applied to a single function. They are applied from **bottom to top** (innermost first).
-
-   .. code-block:: python
-
-      def apply_bold(func):
-          @wraps(func)
-          def wrapper(*args, **kwargs):
-              return f"<b>{func(*args, **kwargs)}</b>"
-          return wrapper
-
-      def apply_italic(func):
-          @wraps(func)
-          def wrapper(*args, **kwargs):
-              return f"<i>{func(*args, **kwargs)}</i>"
-          return wrapper
-
-      # @apply_bold @apply_italic def greet <=> greet = apply_bold(apply_italic(greet))
-      @apply_bold      # executed second
-      @apply_italic    # executed first
-      def greet(name):
-          return f"Hello, {name}"
-
-      print(greet("Alice"))  # <b><i>Hello, Alice</i></b>
-
-
-.. dropdown:: Decorators with Arguments
-   :open:
-
-   **Parameterized Decorators**
-
-   Sometimes you want to pass arguments to a decorator itself. This requires an extra layer of nesting: a decorator factory that returns the actual decorator.
-
-   .. code-block:: python
-
-      def repeat(n: int):
-          """Decorator factory: repeat the function call n times."""
-          def decorator(func):
-              @wraps(func)
-              def wrapper(*args, **kwargs):
-                  result = None
-                  for _ in range(n):
-                      result = func(*args, **kwargs)
-                  return result
-              return wrapper
-          return decorator
-
-      @repeat(3)
-      def say_hello():
-          print("Hello!")
-
-      say_hello()
-      # Hello!
-      # Hello!
-      # Hello!
-
-   **Understanding the Three Layers**
-
-   - ``repeat(n)`` -- The decorator factory. Called with the argument ``n`` and returns the actual decorator.
-   - ``decorator(func)`` -- The actual decorator. Takes the function to be decorated and returns the wrapper.
-   - ``wrapper(*args, **kwargs)`` -- The wrapper function. Replaces the original function and adds the repeated-call behavior.
-
-   .. code-block:: python
-
-      # @repeat(3) is processed in two steps:
-      # Step 1: repeat(3) is called, returning 'decorator'
-      # Step 2: decorator(say_hello) is called, returning 'wrapper'
-      # So: say_hello = repeat(3)(say_hello)
-
-   .. note::
-
-      **Pattern**: Whenever you need a decorator that accepts arguments, use three nested functions: ``factory(args) -> decorator(func) -> wrapper(*args, **kwargs)``.
-
-
-Partial Functions
-====================================================
-
-Pre-filling function arguments for convenience and reuse.
-
-Refer to ``partial_demo.py`` to follow along with the examples below.
-
-
-.. dropdown:: What Is ``functools.partial``?
-   :open:
-
-   ``functools.partial`` creates a new function with some arguments of the original function **pre-filled** ("frozen"). The new function takes fewer arguments.
-
-   .. note::
-
-      **Syntax**: ``partial(func, *args, **kwargs)``
-
-   .. code-block:: python
-
-      from functools import partial
-
-      def compute_power(base, exponent):
-          return base ** exponent
-
-      # Create specialized functions by freezing one argument
-      square = partial(compute_power, exponent=2)
-      cube = partial(compute_power, exponent=3)
-
-      print(square(5))  # 25
-      print(cube(5))    # 125
-
-   .. note::
-
-      **Key Insight**: ``partial`` does not call the function. It returns a new callable with some arguments already set. You supply the remaining arguments when you call the partial.
-
-
-.. dropdown:: Inspecting Partial Objects
-   :open:
-
-   .. code-block:: python
-
-      def compute_power(base, exponent):
-          return base ** exponent
-
-      # Freezing a keyword argument
-      square = partial(compute_power, exponent=2)
-      print(square.func)      # <function compute_power at 0x...>
-      print(square.args)      # ()
-      print(square.keywords)  # {'exponent': 2}
-      print(square(10))       # 100
-
-      # Freezing a positional argument (fills left to right)
-      power_of_ten = partial(compute_power, 10)
-      print(power_of_ten.func)      # <function compute_power at 0x...>
-      print(power_of_ten.args)      # (10,)
-      print(power_of_ten.keywords)  # {}
-      print(power_of_ten(3))        # 1000  (10 ** 3)
-
-   Partial objects expose three useful attributes:
-
-   - ``.func`` -- The original function.
-   - ``.args`` -- Positional arguments that were frozen (filled left to right).
-   - ``.keywords`` -- Keyword arguments that were frozen.
-
-
-.. dropdown:: Practical Example: Unit Conversion
-   :open:
-
-   **Robotics Application: Unit Conversion**
-
-   .. code-block:: python
-
-      def convert_distance(value, from_unit, to_unit):
-          """Convert between distance units."""
-          # Lookup table: how many meters one unit equals
-          to_meters = {"m": 1.0, "cm": 0.01, "ft": 0.3048, "in": 0.0254}
-          # Step 1: Convert the input value to meters (common denominator)
-          meters = value * to_meters[from_unit]
-          # Step 2: Convert from meters to the target unit
-          return meters / to_meters[to_unit]
-
-      # Create specialized converters by freezing from_unit and to_unit
-      ft_to_m = partial(convert_distance, from_unit="ft", to_unit="m")
-      cm_to_in = partial(convert_distance, from_unit="cm", to_unit="in")
-
-      # Only 'value' remains as an argument
-      print(f"{ft_to_m(10):.2f} m")    # 3.05 m
-      print(f"{cm_to_in(100):.2f} in")  # 39.37 in
-
-
-.. dropdown:: Partial vs. Lambda vs. Closure
-   :open:
-
-   **Three Ways to Pre-Fill Arguments**
-
-   .. code-block:: python
-
-      def compute_power(base, exponent):
-          return base ** exponent
-
-      # Using partial
-      square_partial = partial(compute_power, exponent=2)
-
-      # Using lambda
-      square_lambda = lambda base: compute_power(base, exponent=2)
-
-      # Using closure
-      def make_power_func(exp):
-          def compute_value(base):
-              return compute_power(base, exp)
-          return compute_value
-      square_closure = make_power_func(2)
-
-      # All produce the same result
-      print(square_partial(5), square_lambda(5), square_closure(5))
-      # 25 25 25
-
-   .. note::
-
-      **When to use which?** ``partial`` is best for simple argument freezing and works well with introspection tools. Lambda is good for very short inline use. Closures offer the most flexibility for complex logic.
-
-
-Putting It All Together
-====================================================
-
-This section combines the concepts from the entire lecture into a comprehensive exercise.
+   In production AV systems, tracking must run within a strict latency budget
+   (typically <50 ms total for the perception stack). Appearance-based methods
+   (DeepSORT) improve ID consistency but add compute. ByteTrack's approach of
+   using all detections (not just high-confidence) significantly reduces ID
+   switches at negligible compute cost -- a favorable engineering trade-off.
 
 
 Summary
 --------
 
 .. grid:: 1 2 2 2
-    :gutter: 3
+   :gutter: 3
 
-    .. grid-item-card::
-        :class-card: sd-border-primary
+   .. grid-item-card:: Segmentation
+      :class-card: sd-border-primary
 
-        - **Paradigms** -- Imperative, OOP, and functional styles; Python is multi-paradigm
-        - **First-Class Functions** -- Assign, pass, return, and store functions like any object
-        - **Lambdas** -- Anonymous single-expression functions for inline use
-        - **Closures** -- Functions that capture and retain enclosing scope variables
+      - Semantic: per-pixel class labels (U-Net, DeepLabv3+)
+      - Instance: per-object masks (Mask R-CNN)
+      - Panoptic: unified things + stuff (PQ metric)
+      - Specialized: driveable surface, lane detection
 
-    .. grid-item-card::
-        :class-card: sd-border-primary
+   .. grid-item-card:: Tracking & Temporal
+      :class-card: sd-border-primary
 
-        - **Callables** -- The ``__call__`` method makes instances callable
-        - **Decorators** -- Wrap functions to add behavior; use ``@wraps`` to preserve metadata
-        - **Stacking/Parameterized** -- Multiple decorators; three-layer pattern for arguments
-        - **Partials** -- ``functools.partial`` freezes arguments for reuse
-
-.. list-table:: Concepts at a Glance
-   :widths: 25 30 30
-   :header-rows: 1
-   :class: compact-table
-
-   * - Concept
-     - Mechanism
-     - Use Case
-   * - First-class function
-     - ``f = do_nothing``
-     - Callbacks, dispatch tables
-   * - Lambda
-     - ``lambda x: x + 1``
-     - Short inline sort keys
-   * - Closure
-     - Nested function + free variable
-     - Stateful factories
-   * - Callable class
-     - ``__call__`` method
-     - Complex stateful behavior
-   * - Decorator
-     - ``@decorator`` syntax
-     - Logging, timing, validation
-   * - Partial
-     - ``functools.partial``
-     - Argument freezing
-
-.. note::
-
-   **Reminder**: Review and experiment with all provided code before next class.
-
-
-Preview: What's Next in L6
----------------------------
-
-.. grid:: 1 2 2 2
-    :gutter: 3
-
-    .. grid-item-card:: L6: Object-Oriented Programming I
-        :class-card: sd-border-primary
-
-        - Classes and objects
-        - Attributes and methods
-        - Constructors and ``__init__``
-        - Encapsulation and properties
-        - Dunder methods
-
-.. note::
-
-   Today's lecture gives you the advanced function concepts that are essential for understanding object-oriented programming, decorators in frameworks, and functional patterns used throughout Python.
+      - MOT paradigm: tracking-by-detection
+      - SORT: Kalman filter + IoU Hungarian matching
+      - DeepSORT: adds appearance embedding for re-ID
+      - ByteTrack: uses low-confidence detections for occlusion recovery
+      - Metrics: MOTA (accuracy), IDF1 (identity), HOTA (balanced)

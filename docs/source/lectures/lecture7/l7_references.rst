@@ -1,364 +1,228 @@
+====================================================
 References
-==========
+====================================================
 
 
-.. dropdown:: Lecture 7
-    :class-container: sd-border-secondary
-    :open:
+.. dropdown:: Localization Fundamentals
+   :class-container: sd-border-secondary
+   :open:
 
-    .. card::
-        :class-card: sd-border-secondary
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-        **ENPM605 -- L7: Object-Oriented Programming II**
+      .. grid-item-card:: Probabilistic Robotics
+         :link: https://probabilistic-robotics.org/
+         :class-card: sd-border-secondary
 
-        Covers class methods (``@classmethod``, factory methods), static
-        methods (``@staticmethod``), object relationships (association,
-        aggregation, composition), inheritance (``super()``,
-        generalization, specialization, MRO, ``isinstance()``,
-        ``issubclass()``), polymorphism, duck typing, operator
-        overloading, abstract base classes (``ABC``,
-        ``@abstractmethod``), data classes (``@dataclass``, ``field()``,
-        ``__post_init__``, ``frozen=True``), ``__slots__``, and
-        ``typing.Protocol``.
+         **Thrun, Burgard & Fox (2005)**
 
+         The definitive reference for probabilistic localization and SLAM.
+         Chapters 4-7 cover EKF localization, particle filter, and SLAM.
 
-.. dropdown:: Python Language References
-    :class-container: sd-border-secondary
+      .. grid-item-card:: State Estimation for Robotics
+         :link: https://www.cambridge.org/core/books/state-estimation-for-robotics/
+         :class-card: sd-border-secondary
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+         **Barfoot (2017)**
 
-        .. grid-item-card:: Python Tutorial: Classes
-            :link: https://docs.python.org/3/tutorial/classes.html
-            :class-card: sd-border-secondary
+         Rigorous treatment of state estimation using Lie groups (SE(3)),
+         Kalman filters, and factor graphs. Graduate-level reference.
 
-            **Python Tutorial**
+      .. grid-item-card:: Monte Carlo Localization
+         :link: https://papers.nips.cc/paper/1998/hash/c88d8d0a6097754525e02c2246d8d27f-Abstract.html
+         :class-card: sd-border-secondary
 
-            Official tutorial covering classes, inheritance, MRO, and
-            Python's object model.
+         **Dellaert et al. (1999)**
 
-            +++
+         Original MCL paper. Landmark paper introducing particle filter
+         localization for mobile robots.
 
-            - Inheritance syntax
-            - ``super()`` and MRO
-            - Multiple inheritance
+      .. grid-item-card:: AMCL (ROS)
+         :link: https://wiki.ros.org/amcl
+         :class-card: sd-border-secondary
 
-        .. grid-item-card:: Built-in: classmethod
-            :link: https://docs.python.org/3/library/functions.html#classmethod
-            :class-card: sd-border-secondary
+         **ROS Navigation Stack**
 
-            **Built-in Functions**
+         Adaptive Monte Carlo Localization implementation. Standard
+         localization package for ROS-based robots.
 
-            Documentation for the ``@classmethod`` and ``@staticmethod``
-            decorators.
 
-            +++
+.. dropdown:: Scan Matching and ICP
+   :class-container: sd-border-secondary
 
-            - ``cls`` parameter
-            - Factory method pattern
-            - Subclass-aware construction
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-        .. grid-item-card:: abc -- Abstract Base Classes
-            :link: https://docs.python.org/3/library/abc.html
-            :class-card: sd-border-secondary
+      .. grid-item-card:: ICP (Besl & McKay, 1992)
+         :link: https://ieeexplore.ieee.org/document/121791
+         :class-card: sd-border-secondary
 
-            **Standard Library -- abc**
+         **Besl & McKay, TPAMI 1992**
 
-            The ``abc`` module for defining abstract base classes and
-            abstract methods.
+         Original point-to-point ICP paper. Foundation of all scan
+         matching approaches.
 
-            +++
+      .. grid-item-card:: Point-to-Plane ICP
+         :link: https://www.cs.princeton.edu/~smr/papers/icpstability.pdf
+         :class-card: sd-border-secondary
 
-            - ``ABC``, ``ABCMeta``
-            - ``@abstractmethod``
-            - Interface enforcement
+         **Chen & Medioni, 1992 / Low, 2004**
 
-        .. grid-item-card:: dataclasses module
-            :link: https://docs.python.org/3/library/dataclasses.html
-            :class-card: sd-border-secondary
+         Point-to-plane variant with faster convergence on planar surfaces.
 
-            **Standard Library -- dataclasses**
+      .. grid-item-card:: NDT (Normal Distributions Transform)
+         :link: https://ieeexplore.ieee.org/document/1249285
+         :class-card: sd-border-secondary
 
-            Full reference for ``@dataclass``, ``field()``,
-            ``__post_init__``, and ``frozen=True``.
+         **Biber & Strasser, IROS 2003**
 
-            +++
+         NDT represents the target as a grid of Gaussians. Robust to
+         outliers; used in Autoware for LiDAR localization.
 
-            - Auto-generated methods
-            - ``field(default_factory=...)``
-            - Frozen and hashable instances
+      .. grid-item-card:: GICP
+         :link: https://journals.sagepub.com/doi/10.1177/0278364910388359
+         :class-card: sd-border-secondary
 
-        .. grid-item-card:: typing.Protocol
-            :link: https://docs.python.org/3/library/typing.html#typing.Protocol
-            :class-card: sd-border-secondary
+         **Segal et al., RSS 2009**
 
-            **Standard Library -- typing**
+         Generalized ICP: maximum-likelihood formulation treating both
+         clouds as Gaussian distributions.
 
-            Documentation for ``Protocol`` and structural subtyping.
+      .. grid-item-card:: Open3D
+         :link: http://www.open3d.org/
+         :class-card: sd-border-secondary
 
-            +++
+         **Zhou, Park & Koltun (2018)**
 
-            - Structural vs. nominal typing
-            - ``@runtime_checkable``
-            - Static type checking with mypy
+         Open-source library for 3D data processing. Includes ICP,
+         RANSAC, point cloud visualization, and mesh tools.
 
-        .. grid-item-card:: Python Data Model: __slots__
-            :link: https://docs.python.org/3/reference/datamodel.html#slots
-            :class-card: sd-border-secondary
+         +++
 
-            **Python Data Model**
+         - `ICP Tutorial <http://www.open3d.org/docs/release/tutorial/pipelines/icp_registration.html>`_
 
-            Reference for ``__slots__``, its memory implications, and
-            behavior in inheritance hierarchies.
 
-            +++
+.. dropdown:: LiDAR SLAM Systems
+   :class-container: sd-border-secondary
 
-            - Replacing ``__dict__``
-            - Memory and access-time benefits
-            - ``__slots__`` with inheritance
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
+      .. grid-item-card:: LOAM
+         :link: https://www.ri.cmu.edu/pub_files/2014/7/Ji_LidarMapping_RSS2014_v8.pdf
+         :class-card: sd-border-secondary
 
-.. dropdown:: UML and Design Resources
-    :class-container: sd-border-secondary
+         **Zhang & Singh, RSS 2014**
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+         LiDAR Odometry and Mapping. Feature-based LiDAR SLAM. Seminal
+         paper achieving top results on KITTI at publication.
 
-        .. grid-item-card:: PlantUML Class Diagrams
-            :link: https://plantuml.com/class-diagram
-            :class-card: sd-border-secondary
+      .. grid-item-card:: LeGO-LOAM
+         :link: https://github.com/RobustFieldAutonomyLab/LeGO-LOAM
+         :class-card: sd-border-secondary
 
-            **PlantUML**
+         **Shan & Englot, IROS 2018**
 
-            Syntax reference for class diagrams including association,
-            aggregation, composition, and inheritance notation.
+         Lightweight and Ground-Optimized LOAM. Adds explicit ground
+         segmentation and pose graph backend with loop closure.
 
-            +++
+         +++
 
-            - Diamond notation (hollow vs. filled)
-            - Inheritance arrows
-            - Cardinality
+         - `LeGO-LOAM on GitHub <https://github.com/RobustFieldAutonomyLab/LeGO-LOAM>`_
 
-        .. grid-item-card:: Mermaid
-            :link: https://mermaid.js.org/
-            :class-card: sd-border-secondary
+      .. grid-item-card:: LIO-SAM
+         :link: https://arxiv.org/abs/2007.00258
+         :class-card: sd-border-secondary
 
-            **Mermaid**
+         **Shan et al., IROS 2020**
 
-            JavaScript-based diagramming tool with Markdown integration
-            for class and relationship diagrams.
+         Tightly-coupled LiDAR-IMU SLAM via factor graph smoothing.
+         Current state-of-the-art for outdoor LiDAR SLAM.
 
-            +++
+         +++
 
-            - Class diagrams
-            - Relationship syntax
-            - GitHub/GitLab rendering
+         - `LIO-SAM on GitHub <https://github.com/TixiaoShan/LIO-SAM>`_
 
+      .. grid-item-card:: KISS-ICP
+         :link: https://arxiv.org/abs/2209.15397
+         :class-card: sd-border-secondary
 
-.. dropdown:: External Tutorials
-    :class-container: sd-border-secondary
+         **Vizzo et al., RA-L 2023**
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+         Simple adaptive threshold ICP achieving competitive accuracy
+         with minimal complexity. Winner of multiple SLAM benchmarks.
 
-        .. grid-item-card:: Real Python: Inheritance and Composition
-            :link: https://realpython.com/inheritance-composition-python/
-            :class-card: sd-border-secondary
+         +++
 
-            **Real Python**
+         - `KISS-ICP on GitHub <https://github.com/PRBonn/kiss-icp>`_
 
-            In-depth guide to inheritance and composition with practical
-            examples and trade-off analysis.
 
-            +++
+.. dropdown:: SLAM Backends and Factor Graphs
+   :class-container: sd-border-secondary
 
-            - "Is-a" vs. "has-a"
-            - Composition over inheritance
-            - Mixins
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-        .. grid-item-card:: Real Python: super()
-            :link: https://realpython.com/python-super/
-            :class-card: sd-border-secondary
+      .. grid-item-card:: g2o
+         :link: https://github.com/RainerKuemmerle/g2o
+         :class-card: sd-border-secondary
 
-            **Real Python**
+         **Kümmerle et al., ICRA 2011**
 
-            Detailed walkthrough of ``super()``, the MRO, and
-            cooperative multiple inheritance.
+         General framework for graph-based nonlinear optimization.
+         Standard backend for 2D and 3D SLAM pose graphs.
 
-            +++
+      .. grid-item-card:: GTSAM
+         :link: https://gtsam.org/
+         :class-card: sd-border-secondary
 
-            - Proxy object mechanics
-            - MRO and C3 linearization
-            - Multiple inheritance patterns
+         **Dellaert & GTSAM Contributors**
 
-        .. grid-item-card:: Real Python: Abstract Base Classes
-            :link: https://realpython.com/python-interface/
-            :class-card: sd-border-secondary
+         Georgia Tech Smoothing and Mapping library. Factor graph
+         framework supporting IMU, GPS, LiDAR, and visual factors.
 
-            **Real Python**
+         +++
 
-            Guide to defining interfaces in Python using ABCs and
-            Protocols.
+         - `Python API <https://gtsam.org/docs/python.html>`_
 
-            +++
+      .. grid-item-card:: Scan Context
+         :link: https://arxiv.org/abs/2109.13494
+         :class-card: sd-border-secondary
 
-            - ``ABC`` and ``@abstractmethod``
-            - Protocols vs. ABCs
-            - When to use each
+         **Kim & Kim, IROS 2018 / TITS 2021**
 
-        .. grid-item-card:: Real Python: Data Classes
-            :link: https://realpython.com/python-data-classes/
-            :class-card: sd-border-secondary
+         Compact global descriptor for LiDAR-based place recognition.
+         Rotation-invariant and efficient for large-scale retrieval.
 
-            **Real Python**
 
-            Comprehensive guide to ``@dataclass``, ``field()``,
-            ``__post_init__``, frozen instances, and comparison with
-            named tuples and regular classes.
+.. dropdown:: Datasets and Evaluation
+   :class-container: sd-border-secondary
 
-            +++
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-            - ``@dataclass`` basics
-            - Mutable defaults and ``field()``
-            - Frozen data classes
+      .. grid-item-card:: KITTI Odometry Benchmark
+         :link: https://www.cvlibs.net/datasets/kitti/eval_odometry.php
+         :class-card: sd-border-secondary
 
-        .. grid-item-card:: Real Python: Instance, Class, and Static Methods
-            :link: https://realpython.com/instance-class-and-static-methods-demystified/
-            :class-card: sd-border-secondary
+         **Geiger et al., IJRR 2013**
 
-            **Real Python**
+         Standard LiDAR SLAM evaluation benchmark with 22 sequences.
 
-            Side-by-side comparison of the three method types with
-            practical use cases.
+      .. grid-item-card:: EVO Trajectory Evaluation
+         :link: https://github.com/MichaelGrupp/evo
+         :class-card: sd-border-secondary
 
-            +++
+         **Grupp (2017)**
 
-            - ``self`` vs. ``cls`` vs. no implicit arg
-            - Factory method pattern
-            - When to use each type
+         Python tool for evaluating SLAM trajectories (APE, RPE).
+         Supports TUM, KITTI, EuRoC, and ROS bag formats.
 
-        .. grid-item-card:: Real Python: __slots__
-            :link: https://realpython.com/python-slots/
-            :class-card: sd-border-secondary
+      .. grid-item-card:: MulRan Dataset
+         :link: https://sites.google.com/view/mulran-pr/
+         :class-card: sd-border-secondary
 
-            **Real Python**
+         **Kim et al., ICRA 2020**
 
-            Deep dive into ``__slots__``, memory profiling, and
-            inheritance considerations.
-
-            +++
-
-            - Memory benchmarks
-            - ``__slots__`` with properties
-            - Limitations and trade-offs
-
-        .. grid-item-card:: Real Python: Protocols in Python
-            :link: https://realpython.com/python-protocol/
-            :class-card: sd-border-secondary
-
-            **Real Python**
-
-            Guide to ``typing.Protocol``, structural subtyping, and
-            ``@runtime_checkable``.
-
-            +++
-
-            - Structural vs. nominal typing
-            - Protocol vs. ABC decision guide
-            - mypy integration
-
-        .. grid-item-card:: Python Glossary: Duck Typing
-            :link: https://docs.python.org/3/glossary.html#term-duck-typing
-            :class-card: sd-border-secondary
-
-            **Python Glossary**
-
-            Official definition of duck typing and its role in Python's
-            object model.
-
-            +++
-
-            - Duck typing definition
-            - Relationship to polymorphism
-            - EAFP programming style
-
-
-.. dropdown:: Style and Best Practices
-    :class-container: sd-border-secondary
-
-    .. grid:: 1 1 2 2
-        :gutter: 2
-
-        .. grid-item-card:: PEP 8 -- Style Guide
-            :link: https://peps.python.org/pep-0008/
-            :class-card: sd-border-secondary
-
-            **Coding Conventions**
-
-            Guidelines for class naming, method organization, and
-            inheritance patterns.
-
-            +++
-
-            - Class names: CamelCase
-            - Method naming: ``snake_case``
-            - Abstract class conventions
-
-        .. grid-item-card:: Google Python Style Guide
-            :link: https://google.github.io/styleguide/pyguide.html
-            :class-card: sd-border-secondary
-
-            **Google Style Guide**
-
-            Style conventions used in this course for docstrings and
-            code organization.
-
-            +++
-
-            - Google-style docstrings
-            - Class and method documentation
-            - Type hints
-
-
-.. dropdown:: Recommended Reading
-    :class-container: sd-border-secondary
-
-    .. grid:: 1 1 2 2
-        :gutter: 2
-
-        .. grid-item-card:: Luciano Ramalho
-            :class-card: sd-border-secondary
-
-            **Fluent Python (2nd Edition)**
-
-            Chapters 11-14 cover the Python data model, special methods,
-            interfaces, protocols, and ABCs. Chapters 22-24 cover dynamic
-            attributes and descriptors. Essential reading for a deep
-            understanding of Python's object model.
-
-        .. grid-item-card:: Mark Lutz
-            :class-card: sd-border-secondary
-
-            **Learning Python (5th Edition)**
-
-            Chapters 29-32 cover advanced OOP topics: class design,
-            advanced inheritance, operator overloading, and class
-            decorators.
-
-        .. grid-item-card:: Brett Slatkin
-            :class-card: sd-border-secondary
-
-            **Effective Python (2nd Edition)**
-
-            Items 37-44 cover classes and inheritance, including
-            ``super()``, ``@classmethod``, ``@staticmethod``,
-            ``@property``, descriptors, and metaclasses.
-
-        .. grid-item-card:: Gamma et al.
-            :class-card: sd-border-secondary
-
-            **Design Patterns (Gang of Four)**
-
-            The foundational reference for object-oriented design
-            patterns. Factory Method, Composite, and Strategy are
-            directly relevant to the patterns introduced in this lecture.
+         Multi-experience range dataset for place recognition evaluation
+         across seasons and conditions.

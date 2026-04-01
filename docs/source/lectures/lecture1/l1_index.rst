@@ -32,10 +32,8 @@ By the end of this lecture, you will be able to:
 - Explain the CARLA simulator architecture and its role in this course.
 
 
-Contents
---------
-
 .. toctree::
+   :hidden:
    :maxdepth: 2
    :titlesonly:
 

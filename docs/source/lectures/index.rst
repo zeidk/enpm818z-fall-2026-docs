@@ -63,14 +63,21 @@ Schedule
      - System Integration, Safety & Industry Outlook
      - AV system architecture, middleware, ISO 26262, SOTIF, UNECE GTR on ADS, V2X, industry trends, course wrap-up
 
-
-Contents
---------
-
 .. toctree::
+   :hidden:
    :maxdepth: 3
    :titlesonly:
 
    lecture1/l1_index
    lecture2/l2_index
    lecture3/l3_index
+   lecture4/l4_index
+   lecture5/l5_index
+   lecture6/l6_index
+   lecture7/l7_index
+   lecture8/l8_index
+   lecture9/l9_index
+   lecture10/l10_index
+   lecture11/l11_index
+   lecture12/l12_index
+   lecture13/l13_index

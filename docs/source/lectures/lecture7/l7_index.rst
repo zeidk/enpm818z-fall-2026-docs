@@ -1,66 +1,60 @@
 ====================================================
-L7: Object-Oriented Programming -- Part II
+L7: Localization & SLAM
 ====================================================
 
 Overview
 --------
 
-This lecture extends the OOP foundation from L6 into more advanced class
-design. You will learn how class methods and static methods differ from
-instance methods, how to implement the three object relationships
-(association, aggregation, and composition) identified in the design
-phase, and how to build class hierarchies using inheritance and
-``super()``. The lecture then covers polymorphism through duck typing and
-method overriding, and abstract base classes as a way to enforce a
-consistent interface across subclasses. Three additional topics are
-included for your information: data classes for reducing boilerplate,
-``__slots__`` for memory-efficient attribute storage, and
-``typing.Protocol`` for structural subtyping without inheritance. All
-examples continue with the Robotics Competition Management System
-running domain introduced in L6.
-
+Knowing **where the vehicle is** in the world with centimeter-level accuracy
+is a prerequisite for safe autonomous driving. This lecture covers the full
+spectrum of localization approaches -- from GNSS-based methods to dead
+reckoning, probabilistic filters, and map-based scan matching -- before
+introducing the Simultaneous Localization and Mapping (SLAM) problem, where
+the vehicle must build its own map while localizing within it. You will
+examine both the SLAM frontend (scan acquisition, feature extraction, ICP)
+and backend (pose graph optimization, loop closure), and survey modern LiDAR
+SLAM systems used in production AV stacks.
 
 Learning Objectives
 -------------------
 
 By the end of this lecture, you will be able to:
 
-- Distinguish between class methods, static methods, and instance methods.
-- Explain and implement association, aggregation, and composition.
-- Use inheritance to create class hierarchies with ``super()``.
-- Understand generalization and specialization in class design.
-- Apply polymorphism through duck typing and method overriding.
-- Define abstract base classes with the ``abc`` module.
-- Use ``typing.Protocol`` for structural subtyping and flexible interfaces.
-- Use ``__slots__`` to restrict attributes and reduce memory overhead.
-- Use ``@dataclass`` to reduce boilerplate for data-centric classes.
-
-
-Contents
---------
+- Formulate the localization problem and describe the coordinate systems and
+  transformations used in AV systems.
+- Describe GNSS-based localization including GPS, RTK, and PPP, and their
+  accuracy limitations.
+- Explain wheel odometry, visual odometry, and LiDAR odometry as dead reckoning
+  methods, and characterize their drift properties.
+- Apply the Extended Kalman Filter and particle filter to probabilistic
+  localization with map observations.
+- Describe scan matching (ICP and variants) and HD map-based localization.
+- Formulate the SLAM problem as simultaneous state estimation and map building.
+- Explain the SLAM frontend components: scan acquisition, preprocessing,
+  feature extraction, ICP, and keyframe selection.
+- Explain the SLAM backend: pose graph construction, optimization, and loop
+  closure detection.
+- Identify evaluation metrics for SLAM and localization systems.
+- Describe modern LiDAR SLAM systems (LOAM, LeGO-LOAM) and their design
+  choices.
 
 .. toctree::
+   :hidden:
    :maxdepth: 2
    :titlesonly:
 
    l7_lecture
-   l7_exercises
    l7_quiz
    l7_references
-
 
 Next Steps
 ----------
 
-- In the next lecture, we will begin working with ROS 2:
-
-  - What ROS 2 is and why it matters for robotics
-  - Nodes, topics, messages, and the ROS 2 computation graph
-  - Writing your first publisher and subscriber in Python
-  - Building and running ROS 2 packages
-
-- Review and experiment with all code snippets and exercises from today's
-  lecture.
-- Practice building class hierarchies with abstract base classes.
-- Read the `ROS 2 Jazzy Beginner Tutorials
-  <https://docs.ros.org/en/jazzy/Tutorials.html>`_.
+- The next lecture covers **Motion Planning**: classical planners (A*, RRT,
+  lattice planners), trajectory optimization, and diffusion-based planning.
+- Install and explore the ``open3d`` Python library for point cloud processing:
+  `http://www.open3d.org <http://www.open3d.org>`_.
+- Review the LOAM paper: Zhang & Singh (2014) for the foundational LiDAR
+  odometry and mapping algorithm.
+- Explore the EVO trajectory evaluation tool:
+  `https://github.com/MichaelGrupp/evo <https://github.com/MichaelGrupp/evo>`_.

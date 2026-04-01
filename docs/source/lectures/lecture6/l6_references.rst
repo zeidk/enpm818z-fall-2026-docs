@@ -1,294 +1,168 @@
+====================================================
 References
-==========
+====================================================
 
 
-.. dropdown:: Lecture 6
-    :class-container: sd-border-secondary
-    :open:
+.. dropdown:: Kalman Filter Theory
+   :class-container: sd-border-secondary
+   :open:
 
-    .. card::
-        :class-card: sd-border-secondary
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-        **ENPM605 -- L6: Object-Oriented Programming I**
+      .. grid-item-card:: Original Kalman Filter Paper
+         :link: https://www.cs.unc.edu/~welch/kalman/media/pdf/Kalman1960.pdf
+         :class-card: sd-border-secondary
 
-        Covers OOP principles (encapsulation, abstraction, inheritance, polymorphism), design phase (requirement analysis, business rules, noun/verb analysis, UML modeling), classes and objects, ``self``, ``__init__``, instance and class attributes, dunder methods (``__str__``, ``__repr__``, ``__eq__``, ``__add__``, ``__contains__``, ``__iter__``, ``__call__``), operator overloading, abstraction, encapsulation, and ``@property`` decorators.
+         **Kalman, R.E. (1960)**
 
+         "A New Approach to Linear Filtering and Prediction Problems."
+         Transactions of the ASME -- Journal of Basic Engineering.
 
-.. dropdown:: Python Language References
-    :class-container: sd-border-secondary
+      .. grid-item-card:: EKF and UKF Overview
+         :link: https://groups.seas.harvard.edu/courses/cs281/papers/unscented.pdf
+         :class-card: sd-border-secondary
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+         **Julier & Uhlmann (1997)**
 
-        .. grid-item-card:: Python Tutorial: Classes
-            :link: https://docs.python.org/3/tutorial/classes.html
-            :class-card: sd-border-secondary
+         "A New Extension of the Kalman Filter to Nonlinear Systems."
+         The paper introducing the Unscented Transform and UKF.
 
-            **Python Tutorial**
+      .. grid-item-card:: Probabilistic Robotics
+         :link: https://probabilistic-robotics.org/
+         :class-card: sd-border-secondary
 
-            Official tutorial covering classes, objects, inheritance, and Python's object model.
+         **Thrun, Burgard & Fox (2005)**
 
-            +++
+         The definitive textbook on probabilistic robotics. Chapters 3-4
+         cover Kalman filters, EKF, UKF, and particle filters in depth.
 
-            - Class definition
-            - Instance and class attributes
-            - Method resolution
+      .. grid-item-card:: filterpy Python Library
+         :link: https://filterpy.readthedocs.io/
+         :class-card: sd-border-secondary
 
-        .. grid-item-card:: Data Model: Special Methods
-            :link: https://docs.python.org/3/reference/datamodel.html#special-method-names
-            :class-card: sd-border-secondary
+         **Roger Labbe**
 
-            **Python Data Model**
+         Python library implementing KF, EKF, UKF, and particle filters.
+         Companion to the "Kalman and Bayesian Filters in Python" textbook.
 
-            Comprehensive reference for all dunder methods in Python's data model.
+         +++
 
-            +++
+         - `GitHub <https://github.com/rlabbe/filterpy>`_
+         - `Jupyter Book <https://github.com/rlabbe/Kalman-and-Bayesian-Filters-in-Python>`_
 
-            - ``__init__``, ``__repr__``, ``__str__``
-            - Rich comparison methods
-            - Numeric and container emulation
 
-        .. grid-item-card:: Built-in Functions: ``property``
-            :link: https://docs.python.org/3/library/functions.html#property
-            :class-card: sd-border-secondary
+.. dropdown:: Multi-Sensor Fusion Architectures
+   :class-container: sd-border-secondary
 
-            **Built-in Functions**
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-            Documentation for the ``property()`` built-in and the ``@property`` decorator.
+      .. grid-item-card:: BEVFusion (MIT)
+         :link: https://arxiv.org/abs/2205.13542
+         :class-card: sd-border-secondary
 
-            +++
+         **Liu et al., ICRA 2023**
 
-            - Getter, setter, deleter
-            - Descriptor protocol
-            - Attribute access control
+         Efficient LiDAR-camera BEV fusion using shared BEV space with
+         cross-attention feature fusion. 70.2 NDS on nuScenes.
 
-        .. grid-item-card:: Abstract Base Classes
-            :link: https://docs.python.org/3/library/abc.html
-            :class-card: sd-border-secondary
+      .. grid-item-card:: BEVFusion (Nanjing)
+         :link: https://arxiv.org/abs/2205.13790
+         :class-card: sd-border-secondary
 
-            **Standard Library -- abc**
+         **Liang et al., NeurIPS 2022**
 
-            The ``abc`` module for defining abstract base classes and abstract methods.
+         Multi-task multi-sensor fusion for detection, map segmentation,
+         and motion prediction in unified BEV space.
 
-            +++
+      .. grid-item-card:: DeepFusion
+         :link: https://arxiv.org/abs/2203.08195
+         :class-card: sd-border-secondary
 
-            - ``ABC``, ``abstractmethod``
-            - Interface enforcement
-            - Preview for L7
+         **Li et al., CVPR 2022**
 
-        .. grid-item-card:: Errors and Exceptions
-            :link: https://docs.python.org/3/tutorial/errors.html
-            :class-card: sd-border-secondary
+         LiDAR-camera fusion using point-to-voxel cross-attention for
+         3D object detection.
 
-            **Python Tutorial**
+      .. grid-item-card:: CenterFusion
+         :link: https://arxiv.org/abs/2011.04841
+         :class-card: sd-border-secondary
 
-            Official tutorial on exception handling, ``try``/``except``, ``raise``, and built-in exception types.
+         **Nabati & Qi, WACV 2021**
 
-            +++
+         Camera-RADAR fusion for 3D object detection using pillar-based
+         radar point cloud association.
 
-            - ``try``/``except``/``else``/``finally``
-            - ``raise`` statement
-            - ``TypeError``, ``ValueError``
 
-        .. grid-item-card:: Glossary: ``__slots__``
-            :link: https://docs.python.org/3/glossary.html#term-__slots__
-            :class-card: sd-border-secondary
+.. dropdown:: Data Association
+   :class-container: sd-border-secondary
 
-            **Python Glossary**
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-            Memory-efficient attribute storage using ``__slots__`` (advanced topic).
+      .. grid-item-card:: Hungarian Algorithm
+         :link: https://en.wikipedia.org/wiki/Hungarian_algorithm
+         :class-card: sd-border-secondary
 
-            +++
+         **Kuhn-Munkres Algorithm**
 
-            - Fixed attribute sets
-            - Memory optimization
-            - Trade-offs with dynamic attributes
+         Optimal bipartite graph matching in O(n^3). Standard for global
+         nearest neighbor data association.
 
+         +++
 
-.. dropdown:: UML and Design Resources
-    :class-container: sd-border-secondary
+         - `scipy.optimize.linear_sum_assignment <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linear_sum_assignment.html>`_
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+      .. grid-item-card:: JPDA Survey
+         :link: https://ieeexplore.ieee.org/document/989947
+         :class-card: sd-border-secondary
 
-        .. grid-item-card:: UML (Unified Modeling Language)
-            :link: https://www.uml.org/
-            :class-card: sd-border-secondary
+         **Fortmann, Bar-Shalom & Scheffe (1983)**
 
-            **Official UML Site**
+         Original Joint Probabilistic Data Association paper for tracking
+         in cluttered environments.
 
-            The standard for software modeling diagrams used in the design phase.
+      .. grid-item-card:: Bar-Shalom et al.
+         :class-card: sd-border-secondary
 
-            +++
+         **Bar-Shalom, Y., Willett, P.K., & Tian, X. (2011)**
 
-            - Class diagrams
-            - Sequence diagrams
-            - Activity diagrams
+         *Tracking and Data Fusion: A Handbook of Algorithms.*
+         YBS Publishing. Comprehensive reference for all association methods.
 
-        .. grid-item-card:: PlantUML
-            :link: https://plantuml.com/
-            :class-card: sd-border-secondary
 
-            **PlantUML**
+.. dropdown:: Particle Filters
+   :class-container: sd-border-secondary
 
-            Text-based tool for creating UML diagrams from simple markup.
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-            +++
+      .. grid-item-card:: Monte Carlo Localization
+         :link: https://people.eecs.berkeley.edu/~pabbeel/cs287-fa12/slides/mcl.pdf
+         :class-card: sd-border-secondary
 
-            - Class diagram syntax
-            - Sequence diagram syntax
-            - Integration with IDEs
+         **Dellaert et al. (1999)**
 
-        .. grid-item-card:: Mermaid
-            :link: https://mermaid.js.org/
-            :class-card: sd-border-secondary
+         Original MCL paper: particle filter for robot localization.
+         Foundation of AMCL used in ROS.
 
-            **Mermaid**
+      .. grid-item-card:: Particle Filters Tutorial
+         :link: https://www.irisa.fr/aspi/legland/ref/arulampalam02a.pdf
+         :class-card: sd-border-secondary
 
-            JavaScript-based diagramming tool with Markdown integration.
+         **Arulampalam et al. (2002)**
 
-            +++
+         "A Tutorial on Particle Filters for Online Nonlinear/Non-Gaussian
+         Bayesian Tracking." IEEE Transactions on Signal Processing.
 
-            - Class diagrams
-            - Flowcharts
-            - GitHub/GitLab rendering
 
+.. dropdown:: Survey Papers
+   :class-container: sd-border-secondary
 
-.. dropdown:: Style and Best Practices
-    :class-container: sd-border-secondary
-
-    .. grid:: 1 1 2 2
-        :gutter: 2
-
-        .. grid-item-card:: PEP 8 -- Style Guide
-            :link: https://peps.python.org/pep-0008/
-            :class-card: sd-border-secondary
-
-            **Coding Conventions**
-
-            Guidelines for class naming, attribute access, and code formatting.
-
-            +++
-
-            - Class names: CamelCase
-            - Non-public attributes: ``_leading_underscore``
-            - Method naming: ``snake_case``
-
-        .. grid-item-card:: Google Python Style Guide
-            :link: https://google.github.io/styleguide/pyguide.html
-            :class-card: sd-border-secondary
-
-            **Google Style Guide**
-
-            Style conventions used in this course for docstrings and code organization.
-
-            +++
-
-            - Google-style docstrings
-            - Class documentation
-            - Properties and type hints
-
-
-.. dropdown:: External Tutorials
-    :class-container: sd-border-secondary
-
-    .. grid:: 1 1 2 2
-        :gutter: 2
-
-        .. grid-item-card:: Real Python: OOP in Python 3
-            :link: https://realpython.com/python3-object-oriented-programming/
-            :class-card: sd-border-secondary
-
-            **Real Python**
-
-            Comprehensive introduction to OOP in Python with practical examples.
-
-            +++
-
-            - Classes and objects
-            - Instance methods
-            - Inheritance basics
-
-        .. grid-item-card:: Real Python: Operator and Function Overloading
-            :link: https://realpython.com/operator-function-overloading/
-            :class-card: sd-border-secondary
-
-            **Real Python**
-
-            Guide to overloading operators and built-in functions for custom classes.
-
-            +++
-
-            - Dunder methods
-            - Comparison operators
-            - Arithmetic operators
-
-        .. grid-item-card:: Real Python: Properties
-            :link: https://realpython.com/python-property/
-            :class-card: sd-border-secondary
-
-            **Real Python**
-
-            In-depth guide to the ``@property`` decorator and managed attributes.
-
-            +++
-
-            - Getters and setters
-            - Validation
-            - Computed attributes
-
-        .. grid-item-card:: Real Python: Inheritance and Composition
-            :link: https://realpython.com/inheritance-composition-python/
-            :class-card: sd-border-secondary
-
-            **Real Python**
-
-            Guide to inheritance and composition in Python. Preview for L7.
-
-            +++
-
-            - "Is-a" vs. "has-a"
-            - Composition over inheritance
-            - Mixins
-
-
-.. dropdown:: Recommended Reading
-    :class-container: sd-border-secondary
-
-    .. grid:: 1 1 2 2
-        :gutter: 2
-
-        .. grid-item-card:: Python Official Tutorial
-            :link: https://docs.python.org/3/tutorial/
-            :class-card: sd-border-secondary
-
-            **Getting Started**
-
-            Section 9 (Classes) covers class definition, scopes, inheritance, and iterators.
-
-            +++
-
-            - Class syntax
-            - Inheritance
-            - Iterators and generators
-
-        .. grid-item-card:: Luciano Ramalho
-            :class-card: sd-border-secondary
-
-            **Fluent Python (2nd Edition)**
-
-            Chapters 11-14 cover the Python data model, special methods, operator overloading, and interfaces. Essential reading for understanding how Python objects work.
-
-        .. grid-item-card:: Mark Lutz
-            :class-card: sd-border-secondary
-
-            **Learning Python (5th Edition)**
-
-            Chapters 26-32 cover OOP fundamentals: class coding basics, inheritance, class design, and advanced class topics.
-
-        .. grid-item-card:: Brett Slatkin
-            :class-card: sd-border-secondary
-
-            **Effective Python (2nd Edition)**
-
-            Items 37-44 cover classes and inheritance, including ``@property``, descriptors, and metaclasses.
+   - Faion, F. et al. (2021). *A Survey on Data Fusion Techniques for
+     Autonomous Driving.* IEEE Intelligent Transportation Systems Magazine.
+   - Yeong, D.J. et al. (2021). *Sensor and Sensor Fusion Technology in
+     Autonomous Vehicles: A Review.* Sensors, 21(6), 2140.
+   - Liang, M. et al. (2022). *BEVFusion: A Simple and Robust LiDAR-Camera
+     Fusion Framework.* arXiv:2205.13790.

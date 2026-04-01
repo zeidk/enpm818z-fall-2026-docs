@@ -1,273 +1,173 @@
+====================================================
 References
-==========
+====================================================
 
 
-.. dropdown:: 🏛️ Lecture 5
-    :class-container: sd-border-secondary
-    :open:
+.. dropdown:: Semantic Segmentation
+   :class-container: sd-border-secondary
+   :open:
 
-    .. card::
-        :class-card: sd-border-secondary
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-        **ENPM605 -- L5: Advanced Functions**
+      .. grid-item-card:: U-Net
+         :link: https://arxiv.org/abs/1505.04597
+         :class-card: sd-border-secondary
 
-        Covers programming paradigms (procedural, functional, object-oriented), first-class functions, lambda expressions, closures, callables, decorators (basic, stacking, parameterized), ``functools.wraps``, ``functools.partial``, and built-in higher-order functions (``map``, ``filter``, ``sorted`` with ``key``).
+         **Ronneberger et al., MICCAI 2015**
 
+         Encoder-decoder with skip connections. The foundational architecture
+         for dense prediction tasks.
 
-.. dropdown:: 🐍 Python Language References
-    :class-container: sd-border-secondary
+      .. grid-item-card:: DeepLabv3+
+         :link: https://arxiv.org/abs/1802.02611
+         :class-card: sd-border-secondary
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+         **Chen et al., ECCV 2018**
 
-        .. grid-item-card:: 🔧 Functional Programming HOWTO
-            :link: https://docs.python.org/3/howto/functional.html
-            :class-card: sd-border-secondary
+         Atrous convolutions and ASPP for multi-scale context. State-of-the-art
+         semantic segmentation architecture.
 
-            **Python HOWTO**
+      .. grid-item-card:: SegFormer
+         :link: https://arxiv.org/abs/2105.15203
+         :class-card: sd-border-secondary
 
-            Comprehensive guide to functional programming in Python, including iterators, generators, and built-in functional tools.
+         **Xie et al., NeurIPS 2021**
 
-            +++
+         Transformer-based segmentation with hierarchical feature extraction
+         and a lightweight MLP decoder head.
 
-            - Pure functions
-            - ``map``, ``filter``, ``reduce``
-            - Itertools
+      .. grid-item-card:: CLRNet (Lane Detection)
+         :link: https://arxiv.org/abs/2203.10350
+         :class-card: sd-border-secondary
 
-        .. grid-item-card:: 📝 Lambda Expressions
-            :link: https://docs.python.org/3/reference/expressions.html#lambda
-            :class-card: sd-border-secondary
+         **Zheng et al., CVPR 2022**
 
-            **Python Reference**
+         Cross Layer Refinement Network for accurate lane detection using
+         lane-specific prior and multi-scale feature fusion.
 
-            Syntax and semantics of lambda expressions in Python.
 
-            +++
+.. dropdown:: Instance and Panoptic Segmentation
+   :class-container: sd-border-secondary
 
-            - Single expression functions
-            - Anonymous functions
-            - Inline callbacks
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-        .. grid-item-card:: 🔍 Data Model: ``__call__``
-            :link: https://docs.python.org/3/reference/datamodel.html#object.__call__
-            :class-card: sd-border-secondary
+      .. grid-item-card:: Mask R-CNN
+         :link: https://arxiv.org/abs/1703.06870
+         :class-card: sd-border-secondary
 
-            **Python Data Model**
+         **He et al., ICCV 2017**
 
-            The ``__call__`` special method that makes instances callable.
+         Extends Faster R-CNN with a mask prediction head. Foundation of
+         instance segmentation.
 
-            +++
+      .. grid-item-card:: Panoptic Segmentation
+         :link: https://arxiv.org/abs/1801.00868
+         :class-card: sd-border-secondary
 
-            - Callable objects
-            - Instance invocation
-            - Emulating functions
+         **Kirillov et al., CVPR 2019**
 
-        .. grid-item-card:: 📦 Built-in: ``callable()``
-            :link: https://docs.python.org/3/library/functions.html#callable
-            :class-card: sd-border-secondary
+         Defines the panoptic segmentation task and the PQ metric.
 
-            **Built-in Functions**
+      .. grid-item-card:: Panoptic-DeepLab
+         :link: https://arxiv.org/abs/1911.10194
+         :class-card: sd-border-secondary
 
-            The ``callable()`` function for checking if an object is callable.
+         **Cheng et al., CVPR 2020**
 
-            +++
+         Bottom-up panoptic segmentation with semantic and instance
+         prediction branches.
 
-            - Runtime check
-            - Functions, classes, instances
-            - ``__call__`` detection
 
-        .. grid-item-card:: 🔄 ``functools.partial``
-            :link: https://docs.python.org/3/library/functools.html#functools.partial
-            :class-card: sd-border-secondary
+.. dropdown:: Multi-Object Tracking
+   :class-container: sd-border-secondary
 
-            **Standard Library -- functools**
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-            Creating partial function objects with frozen arguments.
+      .. grid-item-card:: SORT
+         :link: https://arxiv.org/abs/1602.00763
+         :class-card: sd-border-secondary
 
-            +++
+         **Bewley et al., ICIP 2016**
 
-            - Argument freezing
-            - ``.func``, ``.args``, ``.keywords``
-            - Partial objects
+         Simple Online and Realtime Tracking using Kalman filter and
+         Hungarian algorithm. Runs at 260 Hz.
 
-        .. grid-item-card:: 📋 ``functools.wraps``
-            :link: https://docs.python.org/3/library/functools.html#functools.wraps
-            :class-card: sd-border-secondary
+      .. grid-item-card:: DeepSORT
+         :link: https://arxiv.org/abs/1703.07402
+         :class-card: sd-border-secondary
 
-            **Standard Library -- functools**
+         **Wojke et al., ICIP 2017**
 
-            Preserving function metadata when writing decorators.
+         Extends SORT with a deep appearance descriptor for robust
+         re-identification after occlusion.
 
-            +++
+      .. grid-item-card:: ByteTrack
+         :link: https://arxiv.org/abs/2110.06864
+         :class-card: sd-border-secondary
 
-            - Metadata copying
-            - ``__name__``, ``__doc__``
-            - Decorator best practice
+         **Zhang et al., ECCV 2022**
 
-        .. grid-item-card:: 📖 Glossary: Decorator
-            :link: https://docs.python.org/3/glossary.html#term-decorator
-            :class-card: sd-border-secondary
+         Uses every detection including low-confidence ones for robust
+         tracking. State-of-the-art on MOT17.
 
-            **Python Glossary**
+      .. grid-item-card:: StrongSORT
+         :link: https://arxiv.org/abs/2202.13514
+         :class-card: sd-border-secondary
 
-            Official definition of decorators in the Python glossary.
+         **Du et al., 2022**
 
-            +++
+         Enhanced SORT with better Kalman filter motion model and stronger
+         appearance features for improved performance.
 
-            - ``@`` syntax
-            - Function transformation
-            - Class decorators
 
-        .. grid-item-card:: 📝 PEP 318: Decorators
-            :link: https://peps.python.org/pep-0318/
-            :class-card: sd-border-secondary
+.. dropdown:: Datasets and Benchmarks
+   :class-container: sd-border-secondary
 
-            **PEP 318**
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-            The PEP that introduced decorator syntax for functions and methods.
+      .. grid-item-card:: MOTChallenge
+         :link: https://motchallenge.net/
+         :class-card: sd-border-secondary
 
-            +++
+         **Benchmark for MOT evaluation**
 
-            - ``@decorator`` syntax
-            - Motivation and rationale
-            - Design alternatives
+         MOT17 and MOT20 datasets with standardized MOTA/IDF1 evaluation.
 
+         +++
 
-.. dropdown:: 📏 Style and Best Practices
-    :class-container: sd-border-secondary
+         - `Leaderboard <https://motchallenge.net/results/MOT17/>`_
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+      .. grid-item-card:: Cityscapes
+         :link: https://www.cityscapes-dataset.com/
+         :class-card: sd-border-secondary
 
-        .. grid-item-card:: 📏 PEP 8 -- Style Guide
-            :link: https://peps.python.org/pep-0008/
-            :class-card: sd-border-secondary
+         **Cordts et al., CVPR 2016**
 
-            **Coding Conventions**
+         5000 finely annotated urban driving images for semantic and
+         instance segmentation benchmarking.
 
-            Guidelines for function naming, lambda usage, and code formatting.
+      .. grid-item-card:: nuScenes Panoptic
+         :link: https://nuscenes.org/panoptic
+         :class-card: sd-border-secondary
 
-            +++
+         **Fong et al., CVPR 2022**
 
-            - Lambda assignment discouraged
-            - Function naming (``snake_case``)
-            - Decorator formatting
+         Panoptic segmentation annotations for the nuScenes LiDAR point
+         clouds, enabling 3D panoptic benchmarking.
 
 
-.. dropdown:: 🌐 External Tutorials
-    :class-container: sd-border-secondary
+.. dropdown:: Survey Papers and Textbooks
+   :class-container: sd-border-secondary
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
-
-        .. grid-item-card:: 🎯 Real Python: Primer on Decorators
-            :link: https://realpython.com/primer-on-python-decorators/
-            :class-card: sd-border-secondary
-
-            **Real Python**
-
-            Comprehensive tutorial on decorators, including first-class objects, closures, and practical examples.
-
-            +++
-
-            - First-class functions
-            - Simple decorators
-            - Advanced patterns
-
-        .. grid-item-card:: 🔒 Real Python: Closures
-            :link: https://realpython.com/python-closure/
-            :class-card: sd-border-secondary
-
-            **Real Python**
-
-            In-depth guide to closures in Python with practical examples.
-
-            +++
-
-            - Free variables
-            - ``nonlocal`` keyword
-            - Closure applications
-
-        .. grid-item-card:: 🔀 Real Python: Lambda Functions
-            :link: https://realpython.com/python-lambda/
-            :class-card: sd-border-secondary
-
-            **Real Python**
-
-            Guide to lambda functions, their syntax, use cases, and limitations.
-
-            +++
-
-            - Lambda syntax
-            - Common patterns
-            - When to avoid lambdas
-
-        .. grid-item-card:: 🛠️ Real Python: functools
-            :link: https://realpython.com/python-functools/
-            :class-card: sd-border-secondary
-
-            **Real Python**
-
-            Overview of the ``functools`` module including ``partial``, ``wraps``, ``lru_cache``, and more.
-
-            +++
-
-            - ``partial`` objects
-            - ``wraps`` decorator
-            - Caching with ``lru_cache``
-
-        .. grid-item-card:: 🔧 Real Python: Functional Programming
-            :link: https://realpython.com/python-functional-programming/
-            :class-card: sd-border-secondary
-
-            **Real Python**
-
-            Introduction to functional programming concepts in Python.
-
-            +++
-
-            - Pure functions
-            - Immutability
-            - ``map``, ``filter``, ``reduce``
-
-
-.. dropdown:: 📚 Recommended Reading
-    :class-container: sd-border-secondary
-
-    .. grid:: 1 1 2 2
-        :gutter: 2
-
-        .. grid-item-card:: 📘 Python Official Tutorial
-            :link: https://docs.python.org/3/tutorial/
-            :class-card: sd-border-secondary
-
-            **Getting Started**
-
-            Section 4.7.5 (Lambda Expressions) and Section 4.7.6 (Documentation Strings) cover relevant topics for this lecture.
-
-            +++
-
-            - Lambda expressions
-            - Functional tools
-            - Code style
-
-        .. grid-item-card:: Luciano Ramalho
-            :class-card: sd-border-secondary
-
-            **Fluent Python (2nd Edition)**
-
-            Chapters 7-9 cover first-class functions, type hints, decorators, and closures. Excellent for understanding functions as objects.
-
-        .. grid-item-card:: Mark Lutz
-            :class-card: sd-border-secondary
-
-            **Learning Python (5th Edition)**
-
-            Chapters 19-21 cover advanced function topics including closures, decorators, and functional programming tools.
-
-        .. grid-item-card:: Brett Slatkin
-            :class-card: sd-border-secondary
-
-            **Effective Python (2nd Edition)**
-
-            Items 19-26 cover function arguments, return values, closures, and decorators with practical best practices.
+   - Garcia-Garcia, A. et al. (2018). *A Survey on Deep Learning Techniques
+     for Image and Video Semantic Segmentation.* Applied Soft Computing.
+   - Luo, W. et al. (2021). *Multiple Object Tracking: A Literature Review.*
+     Artificial Intelligence, 293.
+   - Ciaparrone, G. et al. (2020). *Deep Learning in Video Multi-Object
+     Tracking: A Survey.* Neurocomputing, 381.
+   - HOTA metric: Luiten, J. et al. (2021). *HOTA: A Higher Order Metric for
+     Evaluating Multi-Object Tracking.* IJCV.
