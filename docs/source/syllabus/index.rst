@@ -103,61 +103,114 @@ Course Schedule
    Monitor ELMS-Canvas for current deadlines.
 
 
-Assignments
------------
+Assignments: Building an ADS Pipeline
+--------------------------------------
 
-Students complete four individual assignments and a final project, each
-building on prior material and using the CARLA simulator with ROS 2.
+The four assignments form a **cumulative pipeline**. Each assignment extends
+the ROS 2 package created in the previous one, so that by A4 you have a
+working (if basic) automated driving system. The final project elevates this
+pipeline into a complete, evaluated ADS.
+
+.. important::
+
+   Starting from A2, every assignment builds on your previous submission.
+   You will extend -- not replace -- the ROS 2 package you created in the
+   prior assignment.
 
 .. list-table::
    :header-rows: 1
-   :widths: 35 15 15 15 20
+   :widths: 30 12 12 12 34
    :class: compact-table
 
    * - Assignment
      - Posted
      - Due
-     - Duration
-     - Topic
+     - Lectures
+     - Cumulative Output
    * - A1: Sensor Data & Exploration
      - Week 4
      - Week 6
-     - 2 weeks
      - L1--L2
-   * - A2: Object Detection -- YOLO vs. DETR
+     - ROS 2 package that connects to CARLA, spawns a vehicle with
+       sensors (camera, LiDAR, odometry), and records data.
+   * - A2: Perception (YOLO vs. DETR)
      - Week 6
      - Week 8
-     - 2 weeks
-     - L3--L4
-   * - A3: Multi-Sensor Fusion & Localization
+     - L3--L5
+     - Adds a perception node that subscribes to camera images and
+       publishes detected objects (bounding boxes, classes, confidence).
+       Comparison of CNN vs. transformer-based detection.
+   * - A3: Fusion & Localization
      - Week 8
      - Week 10
-     - 2 weeks
-     - L5--L7
-   * - A4: Planning & Control Pipeline
+     - L6--L7
+     - Adds a fusion/localization node that combines camera detections
+       (from A2) with LiDAR and odometry to produce a fused world
+       representation and vehicle pose estimate.
+   * - A4: Planning & Control
      - Week 11
      - Week 13
-     - 2 weeks
      - L8--L10
+     - Adds planning and control nodes that consume fused perception
+       (from A3) and the localized pose to drive the vehicle through
+       a CARLA scenario (lane following, obstacle avoidance).
+
+The pipeline progression:
+
+.. code-block:: text
+
+   A1: Sensors & Data        ──►  Record CARLA sensor streams
+       │
+   A2: Perception            ──►  Detect objects from camera feed
+       │
+   A3: Fusion & Localization ──►  Fuse sensors + estimate vehicle pose
+       │
+   A4: Planning & Control    ──►  Drive the vehicle autonomously
+       │
+   Final Project             ──►  Complete ADS in complex scenarios
 
 
 Final Project
 -------------
 
-The final project is the capstone of this course. Students design, implement,
-and test components of an **automated driving system (ADS)** pipeline in CARLA,
-integrating perception, localization, planning, and control modules developed
-throughout the semester.
+The final project is the capstone of this course. Students integrate and
+improve their A1--A4 pipeline into a **complete automated driving system**,
+then evaluate it on challenging CARLA scenarios.
 
-The project includes:
+.. card::
+   :class-card: sd-border-primary sd-shadow-sm
 
-- A complete ROS 2 ADS implementation in CARLA.
-- A written report documenting the system architecture, design decisions, and
-  evaluation results.
-- A final presentation demonstrating the system.
+   **What You Will Deliver**
 
-**End-to-end driving** using transformers or imitation learning is available as
-an advanced project option for ambitious students.
+   1. **Integrated ADS pipeline** -- A single ROS 2 system combining
+      perception, fusion, localization, planning, and control, running
+      end-to-end in CARLA.
+   2. **Complex scenario evaluation** -- Your system will be tested on
+      scenarios beyond what was seen in assignments: urban intersections,
+      highway merging, pedestrian crossings, and adverse weather.
+   3. **Written report** -- Documents the system architecture, design
+      decisions, failure analysis, and quantitative evaluation results.
+   4. **Final presentation** -- Live demonstration of the system with Q&A.
+
+.. tab-set::
+
+   .. tab-item:: Standard Track
+
+      Integrate and refine the modular pipeline from A1--A4. Add prediction
+      or decision-making logic (e.g., behavioral state machine, rule-based
+      planner) to handle complex traffic scenarios.
+
+   .. tab-item:: Advanced Track (Optional)
+
+      Replace part or all of the modular pipeline with an **end-to-end
+      driving** approach using transformers or imitation learning. Compare
+      performance against the modular baseline from the standard track.
+
+.. note::
+
+   The advanced track is optional and intended for ambitious students. Both
+   tracks are graded on the same rubric -- the advanced track does not
+   receive bonus points but provides deeper exposure to modern AV techniques.
 
 
 Required Software and Tools
