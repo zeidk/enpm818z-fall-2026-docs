@@ -2,10 +2,11 @@
 Quiz
 ====================================================
 
-This quiz covers the key concepts from Lecture 5: Advanced Functions,
-including programming paradigms, first-class functions, lambda expressions,
-closures, callables, decorators, ``functools.wraps``, stacking decorators,
-decorators with arguments, and ``functools.partial``.
+This quiz covers the key concepts from Lecture 5: Perception III --
+Segmentation, Tracking & Temporal Reasoning. Topics include semantic,
+instance, and panoptic segmentation; U-Net and DeepLabv3+; multi-object
+tracking (SORT, DeepSORT, ByteTrack); tracking metrics (MOTA, MOTP, IDF1);
+and temporal reasoning for improved perception.
 
 .. note::
 
@@ -21,556 +22,455 @@ decorators with arguments, and ``functools.partial``.
 ----
 
 
-Multiple Choice
-===============
+Multiple Choice (Questions 1-10)
+=================================
 
 .. admonition:: Question 1
    :class: hint
 
-   What is the output of the following code?
+   Which segmentation task assigns a unique instance ID to each individual
+   object AND provides a label for every pixel in the image (including
+   background "stuff" regions)?
 
-   .. code-block:: python
+   A. Semantic segmentation
 
-      def make_multiplier(n):
-          return lambda x: x * n
+   B. Instance segmentation
 
-      double = make_multiplier(2)
-      print(double(5))
+   C. Panoptic segmentation
 
-   A. ``5``
-
-   B. ``10``
-
-   C. ``2``
-
-   D. ``TypeError``
+   D. Binary segmentation
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``10``
+   **C** -- Panoptic segmentation
 
-   ``make_multiplier(2)`` returns a lambda that multiplies its argument by ``2``. Calling ``double(5)`` evaluates ``5 * 2 = 10``.
+   Panoptic segmentation unifies semantic and instance segmentation. Every
+   pixel receives a class label (like semantic segmentation), and every
+   "thing" (countable object like a car or pedestrian) also receives a unique
+   instance ID. "Stuff" regions (road, sky) get class labels but no instance
+   IDs.
 
 
 .. admonition:: Question 2
    :class: hint
 
-   Which of the following is NOT a valid use of a lambda?
+   What is the primary architectural innovation of **U-Net** that allows it
+   to produce high-resolution segmentation masks?
 
-   A. ``sorted(items, key=lambda x: x[1])``
+   A. Atrous (dilated) convolutions at multiple dilation rates.
 
-   B. ``lambda x, y: x + y``
+   B. Skip connections that concatenate encoder feature maps with decoder
+      feature maps at the same resolution.
 
-   C. ``lambda x: if x > 0: return x``
+   C. A Region Proposal Network that identifies candidate object locations.
 
-   D. ``list(map(lambda x: x**2, [1, 2, 3]))``
+   D. A deformable attention mechanism over learned reference points.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- ``lambda x: if x > 0: return x``
+   **B** -- Skip connections that concatenate encoder feature maps with decoder
+   feature maps at the same resolution.
 
-   Lambdas can only contain a single expression. ``if``/``return`` statements are not allowed. Conditional *expressions* (``x if x > 0 else 0``) are allowed, but statement-based ``if`` blocks are not.
+   U-Net's encoder progressively downsamples the input to extract
+   high-level semantic features, while the decoder upsamples back to full
+   resolution. The skip connections from encoder to decoder at matching
+   resolutions provide fine-grained spatial detail (edges, boundaries) that
+   would otherwise be lost during downsampling.
 
 
 .. admonition:: Question 3
    :class: hint
 
-   What is the output of the following code?
+   In **DeepLabv3+**, what is the purpose of Atrous Spatial Pyramid Pooling
+   (ASPP)?
 
-   .. code-block:: python
+   A. To extract region proposals for instance segmentation.
 
-      def outer():
-          count = 0
-          def inner():
-              nonlocal count
-              count += 1
-              return count
-          return inner
+   B. To apply dilated convolutions at multiple rates in parallel, capturing
+      multi-scale contextual information in a single forward pass.
 
-      f = outer()
-      print(f(), f(), f())
+   C. To warp features from previous frames using ego-motion.
 
-   A. ``1 1 1``
-
-   B. ``1 2 3``
-
-   C. ``0 1 2``
-
-   D. ``NameError``
+   D. To perform bilinear interpolation for upsampling the feature map.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``1 2 3``
+   **B** -- To apply dilated convolutions at multiple rates in parallel,
+   capturing multi-scale contextual information in a single forward pass.
 
-   ``outer()`` creates a closure. Each call to ``f()`` increments the captured ``count`` variable via ``nonlocal``. The three calls produce ``1``, ``2``, and ``3``.
+   ASPP uses several parallel dilated convolutional branches with different
+   dilation rates (e.g., 6, 12, 18) plus global average pooling. Each branch
+   captures context at a different scale without reducing spatial resolution.
+   The outputs are concatenated and passed to the decoder.
 
 
 .. admonition:: Question 4
    :class: hint
 
-   What does the ``@`` syntax do in the following code?
+   In the **SORT** tracker, how are detections in a new frame associated with
+   existing tracks?
 
-   .. code-block:: python
+   A. By comparing appearance embeddings (CNN features) from each detection
+      and track.
 
-      @my_decorator
-      def my_function():
-          pass
+   B. By using a Kalman filter to predict track positions and then solving a
+      bipartite matching problem minimizing IoU distance via the Hungarian
+      algorithm.
 
-   A. It calls ``my_function`` and passes the result to ``my_decorator``.
+   C. By computing optical flow between frames and linking detections along
+      flow vectors.
 
-   B. It is equivalent to ``my_function = my_decorator(my_function)``.
-
-   C. It creates a new class called ``my_decorator``.
-
-   D. It passes ``my_decorator`` as an argument to ``my_function``.
+   D. By comparing 3D LiDAR point cloud segments across frames.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- It is equivalent to ``my_function = my_decorator(my_function)``.
+   **B** -- By using a Kalman filter to predict track positions and then
+   solving a bipartite matching problem minimizing IoU distance via the
+   Hungarian algorithm.
 
-   The ``@decorator`` syntax is syntactic sugar. Python calls the decorator with the function as its argument and replaces the function with the return value.
+   SORT propagates each track's state (position, velocity) forward with a
+   Kalman filter to predict where it should be in the new frame. It then
+   constructs an IoU-based cost matrix between predicted track boxes and new
+   detections, and solves the optimal assignment with the Hungarian algorithm.
 
 
 .. admonition:: Question 5
    :class: hint
 
-   What is the purpose of ``functools.wraps``?
+   What key limitation of SORT does **DeepSORT** address?
 
-   A. It makes a function run faster.
+   A. SORT cannot run in real time on embedded hardware.
 
-   B. It copies the original function's metadata (name, docstring) onto the wrapper.
+   B. SORT fails at long-range detection because it uses only IoU for matching
+      and has no appearance model to re-identify objects after occlusion.
 
-   C. It prevents a function from being decorated.
+   C. SORT cannot handle more than 10 simultaneous tracks.
 
-   D. It automatically adds type hints to the wrapper function.
+   D. SORT requires LiDAR input and cannot process camera-only data.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- It copies the original function's metadata (name, docstring) onto the wrapper.
+   **B** -- SORT fails at long-range detection because it uses only IoU for
+   matching and has no appearance model to re-identify objects after occlusion.
 
-   Without ``@wraps(func)``, the wrapper replaces the original function's ``__name__``, ``__doc__``, and other attributes. ``functools.wraps`` preserves these for introspection and debugging.
+   When an object is occluded, SORT's track dies (no IoU match available).
+   When the object reappears, SORT assigns a new ID -- an "ID switch." DeepSORT
+   addresses this by maintaining a CNN-based appearance embedding gallery per
+   track, enabling re-identification based on visual similarity even after
+   long occlusions.
 
 
 .. admonition:: Question 6
    :class: hint
 
-   What is the output of the following code?
+   **ByteTrack's** key innovation over SORT/DeepSORT is:
 
-   .. code-block:: python
+   A. Using a Transformer-based detector instead of YOLO.
 
-      from functools import partial
+   B. Performing a second association pass that matches low-confidence
+      detections to unmatched tracks, recovering occluded objects.
 
-      def power(base, exponent):
-          return base ** exponent
+   C. Replacing the Kalman filter with an LSTM for state prediction.
 
-      square = partial(power, exponent=2)
-      print(square(5))
-
-   A. ``10``
-
-   B. ``25``
-
-   C. ``32``
-
-   D. ``TypeError``
+   D. Running tracking in BEV space instead of image space.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``25``
+   **B** -- Performing a second association pass that matches low-confidence
+   detections to unmatched tracks, recovering occluded objects.
 
-   ``partial(power, exponent=2)`` creates a new function with ``exponent`` fixed to ``2``. Calling ``square(5)`` computes ``5 ** 2 = 25``.
+   ByteTrack observes that occluded objects often produce low-confidence
+   (but valid) detections that SORT/DeepSORT discard. ByteTrack first
+   associates high-confidence detections, then in a second pass associates
+   remaining (unmatched) tracks with low-confidence detections, significantly
+   reducing ID switches at essentially zero additional compute.
 
 
 .. admonition:: Question 7
    :class: hint
 
-   When multiple decorators are stacked, in what order are they applied?
+   The **MOTA** (Multi-Object Tracking Accuracy) metric penalizes which three
+   types of errors?
 
-   .. code-block:: python
+   A. False positives, false negatives, and localization errors.
 
-      @decorator_a
-      @decorator_b
-      def func():
-          pass
+   B. False positives, false negatives, and ID switches.
 
-   A. ``decorator_a`` is applied first, then ``decorator_b``.
+   C. ID switches, localization errors, and classification errors.
 
-   B. ``decorator_b`` is applied first, then ``decorator_a``.
-
-   C. Both are applied simultaneously.
-
-   D. The order depends on the function's arguments.
+   D. False negatives, velocity errors, and ID switches.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``decorator_b`` is applied first, then ``decorator_a``.
+   **B** -- False positives, false negatives, and ID switches.
 
-   Stacked decorators are applied bottom to top. This is equivalent to ``func = decorator_a(decorator_b(func))``. The innermost decorator (closest to the function) is applied first.
+   MOTA = 1 - (FN + FP + IDSW) / GT. It penalizes all three error types:
+   missed detections (FN), spurious detections (FP), and identity switches
+   (IDSW) where a track's ID changes on the same object. MOTA does NOT
+   penalize localization errors -- that is captured by MOTP.
 
 
 .. admonition:: Question 8
    :class: hint
 
-   What does ``callable(42)`` return?
+   Which segmentation architecture adds a **mask prediction head** to a
+   two-stage detector framework to produce instance-level binary masks?
 
-   A. ``True``
+   A. U-Net
 
-   B. ``False``
+   B. DeepLabv3+
 
-   C. ``42``
+   C. Mask R-CNN
 
-   D. ``TypeError``
+   D. SegNet
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``False``
+   **C** -- Mask R-CNN
 
-   Integers are not callable. Only objects that can be invoked with parentheses (functions, classes, objects with ``__call__``) return ``True`` from ``callable()``.
+   Mask R-CNN extends Faster R-CNN by adding a third head alongside the
+   classification and bounding box regression heads. For each detected region
+   proposal, this mask head predicts a 28x28 binary mask per class using a
+   small FCN. RoIAlign (instead of RoIPool) ensures pixel-precise feature
+   alignment for accurate mask prediction.
 
 
 .. admonition:: Question 9
    :class: hint
 
-   What is the output of the following code?
+   Why is the **IDF1** metric preferred over MOTA for evaluating tracking
+   algorithms in autonomous driving applications?
 
-   .. code-block:: python
+   A. IDF1 is faster to compute than MOTA.
 
-      def make_greeter(greeting):
-          def greet(name):
-              return f"{greeting}, {name}!"
-          return greet
+   B. IDF1 focuses on ID consistency over time, which is critical for
+      trajectory prediction -- knowing it is the same car across frames
+      matters more than counting detections.
 
-      hi = make_greeter("Hi")
-      hello = make_greeter("Hello")
-      print(hi("Bob"))
+   C. IDF1 penalizes localization errors more strictly than MOTA.
 
-   A. ``"Hello, Bob!"``
-
-   B. ``"Hi, Bob!"``
-
-   C. ``"greeting, Bob!"``
-
-   D. ``NameError``
+   D. IDF1 requires no ground-truth annotations.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``"Hi, Bob!"``
+   **B** -- IDF1 focuses on ID consistency over time, which is critical for
+   trajectory prediction -- knowing it is the same car across frames matters
+   more than counting detections.
 
-   Each call to ``make_greeter`` creates an independent closure. ``hi`` captures ``"Hi"`` and ``hello`` captures ``"Hello"``. They do not interfere with each other.
+   MOTA is dominated by detection quality (FP/FN). A tracker with many ID
+   switches can still achieve high MOTA if the detector is good. For
+   downstream prediction, consistent IDs are essential -- the predictor must
+   know it is tracking the same pedestrian over 2 seconds. IDF1 directly
+   measures this identity consistency.
 
 
 .. admonition:: Question 10
    :class: hint
 
-   Which of the following correctly describes a higher-order function?
+   Which approach for **temporal reasoning** in autonomous driving is most
+   commonly used in production BEV perception stacks (as covered in L4)?
 
-   A. A function that uses recursion.
+   A. 3D convolutions over a video volume (C3D, SlowFast).
 
-   B. A function that takes another function as an argument or returns a function.
+   B. LSTM hidden state over flattened image features.
 
-   C. A function defined inside a class.
+   C. Warping the previous BEV feature map to the current ego frame using
+      ego-motion and computing temporal cross-attention.
 
-   D. A function with more than three parameters.
+   D. Optical flow estimation between consecutive camera frames.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- A function that takes another function as an argument or returns a function.
+   **C** -- Warping the previous BEV feature map to the current ego frame
+   using ego-motion and computing temporal cross-attention.
 
-   Higher-order functions operate on other functions. Examples include ``map``, ``filter``, ``sorted`` (with ``key``), and any decorator.
+   BEVFormer's temporal self-attention is the dominant approach in modern
+   production-adjacent stacks. It uses known ego-motion (from odometry/
+   localization) to spatially align previous BEV features with the current
+   frame, then applies attention to selectively integrate temporal information.
+   This is efficient, interpretable, and achieves large gains (+4-7 NDS).
 
+
+----
+
+
+True or False (Questions 11-15)
+================================
 
 .. admonition:: Question 11
    :class: hint
 
-   What is the output of the following code?
-
-   .. code-block:: python
-
-      nums = [1, 2, 3, 4, 5]
-      result = list(filter(lambda x: x % 2 == 0, nums))
-      print(result)
-
-   A. ``[1, 3, 5]``
-
-   B. ``[2, 4]``
-
-   C. ``[1, 2, 3, 4, 5]``
-
-   D. ``[]``
+   **True or False:** In semantic segmentation, two pedestrians standing
+   next to each other will receive different instance IDs but the same
+   class label.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``[2, 4]``
+   **False**
 
-   ``filter`` keeps elements for which the lambda returns ``True``. The lambda checks if a number is even (``x % 2 == 0``), so only ``2`` and ``4`` are kept.
+   Semantic segmentation only assigns class labels -- it has no concept of
+   instances. Both pedestrians would receive the class label "pedestrian"
+   but NO instance IDs. Differentiating individual instances requires
+   instance segmentation or panoptic segmentation.
 
 
 .. admonition:: Question 12
    :class: hint
 
-   What is the output of the following code?
-
-   .. code-block:: python
-
-      def repeat(n):
-          def decorator(func):
-              def wrapper(*args, **kwargs):
-                  for _ in range(n):
-                      func(*args, **kwargs)
-              return wrapper
-          return decorator
-
-      @repeat(2)
-      def say_hi():
-          print("Hi")
-
-      say_hi()
-
-   A. ``Hi`` (printed once)
-
-   B. ``Hi`` (printed twice)
-
-   C. ``TypeError``
-
-   D. Nothing is printed.
+   **True or False:** U-Net's skip connections are the primary mechanism
+   that allows the network to recover fine spatial detail that is lost
+   during encoding (downsampling).
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``Hi`` (printed twice)
+   **True**
 
-   ``@repeat(2)`` creates a parameterized decorator. ``repeat(2)`` returns ``decorator``, which wraps ``say_hi`` so that calling it executes the original function ``2`` times.
+   During encoding, spatial resolution is progressively reduced (via max
+   pooling or strided convolutions) to build high-level semantic features.
+   Skip connections directly copy encoder feature maps at each resolution
+   to the corresponding decoder level, bypassing the bottleneck. This
+   allows the decoder to combine high-level semantics (from the bottleneck)
+   with fine spatial detail (from the encoder skip).
 
 
 .. admonition:: Question 13
    :class: hint
 
-   Which of the following is a requirement for a closure?
-
-   A. The inner function must be defined with ``lambda``.
-
-   B. The inner function must reference a variable from the enclosing function's scope.
-
-   C. The enclosing function must use the ``global`` keyword.
-
-   D. The inner function must accept ``*args`` and ``**kwargs``.
+   **True or False:** SORT uses a deep convolutional neural network to
+   compute appearance embeddings for matching detections to tracks.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- The inner function must reference a variable from the enclosing function's scope.
+   **False**
 
-   A closure requires: a nested function, a reference to a free variable from the enclosing scope, and the enclosing function returning the nested function.
+   SORT does NOT use appearance embeddings. Its matching relies solely on
+   IoU between predicted bounding boxes (from the Kalman filter) and new
+   detections, solved via the Hungarian algorithm. Appearance embeddings
+   were introduced in DeepSORT, which is the extension of SORT that adds
+   a CNN-based re-identification module.
 
 
 .. admonition:: Question 14
    :class: hint
 
-   What is the output of the following code?
-
-   .. code-block:: python
-
-      def compute_square(x):
-          return x ** 2
-
-      f = compute_square
-      print(f(4))
-      print(type(f))
-
-   A. ``16`` then ``<class 'int'>``
-
-   B. ``16`` then ``<class 'function'>``
-
-   C. ``TypeError``
-
-   D. ``None`` then ``<class 'function'>``
+   **True or False:** The Panoptic Quality (PQ) metric can be decomposed
+   into a recognition quality component and a segmentation quality component.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``16`` then ``<class 'function'>``
+   **True**
 
-   ``f = compute_square`` assigns the function object (not the return value) to ``f``. Calling ``f(4)`` returns ``16``, and ``type(f)`` is ``<class 'function'>``.
+   PQ = RQ * SQ, where:
+   RQ (Recognition Quality) = TP / (TP + 0.5*FP + 0.5*FN) measures how
+   well the model detects objects (like F1 score).
+   SQ (Segmentation Quality) = average IoU of matched pairs measures how
+   well the masks are segmented.
+   This decomposition allows analysis of whether errors come from missed
+   detections or poor mask quality.
 
 
 .. admonition:: Question 15
    :class: hint
 
-   What is the key difference between ``map`` and ``filter``?
-
-   A. ``map`` transforms each element; ``filter`` selects elements based on a condition.
-
-   B. ``map`` returns a list; ``filter`` returns a tuple.
-
-   C. ``map`` works with strings only; ``filter`` works with numbers only.
-
-   D. ``map`` modifies the original list; ``filter`` creates a copy.
+   **True or False:** In the tracking-by-detection paradigm, the detector
+   and tracker are trained jointly end-to-end to optimize tracking performance
+   directly.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **A** -- ``map`` transforms each element; ``filter`` selects elements based on a condition.
+   **False**
 
-   ``map(func, iterable)`` applies ``func`` to every element and returns the transformed values. ``filter(func, iterable)`` returns only those elements for which ``func`` returns ``True``. Both return lazy iterators.
+   In tracking-by-detection, the detector and tracker are completely
+   independent modules. The detector is trained separately (often on static
+   image datasets) and produces detection outputs. The tracker then processes
+   these outputs to maintain object identities. This modularity allows
+   improving either component independently but means the detector is not
+   optimized for tracking.
 
 
 ----
 
 
-True or False
-=============
+Essay Questions (Questions 16-18)
+===================================
 
 .. admonition:: Question 16
    :class: hint
 
-   **True or False:** In Python, functions are first-class objects and can be assigned to variables, passed as arguments, and returned from other functions.
+   **Compare SORT, DeepSORT, and ByteTrack** in terms of their key design
+   choices, strengths, and weaknesses. Which would you choose for a
+   production AV system and why?
 
-.. dropdown:: Answer
+   *(2-4 sentences)*
+
+.. dropdown:: Answer Guidelines
    :class-container: sd-border-success
 
-   **True**
+   *Key points to include:*
 
-   Functions in Python are first-class objects. They can be assigned to variables, passed to other functions as arguments, returned from functions, and stored in data structures like lists and dictionaries.
+   - SORT: Kalman filter + IoU Hungarian matching. Extremely fast (260 Hz),
+     minimal compute. Weakness: no appearance model, poor re-ID after
+     occlusion, frequent ID switches in crowded scenes.
+   - DeepSORT: adds CNN appearance embedding gallery. Improves re-ID but
+     adds compute (CNN inference per detection crop) and requires a
+     separate re-ID training dataset.
+   - ByteTrack: uses all detections (high + low confidence) in two-pass
+     association. Matches SORT speed with significantly fewer ID switches.
+     No appearance model needed.
+   - For production AV: ByteTrack or ByteTrack + lightweight appearance
+     model is the best trade-off -- low latency, robust to occlusion, no
+     re-ID dataset dependency. DeepSORT suits pedestrian-heavy scenarios
+     where re-ID matters most.
 
 
 .. admonition:: Question 17
    :class: hint
 
-   **True or False:** A lambda function can contain multiple statements separated by semicolons.
+   **Explain the difference between MOTA and IDF1 as tracking metrics.**
+   Give a concrete example where a tracker with high MOTA has poor IDF1,
+   and explain why IDF1 matters for autonomous driving.
 
-.. dropdown:: Answer
+   *(2-4 sentences)*
+
+.. dropdown:: Answer Guidelines
    :class-container: sd-border-success
 
-   **False**
+   *Key points to include:*
 
-   Lambda functions are restricted to a single expression. They cannot contain statements (assignments, loops, ``try``/``except``, etc.). For multi-line logic, use a regular ``def`` function.
+   - MOTA = 1 - (FN + FP + IDSW) / GT. It is dominated by detection
+     quality -- a perfect detector with frequent ID switches can achieve
+     high MOTA.
+   - IDF1 measures F1 score for correct identity assignments across the
+     full track lifetime, directly measuring ID consistency.
+   - Concrete example: a tracker that detects every vehicle correctly
+     (zero FP/FN) but switches the ID of Vehicle A and Vehicle B at every
+     occlusion would have MOTA near 1.0 but IDF1 near 0.5.
+   - For AV: downstream prediction modules track a vehicle's trajectory
+     to predict where it will be in 3 seconds. If IDs switch frequently,
+     the predictor mixes trajectories of different vehicles -- producing
+     catastrophically wrong predictions. High IDF1 is therefore safety-critical.
 
 
 .. admonition:: Question 18
    :class: hint
 
-   **True or False:** A closure's captured variables are destroyed when the enclosing function returns.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   The captured variables survive through cell objects stored in the inner function's ``__closure__`` tuple. Even after the enclosing function returns and its local scope is discarded, the cell objects keep the captured values alive.
-
-
-.. admonition:: Question 19
-   :class: hint
-
-   **True or False:** ``functools.partial`` calls the original function immediately with the frozen arguments.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   ``functools.partial`` does not call the function. It returns a new callable with some arguments pre-filled. The function is only called when you invoke the partial object with the remaining arguments.
-
-
-.. admonition:: Question 20
-   :class: hint
-
-   **True or False:** The ``nonlocal`` keyword is required to read a variable from an enclosing scope inside a nested function.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   You can *read* variables from an enclosing scope without ``nonlocal``. The ``nonlocal`` keyword is only required when you want to *modify* (reassign) a variable in the enclosing scope.
-
-
-.. admonition:: Question 21
-   :class: hint
-
-   **True or False:** Decorators can only be applied to functions, not to classes or methods.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   Decorators can be applied to functions, methods, and classes. For example, ``@staticmethod``, ``@classmethod``, and ``@dataclass`` are all commonly used decorators applied to methods or classes.
-
-
-.. admonition:: Question 22
-   :class: hint
-
-   **True or False:** ``map`` and ``filter`` return lists in Python 3.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   In Python 3, ``map`` and ``filter`` return lazy iterators, not lists. You must wrap the result in ``list()`` to materialize all values.
-
-
-.. admonition:: Question 23
-   :class: hint
-
-   **True or False:** PEP 8 discourages assigning a lambda to a variable name.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**
-
-   PEP 8 states that assigning a lambda to a variable (e.g., ``f = lambda x: x + 1``) defeats the purpose of lambdas. If you need a named function, use ``def`` instead. Lambdas are intended for short, inline use.
-
-
-.. admonition:: Question 24
-   :class: hint
-
-   **True or False:** Two closures created by the same enclosing function share the same captured state.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   Each call to the enclosing function creates a new, independent closure with its own set of captured variables. Two closures from the same factory do not share state.
-
-
-.. admonition:: Question 25
-   :class: hint
-
-   **True or False:** A parameterized decorator (decorator with arguments) requires three levels of nested functions.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**
-
-   A parameterized decorator uses three layers: the decorator factory (takes the arguments), the decorator (takes the function), and the wrapper (replaces the function). The pattern is ``factory(args) -> decorator(func) -> wrapper(*args, **kwargs)``.
-
-
-----
-
-
-Essay Questions
-===============
-
-.. admonition:: Question 26
-   :class: hint
-
-   **Explain what a closure is and the three conditions required for one to exist.** Provide a brief example.
+   **Describe three ways that temporal reasoning improves perception quality**
+   in autonomous driving beyond what a single-frame detector can provide.
 
    *(2-4 sentences)*
 
@@ -579,79 +479,17 @@ Essay Questions
 
    *Key points to include:*
 
-   - A closure is a function that retains access to variables from its enclosing scope even after the enclosing function has returned.
-   - Three conditions: (1) a nested function exists, (2) the nested function references a free variable from the enclosing scope, and (3) the enclosing function returns the nested function.
-   - Python uses cell objects to keep the captured variables alive after the enclosing scope is discarded.
-   - Example: a ``make_counter`` function that returns an ``increment`` function which remembers and updates a ``count`` variable.
-
-
-.. admonition:: Question 27
-   :class: hint
-
-   **Explain why ``functools.wraps`` is important when writing decorators.** What happens if you omit it?
-
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
-   :class-container: sd-border-success
-
-   *Key points to include:*
-
-   - When a decorator wraps a function, the wrapper function replaces the original. Without ``@wraps``, the original function's ``__name__``, ``__doc__``, ``__module__``, and other metadata are lost.
-   - ``functools.wraps`` copies these attributes from the original function onto the wrapper.
-   - This is important for debugging (stack traces show the correct name), documentation generators, and any tool that inspects function metadata.
-   - Best practice: always use ``@functools.wraps(func)`` in every decorator wrapper.
-
-
-.. admonition:: Question 28
-   :class: hint
-
-   **Compare ``functools.partial``, lambda expressions, and closures as ways to pre-fill function arguments.** When would you prefer each approach?
-
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
-   :class-container: sd-border-success
-
-   *Key points to include:*
-
-   - ``functools.partial`` is best for simple argument freezing; it preserves introspection via ``.func``, ``.args``, and ``.keywords`` attributes.
-   - Lambda expressions are good for short, inline transformations where the logic fits in a single expression.
-   - Closures offer the most flexibility: they can contain complex logic, maintain mutable state, and perform additional processing beyond simple argument binding.
-   - Rule of thumb: use ``partial`` for straightforward cases, lambda for one-liners, and closures when you need state or multi-step logic.
-
-
-.. admonition:: Question 29
-   :class: hint
-
-   **Explain how stacked decorators are applied.** Given ``@A`` on top of ``@B`` on top of a function ``f``, describe the order of execution.
-
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
-   :class-container: sd-border-success
-
-   *Key points to include:*
-
-   - Stacked decorators are applied bottom to top: ``@B`` is applied first, then ``@A``.
-   - The equivalent expression is ``f = A(B(f))``.
-   - At call time, the outermost wrapper (from ``A``) executes first, then the wrapper from ``B``, then the original function ``f``.
-   - This means the decorator closest to the function definition is applied first during decoration, but its wrapper is called last during execution.
-
-
-.. admonition:: Question 30
-   :class: hint
-
-   **Describe the difference between a pure function and an impure function.** Why do functional programming advocates prefer pure functions?
-
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
-   :class-container: sd-border-success
-
-   *Key points to include:*
-
-   - A pure function depends only on its inputs and produces no side effects (no modifying external state, no I/O). Given the same inputs, it always returns the same output.
-   - An impure function may modify global variables, mutate arguments, perform I/O, or depend on external state, making its behavior harder to predict.
-   - Pure functions are preferred because they are easier to test, debug, and reason about. They also enable safe parallelism since they do not share mutable state.
-   - In practice, most programs need some impure functions (for I/O, logging, etc.), but minimizing side effects improves code quality.
+   - Velocity estimation: observing the same object across multiple frames
+     provides direct velocity measurements via state propagation (Kalman
+     filter) or feature-level optical flow. Single frames provide no velocity.
+   - Occlusion handling: an object invisible in frame t was visible in frame
+     t-1. A temporal model (tracker, temporal BEV attention) can propagate
+     the estimated state through the occlusion window, maintaining awareness
+     of the object.
+   - Noise suppression: random detection noise is temporally uncorrelated.
+     Averaging estimates over multiple frames (or Kalman filter smoothing)
+     reduces variance in position and classification confidence, while true
+     object signals are correlated across frames and survive averaging.
+   - Additionally: attribute estimation (classification confidence improves
+     with multiple views of the same object from different angles as the
+     vehicle moves).

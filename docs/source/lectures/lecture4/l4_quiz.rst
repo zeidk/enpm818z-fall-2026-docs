@@ -2,10 +2,10 @@
 Quiz
 ====================================================
 
-This quiz covers the key concepts from Lecture 4: Function Fundamentals,
-including function definition and calling, arguments (positional, default,
-keyword, ``*args``, ``**kwargs``), scopes (LEGB), pass-by-assignment,
-type hints, docstrings, and recursion.
+This quiz covers the key concepts from Lecture 4: Perception II -- BEV
+Perception & Occupancy Networks. Topics include the motivation for BEV
+representations, Lift-Splat-Shoot, BEVFormer, multi-camera fusion, 3D
+occupancy networks, nuScenes metrics, and industry adoption.
 
 .. note::
 
@@ -21,547 +21,438 @@ type hints, docstrings, and recursion.
 ----
 
 
-Multiple Choice
-===============
+Multiple Choice (Questions 1-10)
+=================================
 
 .. admonition:: Question 1
    :class: hint
 
-   What is the output of the following code?
+   Which of the following best describes why **Bird's-Eye View (BEV)** is
+   preferred for autonomous driving planning over perspective camera images?
 
-   .. code-block:: python
+   A. BEV requires less compute than perspective images.
 
-      def greet(name, greeting="Hello"):
-          return f"{greeting}, {name}!"
+   B. BEV preserves metric distances and object sizes, directly matching the
+      coordinate system used by motion planners.
 
-      print(greet("Alice"))
+   C. BEV images can be captured directly by a single wide-angle camera.
 
-   A. ``"Hello, Alice!"``
-
-   B. ``"Alice, Hello!"``
-
-   C. ``TypeError``
-
-   D. ``"None, Alice!"``
+   D. BEV eliminates the need for sensor calibration.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **A** -- ``"Hello, Alice!"``
+   **B** -- BEV preserves metric distances and object sizes, directly matching
+   the coordinate system used by motion planners.
 
-   The ``greeting`` parameter has a default value of ``"Hello"``. Since only ``name`` is provided, the default is used.
+   In perspective images, depth is ambiguous and object sizes decrease with
+   distance. BEV places all objects in a metric top-down map where distances
+   and sizes are consistent -- directly compatible with path planning,
+   trajectory prediction, and control modules.
 
 
 .. admonition:: Question 2
    :class: hint
 
-   What is the output of the following code?
+   In the **Lift-Splat-Shoot** (LSS) pipeline, what does the **Lift** stage do?
 
-   .. code-block:: python
+   A. Converts a 3D voxel grid to a 2D BEV feature map.
 
-      def add_item(item, items=[]):
-          items.append(item)
-          return items
+   B. Applies a detection head to the BEV feature map.
 
-      print(add_item("a"))
-      print(add_item("b"))
+   C. Predicts a depth distribution per pixel and creates a 3D frustum of
+      features for each camera.
 
-   A. ``['a']`` then ``['b']``
-
-   B. ``['a']`` then ``['a', 'b']``
-
-   C. ``['a', 'b']`` then ``['a', 'b']``
-
-   D. ``TypeError``
+   D. Warps the previous frame's BEV features to the current ego frame.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``['a']`` then ``['a', 'b']``
+   **C** -- Predicts a depth distribution per pixel and creates a 3D frustum
+   of features for each camera.
 
-   This is the mutable default argument trap. The default list ``[]`` is created once when the function is defined and shared across all calls. Each call appends to the same list object.
+   The Lift stage takes the 2D image feature map and, for each pixel, predicts
+   a softmax distribution over discrete depth bins. Each pixel's feature is
+   weighted by its depth probabilities and replicated along the camera ray,
+   creating a 3D frustum (a tensor of shape D x H x W x C per camera).
 
 
 .. admonition:: Question 3
    :class: hint
 
-   What does the ``*args`` parameter collect?
+   In **BEVFormer**, what is the role of **Spatial Cross-Attention**?
 
-   A. All keyword arguments as a dictionary.
+   A. It warps previous BEV frames into the current ego coordinate frame.
 
-   B. All positional arguments as a tuple.
+   B. It fuses BEV features from LiDAR and camera modalities.
 
-   C. All arguments as a list.
+   C. It allows each BEV query to attend to relevant features in all camera
+      images by projecting 3D reference points onto image planes.
 
-   D. Only the first extra argument.
+   D. It compresses the 3D voxel grid into a 2D BEV by max-pooling along Z.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- All positional arguments as a tuple.
+   **C** -- It allows each BEV query to attend to relevant features in all
+   camera images by projecting 3D reference points onto image planes.
 
-   ``*args`` collects any extra positional arguments into a tuple. Keyword arguments are collected by ``**kwargs`` into a dictionary.
+   For each BEV grid cell query, BEVFormer samples several 3D reference points
+   at different heights, projects them into each camera image using calibration
+   parameters, and samples image features at those projected locations via
+   deformable attention. This provides geometry-guided feature aggregation
+   across all cameras.
 
 
 .. admonition:: Question 4
    :class: hint
 
-   What is the output of the following code?
+   What is the purpose of **Temporal Self-Attention** in BEVFormer?
 
-   .. code-block:: python
+   A. To apply attention across all pixels in a single camera image.
 
-      x = 10
+   B. To integrate previous BEV feature maps (warped to the current frame)
+      with the current BEV queries, providing multi-frame context.
 
-      def modify():
-          x = 20
-          print(x)
+   C. To synchronize feature extraction across all cameras in the rig.
 
-      modify()
-      print(x)
-
-   A. ``20`` then ``20``
-
-   B. ``20`` then ``10``
-
-   C. ``10`` then ``10``
-
-   D. ``UnboundLocalError``
+   D. To reduce compute by skipping attention for static background cells.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``20`` then ``10``
+   **B** -- To integrate previous BEV feature maps (warped to the current
+   frame) with the current BEV queries, providing multi-frame context.
 
-   The ``x = 20`` inside ``modify()`` creates a local variable that shadows the global ``x``. The global ``x`` remains ``10``.
+   Temporal Self-Attention warps the prior frame's BEV using ego-motion
+   estimates and then computes cross-attention between the current BEV queries
+   and the concatenated current + warped-past features. This provides velocity
+   cues, helps with occluded objects, and significantly boosts detection of
+   moving objects (up to +6.9 NDS on nuScenes).
 
 
 .. admonition:: Question 5
    :class: hint
 
-   In the LEGB rule, what does the "E" stand for?
+   A 3D Occupancy Network outputs which of the following?
 
-   A. External
+   A. A set of 3D bounding boxes with class labels.
 
-   B. Enclosing
+   B. A 2D semantic segmentation map in the camera image plane.
 
-   C. Environment
+   C. A per-voxel semantic label across a 3D volume around the vehicle.
 
-   D. Evaluated
+   D. A depth map for each camera in the rig.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Enclosing
+   **C** -- A per-voxel semantic label across a 3D volume around the vehicle.
 
-   LEGB stands for Local, Enclosing, Global, Built-in. The enclosing scope refers to the scope of an outer function when using nested functions.
+   Occupancy networks divide the scene into a 3D voxel grid and assign each
+   voxel a semantic class (free, vehicle, pedestrian, vegetation, etc.) plus
+   an unknown/occluded category. This dense representation captures arbitrary
+   scene geometry that cannot be represented by bounding boxes.
 
 
 .. admonition:: Question 6
    :class: hint
 
-   What is the output of the following code?
+   Which nuScenes metric is a **composite score** combining mAP with five
+   attribute error terms?
 
-   .. code-block:: python
+   A. mIoU
 
-      def func(a: int, b: str) -> bool:
-          return str(a) == b
+   B. ATE
 
-      result = func(42, "42")
-      print(result)
+   C. NDS
 
-   A. ``True``
-
-   B. ``False``
-
-   C. ``TypeError``
-
-   D. ``"42"``
+   D. AOE
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **A** -- ``True``
+   **C** -- NDS (nuScenes Detection Score)
 
-   Type hints are not enforced at runtime. ``str(42)`` returns ``"42"``, which equals the second argument ``"42"``, so the function returns ``True``.
+   NDS is the primary ranking metric on nuScenes. It is computed as a
+   weighted combination of mAP and five True Positive metrics: Average
+   Translation Error (ATE), Average Scale Error (ASE), Average Orientation
+   Error (AOE), Average Velocity Error (AVE), and Average Attribute Error
+   (AAE). A single NDS scalar enables fair ranking of methods.
 
 
 .. admonition:: Question 7
    :class: hint
 
-   What happens when you pass a list to a function and the function appends an element to it?
+   In the **Splat** stage of LSS, what operation converts the 3D frustum
+   features into a voxel grid?
 
-   A. The original list is unchanged because Python uses pass-by-value.
+   A. Deformable attention over reference points in image space.
 
-   B. The original list is modified because lists are mutable and passed by assignment.
+   B. Unprojection of frustum features into ego-vehicle coordinates using
+      camera intrinsics and extrinsics, then sum-pooling into voxels.
 
-   C. The original list is replaced with a new list.
+   C. Warping the image feature map using a homography transformation.
 
-   D. A ``TypeError`` is raised.
+   D. Applying 3D sparse convolution to the point cloud.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- The original list is modified because lists are mutable and passed by assignment.
+   **B** -- Unprojection of frustum features into ego-vehicle coordinates
+   using camera intrinsics and extrinsics, then sum-pooling into voxels.
 
-   Python passes a reference to the list object. Since lists are mutable, in-place operations like ``append()`` modify the original object.
+   The Splat stage uses known camera calibration to unproject the 3D frustum
+   points (which are in camera space) into the world/ego-vehicle 3D space.
+   Multiple frustum points that land in the same voxel are aggregated via
+   sum-pooling, producing a dense 3D feature volume.
 
 
 .. admonition:: Question 8
    :class: hint
 
-   What is the output of the following code?
+   Tesla's occupancy network (as described at AI Day 2022) takes which sensors
+   as input?
 
-   .. code-block:: python
+   A. LiDAR + 8 cameras
 
-      def outer():
-          count = 0
-          def inner():
-              nonlocal count
-              count += 1
-              return count
-          return inner()
+   B. RADAR + front camera
 
-      print(outer())
+   C. 8 cameras only (no LiDAR)
 
-   A. ``0``
-
-   B. ``1``
-
-   C. ``NameError``
-
-   D. ``None``
+   D. LiDAR + RADAR (no cameras)
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``1``
+   **C** -- 8 cameras only (no LiDAR)
 
-   ``nonlocal count`` allows ``inner()`` to modify ``count`` in the enclosing scope. It increments from 0 to 1, and ``outer()`` returns the result of ``inner()``.
+   Tesla's approach is camera-only. Their 8-camera rig provides surround
+   coverage and the network infers depth via multi-frame parallax and learned
+   depth priors. Tesla has argued this matches human driving (eyes only) and
+   enables lower hardware costs at scale.
 
 
 .. admonition:: Question 9
    :class: hint
 
-   What is the output of the following code?
+   Which of the following scenarios is **best handled by a 3D occupancy
+   network** rather than a standard 3D bounding box detector?
 
-   .. code-block:: python
+   A. Counting the exact number of vehicles in a parking lot.
 
-      def combine(*args, **kwargs):
-          return (args, kwargs)
+   B. Detecting and tracking traffic lights at intersections.
 
-      print(combine(1, 2, x=3, y=4))
+   C. Navigating a construction zone with irregular barriers and debris.
 
-   A. ``([1, 2], {'x': 3, 'y': 4})``
-
-   B. ``((1, 2), {'x': 3, 'y': 4})``
-
-   C. ``(1, 2, 3, 4)``
-
-   D. ``TypeError``
+   D. Classifying pedestrian gestures at a crosswalk.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``((1, 2), {'x': 3, 'y': 4})``
+   **C** -- Navigating a construction zone with irregular barriers and debris.
 
-   ``*args`` collects positional arguments ``1, 2`` as a tuple, and ``**kwargs`` collects keyword arguments as a dictionary.
+   Bounding box detectors assume rectangular box shapes for all objects.
+   Construction barriers, debris piles, and irregular obstacles do not fit
+   this assumption. Occupancy networks capture arbitrary geometry per voxel,
+   making them far more suitable for construction zones and novel obstacle
+   shapes.
 
 
 .. admonition:: Question 10
    :class: hint
 
-   Which of the following is NOT true about Python type hints?
+   In BEV multi-camera fusion, why is **extrinsic calibration** so critical?
 
-   A. They improve code readability and documentation.
+   A. It determines the resolution of each camera image.
 
-   B. They are enforced at runtime by the Python interpreter.
+   B. It controls the field of view overlap between adjacent cameras.
 
-   C. They enable static analysis tools like ``mypy``.
+   C. It maps each camera's 3D frustum features into the correct position in
+      the shared ego-vehicle BEV grid -- errors cause spatial misalignment
+      and ghost detections.
 
-   D. They can specify ``Optional`` for values that may be ``None``.
+   D. It sets the depth bin resolution for the LSS depth distribution.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- They are enforced at runtime by the Python interpreter.
+   **C** -- It maps each camera's 3D frustum features into the correct
+   position in the shared ego-vehicle BEV grid -- errors cause spatial
+   misalignment and ghost detections.
 
-   Type hints are not enforced at runtime. They serve as documentation and enable static analysis tools like ``mypy``, but Python ignores them during execution.
+   BEV fusion relies on accurate knowledge of each camera's position and
+   orientation relative to the vehicle frame (extrinsic calibration). Even a
+   1-degree rotation error causes object position errors of ~0.87 m at 50 m
+   range, creating duplicated or misplaced detections in the fused BEV map.
 
+
+----
+
+
+True or False (Questions 11-15)
+================================
 
 .. admonition:: Question 11
    :class: hint
 
-   What is the output of the following code?
-
-   .. code-block:: python
-
-      def factorial(n):
-          if n <= 1:
-              return 1
-          return n * factorial(n - 1)
-
-      print(factorial(5))
-
-   A. ``5``
-
-   B. ``15``
-
-   C. ``120``
-
-   D. ``RecursionError``
+   **True or False:** The Lift-Splat-Shoot method requires explicit depth
+   sensor supervision (e.g., LiDAR depth labels) during training.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- ``120``
+   **False**
 
-   ``factorial(5) = 5 * 4 * 3 * 2 * 1 = 120``. Each recursive call reduces ``n`` by 1 until the base case ``n <= 1`` returns 1.
+   LSS learns its depth distribution implicitly from 3D bounding box
+   supervision alone. The depth prediction network is trained end-to-end
+   alongside the detection head -- no explicit depth ground truth labels are
+   required. This is one of LSS's key advantages: it works with camera-only
+   setups.
 
 
 .. admonition:: Question 12
    :class: hint
 
-   What is the output of the following code?
-
-   .. code-block:: python
-
-      def modify(data):
-          data = [99, 99, 99]
-
-      original = [1, 2, 3]
-      modify(original)
-      print(original)
-
-   A. ``[99, 99, 99]``
-
-   B. ``[1, 2, 3]``
-
-   C. ``[]``
-
-   D. ``None``
+   **True or False:** BEVFormer's temporal self-attention warps the previous
+   BEV feature map into the current ego frame using ego-motion estimates before
+   computing attention.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``[1, 2, 3]``
+   **True**
 
-   Reassigning ``data = [99, 99, 99]`` inside the function creates a new local binding. The original list referenced by ``original`` is not affected because reassignment does not mutate the object.
+   Before computing temporal self-attention, BEVFormer applies the ego-motion
+   transformation (from vehicle odometry or localization) to spatially align
+   the previous BEV frame with the current ego frame. This alignment is
+   necessary so that a stationary object at the same world position aligns in
+   both BEV grids, while moving objects will have a visible offset.
 
 
 .. admonition:: Question 13
    :class: hint
 
-   What does a function return if it has no ``return`` statement?
-
-   A. ``0``
-
-   B. An empty string ``""``
-
-   C. ``None``
-
-   D. It raises an error.
+   **True or False:** 3D occupancy networks evaluate primarily using mAP
+   (mean Average Precision) as their main metric.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- ``None``
+   **False**
 
-   Functions without an explicit ``return`` statement (or with a bare ``return``) implicitly return ``None``.
+   3D occupancy networks are evaluated using **mIoU** (mean Intersection over
+   Union) across semantic voxel classes. mAP is used for bounding box
+   detection benchmarks. Since occupancy produces dense per-voxel predictions,
+   IoU-based metrics that compare predicted and ground-truth voxel masks are
+   the appropriate choice.
 
 
 .. admonition:: Question 14
    :class: hint
 
-   Which correctly unpacks a function's return value?
-
-   .. code-block:: python
-
-      def get_coords():
-          return 3.5, 7.2
-
-   A. ``x, y = get_coords()``
-
-   B. ``(x, y) = get_coords()``
-
-   C. Both A and B are correct.
-
-   D. Neither A nor B is correct.
+   **True or False:** The nuScenes NDS metric rewards methods that have both
+   high detection recall (mAP) and low attribute errors (e.g., position,
+   size, orientation, velocity).
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- Both A and B are correct.
+   **True**
 
-   Python supports tuple unpacking with or without parentheses. ``get_coords()`` returns a tuple, and both syntaxes correctly unpack the two values.
+   NDS = (1/10) * [5 * mAP + sum over TP metrics of (1 - min(1, error))].
+   It equally rewards accurate detection (mAP) and precise attribute
+   estimation (ATE, ASE, AOE, AVE, AAE). A method with high mAP but poor
+   velocity estimation will score lower than one with balanced performance
+   across all attributes.
 
 
 .. admonition:: Question 15
    :class: hint
 
-   What is the correct order of parameters in a function signature?
-
-   A. ``def func(*args, a, b, **kwargs):``
-
-   B. ``def func(a, b, *args, **kwargs):``
-
-   C. ``def func(**kwargs, a, b, *args):``
-
-   D. ``def func(a, **kwargs, b, *args):``
+   **True or False:** BEV detection completely eliminates the need for
+   perspective-view camera features and processes only top-down image data.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``def func(a, b, *args, **kwargs):``
+   **False**
 
-   The correct order is: positional parameters, then ``*args`` for extra positional arguments, then ``**kwargs`` for extra keyword arguments.
+   BEV detection methods like LSS and BEVFormer start from perspective-view
+   camera images and transform those features into BEV space. The perspective
+   images are the input; BEV is the output representation. Only LiDAR-based
+   methods can directly produce BEV features without perspective images.
 
 
 ----
 
 
-True or False
-=============
+Essay Questions (Questions 16-18)
+===================================
 
 .. admonition:: Question 16
    :class: hint
 
-   **True or False:** In Python, a function can return multiple values as a tuple.
+   **Compare and contrast Lift-Splat-Shoot (LSS) and BEVFormer** as approaches
+   for camera-to-BEV transformation. What are the key architectural differences
+   and the trade-offs of each?
 
-.. dropdown:: Answer
+   *(2-4 sentences)*
+
+.. dropdown:: Answer Guidelines
    :class-container: sd-border-success
 
-   **True**
+   *Key points to include:*
 
-   Python functions can return multiple values separated by commas, which are automatically packed into a tuple. The caller can unpack them using tuple unpacking.
+   - LSS uses explicit geometry: it predicts a per-pixel depth distribution,
+     lifts features into a 3D frustum, and splats them into a voxel grid using
+     camera calibration. It is conceptually simple and does not require
+     Transformer attention mechanisms.
+   - BEVFormer uses learnable BEV queries that attend to image features via
+     deformable attention at geometrically-projected 3D reference points. It
+     is more flexible and can be extended with temporal attention.
+   - LSS trade-off: depends on accurate depth prediction; depth errors propagate
+     into BEV position errors. BEVFormer trade-off: higher computational cost
+     due to attention; requires careful tuning of query initialization and
+     reference point sampling.
+   - BEVFormer with temporal attention significantly outperforms LSS on nuScenes
+     (41.6 vs. ~32 mAP for comparable backbones), at higher compute cost.
 
 
 .. admonition:: Question 17
    :class: hint
 
-   **True or False:** Default argument values are evaluated once when the function is defined, not each time it is called.
+   **Explain why 3D occupancy networks represent an advance over bounding box
+   detection** for autonomous driving. Give two concrete scenarios where
+   occupancy prediction is superior.
 
-.. dropdown:: Answer
+   *(2-4 sentences)*
+
+.. dropdown:: Answer Guidelines
    :class-container: sd-border-success
 
-   **True**
+   *Key points to include:*
 
-   Default values are evaluated once at function definition time. This is why mutable defaults (like lists or dictionaries) can cause unexpected behavior across multiple calls.
+   - Bounding boxes assume rectangular box shapes, which fail for non-rigid
+     or irregular objects. Occupancy networks assign a semantic label to every
+     voxel independently, capturing arbitrary geometry.
+   - Scenario 1: construction zone -- barriers, debris, and scaffolding have
+     complex non-box shapes. Occupancy correctly maps the free space boundary
+     while a box detector would fail or produce very loose boxes.
+   - Scenario 2: overhanging tree branches or low-clearance obstacles -- a
+     3D box cannot represent objects that extend into part of the vehicle's
+     path. Occupancy precisely maps which voxels are occupied.
+   - Additionally, occupancy provides a direct "free space" representation
+     needed for trajectory optimization, while box detection requires a
+     separate freespace estimation step.
 
 
 .. admonition:: Question 18
    :class: hint
 
-   **True or False:** The ``global`` keyword allows a function to create a new global variable that did not exist before.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**
-
-   The ``global`` keyword can both modify an existing global variable and create a new one if it does not already exist in the module scope.
-
-
-.. admonition:: Question 19
-   :class: hint
-
-   **True or False:** ``**kwargs`` collects extra keyword arguments into a list.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   ``**kwargs`` collects extra keyword arguments into a **dictionary**, not a list. Each keyword becomes a key, and its argument becomes the corresponding value.
-
-
-.. admonition:: Question 20
-   :class: hint
-
-   **True or False:** A recursive function without a base case will run forever without error.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   Python has a maximum recursion depth (default 1000). A recursive function without a base case will hit this limit and raise a ``RecursionError``, not run forever.
-
-
-.. admonition:: Question 21
-   :class: hint
-
-   **True or False:** Type hints in Python are enforced at runtime by the interpreter.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   Type hints are not enforced at runtime. They are metadata used by developers, IDEs, and static analysis tools like ``mypy`` for type checking.
-
-
-.. admonition:: Question 22
-   :class: hint
-
-   **True or False:** In the LEGB rule, Python checks the local scope before the global scope.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**
-
-   The LEGB order is Local, Enclosing, Global, Built-in. Python checks the local scope first, so a local variable will shadow a global variable with the same name.
-
-
-.. admonition:: Question 23
-   :class: hint
-
-   **True or False:** Reassigning a parameter inside a function always modifies the original variable outside the function.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   Reassigning a parameter inside a function creates a new local binding and does not affect the original variable. Only in-place mutations on mutable objects affect the original.
-
-
-.. admonition:: Question 24
-   :class: hint
-
-   **True or False:** A Google-style docstring should include a description, an ``Args`` section, and a ``Returns`` section.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**
-
-   A Google-style docstring includes a one-line description of the function, an ``Args`` section listing each parameter and its type/description, and a ``Returns`` section describing the return value.
-
-
-.. admonition:: Question 25
-   :class: hint
-
-   **True or False:** The ``nonlocal`` keyword is used to modify a variable in the enclosing function's scope.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**
-
-   The ``nonlocal`` keyword allows a nested (inner) function to modify a variable defined in the enclosing (outer) function's scope, rather than creating a new local variable.
-
-
-----
-
-
-Essay Questions
-===============
-
-.. admonition:: Question 26
-   :class: hint
-
-   **Explain the LEGB rule in Python.** Describe what each letter stands for and the order in which Python searches for a variable name.
+   **Describe Tesla's BEV occupancy network approach** and explain why Tesla
+   chose a camera-only strategy instead of adding LiDAR. What are the
+   potential advantages and risks of this approach?
 
    *(2-4 sentences)*
 
@@ -570,82 +461,16 @@ Essay Questions
 
    *Key points to include:*
 
-   - LEGB stands for Local, Enclosing, Global, Built-in.
-   - Local: variables defined inside the current function.
-   - Enclosing: variables in the scope of outer functions (for nested functions).
-   - Global: variables defined at the module level.
-   - Built-in: names in Python's ``builtins`` module (e.g., ``print``, ``len``, ``int``).
-   - Python searches in this exact order and uses the first match found.
-
-
-.. admonition:: Question 27
-   :class: hint
-
-   **Explain the difference between pass-by-assignment with mutable and immutable objects.** Provide an example of each showing different behavior.
-
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
-   :class-container: sd-border-success
-
-   *Key points to include:*
-
-   - Python passes object references, not values or pointers.
-   - Immutable objects (int, str, tuple): modifications inside a function create a new object; the original is unchanged. Example: adding to an integer parameter does not affect the caller's variable.
-   - Mutable objects (list, dict, set): in-place modifications (like ``append()``) affect the original object. Example: appending to a list parameter modifies the caller's list.
-   - Reassignment inside a function always creates a new local binding, regardless of mutability.
-
-
-.. admonition:: Question 28
-   :class: hint
-
-   **Explain the mutable default argument problem.** Why is ``def func(items=[])`` dangerous, and what is the recommended alternative?
-
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
-   :class-container: sd-border-success
-
-   *Key points to include:*
-
-   - Default argument values are evaluated once at function definition time, not at each call.
-   - If the default is a mutable object (like a list or dict), all calls share the same object.
-   - This causes unexpected accumulation of values across calls.
-   - The fix is to use ``None`` as the default and create a new object inside the function: ``if items is None: items = []``.
-
-
-.. admonition:: Question 29
-   :class: hint
-
-   **Describe the two essential components of a recursive function.** What happens if one of them is missing?
-
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
-   :class-container: sd-border-success
-
-   *Key points to include:*
-
-   - A recursive function needs a **base case** (the stopping condition) and a **recursive case** (where the function calls itself with a simpler input).
-   - Without a base case, the function will recurse indefinitely until Python raises a ``RecursionError`` (default depth limit of 1000).
-   - Without a recursive case, the function is just a regular function with no recursion.
-   - Example: factorial uses ``n <= 1`` as the base case and ``n * factorial(n - 1)`` as the recursive case.
-
-
-.. admonition:: Question 30
-   :class: hint
-
-   **Explain why type hints are useful even though Python does not enforce them at runtime.** Give at least two benefits.
-
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
-   :class-container: sd-border-success
-
-   *Key points to include:*
-
-   - Type hints improve **readability** by making function signatures self-documenting.
-   - They enable **static analysis** tools like ``mypy`` to catch type errors before runtime.
-   - IDEs use them for **autocompletion** and better code navigation.
-   - They make **refactoring** safer by surfacing type mismatches across the codebase.
-   - They serve as **documentation** that stays in sync with the code (unlike comments that may become outdated).
+   - Tesla uses 8 cameras to produce a 4D occupancy prediction (3D space +
+     predicted future states) using a video transformer trained on billions
+     of auto-labeled frames from its fleet.
+   - Tesla argues cameras are sufficient because humans drive with eyes only,
+     and a sufficiently powerful neural network can infer depth from multi-frame
+     parallax and learned scene priors.
+   - Advantages: lower hardware cost (LiDAR adds $1,000-$10,000+ per unit),
+     massively scalable data collection from the existing fleet, no sensor
+     interference or point sparsity at long range.
+   - Risks: camera-based depth inference is less reliable in low-texture
+     scenes, fog, rain, and low-light conditions compared to LiDAR. Validation
+     of safety margins is harder without a ground-truth depth sensor. Most
+     Tier-1 robotaxi competitors (Waymo, Cruise) retain LiDAR for redundancy.

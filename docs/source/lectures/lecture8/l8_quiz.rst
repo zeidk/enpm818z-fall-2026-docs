@@ -2,11 +2,11 @@
 Quiz
 ====================================================
 
-This quiz covers the key concepts from Lecture 8: Introduction to
-ROS 2, including the distributed architecture, DDS, pub/sub model,
-workspace setup, node design (minimal and OOP), spinning, timers,
-publishers, subscribers, QoS policies, and communication timing
-scenarios.
+This quiz covers the key concepts from Lecture 8: Motion Planning,
+including the planning hierarchy, bicycle kinematic model,
+graph-based planners (Dijkstra, A*, Weighted A*), sampling-based
+planners (RRT, RRT*, PRM), lattice-based planning, collision
+detection, and diffusion-based planning.
 
 .. note::
 
@@ -29,302 +29,302 @@ Multiple Choice
 .. admonition:: Question 1
    :class: hint
 
-   What is the primary role of DDS in ROS 2?
+   In the three-tier autonomous vehicle planning hierarchy, which tier
+   is responsible for deciding whether the vehicle should change lanes
+   or yield to an oncoming vehicle?
 
-   A. It is a build tool that compiles ROS 2 packages.
+   A. Route planning (Tier 1)
 
-   B. It is the middleware layer that handles node discovery, message
-      transport, and QoS enforcement between nodes.
+   B. Behavior planning (Tier 2)
 
-   C. It is the Python client library used to write ROS 2 nodes.
+   C. Motion planning (Tier 3)
 
-   D. It is a visualization tool for inspecting the ROS 2 computation
-      graph.
+   D. Trajectory planning (a separate fourth tier)
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- DDS is the middleware layer that handles node discovery,
-   message transport, and QoS enforcement between nodes.
+   **B** -- Behavior planning (Tier 2).
 
-   DDS (Data Distribution Service) sits beneath the ``rclpy``/``rclcpp``
-   API and transparently handles participant discovery via multicast,
-   serialization/deserialization of messages, transport over UDP/TCP/shared
-   memory, and enforcement of per-topic QoS policies. Node developers
-   interact only with the ROS 2 API; DDS operates invisibly underneath.
+   Behavior planning operates at the intersection scale and decides
+   *how* the vehicle interacts with other agents -- lane-keeping,
+   lane-change, yield, stop. Route planning selects which roads to
+   use. Motion planning finds a collision-free geometric path within
+   the maneuver envelope defined by the behavior planner. Trajectory
+   planning (covered in L9) adds the time dimension to the path.
 
 
 .. admonition:: Question 2
    :class: hint
 
-   What is the correct order of ``colcon build`` output directories?
+   The bicycle kinematic model describes vehicle heading change as:
 
-   A. ``src/``, ``build/``, ``install/``, ``log/``
+   .. math::
 
-   B. ``build/``, ``install/``, ``log/`` (``src/`` is not created by
-      colcon)
+      \dot{\theta} = \frac{v}{L} \tan\delta
 
-   C. ``build/``, ``log/``, ``dist/``
+   If the wheelbase :math:`L = 2.7` m, speed :math:`v = 10` m/s,
+   and the steering angle :math:`\delta = 0.15` rad, what is
+   :math:`\dot{\theta}` (approximately)?
 
-   D. ``install/``, ``dist/``, ``log/``
+   A. 0.055 rad/s
+
+   B. 0.55 rad/s
+
+   C. 5.5 rad/s
+
+   D. 0.0055 rad/s
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``build/``, ``install/``, ``log/`` (``src/`` is not created
-   by colcon).
+   **B** -- Approximately 0.55 rad/s.
 
-   ``colcon build`` scans the existing ``src/`` directory for packages
-   and creates ``build/`` (intermediate artifacts), ``install/`` (final
-   install tree including ``setup.bash``), and ``log/`` (build logs).
-   The ``src/`` directory is created manually by the developer before
-   the first build.
+   .. math::
+
+      \dot{\theta} = \frac{10}{2.7} \tan(0.15) \approx
+      3.70 \times 0.1501 \approx 0.556 \text{ rad/s}
+
+   At this heading rate the vehicle completes roughly one full turn
+   every 11 seconds, consistent with a gentle highway curve at
+   36 km/h.
 
 
 .. admonition:: Question 3
    :class: hint
 
-   What happens if you call ``ros2 run first_pkg minimal_node`` and the
-   node contains no ``rclpy.spin()`` call?
+   A* search is guaranteed to find the optimal path when:
 
-   A. The node runs indefinitely, waiting for callbacks.
+   A. The heuristic overestimates the true cost-to-go by at most 10%.
 
-   B. The node raises a ``RuntimeError`` because spin is mandatory.
+   B. The heuristic is admissible (never overestimates the true
+      cost-to-go).
 
-   C. The node starts, executes its ``main()`` body, and exits
-      immediately.
+   C. The graph has no negative edge weights.
 
-   D. The node silently blocks without doing anything.
+   D. The goal node is expanded before any other node with higher
+      :math:`f`-value.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- The node starts, executes its ``main()`` body, and exits
-   immediately.
+   **B** -- The heuristic is admissible (never overestimates).
 
-   Without ``rclpy.spin()``, the main thread is never handed to the
-   executor. The node registers with the ROS 2 runtime, executes any
-   code after ``rclpy.init()``, and then reaches ``rclpy.shutdown()``
-   and exits. No callbacks ever fire. ``ros2 node list`` will show
-   nothing because the process has already terminated.
+   Admissibility ensures that whenever a node is expanded, its
+   :math:`g`-value is already optimal. An overestimating heuristic
+   can cause A* to expand the goal prematurely with a suboptimal
+   cost. Note: non-negative edge weights are required by Dijkstra
+   but A* inherits this requirement too; however, the critical
+   guarantee for *optimality specifically* is admissibility of
+   the heuristic.
 
 
 .. admonition:: Question 4
    :class: hint
 
-   Which ``create_publisher()`` argument controls how many undelivered
-   messages are buffered before the oldest is dropped?
+   Weighted A* with inflation factor :math:`\varepsilon = 3` finds a
+   path of cost 120. What is the tightest guarantee on the optimal
+   path cost?
 
-   A. The message type.
+   A. The optimal cost is at least 40.
 
-   B. The topic name.
+   B. The optimal cost is at least 60.
 
-   C. The queue depth (third positional argument).
+   C. The optimal cost is at least 90.
 
-   D. The ``reliability`` policy.
+   D. No guarantee can be made.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- The queue depth (third positional argument).
+   **A** -- The optimal cost is at least 40.
 
-   Under the default ``KEEP_LAST`` history policy, the queue depth
-   (``depth``) determines how many messages are held in the buffer.
-   When the queue is full, the oldest message is evicted to make room
-   for the newest incoming message. Passing an integer as the third
-   argument to ``create_publisher()`` sets this depth with all other
-   QoS policies at their defaults.
+   Weighted A* guarantees that the returned cost is at most
+   :math:`\varepsilon` times the optimal cost:
+
+   .. math::
+
+      \text{cost}_{returned} \leq \varepsilon \cdot \text{cost}^*
+      \implies 120 \leq 3 \cdot \text{cost}^*
+      \implies \text{cost}^* \geq 40
+
+   The optimal cost is therefore at least 40 (it could be anywhere
+   in :math:`[40, 120]`).
 
 
 .. admonition:: Question 5
    :class: hint
 
-   A subscriber with ``RELIABLE`` reliability policy tries to connect
-   to a publisher with ``BEST_EFFORT`` reliability. What happens?
+   What is the key property that makes RRT* asymptotically optimal
+   but plain RRT is not?
 
-   A. The subscriber receives all messages but logs a warning.
+   A. RRT* uses a bidirectional search from both start and goal.
 
-   B. DDS silently refuses the connection; no messages are delivered
-      and no error is raised.
+   B. RRT* rewires the tree to reassign parents when a cheaper
+      path to a node is found.
 
-   C. ROS 2 raises a ``QoSIncompatibleError`` at runtime.
+   C. RRT* uses a grid-based heuristic instead of random sampling.
 
-   D. The subscriber falls back to ``BEST_EFFORT`` automatically.
+   D. RRT* runs Dijkstra on the final tree to extract the path.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- DDS silently refuses the connection; no messages are
-   delivered and no error is raised.
+   **B** -- RRT* rewires the tree to reassign parents when a cheaper
+   path to a node is found.
 
-   A ``RELIABLE`` subscriber requires guaranteed delivery; a
-   ``BEST_EFFORT`` publisher cannot provide that guarantee. DDS
-   therefore refuses to establish the connection. The failure is
-   completely silent -- no exception, no warning in the log. This is
-   one of the most common silent bugs in ROS 2. Diagnose with
-   ``ros2 topic info /topic -v``.
+   The two extra steps in RRT* (parent selection within a shrinking
+   radius and tree rewiring) allow the algorithm to continuously
+   improve path cost as more samples are added. Plain RRT only
+   adds edges and never removes or reassigns them, so the first
+   path found is never improved.
 
 
 .. admonition:: Question 6
    :class: hint
 
-   What does ``--symlink-install`` do when passed to ``colcon build``?
+   A Probabilistic Road Map (PRM) is best described as:
 
-   A. It builds only the packages that have changed since the last
-      build.
+   A. A single-query planner that rebuilds the graph for every new
+      start/goal pair.
 
-   B. It creates symbolic links to Python source files and config
-      files in ``install/``, so edits take effect without rebuilding.
+   B. A multi-query planner that constructs a roadmap offline and
+      reuses it for many queries.
 
-   C. It links the workspace to the base ROS 2 installation
-      automatically.
+   C. A planner that samples configurations online during execution
+      to react to dynamic obstacles.
 
-   D. It enables incremental compilation for C++ packages.
+   D. An exact planner that guarantees finding the shortest path.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- It creates symbolic links to Python source files and config
-   files in ``install/``, so edits take effect without rebuilding.
+   **B** -- A multi-query planner that constructs a roadmap offline
+   and reuses it for many queries.
 
-   Without ``--symlink-install``, ``colcon build`` copies Python files
-   into ``install/``. Any edit to the source requires a rebuild to
-   take effect. With ``--symlink-install``, ``install/`` contains
-   symlinks back to the source files; a change to a ``.py`` file is
-   immediately visible on the next ``ros2 run``. Note: new entry points
-   and data file declarations in ``setup.py`` still require a rebuild.
+   PRM's two-phase design (offline construction + online query)
+   amortizes the sampling cost over many planning queries. This
+   makes it efficient for static or semi-static environments
+   where the same roadmap can be queried repeatedly (e.g., a
+   warehouse or structured parking garage).
 
 
 .. admonition:: Question 7
    :class: hint
 
-   In an OOP-based ROS 2 node, why is the spin loop placed in the
-   entry point script rather than inside the node class?
+   In lattice-based planning for autonomous vehicles, motion
+   primitives are:
 
-   A. Because ``rclpy.spin()`` can only be called from a ``__main__``
-      block.
+   A. Computed online at every planning cycle using numerical
+      integration of the bicycle model.
 
-   B. Because placing it in the class would cause a recursion error.
+   B. Pre-computed offline kinematically feasible maneuvers stored
+      in a lookup table.
 
-   C. To keep the class reusable by any executor or entry point script
-      without modification.
+   C. Straight-line segments connecting adjacent grid cells,
+      ignoring vehicle kinematics.
 
-   D. Because ROS 2 automatically adds a spin loop to all Node
-      subclasses.
+   D. Neural network outputs that map sensor data to control actions.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- To keep the class reusable by any executor or entry point
-   script without modification.
+   **B** -- Pre-computed offline kinematically feasible maneuvers
+   stored in a lookup table.
 
-   The node class defines behavior (publishers, subscribers, timers,
-   callbacks). The entry point script handles initialization,
-   spinning, cleanup, and shutdown. Keeping the spin loop out of the
-   class means the same class can be instantiated by different scripts,
-   handed to different executors (single-threaded, multi-threaded), or
-   combined with other nodes in a single process -- all without
-   changing the class itself.
+   The key advantage of lattice planning is that the expensive
+   kinematic computation (integrating the bicycle model, checking
+   curvature limits) is done once offline. At runtime, planning
+   reduces to pure graph search with O(1) edge lookups, enabling
+   real-time replanning at 20--50 Hz.
 
 
 .. admonition:: Question 8
    :class: hint
 
-   What is the correct import and instantiation for a ``geometry_msgs``
-   ``Pose`` message?
+   The Minkowski sum :math:`\mathcal{O} \oplus \mathcal{B}(d)` used
+   in collision detection safety margins:
 
-   A.
-      .. code-block:: python
+   A. Shrinks the obstacle by radius :math:`d` to create a
+      conservative free space.
 
-         from geometry_msgs import Pose
-         pose = Pose.new()
+   B. Inflates the obstacle boundary outward by radius :math:`d`,
+      equivalent to shrinking the robot to a point.
 
-   B.
-      .. code-block:: python
+   C. Computes the intersection of the obstacle with a circle of
+      radius :math:`d`.
 
-         from geometry_msgs.msg import Pose
-         pose = Pose()
-
-   C.
-      .. code-block:: python
-
-         import geometry_msgs
-         pose = geometry_msgs.Pose()
-
-   D.
-      .. code-block:: python
-
-         from rclpy.msgs import Pose
-         pose = Pose()
+   D. Rotates the obstacle by angle :math:`d` around its centroid.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``from geometry_msgs.msg import Pose`` followed by
-   ``pose = Pose()``.
+   **B** -- Inflates the obstacle boundary outward by radius
+   :math:`d`.
 
-   All ROS 2 message classes live in the ``.msg`` subpackage of their
-   package (e.g., ``std_msgs.msg``, ``geometry_msgs.msg``). They are
-   imported directly and instantiated with ``MsgType()``. All numeric
-   fields default to ``0`` or ``0.0`` on construction.
+   The Minkowski sum with a disk inflates every point on the
+   obstacle boundary outward by :math:`d`. This is equivalent
+   to shrinking the robot to a point and planning in the inflated
+   configuration space -- a standard trick that reduces collision
+   checking to point-in-polygon tests. The safety margin encodes
+   both localization uncertainty and comfort distance.
 
 
 .. admonition:: Question 9
    :class: hint
 
-   A publisher runs at 2 Hz with QoS depth 3 (``KEEP_LAST``). The
-   subscriber callback takes 1.7 s to complete. After the queue fills
-   up, what happens to new incoming messages?
+   DiffusionDrive (CVPR 2025) achieves real-time performance
+   compared to earlier diffusion planners primarily by:
 
-   A. New messages are discarded by the publisher and never enter the
-      queue.
+   A. Using a larger neural network with more parameters.
 
-   B. New messages are buffered in an unlimited overflow area.
+   B. Running a truncated diffusion schedule starting partway
+      through the denoising chain, reducing denoising steps from
+      ~100 to ~10.
 
-   C. The oldest message in the queue is evicted to make room for the
-      newest message.
+   C. Replacing the Transformer encoder with a simpler CNN.
 
-   D. The publisher slows down automatically to match the subscriber.
+   D. Only planning for the next 1 second instead of 8 seconds.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- The oldest message in the queue is evicted to make room
-   for the newest message.
+   **B** -- Using a truncated diffusion schedule starting partway
+   through the denoising chain.
 
-   Under the ``KEEP_LAST`` history policy, the queue has a fixed
-   capacity equal to ``depth``. When the queue is full and a new
-   message arrives, the oldest buffered message is dropped. The
-   subscriber always processes the most recent available data, but may
-   miss intermediate messages entirely. Increasing the depth only
-   delays the first drop; it does not eliminate message loss when the
-   subscriber is persistently slower than the publisher.
+   DiffusionDrive initializes from anchored Gaussian noise
+   (clustered around likely trajectory modes) rather than pure
+   noise, and runs the reverse diffusion process starting from
+   step :math:`T' \ll T`. This dramatically cuts the number of
+   network forward passes required at inference while maintaining
+   trajectory quality, enabling 45 FPS on a single GPU.
 
 
 .. admonition:: Question 10
    :class: hint
 
-   Which command shows the publishing frequency of the ``/counter``
-   topic in a running ROS 2 system?
+   Which planning algorithm is most appropriate for real-time motion
+   planning on a structured highway road network?
 
-   A. ``ros2 topic info /counter``
+   A. Plain RRT (fast first path)
 
-   B. ``ros2 topic echo /counter``
+   B. PRM (multi-query roadmap)
 
-   C. ``ros2 topic hz /counter``
+   C. Lattice-based planner in Frenet frame
 
-   D. ``ros2 node info /counter``
+   D. Full RRT* (asymptotically optimal)
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- ``ros2 topic hz /counter``
+   **C** -- Lattice-based planner in Frenet frame.
 
-   ``ros2 topic hz`` subscribes to the topic and measures the average
-   message arrival rate in Hz. It is the primary tool for confirming
-   that a publisher is running at the expected frequency. ``echo``
-   prints message contents; ``info`` shows metadata and QoS; ``node info``
-   describes a node, not a topic.
+   Highway driving is highly structured: lanes are well-defined,
+   maneuvers are limited, and replanning must occur at 10--50 Hz.
+   Lattice planners exploit this structure through pre-built
+   road-aligned motion primitives and fast graph search. RRT/RRT*
+   are designed for unstructured spaces and converge slowly. PRM
+   is a multi-query planner but its roadmap is not road-aligned.
 
 
 ----
@@ -336,186 +336,101 @@ True / False
 .. admonition:: Question 11
    :class: hint
 
-   **True or False:** ``rclpy.spin(node)`` must be called inside the
-   node class's ``__init__`` method.
+   **True or False:** The bicycle model imposes a holonomic
+   constraint, meaning the vehicle can move freely in any direction
+   including sideways.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   ``rclpy.spin(node)`` belongs in the **entry point script**, not
-   inside the node class. The spin loop is part of the application
-   lifecycle (initialize, spin, cleanup), not part of the node's
-   behavior. Keeping it in the entry point makes the class reusable
-   by different executors and scripts without modification.
+   The bicycle model imposes a **nonholonomic** constraint:
+   :math:`\dot{x}\sin\theta - \dot{y}\cos\theta = 0`. This
+   prohibits lateral (sideways) motion. A nonholonomic constraint
+   restricts the instantaneously achievable velocities but not
+   necessarily the reachable configurations over time (the vehicle
+   can parallel-park using a sequence of forward/backward arcs).
 
 
 .. admonition:: Question 12
    :class: hint
 
-   **True or False:** A ROS 2 publisher sends messages only when at
-   least one subscriber is connected.
+   **True or False:** Dijkstra's algorithm expands nodes in
+   increasing order of their true cost-to-come :math:`g(v)`.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **True**
 
-   A publisher sends messages regardless of whether any subscriber is
-   listening (Rule 3 of the pub/sub model). If no subscriber is
-   connected and the durability policy is ``VOLATILE`` (the default),
-   messages are discarded by DDS immediately. The publisher is
-   completely unaware of whether subscribers exist.
+   Dijkstra maintains a min-priority queue keyed on :math:`g(v)`.
+   Each extraction yields the node with the smallest known
+   cost-to-come among unvisited nodes. This is exactly the
+   Bellman optimality condition: once a node is extracted, its
+   :math:`g`-value is optimal (assuming non-negative edge weights).
 
 
 .. admonition:: Question 13
    :class: hint
 
-   **True or False:** ``package.xml`` and ``setup.py`` must agree on
-   the package name and version.
+   **True or False:** RRT is probabilistically complete, meaning
+   that given infinite samples it will always find a path if one
+   exists.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **True**
 
-   The ROS 2 build system reads both files and expects consistency.
-   A mismatch between the ``name`` field in ``setup.py`` and the
-   ``<name>`` tag in ``package.xml``, or between their ``version``
-   values, causes a build error. Always update both files together.
+   RRT is probabilistically complete. As the number of random
+   samples :math:`N \to \infty`, the probability that the tree
+   fails to reach any reachable configuration goes to zero. This
+   follows from the density of the sampling distribution over
+   :math:`\mathcal{C}_{free}`. However, probabilistic completeness
+   does not guarantee path quality -- RRT finds *a* path, not
+   necessarily a *good* path.
 
 
 .. admonition:: Question 14
    :class: hint
 
-   **True or False:** ``TRANSIENT_LOCAL`` durability ensures that a
-   subscriber which joins after the publisher has already sent messages
-   will receive the last cached message.
+   **True or False:** In diffusion-based planning, the reverse
+   (denoising) process starts from a trajectory drawn from the
+   dataset and gradually removes noise.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **True**
+   **False**
 
-   ``TRANSIENT_LOCAL`` durability causes the publisher to cache its
-   last published message. When a new subscriber connects, DDS
-   immediately delivers the cached message to it, even if the
-   publisher sent it long before the subscriber existed. Both the
-   publisher and subscriber must use ``TRANSIENT_LOCAL`` for this to
-   work; a ``VOLATILE`` publisher paired with a ``TRANSIENT_LOCAL``
-   subscriber is an incompatible QoS combination.
+   The reverse process starts from **pure Gaussian noise**
+   :math:`\tau_T \sim \mathcal{N}(0, I)` (or, in DiffusionDrive,
+   from anchored noise near likely trajectory clusters). It is the
+   *forward* process that starts from a real trajectory and adds
+   noise. The reverse process is the generative (planning) process
+   that denoises from noise to a plausible trajectory.
 
 
 .. admonition:: Question 15
    :class: hint
 
-   **True or False:** ``colcon build --symlink-install`` means you
-   never need to rebuild after adding a new entry point to ``setup.py``.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   ``--symlink-install`` symlinks Python source files and config files
-   so that edits to existing ``.py`` files take effect without
-   rebuilding. However, adding a **new** entry point or data file
-   declaration to ``setup.py`` requires a full ``colcon build`` run,
-   because entry points are registered in the install tree during the
-   build step, not via symlinks.
-
-
-.. admonition:: Question 16
-   :class: hint
-
-   **True or False:** A subscriber can exist on a topic with no active
-   publisher.
+   **True or False:** Inflating obstacle representations by a safety
+   margin :math:`d_{\text{safe}}` is equivalent to planning with a
+   point-mass robot in the inflated configuration space.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **True**
 
-   This is Rule 4 of the pub/sub model. A subscriber can be started
-   before any publisher exists. It will simply never receive a message
-   until a compatible publisher appears. DDS handles the discovery
-   automatically when both sides eventually become active.
-
-
-.. admonition:: Question 17
-   :class: hint
-
-   **True or False:** Using ``print()`` instead of
-   ``node.get_logger().info()`` in a ROS 2 node is acceptable for
-   production code.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   In ROS 2 nodes, ``print()`` should never be used. The ROS 2 logger
-   routes messages to the terminal, to timestamped log files, and to
-   the ``/rosout`` topic simultaneously. This allows messages to be
-   captured, filtered by severity, and replayed. ``print()`` bypasses
-   all of these mechanisms and produces output that cannot be filtered,
-   timestamped by ROS 2, or subscribed to remotely.
-
-
-.. admonition:: Question 18
-   :class: hint
-
-   **True or False:** A topic name mismatch between a publisher and a
-   subscriber causes ROS 2 to raise a runtime exception.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   A topic name mismatch is a **silent failure**. DDS simply never
-   establishes a connection between the publisher and subscriber
-   because they are on different named channels. No exception is
-   raised and no warning is printed. The subscriber callback never
-   fires. This is why introspection tools like ``ros2 topic list``
-   and ``ros2 topic info`` are essential for debugging communication
-   problems.
-
-
-.. admonition:: Question 19
-   :class: hint
-
-   **True or False:** ``ros2 run`` can start multiple nodes from a
-   single command.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   ``ros2 run <package> <executable>`` starts exactly **one** node per
-   invocation and blocks the terminal until Ctrl-C is pressed. To
-   start multiple nodes from a single command, use
-   ``ros2 launch <package> <launch_file>``, which reads a launch file
-   and starts all declared nodes in one terminal.
-
-
-.. admonition:: Question 20
-   :class: hint
-
-   **True or False:** The ``resource/`` directory inside a Python ROS 2
-   package can be safely deleted to clean up the package layout.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   The ``resource/`` directory contains a marker file required by the
-   ROS 2 ament package index. Without it, the package cannot be found
-   by ``ros2 pkg list`` or other ROS 2 tooling after building. It must
-   never be deleted.
+   When all obstacles are inflated by the robot's radius (or
+   safety margin) via the Minkowski sum, the robot can be treated
+   as a point mass for collision checking purposes. Any path that
+   is collision-free for the point mass in the inflated space is
+   also collision-free for the full-size robot in the original
+   space. This simplification is used in virtually all practical
+   motion planners.
 
 
 ----
@@ -524,12 +439,13 @@ True / False
 Essay Questions
 ===============
 
-.. admonition:: Question 21
+.. admonition:: Question 16
    :class: hint
 
-   **Explain the difference between a monolithic and a distributed
-   robotic software architecture.** What are the key advantages of the
-   distributed approach that ROS 2 enables?
+   **Compare RRT and A* as motion planners for an autonomous
+   vehicle navigating a structured urban environment.** Address
+   completeness, optimality, computational efficiency, and
+   suitability for real-time replanning.
 
    *(2-4 sentences)*
 
@@ -538,25 +454,29 @@ Essay Questions
 
    *Key points to include:*
 
-   - In a monolithic architecture, all robot software runs in one large
-     program. Changing one component risks breaking everything, and a
-     single crash takes down the entire system.
-   - In a distributed architecture (ROS 2), each component runs as a
-     separate OS process (node). Nodes communicate via message passing
-     over named topics; they are decoupled and unaware of each other's
-     identity.
-   - Key advantages: fault isolation (a crashed node does not kill
-     others), modularity (nodes can be independently developed, tested,
-     and replaced), scalability (the system grows by adding nodes), and
-     collaboration (teams work on different nodes in parallel).
+   - A* on a pre-built road graph is complete and optimal
+     (with an admissible heuristic) and runs in milliseconds
+     on sparse road graphs, making it well-suited for real-time
+     replanning in structured environments.
+   - RRT is probabilistically complete but not optimal; it
+     explores uniformly in all directions including off-road
+     areas, making it inefficient when the environment has
+     exploitable structure (lanes, intersections).
+   - For structured urban driving, A* (or lattice search) is
+     strongly preferred. RRT is better suited to unstructured
+     spaces (parking, off-road) where a road-graph abstraction
+     does not exist.
+   - Weighted A* with :math:`\varepsilon > 1` reduces the number
+     of expanded nodes at the cost of a bounded suboptimality,
+     making it the practical choice for real-time urban planning.
 
 
-.. admonition:: Question 22
+.. admonition:: Question 17
    :class: hint
 
-   **Describe the four core QoS policies in ROS 2.** For each policy,
-   give a concrete example of when you would choose one setting over
-   the other.
+   **Explain the concept of asymptotic optimality in RRT* and
+   why it matters for practical motion planning.** What is the
+   trade-off between RRT and RRT* in a time-constrained setting?
 
    *(2-4 sentences)*
 
@@ -565,28 +485,29 @@ Essay Questions
 
    *Key points to include:*
 
-   - **Reliability**: ``RELIABLE`` for commands or critical state
-     (gripper trigger, navigation goal); ``BEST_EFFORT`` for
-     high-frequency sensor data (IMU at 200 Hz) where losing an
-     occasional message is acceptable.
-   - **Durability**: ``TRANSIENT_LOCAL`` for data published once but
-     needed by nodes that start later (robot URDF description, static
-     map); ``VOLATILE`` for continuous streams where only current
-     data matters.
-   - **History**: ``KEEP_LAST`` with a chosen depth for bounded memory
-     use; ``KEEP_ALL`` only when no message can ever be dropped
-     (e.g., event logs with strict audit requirements).
-   - **Deadline**: set on sensor topics to detect a failed sensor driver
-     -- if no message arrives within the deadline, a callback fires
-     to alert the system.
+   - Asymptotic optimality means that as the number of samples
+     :math:`N \to \infty`, the cost of the RRT* path converges
+     to the true optimal cost. For any finite :math:`N`, RRT*
+     provides a path that is at least as good as RRT's.
+   - RRT* achieves this through the parent-selection and rewiring
+     steps that continuously improve the tree structure as new
+     samples are added.
+   - The trade-off: RRT* does more work per sample (neighbor
+     search within radius :math:`r_N`), so it runs slower than
+     RRT for a fixed time budget. In time-constrained scenarios
+     RRT might find a feasible path faster.
+   - In practice, RRT* is used for offline planning or as an
+     *anytime* algorithm: run it until the time budget expires
+     and return the best path found so far.
 
 
-.. admonition:: Question 23
+.. admonition:: Question 18
    :class: hint
 
-   **Explain what spinning is in ROS 2 and why a node without a spin
-   loop is essentially non-functional.** What is the role of the
-   executor during spinning?
+   **Describe how diffusion-based planners differ from classical
+   optimization-based motion planners.** What advantages do they
+   offer for complex multi-agent scenarios, and what are their
+   current limitations?
 
    *(2-4 sentences)*
 
@@ -595,44 +516,21 @@ Essay Questions
 
    *Key points to include:*
 
-   - Spinning hands the calling thread to the ROS 2 executor, which
-     continuously checks for pending callbacks and dispatches them one
-     by one.
-   - Without spinning, the executor never runs. Timer callbacks never
-     fire, subscriber callbacks never receive messages, service
-     requests are never processed, and action goals are never handled.
-     The node is registered but completely passive.
-   - ``rclpy.spin(node)`` is the event loop of a ROS 2 node.
-     ``rclpy.spin_once()`` processes one batch and returns, useful
-     for interleaving ROS processing with other work.
-
-
-.. admonition:: Question 24
-   :class: hint
-
-   **Describe the three communication timing scenarios covered in the
-   lecture** (no subscriber, fast subscriber, slow subscriber). What
-   is the key risk in the slow subscriber scenario and how would you
-   diagnose it?
-
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
-   :class-container: sd-border-success
-
-   *Key points to include:*
-
-   - **No subscriber**: DDS discards all messages immediately (with
-     ``VOLATILE`` durability). No buffering occurs. The publisher
-     runs normally with no performance impact.
-   - **Fast subscriber**: the callback completes before the next
-     message arrives. The queue never builds up; no messages are
-     dropped. This is the ideal scenario.
-   - **Slow subscriber**: the callback takes longer than the publish
-     interval. The queue fills up and the oldest messages are evicted
-     (``KEEP_LAST``). The subscriber continuously processes stale
-     data and can never catch up. Increasing queue depth only delays
-     the first drop.
-   - Diagnose with ``ros2 topic hz /topic`` (confirms publish rate)
-     and ``ros2 topic info /topic -v`` (checks QoS). If hz is correct
-     but the callback fires less often, the callback is the bottleneck.
+   - Classical optimization-based planners define an explicit
+     cost function (e.g., path length + smoothness + safety
+     margin) and solve a constrained optimization problem. They
+     are interpretable and can encode hard constraints but
+     struggle with multi-modal distributions over possible
+     futures.
+   - Diffusion planners learn a generative model of plausible
+     trajectories from expert data. The denoising process
+     implicitly captures the multi-modal distribution of human
+     driving behavior and can generate diverse, interaction-
+     consistent plans.
+   - Advantages: handles complex interactions without hand-crafted
+     cost functions; naturally multi-modal (can represent
+     uncertainty over which maneuver to take).
+   - Limitations: require large, high-quality training datasets;
+     inference is more expensive than classical planners;
+     safety guarantees are harder to formally prove; behavior
+     can be hard to interpret or correct when it fails.

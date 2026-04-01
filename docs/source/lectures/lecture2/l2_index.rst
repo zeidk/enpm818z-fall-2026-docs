@@ -32,10 +32,8 @@ By the end of this lecture, you will be able to:
   requirements, and failure mode analysis.
 
 
-Contents
---------
-
 .. toctree::
+   :hidden:
    :maxdepth: 2
    :titlesonly:
 

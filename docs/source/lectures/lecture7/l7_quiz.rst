@@ -2,11 +2,12 @@
 Quiz
 ====================================================
 
-This quiz covers the key concepts from Lecture 7: Object-Oriented
-Programming II, including class and static methods, object relationships
-(association, aggregation, composition), inheritance, ``super()``,
-polymorphism, duck typing, abstract base classes, data classes,
-``__slots__``, and ``typing.Protocol``.
+This quiz covers the key concepts from Lecture 7: Localization & SLAM.
+Topics include the localization problem, coordinate frames, GNSS/RTK,
+dead reckoning (wheel/visual/LiDAR odometry), probabilistic localization
+(EKF, MCL), scan matching (ICP), HD map localization, SLAM formulation,
+SLAM frontend and backend, loop closure, evaluation metrics, and modern
+LiDAR SLAM systems.
 
 .. note::
 
@@ -22,676 +23,477 @@ polymorphism, duck typing, abstract base classes, data classes,
 ----
 
 
-Multiple Choice
-===============
+Multiple Choice (Questions 1-10)
+=================================
 
 .. admonition:: Question 1
    :class: hint
 
-   What is the key difference between a class method and a static method?
+   What is the typical horizontal accuracy of standard civilian GPS without
+   any corrections, and why is this insufficient for autonomous driving
+   lane-keeping?
 
-   A. A class method can only be called on instances; a static method can
-      only be called on the class.
+   A. 1-5 mm; unnecessary precision wastes compute.
 
-   B. A class method receives ``cls`` as its first argument and can access
-      class state; a static method receives no implicit argument and has no
-      access to instance or class state.
+   B. 1-5 m; lane widths are approximately 3-4 m, requiring <20 cm for
+      reliable lane-level localization.
 
-   C. A class method is faster than a static method.
+   C. 10-50 m; cannot distinguish even road segments.
 
-   D. A static method can modify class attributes; a class method cannot.
+   D. 1-5 cm; sufficient for all AV applications.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- A class method receives ``cls`` as its first argument and can
-   access class state; a static method receives no implicit argument and
-   has no access to instance or class state.
+   **B** -- 1-5 m; lane widths are approximately 3-4 m, requiring <20 cm
+   for reliable lane-level localization.
 
-   ``@classmethod`` passes the class itself as ``cls``, allowing access
-   to class attributes and enabling subclass-aware construction.
-   ``@staticmethod`` receives neither ``self`` nor ``cls`` and behaves
-   like a plain function that lives in the class namespace for
-   organizational reasons.
+   Standard GPS (civilian L1 signal) achieves 1-5 m accuracy under good
+   conditions, degrading further in urban canyons due to multipath. With
+   lane widths of ~3.5 m, a 5 m position error means the vehicle cannot
+   determine which lane it is in, let alone where within the lane. RTK-GPS
+   or LiDAR scan matching is required for lane-level localization.
 
 
 .. admonition:: Question 2
    :class: hint
 
-   What is the output of the following code?
+   **RTK-GPS** achieves centimeter-level accuracy by:
 
-   .. code-block:: python
+   A. Using more satellites simultaneously than standard GPS.
 
-      class Robot:
-          total_robots = 0
+   B. Applying corrections computed by a nearby base station at a precisely
+      known location, enabling carrier-phase integer ambiguity resolution.
 
-          def __init__(self, name: str):
-              self._name = name
-              Robot.total_robots += 1
+   C. Operating at a higher signal frequency (L5 band) than standard GPS.
 
-          @classmethod
-          def get_fleet_size(cls) -> str:
-              return f"Fleet size: {cls.total_robots}"
-
-      Robot("Scout")
-      Robot("Hauler")
-      print(Robot.get_fleet_size())
-
-   A. ``Fleet size: 0``
-
-   B. ``Fleet size: 1``
-
-   C. ``Fleet size: 2``
-
-   D. ``AttributeError``
+   D. Averaging position estimates over multiple minutes to reduce noise.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- ``Fleet size: 2``
+   **B** -- Applying corrections computed by a nearby base station at a
+   precisely known location, enabling carrier-phase integer ambiguity
+   resolution.
 
-   Each call to ``Robot(...)`` increments the class attribute
-   ``total_robots`` by 1. After two instances are created,
-   ``total_robots`` is 2. ``get_fleet_size()`` is a class method that
-   reads the class attribute via ``cls.total_robots``.
+   RTK stands for Real-Time Kinematic. The base station measures carrier-
+   phase signals from GPS satellites and, knowing its exact position,
+   computes the residual errors. These corrections are broadcast to the
+   rover. By resolving the integer ambiguity in the carrier phase (wavelength
+   ~19 cm for L1), the rover achieves 1-2 cm horizontal accuracy.
 
 
 .. admonition:: Question 3
    :class: hint
 
-   Which object relationship is best described as "the part cannot exist
-   independently of the whole"?
+   Which dead reckoning method has the **lowest positional drift** per unit
+   distance traveled?
 
-   A. Association
+   A. Wheel odometry
 
-   B. Aggregation
+   B. Monocular visual odometry
 
-   C. Composition
+   C. LiDAR odometry
 
-   D. Inheritance
+   D. IMU integration (without external corrections)
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- Composition
+   **C** -- LiDAR odometry
 
-   In composition, the parts are created inside the whole's ``__init__``
-   and their lifetime is tied to the whole. Destroying the whole destroys
-   the parts. Example: a ``Robot`` owns its ``Sensor``\(s); the sensors
-   have no meaning outside the robot that created them.
+   LiDAR odometry (e.g., LOAM) achieves ~0.1-0.5% drift per distance
+   traveled by directly measuring 3D geometry via scan matching. Wheel
+   odometry drifts 1-5% due to wheel slip and terrain. Stereo visual
+   odometry drifts 0.5-1%. IMU integration diverges within seconds due to
+   gyroscope and accelerometer bias accumulation.
 
 
 .. admonition:: Question 4
    :class: hint
 
-   What is the output of the following code?
+   In **Iterative Closest Point (ICP)**, what is the role of the
+   **correspondence step**?
 
-   .. code-block:: python
+   A. Compute the SVD of the cross-covariance matrix to find the optimal
+      rotation and translation.
 
-      class Animal:
-          def __init__(self, name: str, age: int):
-              self._name = name
-              self._age = age
+   B. For each point in the source cloud, find its nearest neighbor in the
+      target cloud to establish point pairs for optimization.
 
-      class Dog(Animal):
-          def __init__(self, name: str, age: int, breed: str):
-              super().__init__(name, age)
-              self._breed = breed
+   C. Apply motion distortion correction to each scan point using IMU data.
 
-      rex = Dog("Rex", 5, "Labrador")
-      print(rex._name, rex._age, rex._breed)
-
-   A. ``AttributeError``
-
-   B. ``Rex 5 Labrador``
-
-   C. ``None None Labrador``
-
-   D. ``TypeError``
+   D. Select keyframes by comparing the distance traveled since the last
+      keyframe.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``Rex 5 Labrador``
+   **B** -- For each point in the source cloud, find its nearest neighbor
+   in the target cloud to establish point pairs for optimization.
 
-   ``Dog.__init__`` calls ``super().__init__(name, age)``, which
-   delegates to ``Animal.__init__`` and sets ``_name`` and ``_age``.
-   ``Dog.__init__`` then sets ``_breed``. All three attributes are
-   available on the instance.
+   ICP alternates between two steps: (1) correspondence -- find nearest
+   neighbors between current aligned source and target to form point pairs
+   (p_i, q_i); (2) minimize -- solve for the rigid transform T that minimizes
+   sum||q_i - T*p_i||^2 using SVD. The process repeats until convergence
+   (translation/rotation change below threshold).
 
 
 .. admonition:: Question 5
    :class: hint
 
-   What happens when you try to instantiate a class that inherits from
-   ``ABC`` and does not implement all of its abstract methods?
+   **Monte Carlo Localization (MCL/AMCL)** has an advantage over EKF
+   localization because it can:
 
-   A. The instance is created but the missing methods raise
-      ``NotImplementedError`` when called.
+   A. Run faster than EKF on embedded hardware.
 
-   B. Python raises ``TypeError`` at instantiation time.
+   B. Handle global localization (no initial pose given) and recovery from
+      the "kidnapped robot" problem, which EKF cannot.
 
-   C. Python raises ``AttributeError`` at instantiation time.
+   C. Use fewer parameters than EKF.
 
-   D. The instance is created successfully; no error is raised.
+   D. Provide a closed-form analytical solution to the posterior distribution.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Python raises ``TypeError`` at instantiation time.
+   **B** -- Handle global localization (no initial pose given) and recovery
+   from the "kidnapped robot" problem, which EKF cannot.
 
-   Python checks at instantiation time whether all abstract methods have
-   been implemented. If any are missing, it raises ``TypeError`` with a
-   message listing the unimplemented methods. This catches the omission
-   at the earliest possible point, not when the method is first called.
+   EKF maintains a single Gaussian estimate of pose -- if the initialization
+   is wrong or the vehicle is suddenly teleported (kidnapped), the single
+   Gaussian cannot represent multiple hypotheses. MCL represents the belief
+   as N particles spread across the entire map, naturally supporting multiple
+   hypotheses. As measurements arrive, particles in wrong locations get low
+   weight and die off; correct particles survive.
 
 
 .. admonition:: Question 6
    :class: hint
 
-   What is the output of the following code?
+   In the SLAM pose graph, what does a **loop closure edge** represent?
 
-   .. code-block:: python
+   A. A constraint between consecutive keyframes from scan-to-scan ICP.
 
-      class Animal:
-          def __init__(self, name: str):
-              self._name = name
+   B. A constraint between two non-consecutive keyframes that were identified
+      as the same location (the vehicle revisited a prior area), verified
+      by ICP.
 
-      class Cat(Animal):
-          def make_sound(self) -> None:
-              print(f"{self._name} says: Meow")
+   C. A GPS measurement at a specific keyframe position.
 
-      class Dog(Animal):
-          def make_sound(self) -> None:
-              print(f"{self._name} says: Woof")
-
-      animals = [Cat("Kitty"), Dog("Rex")]
-      for a in animals:
-          a.make_sound()
-
-   A. ``TypeError: make_sound not defined on Animal``
-
-   B. ``Kitty says: Meow`` then ``Rex says: Woof``
-
-   C. ``Meow`` then ``Woof``
-
-   D. ``AttributeError``
+   D. The initial pose prior used to anchor the first node.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``Kitty says: Meow`` then ``Rex says: Woof``
+   **B** -- A constraint between two non-consecutive keyframes that were
+   identified as the same location (the vehicle revisited a prior area),
+   verified by ICP.
 
-   This is duck typing in action. ``Cat`` and ``Dog`` each define
-   ``make_sound()`` independently. The loop calls the method on each
-   object without checking its type. Python resolves the correct
-   implementation at runtime based on the actual type of each object.
+   Loop closure edges connect keyframe i to keyframe j (where j >> i+1) when
+   place recognition detects that the current scan matches a previous keyframe.
+   The relative transform is computed by ICP and added as a long-range edge.
+   During pose graph optimization, this edge pulls the two distant keyframes
+   into alignment, distributing the accumulated drift correction across the
+   entire trajectory.
 
 
 .. admonition:: Question 7
    :class: hint
 
-   Which of the following correctly describes the difference between
-   aggregation and composition?
+   **LOAM** (LiDAR Odometry and Mapping) achieves high-accuracy odometry by:
 
-   A. Aggregation uses a hollow diamond in UML; composition uses a filled
-      diamond. In aggregation the part can outlive the whole; in
-      composition the part is destroyed with the whole.
+   A. Using a particle filter to track the vehicle pose.
 
-   B. Aggregation uses a filled diamond in UML; composition uses a hollow
-      diamond. In aggregation the part is destroyed with the whole; in
-      composition it can outlive the whole.
+   B. Matching edge features (high curvature points) and planar features
+      (low curvature points) between scans using point-to-edge and
+      point-to-plane distance minimization.
 
-   C. Aggregation and composition are identical; they differ only in UML
-      notation.
+   C. Aligning raw LiDAR point clouds using standard point-to-point ICP.
 
-   D. Aggregation implies inheritance; composition does not.
+   D. Fusing LiDAR with GPS measurements via a Kalman filter.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **A** -- Aggregation uses a hollow diamond; composition uses a filled
-   diamond. In aggregation the part can outlive the whole; in composition
-   the part is destroyed with the whole.
+   **B** -- Matching edge features (high curvature points) and planar features
+   (low curvature points) between scans using point-to-edge and point-to-plane
+   distance minimization.
 
-   The key distinction is lifetime dependency. In aggregation, parts are
-   created outside and passed in; deleting the container leaves the parts
-   intact. In composition, parts are created inside ``__init__`` and
-   owned exclusively by the whole.
+   LOAM extracts features based on local curvature: high curvature → edge
+   features (on sharp corners and poles); low curvature → planar features
+   (on flat walls and ground). Matching edge-to-edge and plane-to-plane
+   (rather than arbitrary point-to-point) is more discriminative and produces
+   better-constrained, more accurate scan matching results.
 
 
 .. admonition:: Question 8
    :class: hint
 
-   What is the output of the following code?
+   The **Absolute Pose Error (APE)** metric measures:
 
-   .. code-block:: python
+   A. The drift rate per meter of trajectory (local accuracy).
 
-      from dataclasses import dataclass
+   B. The RMSE between estimated and ground-truth poses over the full
+      trajectory (global accuracy).
 
-      @dataclass
-      class Animal:
-          name: str
-          age: int
-          weight: float
+   C. The number of loop closures detected per kilometer.
 
-      kitty = Animal("Kitty", 3, 4.2)
-      print(kitty)
-
-   A. ``<__main__.Animal object at 0x...>``
-
-   B. ``Animal(name='Kitty', age=3, weight=4.2)``
-
-   C. ``{'name': 'Kitty', 'age': 3, 'weight': 4.2}``
-
-   D. ``TypeError``
+   D. The processing time per LiDAR scan.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``Animal(name='Kitty', age=3, weight=4.2)``
+   **B** -- The RMSE between estimated and ground-truth poses over the full
+   trajectory (global accuracy).
 
-   ``@dataclass`` auto-generates ``__repr__`` from the class's
-   type-annotated fields. The generated representation lists each field
-   name and value in declaration order.
+   APE aligns the estimated trajectory to the ground truth (removing
+   global gauge freedom) and then measures the RMSE of pose errors at
+   each timestep. It reflects the overall quality of the map and the
+   effectiveness of loop closure. Relative Pose Error (RPE) measures
+   drift over fixed intervals -- a complementary local accuracy metric.
 
 
 .. admonition:: Question 9
    :class: hint
 
-   What does ``super()`` return?
+   Why is **motion distortion correction** necessary for LiDAR scans in a
+   moving vehicle?
 
-   A. The parent class itself.
+   A. LiDAR sensors have a calibration error that must be corrected offline.
 
-   B. A new instance of the parent class.
+   B. A spinning LiDAR scan takes 50-100 ms to complete; during this time the
+      vehicle moves, so each point is captured at a different vehicle pose.
+      Without correction, the scan appears sheared/distorted.
 
-   C. A proxy object that routes method calls to the next class in the MRO.
+   C. LiDAR returns require temperature correction to compute accurate ranges.
 
-   D. The ``__init__`` method of the parent class.
+   D. Multiple LiDAR returns from the same surface must be averaged.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- A proxy object that routes method calls to the next class in
-   the MRO.
+   **B** -- A spinning LiDAR scan takes 50-100 ms to complete; during this
+   time the vehicle moves, so each point is captured at a different vehicle
+   pose. Without correction, the scan appears sheared/distorted.
 
-   ``super()`` does not return the parent class directly. It returns a
-   proxy that knows your position in the MRO and delegates calls to the
-   appropriate next class in the chain. This is what makes ``super()``
-   work correctly in multiple inheritance scenarios.
+   At 50 km/h, a vehicle moves ~1.4 m during a 100 ms scan. Points at the
+   start of the scan are displaced ~1.4 m relative to the end-of-scan points.
+   IMU data (100-1000 Hz) is interpolated to compute the vehicle pose at
+   each point's acquisition time, and each point is transformed to the
+   common reference pose (e.g., scan start or scan center).
 
 
 .. admonition:: Question 10
    :class: hint
 
-   What is the primary advantage of ``__slots__`` over a regular class?
+   **LIO-SAM** improves on LOAM by:
 
-   A. It allows dynamic addition of new attributes at runtime.
+   A. Removing the need for LiDAR entirely, using cameras and IMU.
 
-   B. It replaces ``__dict__`` with a fixed structure, reducing memory
-      usage and speeding up attribute access.
+   B. Tightly coupling IMU pre-integration with LiDAR scan matching in a
+      unified factor graph (GTSAM), enabling accurate real-time SLAM with
+      GPS and loop closure.
 
-   C. It automatically generates ``__init__``, ``__repr__``, and
-      ``__eq__``.
+   C. Using neural network-based scan matching instead of ICP.
 
-   D. It prevents a class from being subclassed.
+   D. Operating at 100 Hz by reducing scan resolution.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- It replaces ``__dict__`` with a fixed structure, reducing
-   memory usage and speeding up attribute access.
+   **B** -- Tightly coupling IMU pre-integration with LiDAR scan matching
+   in a unified factor graph (GTSAM), enabling accurate real-time SLAM with
+   GPS and loop closure.
 
-   Every regular instance carries a ``__dict__`` that costs roughly
-   232 bytes. ``__slots__`` replaces it with a compact array of named
-   slots. The trade-off is that dynamic attribute assignment is no longer
-   allowed after instantiation.
+   LIO-SAM adds three key improvements over LOAM: (1) tight IMU integration
+   via pre-integration factors for high-frequency motion estimates, (2) a
+   full factor graph backend (GTSAM) that jointly optimizes IMU, LiDAR, GPS,
+   and loop closure constraints, and (3) efficient sliding window map
+   representation. This makes it robust to aggressive motions and suitable
+   for long-duration outdoor mapping.
 
+
+----
+
+
+True or False (Questions 11-15)
+================================
 
 .. admonition:: Question 11
    :class: hint
 
-   Which of the following is true about ``typing.Protocol``?
-
-   A. A class must explicitly inherit from the Protocol to be considered
-      compatible.
-
-   B. A class satisfies a Protocol if it has the required methods,
-      regardless of its class hierarchy.
-
-   C. Protocols replace abstract base classes entirely.
-
-   D. Protocols can only be used with ``isinstance()`` checks.
+   **True or False:** Dead reckoning methods like wheel odometry produce
+   position estimates with bounded error -- the error does not grow
+   indefinitely over time.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- A class satisfies a Protocol if it has the required methods,
-   regardless of its class hierarchy.
+   **False**
 
-   This is structural subtyping: compatibility is determined by structure
-   (the presence of the required methods), not by declaration (explicit
-   inheritance). No import or inheritance of the Protocol is needed in
-   the implementing class.
+   Dead reckoning error is **unbounded** -- it accumulates over time (or
+   distance traveled) through integration. Systematic errors (e.g., slight
+   wheel diameter miscalibration) cause the error to grow linearly with
+   distance; random noise causes it to grow as a random walk (proportional
+   to sqrt of distance). Without external corrections (GPS, scan matching,
+   landmarks), any dead reckoning method will eventually lose track of
+   the vehicle's true position.
 
 
 .. admonition:: Question 12
    :class: hint
 
-   What is the output of the following code?
-
-   .. code-block:: python
-
-      class Animal:
-          pass
-
-      class Cat(Animal):
-          pass
-
-      kitty = Cat()
-      print(isinstance(kitty, Cat))
-      print(isinstance(kitty, Animal))
-      print(issubclass(Animal, Cat))
-
-   A. ``True``, ``True``, ``True``
-
-   B. ``True``, ``True``, ``False``
-
-   C. ``True``, ``False``, ``False``
-
-   D. ``False``, ``True``, ``False``
+   **True or False:** In the SLAM problem, the vehicle must have a pre-built
+   map of the environment before it can operate.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``True``, ``True``, ``False``
+   **False**
 
-   ``isinstance(kitty, Cat)`` is ``True`` because ``kitty`` is a ``Cat``.
-   ``isinstance(kitty, Animal)`` is ``True`` because ``Cat`` is a
-   subclass of ``Animal`` (is-a relationship). ``issubclass(Animal, Cat)``
-   is ``False`` because the parent is not a subclass of its child.
+   SLAM (Simultaneous Localization and Mapping) is specifically designed
+   for operation WITHOUT a prior map. The vehicle builds the map from scratch
+   using sensor observations while simultaneously estimating its own position
+   within that growing map. This is in contrast to map-based localization
+   (e.g., HD map matching), which requires a pre-built map.
 
 
 .. admonition:: Question 13
    :class: hint
 
-   What is the correct way to declare a mutable default field in a
-   ``@dataclass``?
-
-   A. ``tags: list[str] = []``
-
-   B. ``tags: list[str] = list``
-
-   C. ``tags: list[str] = field(default_factory=list)``
-
-   D. ``tags: list[str] = field(default=[])``
+   **True or False:** Loop closure detection can reduce the accumulated
+   drift in a SLAM trajectory even if the loop closure occurs only once
+   at the very end of a long mission.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- ``tags: list[str] = field(default_factory=list)``
+   **True**
 
-   Mutable defaults like ``[]`` cannot be used directly because Python
-   would share the same list across all instances. ``field(default_factory=list)``
-   calls ``list()`` for each new instance, producing an independent empty
-   list. Option D is invalid because ``field(default=...)`` requires an
-   immutable value.
+   A single loop closure edge in the pose graph, added at the end of a long
+   trajectory, creates a constraint between the start and end of the loop.
+   Pose graph optimization distributes this correction across all
+   intermediate poses in the loop, reducing the drift from meters to
+   centimeters throughout the entire trajectory. This is the power of global
+   backend optimization -- it retroactively corrects the entire history.
 
 
 .. admonition:: Question 14
    :class: hint
 
-   In the following code, what is the MRO of ``Dog``?
-
-   .. code-block:: python
-
-      class Animal:
-          pass
-
-      class Dog(Animal):
-          pass
-
-   A. ``Dog -> object``
-
-   B. ``Dog -> Animal``
-
-   C. ``Dog -> Animal -> object``
-
-   D. ``Animal -> Dog -> object``
+   **True or False:** Point-to-plane ICP is generally faster to converge
+   than standard point-to-point ICP when matching planar surfaces.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- ``Dog -> Animal -> object``
+   **True**
 
-   In single inheritance the MRO is the chain from child to parent,
-   ending with ``object``. Every Python class ultimately inherits from
-   ``object``, which always appears last. Inspect it with
-   ``Dog.__mro__``.
+   Point-to-plane ICP minimizes the distance from each source point to the
+   tangent plane at the corresponding target point (using surface normals).
+   This objective provides a more accurate gradient for optimization near
+   flat surfaces -- the most common geometry in man-made environments.
+   Empirically, point-to-plane converges in ~5-10 iterations vs. ~30-50 for
+   point-to-point, on typical urban LiDAR scans.
 
 
 .. admonition:: Question 15
    :class: hint
 
-   Which decorator is required to allow ``isinstance()`` checks against a
-   ``typing.Protocol`` at runtime?
-
-   A. ``@abstractmethod``
-
-   B. ``@classmethod``
-
-   C. ``@runtime_checkable``
-
-   D. ``@staticmethod``
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **C** -- ``@runtime_checkable``
-
-   By default, ``isinstance()`` cannot check Protocol conformance at
-   runtime. Adding ``@runtime_checkable`` to the Protocol enables this
-   check. It only verifies the presence of the required methods, not
-   their signatures. Full type safety still requires a static type checker
-   such as ``mypy``.
-
-
-----
-
-
-True or False
-=============
-
-.. admonition:: Question 16
-   :class: hint
-
-   **True or False:** A static method can access and modify class
-   attributes via ``cls``.
+   **True or False:** HD map-based localization suffers from accumulated
+   drift over long drives because it integrates odometry without correction.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   A static method receives neither ``self`` nor ``cls``. It has no
-   implicit access to instance or class state. To read or modify a class
-   attribute inside a static method, you would have to reference the
-   class name directly (e.g., ``Robot.total_robots``), which is
-   considered poor style. Use a class method instead.
+   HD map-based localization does NOT accumulate drift. The HD map provides
+   a globally consistent reference frame. At each step, the current sensor
+   scan is matched against the global HD map to compute a position correction
+   -- this measurement-to-map comparison anchors the pose estimate to the
+   global frame. The limitation of HD maps is not drift but rather their
+   cost to create, maintain, and update when the environment changes.
+
+
+----
+
+
+Essay Questions (Questions 16-18)
+===================================
+
+.. admonition:: Question 16
+   :class: hint
+
+   **Explain the SLAM frontend and backend** as a two-stage processing
+   pipeline. What does each stage produce, and why must they work together
+   for accurate long-range mapping?
+
+   *(2-4 sentences)*
+
+.. dropdown:: Answer Guidelines
+   :class-container: sd-border-success
+
+   *Key points to include:*
+
+   - Frontend: processes raw LiDAR scans in real time to produce a local
+     odometry estimate (incremental pose changes) and detects potential
+     loop closure candidates. It includes preprocessing (motion distortion,
+     downsampling), feature extraction, ICP scan matching, and keyframe
+     selection. Frontend must run faster than the sensor rate (>10 Hz for
+     a 10 Hz LiDAR).
+   - Backend: receives keyframes and their relative pose constraints from
+     the frontend and solves a global pose graph optimization problem to
+     find the maximum-likelihood trajectory. When loop closures are added,
+     the backend redistributes drift corrections across the entire history.
+   - Why both are needed: the frontend provides the real-time incremental
+     estimates and detects loop candidates; but without the backend's global
+     optimization, drift accumulates indefinitely. Without the frontend's
+     real-time operation, the backend has no input. Together they achieve
+     real-time, globally consistent mapping.
+   - Example: after 500 m, the frontend has 5 m of drift. One loop closure
+     detected by the frontend triggers backend optimization, reducing APE
+     to <5 cm across the entire 500 m trajectory.
 
 
 .. admonition:: Question 17
    :class: hint
 
-   **True or False:** In aggregation, deleting the container object also
-   destroys the contained objects.
+   **Describe why loop closure is critical for SLAM** and how place
+   recognition enables it. What happens to the map quality if loop
+   closure fails?
 
-.. dropdown:: Answer
+   *(2-4 sentences)*
+
+.. dropdown:: Answer Guidelines
    :class-container: sd-border-success
 
-   **False**
+   *Key points to include:*
 
-   In aggregation the parts can outlive the whole. Parts are created
-   outside the container and passed in. Deleting the container leaves the
-   parts intact as long as another reference to them exists. This is the
-   key distinction from composition, where the parts' lifetime is tied
-   to the whole.
+   - SLAM odometry (frontend) accumulates drift -- typically 0.1-0.5% of
+     distance for LiDAR SLAM. Over 1 km, this means 1-5 m of accumulated
+     error. Without correction, the map shows the start and end of a loop
+     as two separate locations (map "split"), making the map inconsistent.
+   - Loop closure detects that the vehicle is revisiting a known location
+     by comparing the current scan's global descriptor (Scan Context,
+     FPFH) against all stored keyframe descriptors. When a match is found,
+     ICP verifies the relative transform.
+   - The verified loop closure edge is added to the pose graph. Backend
+     optimization distributes the correction: all keyframes in the loop
+     are adjusted to make the loop geometrically consistent.
+   - Without loop closure: maps of large environments (>100 m) are
+     unusable for localization because the start and end of a revisited
+     area appear at different locations. The map cannot be used for
+     place recognition in future operations.
 
 
 .. admonition:: Question 18
    :class: hint
 
-   **True or False:** ``super().__init__()`` should always be called as
-   the first line of a child class's ``__init__``.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**
-
-   Calling ``super().__init__()`` first ensures that parent attributes
-   are initialized before the child tries to use them. If the child sets
-   attributes that depend on parent state before calling
-   ``super().__init__()``, those parent attributes do not yet exist and
-   an ``AttributeError`` will follow.
-
-
-.. admonition:: Question 19
-   :class: hint
-
-   **True or False:** An abstract class can contain concrete methods
-   (methods with a full implementation) alongside abstract methods.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**
-
-   An abstract class can mix abstract and concrete methods. Concrete
-   methods are inherited by all subclasses as-is. Abstract methods define
-   the interface that each subclass must implement. This is a common
-   pattern: the base class provides shared behavior through concrete
-   methods and enforces a contract through abstract methods.
-
-
-.. admonition:: Question 20
-   :class: hint
-
-   **True or False:** Duck typing checks the type label of an object to
-   determine whether it is compatible with an interface.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   Duck typing checks what an object *can do* (the methods it has), not
-   what it *is* (its type or class hierarchy). If an object has the
-   required method, it is compatible, regardless of its class. The name
-   comes from: "If it walks like a duck and quacks like a duck, then it
-   must be a duck."
-
-
-.. admonition:: Question 21
-   :class: hint
-
-   **True or False:** A ``@dataclass(frozen=True)`` instance can be used
-   as a dictionary key.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**
-
-   ``frozen=True`` prevents field modification after creation and
-   automatically generates ``__hash__``, making the instance hashable.
-   Hashable objects can be used as dictionary keys or stored in sets.
-   A regular ``@dataclass`` sets ``__hash__`` to ``None`` by default
-   (making it unhashable) because mutable objects should not be hashed.
-
-
-.. admonition:: Question 22
-   :class: hint
-
-   **True or False:** When using ``__slots__``, a child class must
-   redeclare all slots from its parent class.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   Each class in the hierarchy should declare only the new attributes it
-   introduces. Python merges ``__slots__`` from all classes in the chain
-   automatically. Redeclaring a parent slot in the child wastes memory
-   and can cause subtle bugs.
-
-
-.. admonition:: Question 23
-   :class: hint
-
-   **True or False:** A class must explicitly inherit from a
-   ``typing.Protocol`` to satisfy it.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   A class satisfies a Protocol through structural subtyping: if it has
-   the required methods and attributes, it is compatible, regardless of
-   its class hierarchy. No import or inheritance of the Protocol is
-   needed in the implementing class. This is the key difference from
-   ABCs, which require explicit inheritance (nominal typing).
-
-
-.. admonition:: Question 24
-   :class: hint
-
-   **True or False:** Implementing ``__str__`` and ``__repr__`` in a
-   Python class is an example of method overloading.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   Implementing ``__str__`` and ``__repr__`` is method *overriding*, not
-   overloading. Every Python class already inherits these methods from
-   ``object``. Providing your own version replaces the inherited one.
-   Method overloading (defining multiple versions of a method with
-   different signatures) is not natively supported in Python.
-
-
-.. admonition:: Question 25
-   :class: hint
-
-   **True or False:** ``@abstractmethod`` can only be applied to methods
-   that have no body (i.e., ``pass`` or ``...``).
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   An abstract method can have a body. The subclass can call it
-   explicitly via ``super().method_name()``, which is useful when the
-   base class provides a default behavior that subclasses extend rather
-   than replace entirely. In practice, abstract methods with a body are
-   rare; an empty body is the norm.
-
-
-----
-
-
-Essay Questions
-===============
-
-.. admonition:: Question 26
-   :class: hint
-
-   **Explain the difference between association, aggregation, and
-   composition.** Give a robotics competition example for each.
+   **Compare GNSS-based localization and LiDAR scan matching** as
+   localization methods for autonomous driving. In what environments does
+   each perform best, and how do production AV systems combine them?
 
    *(2-4 sentences)*
 
@@ -700,119 +502,19 @@ Essay Questions
 
    *Key points to include:*
 
-   - Association is a general "uses-a" relationship where both objects
-     exist independently and neither owns the other. Example: a ``Robot``
-     is assigned a ``Task``; the task exists before and after the robot
-     executes it.
-   - Aggregation is a "has-a" relationship where the part can outlive the
-     whole. Parts are created outside the container and passed in.
-     Example: a ``Team`` has ``Robot``\(s); dissolving the team does not
-     destroy the robots.
-   - Composition is a stronger "has-a" relationship where the part cannot
-     exist without the whole. Parts are created inside the whole's
-     ``__init__``. Example: a ``Robot`` owns its ``Sensor``\(s);
-     destroying the robot destroys its sensors.
-
-
-.. admonition:: Question 27
-   :class: hint
-
-   **Explain what polymorphism is and how duck typing achieves it in
-   Python.** Why are abstract base classes useful even when duck typing
-   already works?
-
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
-   :class-container: sd-border-success
-
-   *Key points to include:*
-
-   - Polymorphism means different objects respond to the same interface in
-     their own way. In Python, duck typing is the mechanism: an object is
-     compatible if it has the required methods, regardless of its type.
-   - Duck typing is flexible but provides no compile-time or
-     instantiation-time guarantee. Nothing stops a developer from
-     forgetting to implement a required method in a new subclass.
-   - Abstract base classes close this gap: ``@abstractmethod`` forces
-     Python to raise ``TypeError`` at instantiation time if a required
-     method is missing, catching the omission as early as possible.
-
-
-.. admonition:: Question 28
-   :class: hint
-
-   **Explain what ``super()`` returns and why it should be called at the
-   start of a child class's ``__init__``.** What goes wrong if you forget
-   to call it?
-
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
-   :class-container: sd-border-success
-
-   *Key points to include:*
-
-   - ``super()`` returns a proxy object that routes method calls to the
-     next class in the MRO. It does not return the parent class directly.
-   - It should be called first in the child ``__init__`` so that parent
-     attributes are initialized before the child tries to use them.
-   - If ``super().__init__()`` is omitted entirely, the parent attributes
-     are never set and any method that accesses them will raise
-     ``AttributeError``.
-   - If it is called after child code that depends on parent attributes,
-     those parent attributes do not exist yet, causing the same error.
-
-
-.. admonition:: Question 29
-   :class: hint
-
-   **Compare ABCs and Protocols as mechanisms for defining interfaces in
-   Python.** When would you choose one over the other?
-
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
-   :class-container: sd-border-success
-
-   *Key points to include:*
-
-   - ABCs (nominal typing) require the implementing class to explicitly
-     inherit from the base class. They enforce the interface at
-     instantiation time and are well-suited when subclasses share
-     concrete behavior (inherited methods with a body).
-   - Protocols (structural typing) require no inheritance. A class
-     satisfies a Protocol simply by having the right methods. They are
-     better for describing interfaces that unrelated classes can satisfy,
-     especially across library or module boundaries.
-   - Choose ABCs when you want shared base behavior and strong enforcement
-     at instantiation time. Choose Protocols when you want loose coupling
-     and flexibility, particularly for type-annotating function parameters.
-
-
-.. admonition:: Question 30
-   :class: hint
-
-   **What is generalization and what is specialization in class design?**
-   Describe a scenario where each is the appropriate design activity.
-
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
-   :class-container: sd-border-success
-
-   *Key points to include:*
-
-   - Generalization is a bottom-up activity: you start with several
-     concrete classes, identify shared attributes and methods, and move
-     them into a new base class. Example: noticing that ``Cat``, ``Dog``,
-     and ``Bird`` all have ``name``, ``age``, and ``eat()`` and creating
-     an ``Animal`` base class to hold them.
-   - Specialization is a top-down activity: you start with a general base
-     class and create derived classes that extend or override it for a
-     specific context. Example: starting from a ``Robot`` base class and
-     creating ``MobileRobot`` (adds ``_speed``) and ``ManipulatorRobot``
-     (adds ``_reach_m``).
-   - A design smell that signals specialization is needed: a base class
-     carrying ``None`` values for attributes that only apply to some
-     subclasses (e.g., ``wingspan = None`` on a ``Cat``).
+   - GNSS (especially RTK): provides global, drift-free localization but
+     fails in urban canyons (multipath), tunnels, and underground areas.
+     Accuracy: 1-2 cm (RTK) under open sky; degrades to meters or loss
+     of fix in dense urban environments. No map required.
+   - LiDAR scan matching: provides high-accuracy local positioning (0.1-0.5%
+     drift for odometry; centimeter-level for map-based matching against
+     HD maps) but requires a pre-built map and accumulates drift without
+     loop closure. Works in tunnels, indoor parking, urban canyons.
+   - Production systems (Waymo, Cruise, Mobileye): use a tight EKF/factor
+     graph fusion of GNSS, LiDAR scan matching against HD maps, and IMU.
+     GNSS provides the global anchor; LiDAR provides accuracy in GNSS-denied
+     environments; IMU fills short gaps at high frequency.
+   - The HD map acts as the "long-term memory" -- accumulated drift from
+     LiDAR odometry is corrected at each map feature observation, providing
+     globally consistent, centimeter-accurate localization in all covered
+     environments.

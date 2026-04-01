@@ -9,309 +9,338 @@ References
     .. card::
         :class-card: sd-border-secondary
 
-        **ENPM605 -- L8: Introduction to ROS 2**
+        **ENPM818Z -- L8: Motion Planning**
 
-        Covers the ROS 2 distributed architecture, DDS middleware and
-        QoS policies, the publish/subscribe model (nodes, topics,
-        messages, rules, patterns), workspace setup and ``colcon``
-        builds, Python package creation (``package.xml``, ``setup.py``,
-        ``ament_python``), writing minimal and OOP-based nodes with
-        ``rclpy``, spinning and the executor model, timers and
-        callbacks, publishers (``create_publisher``, ``Int64``,
-        ``QoSProfile``), subscribers (``create_subscription``, named
-        callbacks), and three pub/sub communication timing scenarios
-        (no subscriber, fast subscriber, slow subscriber).
+        Covers the three-tier motion planning hierarchy (route,
+        behavior, motion), bicycle kinematic model and nonholonomic
+        constraints, graph-based planners (Dijkstra, A*, Weighted
+        A*), sampling-based planners (RRT, RRT*, PRM), lattice-based
+        planning in the Frenet frame with pre-computed motion
+        primitives, geometric collision detection with safety
+        margins (OBB, Minkowski sum), and diffusion-based planners
+        (Diffusion Planner ICLR 2025, DiffusionDrive CVPR 2025).
 
 
-.. dropdown:: ROS 2 Official Documentation
+.. dropdown:: Foundational Textbooks
     :class-container: sd-border-secondary
 
     .. grid:: 1 1 2 2
         :gutter: 2
 
-        .. grid-item-card:: ROS 2 Jazzy Documentation
-            :link: https://docs.ros.org/en/jazzy/
+        .. grid-item-card:: Choset et al. -- Principles of Robot Motion
             :class-card: sd-border-secondary
 
-            **docs.ros.org**
+            **MIT Press, 2005**
 
-            The official ROS 2 Jazzy documentation hub. Starting point
-            for all ROS 2 concepts, tutorials, and API references.
+            Comprehensive coverage of configuration spaces,
+            potential fields, graph-based planning, and sampling-
+            based planners. Chapters 4--7 are directly relevant
+            to this lecture.
 
             +++
 
-            - Concepts overview
-            - Tutorials (beginner to advanced)
-            - API reference
+            - Configuration space theory
+            - PRM and RRT derivations
+            - Completeness and optimality proofs
 
-        .. grid-item-card:: ROS 2 Beginner Tutorials
-            :link: https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries.html
+        .. grid-item-card:: LaValle -- Planning Algorithms
             :class-card: sd-border-secondary
 
-            **Beginner: Client Libraries**
+            **Cambridge University Press, 2006**
+            (freely available at planning.cs.uiuc.edu)
 
-            Step-by-step tutorials for writing nodes, publishers,
-            subscribers, services, and actions in Python.
+            The definitive reference for motion planning
+            algorithms. Covers discrete planning, sampling-based
+            methods, and nonholonomic systems.
 
             +++
 
-            - Creating a workspace
-            - Writing a simple publisher/subscriber
-            - Writing a simple service/client
+            - RRT and PRM foundations
+            - Nonholonomic planning
+            - Optimality analysis
 
-        .. grid-item-card:: rclpy API Reference
-            :link: https://docs.ros.org/en/jazzy/p/rclpy/
+        .. grid-item-card:: Thrun, Burgard, Fox -- Probabilistic Robotics
             :class-card: sd-border-secondary
 
-            **rclpy**
+            **MIT Press, 2005**
 
-            Full Python API reference for the ``rclpy`` client library.
+            Probabilistic foundations for robotics including
+            localization, mapping, and planning under uncertainty.
+            Relevant for understanding safety margins and
+            uncertainty-aware planning.
 
             +++
 
-            - ``Node`` class
-            - ``create_publisher``, ``create_subscription``
-            - ``create_timer``, ``spin``, ``shutdown``
+            - Probabilistic state estimation
+            - Occupancy grid maps
+            - Planning under uncertainty
 
-        .. grid-item-card:: ROS 2 QoS Settings
-            :link: https://docs.ros.org/en/rolling/Concepts/Intermediate/About-Quality-of-Service-Settings.html
+        .. grid-item-card:: Paden et al. -- Survey of AV Motion Planning
             :class-card: sd-border-secondary
 
-            **QoS Concepts**
+            **IEEE T-ITS, 2016**
 
-            Detailed explanation of all QoS policies, compatibility
-            rules, and predefined profiles.
+            Comprehensive survey of motion planning techniques
+            specifically for autonomous vehicles, covering all
+            algorithm families in this lecture.
 
             +++
 
-            - Reliability, durability, history, deadline
-            - Compatibility matrix
-            - Predefined profiles
-
-        .. grid-item-card:: ROS 2 Logging
-            :link: https://docs.ros.org/en/jazzy/Concepts/Intermediate/About-Logging.html
-            :class-card: sd-border-secondary
-
-            **About Logging**
-
-            How the ROS 2 logging system works, severity levels, and
-            configuration options.
-
-            +++
-
-            - Log levels: DEBUG, INFO, WARN, ERROR, FATAL
-            - ``/rosout`` topic
-            - Log file output
-
-        .. grid-item-card:: colcon Documentation
-            :link: https://colcon.readthedocs.io/
-            :class-card: sd-border-secondary
-
-            **colcon**
-
-            Official documentation for the colcon build tool.
-
-            +++
-
-            - ``colcon build`` flags
-            - ``--symlink-install``
-            - Package discovery
+            - Route, behavior, motion hierarchy
+            - Graph-based and sampling-based planners
+            - AV-specific constraints
 
 
-.. dropdown:: DDS and Middleware
+.. dropdown:: Graph-Based Planning
     :class-container: sd-border-secondary
 
     .. grid:: 1 1 2 2
         :gutter: 2
 
-        .. grid-item-card:: OMG DDS Portal
-            :link: https://www.omg.org/omg-dds-portal/
+        .. grid-item-card:: Hart, Nilsson, Raphael -- A* (1968)
             :class-card: sd-border-secondary
 
-            **Object Management Group**
+            **IEEE T-SSC, 1968**
 
-            Official DDS standard, specification downloads, and
-            community resources.
+            The original A* paper introducing the heuristic
+            search algorithm and proving its optimality under
+            admissible heuristics.
 
             +++
 
-            - DDS specification
-            - RTPS wire protocol
-            - Vendor landscape
+            - Original A* formulation
+            - Admissibility proof
+            - Heuristic design
 
-        .. grid-item-card:: DDS Foundation
-            :link: https://www.dds-foundation.org/
+        .. grid-item-card:: Likhachev et al. -- Weighted A* (2003)
             :class-card: sd-border-secondary
 
-            **DDS Foundation**
+            **NIPS 2003**
 
-            Use cases, QoS reference, webinar series, and historical
-            overview of DDS adoption.
+            Introduces the :math:`\varepsilon`-suboptimal
+            weighted A* variant with formal bounds on solution
+            quality vs. computation time.
 
             +++
 
-            - QoS policy reference
-            - Application domain case studies
-            - Interoperability
-
-        .. grid-item-card:: eProsima Fast DDS
-            :link: https://fast-dds.docs.eprosima.com/
-            :class-card: sd-border-secondary
-
-            **Fast DDS Documentation**
-
-            Documentation for the default ROS 2 DDS implementation
-            (eProsima Fast DDS).
-
-            +++
-
-            - Configuration
-            - QoS profiles
-            - Discovery settings
-
-        .. grid-item-card:: ROS 2 DDS Vendor Guide
-            :link: https://docs.ros.org/en/jazzy/Concepts/Intermediate/About-Different-Middleware-Vendors.html
-            :class-card: sd-border-secondary
-
-            **ROS 2 Jazzy: Middleware Vendors**
-
-            Comparison of supported RMW implementations for Jazzy:
-            Fast DDS, Cyclone DDS, Connext DDS, GurumDDS.
-
-            +++
-
-            - Switching RMW at runtime
-            - Vendor feature comparison
-            - Installation instructions
+            - Inflation factor analysis
+            - Anytime planning extensions
+            - Practical implementation
 
 
-.. dropdown:: External Tutorials
+.. dropdown:: Sampling-Based Planning
     :class-container: sd-border-secondary
 
     .. grid:: 1 1 2 2
         :gutter: 2
 
-        .. grid-item-card:: Articulated Robotics: ROS 2 Tutorials
-            :link: https://articulatedrobotics.xyz/category/ros2-tutorials/
+        .. grid-item-card:: LaValle -- RRT (1998)
             :class-card: sd-border-secondary
 
-            **Articulated Robotics**
+            **Technical Report, Iowa State, 1998**
 
-            Practical video and written tutorials for ROS 2 from
-            workspace setup through navigation.
+            Original RRT paper introducing rapidly-exploring
+            random trees for single-query kinodynamic planning.
 
             +++
 
-            - Workspace setup
-            - Publisher/subscriber patterns
-            - Launch files
+            - RRT algorithm
+            - Probabilistic completeness proof
+            - Kinodynamic extension
 
-        .. grid-item-card:: The Construct: ROS 2 Basics
-            :link: https://www.theconstructsim.com/ros2-for-beginners/
+        .. grid-item-card:: Karaman & Frazzoli -- RRT* (2011)
             :class-card: sd-border-secondary
 
-            **The Construct**
+            **IJRR, 2011**
 
-            Browser-based ROS 2 environment with guided courses for
-            beginners through advanced users.
+            Introduces RRT* with asymptotic optimality guarantee.
+            Also introduces PRM* and formal analysis of
+            sampling-based planner convergence rates.
 
             +++
 
-            - Interactive exercises
-            - No local install required
-            - Structured curriculum
+            - RRT* rewiring algorithm
+            - Asymptotic optimality proof
+            - Convergence rate analysis
 
-        .. grid-item-card:: Real Python: Python Classes (OOP)
-            :link: https://realpython.com/python3-object-oriented-programming/
+        .. grid-item-card:: Kavraki et al. -- PRM (1996)
             :class-card: sd-border-secondary
 
-            **Real Python**
+            **IEEE T-RA, 1996**
 
-            Review of Python OOP concepts underlying OOP node design:
-            classes, inheritance, ``__init__``, ``super()``.
+            Original PRM paper introducing probabilistic road
+            maps for multi-query planning in high-dimensional
+            configuration spaces.
 
             +++
 
-            - Class definition and instantiation
-            - Inheritance and ``super()``
-            - Instance and class attributes
+            - Two-phase construction
+            - Probabilistic completeness
+            - Multi-query efficiency
 
 
-.. dropdown:: Style and Best Practices
+.. dropdown:: Lattice-Based Planning
     :class-container: sd-border-secondary
 
     .. grid:: 1 1 2 2
         :gutter: 2
 
-        .. grid-item-card:: ROS 2 Python Style Guide
-            :link: https://docs.ros.org/en/jazzy/Contributing/Code-Style-Language-Versions.html
+        .. grid-item-card:: Pivtoraiko et al. -- State Lattice (2009)
             :class-card: sd-border-secondary
 
-            **ROS 2 Coding Standards**
+            **JFR, 2009**
 
-            Official style guidelines for Python and C++ ROS 2 code.
+            Introduces the state lattice framework with
+            pre-computed motion primitives for kinematically
+            feasible robot motion planning.
 
             +++
 
-            - Naming conventions
-            - Node class structure
-            - Docstring style
+            - Lattice construction methodology
+            - Motion primitive generation
+            - Search algorithms
 
-        .. grid-item-card:: PEP 8 -- Python Style Guide
-            :link: https://peps.python.org/pep-0008/
+        .. grid-item-card:: McNaughton et al. -- Frenet Lattice (2011)
             :class-card: sd-border-secondary
 
-            **Coding Conventions**
+            **ICRA 2011 (Uber ATG)**
 
-            Python style guide applied throughout ROS 2 Python code.
+            Describes the Frenet-frame lattice planner used
+            in structured autonomous driving, including
+            lane-change and yield maneuver encoding.
 
             +++
 
-            - ``snake_case`` for topic names and variables
-            - Class naming: ``CamelCase``
-            - Import ordering
+            - Road-aligned lattice design
+            - Lane change primitives
+            - Real-time performance
 
 
-.. dropdown:: Recommended Reading
+.. dropdown:: Diffusion-Based Planning
     :class-container: sd-border-secondary
 
     .. grid:: 1 1 2 2
         :gutter: 2
 
-        .. grid-item-card:: Anis Koubaa (Ed.)
+        .. grid-item-card:: Zheng et al. -- Diffusion Planner (ICLR 2025)
             :class-card: sd-border-secondary
 
-            **Robot Operating System (ROS): The Complete Reference
-            (Vol. 1-7)**
+            **ICLR 2025**
 
-            A multi-volume series covering ROS and ROS 2 from
-            fundamentals through advanced applications. Relevant
-            chapters cover distributed architectures, DDS, and
-            communication patterns.
+            Joint ego-agent diffusion planner achieving
+            state-of-the-art closed-loop performance on the
+            nuPlan benchmark through interaction-aware trajectory
+            denoising.
 
-        .. grid-item-card:: Open Robotics
+            +++
+
+            - Joint prediction and planning
+            - Scene context encoding
+            - nuPlan benchmark results
+
+        .. grid-item-card:: Liao et al. -- DiffusionDrive (CVPR 2025)
             :class-card: sd-border-secondary
 
-            **Programming Robots with ROS 2**
+            **CVPR 2025**
 
-            Hands-on guide to writing ROS 2 applications in Python and
-            C++, covering nodes, topics, services, actions, parameters,
-            and launch files.
+            Real-time diffusion planner using truncated schedule
+            and anchored Gaussian initialization achieving 45 FPS
+            while maintaining competitive nuPlan performance.
 
-        .. grid-item-card:: Silberschatz, Galvin, and Gagne
+            +++
+
+            - Truncated diffusion schedule
+            - Anchored Gaussian initialization
+            - Real-time inference analysis
+
+        .. grid-item-card:: Ho et al. -- DDPM (NeurIPS 2020)
             :class-card: sd-border-secondary
 
-            **Operating System Concepts (10th Edition)**
+            **NeurIPS 2020**
 
-            Chapter 3 (Processes) and Chapter 4 (Threads) provide the
-            OS-level background for understanding ROS 2 process
-            isolation, the main thread, and the executor spin loop.
+            Foundational paper establishing denoising diffusion
+            probabilistic models, the framework underlying
+            all diffusion-based planners.
 
-        .. grid-item-card:: Object Management Group
+            +++
+
+            - Forward/reverse process formulation
+            - Denoising score matching
+            - Image generation results
+
+
+.. dropdown:: Collision Detection
+    :class-container: sd-border-secondary
+
+    .. grid:: 1 1 2 2
+        :gutter: 2
+
+        .. grid-item-card:: Ericson -- Real-Time Collision Detection
             :class-card: sd-border-secondary
 
-            **DDS Specification v1.4**
+            **Morgan Kaufmann, 2004**
 
-            The formal OMG specification for the Data Distribution
-            Service. Appendix A contains the complete QoS policy
-            reference with compatibility rules and default values.
+            Comprehensive reference for geometric collision
+            detection algorithms including AABB, OBB, GJK,
+            and sweep-based methods.
+
+            +++
+
+            - Bounding volume hierarchies
+            - OBB intersection tests
+            - Minkowski sum computation
+
+        .. grid-item-card:: Berg et al. -- Reciprocal Velocity Obstacles
+            :class-card: sd-border-secondary
+
+            **IJRR, 2011**
+
+            Velocity-obstacle-based collision avoidance for
+            multi-agent scenarios, relevant to dynamic obstacle
+            handling in AV planning.
+
+            +++
+
+            - Velocity obstacles
+            - Multi-agent collision avoidance
+            - Real-time performance
+
+
+.. dropdown:: Benchmarks and Datasets
+    :class-container: sd-border-secondary
+
+    .. grid:: 1 1 2 2
+        :gutter: 2
+
+        .. grid-item-card:: nuPlan Benchmark
+            :link: https://nuplan.org/
+            :class-card: sd-border-secondary
+
+            **Motional / nuPlan**
+
+            Closed-loop planning benchmark used to evaluate
+            Diffusion Planner and DiffusionDrive, based on
+            real-world driving logs.
+
+            +++
+
+            - Closed-loop reactive simulation
+            - 1300+ hours of driving data
+            - Standardized metrics
+
+        .. grid-item-card:: CARLA Simulator
+            :link: https://carla.org/
+            :class-card: sd-border-secondary
+
+            **CARLA Open-Source Simulator**
+
+            High-fidelity autonomous driving simulator used
+            for the lecture's implementation exercise. Provides
+            waypoint graphs, sensor simulation, and traffic
+            scenarios.
+
+            +++
+
+            - Python API documentation
+            - Waypoint graph API
+            - Traffic scenario library

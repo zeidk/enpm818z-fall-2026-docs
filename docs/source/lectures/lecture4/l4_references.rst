@@ -1,238 +1,174 @@
+====================================================
 References
-==========
+====================================================
 
 
-.. dropdown:: 🏛️ Lecture 4
-    :class-container: sd-border-secondary
-    :open:
+.. dropdown:: Foundational BEV Papers
+   :class-container: sd-border-secondary
+   :open:
 
-    .. card::
-        :class-card: sd-border-secondary
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-        **ENPM605 -- L4: Function Fundamentals**
+      .. grid-item-card:: Lift-Splat-Shoot (LSS)
+         :link: https://arxiv.org/abs/2008.05711
+         :class-card: sd-border-secondary
 
-        Covers function definition and calling, arguments (positional, default, keyword, ``*args``, ``**kwargs``), scopes and the LEGB rule, pass-by-assignment, type hints (``Optional``, ``Union``, pipe syntax), Google-style docstrings, and recursion.
+         **Philion & Fidler, NeurIPS 2020**
 
+         Lifting image features into 3D space and splatting into a BEV grid.
+         The seminal camera-only BEV method.
 
-.. dropdown:: 🐍 Python Language References
-    :class-container: sd-border-secondary
+      .. grid-item-card:: BEVFormer
+         :link: https://arxiv.org/abs/2203.17270
+         :class-card: sd-border-secondary
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+         **Li et al., ECCV 2022**
 
-        .. grid-item-card:: 🔧 Defining Functions
-            :link: https://docs.python.org/3/tutorial/controlflow.html#defining-functions
-            :class-card: sd-border-secondary
+         Learnable BEV queries with spatial cross-attention and temporal
+         self-attention. State-of-the-art camera-only BEV detection.
 
-            **Tutorial -- Control Flow**
+      .. grid-item-card:: DETR3D
+         :link: https://arxiv.org/abs/2110.06922
+         :class-card: sd-border-secondary
 
-            Function definition, parameters, return values, and default arguments.
+         **Wang et al., CoRL 2021**
 
-            +++
+         3D object detection from multi-camera images using set-to-set
+         prediction with 3D reference points and camera-based attention.
 
-            - ``def`` keyword
-            - Default values
-            - Keyword arguments
+      .. grid-item-card:: BEVDet
+         :link: https://arxiv.org/abs/2112.11790
+         :class-card: sd-border-secondary
 
-        .. grid-item-card:: 📦 More on Defining Functions
-            :link: https://docs.python.org/3/tutorial/controlflow.html#more-on-defining-functions
-            :class-card: sd-border-secondary
+         **Huang et al., 2021**
 
-            **Tutorial -- Control Flow**
+         Adapts image backbones to BEV space using the LSS view transformer
+         with improved data augmentation strategies.
 
-            Advanced argument handling, ``*args``, ``**kwargs``, and unpacking.
 
-            +++
+.. dropdown:: 3D Occupancy Networks
+   :class-container: sd-border-secondary
 
-            - Arbitrary argument lists
-            - Unpacking argument lists
-            - Lambda expressions
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-        .. grid-item-card:: 🔍 Scopes and Namespaces
-            :link: https://docs.python.org/3/tutorial/classes.html#python-scopes-and-namespaces
-            :class-card: sd-border-secondary
+      .. grid-item-card:: MonoScene
+         :link: https://arxiv.org/abs/2112.00726
+         :class-card: sd-border-secondary
 
-            **Tutorial -- Classes**
+         **Cao & de Charette, CVPR 2022**
 
-            Python's scope rules, the LEGB lookup order, and namespace mechanics.
+         First semantic scene completion from a single monocular camera.
+         Introduced the camera-based occupancy prediction task.
 
-            +++
+      .. grid-item-card:: TPVFormer
+         :link: https://arxiv.org/abs/2302.07817
+         :class-card: sd-border-secondary
 
-            - Local, enclosing, global, built-in
-            - ``global`` and ``nonlocal``
-            - Name resolution
+         **Huang et al., CVPR 2023**
 
-        .. grid-item-card:: 📝 typing Module
-            :link: https://docs.python.org/3/library/typing.html
-            :class-card: sd-border-secondary
+         Tri-Perspective View representation for efficient 3D occupancy
+         prediction without full 3D voxel attention.
 
-            **Standard Library -- typing**
+      .. grid-item-card:: Occ3D
+         :link: https://arxiv.org/abs/2304.14365
+         :class-card: sd-border-secondary
 
-            Type hints, ``Optional``, ``Union``, and generic types.
+         **Tian et al., NeurIPS 2023**
 
-            +++
+         Large-scale 3D occupancy benchmark on nuScenes and Waymo with
+         dense annotations and standardized evaluation.
 
-            - Basic annotations
-            - ``Optional`` and ``Union``
-            - Generic collections
+      .. grid-item-card:: OpenOccupancy
+         :link: https://arxiv.org/abs/2303.03991
+         :class-card: sd-border-secondary
 
-        .. grid-item-card:: 🔄 Pass by Reference FAQ
-            :link: https://docs.python.org/3/faq/programming.html#how-do-i-write-a-function-with-output-parameters-call-by-reference
-            :class-card: sd-border-secondary
+         **Wang et al., 2023**
 
-            **Python FAQ**
+         Open-source occupancy prediction benchmark and augmented annotation
+         framework for nuScenes.
 
-            Explanation of how Python passes arguments and why it is neither pass-by-value nor pass-by-reference.
 
-            +++
+.. dropdown:: Multi-Camera Fusion
+   :class-container: sd-border-secondary
 
-            - Object references
-            - Mutable vs immutable
-            - Output parameters
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-        .. grid-item-card:: 🔁 Recursion
-            :link: https://docs.python.org/3/tutorial/controlflow.html#defining-functions
-            :class-card: sd-border-secondary
+      .. grid-item-card:: BEVFusion (MIT)
+         :link: https://arxiv.org/abs/2205.13542
+         :class-card: sd-border-secondary
 
-            **Tutorial -- Control Flow**
+         **Liu et al., ICRA 2023**
 
-            Recursive function examples and the Fibonacci sequence.
+         Efficient LiDAR-camera BEV fusion using a shared BEV feature space
+         with camera-to-BEV transformation.
 
-            +++
+      .. grid-item-card:: BEVFusion (Nanjing)
+         :link: https://arxiv.org/abs/2205.13790
+         :class-card: sd-border-secondary
 
-            - Base case and recursive case
-            - Stack depth
-            - ``sys.getrecursionlimit()``
+         **Liang et al., NeurIPS 2022**
 
-        .. grid-item-card:: 📋 Function Annotations
-            :link: https://docs.python.org/3/tutorial/controlflow.html#function-annotations
-            :class-card: sd-border-secondary
+         Multi-task multi-sensor fusion for 3D detection, segmentation,
+         and map prediction in BEV space.
 
-            **Tutorial -- Control Flow**
+      .. grid-item-card:: Cross-View Transformers
+         :link: https://arxiv.org/abs/2205.02833
+         :class-card: sd-border-secondary
 
-            How to use function annotations for parameter and return type hints.
+         **Zhou & Krähenbühl, NeurIPS 2022**
 
-            +++
+         Attention-based cross-view feature aggregation for BEV semantic
+         map prediction from surround cameras.
 
-            - Annotation syntax
-            - ``__annotations__`` dict
-            - PEP 3107
 
-        .. grid-item-card:: 📖 Docstring Conventions
-            :link: https://peps.python.org/pep-0257/
-            :class-card: sd-border-secondary
+.. dropdown:: Datasets and Benchmarks
+   :class-container: sd-border-secondary
 
-            **PEP 257**
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-            Docstring conventions for modules, functions, classes, and methods.
+      .. grid-item-card:: nuScenes Dataset
+         :link: https://www.nuscenes.org/
+         :class-card: sd-border-secondary
 
-            +++
+         **Caesar et al., CVPR 2020**
 
-            - One-line docstrings
-            - Multi-line docstrings
-            - ``__doc__`` attribute
+         1000-scene dataset with 6-camera surround, LiDAR, RADAR, and
+         3D bounding box + tracking annotations.
 
+         +++
 
-.. dropdown:: 📏 Style and Best Practices
-    :class-container: sd-border-secondary
+         - `Object Detection Leaderboard <https://nuscenes.org/object-det>`_
+         - `Occupancy Prediction Benchmark <https://github.com/nutonomy/nuscenes-devkit>`_
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+      .. grid-item-card:: Waymo Open Dataset
+         :link: https://waymo.com/open/
+         :class-card: sd-border-secondary
 
-        .. grid-item-card:: 📏 PEP 8 -- Style Guide
-            :link: https://peps.python.org/pep-0008/
-            :class-card: sd-border-secondary
+         **Sun et al., CVPR 2020**
 
-            **Coding Conventions**
+         1,950 scenes with 5-camera, 5-LiDAR sensor setup and high-quality
+         3D annotations including occupancy flow.
 
-            Guidelines for function naming, parameter formatting, and documentation.
 
-            +++
+.. dropdown:: Industry Resources
+   :class-container: sd-border-secondary
 
-            - Function naming (``snake_case``)
-            - Argument formatting
-            - Blank lines around functions
+   - `Tesla AI Day 2022 -- Occupancy Networks <https://youtu.be/ODSJsviD_SU>`_
+   - `Andrej Karpathy: Tesla Autopilot and Multi-Task Learning <https://www.youtube.com/watch?v=hx7BXih7zx8>`_
+   - `Waymo Research Blog -- Perception <https://waymo.com/research/>`_
+   - `nuScenes Detection Metric Definition <https://www.nuscenes.org/object-det>`_
 
-        .. grid-item-card:: 📝 PEP 484 -- Type Hints
-            :link: https://peps.python.org/pep-0484/
-            :class-card: sd-border-secondary
 
-            **Type Hints**
+.. dropdown:: Textbooks and Survey Papers
+   :class-container: sd-border-secondary
 
-            The PEP that introduced type hints to Python.
-
-            +++
-
-            - Annotation syntax
-            - ``typing`` module
-            - Gradual typing
-
-        .. grid-item-card:: 📝 PEP 604 -- Union with X | Y
-            :link: https://peps.python.org/pep-0604/
-            :class-card: sd-border-secondary
-
-            **Simplified Union Syntax**
-
-            The PEP that introduced ``X | Y`` syntax as an alternative to ``Union[X, Y]`` in Python 3.10+.
-
-            +++
-
-            - Pipe operator for unions
-            - ``isinstance()`` support
-            - ``Optional`` replacement
-
-        .. grid-item-card:: 📋 Google Python Style Guide
-            :link: https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
-            :class-card: sd-border-secondary
-
-            **Docstrings Section**
-
-            Google's conventions for writing docstrings, including ``Args``, ``Returns``, and ``Raises`` sections.
-
-            +++
-
-            - Function docstrings
-            - Args and Returns format
-            - Module and class docstrings
-
-
-.. dropdown:: 📚 Recommended Reading
-    :class-container: sd-border-secondary
-
-    .. grid:: 1 1 2 2
-        :gutter: 2
-
-        .. grid-item-card:: 📘 Python Official Tutorial
-            :link: https://docs.python.org/3/tutorial/
-            :class-card: sd-border-secondary
-
-            **Getting Started**
-
-            Section 4.7 (Defining Functions) and Section 4.8 (More on Defining Functions) cover this lecture's topics.
-
-            +++
-
-            - Functions and arguments
-            - ``*args`` and ``**kwargs``
-            - Lambda expressions
-
-        .. grid-item-card:: Mark Lutz
-            :class-card: sd-border-secondary
-
-            **Learning Python (5th Edition)**
-
-            Chapters 16-21 cover function basics, scopes, arguments, and advanced function topics in depth.
-
-        .. grid-item-card:: Luciano Ramalho
-            :class-card: sd-border-secondary
-
-            **Fluent Python (2nd Edition)**
-
-            Chapters 7-9 cover first-class functions, type hints, decorators, and closures. Excellent for understanding functions as objects.
-
-        .. grid-item-card:: Brett Slatkin
-            :class-card: sd-border-secondary
-
-            **Effective Python (2nd Edition)**
-
-            Items 19-26 cover function arguments, return values, closures, and decorators with practical best practices.
+   - Ma, Y. et al. (2022). *Vision-Centric BEV Perception: A Survey.*
+     arXiv:2208.02797.
+   - Li, Z. et al. (2022). *Delving into the Devils of Bird's-Eye-View
+     Perception: A Review, Evaluation and Recipe.* IEEE TPAMI.
+   - Mao, J. et al. (2023). *A Survey on Occupancy Prediction for Autonomous
+     Driving.* arXiv:2305.07922.
