@@ -4,6 +4,11 @@ CARLA Simulator
 
 CARLA (CAR Learning to Act) is an open-source autonomous driving simulator designed to support development, training, and validation of autonomous driving systems.
 
+.. note::
+   **Installation Options**
+
+   CARLA 0.9.16 runs **natively on Ubuntu 22.04** (ROS 2 Humble). This is the simplest setup and is recommended if you are running Humble — see the :doc:`Humble setup guide <humble>`. If you are running **Ubuntu 24.04 with ROS 2 Jazzy**, CARLA does not have native support for that platform — use the **Docker image** provided instead, as described in the :doc:`Jazzy setup guide <jazzy>`.
+
 .. important::
    **Why CARLA 0.9.16?**
    
@@ -17,24 +22,23 @@ CARLA (CAR Learning to Act) is an open-source autonomous driving simulator desig
    
    While newer CARLA versions exist, 0.9.16 offers the perfect balance of features, stability, and simplicity for learning autonomous vehicle concepts.
 
-.. card:: 🚗 CARLA Overview
-   :class-header: bg-primary text-white
-   :class-card: sd-mt-3
+.. .. card:: 🚗 CARLA Overview
+..    :class-header: bg-primary text-white
+..    :class-card: sd-mt-3
 
-   CARLA provides:
+..    CARLA provides:
    
-   - **Realistic urban environments** with detailed cityscapes
-   - **Physics simulation** powered by Unreal Engine 4
-   - **Sensor suite** including cameras, LiDAR, radar, GNSS, and IMU
-   - **Python API** for complete control and automation
-   - **Weather control** and day-night cycles
-   - **Blueprint library** with vehicles, pedestrians, and props
-   - **Traffic simulation** with AI-controlled agents
-   - **ROS integration** for robotics applications
+..    - **Realistic urban environments** with detailed cityscapes
+..    - **Physics simulation** powered by Unreal Engine 4
+..    - **Sensor suite** including cameras, LiDAR, radar, GNSS, and IMU
+..    - **Python API** for complete control and automation
+..    - **Weather control** and day-night cycles
+..    - **Blueprint library** with vehicles, pedestrians, and props
+..    - **Traffic simulation** with AI-controlled agents
+..    - **ROS integration** for robotics applications
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Setup Guides
+   :hidden:
 
    humble
    jazzy
@@ -910,6 +914,7 @@ Troubleshooting
               sudo tee /etc/apt/sources.list.d/nvidia-docker.list
             sudo apt-get update && sudo apt-get install -y nvidia-docker2
             sudo systemctl restart docker
+
 
 References
 ----------
