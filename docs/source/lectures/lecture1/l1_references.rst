@@ -1,238 +1,153 @@
+====================================================
 References
-==========
+====================================================
 
 
-.. dropdown:: 🏛️ Lecture 1
-    :class-container: sd-border-secondary
-    :open:
+.. dropdown:: Standards and Regulations
+   :class-container: sd-border-secondary
+   :open:
 
-    .. card::
-        :class-card: sd-border-secondary
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-        **ENPM605 — L1: Course Introduction**
+      .. grid-item-card:: SAE J3016
+         :link: https://www.sae.org/standards/content/j3016_202104/
+         :class-card: sd-border-secondary
 
-        Covers course structure, development environment setup, the Python execution pipeline, and introduction to Python variables.
+         **Levels of Driving Automation**
 
+         Taxonomy and definitions for terms related to driving automation
+         systems for on-road motor vehicles.
 
-.. dropdown:: 🐍 Python Resources
-    :class-container: sd-border-secondary
+      .. grid-item-card:: ISO 26262
+         :link: https://www.iso.org/standard/68383.html
+         :class-card: sd-border-secondary
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+         **Functional Safety**
 
-        .. grid-item-card:: 📘 Python Official Tutorial
-            :link: https://docs.python.org/3/tutorial/
-            :class-card: sd-border-secondary
+         Road vehicles -- Functional safety standard for electrical and
+         electronic systems.
 
-            **Getting Started**
+      .. grid-item-card:: ISO 21448 (SOTIF)
+         :link: https://www.iso.org/standard/77490.html
+         :class-card: sd-border-secondary
 
-            Sections 3, 4, and 5 cover informal introduction, control flow, and data structures.
+         **Safety of the Intended Functionality**
 
-            +++
+         Addresses safety hazards that occur without a system failure.
 
-            - Variables & Types
-            - Control Flow
-            - Data Structures
+      .. grid-item-card:: ISO/SAE 21434
+         :link: https://www.iso.org/standard/70918.html
+         :class-card: sd-border-secondary
 
-        .. grid-item-card:: 📏 PEP 8 Style Guide
-            :link: https://peps.python.org/pep-0008/
-            :class-card: sd-border-secondary
+         **Cybersecurity Engineering**
 
-            **Coding Conventions**
+         Road vehicles -- Cybersecurity engineering standard.
 
-            Python's official style guide for writing clean, readable code.
 
-            +++
+.. dropdown:: Government and Policy
+   :class-container: sd-border-secondary
 
-            - Naming Conventions
-            - Whitespace & Indentation
-            - Import Ordering
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-        .. grid-item-card:: 🔍 Python Language Reference
-            :link: https://docs.python.org/3/reference/
-            :class-card: sd-border-secondary
+      .. grid-item-card:: NHTSA Automated Vehicles
+         :link: https://www.nhtsa.gov/technology-innovation/automated-vehicles
+         :class-card: sd-border-secondary
 
-            **Internals**
+         **AV Policy**
 
-            Detailed reference for Python syntax, data model, and execution model.
+         NHTSA's technology and innovation page for automated vehicles.
 
-            +++
+      .. grid-item-card:: NIST AV Program
+         :link: https://www.nist.gov/programs-projects/nist-automated-vehicles-program
+         :class-card: sd-border-secondary
 
-            - Data Model
-            - Execution Model
-            - Expressions & Statements
+         **Measurement Science for AVs**
 
-        .. grid-item-card:: 📦 Python Standard Library
-            :link: https://docs.python.org/3/library/
-            :class-card: sd-border-secondary
+         NIST research on measurement science for automated vehicles.
 
-            **Built-in Modules**
+      .. grid-item-card:: NIST OES
+         :link: https://doi.org/10.6028/NIST.IR.8407
+         :class-card: sd-border-secondary
 
-            Reference for all standard library modules used in this course.
+         **Operating Envelope Specification**
 
-            +++
+         A formal specification format for defining ADS capabilities and limits.
 
-            - ``sys``, ``os``, ``ast``
-            - ``dis``, ``tokenize``
-            - ``keyword``
+      .. grid-item-card:: UNECE WP.29
+         :link: https://unece.org/transport/vehicle-regulations/wp29/introduction
+         :class-card: sd-border-secondary
 
+         **Vehicle Regulations**
 
-.. dropdown:: 🛠️ Development Tools
-    :class-container: sd-border-secondary
+         World Forum for Harmonization of Vehicle Regulations.
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
 
-        .. grid-item-card:: 💻 Visual Studio Code
-            :link: https://code.visualstudio.com/docs
-            :class-card: sd-border-secondary
+.. dropdown:: Simulation and Tools
+   :class-container: sd-border-secondary
 
-            **IDE Documentation**
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-            Getting started, extensions, and debugging guides.
+      .. grid-item-card:: CARLA Simulator
+         :link: https://carla.org/
+         :class-card: sd-border-secondary
 
-            +++
+         **Open-Source AV Simulator**
 
-            - Python Extension
-            - Dev Containers
-            - Debugging
+         Built on Unreal Engine 4 for photorealistic driving simulation.
 
-        .. grid-item-card:: 🐳 Docker Desktop
-            :link: https://docs.docker.com/desktop/
-            :class-card: sd-border-secondary
+         +++
 
-            **Container Platform**
+         - `Documentation (0.9.16) <https://carla.readthedocs.io/en/0.9.16/>`_
+         - `Python API Reference <https://carla.readthedocs.io/en/0.9.16/python_api/>`_
+         - `GitHub Repository <https://github.com/carla-simulator/carla>`_
 
-            Installation, setup, and container management.
+      .. grid-item-card:: Visual Studio Code
+         :link: https://code.visualstudio.com/
+         :class-card: sd-border-secondary
 
-            +++
+         **Code Editor**
 
-            - Installation Guides
-            - Container Basics
-            - Dev Environments
+         Free, open-source editor with Python, ROS 2, and Git support.
 
-        .. grid-item-card:: ⚡ Ruff
-            :link: https://docs.astral.sh/ruff/
-            :class-card: sd-border-secondary
+      .. grid-item-card:: ROS 2 Humble
+         :link: https://docs.ros.org/en/humble/
+         :class-card: sd-border-secondary
 
-            **Python Linter & Formatter**
+         **Robotics Middleware**
 
-            Fast, all-in-one tool for Python code quality.
+         ROS 2 Humble Hawksbill documentation and tutorials.
 
-            +++
+      .. grid-item-card:: ROS 2 Jazzy
+         :link: https://docs.ros.org/en/jazzy/
+         :class-card: sd-border-secondary
 
-            - Configuration
-            - Rule Reference
-            - VS Code Integration
+         **Robotics Middleware**
 
-        .. grid-item-card:: 🐍 Python Extension for VS Code
-            :link: https://marketplace.visualstudio.com/items?itemName=ms-python.python
-            :class-card: sd-border-secondary
+         ROS 2 Jazzy Jalisco documentation and tutorials.
 
-            **Language Support**
 
-            IntelliSense, debugging, linting, and formatting.
+.. dropdown:: Industry Reports and Data
+   :class-container: sd-border-secondary
 
-            +++
+   - `WHO Global Status Report on Road Safety <https://www.who.int/publications/i/item/9789241565684>`_
+   - `McKinsey: Autonomous Driving's Future <https://www.mckinsey.com/industries/automotive-and-assembly/our-insights/autonomous-drivings-future-convenient-and-connected>`_
+   - `NHTSA Critical Reasons for Crashes <https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/812115>`_
 
-            - Interpreter Selection
-            - REPL & Debugging
-            - Testing
 
+.. dropdown:: Textbooks and Surveys
+   :class-container: sd-border-secondary
 
-.. dropdown:: 🤖 ROS 2 & Simulation Resources
-    :class-container: sd-border-secondary
+   - Pendleton, S. D. et al. (2017). *Perception, Planning, Control, and Coordination for Autonomous Vehicles.* Machines, 5(1), 6.
+   - Yurtsever, E. et al. (2020). *A Survey of Autonomous Driving: Common Practices and Emerging Technologies.* IEEE Access, 8.
+   - Kalra, N. & Paddock, S. M. (2016). *Driving to Safety: How Many Miles of Driving Would It Take to Demonstrate Autonomous Vehicle Reliability?* RAND Corporation.
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
 
-        .. grid-item-card:: 📘 ROS 2 Jazzy
-            :link: https://docs.ros.org/en/jazzy/
-            :class-card: sd-border-secondary
+.. dropdown:: Coding Standards
+   :class-container: sd-border-secondary
 
-            **Official Documentation**
-
-            ROS 2 Jazzy Jalisco documentation and tutorials.
-
-            +++
-
-            - Installation
-            - Tutorials
-            - API Reference
-
-        .. grid-item-card:: 🌍 Gazebo Harmonic
-            :link: https://gazebosim.org/docs/harmonic/getstarted/
-            :class-card: sd-border-secondary
-
-            **Simulation Environment**
-
-            Getting started with Gazebo Harmonic for robot simulation.
-
-            +++
-
-            - Installation
-            - World Building
-            - Sensor Plugins
-
-        .. grid-item-card:: 🧭 Nav2
-            :link: https://docs.nav2.org/
-            :class-card: sd-border-secondary
-
-            **Navigation Stack**
-
-            The ROS 2 navigation framework used in the final project.
-
-            +++
-
-            - Architecture
-            - Configuration
-            - Behavior Trees
-
-        .. grid-item-card:: 🌳 py_trees
-            :link: https://py-trees.readthedocs.io/
-            :class-card: sd-border-secondary
-
-            **Behavior Trees for Python**
-
-            Library for building application-level behavior trees.
-
-            +++
-
-            - Getting Started
-            - Composites & Decorators
-            - Blackboards
-
-
-.. dropdown:: 📚 Python Books
-    :class-container: sd-border-secondary
-
-    .. grid:: 1 1 2 2
-        :gutter: 2
-
-        .. grid-item-card:: Mark Lutz
-            :class-card: sd-border-secondary
-
-            **Learning Python (5th Edition)**
-
-            Comprehensive introduction to the Python language.
-
-        .. grid-item-card:: Luciano Ramalho
-            :class-card: sd-border-secondary
-
-            **Fluent Python (2nd Edition)**
-
-            Effective use of Python features for experienced programmers.
-
-        .. grid-item-card:: Brett Slatkin
-            :class-card: sd-border-secondary
-
-            **Effective Python (2nd Edition)**
-
-            90 specific ways to write better Python.
-
-        .. grid-item-card:: Martin Fowler *et al.*
-            :class-card: sd-border-secondary
-
-            **Refactoring: Improving the Design of Existing Code**
-
-            The origin of the term "code smells" referenced in the linting section.
+   - `PEP 8 -- Style Guide for Python Code <https://peps.python.org/pep-0008/>`_
+   - `C++ Core Guidelines <https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines>`_
+   - `Git Documentation <https://git-scm.com/doc>`_

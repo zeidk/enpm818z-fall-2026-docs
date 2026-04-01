@@ -1,11 +1,17 @@
 ====================================================
-L1: Course Introduction
+L1: Course Introduction & AV Landscape
 ====================================================
 
 Overview
 --------
 
-This lecture introduces the ENPM605 course, covering its structure, grading policies, and major deliverables. You will set up your development environment (Visual Studio Code, Docker, and Python), learn how Python code is executed from source to output, and get a first look at Python variables and data types.
+This lecture introduces ENPM818Z and provides a comprehensive overview of the
+autonomous vehicle (AV) landscape. You will learn about the core technologies
+that enable self-driving capabilities, the current state of the industry, and
+the key challenges that remain. The lecture also covers the course structure,
+grading policies, development environment setup (Ubuntu, ROS 2, VS Code, Git),
+and an introduction to the CARLA simulator that will be used throughout the
+semester.
 
 
 Learning Objectives
@@ -13,12 +19,17 @@ Learning Objectives
 
 By the end of this lecture, you will be able to:
 
-- Describe the course structure, grading policies, and major deliverables.
-- Set up Visual Studio Code with the Python and Dev Containers extensions.
-- Configure Docker for containerized development environments.
-- Explain the Python execution pipeline.
-- Run Python scripts using multiple methods in VS Code.
-- Verify your development environment is correctly configured.
+- Define key AV terminology: Dynamic Driving Task (DDT), Operational Design
+  Domain (ODD), ADAS vs. ADS.
+- Explain the SAE J3016 levels of driving automation (Levels 0--5).
+- Describe the current industry landscape, including major players and their
+  deployment status.
+- Identify the core technical challenges in autonomous driving: perception,
+  prediction, planning, control, and validation.
+- Summarize the key safety standards (ISO 26262, ISO 21448/SOTIF) and the
+  evolving regulatory landscape.
+- Set up the development environment: Ubuntu, ROS 2, VS Code, and Git.
+- Explain the CARLA simulator architecture and its role in this course.
 
 
 Contents
@@ -32,14 +43,16 @@ Contents
    l1_quiz
    l1_references
 
+
 Next Steps
 ----------
 
-- In the next lecture, we will begin Python Fundamentals — Part I:
+- In the next lecture, we will cover **Sensor Technologies & Calibration**:
 
-  - Primitive data types and operators.
-  - Conditional statements and loops.
-  - Introduction to type hints.
+  - Camera, LiDAR, RADAR, IMU, and GNSS systems.
+  - Intrinsic and extrinsic calibration.
+  - Sensor placement, coverage, and complementarity.
 
-- Complete your environment setup if not finished in class.
-- Read `Python Official Tutorial <https://docs.python.org/3/tutorial/>`_ — Sections 3, 4, and 5.
+- Complete your development environment setup if not finished in class.
+- Install CARLA following the :doc:`setup guide </carla/carla>`.
+- Read the `SAE J3016 Standard <https://www.sae.org/standards/content/j3016_202104/>`_.

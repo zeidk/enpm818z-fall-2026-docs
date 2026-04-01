@@ -72,6 +72,7 @@ Late submissions incur a 10% deduction per day (maximum 3 days). Beyond 3 days, 
    :titlesonly:
 
    changelog/changelog
+   syllabus/index
    carla/carla
    lectures/index
    assignments/index
