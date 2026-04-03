@@ -411,3 +411,407 @@ Industry Sensor Configurations
 
    There is no universal "best" sensor configuration. The right choice depends
    on the ODD, cost constraints, and the fusion architecture.
+
+
+Sensor Fusion Preview
+---------------------
+
+While the full mathematical treatment of sensor fusion is covered in
+**L6: Multi-Sensor Fusion**, this section introduces the key concepts you
+need to understand *why* we fuse sensor data and the fundamental approaches
+for doing so.
+
+
+Sensor Relationships
+~~~~~~~~~~~~~~~~~~~~
+
+The Complementarity Principle (Luo, 1989) classifies sensor relationships
+into three categories:
+
+.. tab-set::
+
+   .. tab-item:: Complementary
+
+      Sensors provide **different pieces of the puzzle**. Each covers a gap
+      the other cannot.
+
+      - **Example:** Camera (color, text, classification) + LiDAR (precise 3D
+        shape and range). Neither alone is sufficient for robust perception.
+
+   .. tab-item:: Competitive (Redundant)
+
+      Sensors provide the **same type of information** for reliability and
+      safety.
+
+      - **Example:** Two forward-facing cameras. If one is blinded by sun
+        glare, the other may still function. Redundancy prevents single points
+        of failure.
+
+   .. tab-item:: Cooperative
+
+      Sensors **work together** to create new information that neither could
+      produce alone.
+
+      - **Example:** Two cameras forming a stereo pair to compute geometric
+        depth via triangulation.
+
+.. admonition:: Why Is Fusion Essential?
+   :class: important
+
+   - **Improved accuracy** -- Combining measurements reduces overall
+     uncertainty.
+   - **Increased reliability** -- Redundancy provides fault tolerance.
+   - **Extended coverage** -- Different sensors work in different conditions
+     (rain, night, tunnel).
+   - **Complementary information** -- Each sensor provides unique data types.
+
+
+Fusion Architectures Overview
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A critical design decision is not just *how* to fuse data, but *when*. The
+three main strategies trade off performance against modularity:
+
+.. list-table::
+   :widths: 18 27 27 28
+   :header-rows: 1
+   :class: compact-table
+
+   * - Strategy
+     - Description
+     - Best For
+     - Trade-Off
+   * - **Early Fusion**
+     - Combine **raw data** first, then run a single perception pipeline.
+     - Maximum performance; research platforms.
+     - High compute; tightly coupled.
+   * - **Late Fusion**
+     - Each sensor runs its own perception. **Object lists** are merged at
+       the end.
+     - Modularity; production ADAS (AEB, ACC).
+     - Information loss before fusion.
+   * - **Hybrid Fusion**
+     - Early fusion for tightly-coupled sensors (Camera + LiDAR); late fusion
+       for the rest (+ RADAR).
+     - L4 robotaxis; practical balance.
+     - Manages complexity selectively.
+
+
+Weighted Averaging: A Simple Fusion Example
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Before introducing Kalman Filters (L6), we can fuse two sensor measurements
+using **inverse-variance weighting** -- the simplest principled fusion method.
+
+.. math::
+
+   x_{\text{fused}} = \frac{\sum_{i=1}^{n} w_i \, x_i}{\sum_{i=1}^{n} w_i}
+   \qquad\text{where}\qquad w_i = \frac{1}{\sigma_i^2}
+
+Measurements from more precise sensors (lower variance :math:`\sigma^2`)
+receive higher weight.
+
+.. admonition:: Worked Example
+   :class: note
+
+   **Scenario:** Fuse distance measurements from LiDAR and a monocular camera.
+
+   - **LiDAR:** :math:`x_1 = 10.0` m, :math:`\sigma_1^2 = 0.1` (high
+     confidence) :math:`\Rightarrow w_1 = 10.0`
+   - **Camera:** :math:`x_2 = 11.0` m, :math:`\sigma_2^2 = 2.0` (low
+     confidence) :math:`\Rightarrow w_2 = 0.5`
+
+   .. math::
+
+      x_{\text{fused}} = \frac{10.0 \times 10.0 + 0.5 \times 11.0}
+                               {10.0 + 0.5}
+                        = \frac{105.5}{10.5} \approx \mathbf{10.048\;m}
+
+   The result is pulled strongly toward the precise LiDAR measurement
+   (10.0 m) rather than the naive average (10.5 m). The algorithm correctly
+   trusts the better sensor.
+
+.. note::
+
+   Weighted averaging is *memoryless* -- it uses only the current
+   measurements. The Kalman Filter (L6) adds a **predict-update cycle**
+   that incorporates motion models and temporal history, making it far more
+   powerful for tracking moving objects.
+
+
+Discussion: Design Trade-Offs
+------------------------------
+
+The following discussion questions are explored during the lecture. They
+reinforce the core tension between performance, cost, safety, and
+real-time constraints in AV sensor system design.
+
+Safety and Graceful Degradation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A robust AV must anticipate and safely handle the failure of any single
+sensor:
+
+- **Redundant sensing** -- Critical zones (especially forward) must be
+  covered by at least two different sensor modalities (e.g., RADAR + Camera)
+  to avoid a single point of failure.
+- **Decentralized detection** -- Each sensor subsystem generates its own
+  object list. If one sensor fails, the central fusion unit ignores its
+  list and continues -- enabling graceful degradation.
+- **Cross-validation** -- The fusion algorithm performs plausibility checks.
+  If RADAR and camera disagree for a sustained period, a fault is flagged
+  and trust in the inconsistent sensor is reduced.
+- **Health monitoring and fail-safes** -- Constant self-diagnostics. If a
+  critical sensor fails, the system executes a pre-planned Minimal Risk
+  Condition (MRC) -- e.g., safely pulling over and stopping.
+
+
+Adapting to Environmental Change
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The key to adaptation is dynamically adjusting the **trust** placed in each
+sensor as conditions change. In a Kalman Filter framework, this is done by
+modifying the measurement noise covariance matrix :math:`R`:
+
+1. **Classify environment** -- Detect adverse conditions using available
+   sensor data (camera sees rain, wipers are active, LiDAR point density
+   drops).
+2. **Adjust uncertainty** -- Increase :math:`R` for degraded sensors (e.g.,
+   camera in sun glare, LiDAR in dense fog).
+3. **Automatic re-weighting** -- A higher :math:`R` produces a lower Kalman
+   Gain :math:`K`, so the filter naturally de-weights the unreliable sensor
+   and relies more on its prediction and other sensors (like RADAR).
+
+This mechanism allows the fusion system to **gracefully adapt** without
+needing separate hard-coded logic for every weather condition.
+
+
+Real-Time Constraints
+~~~~~~~~~~~~~~~~~~~~~~
+
+Fusion algorithms for embedded automotive systems must be both accurate and
+efficient to meet real-time deadlines:
+
+- **Choose the right tool** -- Use the simplest algorithm that works. An
+  Unscented Kalman Filter (UKF) often provides the best accuracy/cost
+  trade-off for non-linear systems without the expense of a Particle Filter.
+- **Efficient association** -- Use "gating" techniques to quickly discard
+  unlikely measurement-to-track pairings, avoiding unnecessary computation.
+- **State vector simplicity** -- Only track what is necessary. A simple
+  state (position, velocity) is much faster than a complex one.
+- **Hardware acceleration** -- Offload matrix math to DSPs or GPUs.
+- **Smart scheduling** -- Use a Real-Time Operating System (RTOS) to give
+  core fusion tasks the highest priority at a consistent frequency
+  (e.g., 50 Hz).
+
+
+CARLA Hands-On: Sensor Exploration
+------------------------------------
+
+This exercise introduces the CARLA Python API by spawning a vehicle,
+attaching sensors, and visualizing their output. It provides hands-on
+experience with the sensors discussed in this lecture.
+
+
+Task 1: Spawn a Vehicle and Attach Sensors
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   import carla
+   import numpy as np
+   import time
+
+   # ── Connect to CARLA ──────────────────────────────────────────────
+   client = carla.Client('localhost', 2000)
+   client.set_timeout(10.0)
+   world = client.get_world()
+   bp_lib = world.get_blueprint_library()
+
+   # ── Spawn ego vehicle ─────────────────────────────────────────────
+   vehicle_bp = bp_lib.find('vehicle.tesla.model3')
+   spawn_point = world.get_map().get_spawn_points()[0]
+   vehicle = world.spawn_actor(vehicle_bp, spawn_point)
+   vehicle.set_autopilot(True)
+   print(f"Spawned vehicle: {vehicle.type_id} at {spawn_point.location}")
+
+   # ── Attach an RGB camera ──────────────────────────────────────────
+   camera_bp = bp_lib.find('sensor.camera.rgb')
+   camera_bp.set_attribute('image_size_x', '1280')
+   camera_bp.set_attribute('image_size_y', '720')
+   camera_bp.set_attribute('fov', '90')
+   camera_transform = carla.Transform(carla.Location(x=1.5, z=2.4))
+   camera = world.spawn_actor(camera_bp, camera_transform,
+                              attach_to=vehicle)
+
+   # ── Attach a LiDAR sensor ─────────────────────────────────────────
+   lidar_bp = bp_lib.find('sensor.lidar.ray_cast')
+   lidar_bp.set_attribute('channels', '64')
+   lidar_bp.set_attribute('range', '100.0')
+   lidar_bp.set_attribute('points_per_second', '1200000')
+   lidar_bp.set_attribute('rotation_frequency', '20')
+   lidar_transform = carla.Transform(carla.Location(x=0.0, z=2.5))
+   lidar = world.spawn_actor(lidar_bp, lidar_transform,
+                             attach_to=vehicle)
+
+   # ── Attach a RADAR sensor ─────────────────────────────────────────
+   radar_bp = bp_lib.find('sensor.other.radar')
+   radar_bp.set_attribute('horizontal_fov', '30')
+   radar_bp.set_attribute('vertical_fov', '10')
+   radar_bp.set_attribute('range', '100')
+   radar_transform = carla.Transform(carla.Location(x=2.0, z=1.0))
+   radar = world.spawn_actor(radar_bp, radar_transform,
+                             attach_to=vehicle)
+
+   # ── Attach IMU and GNSS ────────────────────────────────────────────
+   imu = world.spawn_actor(
+       bp_lib.find('sensor.other.imu'),
+       carla.Transform(), attach_to=vehicle)
+   gnss = world.spawn_actor(
+       bp_lib.find('sensor.other.gnss'),
+       carla.Transform(), attach_to=vehicle)
+
+   print("All sensors attached. Vehicle running on autopilot.")
+
+
+Task 2: Collect and Visualize Sensor Data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   import cv2
+
+   # ── Camera callback: save and display images ──────────────────────
+   def camera_callback(image):
+       array = np.frombuffer(image.raw_data, dtype=np.uint8)
+       array = array.reshape((image.height, image.width, 4))[:, :, :3]
+       cv2.imshow("CARLA Camera", array)
+       cv2.waitKey(1)
+
+   camera.listen(camera_callback)
+
+   # ── LiDAR callback: print point cloud stats ───────────────────────
+   def lidar_callback(point_cloud):
+       data = np.frombuffer(point_cloud.raw_data, dtype=np.float32)
+       points = data.reshape(-1, 4)  # x, y, z, intensity
+       print(f"[LiDAR] Frame {point_cloud.frame}: "
+             f"{points.shape[0]} points, "
+             f"range: {np.linalg.norm(points[:, :3], axis=1).max():.1f} m")
+
+   lidar.listen(lidar_callback)
+
+   # ── RADAR callback: show detections with velocity ──────────────────
+   def radar_callback(radar_data):
+       detections = []
+       for d in radar_data:
+           detections.append({
+               'altitude': np.degrees(d.altitude),
+               'azimuth': np.degrees(d.azimuth),
+               'depth': d.depth,
+               'velocity': d.velocity
+           })
+       if detections:
+           print(f"[RADAR] Frame {radar_data.frame}: "
+                 f"{len(detections)} detections, "
+                 f"closest: {min(d['depth'] for d in detections):.1f} m")
+
+   radar.listen(radar_callback)
+
+   # ── IMU callback ───────────────────────────────────────────────────
+   def imu_callback(imu_data):
+       print(f"[IMU] Accel: ({imu_data.accelerometer.x:.2f}, "
+             f"{imu_data.accelerometer.y:.2f}, "
+             f"{imu_data.accelerometer.z:.2f}) m/s^2  "
+             f"Gyro: ({imu_data.gyroscope.x:.3f}, "
+             f"{imu_data.gyroscope.y:.3f}, "
+             f"{imu_data.gyroscope.z:.3f}) rad/s")
+
+   imu.listen(imu_callback)
+
+   # ── GNSS callback ─────────────────────────────────────────────────
+   def gnss_callback(gnss_data):
+       print(f"[GNSS] Lat: {gnss_data.latitude:.6f}, "
+             f"Lon: {gnss_data.longitude:.6f}, "
+             f"Alt: {gnss_data.altitude:.2f}")
+
+   gnss.listen(gnss_callback)
+
+
+Task 3: Project LiDAR Points onto the Camera Image
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This exercise demonstrates **extrinsic calibration** in practice -- using the
+known sensor transforms to project 3D LiDAR points into the camera image.
+
+.. code-block:: python
+
+   def lidar_to_camera_projection(lidar_data, camera_data, camera_actor):
+       """Project LiDAR points onto a camera image."""
+       # Parse LiDAR point cloud
+       points = np.frombuffer(lidar_data.raw_data, dtype=np.float32)
+       points = points.reshape(-1, 4)[:, :3]  # (N, 3) -- x, y, z
+
+       # Convert to homogeneous coordinates
+       points_h = np.hstack([points, np.ones((points.shape[0], 1))])
+
+       # Get camera intrinsic matrix from CARLA attributes
+       image_w = int(camera_actor.attributes['image_size_x'])
+       image_h = int(camera_actor.attributes['image_size_y'])
+       fov = float(camera_actor.attributes['fov'])
+       focal = image_w / (2.0 * np.tan(np.radians(fov / 2.0)))
+
+       K = np.array([
+           [focal,  0.0,   image_w / 2.0],
+           [0.0,    focal, image_h / 2.0],
+           [0.0,    0.0,   1.0]
+       ])
+
+       # Get the LiDAR-to-camera extrinsic transform
+       # (In CARLA, sensor transforms are relative to the vehicle)
+       lidar_tf = lidar_data.transform
+       cam_tf = camera_data.transform
+       world_to_cam = np.array(cam_tf.get_inverse_matrix())
+       lidar_to_world = np.array(lidar_tf.get_matrix())
+       lidar_to_cam = world_to_cam @ lidar_to_world
+
+       # Project points: transform to camera frame, then apply intrinsics
+       cam_points = (lidar_to_cam @ points_h.T)[:3]  # (3, N)
+
+       # Keep only points in front of the camera (z > 0)
+       mask = cam_points[2] > 0
+       cam_points = cam_points[:, mask]
+
+       # Apply intrinsics to get pixel coordinates
+       pixel_coords = K @ cam_points
+       pixel_coords /= pixel_coords[2]  # normalize by depth
+
+       u = pixel_coords[0].astype(int)
+       v = pixel_coords[1].astype(int)
+       depths = cam_points[2]
+
+       # Filter to image bounds
+       valid = (u >= 0) & (u < image_w) & (v >= 0) & (v < image_h)
+
+       return u[valid], v[valid], depths[valid]
+
+.. admonition:: Exercise Tasks
+   :class: tip
+
+   1. **Run the sensor spawning script** and observe camera, LiDAR, and
+      RADAR data streaming in real time.
+   2. **Modify sensor parameters**: Change the LiDAR channel count from 64
+      to 32 to 16 and observe how point cloud density changes.
+   3. **Project LiDAR onto camera**: Use the projection function above to
+      overlay colored depth points on the camera image.
+   4. **Add sensor noise**: Set the GNSS sensor's ``noise_alt_stddev``,
+      ``noise_lat_stddev``, and ``noise_lon_stddev`` attributes to simulate
+      realistic GPS noise. Compare noisy vs. clean positions.
+   5. **Weather experiment**: Change weather to heavy rain
+      (``world.set_weather(carla.WeatherParameters.HardRainNoon)``) and
+      observe the impact on each sensor's data quality.
+
+.. note::
+
+   This exercise provides the foundation for **GP1: Sensor Suite & Data
+   Pipeline**, where you will build a complete ROS 2 package around these
+   sensors.

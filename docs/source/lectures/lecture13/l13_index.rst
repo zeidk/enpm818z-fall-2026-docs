@@ -1,20 +1,20 @@
 ====================================================
-L13: System Integration, Safety & Industry Outlook
+L13: World Models & Simulation
 ====================================================
 
 Overview
 --------
 
-This concluding lecture ties together the entire ENPM818Z curriculum by
-examining how all AV stack components are integrated into a production system,
-and then zooming out to the regulatory, ethical, and economic landscape that
-will shape the industry through 2030 and beyond. We cover the middleware
-infrastructure (ROS 2, DDS) that enables real-time communication between AV
-modules, the safety standards (ISO 26262, SOTIF, UNECE GTR January 2026)
-that govern deployment, cybersecurity threats and defenses (ISO/SAE 21434),
-and the emerging role of V2X connectivity. The lecture concludes with an
-honest assessment of where the industry is heading, an exploration of ethics
-and liability, guidance on career paths, and a summary of the course.
+This lecture introduces **world models** -- neural networks that learn a
+compressed, generative model of the physical world from driving data -- and
+examines how they are transforming simulation-based ADS development. We survey
+the most capable driving world models of 2024--2025, including Wayve GAIA-3
+(15B parameters), NVIDIA Cosmos, and Vista (NeurIPS 2024), and explain how
+each can be used for data augmentation, long-tail scenario generation, and
+policy evaluation. The lecture concludes by comparing world models with
+traditional physics-based simulators like CARLA, analyzing the sim-to-real
+gap, and positioning world models as the "imagination module" within the
+broader end-to-end driving stack.
 
 
 Learning Objectives
@@ -22,25 +22,22 @@ Learning Objectives
 
 By the end of this lecture, you will be able to:
 
-- Describe the architecture of a complete production AV stack and explain
-  how perception, prediction, planning, and control modules communicate
-  in real time.
-- Explain the role of ROS 2 and DDS (Data Distribution Service) in
-  autonomous vehicle middleware, including the publish-subscribe paradigm
-  and Quality of Service (QoS) settings.
-- Define real-time constraints -- latency budgets, scheduling priorities,
-  and deadline misses -- and explain their safety implications for ADS.
-- Summarize ISO 26262 (functional safety, ASIL levels, V-model), ISO 21448
-  (SOTIF), and the UNECE Global Technical Regulation on ADS (January 2026).
-- Describe the automotive cybersecurity threat landscape and how ISO/SAE 21434
-  and secure communication protocols address it.
-- Explain the two dominant V2X standards (DSRC and C-V2X) and how V2X
-  enables cooperative perception beyond line-of-sight.
-- Assess the current state and near-term trajectory of the global AV
-  industry, including the consolidation trend and US vs. China dynamics.
-- Discuss the ethical dimensions of autonomous driving -- including the
-  trolley problem and liability frameworks -- and identify career pathways
-  in the AV industry.
+- Define a world model and explain how video prediction transformers and
+  action-conditioned generation work at an architectural level.
+- Describe the key design choices and capabilities of Wayve GAIA-3 (15B
+  parameters, December 2025), NVIDIA Cosmos, and Vista (NeurIPS 2024).
+- Identify three distinct applications of driving world models: data
+  augmentation, long-tail scenario generation, and offline policy evaluation.
+- Compare and contrast world models with traditional physics-based simulators
+  like CARLA on dimensions of realism, control, and scalability.
+- Explain what the sim-to-real gap is and describe at least two strategies --
+  domain randomization and domain adaptation -- that address it.
+- Articulate how a world model functions as the "imagination module" inside
+  an end-to-end driving system, enabling model-based planning.
+- Discuss the limitations of current generative world models, including
+  consistency, physical plausibility, and controllability.
+- Explain why CARLA remains relevant alongside generative world models for
+  ADS education and algorithm development.
 
 
 .. toctree::
@@ -56,15 +53,15 @@ By the end of this lecture, you will be able to:
 Next Steps
 ----------
 
-- This is the **final lecture** of ENPM818Z. Your remaining deliverables are:
+- In the next lecture, we will cover **System Integration, Safety & Industry
+  Outlook**:
 
-  - **Final Project** -- A functional ADS pipeline in CARLA demonstrating
-    integration of perception, prediction, planning, and control. Submission
-    deadline: see course syllabus.
-  - **Final Quiz** -- Covering Lectures 11-13 (this quiz).
+  - Full AV stack architecture: how modules communicate in production.
+  - Middleware: ROS 2, DDS, and publish-subscribe at scale.
+  - ISO 26262, SOTIF, and the UNECE GTR (January 2026).
+  - Cybersecurity, V2X, and the industry outlook for 2026 and beyond.
 
-- Review all lecture materials and your assignment submissions as preparation
-  for the final project integration phase.
-- Explore career resources: IEEE Intelligent Vehicles Symposium (IV),
-  CVPR Autonomous Driving Workshop, and the job boards of Waymo, Mobileye,
-  Motional, and NVIDIA DRIVE.
+- Review the GAIA-1 paper (Wayve, 2023) as a predecessor to GAIA-3.
+- Explore the NVIDIA Cosmos announcement and technical report.
+- Familiarize yourself with CARLA's scenario generation Python API, which
+  will be used in the final project.

@@ -482,3 +482,347 @@ Summary
       - DeepSORT: adds appearance embedding for re-ID
       - ByteTrack: uses low-confidence detections for occlusion recovery
       - Metrics: MOTA (accuracy), IDF1 (identity), HOTA (balanced)
+
+
+CARLA Hands-On: Segmentation and Object Tracking
+--------------------------------------------------
+
+This exercise uses CARLA's ground-truth semantic camera and vehicle
+detections to implement segmentation visualization and a basic SORT tracker.
+
+
+Task 1: Semantic Segmentation from CARLA
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+CARLA provides a ground-truth semantic segmentation camera that assigns
+class labels to every pixel. This lets you explore segmentation output
+without training a model.
+
+.. code-block:: python
+
+   import carla
+   import numpy as np
+   import cv2
+
+   client = carla.Client('localhost', 2000)
+   client.set_timeout(10.0)
+   world = client.get_world()
+   bp_lib = world.get_blueprint_library()
+
+   # Spawn ego vehicle
+   vehicle_bp = bp_lib.find('vehicle.tesla.model3')
+   spawn_point = world.get_map().get_spawn_points()[0]
+   vehicle = world.spawn_actor(vehicle_bp, spawn_point)
+   vehicle.set_autopilot(True)
+
+   # Spawn semantic segmentation camera
+   seg_bp = bp_lib.find('sensor.camera.semantic_segmentation')
+   seg_bp.set_attribute('image_size_x', '1280')
+   seg_bp.set_attribute('image_size_y', '720')
+   seg_bp.set_attribute('fov', '90')
+   seg_cam = world.spawn_actor(
+       seg_bp,
+       carla.Transform(carla.Location(x=1.5, z=2.4)),
+       attach_to=vehicle)
+
+   # CARLA semantic labels (subset)
+   LABEL_COLORS = {
+       0: (0, 0, 0),        # Unlabeled
+       1: (70, 70, 70),     # Building
+       4: (128, 64, 128),   # Road
+       5: (244, 35, 232),   # Sidewalk
+       6: (107, 142, 35),   # Vegetation
+       7: (0, 0, 142),      # Vehicle
+       9: (0, 0, 230),      # Traffic Light
+       10: (220, 20, 60),   # Pedestrian
+       12: (220, 220, 0),   # Traffic Sign
+       24: (157, 234, 50),  # Lane Marking
+   }
+
+   def seg_callback(image):
+       """Colorize semantic segmentation output."""
+       array = np.frombuffer(image.raw_data, dtype=np.uint8)
+       array = array.reshape((image.height, image.width, 4))
+       labels = array[:, :, 2]  # semantic tag is in the red channel
+
+       colored = np.zeros((image.height, image.width, 3), dtype=np.uint8)
+       for label_id, color in LABEL_COLORS.items():
+           colored[labels == label_id] = color
+
+       # Compute driveable surface mask (road + lane markings)
+       driveable = ((labels == 4) | (labels == 24)).astype(np.uint8) * 255
+
+       cv2.imshow("Semantic Segmentation", colored)
+       cv2.imshow("Driveable Surface", driveable)
+       cv2.waitKey(1)
+
+   seg_cam.listen(seg_callback)
+
+
+Task 2: Compute Segmentation Metrics
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   def compute_miou(pred_labels, gt_labels, num_classes):
+       """Compute mean Intersection over Union across all classes."""
+       ious = []
+       for c in range(num_classes):
+           pred_c = (pred_labels == c)
+           gt_c = (gt_labels == c)
+           intersection = np.logical_and(pred_c, gt_c).sum()
+           union = np.logical_or(pred_c, gt_c).sum()
+           if union > 0:
+               ious.append(intersection / union)
+       return np.mean(ious) if ious else 0.0
+
+   # Usage: compare a model's predictions against CARLA ground truth
+   # miou = compute_miou(model_output, carla_gt_labels, num_classes=23)
+
+
+Task 3: Implement a Basic SORT Tracker
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This implements the core SORT algorithm: Kalman filter prediction +
+IoU-based Hungarian matching.
+
+.. code-block:: python
+
+   from scipy.optimize import linear_sum_assignment
+
+   class KalmanBoxTracker:
+       """Kalman filter tracker for a single bounding box."""
+       _count = 0
+
+       def __init__(self, bbox):
+           """Initialize with bounding box [x1, y1, x2, y2]."""
+           self.id = KalmanBoxTracker._count
+           KalmanBoxTracker._count += 1
+
+           # State: [cx, cy, area, aspect_ratio, vx, vy, va]
+           cx = (bbox[0] + bbox[2]) / 2
+           cy = (bbox[1] + bbox[3]) / 2
+           area = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1])
+           aspect = (bbox[2] - bbox[0]) / max(bbox[3] - bbox[1], 1)
+
+           self.state = np.array([cx, cy, area, aspect, 0, 0, 0],
+                                 dtype=np.float64)
+           self.hits = 1
+           self.age = 0
+           self.time_since_update = 0
+
+       def predict(self):
+           """Constant-velocity prediction."""
+           self.state[:3] += self.state[4:7]  # update position with velocity
+           self.age += 1
+           self.time_since_update += 1
+           return self._state_to_bbox()
+
+       def update(self, bbox):
+           """Update state with matched detection."""
+           cx = (bbox[0] + bbox[2]) / 2
+           cy = (bbox[1] + bbox[3]) / 2
+           area = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1])
+
+           # Simple exponential moving average (alpha = 0.7)
+           alpha = 0.7
+           old_cx, old_cy, old_area = self.state[:3]
+           self.state[4] = alpha * (cx - old_cx) + (1 - alpha) * self.state[4]
+           self.state[5] = alpha * (cy - old_cy) + (1 - alpha) * self.state[5]
+           self.state[6] = alpha * (area - old_area) + (1-alpha) * self.state[6]
+           self.state[0] = cx
+           self.state[1] = cy
+           self.state[2] = area
+           self.hits += 1
+           self.time_since_update = 0
+
+       def _state_to_bbox(self):
+           """Convert state back to [x1, y1, x2, y2]."""
+           cx, cy, area, aspect = self.state[:4]
+           w = np.sqrt(max(area * aspect, 1))
+           h = max(area / w, 1)
+           return np.array([cx - w/2, cy - h/2, cx + w/2, cy + h/2])
+
+
+   def iou_batch(bb_det, bb_trk):
+       """Compute IoU between all pairs of detection and track boxes."""
+       # bb_det: (M, 4), bb_trk: (N, 4) -- [x1, y1, x2, y2]
+       M, N = len(bb_det), len(bb_trk)
+       iou_matrix = np.zeros((M, N))
+       for m in range(M):
+           for n in range(N):
+               x1 = max(bb_det[m, 0], bb_trk[n, 0])
+               y1 = max(bb_det[m, 1], bb_trk[n, 1])
+               x2 = min(bb_det[m, 2], bb_trk[n, 2])
+               y2 = min(bb_det[m, 3], bb_trk[n, 3])
+               inter = max(0, x2 - x1) * max(0, y2 - y1)
+               area_d = ((bb_det[m, 2] - bb_det[m, 0])
+                         * (bb_det[m, 3] - bb_det[m, 1]))
+               area_t = ((bb_trk[n, 2] - bb_trk[n, 0])
+                         * (bb_trk[n, 3] - bb_trk[n, 1]))
+               iou_matrix[m, n] = inter / max(area_d + area_t - inter, 1e-6)
+       return iou_matrix
+
+
+   class SORTTracker:
+       """Simple Online and Realtime Tracking."""
+
+       def __init__(self, max_age=5, min_hits=3, iou_threshold=0.3):
+           self.max_age = max_age
+           self.min_hits = min_hits
+           self.iou_threshold = iou_threshold
+           self.trackers = []
+
+       def update(self, detections):
+           """
+           Update tracks with new detections.
+
+           Args:
+               detections: np.array of shape (M, 4) -- [x1, y1, x2, y2]
+
+           Returns:
+               np.array of shape (K, 5) -- [x1, y1, x2, y2, track_id]
+           """
+           # Predict existing tracks
+           predicted = []
+           for trk in self.trackers:
+               predicted.append(trk.predict())
+           predicted = np.array(predicted) if predicted else np.empty((0, 4))
+
+           # Associate detections to tracks via Hungarian algorithm
+           if len(detections) > 0 and len(predicted) > 0:
+               iou_matrix = iou_batch(detections, predicted)
+               row_idx, col_idx = linear_sum_assignment(-iou_matrix)
+
+               matched, unmatched_dets, unmatched_trks = [], [], []
+               for m, t in zip(row_idx, col_idx):
+                   if iou_matrix[m, t] >= self.iou_threshold:
+                       matched.append((m, t))
+                   else:
+                       unmatched_dets.append(m)
+                       unmatched_trks.append(t)
+
+               unmatched_dets += [m for m in range(len(detections))
+                                  if m not in row_idx]
+               unmatched_trks += [t for t in range(len(predicted))
+                                  if t not in col_idx]
+           else:
+               matched = []
+               unmatched_dets = list(range(len(detections)))
+               unmatched_trks = list(range(len(predicted)))
+
+           # Update matched tracks
+           for m, t in matched:
+               self.trackers[t].update(detections[m])
+
+           # Create new tracks for unmatched detections
+           for m in unmatched_dets:
+               self.trackers.append(KalmanBoxTracker(detections[m]))
+
+           # Remove dead tracks
+           self.trackers = [t for t in self.trackers
+                            if t.time_since_update <= self.max_age]
+
+           # Return confirmed tracks
+           results = []
+           for trk in self.trackers:
+               if trk.hits >= self.min_hits:
+                   bbox = trk._state_to_bbox()
+                   results.append([*bbox, trk.id])
+           return np.array(results) if results else np.empty((0, 5))
+
+
+Task 4: Run the Tracker on CARLA Vehicles
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   def get_vehicle_bboxes_2d(world, camera_actor, K):
+       """Get 2D bounding boxes for all vehicles visible to a camera."""
+       vehicles = world.get_actors().filter('vehicle.*')
+       ego_id = vehicle.id
+       cam_transform = camera_actor.get_transform()
+       world_to_cam = np.array(cam_transform.get_inverse_matrix())
+
+       bboxes = []
+       for v in vehicles:
+           if v.id == ego_id:
+               continue
+
+           # Get vehicle center in world frame
+           v_loc = v.get_transform().location
+           v_world = np.array([v_loc.x, v_loc.y, v_loc.z, 1.0])
+
+           # Transform to camera frame
+           v_cam = world_to_cam @ v_world
+           if v_cam[2] < 1.0:  # behind camera
+               continue
+
+           # Project to pixel coordinates
+           px = K[0, 0] * v_cam[0] / v_cam[2] + K[0, 2]
+           py = K[1, 1] * v_cam[1] / v_cam[2] + K[1, 2]
+
+           # Approximate bounding box size based on distance
+           half_w = max(30, 2000 / v_cam[2])
+           half_h = max(20, 1500 / v_cam[2])
+
+           x1 = max(0, int(px - half_w))
+           y1 = max(0, int(py - half_h))
+           x2 = min(1280, int(px + half_w))
+           y2 = min(720, int(py + half_h))
+
+           if x2 > x1 and y2 > y1:
+               bboxes.append([x1, y1, x2, y2])
+
+       return np.array(bboxes) if bboxes else np.empty((0, 4))
+
+   # ── Main tracking loop ────────────────────────────────────────────
+   tracker = SORTTracker(max_age=5, min_hits=3, iou_threshold=0.3)
+   # Assign unique colors per track ID
+   track_colors = {}
+
+   def tracking_callback(image):
+       array = np.frombuffer(image.raw_data, dtype=np.uint8)
+       frame = array.reshape((image.height, image.width, 4))[:, :, :3].copy()
+
+       detections = get_vehicle_bboxes_2d(world, cameras['front'], K)
+       tracks = tracker.update(detections)
+
+       for trk in tracks:
+           x1, y1, x2, y2, tid = trk.astype(int)
+           if tid not in track_colors:
+               track_colors[tid] = tuple(
+                   int(c) for c in np.random.randint(50, 255, 3))
+           color = track_colors[tid]
+           cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
+           cv2.putText(frame, f"ID:{tid}", (x1, y1 - 8),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+
+       cv2.imshow("SORT Tracker", frame)
+       cv2.waitKey(1)
+
+   cameras['front'].listen(tracking_callback)
+
+.. admonition:: Exercise Tasks
+   :class: tip
+
+   1. **Visualize CARLA semantic segmentation** using the ground-truth camera.
+      Identify the driveable surface, lane markings, and vehicle pixels.
+   2. **Run the SORT tracker** on CARLA vehicle detections. Observe how track
+      IDs are assigned and maintained as vehicles move through the scene.
+   3. **Stress-test with occlusion**: Drive through a busy intersection and
+      observe ID switches when vehicles occlude each other. Count the number
+      of ID switches over 100 frames.
+   4. **Implement ByteTrack's two-pass association**: Modify the
+      ``SORTTracker.update()`` method to split detections into high-confidence
+      and low-confidence sets, run two rounds of Hungarian matching, and
+      compare the ID switch count against basic SORT.
+   5. **Compute tracking metrics**: Using CARLA's ground-truth vehicle
+      positions as reference, compute MOTA and IDF1 for your tracker over
+      a 30-second driving sequence.
+
+.. note::
+
+   This exercise uses simplified 2D bounding boxes projected from 3D world
+   positions. In GP2, you will replace these with actual YOLO/DETR detector
+   outputs, creating a full detection-and-tracking pipeline.

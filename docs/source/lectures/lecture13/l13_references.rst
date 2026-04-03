@@ -3,222 +3,167 @@ References
 ====================================================
 
 
-.. dropdown:: Safety Standards
+.. dropdown:: World Model Papers
    :class-container: sd-border-secondary
    :open:
 
    .. grid:: 1 1 2 2
       :gutter: 2
 
-      .. grid-item-card:: ISO 26262
-         :link: https://www.iso.org/standard/68383.html
+      .. grid-item-card:: GAIA-1 (Wayve, 2023)
+         :link: https://arxiv.org/abs/2309.17080
          :class-card: sd-border-secondary
 
-         **Road Vehicles -- Functional Safety**
+         **GAIA-1: Generative World Model for Autonomous Driving**
 
-         The primary standard for functional safety in automotive electrical
-         and electronic systems. Defines ASIL levels A-D and the V-model
-         development process.
+         Hu, A. et al. (2023). The first Wayve generative driving world model.
+         9B parameters; action-conditioned video generation for driving.
 
-      .. grid-item-card:: ISO 21448 (SOTIF)
-         :link: https://www.iso.org/standard/77490.html
+      .. grid-item-card:: Vista (NeurIPS 2024)
+         :link: https://arxiv.org/abs/2405.17398
          :class-card: sd-border-secondary
 
-         **Safety of the Intended Functionality**
+         **Vista: Generalizable Driving World Models**
 
-         Addresses safety hazards from performance limitations of intended
-         functions, including sensor limitations and algorithmic failure modes.
+         Gao, S. et al. (2024). Multi-dataset training for generalizable
+         driving world models with standard evaluation protocol.
 
-      .. grid-item-card:: ISO/SAE 21434
-         :link: https://www.iso.org/standard/70918.html
+      .. grid-item-card:: DriveDreamer
+         :link: https://arxiv.org/abs/2309.09777
          :class-card: sd-border-secondary
 
-         **Road Vehicles -- Cybersecurity Engineering**
+         **DriveDreamer: Towards Real-world-driven World Models**
 
-         Joint ISO/SAE standard for automotive cybersecurity, including TARA
-         methodology and security lifecycle requirements.
+         Wang, X. et al. (2023). World model conditioned on structured
+         driving representations (HD maps, agent boxes).
 
-      .. grid-item-card:: UNECE GTR on ADS
-         :link: https://unece.org/transport/vehicle-regulations
+      .. grid-item-card:: WoVogen
+         :link: https://arxiv.org/abs/2312.02934
          :class-card: sd-border-secondary
 
-         **UNECE Global Technical Regulation**
+         **WoVogen: World Volume-aware Driving Video Generation**
 
-         The first international safety framework for ADS (approved January
-         2026). Safety case approach for demonstrating ADS acceptability.
+         Structured scene representation for temporally consistent
+         driving video generation.
 
 
-.. dropdown:: Middleware and Communication
+.. dropdown:: NVIDIA Cosmos
    :class-container: sd-border-secondary
 
    .. grid:: 1 1 2 2
       :gutter: 2
 
-      .. grid-item-card:: ROS 2 Documentation
-         :link: https://docs.ros.org/en/humble/
+      .. grid-item-card:: NVIDIA Cosmos Announcement
+         :link: https://www.nvidia.com/en-us/ai/cosmos/
          :class-card: sd-border-secondary
 
-         **ROS 2 Humble Hawksbill**
+         **NVIDIA Cosmos World Foundation Models**
 
-         Official ROS 2 documentation including DDS configuration, QoS
-         policies, real-time executor, and security (SROS 2).
+         Official page for NVIDIA Cosmos, including model descriptions,
+         licensing, and developer resources.
 
-      .. grid-item-card:: DDS Standard (OMG)
-         :link: https://www.omg.org/spec/DDS/
+      .. grid-item-card:: Cosmos Technical Report
+         :link: https://arxiv.org/abs/2501.03575
          :class-card: sd-border-secondary
 
-         **Data Distribution Service (DDS)**
+         **Cosmos World Foundation Model Platform for Physical AI**
 
-         OASIS/OMG standard for real-time publish-subscribe middleware.
-         Foundational to ROS 2 communication.
+         NVIDIA (2025). Technical report describing the Cosmos model
+         family, training data, and evaluation on robotics and driving.
 
-      .. grid-item-card:: DDS-Security
-         :link: https://www.omg.org/spec/DDS-SECURITY/
+      .. grid-item-card:: NVIDIA DRIVE
+         :link: https://developer.nvidia.com/drive
          :class-card: sd-border-secondary
 
-         **DDS Security Specification**
+         **NVIDIA DRIVE Developer Platform**
 
-         Security plugin specification for DDS, enabling authentication,
-         encryption, and access control in ROS 2 (SROS 2).
-
-      .. grid-item-card:: ROS 2 Real-Time Guide
-         :link: https://docs.ros.org/en/humble/Guides/Real-Time-Programming.html
-         :class-card: sd-border-secondary
-
-         **Real-Time Programming with ROS 2**
-
-         Official guide on scheduling, memory management, and latency
-         optimization for real-time AV applications.
+         End-to-end ADS development platform integrating Cosmos, Hydra-MDP,
+         DRIVE Orin/Thor, and DriveTransformer.
 
 
-.. dropdown:: V2X and Connectivity
+.. dropdown:: Foundational World Model Theory
    :class-container: sd-border-secondary
 
    .. grid:: 1 1 2 2
       :gutter: 2
 
-      .. grid-item-card:: 3GPP C-V2X (LTE-V / NR-V2X)
-         :link: https://www.3gpp.org/technologies/keywords-acronyms/103-v2x
+      .. grid-item-card:: Dreamer (Hafner et al.)
+         :link: https://arxiv.org/abs/1912.01603
          :class-card: sd-border-secondary
 
-         **Cellular V2X Standards**
+         **Dream to Control: Learning Behaviors by Latent Imagination**
 
-         3GPP specifications for LTE-V2X (Release 14) and 5G NR-V2X
-         (Release 16). Technical foundation of C-V2X communication.
+         Hafner, D. et al. (2020). Seminal work demonstrating world-model-based
+         RL for control from pixels. Conceptual ancestor of driving world models.
 
-      .. grid-item-card:: IEEE 802.11p / DSRC
-         :link: https://standards.ieee.org/ieee/802.11p/3953/
+      .. grid-item-card:: World Models (Ha & Schmidhuber)
+         :link: https://arxiv.org/abs/1803.10122
          :class-card: sd-border-secondary
 
-         **Dedicated Short-Range Communications**
+         **World Models**
 
-         IEEE 802.11p standard for DSRC V2X communication in the 5.9 GHz
-         band. Being phased out in the US in favor of C-V2X.
+         Ha, D. & Schmidhuber, J. (2018). Original world model architecture
+         (VAE + RNN + controller) that inspired subsequent large-scale work.
 
-      .. grid-item-card:: ETSI ITS Standards
-         :link: https://www.etsi.org/technologies/automotive-intelligent-transport/
-         :class-card: sd-border-secondary
-
-         **Intelligent Transport Systems (Europe)**
-
-         ETSI standards for V2X in Europe, including cooperative awareness
-         messages (CAM) and decentralized environmental notification messages
-         (DENM).
-
-   - Wang, Z. et al. (2020). *V2VNet: Vehicle-to-Vehicle Communication for
-     Joint Perception and Prediction.* ECCV 2020. Seminal cooperative
-     perception paper using V2X for joint detection and forecasting.
-   - Xu, R. et al. (2022). *OPV2V: An Open Benchmark Dataset and Fusion
-     Pipeline for Perception with Vehicle-to-Vehicle Communication.* ICRA
-     2022.
+   - LeCun, Y. (2022). *A Path Towards Autonomous Machine Intelligence.*
+     OpenReview. Influential whitepaper arguing world models are essential
+     for general intelligence and autonomous driving.
 
 
-.. dropdown:: Industry Reports and Outlook
+.. dropdown:: Simulation Platforms
    :class-container: sd-border-secondary
 
    .. grid:: 1 1 2 2
       :gutter: 2
 
-      .. grid-item-card:: Waymo Safety Report
-         :link: https://waymo.com/safety/
+      .. grid-item-card:: CARLA Simulator
+         :link: https://carla.org/
          :class-card: sd-border-secondary
 
-         **Waymo Safety**
+         **Open-Source AV Simulator**
 
-         Waymo's public safety documentation, including crash statistics,
-         safety methodology, and ODD descriptions.
+         Physics-based driving simulator used throughout this course.
 
-      .. grid-item-card:: NHTSA AV Policy
-         :link: https://www.nhtsa.gov/technology-innovation/automated-vehicles
+         +++
+
+         - `Documentation <https://carla.readthedocs.io/en/0.9.16/>`_
+         - `Scenario Runner <https://github.com/carla-simulator/scenario_runner>`_
+
+      .. grid-item-card:: ASAM OpenSCENARIO 2.0
+         :link: https://www.asam.net/standards/detail/openscenario/
          :class-card: sd-border-secondary
 
-         **NHTSA Automated Vehicles**
+         **Scenario Specification Standard**
 
-         US federal policy for ADS, including Standing General Order on
-         crash reporting and technology innovation resources.
+         Standard format for parameterized driving scenario families, used
+         for safety validation and world model conditioning.
 
-   - RAND Corporation (2020). *Measuring Automated Vehicle Safety.*
-     Methodology for assessing AV safety performance.
-   - McKinsey & Company (2023). *Autonomous Driving's Future.*
-     Industry outlook and economics of robotaxi services.
-   - IEEE Spectrum (2025). *The State of Self-Driving Cars in 2026.*
-     Annual industry survey of deployment status, technology trends, and
-     regulatory developments.
+      .. grid-item-card:: Waymo Open Dataset
+         :link: https://waymo.com/open/
+         :class-card: sd-border-secondary
+
+         **Waymo Open Dataset**
+
+         Large-scale real-world driving dataset used for training and
+         evaluating world models, including Vista.
+
+      .. grid-item-card:: nuScenes
+         :link: https://www.nuscenes.org/
+         :class-card: sd-border-secondary
+
+         **nuScenes Dataset**
+
+         Multi-camera and LiDAR driving dataset, commonly used for
+         world model training and evaluation benchmarks.
 
 
-.. dropdown:: Ethics and Liability
+.. dropdown:: Sim-to-Real and Domain Adaptation
    :class-container: sd-border-secondary
 
-   - Awad, E. et al. (2018). *The Moral Machine Experiment.* Nature, 563,
-     59-64. Cross-cultural study of ethical preferences in AV decision-making
-     scenarios across 2.3 million participants in 233 countries.
-   - Bonnefon, J. F. et al. (2016). *The Social Dilemma of Autonomous
-     Vehicles.* Science, 352(6293), 1573-1576.
-   - Geistfeld, M. A. (2017). *A Roadmap for Autonomous Vehicles: State
-     Tort Liability, Automobile Insurance, and Federal Safety Regulation.*
-     California Law Review, 105(6).
-   - German Road Traffic Act (StVG) Amendment (2021). First national
-     legislation placing liability on ADS operator for Level 4 incidents.
-
-
-.. dropdown:: Career Resources
-   :class-container: sd-border-secondary
-
-   .. grid:: 1 1 2 2
-      :gutter: 2
-
-      .. grid-item-card:: IEEE IV Symposium
-         :link: https://ieee-iv.org/
-         :class-card: sd-border-secondary
-
-         **IEEE Intelligent Vehicles Symposium**
-
-         Premier academic venue for autonomous driving research. Good
-         source for internship and job connections.
-
-      .. grid-item-card:: CVPR AV Workshop
-         :link: https://cvpr.thecvf.com/
-         :class-card: sd-border-secondary
-
-         **CVPR Autonomous Driving Workshop**
-
-         Annual workshop at CVPR showcasing the latest perception and
-         planning research from industry and academia.
-
-      .. grid-item-card:: Waymo Careers
-         :link: https://waymo.com/careers/
-         :class-card: sd-border-secondary
-
-         **Waymo**
-
-         Roles in perception, prediction, planning, systems, and
-         software infrastructure across the full ADS stack.
-
-      .. grid-item-card:: NVIDIA DRIVE Careers
-         :link: https://www.nvidia.com/en-us/self-driving-cars/
-         :class-card: sd-border-secondary
-
-         **NVIDIA Autonomous Vehicles**
-
-         Roles spanning hardware (SoC), software (DRIVE platform),
-         world models (Cosmos), and AV tooling.
+   - Tobin, J. et al. (2017). *Domain Randomization for Transferring Deep
+     Neural Networks from Simulation to the Real World.* IROS 2017.
+     Foundational paper on domain randomization.
+   - Ganin, Y. et al. (2016). *Domain-Adversarial Training of Neural
+     Networks.* JMLR 2016. Foundation for domain adaptation methods.
+   - Yang, J. et al. (2023). *UniSim: A Neural Closed-Loop Sensor
+     Simulator.* CVPR 2023. Sensor-realistic simulation for ADS evaluation.

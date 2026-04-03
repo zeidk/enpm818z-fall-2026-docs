@@ -2,383 +2,340 @@ References
 ==========
 
 
-.. dropdown:: Lecture 10
+.. dropdown:: Lecture 9
     :class-container: sd-border-secondary
     :open:
 
     .. card::
         :class-card: sd-border-secondary
 
-        **ENPM818Z -- L10: Prediction & Decision-Making**
+        **ENPM818Z -- L9: Trajectory Planning & Control**
 
-        Covers why prediction is necessary for planning (horizon
-        requirements), physics-based prediction (CV, CTRA),
-        maneuver-based prediction (intent classification + conditional
-        model), interaction-aware prediction (Social Force, GNNs),
-        Transformer-based prediction (MotionTransformer, scene
-        context encoding, multi-modal output), multi-modal prediction
-        metrics (MinADE, MinFDE, MissRate, mAP), FSM behavior
-        planning (states, transitions, limitations), rule-based vs.
-        learned decision-making, behavior cloning (distribution shift,
-        compounding errors), and DAgger (dataset aggregation, expert
-        querying, convergence guarantees).
+        Covers path vs. trajectory (time parameterization),
+        trajectory requirements (continuity, feasibility, comfort,
+        safety), quintic polynomial trajectory generation in the
+        Frenet frame, natural cubic splines and B-splines, optimization-
+        based trajectory planning with QP/NLP cost functions,
+        Model Predictive Control (MPC formulation, receding horizon,
+        prediction horizon tuning, real-time QP solving), Pure
+        Pursuit controller (lookahead distance, adaptive gain),
+        Stanley controller (cross-track + heading error), PID
+        longitudinal speed control with anti-windup, and CARLA
+        lane-following implementation.
 
 
-.. dropdown:: Trajectory Prediction
+.. dropdown:: Trajectory Planning
     :class-container: sd-border-secondary
 
     .. grid:: 1 1 2 2
         :gutter: 2
 
-        .. grid-item-card:: Schubert et al. -- CTRA Model (2008)
+        .. grid-item-card:: Werling et al. -- Frenet-Frame Planner (ICRA 2010)
             :class-card: sd-border-secondary
 
-            **IEEE IV 2008**
+            **ICRA 2010**
 
-            Analysis and comparison of constant-motion kinematic
-            models (CV, CA, CTRA, CTRV) for vehicle trajectory
-            prediction with empirical accuracy benchmarks.
+            Seminal paper on Frenet-frame quintic polynomial
+            trajectory generation for highway driving, including
+            candidate sampling and cost-function-based selection.
 
             +++
 
-            - CTRA derivation
-            - Model comparison
-            - Short-horizon accuracy
+            - Frenet frame formulation
+            - Quintic polynomial candidates
+            - Cost function design
 
-        .. grid-item-card:: Helbing & Molnar -- Social Force (1995)
+        .. grid-item-card:: Ziegler et al. -- AV Berlin (2014)
             :class-card: sd-border-secondary
 
-            **Physical Review E, 1995**
+            **IEEE Intelligent Transportation Systems, 2014**
 
-            Seminal social force model for pedestrian dynamics,
-            modelling attraction toward goals and repulsion from
-            obstacles and other pedestrians.
+            Describes the full trajectory planning and control
+            stack of the Bertha-Benz Memorial Route autonomous
+            vehicle (Mercedes-Benz research).
 
             +++
 
-            - Force model formulation
-            - Crowd dynamics simulation
-            - Parameter estimation
+            - End-to-end AV trajectory system
+            - Spline-based path representation
+            - Emergency maneuver handling
 
-        .. grid-item-card:: Alahi et al. -- Social LSTM (CVPR 2016)
+        .. grid-item-card:: Brezak & Petrovic -- Spline Path Planning
             :class-card: sd-border-secondary
 
-            **CVPR 2016**
+            **IEEE T-ITS, 2014**
 
-            Introduced the social pooling mechanism to LSTM-based
-            pedestrian trajectory prediction, enabling interaction-
-            aware learning.
+            Comparison of cubic and quintic spline methods for
+            smooth path planning under kinematic constraints.
 
             +++
 
-            - LSTM trajectory prediction
-            - Social pooling
-            - ETH/UCY benchmark results
+            - Curvature continuity analysis
+            - Spline vs. polynomial trade-offs
+            - Constraint satisfaction
 
-        .. grid-item-card:: Gupta et al. -- Social GAN (CVPR 2018)
+        .. grid-item-card:: Farin -- NURBS and B-Splines
             :class-card: sd-border-secondary
 
-            **CVPR 2018**
+            **A K Peters / CRC Press, 5th Ed.**
 
-            Generative adversarial network for multi-modal
-            pedestrian trajectory prediction with socially
-            acceptable samples.
+            Comprehensive reference for B-spline and NURBS
+            theory, including knot insertion, degree elevation,
+            and the convex hull and local support properties.
 
             +++
 
-            - GAN-based multi-modal prediction
-            - Variety loss
-            - Social acceptability
+            - B-spline basis functions
+            - Convex hull property
+            - Knot vector design
 
 
-.. dropdown:: Transformer-Based Prediction
+.. dropdown:: Model Predictive Control
     :class-container: sd-border-secondary
 
     .. grid:: 1 1 2 2
         :gutter: 2
 
-        .. grid-item-card:: Shi et al. -- MotionTransformer (NeurIPS 2023)
+        .. grid-item-card:: Rawlings & Mayne -- MPC: Theory and Design
             :class-card: sd-border-secondary
 
-            **NeurIPS 2023**
+            **Nob Hill Publishing, 2nd Ed.**
 
-            State-of-the-art Transformer predictor with two-stage
-            global + local motion Transformers and learnable motion
-            query pairs for multi-modal prediction on WOMD.
+            The definitive graduate-level MPC textbook covering
+            stability theory, constraint handling, and real-time
+            implementation.
 
             +++
 
-            - Two-stage Transformer architecture
-            - Factorized attention
-            - WOMD state-of-the-art results
+            - Receding horizon optimality
+            - Terminal cost and constraint design
+            - Stability guarantees
 
-        .. grid-item-card:: Nayakanti et al. -- Wayformer (ICRA 2023)
+        .. grid-item-card:: Kong et al. -- Kinematic and Dynamic MPC (2015)
             :class-card: sd-border-secondary
 
-            **ICRA 2023**
+            **IV 2015**
 
-            Waymo's Transformer-based prediction model with
-            efficient factorized attention for joint agent and
-            map encoding.
+            Comparison of kinematic and dynamic bicycle model
+            MPC for vehicle trajectory tracking across speed
+            regimes.
 
             +++
 
-            - Factorized attention design
-            - Scalability analysis
-            - Real-time inference
+            - Kinematic vs. dynamic MPC
+            - Speed-regime suitability
+            - Experimental validation
 
-        .. grid-item-card:: Ngiam et al. -- Scene Transformer (ICLR 2022)
+        .. grid-item-card:: OSQP Solver
+            :link: https://osqp.org/
             :class-card: sd-border-secondary
 
-            **ICLR 2022**
+            **OSQP (Operator Splitting QP)**
 
-            Joint prediction of all agents in a scene using a
-            single Transformer, enabling fully interaction-aware
-            prediction.
+            Open-source QP solver well-suited to MPC due to
+            its warm-starting capability and predictable
+            real-time performance.
 
             +++
 
-            - Joint multi-agent prediction
-            - Factored attention masks
-            - nuScenes and WOMD results
+            - Warm-starting for MPC
+            - Embedded C code generation
+            - Real-time performance
 
-        .. grid-item-card:: Shi et al. -- MTR++ (T-PAMI 2024)
+        .. grid-item-card:: acados -- Real-Time NMPC
+            :link: https://docs.acados.org/
             :class-card: sd-border-secondary
 
-            **IEEE T-PAMI 2024**
+            **acados**
 
-            Extension of MotionTransformer with improved scene
-            encoding and multi-agent prediction, achieving SOTA
-            across multiple benchmarks.
+            Fast C library for nonlinear MPC with code
+            generation for embedded automotive controllers.
+            Supports SQP with Gauss-Newton Hessian approximation.
 
             +++
 
-            - Extended architecture
-            - Multi-dataset training
-            - Benchmark leaderboard
+            - Nonlinear MPC formulation
+            - Code generation
+            - ROS 2 integration examples
 
 
-.. dropdown:: Behavior Planning
+.. dropdown:: Path-Following Controllers
     :class-container: sd-border-secondary
 
     .. grid:: 1 1 2 2
         :gutter: 2
 
-        .. grid-item-card:: Paden et al. -- AV Planning Survey (IEEE T-ITS 2016)
+        .. grid-item-card:: Coulter -- Pure Pursuit (1992)
             :class-card: sd-border-secondary
 
-            **IEEE T-ITS, 2016**
+            **CMU Technical Report, 1992**
 
-            Survey of behavior planning approaches including FSMs,
-            POMDP, and rule-based methods for autonomous vehicles.
+            Original Pure Pursuit algorithm from the CMU
+            Navlab project. Includes derivation of the
+            lookahead-to-curvature relationship and
+            experimental results.
 
             +++
 
-            - FSM design patterns
-            - POMDP formulation
-            - Rule-based systems
+            - Geometric derivation
+            - Lookahead distance analysis
+            - Experimental validation
 
-        .. grid-item-card:: Ulbrich & Maurer -- MOMDP for Behavior (IV 2013)
+        .. grid-item-card:: Thrun et al. -- Stanley Controller (2006)
             :class-card: sd-border-secondary
 
-            **IV 2013**
+            **JAIR, 2006 (DARPA Grand Challenge)**
 
-            Models behavior planning as a Mixed Observability MDP,
-            enabling principled uncertainty handling beyond FSMs.
+            Describes the Stanley controller used on the
+            Stanford entry in the DARPA Urban Challenge, with
+            analysis of heading and cross-track error behavior.
 
             +++
 
-            - MOMDP formulation
-            - Belief-space planning
-            - Intersection scenarios
+            - Stanley derivation
+            - Heading + cross-track error
+            - Urban challenge results
 
-        .. grid-item-card:: Brechtel et al. -- Probabilistic MDP (ITSC 2014)
+        .. grid-item-card:: Snider -- Path Tracking Survey (2009)
             :class-card: sd-border-secondary
 
-            **ITSC 2014**
+            **CMU Technical Report, 2009**
 
-            Probabilistic behavior planning under prediction
-            uncertainty using continuous-state MDP.
+            Comprehensive comparison of path-tracking controllers
+            (Pure Pursuit, Stanley, and variants) on the same
+            test tracks and conditions.
 
             +++
 
-            - MDP with probabilistic transitions
-            - Integration with prediction
-            - Risk-aware planning
-
-        .. grid-item-card:: Werber et al. -- Rule Book (IV 2019)
-            :class-card: sd-border-secondary
-
-            **IV 2019**
-
-            Formalization of traffic rules as a hierarchically
-            ordered rule book for certifiable behavior planning.
-
-            +++
-
-            - Rule formalization
-            - Hierarchical priority
-            - Verification
+            - Side-by-side comparison
+            - Speed-regime analysis
+            - Implementation details
 
 
-.. dropdown:: Imitation Learning and DAgger
+.. dropdown:: PID Control
     :class-container: sd-border-secondary
 
     .. grid:: 1 1 2 2
         :gutter: 2
 
-        .. grid-item-card:: Ross & Bagnell -- Behavior Cloning (2010)
+        .. grid-item-card:: Astrom & Hagglund -- PID Controllers
             :class-card: sd-border-secondary
 
-            **JMLR Workshop, 2010**
+            **ISA, 2nd Ed.**
 
-            Analysis of distribution shift in behavior cloning with
-            the formal :math:`O(\epsilon T^2)` error bound derivation.
+            Standard reference for PID control covering
+            Ziegler-Nichols tuning, anti-windup, derivative
+            filtering, and practical implementation.
 
             +++
 
-            - Distribution shift analysis
-            - Compounding error bound
-            - Theoretical foundations
+            - Ziegler-Nichols tuning
+            - Anti-windup strategies
+            - Bumpless transfer
 
-        .. grid-item-card:: Ross, Gordon & Bagnell -- DAgger (AISTATS 2011)
+        .. grid-item-card:: Franklin, Powell, Emami-Naeini
             :class-card: sd-border-secondary
 
-            **AISTATS 2011**
+            **Feedback Control of Dynamic Systems (8th Ed.)**
 
-            Original DAgger paper introducing the dataset aggregation
-            algorithm with formal reduction from :math:`O(\epsilon T^2)`
-            to :math:`O(\epsilon T)` regret.
+            Undergraduate-level control systems textbook with
+            in-depth coverage of PID design, root locus, and
+            frequency-domain stability analysis.
 
             +++
 
-            - DAgger algorithm
-            - Convergence guarantees
-            - No-regret analysis
-
-        .. grid-item-card:: Codevilla et al. -- CILRS (ICCV 2019)
-            :class-card: sd-border-secondary
-
-            **ICCV 2019**
-
-            Conditional imitation learning with reinforcement
-            learning for robust urban driving, addressing
-            distribution shift via hybrid IL+RL training.
-
-            +++
-
-            - Conditional command inputs
-            - IL + RL hybrid
-            - CARLA benchmark results
-
-        .. grid-item-card:: Chen et al. -- TransFuser (CVPR 2021)
-            :class-card: sd-border-secondary
-
-            **CVPR 2021**
-
-            Transformer-based imitation learning agent fusing
-            camera and LiDAR via cross-attention for CARLA
-            Leaderboard challenge.
-
-            +++
-
-            - Sensor fusion via attention
-            - End-to-end imitation
-            - Leaderboard benchmark
+            - PID design methodology
+            - Stability margins
+            - Digital implementation
 
 
-.. dropdown:: Datasets and Benchmarks
+.. dropdown:: CARLA Simulator
     :class-container: sd-border-secondary
 
     .. grid:: 1 1 2 2
         :gutter: 2
 
-        .. grid-item-card:: Waymo Open Motion Dataset (WOMD)
-            :link: https://waymo.com/open/data/motion/
+        .. grid-item-card:: CARLA Documentation
+            :link: https://carla.readthedocs.io/
             :class-card: sd-border-secondary
 
-            **Waymo Open Dataset**
+            **carla.readthedocs.io**
 
-            Large-scale real-world prediction benchmark with 570 hours
-            of driving data across diverse scenarios. Standard benchmark
-            for MotionTransformer and similar models.
+            Official CARLA Python API documentation including
+            vehicle control interfaces, waypoint API, sensor
+            mounting, and traffic management.
 
             +++
 
-            - Agent trajectory annotations
-            - HD map with road graph
-            - Prediction challenge leaderboard
+            - VehicleControl API
+            - Map and waypoint access
+            - Sensor blueprint library
 
-        .. grid-item-card:: nuScenes Prediction
-            :link: https://www.nuscenes.org/prediction
+        .. grid-item-card:: Dosovitskiy et al. -- CARLA (CoRL 2017)
             :class-card: sd-border-secondary
 
-            **nuScenes (Motional)**
+            **CoRL 2017**
 
-            360-degree sensor suite dataset with prediction challenge
-            and standardized MinADE/MinFDE/MissRate metrics.
+            Original CARLA paper describing the simulator
+            architecture, sensor models, and evaluation metrics.
 
             +++
 
-            - Multi-sensor annotations
-            - Prediction challenge
-            - MinADE/MinFDE baseline results
+            - Simulator design
+            - Benchmark scenarios
+            - Sensor simulation fidelity
 
-        .. grid-item-card:: ETH/UCY Pedestrian Datasets
-            :link: https://graphics.cs.ucy.ac.cy/research/downloads/crowd-data
+        .. grid-item-card:: Leaderboard 2.0
+            :link: https://leaderboard.carla.org/
             :class-card: sd-border-secondary
 
-            **ETH Zurich / UCY**
+            **CARLA Autonomous Driving Leaderboard**
 
-            Standard pedestrian trajectory prediction benchmarks
-            used to evaluate Social LSTM, Social GAN, and subsequent
-            pedestrian prediction models.
+            Official benchmark for evaluating autonomous driving
+            agents in CARLA, including town routes, traffic
+            scenarios, and scoring methodology.
 
             +++
 
-            - Overhead video annotations
-            - Multiple crowd scenarios
-            - ADE/FDE metrics
+            - Route completion metric
+            - Infraction taxonomy
+            - Submission guidelines
 
 
-.. dropdown:: Recommended Reading
+.. dropdown:: Benchmarks
     :class-container: sd-border-secondary
 
     .. grid:: 1 1 2 2
         :gutter: 2
 
-        .. grid-item-card:: Schmerling et al.
+        .. grid-item-card:: nuPlan
+            :link: https://nuplan.org/
             :class-card: sd-border-secondary
 
-            **Multimodal Probabilistic Model-Based Planning for
-            Human-Robot Interaction (ICRA 2018)**
+            **nuPlan Planning Benchmark**
 
-            Unified framework for prediction and planning under
-            multi-modal agent behavior uncertainty.
+            Closed-loop planning benchmark with 1300+ hours
+            of real-world data. Used to evaluate MPC and
+            learning-based trajectory planners.
 
-        .. grid-item-card:: Sutton & Barto
+            +++
+
+            - Closed-loop reactive simulation
+            - Standardized metrics (PDMs score)
+            - Real-world driving scenarios
+
+        .. grid-item-card:: CommonRoad
+            :link: https://commonroad.in.tum.de/
             :class-card: sd-border-secondary
 
-            **Reinforcement Learning: An Introduction (2nd Ed.)**
+            **CommonRoad (TU Munich)**
 
-            Comprehensive RL textbook. Chapters 3--6 provide the
-            MDP and policy optimization foundations underlying
-            learned behavior planners and DAgger.
+            Benchmark and scenario format for trajectory
+            planning evaluation with standardized kinematic
+            feasibility checks.
 
-        .. grid-item-card:: Vaswani et al.
-            :class-card: sd-border-secondary
+            +++
 
-            **Attention Is All You Need (NeurIPS 2017)**
-
-            Original Transformer paper. Essential background for
-            understanding MotionTransformer and all Transformer-based
-            prediction architectures.
-
-        .. grid-item-card:: Goodfellow, Bengio & Courville
-            :class-card: sd-border-secondary
-
-            **Deep Learning (MIT Press, 2016)**
-
-            Chapters 6--10 cover the deep learning foundations
-            (MLPs, CNNs, RNNs) underlying LSTM-based and
-            Transformer-based prediction models.
+            - Standardized scenario format
+            - Feasibility checkers
+            - Planning solution library

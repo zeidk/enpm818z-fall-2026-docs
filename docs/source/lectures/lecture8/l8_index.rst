@@ -1,63 +1,49 @@
 ====================================================
-L8: Motion Planning
+L8: Navigation & Route Planning
 ====================================================
 
 Overview
 --------
 
-This lecture covers the full motion planning stack for autonomous
-vehicles, from high-level route planning down to collision-aware
-path generation. You will learn the mathematical foundations of
-vehicle kinematic models, implement classical graph-based and
-sampling-based planners, and explore the emerging class of
-diffusion-based neural planners that are redefining the state of
-the art. The lecture concludes with algorithm selection criteria
-and a hands-on CARLA implementation exercise.
+This lecture covers the **navigation layer** of the autonomous driving
+stack -- the system that determines *which roads to take* to reach a
+destination. Navigation sits between localization (L7: knowing where
+you are) and motion planning (L9: finding a collision-free local path).
+While motion planning operates at the 10--50 m scale, navigation
+operates at the city scale, producing a sequence of road segments and
+lane-level waypoints that guide all downstream planning.
 
+Students will learn how road networks are represented as graphs, how
+global route planning algorithms work on these graphs, and how to use
+CARLA's navigation API to plan and execute multi-kilometer routes.
+This lecture directly supports **GP4: Planning & Control**, where
+students must achieve route completion on instructor-provided scenarios.
 
 Learning Objectives
 -------------------
 
 By the end of this lecture, you will be able to:
 
-- Describe the three-tier motion planning hierarchy (route, behavior,
-  motion) and explain how each tier constrains the next.
-- Derive the bicycle kinematic model and articulate its nonholonomic
-  constraints.
-- Implement Dijkstra's algorithm and A* search with admissible
-  heuristics on a road network graph.
-- Explain how RRT and RRT* explore configuration space and why RRT*
-  achieves asymptotic optimality.
-- Construct a state lattice and perform graph search over it for
-  structured road scenarios.
-- Apply geometric collision detection methods with appropriate safety
-  margins.
-- Describe how diffusion-based planners (Diffusion Planner, DiffusionDrive)
-  formulate planning as iterative denoising.
-- Select an appropriate planning algorithm given task requirements,
-  environment structure, and computational constraints.
+- Explain the role of navigation in the AV planning hierarchy and how
+  it constrains behavior and motion planning.
+- Describe how road networks are represented as directed graphs with
+  lane-level topology (OpenDRIVE, Lanelet2).
+- Apply Dijkstra and A* algorithms to road network graphs with
+  appropriate cost functions.
+- Use CARLA's ``GlobalRoutePlanner`` API to compute and visualize
+  global routes.
+- Explain how HD maps encode semantic road information (speed limits,
+  traffic rules, lane connectivity) for navigation.
+- Implement lane-level routing decisions (lane selection, merge
+  planning, highway exit timing).
+- Discuss dynamic rerouting strategies for handling road closures and
+  unexpected obstacles.
 
 
 .. toctree::
    :hidden:
    :maxdepth: 2
-   :titlesonly:
 
    l8_lecture
    l8_quiz
    l8_references
-
-
-Next Steps
-----------
-
-- In the next lecture, we will cover trajectory planning and control:
-
-  - Adding the time dimension: converting paths into trajectories
-  - Polynomial and spline-based trajectory generation
-  - Model Predictive Control (MPC) formulation
-  - Pure Pursuit, Stanley, and PID lateral/longitudinal controllers
-
-- Complete the CARLA motion planning exercise from this lecture.
-- Read Chapter 4 of *Principles of Robot Motion* (Choset et al.)
-  for deeper coverage of sampling-based planners.

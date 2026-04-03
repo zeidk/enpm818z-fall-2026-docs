@@ -3,114 +3,136 @@ References
 ====================================================
 
 
-.. dropdown:: World Model Papers
+.. dropdown:: Foundational Papers
    :class-container: sd-border-secondary
    :open:
 
    .. grid:: 1 1 2 2
       :gutter: 2
 
-      .. grid-item-card:: GAIA-1 (Wayve, 2023)
-         :link: https://arxiv.org/abs/2309.17080
+      .. grid-item-card:: UniAD (CVPR 2023)
+         :link: https://arxiv.org/abs/2212.10156
          :class-card: sd-border-secondary
 
-         **GAIA-1: Generative World Model for Autonomous Driving**
+         **Planning-Oriented Autonomous Driving**
 
-         Hu, A. et al. (2023). The first Wayve generative driving world model.
-         9B parameters; action-conditioned video generation for driving.
+         Hu, Y. et al. (2023). Unified end-to-end model for tracking, mapping,
+         motion forecasting, occupancy prediction, and planning.
 
-      .. grid-item-card:: Vista (NeurIPS 2024)
-         :link: https://arxiv.org/abs/2405.17398
+      .. grid-item-card:: DriveTransformer (ICLR 2025)
+         :link: https://arxiv.org/abs/2408.13630
          :class-card: sd-border-secondary
 
-         **Vista: Generalizable Driving World Models**
+         **DriveTransformer: Unified Transformer for Scalable E2E AD**
 
-         Gao, S. et al. (2024). Multi-dataset training for generalizable
-         driving world models with standard evaluation protocol.
+         Shared attention across agent, map, and ego tokens. 3x throughput
+         improvement over UniAD at equivalent or better performance.
 
-      .. grid-item-card:: DriveDreamer
-         :link: https://arxiv.org/abs/2309.09777
+      .. grid-item-card:: DriveVLM
+         :link: https://arxiv.org/abs/2402.12289
          :class-card: sd-border-secondary
 
-         **DriveDreamer: Towards Real-world-driven World Models**
+         **DriveVLM: Chain-of-Thought Empowered Large Vision Language Model**
 
-         Wang, X. et al. (2023). World model conditioned on structured
-         driving representations (HD maps, agent boxes).
+         Tian, X. et al. (2024). VLM backbone with CoT reasoning for complex
+         autonomous driving scenarios.
 
-      .. grid-item-card:: WoVogen
-         :link: https://arxiv.org/abs/2312.02934
+      .. grid-item-card:: BEVFormer
+         :link: https://arxiv.org/abs/2203.17270
          :class-card: sd-border-secondary
 
-         **WoVogen: World Volume-aware Driving Video Generation**
+         **BEVFormer: Learning BEV Representation from Multi-Camera Images**
 
-         Structured scene representation for temporally consistent
-         driving video generation.
+         Li, Z. et al. (2022). The BEV encoder backbone used by UniAD and
+         many subsequent end-to-end driving models.
 
 
-.. dropdown:: NVIDIA Cosmos
+.. dropdown:: Industry Systems and Blogs
    :class-container: sd-border-secondary
 
    .. grid:: 1 1 2 2
       :gutter: 2
 
-      .. grid-item-card:: NVIDIA Cosmos Announcement
-         :link: https://www.nvidia.com/en-us/ai/cosmos/
+      .. grid-item-card:: Tesla FSD Technical Blog
+         :link: https://www.tesla.com/AI
          :class-card: sd-border-secondary
 
-         **NVIDIA Cosmos World Foundation Models**
+         **Tesla AI & Autopilot**
 
-         Official page for NVIDIA Cosmos, including model descriptions,
-         licensing, and developer resources.
+         Tesla's official AI page with technical details on FSD v12 and the
+         HydraNet / end-to-end transition.
 
-      .. grid-item-card:: Cosmos Technical Report
-         :link: https://arxiv.org/abs/2501.03575
-         :class-card: sd-border-secondary
-
-         **Cosmos World Foundation Model Platform for Physical AI**
-
-         NVIDIA (2025). Technical report describing the Cosmos model
-         family, training data, and evaluation on robotics and driving.
-
-      .. grid-item-card:: NVIDIA DRIVE
+      .. grid-item-card:: NVIDIA DRIVE Platform
          :link: https://developer.nvidia.com/drive
          :class-card: sd-border-secondary
 
-         **NVIDIA DRIVE Developer Platform**
+         **NVIDIA DRIVE Developer Resources**
 
-         End-to-end ADS development platform integrating Cosmos, Hydra-MDP,
-         DRIVE Orin/Thor, and DriveTransformer.
+         Documentation for DRIVE Orin/Thor SoCs, Hydra-MDP perception, and
+         the NVIDIA end-to-end ADS stack.
+
+      .. grid-item-card:: NVIDIA Alpamayo
+         :link: https://developer.nvidia.com/blog/alpamayo
+         :class-card: sd-border-secondary
+
+         **Alpamayo VLA Model for Driving**
+
+         NVIDIA's vision-language-action model for autonomous vehicles,
+         supporting natural language commands and chain-of-thought reasoning.
+
+      .. grid-item-card:: Wayve Blog
+         :link: https://wayve.ai/thinking/
+         :class-card: sd-border-secondary
+
+         **Wayve Research Blog**
+
+         End-to-end and world model research from the team behind LINGO and
+         GAIA-3.
 
 
-.. dropdown:: Foundational World Model Theory
+.. dropdown:: Survey Papers and Reviews
+   :class-container: sd-border-secondary
+
+   - Chen, L. et al. (2024). *End-to-End Autonomous Driving: Challenges and
+     Frontiers.* arXiv:2306.16927. Comprehensive survey of E2E methods.
+   - Renz, K. et al. (2022). *Plant: Explainable Planning Transformers via
+     Object-Level Representations.* CoRL 2022. Interpretability for
+     transformer-based planners.
+   - Shao, H. et al. (2023). *ReasonNet: End-to-End Driving with Temporal and
+     Global Reasoning.* CVPR 2023.
+
+
+.. dropdown:: Safety and Validation
    :class-container: sd-border-secondary
 
    .. grid:: 1 1 2 2
       :gutter: 2
 
-      .. grid-item-card:: Dreamer (Hafner et al.)
-         :link: https://arxiv.org/abs/1912.01603
+      .. grid-item-card:: ISO 26262
+         :link: https://www.iso.org/standard/68383.html
          :class-card: sd-border-secondary
 
-         **Dream to Control: Learning Behaviors by Latent Imagination**
+         **Functional Safety for Road Vehicles**
 
-         Hafner, D. et al. (2020). Seminal work demonstrating world-model-based
-         RL for control from pixels. Conceptual ancestor of driving world models.
+         The primary standard for hardware and software safety in automotive
+         electrical and electronic systems.
 
-      .. grid-item-card:: World Models (Ha & Schmidhuber)
-         :link: https://arxiv.org/abs/1803.10122
+      .. grid-item-card:: Responsibility-Sensitive Safety (RSS)
+         :link: https://www.mobileye.com/technology/rss/
          :class-card: sd-border-secondary
 
-         **World Models**
+         **Mobileye RSS Framework**
 
-         Ha, D. & Schmidhuber, J. (2018). Original world model architecture
-         (VAE + RNN + controller) that inspired subsequent large-scale work.
+         Formal safety model providing mathematical guarantees on collision
+         avoidance that can be layered on top of E2E planners.
 
-   - LeCun, Y. (2022). *A Path Towards Autonomous Machine Intelligence.*
-     OpenReview. Influential whitepaper arguing world models are essential
-     for general intelligence and autonomous driving.
+   - Seshia, S. A. et al. (2018). *Formal Specification for Deep Neural
+     Networks.* ATVA 2018.
+   - Corso, A. et al. (2021). *Interpretable Safety Validation for Autonomous
+     Vehicles.* ICRA 2021.
 
 
-.. dropdown:: Simulation Platforms
+.. dropdown:: Simulation and Data
    :class-container: sd-border-secondary
 
    .. grid:: 1 1 2 2
@@ -122,48 +144,20 @@ References
 
          **Open-Source AV Simulator**
 
-         Physics-based driving simulator used throughout this course.
+         Primary simulation platform for this course. Used for scenario
+         generation, sensor data collection, and E2E model evaluation.
 
          +++
 
-         - `Documentation <https://carla.readthedocs.io/en/0.9.16/>`_
-         - `Scenario Runner <https://github.com/carla-simulator/scenario_runner>`_
+         - `CARLA Documentation <https://carla.readthedocs.io/en/0.9.16/>`_
+         - `CARLA GitHub <https://github.com/carla-simulator/carla>`_
 
-      .. grid-item-card:: ASAM OpenSCENARIO 2.0
-         :link: https://www.asam.net/standards/detail/openscenario/
-         :class-card: sd-border-secondary
-
-         **Scenario Specification Standard**
-
-         Standard format for parameterized driving scenario families, used
-         for safety validation and world model conditioning.
-
-      .. grid-item-card:: Waymo Open Dataset
-         :link: https://waymo.com/open/
-         :class-card: sd-border-secondary
-
-         **Waymo Open Dataset**
-
-         Large-scale real-world driving dataset used for training and
-         evaluating world models, including Vista.
-
-      .. grid-item-card:: nuScenes
+      .. grid-item-card:: nuScenes Dataset
          :link: https://www.nuscenes.org/
          :class-card: sd-border-secondary
 
-         **nuScenes Dataset**
+         **nuScenes Benchmark**
 
-         Multi-camera and LiDAR driving dataset, commonly used for
-         world model training and evaluation benchmarks.
-
-
-.. dropdown:: Sim-to-Real and Domain Adaptation
-   :class-container: sd-border-secondary
-
-   - Tobin, J. et al. (2017). *Domain Randomization for Transferring Deep
-     Neural Networks from Simulation to the Real World.* IROS 2017.
-     Foundational paper on domain randomization.
-   - Ganin, Y. et al. (2016). *Domain-Adversarial Training of Neural
-     Networks.* JMLR 2016. Foundation for domain adaptation methods.
-   - Yang, J. et al. (2023). *UniSim: A Neural Closed-Loop Sensor
-     Simulator.* CVPR 2023. Sensor-realistic simulation for ADS evaluation.
+         The standard benchmark dataset used to evaluate UniAD,
+         DriveTransformer, and other E2E models. Includes 1000 driving
+         scenes with full sensor suite annotations.
