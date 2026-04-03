@@ -244,22 +244,66 @@ to a known landmark), requiring the EKF's Jacobian linearization.
 MCL: Monte Carlo Localization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**MCL** (also called **AMCL** -- Adaptive MCL) uses a particle filter to
-represent the pose belief. It is the standard algorithm for robot localization
-in ROS.
+.. admonition:: Prerequisite Recap (ENPM673)
+   :class: note
 
-.. code-block:: text
+   In ENPM673, you implemented a particle filter for robot localization
+   (predict with motion model, weight by sensor likelihood, resample).
+   MCL (also called AMCL) applies this same algorithm to AV pose estimation
+   using LiDAR scans against a reference map.
 
-   Initialize N particles uniformly (or from GPS prior)
+**LiDAR Sensor Model.** The sensor update step scores each particle by how
+well the vehicle's actual LiDAR scan matches a simulated scan from that
+particle's hypothesized pose. The map-based sensor model works as follows:
 
-   Loop:
-   1. MOTION UPDATE: sample new particle from motion model
-      x^(i) ~ p(x_t | x^(i)_{t-1}, u_t)    [add process noise to odometry]
+1. For each particle, perform **ray-casting** against a 2D occupancy grid or
+   3D voxel map to compute the expected scan from that pose.
+2. Compare the expected scan to the actual scan using a likelihood function
+   (e.g., beam model with Gaussian noise, or likelihood field model that
+   queries the distance to the nearest obstacle for each measured endpoint).
+3. Assign the particle a weight proportional to the scan match score.
 
-   2. SENSOR UPDATE: weight by LiDAR scan likelihood
-      w^(i) = p(z_t | x^(i), map)           [compare scan to map raycast]
+**Adaptive Particle Count (KLD-Sampling).** Standard MCL uses a fixed number
+of particles :math:`N`. AMCL adjusts :math:`N` dynamically using
+**KLD-sampling** (Kullback-Leibler divergence sampling):
 
-   3. RESAMPLE: resample N particles by weight
+- When the particle distribution is converged (vehicle well-localized), fewer
+  particles are needed -- :math:`N` shrinks, reducing CPU load.
+- When the distribution is spread out (high uncertainty, e.g., after
+  initialization or GPS dropout), :math:`N` grows to cover the hypothesis
+  space adequately.
+- The bound is derived from the KL divergence between the true posterior and
+  the sample-based approximation, guaranteeing a maximum approximation error
+  with probability :math:`1 - \delta`.
+
+**Operating Modes.**
+
+- **Global localization**: particles are initialized uniformly across the
+  entire map. The filter converges to the correct pose as scans accumulate.
+  Required at startup when no GPS prior is available.
+- **Pose tracking**: particles are initialized around a known pose (e.g., from
+  GPS). The filter tracks incremental motion. Much faster convergence.
+- A small fraction of random particles can be injected each cycle to enable
+  **kidnapped robot recovery** -- detecting and recovering from sudden
+  relocations (e.g., a localization failure after passing through a tunnel).
+
+**Integration with ROS 2 Nav2.** The ``nav2_amcl`` package provides a
+production-ready AMCL implementation for the ROS 2 navigation stack:
+
+.. list-table::
+   :widths: 30 70
+   :class: compact-table
+
+   * - **Input**
+     - 2D laser scan (``sensor_msgs/LaserScan``), odometry, and a 2D
+       occupancy grid map (``nav_msgs/OccupancyGrid``)
+   * - **Output**
+     - Corrected pose as the ``map`` → ``odom`` transform on ``/tf``
+   * - **Key parameters**
+     - ``min_particles`` / ``max_particles`` (KLD bounds),
+       ``laser_model_type`` (beam or likelihood field),
+       ``recovery_alpha_slow`` / ``recovery_alpha_fast`` (random particle
+       injection rates for kidnapped-robot recovery)
 
 Key advantage: MCL handles the **global localization** problem (starting
 without a prior pose) and recovers from **kidnapped robot** scenarios

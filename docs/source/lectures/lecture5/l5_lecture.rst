@@ -3,77 +3,36 @@ Lecture
 ====================================================
 
 
-Semantic Segmentation
-----------------------
+Segmentation for Autonomous Driving
+-------------------------------------
 
-Object detection from L3 gives us **where objects are** (bounding boxes) but
-not **what every pixel is**. Semantic segmentation provides a dense,
-pixel-level classification that is essential for understanding driveable space,
-lane structure, and arbitrary obstacles.
-
-.. admonition:: Definition
+.. admonition:: Recap from ENPM673
    :class: note
 
-   **Semantic segmentation** assigns a class label to every pixel in an image.
-   Unlike detection, there is no "instance" concept -- all pixels belonging to
-   the same class receive the same label, regardless of how many separate
-   objects there are.
+   In ENPM673, you studied semantic segmentation fundamentals: pixel-wise
+   classification, the encoder-decoder paradigm (U-Net), mIoU evaluation,
+   and the distinction between semantic, instance, and panoptic segmentation.
+   This lecture focuses on how these techniques are **deployed in autonomous
+   driving** and introduces AV-specific architectures and tasks.
 
-The Segmentation Pipeline
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. list-table::
-   :widths: 20 80
-   :class: compact-table
-
-   * - **Input**
-     - RGB image :math:`I \in \mathbb{R}^{H \times W \times 3}`
-   * - **Output**
-     - Label map :math:`S \in \{1, \ldots, K\}^{H \times W}`, one label per pixel
-   * - **Loss**
-     - Pixel-wise cross-entropy (or weighted variant for class imbalance)
-   * - **Metric**
-     - Mean IoU (mIoU) across all classes
-
-
-U-Net Architecture
-~~~~~~~~~~~~~~~~~~~
-
-U-Net (Ronneberger et al., 2015), originally designed for medical imaging, has
-become a standard backbone for segmentation due to its **encoder-decoder
-structure with skip connections**.
-
-.. code-block:: text
-
-   Encoder (Contracting Path)        Decoder (Expanding Path)
-   ─────────────────────────         ──────────────────────────
-   Input (H x W x 3)                 Logits (H x W x K)
-       │ Conv + Pool                      │ Up-Conv + Conv
-   H/2 x W/2 x 64          ──skip──   H/2 x W/2 x 64
-       │ Conv + Pool                      │ Up-Conv + Conv
-   H/4 x W/4 x 128         ──skip──   H/4 x W/4 x 128
-       │ Conv + Pool                      │ Up-Conv + Conv
-   H/8 x W/8 x 256         ──skip──   H/8 x W/8 x 256
-       │ Conv + Pool                      │ Up-Conv + Conv
-   H/16 x W/16 x 512       ──skip──   H/16 x W/16 x 512
-       │ Bottleneck (H/32 x W/32 x 1024) │
-
-Key properties:
-
-- **Skip connections** concatenate encoder feature maps with decoder feature
-  maps at the same resolution, preserving fine spatial detail.
-- **No fully connected layers** -- the network is fully convolutional, allowing
-  arbitrary input sizes.
-- **Symmetric structure** enables pixel-precise localization from high-level
-  semantic features.
+Object detection from L3 gives us **where objects are** (bounding boxes) but
+not **what every pixel is**. In autonomous driving, dense pixel-level
+understanding is critical: the planner needs to know which surfaces are safe to
+drive on, where lane boundaries lie, and which regions are occupied by
+obstacles of any shape -- information that bounding boxes alone cannot provide.
 
 
 DeepLabv3+ Architecture
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-DeepLabv3+ (Chen et al., 2018) uses **atrous (dilated) convolutions** and
-**Atrous Spatial Pyramid Pooling (ASPP)** to capture multi-scale context
-without reducing spatial resolution.
+While U-Net established the encoder-decoder paradigm for segmentation,
+autonomous driving demands architectures that can capture **multi-scale
+context** efficiently. DeepLabv3+ (Chen et al., 2018) addresses this with
+**atrous (dilated) convolutions** and **Atrous Spatial Pyramid Pooling
+(ASPP)** -- techniques that enlarge the receptive field without sacrificing
+spatial resolution. DeepLabv3+ and its variants remain widely used in
+production AV perception stacks because they offer a strong accuracy-latency
+trade-off on high-resolution driving imagery.
 
 .. tab-set::
 
@@ -90,12 +49,24 @@ without reducing spatial resolution.
       where :math:`r` is the dilation rate. Rate :math:`r=2` doubles the
       receptive field with the same number of parameters.
 
+      For AV perception this is essential: objects such as trucks or road
+      barriers span a wide range of scales in a single frame due to
+      perspective projection. Dilated convolutions let the network "see"
+      large structures while retaining the fine resolution needed for
+      accurate boundary delineation.
+
    .. tab-item:: ASPP
 
       Atrous Spatial Pyramid Pooling applies parallel dilated convolutions
       at multiple rates (e.g., 6, 12, 18) and pools at different scales,
       then concatenates the results. This captures objects at multiple scales
       in a single forward pass.
+
+      In driving scenes the same class (e.g., *vehicle*) can appear at
+      vastly different scales depending on distance. ASPP's multi-rate
+      design ensures that both nearby and far-away instances are encoded
+      with rich contextual features without requiring explicit multi-scale
+      input pyramids.
 
    .. tab-item:: Encoder-Decoder
 
@@ -107,6 +78,11 @@ without reducing spatial resolution.
       3. Upsampled ASPP features are concatenated with low-level features.
       4. Two 3x3 convolutions refine boundaries.
       5. Bilinear upsampling to full resolution.
+
+      The explicit fusion of low-level (edge/texture) and high-level
+      (semantic) features is particularly important for driving tasks such
+      as curb detection and lane boundary segmentation, where pixel-precise
+      boundaries directly affect downstream planning accuracy.
 
 
 Driveable Surface and Lane Detection
@@ -122,22 +98,45 @@ Two specialized segmentation tasks critical for AV systems:
 
       Segment all pixels belonging to navigable road surface. Key challenges:
       varying lighting, wet roads (reflections), construction zones, unmarked
-      rural roads. Often implemented as a binary segmentation (driveable /
-      not-driveable).
+      rural roads. Often implemented as a binary or ternary segmentation
+      (directly driveable / alternatively driveable / not-driveable).
+
+      **Why it matters for planning.** The planner's trajectory generator
+      operates over *free space* -- the region where the ego vehicle can
+      physically drive without collision. The driveable surface mask, once
+      projected into BEV or 3-D, defines this free-space boundary. Without
+      it, the planner must rely solely on object detections and HD-map lanes,
+      which fail in unmapped areas or when obstacles have unusual shapes
+      (e.g., road debris, fallen trees).
 
    .. grid-item-card:: Lane Detection
       :class-card: sd-border-info
 
-      Detect lane markings as pixel masks or parametric curves. Methods range
-      from simple Hough-transform line detection to deep learning approaches
-      (LaneNet, CLRNet) that predict lane curves with instance-level grouping.
+      Detect lane markings as pixel masks or parametric curves.
 
-.. admonition:: Tip: BEV Segmentation
+      **Classical approaches** use edge detection and Hough transforms but
+      fail under occlusion and complex topology. **Modern deep-learning
+      methods** treat lane detection as a structured prediction task:
+
+      - **CLRNet** (Zheng et al., 2022) performs row-based anchor detection:
+        it predicts lateral lane offsets at a discrete set of row positions,
+        then refines them with cross-layer feature aggregation.
+      - Many recent approaches predict **polynomial or spline coefficients**
+        (e.g., cubic B-splines) per lane instance rather than per-pixel
+        masks, yielding a compact, smooth representation directly usable by
+        the planner's path-following controller.
+
+.. admonition:: BEV Projection Simplifies Lane Detection
    :class: tip
 
-   Both tasks benefit enormously from the BEV representation (L4). Perspective
-   foreshortening makes lane width and curvature appear non-uniform. In BEV,
-   lanes are uniform-width curves -- simpler to predict and post-process.
+   Both tasks benefit enormously from the BEV representation introduced in
+   L4. In perspective view, foreshortening makes lane width and curvature
+   appear non-uniform -- lanes converge toward the horizon and curvature
+   is compressed at distance. In BEV, lanes become **uniform-width curves**
+   that are simpler to predict, fit with polynomials, and post-process.
+   Several state-of-the-art lane detectors (PersFormer, Anchor3DLane) now
+   predict lanes directly in BEV space, side-stepping perspective distortion
+   entirely.
 
 
 Instance and Panoptic Segmentation

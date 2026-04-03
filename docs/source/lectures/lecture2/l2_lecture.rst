@@ -264,41 +264,135 @@ fusion is impossible.
 Intrinsic Calibration
 ~~~~~~~~~~~~~~~~~~~~~
 
-Determines the internal parameters of a camera:
+.. admonition:: Recall from ENPM673
+   :class: tip
 
-.. math::
-
-   K = \begin{bmatrix} f_x & 0 & c_x \\ 0 & f_y & c_y \\ 0 & 0 & 1 \end{bmatrix}
-
-- :math:`f_x, f_y` -- focal lengths in pixels.
-- :math:`c_x, c_y` -- principal point (optical center).
-- **Distortion coefficients** (:math:`k_1, k_2, k_3, p_1, p_2`) model lens
-  distortion.
-
-**Methods:** Checkerboard or AprilTag patterns with OpenCV, MATLAB, or Kalibr.
-
-**Validation:** Reprojection error should be < 2 pixels.
+   You already learned intrinsic camera calibration in detail. The camera
+   matrix :math:`K = \begin{bmatrix} f_x & 0 & c_x \\ 0 & f_y & c_y \\ 0 & 0 & 1 \end{bmatrix}`
+   encodes focal lengths, principal point, and skew. Distortion coefficients
+   and checkerboard-based calibration were covered there as well.
 
 
 Extrinsic Calibration
 ~~~~~~~~~~~~~~~~~~~~~
 
-Determines the 6-DOF transformation (rotation + translation) between sensors
-or between a sensor and the vehicle frame.
+Extrinsic calibration determines the **6-DOF rigid-body transformation**
+(3 rotation + 3 translation parameters) between two sensor coordinate frames
+or between a sensor and the vehicle body frame. This is the critical step that
+enables multi-sensor fusion.
 
-- Essential for projecting LiDAR points onto camera images.
-- Essential for fusing detections from multiple sensors into a common
-  coordinate frame.
+**Mathematical formulation:**
 
-**Methods:** Target-based (checkerboard visible to both sensors),
-targetless (mutual information), tools (OpenCV, Kalibr, Autoware calibration
-toolkit).
+The extrinsic transform between frame :math:`A` and frame :math:`B` is a
+4 x 4 homogeneous transformation matrix:
+
+.. math::
+
+   T_B^A = \begin{bmatrix} R & t \\ 0 & 1 \end{bmatrix} \in SE(3)
+
+where :math:`R \in SO(3)` is a 3 x 3 rotation matrix and
+:math:`t \in \mathbb{R}^3` is the translation vector. To transform a point
+:math:`\mathbf{p}_B` expressed in frame :math:`B` into frame :math:`A`:
+
+.. math::
+
+   \mathbf{p}_A = R \, \mathbf{p}_B + t
+
+**Example -- LiDAR-to-camera projection:**
+
+To project a LiDAR point into a camera image, you chain the extrinsic and
+intrinsic transforms. Given vehicle-to-LiDAR (:math:`T_L^V`) and
+vehicle-to-camera (:math:`T_C^V`) extrinsics:
+
+.. math::
+
+   T_C^L = T_C^V \cdot \left(T_L^V\right)^{-1}
+
+A 3-D LiDAR point :math:`\mathbf{p}_L` projects to pixel coordinates via:
+
+.. math::
+
+   \mathbf{u} = \pi\!\left(K \; T_C^L \; \mathbf{p}_L\right)
+
+where :math:`\pi` applies the perspective division and :math:`K` is the
+camera intrinsic matrix.
+
+**Calibration methods:**
+
+.. tab-set::
+
+   .. tab-item:: Target-Based
+
+      - Place a calibration target (checkerboard, AprilTag board, or custom
+        3-D target) that is **visible to both sensors simultaneously**.
+      - Correspondences between sensor detections are established
+        automatically and a least-squares optimization solves for
+        :math:`[R \mid t]`.
+      - **Pros:** High accuracy (sub-degree rotation, sub-centimeter
+        translation) when enough poses are collected.
+      - **Cons:** Requires a controlled setup; difficult to repeat in the
+        field.
+
+   .. tab-item:: Targetless (Automatic)
+
+      - Exploits **mutual information**, edge alignment, or learned feature
+        matching between overlapping sensor data (e.g., LiDAR intensity vs.
+        camera image edges).
+      - Does not require a physical target -- can run on natural scenes.
+      - **Pros:** Convenient; can be run on recorded driving data.
+      - **Cons:** Lower accuracy than target-based; sensitive to scene
+        structure and initialization.
+
+   .. tab-item:: Motion-Based
+
+      - Uses ego-motion estimated independently by each sensor (e.g.,
+        visual odometry and LiDAR odometry) and solves the hand-eye
+        calibration problem :math:`AX = XB`.
+      - Requires sufficient rotational and translational excitation in the
+        trajectory.
+      - **Pros:** No target needed; works with any sensor pair that
+        estimates ego-motion.
+      - **Cons:** Requires good odometry from both sensors; degenerate
+        motions (e.g., straight-line driving) yield poor results.
+
+**Common calibration tools:**
+
+.. list-table::
+   :widths: 25 75
+   :header-rows: 1
+   :class: compact-table
+
+   * - Tool
+     - Description
+   * - **OpenCV** ``stereoCalibrate``
+     - Jointly calibrates intrinsics and extrinsics of a stereo camera pair
+       or camera-projector system using checkerboard detections.
+   * - **Kalibr**
+     - ETH Zurich toolkit for multi-camera and camera-IMU calibration using
+       AprilTag grids. Widely used in robotics research.
+   * - **Autoware Calibration Toolkit**
+     - Open-source tools for LiDAR-camera, LiDAR-LiDAR, and ground-plane
+       calibration designed for autonomous driving stacks.
+   * - **MATLAB Lidar Toolbox**
+     - Interactive checkerboard-based LiDAR-camera calibration with
+       visualization and error analysis.
+
+**Online (runtime) re-calibration:**
+
+Extrinsic parameters can drift over time due to vibration, thermal expansion,
+or mechanical shock. Modern AV stacks therefore include **online
+re-calibration** modules that continuously refine :math:`T` while driving:
+
+- Monitor reprojection consistency between LiDAR points and camera features.
+- Apply small incremental corrections using sliding-window optimization.
+- Flag large deviations for human review or safe stop.
 
 .. important::
 
    Poor calibration is one of the most common causes of fusion failure.
-   A 1-degree rotation error at 100 m range produces a 1.7 m positional
-   error.
+   A 1-degree rotation error at 100 m range produces a **1.7 m positional
+   error**. Always validate calibration with quantitative reprojection
+   metrics before deploying a multi-sensor system.
 
 
 System Design & Integration
