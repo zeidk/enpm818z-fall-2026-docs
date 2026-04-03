@@ -320,12 +320,10 @@ Assessment
 
    * - Component
      - Weight
-   * - Assignments (4)
-     - 30%
+   * - Final Project (GP1--GP4 + Final Report)
+     - 80%
    * - Quizzes (5)
      - 20%
-   * - Final Project
-     - 50%
    * - **Total**
      - **100%**
 
@@ -599,3 +597,232 @@ CARLA in This Course
    Pre-configured CARLA scenarios will be provided for each assignment to
    ensure consistent learning experiences across different hardware
    configurations.
+
+
+AV Case Studies: Learning from Real-World Incidents
+----------------------------------------------------
+
+Understanding real-world failures is critical for building safe autonomous
+systems. These case studies illustrate how technical, organizational, and
+regulatory factors interact.
+
+
+Uber ATG Fatality (Tempe, AZ -- March 2018)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In March 2018, an Uber ATG test vehicle operating in autonomous mode struck
+and killed a pedestrian crossing the road at night in Tempe, Arizona. The
+NTSB investigation revealed multiple contributing factors:
+
+.. list-table::
+   :widths: 25 75
+   :class: compact-table
+
+   * - **Perception failure**
+     - The system detected the pedestrian 6 seconds before impact but
+       repeatedly reclassified her as "vehicle," "other," and "bicycle,"
+       preventing a stable track.
+   * - **Planner design flaw**
+     - Each reclassification reset the prediction module. The system never
+       built enough confidence to initiate emergency braking.
+   * - **Safety driver distraction**
+     - The backup safety driver was watching a video on a phone and did not
+       intervene.
+   * - **Disabled emergency braking**
+     - Uber had disabled the Volvo XC90's factory AEB system to prevent
+       conflicts with the autonomy stack. No fallback existed.
+
+.. admonition:: Key Lesson
+   :class: warning
+
+   Redundancy and fail-safe design are non-negotiable. Disabling factory
+   safety systems without equivalent replacements creates an unacceptable
+   single point of failure. Object classification instability must be handled
+   by the planner -- track-level fusion should maintain object persistence
+   across classification changes.
+
+
+Cruise Dragging Incident (San Francisco -- October 2023)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In October 2023, a Cruise robotaxi in San Francisco was involved in an
+incident where a pedestrian -- initially struck by a human-driven vehicle --
+was knocked into the path of the robotaxi. The Cruise vehicle:
+
+1. Detected the collision and stopped.
+2. Incorrectly determined the safest action was to **pull over** to the
+   curb (Minimal Risk Condition).
+3. Dragged the pedestrian approximately 20 feet while executing the pullover.
+
+.. list-table::
+   :widths: 25 75
+   :class: compact-table
+
+   * - **Perception gap**
+     - The system did not detect that the pedestrian was pinned under the
+       vehicle after the initial stop.
+   * - **MRC design flaw**
+     - The pullover maneuver was inappropriate for this scenario. The MRC
+       logic did not account for objects trapped beneath the vehicle.
+   * - **Organizational response**
+     - Cruise initially presented incomplete information to regulators,
+       leading to the California DMV revoking their autonomous testing
+       permit and eventual shutdown of operations.
+
+.. admonition:: Key Lesson
+   :class: warning
+
+   MRC (Minimal Risk Condition) maneuvers must be validated against a broad
+   range of edge cases. "Pull over and stop" is not universally safe.
+   Transparency with regulators is critical for maintaining public trust and
+   operational permits.
+
+
+CARLA Live Walkthrough
+-----------------------
+
+This in-class demonstration introduces the CARLA simulation environment
+that you will use throughout the course. The goal is to become comfortable
+with the client-server architecture, the Python API, and basic vehicle
+and sensor control.
+
+
+Demo 1: Launch CARLA and Explore the World
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   import carla
+   import time
+
+   # ── Connect to the CARLA server ───────────────────────────────────
+   client = carla.Client('localhost', 2000)
+   client.set_timeout(10.0)
+   world = client.get_world()
+
+   # ── Explore available maps ────────────────────────────────────────
+   available_maps = client.get_available_maps()
+   print("Available maps:")
+   for m in available_maps:
+       print(f"  {m}")
+
+   # ── Load a specific town ──────────────────────────────────────────
+   world = client.load_world('Town03')
+   print(f"Loaded: {world.get_map().name}")
+
+   # ── Set weather ───────────────────────────────────────────────────
+   weather = carla.WeatherParameters.ClearNoon
+   world.set_weather(weather)
+   print(f"Weather set to ClearNoon")
+
+   # ── Explore the blueprint library ─────────────────────────────────
+   bp_lib = world.get_blueprint_library()
+   vehicles = bp_lib.filter('vehicle.*')
+   print(f"\nAvailable vehicle blueprints: {len(vehicles)}")
+   for bp in list(vehicles)[:5]:
+       print(f"  {bp.id}")
+
+   sensors = bp_lib.filter('sensor.*')
+   print(f"\nAvailable sensor blueprints: {len(sensors)}")
+   for bp in sensors:
+       print(f"  {bp.id}")
+
+
+Demo 2: Spawn a Vehicle, Attach a Camera, and Drive
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   import numpy as np
+   import cv2
+
+   # ── Spawn the ego vehicle ─────────────────────────────────────────
+   vehicle_bp = bp_lib.find('vehicle.tesla.model3')
+   spawn_points = world.get_map().get_spawn_points()
+   vehicle = world.spawn_actor(vehicle_bp, spawn_points[0])
+   print(f"Spawned: {vehicle.type_id}")
+
+   # ── Attach a front-facing RGB camera ──────────────────────────────
+   camera_bp = bp_lib.find('sensor.camera.rgb')
+   camera_bp.set_attribute('image_size_x', '1280')
+   camera_bp.set_attribute('image_size_y', '720')
+   camera_bp.set_attribute('fov', '90')
+   camera_transform = carla.Transform(carla.Location(x=1.5, z=2.4))
+   camera = world.spawn_actor(camera_bp, camera_transform,
+                              attach_to=vehicle)
+
+   # ── Display camera feed ───────────────────────────────────────────
+   def camera_callback(image):
+       array = np.frombuffer(image.raw_data, dtype=np.uint8)
+       frame = array.reshape((image.height, image.width, 4))[:, :, :3]
+       cv2.imshow("CARLA Ego Camera", frame)
+       cv2.waitKey(1)
+
+   camera.listen(camera_callback)
+
+   # ── Enable autopilot and observe ──────────────────────────────────
+   vehicle.set_autopilot(True)
+   print("Autopilot enabled. Watch the camera feed.")
+
+   # ── Spawn NPC traffic ─────────────────────────────────────────────
+   traffic_manager = client.get_trafficmanager(8000)
+   npc_bps = bp_lib.filter('vehicle.*')
+
+   npcs = []
+   for i, sp in enumerate(spawn_points[1:21]):  # spawn 20 NPCs
+       npc_bp = np.random.choice(list(npc_bps))
+       npc = world.try_spawn_actor(npc_bp, sp)
+       if npc is not None:
+           npc.set_autopilot(True, traffic_manager.get_port())
+           npcs.append(npc)
+
+   print(f"Spawned {len(npcs)} NPC vehicles.")
+
+
+Demo 3: Weather and Lighting Experiments
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   # ── Cycle through weather conditions ──────────────────────────────
+   weather_presets = [
+       ("Clear Noon",    carla.WeatherParameters.ClearNoon),
+       ("Cloudy Noon",   carla.WeatherParameters.CloudyNoon),
+       ("Wet Noon",      carla.WeatherParameters.WetNoon),
+       ("Hard Rain",     carla.WeatherParameters.HardRainNoon),
+       ("Soft Rain Sunset", carla.WeatherParameters.SoftRainSunset),
+       ("Clear Night",   carla.WeatherParameters(
+           sun_altitude_angle=-30.0)),
+       ("Dense Fog",     carla.WeatherParameters(
+           fog_density=80.0, fog_distance=10.0)),
+   ]
+
+   for name, preset in weather_presets:
+       world.set_weather(preset)
+       print(f"Weather: {name} -- observe the camera feed")
+       time.sleep(5)  # observe each condition for 5 seconds
+
+.. admonition:: Discussion Points During Demo
+   :class: tip
+
+   1. **Sensor visibility**: How does each weather condition affect what the
+      camera can see? What about at night?
+   2. **Town diversity**: Switch between Town01 (residential), Town03
+      (commercial), and Town04 (highway). How do the driving challenges
+      differ?
+   3. **Traffic complexity**: Observe NPC vehicle behavior at intersections.
+      What decisions must the ADS make?
+   4. **Connection to the course**: This demo shows the raw inputs. Over the
+      next 13 weeks, you will build the full pipeline: sensors (L2) ->
+      perception (L3--L5) -> fusion (L6) -> localization (L7) -> planning
+      (L8--L9) -> control (L9) -> decision-making (L10).
+
+.. code-block:: python
+
+   # ── Cleanup ───────────────────────────────────────────────────────
+   camera.stop()
+   camera.destroy()
+   for npc in npcs:
+       npc.destroy()
+   vehicle.destroy()
+   print("All actors destroyed.")

@@ -464,3 +464,204 @@ Summary
    The progression from 2D detection (L3) to BEV detection (L4) to occupancy
    prediction (L4 advanced) mirrors how the industry has evolved from early
    prototype systems to production AV stacks.
+
+
+CARLA Hands-On: Building a BEV Grid from Multi-Camera Data
+------------------------------------------------------------
+
+This exercise walks through the core steps of constructing a BEV
+representation from CARLA's multi-camera setup, implementing a simplified
+version of the Lift-Splat-Shoot pipeline.
+
+
+Task 1: Set Up a Multi-Camera Rig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Spawn six cameras to achieve 360-degree surround coverage, mimicking a
+production AV sensor configuration.
+
+.. code-block:: python
+
+   import carla
+   import numpy as np
+   import cv2
+
+   client = carla.Client('localhost', 2000)
+   client.set_timeout(10.0)
+   world = client.get_world()
+   bp_lib = world.get_blueprint_library()
+
+   # Spawn ego vehicle
+   vehicle_bp = bp_lib.find('vehicle.tesla.model3')
+   spawn_point = world.get_map().get_spawn_points()[0]
+   vehicle = world.spawn_actor(vehicle_bp, spawn_point)
+   vehicle.set_autopilot(True)
+
+   # Define 6-camera rig (position, yaw)
+   camera_configs = [
+       {'name': 'front',       'x':  1.5, 'y':  0.0, 'z': 2.4, 'yaw':   0},
+       {'name': 'front_left',  'x':  1.0, 'y': -0.5, 'z': 2.4, 'yaw': -60},
+       {'name': 'front_right', 'x':  1.0, 'y':  0.5, 'z': 2.4, 'yaw':  60},
+       {'name': 'back',        'x': -1.5, 'y':  0.0, 'z': 2.4, 'yaw': 180},
+       {'name': 'back_left',   'x': -1.0, 'y': -0.5, 'z': 2.4, 'yaw':-120},
+       {'name': 'back_right',  'x': -1.0, 'y':  0.5, 'z': 2.4, 'yaw': 120},
+   ]
+
+   IMAGE_W, IMAGE_H, FOV = 800, 600, 90
+   cameras = {}
+
+   for cfg in camera_configs:
+       cam_bp = bp_lib.find('sensor.camera.rgb')
+       cam_bp.set_attribute('image_size_x', str(IMAGE_W))
+       cam_bp.set_attribute('image_size_y', str(IMAGE_H))
+       cam_bp.set_attribute('fov', str(FOV))
+       transform = carla.Transform(
+           carla.Location(x=cfg['x'], y=cfg['y'], z=cfg['z']),
+           carla.Rotation(yaw=cfg['yaw']))
+       cam = world.spawn_actor(cam_bp, transform, attach_to=vehicle)
+       cameras[cfg['name']] = cam
+
+   # Also spawn a depth camera co-located with the front camera
+   # (to provide ground-truth depth for the LSS exercise)
+   depth_bp = bp_lib.find('sensor.camera.depth')
+   depth_bp.set_attribute('image_size_x', str(IMAGE_W))
+   depth_bp.set_attribute('image_size_y', str(IMAGE_H))
+   depth_bp.set_attribute('fov', str(FOV))
+   depth_cam = world.spawn_actor(
+       depth_bp,
+       carla.Transform(carla.Location(x=1.5, z=2.4)),
+       attach_to=vehicle)
+
+   print(f"Spawned {len(cameras)} RGB cameras + 1 depth camera.")
+
+
+Task 2: Build Camera Intrinsics and Extrinsics
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   def get_camera_intrinsic(image_w, image_h, fov):
+       """Compute the 3x3 camera intrinsic matrix from CARLA parameters."""
+       focal = image_w / (2.0 * np.tan(np.radians(fov / 2.0)))
+       K = np.array([
+           [focal,  0.0,   image_w / 2.0],
+           [0.0,    focal, image_h / 2.0],
+           [0.0,    0.0,   1.0]
+       ])
+       return K
+
+   def get_extrinsic_matrix(camera_actor):
+       """Get the 4x4 camera-to-world extrinsic matrix."""
+       transform = camera_actor.get_transform()
+       return np.array(transform.get_matrix())
+
+   K = get_camera_intrinsic(IMAGE_W, IMAGE_H, FOV)
+   print(f"Intrinsic matrix:\n{K}")
+
+   for name, cam in cameras.items():
+       E = get_extrinsic_matrix(cam)
+       print(f"{name} extrinsic (camera-to-world):\n{E[:3]}\n")
+
+
+Task 3: Simplified LSS -- Lift Depth to 3D and Splat to BEV
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Using the ground-truth depth from CARLA's depth camera, implement the core
+LSS steps: "lift" pixels to 3D points and "splat" them into a BEV grid.
+
+.. code-block:: python
+
+   # BEV grid parameters
+   BEV_X_RANGE = (-50.0, 50.0)   # meters, left-right
+   BEV_Y_RANGE = (-50.0, 50.0)   # meters, front-back
+   BEV_RESOLUTION = 0.5           # meters per cell
+   BEV_W = int((BEV_X_RANGE[1] - BEV_X_RANGE[0]) / BEV_RESOLUTION)
+   BEV_H = int((BEV_Y_RANGE[1] - BEV_Y_RANGE[0]) / BEV_RESOLUTION)
+
+   def depth_image_to_3d_points(depth_array, K, extrinsic):
+       """Lift a depth image to 3D world points (LSS 'Lift' stage)."""
+       H, W = depth_array.shape
+       u, v = np.meshgrid(np.arange(W), np.arange(H))
+
+       # Back-project pixels to camera frame using intrinsics
+       x_cam = (u - K[0, 2]) * depth_array / K[0, 0]
+       y_cam = (v - K[1, 2]) * depth_array / K[1, 1]
+       z_cam = depth_array
+
+       # Stack into (N, 4) homogeneous coordinates
+       ones = np.ones_like(z_cam)
+       cam_points = np.stack([x_cam, y_cam, z_cam, ones], axis=-1)
+       cam_points = cam_points.reshape(-1, 4)
+
+       # Transform to world frame
+       world_points = (extrinsic @ cam_points.T).T[:, :3]
+       return world_points
+
+   def splat_to_bev(points_3d, bev_x_range, bev_y_range, resolution):
+       """Splat 3D points into a 2D BEV occupancy grid (LSS 'Splat' stage)."""
+       bev_w = int((bev_x_range[1] - bev_x_range[0]) / resolution)
+       bev_h = int((bev_y_range[1] - bev_y_range[0]) / resolution)
+       bev_grid = np.zeros((bev_h, bev_w), dtype=np.float32)
+
+       # Convert world XY to grid indices
+       xi = ((points_3d[:, 0] - bev_x_range[0]) / resolution).astype(int)
+       yi = ((points_3d[:, 1] - bev_y_range[0]) / resolution).astype(int)
+
+       # Filter to within grid bounds
+       valid = (xi >= 0) & (xi < bev_w) & (yi >= 0) & (yi < bev_h)
+       xi, yi = xi[valid], yi[valid]
+
+       # Accumulate point counts per cell
+       np.add.at(bev_grid, (yi, xi), 1.0)
+       return bev_grid
+
+   # Usage (inside depth camera callback):
+   # depth_array = parse_carla_depth_image(depth_image)
+   # E = get_extrinsic_matrix(depth_cam)
+   # points_3d = depth_image_to_3d_points(depth_array, K, E)
+   # bev = splat_to_bev(points_3d, BEV_X_RANGE, BEV_Y_RANGE, BEV_RESOLUTION)
+
+
+Task 4: Visualize and Analyze the BEV Grid
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   def visualize_bev(bev_grid, title="BEV Occupancy"):
+       """Display the BEV grid as a heatmap."""
+       # Normalize for visualization
+       bev_vis = np.clip(bev_grid, 0, 50)  # cap at 50 points per cell
+       bev_vis = (bev_vis / 50.0 * 255).astype(np.uint8)
+       bev_colored = cv2.applyColorMap(bev_vis, cv2.COLORMAP_JET)
+
+       # Mark ego vehicle at center
+       center = (bev_grid.shape[1] // 2, bev_grid.shape[0] // 2)
+       cv2.circle(bev_colored, center, 5, (0, 255, 0), -1)
+       cv2.putText(bev_colored, "EGO", (center[0]+8, center[1]+5),
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
+
+       cv2.imshow(title, bev_colored)
+       cv2.waitKey(1)
+
+.. admonition:: Exercise Tasks
+   :class: tip
+
+   1. **Run the multi-camera rig** and display all six camera views in a
+      tiled window.
+   2. **Implement the LSS pipeline** using CARLA's ground-truth depth camera.
+      Visualize the resulting BEV occupancy grid.
+   3. **Multi-camera BEV fusion**: Extend the pipeline to use all six cameras
+      (each with a co-located depth camera). Merge all BEV grids using
+      sum-pooling and compare coverage against a single front camera.
+   4. **Vary the BEV resolution**: Test 0.25 m, 0.5 m, and 1.0 m resolution.
+      How does resolution affect object visibility and compute time?
+   5. **Compare to LiDAR BEV**: Spawn a 64-channel LiDAR, project its point
+      cloud into the same BEV grid, and compare the camera-based vs.
+      LiDAR-based BEV representations side-by-side.
+
+.. note::
+
+   In a real LSS implementation, the depth distribution is *learned* by a
+   neural network rather than using ground-truth depth. This exercise uses
+   CARLA's depth camera as a stand-in to focus on the geometric concepts.
+   The learned depth version is what makes LSS end-to-end differentiable.

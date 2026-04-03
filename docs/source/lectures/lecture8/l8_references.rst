@@ -1,346 +1,200 @@
+====================================================
 References
-==========
+====================================================
 
 
-.. dropdown:: Lecture 8
-    :class-container: sd-border-secondary
-    :open:
+Textbooks and Surveys
+---------------------
 
-    .. card::
-        :class-card: sd-border-secondary
+.. list-table::
+   :widths: 100
+   :class: compact-table
 
-        **ENPM818Z -- L8: Motion Planning**
+   * - .. dropdown:: LaValle (2006) -- Planning Algorithms, Ch. 2: Discrete Planning
 
-        Covers the three-tier motion planning hierarchy (route,
-        behavior, motion), bicycle kinematic model and nonholonomic
-        constraints, graph-based planners (Dijkstra, A*, Weighted
-        A*), sampling-based planners (RRT, RRT*, PRM), lattice-based
-        planning in the Frenet frame with pre-computed motion
-        primitives, geometric collision detection with safety
-        margins (OBB, Minkowski sum), and diffusion-based planners
-        (Diffusion Planner ICLR 2025, DiffusionDrive CVPR 2025).
+         | **Planning Algorithms**
+         | Steven M. LaValle, Cambridge University Press, 2006
+         | `Available free online <http://lavalle.pl/planning/>`_
 
+         Covers graph search algorithms (BFS, DFS, Dijkstra, A*) with
+         formal analysis. Chapter 2 provides the theoretical foundation
+         for route planning on discrete graphs.
 
-.. dropdown:: Foundational Textbooks
-    :class-container: sd-border-secondary
+         **Key topics:**
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+            - Graph representations
+            - Dijkstra's algorithm
+            - A* search and admissible heuristics
+            - Complexity analysis
 
-        .. grid-item-card:: Choset et al. -- Principles of Robot Motion
-            :class-card: sd-border-secondary
+   * - .. dropdown:: Paden et al. (2016) -- A Survey of Motion Planning and Control Techniques for Self-Driving Vehicles
 
-            **MIT Press, 2005**
+         | **A Survey of Motion Planning and Control Techniques for Self-Driving Vehicles**
+         | Brian Paden, Michal Čáp, Sze Zheng Yong, Dmitry Yershov, Emilio Frazzoli
+         | IEEE Transactions on Intelligent Vehicles, 2016
 
-            Comprehensive coverage of configuration spaces,
-            potential fields, graph-based planning, and sampling-
-            based planners. Chapters 4--7 are directly relevant
-            to this lecture.
+         Covers the full planning hierarchy including route planning,
+         behavioral planning, and motion planning. Provides the three-tier
+         framework used in this lecture.
 
-            +++
+         **Key topics:**
 
-            - Configuration space theory
-            - PRM and RRT derivations
-            - Completeness and optimality proofs
+            - Route, behavior, motion planning hierarchy
+            - Road network representations
+            - Decision-making architectures
 
-        .. grid-item-card:: LaValle -- Planning Algorithms
-            :class-card: sd-border-secondary
 
-            **Cambridge University Press, 2006**
-            (freely available at planning.cs.uiuc.edu)
+Map Formats and Standards
+-------------------------
 
-            The definitive reference for motion planning
-            algorithms. Covers discrete planning, sampling-based
-            methods, and nonholonomic systems.
+.. list-table::
+   :widths: 100
+   :class: compact-table
 
-            +++
+   * - .. dropdown:: ASAM OpenDRIVE Standard
 
-            - RRT and PRM foundations
-            - Nonholonomic planning
-            - Optimality analysis
+         | **ASAM OpenDRIVE -- Open Dynamic Road Information for Vehicle Environment**
+         | `ASAM OpenDRIVE <https://www.asam.net/standards/detail/opendrive/>`_
 
-        .. grid-item-card:: Thrun, Burgard, Fox -- Probabilistic Robotics
-            :class-card: sd-border-secondary
+         The industry standard for describing road networks in driving
+         simulation. Used by CARLA, dSPACE, IPG CarMaker, and others.
 
-            **MIT Press, 2005**
+         **Key topics:**
 
-            Probabilistic foundations for robotics including
-            localization, mapping, and planning under uncertainty.
-            Relevant for understanding safety margins and
-            uncertainty-aware planning.
+            - Road reference lines (geometry primitives)
+            - Lane sections and lane types
+            - Junction definitions
+            - Signal and object elements
 
-            +++
+   * - .. dropdown:: Poggenhans et al. (2018) -- Lanelet2: A High-Definition Map Framework
 
-            - Probabilistic state estimation
-            - Occupancy grid maps
-            - Planning under uncertainty
+         | **Lanelet2: A High-Definition Map Framework for the Future of Automated Driving**
+         | Fabian Poggenhans et al., IEEE ITSC 2018
 
-        .. grid-item-card:: Paden et al. -- Survey of AV Motion Planning
-            :class-card: sd-border-secondary
+         Describes the Lanelet2 map framework used by Autoware and many
+         research platforms. Boundary-based lane representation with
+         regulatory elements.
 
-            **IEEE T-ITS, 2016**
+         **Key topics:**
 
-            Comprehensive survey of motion planning techniques
-            specifically for autonomous vehicles, covering all
-            algorithm families in this lecture.
+            - Lanelet representation (left/right linestrings)
+            - Regulatory elements (traffic lights, stop lines)
+            - Routing graph construction
+            - OSM-based file format
 
-            +++
 
-            - Route, behavior, motion hierarchy
-            - Graph-based and sampling-based planners
-            - AV-specific constraints
+Route Planning Algorithms
+-------------------------
 
+.. list-table::
+   :widths: 100
+   :class: compact-table
 
-.. dropdown:: Graph-Based Planning
-    :class-container: sd-border-secondary
+   * - .. dropdown:: Geisberger et al. (2012) -- Exact Routing in Large Road Networks Using Contraction Hierarchies
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+         | **Exact Routing in Large Road Networks Using Contraction Hierarchies**
+         | Robert Geisberger, Peter Sanders, Dominik Schultes, Christian Vetter
+         | Transportation Science, 2012
 
-        .. grid-item-card:: Hart, Nilsson, Raphael -- A* (1968)
-            :class-card: sd-border-secondary
+         Describes Contraction Hierarchies, the algorithm behind many
+         production routing engines. Precomputes a hierarchy that enables
+         microsecond query times on continental-scale road networks.
 
-            **IEEE T-SSC, 1968**
+         **Key topics:**
 
-            The original A* paper introducing the heuristic
-            search algorithm and proving its optimality under
-            admissible heuristics.
+            - Node contraction and shortcut edges
+            - Bidirectional search on the hierarchy
+            - Preprocessing vs. query time trade-off
 
-            +++
+   * - .. dropdown:: Hart, Nilsson & Raphael (1968) -- A Formal Basis for the Heuristic Determination of Minimum Cost Paths
 
-            - Original A* formulation
-            - Admissibility proof
-            - Heuristic design
+         | **A Formal Basis for the Heuristic Determination of Minimum Cost Paths**
+         | Peter E. Hart, Nils J. Nilsson, Bertram Raphael
+         | IEEE Transactions on Systems Science and Cybernetics, 1968
 
-        .. grid-item-card:: Likhachev et al. -- Weighted A* (2003)
-            :class-card: sd-border-secondary
+         The original A* paper. Proves optimality and completeness of A*
+         with admissible heuristics.
 
-            **NIPS 2003**
+         **Key topics:**
 
-            Introduces the :math:`\varepsilon`-suboptimal
-            weighted A* variant with formal bounds on solution
-            quality vs. computation time.
+            - A* algorithm formulation
+            - Admissibility and consistency of heuristics
+            - Optimality proof
 
-            +++
 
-            - Inflation factor analysis
-            - Anytime planning extensions
-            - Practical implementation
+CARLA Navigation
+----------------
 
+.. list-table::
+   :widths: 100
+   :class: compact-table
 
-.. dropdown:: Sampling-Based Planning
-    :class-container: sd-border-secondary
+   * - .. dropdown:: CARLA Documentation -- Navigation and Maps
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+         | **CARLA Documentation: Maps and Navigation**
+         | `carla.readthedocs.io <https://carla.readthedocs.io/en/0.9.16/core_map/>`_
 
-        .. grid-item-card:: LaValle -- RRT (1998)
-            :class-card: sd-border-secondary
+         Official documentation for CARLA's map and waypoint system,
+         including the GlobalRoutePlanner API.
 
-            **Technical Report, Iowa State, 1998**
+         **Key topics:**
 
-            Original RRT paper introducing rapidly-exploring
-            random trees for single-query kinodynamic planning.
+            - Map and waypoint API
+            - GlobalRoutePlanner usage
+            - Road topology queries
+            - OpenDRIVE integration
 
-            +++
+   * - .. dropdown:: CARLA Documentation -- Agents Module
 
-            - RRT algorithm
-            - Probabilistic completeness proof
-            - Kinodynamic extension
+         | **CARLA Agents**
+         | `carla.readthedocs.io <https://carla.readthedocs.io/en/0.9.16/adv_agents/>`_
 
-        .. grid-item-card:: Karaman & Frazzoli -- RRT* (2011)
-            :class-card: sd-border-secondary
+         Documentation for CARLA's built-in agent implementations,
+         including the BasicAgent and BehaviorAgent that use the
+         GlobalRoutePlanner internally.
 
-            **IJRR, 2011**
+         **Key topics:**
 
-            Introduces RRT* with asymptotic optimality guarantee.
-            Also introduces PRM* and formal analysis of
-            sampling-based planner convergence rates.
+            - BasicAgent (route following)
+            - BehaviorAgent (traffic-aware driving)
+            - Local planner integration
 
-            +++
 
-            - RRT* rewiring algorithm
-            - Asymptotic optimality proof
-            - Convergence rate analysis
+Industry and Applications
+-------------------------
 
-        .. grid-item-card:: Kavraki et al. -- PRM (1996)
-            :class-card: sd-border-secondary
+.. list-table::
+   :widths: 100
+   :class: compact-table
 
-            **IEEE T-RA, 1996**
+   * - .. dropdown:: Bast et al. (2016) -- Route Planning in Transportation Networks
 
-            Original PRM paper introducing probabilistic road
-            maps for multi-query planning in high-dimensional
-            configuration spaces.
+         | **Route Planning in Transportation Networks**
+         | Hannah Bast, Daniel Delling, Andrew Goldberg, et al.
+         | Algorithm Engineering, Springer, 2016
 
-            +++
+         Comprehensive survey of route planning algorithms used in
+         production systems (Google Maps, Bing Maps, OSRM).
 
-            - Two-phase construction
-            - Probabilistic completeness
-            - Multi-query efficiency
+         **Key topics:**
 
+            - Dijkstra, A*, bidirectional search
+            - Contraction Hierarchies, Transit Node Routing
+            - Time-dependent and multi-criteria routing
+            - Real-world engineering considerations
 
-.. dropdown:: Lattice-Based Planning
-    :class-container: sd-border-secondary
+   * - .. dropdown:: Autoware Foundation -- Autoware.Universe Routing
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+         | **Autoware.Universe: Mission Planner and Route Planner**
+         | `Autoware Documentation <https://autowarefoundation.github.io/autoware-documentation/main/>`_
 
-        .. grid-item-card:: Pivtoraiko et al. -- State Lattice (2009)
-            :class-card: sd-border-secondary
+         Open-source AV routing implementation built on Lanelet2 maps.
+         Demonstrates a production-grade route planner integrated with
+         ROS 2.
 
-            **JFR, 2009**
+         **Key topics:**
 
-            Introduces the state lattice framework with
-            pre-computed motion primitives for kinematically
-            feasible robot motion planning.
-
-            +++
-
-            - Lattice construction methodology
-            - Motion primitive generation
-            - Search algorithms
-
-        .. grid-item-card:: McNaughton et al. -- Frenet Lattice (2011)
-            :class-card: sd-border-secondary
-
-            **ICRA 2011 (Uber ATG)**
-
-            Describes the Frenet-frame lattice planner used
-            in structured autonomous driving, including
-            lane-change and yield maneuver encoding.
-
-            +++
-
-            - Road-aligned lattice design
-            - Lane change primitives
-            - Real-time performance
-
-
-.. dropdown:: Diffusion-Based Planning
-    :class-container: sd-border-secondary
-
-    .. grid:: 1 1 2 2
-        :gutter: 2
-
-        .. grid-item-card:: Zheng et al. -- Diffusion Planner (ICLR 2025)
-            :class-card: sd-border-secondary
-
-            **ICLR 2025**
-
-            Joint ego-agent diffusion planner achieving
-            state-of-the-art closed-loop performance on the
-            nuPlan benchmark through interaction-aware trajectory
-            denoising.
-
-            +++
-
-            - Joint prediction and planning
-            - Scene context encoding
-            - nuPlan benchmark results
-
-        .. grid-item-card:: Liao et al. -- DiffusionDrive (CVPR 2025)
-            :class-card: sd-border-secondary
-
-            **CVPR 2025**
-
-            Real-time diffusion planner using truncated schedule
-            and anchored Gaussian initialization achieving 45 FPS
-            while maintaining competitive nuPlan performance.
-
-            +++
-
-            - Truncated diffusion schedule
-            - Anchored Gaussian initialization
-            - Real-time inference analysis
-
-        .. grid-item-card:: Ho et al. -- DDPM (NeurIPS 2020)
-            :class-card: sd-border-secondary
-
-            **NeurIPS 2020**
-
-            Foundational paper establishing denoising diffusion
-            probabilistic models, the framework underlying
-            all diffusion-based planners.
-
-            +++
-
-            - Forward/reverse process formulation
-            - Denoising score matching
-            - Image generation results
-
-
-.. dropdown:: Collision Detection
-    :class-container: sd-border-secondary
-
-    .. grid:: 1 1 2 2
-        :gutter: 2
-
-        .. grid-item-card:: Ericson -- Real-Time Collision Detection
-            :class-card: sd-border-secondary
-
-            **Morgan Kaufmann, 2004**
-
-            Comprehensive reference for geometric collision
-            detection algorithms including AABB, OBB, GJK,
-            and sweep-based methods.
-
-            +++
-
-            - Bounding volume hierarchies
-            - OBB intersection tests
-            - Minkowski sum computation
-
-        .. grid-item-card:: Berg et al. -- Reciprocal Velocity Obstacles
-            :class-card: sd-border-secondary
-
-            **IJRR, 2011**
-
-            Velocity-obstacle-based collision avoidance for
-            multi-agent scenarios, relevant to dynamic obstacle
-            handling in AV planning.
-
-            +++
-
-            - Velocity obstacles
-            - Multi-agent collision avoidance
-            - Real-time performance
-
-
-.. dropdown:: Benchmarks and Datasets
-    :class-container: sd-border-secondary
-
-    .. grid:: 1 1 2 2
-        :gutter: 2
-
-        .. grid-item-card:: nuPlan Benchmark
-            :link: https://nuplan.org/
-            :class-card: sd-border-secondary
-
-            **Motional / nuPlan**
-
-            Closed-loop planning benchmark used to evaluate
-            Diffusion Planner and DiffusionDrive, based on
-            real-world driving logs.
-
-            +++
-
-            - Closed-loop reactive simulation
-            - 1300+ hours of driving data
-            - Standardized metrics
-
-        .. grid-item-card:: CARLA Simulator
-            :link: https://carla.org/
-            :class-card: sd-border-secondary
-
-            **CARLA Open-Source Simulator**
-
-            High-fidelity autonomous driving simulator used
-            for the lecture's implementation exercise. Provides
-            waypoint graphs, sensor simulation, and traffic
-            scenarios.
-
-            +++
-
-            - Python API documentation
-            - Waypoint graph API
-            - Traffic scenario library
+            - Mission planner architecture
+            - Lanelet2 routing graph
+            - Lane-level route generation
+            - Integration with behavior and motion planners

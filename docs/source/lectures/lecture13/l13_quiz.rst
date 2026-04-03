@@ -2,14 +2,12 @@
 Quiz
 ====================================================
 
-This quiz covers the key concepts from Lecture 13: System Integration, Safety
-& Industry Outlook. Topics include AV system architecture and data flow,
-ROS 2 middleware and DDS QoS, real-time constraints and latency budgets,
-ISO 26262 (ASIL levels, V-model), ISO 21448 (SOTIF), the UNECE Global
-Technical Regulation on ADS (January 2026), automotive cybersecurity (ISO/SAE
-21434), V2X communication standards (DSRC and C-V2X), cooperative perception,
-the 2026+ industry outlook, ethics and liability, and career paths in
-autonomous vehicles.
+This quiz covers the key concepts from Lecture 12: World Models & Simulation.
+Topics include the definition and architecture of driving world models, Wayve
+GAIA-3, NVIDIA Cosmos, Vista (NeurIPS 2024), applications of world models
+(data augmentation, long-tail scenarios, offline policy evaluation),
+comparison with physics-based simulators like CARLA, the sim-to-real gap,
+and the role of world models as imagination modules in end-to-end driving.
 
 .. note::
 
@@ -31,286 +29,296 @@ Multiple Choice (Questions 1-10)
 .. admonition:: Question 1
    :class: hint
 
-   In a production AV system, what is the **correct order** of the main
-   software modules in the data pipeline?
+   What does a **driving world model** predict, given past observations and
+   a sequence of future ego actions?
 
-   A. Planning → Perception → Prediction → Control
+   A. The optimal waypoints the ego vehicle should follow.
 
-   B. Perception → Planning → Prediction → Control
+   B. The distribution over future observations (video frames) that would
+      result from taking those actions.
 
-   C. Perception → Prediction → Planning → Control
+   C. The 3-D bounding boxes of surrounding agents in the next frame.
 
-   D. Prediction → Perception → Control → Planning
+   D. The GPS coordinates the ego vehicle will occupy in the future.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- Perception → Prediction → Planning → Control
+   **B** -- The distribution over future observations (video frames) that
+   would result from taking those actions.
 
-   Sensors provide raw data to the Perception module, which produces a
-   structured scene understanding (object lists, occupancy grids). Prediction
-   uses the perceived agents to forecast their future trajectories. Planning
-   uses those predicted trajectories to generate a safe ego trajectory. Control
-   converts the planned trajectory into actuator commands (steer, throttle,
-   brake).
+   A world model learns to simulate future sensory experience conditioned on
+   actions. Formally: :math:`p(o_{t+1:t+H} \mid o_{1:t}, a_{t:t+H})`. This
+   makes it a data-driven simulator -- a "neural imagination" of future scenes.
 
 
 .. admonition:: Question 2
    :class: hint
 
-   Which **QoS policy** should be used for a camera sensor topic in ROS 2
-   where the most recent frame is always preferred and older frames can
-   be safely dropped?
+   Wayve GAIA-3, released in December 2025, has approximately how many
+   parameters?
 
-   A. RELIABILITY = RELIABLE, HISTORY = KEEP_ALL
+   A. 1.5 billion
 
-   B. RELIABILITY = BEST_EFFORT, HISTORY = KEEP_LAST(1)
+   B. 9 billion
 
-   C. RELIABILITY = RELIABLE, HISTORY = KEEP_LAST(100)
+   C. 15 billion
 
-   D. DURABILITY = TRANSIENT_LOCAL, RELIABILITY = RELIABLE
+   D. 70 billion
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- RELIABILITY = BEST_EFFORT, HISTORY = KEEP_LAST(1)
+   **C** -- 15 billion
 
-   Camera streams require the most recent frame; dropping old frames is
-   acceptable and preferable to queuing them (which would introduce latency).
-   BEST_EFFORT reliability avoids retransmission overhead for dropped packets.
-   KEEP_LAST(1) ensures only the latest image is buffered. RELIABLE is
-   appropriate for safety-critical commands, not high-rate sensor streams.
+   GAIA-3 has 15 billion parameters and represents a significant scale-up
+   from GAIA-1 (9B, 2023). Its scale enables multi-camera consistency,
+   long-horizon generation (30+ seconds), and high-fidelity controllable
+   scenario synthesis.
 
 
 .. admonition:: Question 3
    :class: hint
 
-   What is the **Minimal Risk Condition (MRC)** in the context of ADS
-   real-time safety?
+   What is the role of a **visual tokenizer** (such as a VQ-VAE) in a
+   driving world model architecture?
 
-   A. The minimum acceptable perception accuracy for highway driving.
+   A. It converts driving actions into natural language descriptions.
 
-   B. The fallback behavior an ADS executes when it cannot safely continue
-      the driving task -- typically decelerating smoothly to a stop at the
-      side of the road.
+   B. It compresses high-dimensional video frames into a compact grid of
+      latent tokens, making transformer-based modeling tractable.
 
-   C. The minimum number of sensors required to achieve ASIL D compliance.
+   C. It detects and classifies objects in the scene before world model
+      generation.
 
-   D. A software update process that minimizes the risk of introducing
-      new bugs.
+   D. It converts GPS waypoints into vehicle control commands.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- The fallback behavior an ADS executes when it cannot safely
-   continue the driving task -- typically decelerating smoothly to a stop at
-   the side of the road.
+   **B** -- It compresses high-dimensional video frames into a compact grid
+   of latent tokens, making transformer-based modeling tractable.
 
-   The MRC is a key safety concept in SAE J3016 for Level 4 and 5 systems:
-   since there is no human fallback driver available, the ADS must itself
-   execute a safe stop if it encounters a condition it cannot handle (system
-   fault, ODD exit, missed deadline). Watchdog timers trigger MRC automatically
-   if safety-critical modules miss their deadlines.
+   A raw 1080p frame has over 6 million pixels -- far too many for a
+   transformer to process directly. A VQ-VAE compresses each frame into
+   roughly 1024 discrete tokens. The world model then operates in this
+   compact latent space, predicting future latent tokens rather than raw pixels.
 
 
 .. admonition:: Question 4
    :class: hint
 
-   Which ASIL level is required for **brake-by-wire** systems in an
-   autonomous vehicle?
+   Which of the following is a **key distinction** between NVIDIA Cosmos
+   and Wayve GAIA-3?
 
-   A. QM (Quality Management)
+   A. Cosmos is camera-only while GAIA-3 uses LiDAR.
 
-   B. ASIL A
+   B. Cosmos is a general physical world model pre-trained on diverse video
+      then fine-tuned for driving, while GAIA-3 is purpose-built for
+      driving video from the start.
 
-   C. ASIL B
+   C. GAIA-3 is open-source while Cosmos is fully proprietary.
 
-   D. ASIL D
+   D. Cosmos can only generate single-camera video while GAIA-3 generates
+      multi-camera video.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **D** -- ASIL D
+   **B** -- Cosmos is a general physical world model pre-trained on diverse
+   video then fine-tuned for driving, while GAIA-3 is purpose-built for
+   driving video from the start.
 
-   Brake-by-wire is the highest-criticality function in a vehicle: failure
-   or corruption of braking commands can directly cause a fatal accident with
-   no human override available. ISO 26262 assigns ASIL D to functions with
-   the highest severity (S3), high exposure (E4), and no driver controllability
-   (C0), which characterizes brake-by-wire in an ADS.
+   NVIDIA Cosmos follows the large-model paradigm of pre-training on massive
+   heterogeneous data (robotics, outdoor scenes, driving, manufacturing) to
+   learn general physical priors, then fine-tuning on domain-specific data.
+   GAIA-3 is specialized for driving from the ground up.
 
 
 .. admonition:: Question 5
    :class: hint
 
-   What is the key distinction between **ISO 26262** and **ISO 21448
-   (SOTIF)**?
+   Vista (NeurIPS 2024) made what specific contribution that distinguishes
+   it from earlier driving world models?
 
-   A. ISO 26262 applies to software; SOTIF applies to hardware.
+   A. Vista was the first driving world model to use diffusion-based
+      video generation.
 
-   B. ISO 26262 addresses safety risks from system malfunctions; SOTIF
-      addresses safety risks that occur even when the system functions
-      as designed (e.g., sensor performance limitations).
+   B. Vista is the first driving world model to achieve real-time inference
+      on consumer hardware.
 
-   C. ISO 26262 is for passenger vehicles; SOTIF is for commercial trucks.
+   C. Vista demonstrated generalizability by training jointly on multiple
+      driving datasets from different geographic regions and sensor configurations.
 
-   D. ISO 26262 is for European markets; SOTIF is for US markets.
+   D. Vista introduced action-conditioned video generation to the field.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ISO 26262 addresses safety risks from system malfunctions; SOTIF
-   addresses safety risks that occur even when the system functions as designed.
+   **C** -- Vista demonstrated generalizability by training jointly on
+   multiple driving datasets from different geographic regions and sensor
+   configurations.
 
-   ISO 26262 handles failures (a radar sensor stops working), while SOTIF
-   handles limitations (a radar sensor that is working correctly but cannot
-   detect a bicycle in heavy rain). Both are required for a comprehensive ADS
-   safety argument because they address orthogonal risk classes.
+   Earlier models like GAIA-1/2 were trained on a single proprietary dataset
+   (Wayve's London fleet) and generalized poorly to other regions. Vista's
+   multi-dataset training (nuScenes, Waymo, and others) produces a model that
+   transfers to unseen geographic regions and driving styles.
 
 
 .. admonition:: Question 6
    :class: hint
 
-   The UNECE Global Technical Regulation on ADS (January 2026) uses what
-   approach for demonstrating ADS safety?
+   **Offline closed-loop policy evaluation** using a world model involves:
 
-   A. Mandatory minimum hardware specifications for sensors.
+   A. Testing a new planner by running it in CARLA with real-time physics
+      simulation.
 
-   B. A prescriptive test scenario library that all AVs must pass.
+   B. Using the world model to render what would have happened if a new
+      planner had been used on historical fleet data, without on-road
+      deployment.
 
-   C. A safety case approach -- a structured argument with evidence that
-      the ADS is acceptably safe within its documented ODD.
+   C. Training a new planner on simulated data and then evaluating it on
+      real roads.
 
-   D. A type approval process identical to the existing UNECE R157 standard.
+   D. Recording a human driver and comparing the planner's actions against
+      the human baseline.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- A safety case approach -- a structured argument with evidence
-   that the ADS is acceptably safe within its documented ODD.
+   **B** -- Using the world model to render what would have happened if a
+   new planner had been used on historical fleet data, without on-road
+   deployment.
 
-   The safety case approach is more flexible and technology-neutral than
-   prescriptive specifications, which is why regulators chose it for ADS:
-   the technology is evolving too rapidly for fixed hardware requirements to
-   remain relevant. Manufacturers must construct and maintain a documented
-   safety case showing that all identified hazards are adequately mitigated
-   within the stated ODD.
+   The key feature of world-model-based offline evaluation is its
+   **counterfactual** nature: given historical observations O_{1:T} with
+   human actions A_human, we substitute the new planner's actions A_planner
+   and ask the world model to render the resulting future. This is called
+   "offline closed-loop" because the planner and world model interact in a
+   loop, but no real vehicle is involved.
 
 
 .. admonition:: Question 7
    :class: hint
 
-   **LiDAR spoofing** is an example of which category of automotive
-   cybersecurity attack?
+   Which application of world models **directly addresses** the long-tail
+   data problem in ADS development?
 
-   A. Backend server compromise.
+   A. Offline policy evaluation using historical fleet logs.
 
-   B. OTA update hijacking.
+   B. Model-based planning for real-time decision making.
 
-   C. Sensor spoofing / physical-layer attack.
+   C. Using text conditioning to generate photo-realistic video of rare
+      safety-critical scenarios that are rarely encountered in real data.
 
-   D. CAN bus injection.
+   D. Fine-tuning the world model on a small amount of real-world data.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- Sensor spoofing / physical-layer attack.
+   **C** -- Using text conditioning to generate photo-realistic video of rare
+   safety-critical scenarios that are rarely encountered in real data.
 
-   LiDAR spoofing attacks the physical sensing layer by firing laser pulses
-   at the AV's LiDAR detector to inject phantom obstacles or blank out real
-   ones. This is a physical-layer attack that bypasses the software stack
-   entirely and is addressed through sensor diversity, cross-sensor validation,
-   and hardware-level countermeasures.
+   The long tail refers to the vast space of safety-critical edge cases
+   (pedestrian darting into road, debris on highway) that are encountered
+   too rarely in real data to adequately train or evaluate an ADS. World
+   models can synthesize these scenarios on demand using text or structured
+   conditioning, providing the training and test coverage that real data alone
+   cannot.
 
 
 .. admonition:: Question 8
    :class: hint
 
-   What is the **primary advantage of C-V2X over DSRC** for V2X
-   communication in autonomous vehicles?
+   What is the **sim-to-real gap**, and which of the following is an example
+   of it?
 
-   A. C-V2X has lower latency than DSRC in all conditions.
+   A. The difference in compute cost between running simulation on a laptop
+      vs. a GPU cluster.
 
-   B. C-V2X operates in the 5.9 GHz band, which has longer range than DSRC.
+   B. A model trained exclusively in CARLA that achieves high simulation
+      accuracy but fails to detect real-world pedestrians because simulation
+      textures differ from real camera images.
 
-   C. C-V2X integrates with cellular networks (LTE/5G), enabling wide-area
-      services (HD map updates, traffic optimization) in addition to
-      vehicle-to-vehicle direct communication.
+   C. The time delay between when CARLA renders a frame and when the Python
+      client receives it.
 
-   D. C-V2X is backward compatible with DSRC hardware.
+   D. The mismatch between simulated GPS coordinates and real-world GPS
+      coordinates.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- C-V2X integrates with cellular networks (LTE/5G), enabling
-   wide-area services (HD map updates, traffic optimization) in addition to
-   vehicle-to-vehicle direct communication.
+   **B** -- A model trained exclusively in CARLA that achieves high simulation
+   accuracy but fails to detect real-world pedestrians because simulation
+   textures differ from real camera images.
 
-   C-V2X supports two modes: PC5 (direct sidelink, low latency, no network)
-   and Uu (via cellular base station, wide area). This dual-mode capability
-   enables both immediate safety-critical communication (V2V) and cloud-based
-   services that DSRC cannot support. C-V2X is also the preferred standard in
-   China and is gaining ground in Europe.
+   The sim-to-real gap encompasses differences in visual appearance, sensor
+   noise characteristics, agent behavior distributions, and dynamics between
+   simulation and the real world. Models that overfit to simulation-specific
+   patterns often fail at deployment. This is the primary motivation for
+   domain randomization and world-model-based data augmentation.
 
 
 .. admonition:: Question 9
    :class: hint
 
-   **Cooperative perception** using V2X enables which capability that is
-   impossible with single-vehicle perception?
+   In **model-based planning** using a world model, what is the purpose of
+   the "imagination rollout"?
 
-   A. Higher-resolution point clouds than any single LiDAR can produce.
+   A. To generate training data for the world model itself.
 
-   B. Detection of objects that are occluded from the ego vehicle's sensors
-      by sharing sensor data from other vehicles and roadside units.
+   B. To predict what future observations would result from each candidate
+      action sequence, enabling the planner to select the best action without
+      executing it in the real world first.
 
-   C. Elimination of the need for onboard perception hardware.
+   C. To visualize the ego vehicle's past trajectory for the operator.
 
-   D. Guaranteed latency below 1 ms for perception updates.
+   D. To compress the current observation into a latent state for the
+      world model encoder.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Detection of objects that are occluded from the ego vehicle's
-   sensors by sharing sensor data from other vehicles and roadside units.
+   **B** -- To predict what future observations would result from each
+   candidate action sequence, enabling the planner to select the best action
+   without executing it in the real world first.
 
-   This non-line-of-sight (NLOS) awareness is the transformative capability
-   of cooperative perception: a vehicle behind a truck can see a pedestrian
-   stepping off the curb and share that perception with the vehicle in front,
-   which cannot see the pedestrian directly. This dramatically extends
-   effective perception range beyond the physical limits of any single sensor.
+   Model-based planning uses the world model as an internal simulator: for
+   each candidate action sequence, the world model "imagines" the future
+   scene, and a reward function evaluates each imagined future. The planner
+   selects the action sequence leading to the highest-reward imagined future
+   and executes only the first action before re-planning.
 
 
 .. admonition:: Question 10
    :class: hint
 
-   As of 2026, why has **Baidu Apollo Go's achievement of per-vehicle
-   profitability in Wuhan** been significant for the AV industry?
+   Why does CARLA remain a valuable tool in ADS development and education
+   **alongside** neural world models?
 
-   A. It proved that LiDAR-based systems are more cost-effective than
-      camera-only systems.
+   A. CARLA produces more photo-realistic images than world models.
 
-   B. It was the first demonstration that robotaxi economics can work at
-      city-scale density, providing a proof-of-concept for the commercial
-      viability of ADS.
+   B. CARLA provides precise API-level scenario control, perfect ground-truth
+      labels, real-time closed-loop physics, and is computationally accessible
+      for students and researchers without large GPU clusters.
 
-   C. It showed that regulatory approval in China is easier than in the US.
+   C. CARLA can generate more long-tail scenarios than world models.
 
-   D. It demonstrated that end-to-end models are more profitable than
-      modular stacks.
+   D. CARLA is more widely used in industry than world models.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- It was the first demonstration that robotaxi economics can work
-   at city-scale density, providing a proof-of-concept for the commercial
-   viability of ADS.
+   **B** -- CARLA provides precise API-level scenario control, perfect
+   ground-truth labels, real-time closed-loop physics, and is computationally
+   accessible for students and researchers without large GPU clusters.
 
-   Robotaxi profitability requires high utilization rates (many rides per
-   vehicle per day), competitive cost per mile, and a geographic density that
-   minimizes repositioning costs. Baidu achieving this in Wuhan in 2025
-   provided empirical evidence that the robotaxi business model is viable --
-   not just a theoretical projection -- and has accelerated investment and
-   expansion plans globally.
+   The two simulation paradigms are complementary: CARLA is ideal for
+   controlled algorithm development, debugging, and education because of its
+   precise controllability and structured labels. World models are ideal for
+   large-scale synthetic data generation and photo-realistic evaluation, but
+   require expensive GPU infrastructure and do not provide structured labels.
 
 
 ----
@@ -322,101 +330,98 @@ True or False (Questions 11-15)
 .. admonition:: Question 11
    :class: hint
 
-   **True or False:** In ROS 2, the DDS middleware requires a central
-   rosmaster process to manage communication between nodes, just as ROS 1
-   did.
+   **True or False:** A driving world model trained on real data produces
+   training images that are visually indistinguishable from real camera
+   images, completely eliminating the sim-to-real gap.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   DDS uses **distributed discovery** -- nodes discover each other
-   automatically through multicast without any central broker or master
-   process. This is one of the key improvements of ROS 2 over ROS 1: the
-   single-point-of-failure rosmaster is eliminated, making the system more
-   robust for safety-critical deployments where the master could crash.
+   While world models trained on real data dramatically reduce the visual
+   appearance gap compared to physics-based simulators, they do not
+   completely eliminate the sim-to-real gap. Generated images may contain
+   artifacts, agent behavior distributions may not perfectly match the real
+   world, and physical dynamics remain approximate. The gap is reduced, not
+   eliminated.
 
 
 .. admonition:: Question 12
    :class: hint
 
-   **True or False:** ISO 26262's V-model development process ensures that
-   every design phase has a corresponding verification and testing phase.
+   **True or False:** Autoregressive world models generate all future frames
+   simultaneously in a single forward pass, making them faster than diffusion
+   models at inference time.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False**
+
+   Autoregressive models generate tokens **sequentially** -- each token is
+   predicted after all previous tokens -- making them slow at inference,
+   particularly for long video sequences. Diffusion models generate all tokens
+   through an iterative denoising process that can be parallelized, typically
+   making them faster than autoregressive models at high resolutions.
+
+
+.. admonition:: Question 13
+   :class: hint
+
+   **True or False:** Vista (NeurIPS 2024) introduced a standard evaluation
+   protocol for driving world models that includes measuring action
+   controllability error.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **True**
 
-   The V-model is named for its V-shape when drawn: the left arm descends
-   from system requirements through architecture to implementation; the right
-   arm ascends from unit testing through integration testing to system
-   testing. Each level on the right arm verifies the corresponding level on
-   the left arm, ensuring comprehensive traceability from requirements to
-   tests.
-
-
-.. admonition:: Question 13
-   :class: hint
-
-   **True or False:** Under a Level 4 ADS operating in its ODD, the human
-   passenger is legally liable for any collision that occurs during the
-   autonomous operation.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   At Level 4, the ADS performs the entire DDT within its ODD and there is
-   no human fallback driver role. Liability during autonomous operation
-   therefore shifts from the passenger/driver to the ADS operator or
-   manufacturer -- a product liability model. Several jurisdictions (Germany,
-   UK, Singapore) have codified this in legislation. The passenger is not
-   responsible for the ADS's driving decisions.
+   One of Vista's key contributions was proposing and adopting a standard
+   evaluation protocol for driving world models. Prior to Vista, different
+   papers used different metrics, making comparison difficult. Vista's
+   protocol includes FID, FVD (video-level quality), and action controllability
+   error -- a metric measuring how accurately the generated video reflects the
+   input ego action sequence.
 
 
 .. admonition:: Question 14
    :class: hint
 
-   **True or False:** The "unknown unsafe" zone in SOTIF refers to scenarios
-   that are known to the manufacturer to cause system failures but have not
-   yet been fixed.
+   **True or False:** NVIDIA Cosmos is released exclusively under a
+   proprietary license and is not available for academic research.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   The "unknown unsafe" zone refers to scenarios that the manufacturer has
-   not yet discovered and therefore does not know cause failures. These are
-   the scenarios the system will fail in when encountered in the field,
-   before the manufacturer can identify and address them. The SOTIF validation
-   goal is to reduce this zone through systematic scenario exploration
-   (simulation, formal analysis, real-world testing) before deployment.
+   NVIDIA released Cosmos under an open license for non-commercial research,
+   making it accessible to academic researchers and students. The production
+   DRIVE variant integrated into NVIDIA's commercial ADS stack is proprietary,
+   but the base Cosmos model weights and code are publicly available.
 
 
 .. admonition:: Question 15
    :class: hint
 
-   **True or False:** Adversarial stickers placed on stop signs that fool
-   camera-based perception systems are an example of a SOTIF hazard rather
-   than a cybersecurity attack.
+   **True or False:** Domain randomization reduces the sim-to-real gap by
+   training the model on a fixed, carefully crafted simulation environment
+   that closely resembles the real world.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False** (or arguably **both** -- accept with explanation)
+   **False**
 
-   Physical adversarial attacks (stickers on stop signs) are technically
-   cybersecurity attacks in the sense that they are deliberate adversarial
-   manipulations of the system. However, they also fall under SOTIF because
-   they exploit a performance limitation of the intended functionality
-   (the CNN-based perception cannot handle out-of-distribution patterns).
-   In practice, both frameworks are needed: SOTIF to characterize the
-   performance limitation, and ISO/SAE 21434 to define countermeasures
-   against deliberate adversarial exploitation.
+   Domain randomization works by **randomly varying** simulation parameters
+   (textures, lighting, weather, object colors, dynamics) during training --
+   the opposite of creating a fixed, carefully crafted environment. The
+   rationale is that if the model is trained across a wide range of simulation
+   variations, it cannot overfit to simulation-specific artifacts and must
+   learn features that are present across all variations, including in the
+   real world.
 
 
 ----
@@ -428,9 +433,9 @@ Essay Questions (Questions 16-18)
 .. admonition:: Question 16
    :class: hint
 
-   **Explain the ASIL classification process under ISO 26262.** Choose one
-   AV safety function, perform a simplified HARA (Hazard Analysis and Risk
-   Assessment), and justify the ASIL level you assign.
+   **Explain how a world model can be used for offline closed-loop policy
+   evaluation.** Why is this valuable, and what are the limitations of
+   this evaluation approach?
 
    *(2-4 sentences)*
 
@@ -439,28 +444,30 @@ Essay Questions (Questions 16-18)
 
    *Key points to include:*
 
-   - ASIL is determined by three parameters: Severity (S0-S3), Exposure
-     (E0-E4), and Controllability (C0-C3). The combination maps to ASIL A-D
-     or QM.
-   - Example: Automatic Emergency Braking (AEB). Hazardous event: AEB fails
-     to activate when a pedestrian is in the path. Severity = S3 (potentially
-     fatal). Exposure = E3 (common urban driving). Controllability = C2 (driver
-     may be able to brake manually if reaction time allows). ASIL = C.
-   - Alternatively: AEB activates falsely at highway speed with following
-     traffic. Severity = S3 (rear-end collision possible). Exposure = E4
-     (highway driving is frequent). Controllability = C1 (limited -- sudden
-     braking at 120 km/h is hard to avoid). ASIL = D.
-   - The HARA is documented and the ASIL drives development rigor: ASIL D
-     requires formal verification, independent review, and the most stringent
-     testing requirements.
+   - Offline closed-loop evaluation replaces human actions in historical fleet
+     logs with the new planner's actions and uses the world model to render
+     what would have happened, enabling counterfactual assessment without
+     on-road deployment.
+   - This is valuable because it dramatically reduces the cost and safety
+     risk of evaluating new planners: instead of deploying on the road and
+     hoping nothing goes wrong, engineers can evaluate millions of
+     counterfactual scenarios on a GPU cluster in hours.
+   - Limitations: the evaluation is only as good as the world model's
+     accuracy. If the world model fails to realistically simulate how other
+     agents would respond to the new planner's different actions (reaction
+     modeling), the counterfactual is inaccurate. This is the **agent
+     reaction problem** in offline evaluation.
+   - A second limitation is distribution shift: if the new planner takes
+     actions far outside the historical data distribution, the world model
+     may generate unrealistic futures (hallucinations).
 
 
 .. admonition:: Question 17
    :class: hint
 
-   **Describe how ISO/SAE 21434 addresses the cybersecurity of an OTA
-   (over-the-air) software update system for an autonomous vehicle.** What
-   threats must be addressed, and what technical countermeasures are used?
+   **Compare and contrast CARLA and a generative world model like GAIA-3**
+   as simulation environments for ADS development. For each, name two
+   use cases where it is clearly the better choice, and explain why.
 
    *(2-4 sentences)*
 
@@ -469,30 +476,29 @@ Essay Questions (Questions 16-18)
 
    *Key points to include:*
 
-   - The OTA update channel is a high-value attack target: if an attacker
-     can push a malicious software update to an AV fleet, they gain control
-     of millions of vehicles. ISO/SAE 21434 requires a TARA (Threat Analysis
-     and Risk Assessment) that identifies this attack vector and assigns a
-     risk level.
-   - Primary threats: man-in-the-middle (attacker intercepts and modifies
-     the update), replay (attacker re-sends an old, vulnerable update),
-     and backend server compromise (attacker breaks into the update server).
-   - Countermeasures: code signing (every update package is signed with an
-     asymmetric key pair; the vehicle verifies the signature before installation),
-     TLS 1.3 for the transport channel, version pinning (vehicle rejects
-     updates with lower version numbers to prevent replay), and hardware
-     security modules (HSM) to protect the private signing key.
-   - Post-deployment monitoring is also required: the manufacturer must
-     maintain vulnerability disclosure processes and be able to push urgent
-     security patches within a defined time window.
+   - CARLA is better for: (1) debugging perception and planning algorithms,
+     because it provides exact ground-truth labels and API-level scenario
+     control; (2) real-time closed-loop testing of a specific scenario, because
+     CARLA's physics engine responds instantly to the ego vehicle's actions
+     without approximation.
+   - GAIA-3 / world models are better for: (1) large-scale synthetic training
+     data generation, because world models produce photo-realistic images with
+     real-world appearance statistics at scale; (2) rare scenario simulation
+     where the visual appearance matters for perception, because CARLA's
+     appearance gap would cause a perception model to behave differently on
+     real data.
+   - The practical difference is cost and control: CARLA is cheap and precise;
+     world models are expensive and probabilistic but produce photo-realistic
+     output.
 
 
 .. admonition:: Question 18
    :class: hint
 
-   **Reflect on the ethical and liability challenges of autonomous vehicles**
-   at Level 4. How do current industry and regulatory frameworks address
-   these challenges, and what open questions remain?
+   **What is the "long-tail problem" in ADS development, and how do
+   driving world models address it?** Describe a concrete example of
+   a long-tail scenario and explain how a world model would be used to
+   generate training data for it.
 
    *(2-4 sentences)*
 
@@ -501,22 +507,20 @@ Essay Questions (Questions 16-18)
 
    *Key points to include:*
 
-   - At Level 4, the ADS is the sole decision-maker during autonomous
-     operation. This raises both ethical questions (how should the system
-     prioritize competing harms?) and legal questions (who is responsible
-     when an ADS causes injury?).
-   - Industry approach to ethics: AVs are not programmed to make trolley-problem
-     tradeoffs; instead they are designed to minimize total risk while complying
-     with traffic laws. The MIT Moral Machine experiment showed no global
-     consensus on ethical priorities, making any specific ethical programming
-     controversial.
-   - Liability frameworks: Germany, UK, and Singapore have enacted laws
-     placing liability on the ADS operator/manufacturer during autonomous
-     operation -- a product liability model. This is a pragmatic solution
-     that enables deployment but shifts insurance burden to operators.
-   - Open questions: (1) How should liability be divided when a failure
-     involves both a hardware defect (OEM responsibility) and a software
-     limitation (ADS developer responsibility)? (2) Who is liable when a
-     third-party software component (e.g., a perception library) causes a
-     failure? (3) How are international incidents handled when an AV built
-     and regulated in one country causes harm in another?
+   - The long-tail problem refers to the fact that safety-critical driving
+     scenarios (e.g., child running into road, tire blowout, wrong-way driver)
+     are extremely rare in real data. Even with billions of driving miles,
+     these events may appear only dozens or hundreds of times -- insufficient
+     to train or evaluate a robust system.
+   - Example: a child chasing a ball into a crosswalk while the ego vehicle
+     is approaching at 40 km/h with obstructed sightlines (parked trucks on
+     both sides). This scenario requires a sub-second brake response and is
+     nearly impossible to collect real data for safely.
+   - Using a world model: an engineer provides text conditioning
+     ("child suddenly runs from behind a parked truck into the crosswalk ahead")
+     along with an ego action sequence (constant speed) to GAIA-3. The model
+     generates photo-realistic video of the scenario across different lighting,
+     weather, and child trajectory variations. These images are used to train
+     and evaluate the perception system's response time.
+   - The world model addresses both the data scarcity (unlimited generation)
+     and the safety concern (no real child is placed at risk).

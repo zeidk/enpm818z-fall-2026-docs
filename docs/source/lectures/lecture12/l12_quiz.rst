@@ -2,12 +2,12 @@
 Quiz
 ====================================================
 
-This quiz covers the key concepts from Lecture 12: World Models & Simulation.
-Topics include the definition and architecture of driving world models, Wayve
-GAIA-3, NVIDIA Cosmos, Vista (NeurIPS 2024), applications of world models
-(data augmentation, long-tail scenarios, offline policy evaluation),
-comparison with physics-based simulators like CARLA, the sim-to-real gap,
-and the role of world models as imagination modules in end-to-end driving.
+This quiz covers the key concepts from Lecture 11: End-to-End Driving &
+Foundation Models. Topics include the modular vs. end-to-end debate, UniAD
+(CVPR 2023), DriveTransformer (ICLR 2025), Vision-Language-Action (VLA)
+models, Tesla's FSD v12 architecture, NVIDIA's end-to-end stack with
+reinforcement learning, and the safety and validation challenges of
+black-box neural driving systems.
 
 .. note::
 
@@ -29,296 +29,280 @@ Multiple Choice (Questions 1-10)
 .. admonition:: Question 1
    :class: hint
 
-   What does a **driving world model** predict, given past observations and
-   a sequence of future ego actions?
+   What is the **primary theoretical advantage** of end-to-end driving over
+   the modular pipeline?
 
-   A. The optimal waypoints the ego vehicle should follow.
+   A. End-to-end models are always faster to train than modular pipelines.
 
-   B. The distribution over future observations (video frames) that would
-      result from taking those actions.
+   B. End-to-end models eliminate information loss at module boundaries and
+      allow joint optimization toward a unified driving objective.
 
-   C. The 3-D bounding boxes of surrounding agents in the next frame.
+   C. End-to-end models do not require any labeled training data.
 
-   D. The GPS coordinates the ego vehicle will occupy in the future.
+   D. End-to-end models are more interpretable because their representations
+      are learned rather than hand-engineered.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- The distribution over future observations (video frames) that
-   would result from taking those actions.
+   **B** -- End-to-end models eliminate information loss at module boundaries
+   and allow joint optimization toward a unified driving objective.
 
-   A world model learns to simulate future sensory experience conditioned on
-   actions. Formally: :math:`p(o_{t+1:t+H} \mid o_{1:t}, a_{t:t+H})`. This
-   makes it a data-driven simulator -- a "neural imagination" of future scenes.
+   In a modular pipeline, each stage outputs a fixed schema (e.g., object
+   lists), discarding information that doesn't fit. E2E models propagate
+   gradients from the final planning loss back through all representations,
+   ensuring every feature extraction step is optimized for the ultimate goal.
 
 
 .. admonition:: Question 2
    :class: hint
 
-   Wayve GAIA-3, released in December 2025, has approximately how many
-   parameters?
+   UniAD (CVPR 2023) uses a **query-based architecture** built on a shared
+   BEV backbone. What are the four task-specific modules it introduces?
 
-   A. 1.5 billion
+   A. TrackFormer, MapFormer, PredictFormer, ControlFormer
 
-   B. 9 billion
+   B. TrackFormer, MapFormer, MotionFormer, OccFormer
 
-   C. 15 billion
+   C. PerceptionFormer, FusionFormer, PlanFormer, ControlFormer
 
-   D. 70 billion
+   D. BEVFormer, OccFormer, MotionFormer, PlanFormer
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- 15 billion
+   **B** -- TrackFormer, MapFormer, MotionFormer, OccFormer
 
-   GAIA-3 has 15 billion parameters and represents a significant scale-up
-   from GAIA-1 (9B, 2023). Its scale enables multi-camera consistency,
-   long-horizon generation (30+ seconds), and high-fidelity controllable
-   scenario synthesis.
+   UniAD's architecture flows from a shared BEV encoder into TrackFormer
+   (agent tracking), MapFormer (map element detection), MotionFormer
+   (multi-modal motion forecasting), and OccFormer (occupancy grid
+   prediction), with a final ego-trajectory planner on top.
 
 
 .. admonition:: Question 3
    :class: hint
 
-   What is the role of a **visual tokenizer** (such as a VQ-VAE) in a
-   driving world model architecture?
+   DriveTransformer (ICLR 2025) achieves approximately **3x the throughput**
+   of UniAD. What is the key architectural change that enables this?
 
-   A. It converts driving actions into natural language descriptions.
+   A. DriveTransformer removes the planning module entirely.
 
-   B. It compresses high-dimensional video frames into a compact grid of
-      latent tokens, making transformer-based modeling tractable.
+   B. DriveTransformer uses a single joint attention block shared across
+      all tasks, eliminating redundant feature extraction in separate heads.
 
-   C. It detects and classifies objects in the scene before world model
-      generation.
+   C. DriveTransformer operates on LiDAR point clouds instead of cameras.
 
-   D. It converts GPS waypoints into vehicle control commands.
+   D. DriveTransformer uses knowledge distillation to compress UniAD into
+      a smaller model.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- It compresses high-dimensional video frames into a compact grid
-   of latent tokens, making transformer-based modeling tractable.
+   **B** -- DriveTransformer uses a single joint attention block shared across
+   all tasks, eliminating redundant feature extraction in separate heads.
 
-   A raw 1080p frame has over 6 million pixels -- far too many for a
-   transformer to process directly. A VQ-VAE compresses each frame into
-   roughly 1024 discrete tokens. The world model then operates in this
-   compact latent space, predicting future latent tokens rather than raw pixels.
+   Instead of having each task head independently attend to BEV features,
+   DriveTransformer defines three unified token types (agent, map, ego) that
+   all attend to each other and to sensor features in a single operation.
+   This sharing eliminates the computational duplication that made UniAD slow.
 
 
 .. admonition:: Question 4
    :class: hint
 
-   Which of the following is a **key distinction** between NVIDIA Cosmos
-   and Wayve GAIA-3?
+   In the context of Vision-Language-Action (VLA) models, what is the
+   purpose of **chain-of-thought reasoning**?
 
-   A. Cosmos is camera-only while GAIA-3 uses LiDAR.
+   A. To increase the size of the training dataset through data augmentation.
 
-   B. Cosmos is a general physical world model pre-trained on diverse video
-      then fine-tuned for driving, while GAIA-3 is purpose-built for
-      driving video from the start.
+   B. To generate an intermediate textual reasoning trace that makes the
+      model's driving decisions auditable and interpretable.
 
-   C. GAIA-3 is open-source while Cosmos is fully proprietary.
+   C. To replace the camera sensor with a language description of the scene.
 
-   D. Cosmos can only generate single-camera video while GAIA-3 generates
-      multi-camera video.
+   D. To fine-tune the model on a chain of reinforcement learning rewards.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Cosmos is a general physical world model pre-trained on diverse
-   video then fine-tuned for driving, while GAIA-3 is purpose-built for
-   driving video from the start.
+   **B** -- To generate an intermediate textual reasoning trace that makes
+   the model's driving decisions auditable and interpretable.
 
-   NVIDIA Cosmos follows the large-model paradigm of pre-training on massive
-   heterogeneous data (robotics, outdoor scenes, driving, manufacturing) to
-   learn general physical priors, then fine-tuning on domain-specific data.
-   GAIA-3 is specialized for driving from the ground up.
+   Chain-of-thought (CoT) prompting/training encourages the model to produce
+   a human-readable reasoning step (e.g., "the pedestrian may cross; I should
+   slow down") before outputting a waypoint or action. This dramatically
+   improves interpretability compared to direct regression models.
 
 
 .. admonition:: Question 5
    :class: hint
 
-   Vista (NeurIPS 2024) made what specific contribution that distinguishes
-   it from earlier driving world models?
+   Starting with FSD v12, Tesla's end-to-end architecture is:
 
-   A. Vista was the first driving world model to use diffusion-based
-      video generation.
+   A. LiDAR-primary with camera redundancy.
 
-   B. Vista is the first driving world model to achieve real-time inference
-      on consumer hardware.
+   B. Camera-only, with gradients flowing from control commands back through
+      the video encoder.
 
-   C. Vista demonstrated generalizability by training jointly on multiple
-      driving datasets from different geographic regions and sensor configurations.
+   C. Radar-primary with camera confirmation.
 
-   D. Vista introduced action-conditioned video generation to the field.
+   D. A hybrid of modular perception and learned planning.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- Vista demonstrated generalizability by training jointly on
-   multiple driving datasets from different geographic regions and sensor
-   configurations.
+   **B** -- Camera-only, with gradients flowing from control commands back
+   through the video encoder.
 
-   Earlier models like GAIA-1/2 were trained on a single proprietary dataset
-   (Wayve's London fleet) and generalized poorly to other regions. Vista's
-   multi-dataset training (nuScenes, Waymo, and others) produces a model that
-   transfers to unseen geographic regions and driving styles.
+   Tesla's FSD v12 uses 8 cameras feeding space-time transformers that
+   produce BEV features, which feed an occupancy/flow predictor, and then a
+   planning transformer. The entire pipeline is differentiable, and Tesla
+   trains it using billions of fleet miles of human supervision and shadow
+   mode corrections.
 
 
 .. admonition:: Question 6
    :class: hint
 
-   **Offline closed-loop policy evaluation** using a world model involves:
+   NVIDIA's end-to-end stack uses reinforcement learning (RL) **after**
+   imitation learning (IL). Why?
 
-   A. Testing a new planner by running it in CARLA with real-time physics
-      simulation.
+   A. Imitation learning is too slow, so RL is used to speed up training.
 
-   B. Using the world model to render what would have happened if a new
-      planner had been used on historical fleet data, without on-road
-      deployment.
+   B. RL allows the model to be deployed without any labeled data.
 
-   C. Training a new planner on simulated data and then evaluating it on
-      real roads.
+   C. Imitation learning inherits the distribution of human driving (including
+      human mistakes), while RL can optimize explicitly for safety and comfort
+      reward functions.
 
-   D. Recording a human driver and comparing the planner's actions against
-      the human baseline.
+   D. RL generates the camera images used for imitation learning.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Using the world model to render what would have happened if a
-   new planner had been used on historical fleet data, without on-road
-   deployment.
+   **C** -- Imitation learning inherits the distribution of human driving
+   (including human mistakes), while RL can optimize explicitly for safety and
+   comfort reward functions.
 
-   The key feature of world-model-based offline evaluation is its
-   **counterfactual** nature: given historical observations O_{1:T} with
-   human actions A_human, we substitute the new planner's actions A_planner
-   and ask the world model to render the resulting future. This is called
-   "offline closed-loop" because the planner and world model interact in a
-   loop, but no real vehicle is involved.
+   IL is a strong initialization because it immediately produces human-like
+   behavior. RL fine-tuning then corrects the inherited human errors and
+   optimizes for explicit objectives (minimize collision risk, maximize
+   comfort, make progress) that are difficult to demonstrate.
 
 
 .. admonition:: Question 7
    :class: hint
 
-   Which application of world models **directly addresses** the long-tail
-   data problem in ADS development?
+   Which of the following is a **key validation challenge** specific to
+   end-to-end driving models compared to modular pipelines?
 
-   A. Offline policy evaluation using historical fleet logs.
+   A. End-to-end models cannot be evaluated in simulation.
 
-   B. Model-based planning for real-time decision making.
+   B. ISO 26262 assumes modular decomposition, making it difficult to apply
+      standard safety arguments to a monolithic E2E system.
 
-   C. Using text conditioning to generate photo-realistic video of rare
-      safety-critical scenarios that are rarely encountered in real data.
+   C. End-to-end models require more compute than modular pipelines.
 
-   D. Fine-tuning the world model on a small amount of real-world data.
+   D. End-to-end models cannot process LiDAR data.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- Using text conditioning to generate photo-realistic video of rare
-   safety-critical scenarios that are rarely encountered in real data.
+   **B** -- ISO 26262 assumes modular decomposition, making it difficult to
+   apply standard safety arguments to a monolithic E2E system.
 
-   The long tail refers to the vast space of safety-critical edge cases
-   (pedestrian darting into road, debris on highway) that are encountered
-   too rarely in real data to adequately train or evaluate an ADS. World
-   models can synthesize these scenarios on demand using text or structured
-   conditioning, providing the training and test coverage that real data alone
-   cannot.
+   ISO 26262 functional safety methodology relies on decomposing system
+   requirements into subsystem requirements and testing each component
+   independently. A monolithic neural network has no such decomposition,
+   requiring novel "neural system safety" frameworks that are still being
+   developed by standards bodies in 2026.
 
 
 .. admonition:: Question 8
    :class: hint
 
-   What is the **sim-to-real gap**, and which of the following is an example
-   of it?
+   What is **NVIDIA Alpamayo**?
 
-   A. The difference in compute cost between running simulation on a laptop
-      vs. a GPU cluster.
+   A. NVIDIA's hardware SoC for autonomous driving compute.
 
-   B. A model trained exclusively in CARLA that achieves high simulation
-      accuracy but fails to detect real-world pedestrians because simulation
-      textures differ from real camera images.
+   B. A vision-language-action model for driving released as part of
+      NVIDIA's DRIVE platform in 2025.
 
-   C. The time delay between when CARLA renders a frame and when the Python
-      client receives it.
+   C. NVIDIA's simulation environment that replaces CARLA.
 
-   D. The mismatch between simulated GPS coordinates and real-world GPS
-      coordinates.
+   D. A LiDAR sensor used in NVIDIA's reference vehicle.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- A model trained exclusively in CARLA that achieves high simulation
-   accuracy but fails to detect real-world pedestrians because simulation
-   textures differ from real camera images.
+   **B** -- A vision-language-action model for driving released as part of
+   NVIDIA's DRIVE platform in 2025.
 
-   The sim-to-real gap encompasses differences in visual appearance, sensor
-   noise characteristics, agent behavior distributions, and dynamics between
-   simulation and the real world. Models that overfit to simulation-specific
-   patterns often fail at deployment. This is the primary motivation for
-   domain randomization and world-model-based data augmentation.
+   Alpamayo is a VLA model that generates driving decisions conditioned on
+   natural language scene descriptions produced by the model itself. It
+   supports free-form language commands from passengers and is integrated
+   with NVIDIA's broader DRIVE end-to-end stack.
 
 
 .. admonition:: Question 9
    :class: hint
 
-   In **model-based planning** using a world model, what is the purpose of
-   the "imagination rollout"?
+   What is the primary purpose of **domain randomization** when training
+   end-to-end models in simulation?
 
-   A. To generate training data for the world model itself.
+   A. To speed up CARLA rendering by simplifying scene geometry.
 
-   B. To predict what future observations would result from each candidate
-      action sequence, enabling the planner to select the best action without
-      executing it in the real world first.
+   B. To vary simulation parameters during training so the model learns
+      features that are robust to environment variation, reducing the
+      sim-to-real gap.
 
-   C. To visualize the ego vehicle's past trajectory for the operator.
+   C. To generate additional training data by randomly cropping camera images.
 
-   D. To compress the current observation into a latent state for the
-      world model encoder.
+   D. To test model performance across different geographic locations.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- To predict what future observations would result from each
-   candidate action sequence, enabling the planner to select the best action
-   without executing it in the real world first.
+   **B** -- To vary simulation parameters during training so the model learns
+   features that are robust to environment variation, reducing the sim-to-real gap.
 
-   Model-based planning uses the world model as an internal simulator: for
-   each candidate action sequence, the world model "imagines" the future
-   scene, and a reward function evaluates each imagined future. The planner
-   selects the action sequence leading to the highest-reward imagined future
-   and executes only the first action before re-planning.
+   Domain randomization intentionally introduces variation in lighting,
+   weather, texture, and object properties during simulation-based training.
+   If the model is never presented with a consistent simulation "look", it
+   cannot overfit to simulation artifacts and must learn more general features
+   that transfer to the real world.
 
 
 .. admonition:: Question 10
    :class: hint
 
-   Why does CARLA remain a valuable tool in ADS development and education
-   **alongside** neural world models?
+   As of 2026, what describes the **industry consensus** on where end-to-end
+   learning fits in production ADS systems?
 
-   A. CARLA produces more photo-realistic images than world models.
+   A. Major robotaxi operators run fully end-to-end systems from pixels to
+      actuators with no engineered safety layers.
 
-   B. CARLA provides precise API-level scenario control, perfect ground-truth
-      labels, real-time closed-loop physics, and is computationally accessible
-      for students and researchers without large GPU clusters.
+   B. End-to-end learning is considered a failed approach and the industry
+      has returned to purely modular pipelines.
 
-   C. CARLA can generate more long-tail scenarios than world models.
+   C. E2E models excel at perception and scene understanding, but explicit
+      safety checks and rule-based overrides remain as engineered layers on top.
 
-   D. CARLA is more widely used in industry than world models.
+   D. End-to-end models are only used for highway driving, not urban
+      environments.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- CARLA provides precise API-level scenario control, perfect
-   ground-truth labels, real-time closed-loop physics, and is computationally
-   accessible for students and researchers without large GPU clusters.
+   **C** -- E2E models excel at perception and scene understanding, but
+   explicit safety checks and rule-based overrides remain as engineered
+   layers on top.
 
-   The two simulation paradigms are complementary: CARLA is ideal for
-   controlled algorithm development, debugging, and education because of its
-   precise controllability and structured labels. World models are ideal for
-   large-scale synthetic data generation and photo-realistic evaluation, but
-   require expensive GPU infrastructure and do not provide structured labels.
+   No major robotaxi operator in 2026 runs a system that is purely neural
+   from camera to brake pedal without any engineered safety monitoring. The
+   dominant pattern is a hybrid: a powerful E2E neural backbone for perception
+   and initial planning, with an explicit safety module (RSS, rule-based
+   overrides) that can veto unsafe actions.
 
 
 ----
@@ -330,98 +314,97 @@ True or False (Questions 11-15)
 .. admonition:: Question 11
    :class: hint
 
-   **True or False:** A driving world model trained on real data produces
-   training images that are visually indistinguishable from real camera
-   images, completely eliminating the sim-to-real gap.
+   **True or False:** In a modular ADS pipeline, a detected pedestrian's
+   probability of entering the road can be fully preserved and communicated
+   to the planner via the standard object-list interface between perception
+   and prediction modules.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   While world models trained on real data dramatically reduce the visual
-   appearance gap compared to physics-based simulators, they do not
-   completely eliminate the sim-to-real gap. Generated images may contain
-   artifacts, agent behavior distributions may not perfectly match the real
-   world, and physical dynamics remain approximate. The gap is reduced, not
-   eliminated.
+   The object-list interface between perception and prediction modules
+   typically encodes discrete detections with fixed attributes (class, 3-D
+   box, velocity). Subtle behavioral cues -- such as a pedestrian looking
+   toward the road, crouching, or holding a ball -- that are visible in the
+   raw image are often discarded because they don't fit the schema. This is
+   the information loss problem that motivates end-to-end approaches.
 
 
 .. admonition:: Question 12
    :class: hint
 
-   **True or False:** Autoregressive world models generate all future frames
-   simultaneously in a single forward pass, making them faster than diffusion
-   models at inference time.
+   **True or False:** DriveTransformer achieves 3x throughput over UniAD
+   by using a smaller model with fewer parameters, sacrificing performance
+   on individual driving tasks.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   Autoregressive models generate tokens **sequentially** -- each token is
-   predicted after all previous tokens -- making them slow at inference,
-   particularly for long video sequences. Diffusion models generate all tokens
-   through an iterative denoising process that can be parallelized, typically
-   making them faster than autoregressive models at high resolutions.
+   DriveTransformer's throughput improvement comes from **sharing** attention
+   computations across tasks through unified agent, map, and ego token types --
+   not from reducing model size. DriveTransformer matches or exceeds UniAD on
+   planning metrics (L2 distance) while running approximately 3x faster.
 
 
 .. admonition:: Question 13
    :class: hint
 
-   **True or False:** Vista (NeurIPS 2024) introduced a standard evaluation
-   protocol for driving world models that includes measuring action
-   controllability error.
+   **True or False:** Tesla's FSD v12 uses a LiDAR sensor as its primary
+   perception modality.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False**
+
+   Tesla's FSD is camera-only. Tesla argues that cameras provide sufficient
+   information for driving because humans navigate with vision alone. The
+   FSD v12 architecture uses 8 cameras feeding space-time transformers to
+   produce BEV features, with no LiDAR or radar primary sensor.
+
+
+.. admonition:: Question 14
+   :class: hint
+
+   **True or False:** Chain-of-thought (CoT) supervision in VLA models
+   provides a language-based training signal that can improve generalization
+   to novel scenarios compared to direct waypoint regression.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **True**
 
-   One of Vista's key contributions was proposing and adopting a standard
-   evaluation protocol for driving world models. Prior to Vista, different
-   papers used different metrics, making comparison difficult. Vista's
-   protocol includes FID, FVD (video-level quality), and action controllability
-   error -- a metric measuring how accurately the generated video reflects the
-   input ego action sequence.
-
-
-.. admonition:: Question 14
-   :class: hint
-
-   **True or False:** NVIDIA Cosmos is released exclusively under a
-   proprietary license and is not available for academic research.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   NVIDIA released Cosmos under an open license for non-commercial research,
-   making it accessible to academic researchers and students. The production
-   DRIVE variant integrated into NVIDIA's commercial ADS stack is proprietary,
-   but the base Cosmos model weights and code are publicly available.
+   Language descriptions of scenes encode semantic reasoning (e.g., "the
+   cyclist may merge left") that transfers across geographic domains and
+   lighting conditions far better than pixel-level imitation labels. VLA
+   models trained with CoT supervision have demonstrated better zero-shot
+   generalization than equivalent direct regression models in several
+   benchmarks (DriveVLM, 2024).
 
 
 .. admonition:: Question 15
    :class: hint
 
-   **True or False:** Domain randomization reduces the sim-to-real gap by
-   training the model on a fixed, carefully crafted simulation environment
-   that closely resembles the real world.
+   **True or False:** The sim-to-real gap is fully eliminated by using
+   CARLA for end-to-end training because CARLA uses Unreal Engine 4 for
+   photorealistic rendering.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   Domain randomization works by **randomly varying** simulation parameters
-   (textures, lighting, weather, object colors, dynamics) during training --
-   the opposite of creating a fixed, carefully crafted environment. The
-   rationale is that if the model is trained across a wide range of simulation
-   variations, it cannot overfit to simulation-specific artifacts and must
-   learn features that are present across all variations, including in the
-   real world.
+   Despite CARLA's high-quality rendering, a significant sim-to-real gap
+   remains. Sensor noise models, material reflectances, dynamic agent
+   behavior distributions, and environmental conditions in CARLA do not
+   perfectly match reality. Neural world models (GAIA-3, Cosmos) trained
+   on real data are emerging as a complementary approach to reduce this gap,
+   but it has not been eliminated.
 
 
 ----
@@ -433,9 +416,10 @@ Essay Questions (Questions 16-18)
 .. admonition:: Question 16
    :class: hint
 
-   **Explain how a world model can be used for offline closed-loop policy
-   evaluation.** Why is this valuable, and what are the limitations of
-   this evaluation approach?
+   **Compare and contrast the UniAD and DriveTransformer architectures.**
+   What specific problem does DriveTransformer solve, and what is the
+   practical significance of the 3x throughput improvement for real-time
+   ADS deployment?
 
    *(2-4 sentences)*
 
@@ -444,30 +428,27 @@ Essay Questions (Questions 16-18)
 
    *Key points to include:*
 
-   - Offline closed-loop evaluation replaces human actions in historical fleet
-     logs with the new planner's actions and uses the world model to render
-     what would have happened, enabling counterfactual assessment without
-     on-road deployment.
-   - This is valuable because it dramatically reduces the cost and safety
-     risk of evaluating new planners: instead of deploying on the road and
-     hoping nothing goes wrong, engineers can evaluate millions of
-     counterfactual scenarios on a GPU cluster in hours.
-   - Limitations: the evaluation is only as good as the world model's
-     accuracy. If the world model fails to realistically simulate how other
-     agents would respond to the new planner's different actions (reaction
-     modeling), the counterfactual is inaccurate. This is the **agent
-     reaction problem** in offline evaluation.
-   - A second limitation is distribution shift: if the new planner takes
-     actions far outside the historical data distribution, the world model
-     may generate unrealistic futures (hallucinations).
+   - UniAD uses separate decoder heads per task (TrackFormer, MapFormer,
+     MotionFormer, OccFormer), each independently attending to BEV features,
+     leading to redundant computation and low throughput (~1.8 FPS).
+   - DriveTransformer defines unified agent, map, and ego tokens that share
+     a single joint attention block across all tasks, eliminating redundant
+     feature extraction.
+   - The 3x throughput improvement (from ~1.8 to ~5.5 FPS) is practically
+     significant because real-time ADS requires inference within a 50-100 ms
+     window to maintain safe reaction times. UniAD's throughput is too low
+     for production deployment without significant simplification.
+   - DriveTransformer achieves this throughput gain while matching or improving
+     on UniAD's planning L2 metric, demonstrating that efficiency and
+     accuracy are not in conflict.
 
 
 .. admonition:: Question 17
    :class: hint
 
-   **Compare and contrast CARLA and a generative world model like GAIA-3**
-   as simulation environments for ADS development. For each, name two
-   use cases where it is clearly the better choice, and explain why.
+   **Explain the safety and validation challenges unique to end-to-end driving
+   models** compared to modular systems. What approaches are researchers and
+   engineers pursuing to address these challenges?
 
    *(2-4 sentences)*
 
@@ -476,29 +457,30 @@ Essay Questions (Questions 16-18)
 
    *Key points to include:*
 
-   - CARLA is better for: (1) debugging perception and planning algorithms,
-     because it provides exact ground-truth labels and API-level scenario
-     control; (2) real-time closed-loop testing of a specific scenario, because
-     CARLA's physics engine responds instantly to the ego vehicle's actions
-     without approximation.
-   - GAIA-3 / world models are better for: (1) large-scale synthetic training
-     data generation, because world models produce photo-realistic images with
-     real-world appearance statistics at scale; (2) rare scenario simulation
-     where the visual appearance matters for perception, because CARLA's
-     appearance gap would cause a perception model to behave differently on
-     real data.
-   - The practical difference is cost and control: CARLA is cheap and precise;
-     world models are expensive and probabilistic but produce photo-realistic
-     output.
+   - Modular systems can be validated module-by-module against ISO 26262
+     ASIL requirements with component-level fault trees. E2E models have no
+     such decomposition -- the entire neural network must be validated as a
+     whole, which is computationally intractable for exhaustive testing.
+   - Black-box behavior makes it difficult to determine the root cause of
+     failures, which is essential for constructing safety cases and for
+     regulator approval.
+   - Approaches being pursued include: neural network formal verification
+     (limited to small networks), comprehensive simulation-based scenario
+     testing, runtime safety monitors (Responsibility-Sensitive Safety),
+     concept bottleneck models that enforce interpretable intermediate
+     representations, and VLA chain-of-thought reasoning for post-hoc
+     explainability.
+   - The UNECE GTR (Jan 2026) is moving toward a "safety case" approach
+     that may be more amenable to E2E systems than component-level ASIL
+     certification.
 
 
 .. admonition:: Question 18
    :class: hint
 
-   **What is the "long-tail problem" in ADS development, and how do
-   driving world models address it?** Describe a concrete example of
-   a long-tail scenario and explain how a world model would be used to
-   generate training data for it.
+   **Explain why Tesla's fleet data advantage is often described as a
+   structural moat** in the end-to-end driving paradigm. What are the limits
+   of this advantage, and what could competitors do to close the gap?
 
    *(2-4 sentences)*
 
@@ -507,20 +489,20 @@ Essay Questions (Questions 16-18)
 
    *Key points to include:*
 
-   - The long-tail problem refers to the fact that safety-critical driving
-     scenarios (e.g., child running into road, tire blowout, wrong-way driver)
-     are extremely rare in real data. Even with billions of driving miles,
-     these events may appear only dozens or hundreds of times -- insufficient
-     to train or evaluate a robust system.
-   - Example: a child chasing a ball into a crosswalk while the ego vehicle
-     is approaching at 40 km/h with obstructed sightlines (parked trucks on
-     both sides). This scenario requires a sub-second brake response and is
-     nearly impossible to collect real data for safely.
-   - Using a world model: an engineer provides text conditioning
-     ("child suddenly runs from behind a parked truck into the crosswalk ahead")
-     along with an ego action sequence (constant speed) to GAIA-3. The model
-     generates photo-realistic video of the scenario across different lighting,
-     weather, and child trajectory variations. These images are used to train
-     and evaluate the perception system's response time.
-   - The world model addresses both the data scarcity (unlimited generation)
-     and the safety concern (no real child is placed at risk).
+   - Tesla has millions of vehicles on the road collecting 8 cameras × 36
+     FPS of continuous video, with shadow mode capturing human corrections
+     to model errors. This self-reinforcing flywheel -- more vehicles →
+     more data → better models → more vehicles -- is extremely difficult
+     for a competitor starting from zero fleet to replicate.
+   - The advantage is structural because edge cases (rare weather, unusual
+     road markings, non-standard lane configurations) are encountered at
+     frequency proportional to total fleet miles. With 8.3 billion
+     supervised FSD miles, Tesla has covered a vast space of long-tail
+     events.
+   - Limits: geographic coverage is skewed toward North America; data
+     requires annotation cost even with shadow mode; regulatory constraints
+     prevent data collection in some regions.
+   - Competitors can partially close the gap through: generative world
+     models that synthesize rare scenarios from limited real data,
+     simulation-to-real techniques, and strategic partnership with OEMs
+     for data access (as Mobileye and NVIDIA do).

@@ -12,7 +12,7 @@ GP4: Planning & Control
       :class: compact-table
 
       * - **Duration**
-        - 2 weeks (Week 11 -- Week 13)
+        - 3 weeks (Week 11 -- Week 14)
       * - **Weight**
         - 20 points (20% of final project)
       * - **Lectures**
@@ -525,8 +525,8 @@ grade). All four tasks are required. There is no bonus task in GP4
            |
       GP2: detector_node.py   (YOLO or DETR -- /perception/detections)
            |
-      GP3: fusion_node.py     (/perception/fused_objects)
-           fusion_node.py     (/localization/pose, /localization/odom)
+      GP3: fusion_node.py        (/perception/fused_objects)
+           localization_node.py  (/localization/pose, /localization/odom)
            |
       GP4: behavior_node.py   (/behavior/state, /behavior/target_speed)
            planner_node.py    (/planning/path)

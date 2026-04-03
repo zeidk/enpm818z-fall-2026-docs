@@ -1,19 +1,19 @@
 ====================================================
-L10: Prediction & Decision-Making
+L10: Trajectory Planning & Control
 ====================================================
 
 Overview
 --------
 
-This lecture addresses the two cognitive layers that separate a
-reactive path-follower from a genuinely intelligent autonomous
-vehicle: predicting the future behavior of surrounding agents
-and making strategic decisions about how to interact with them.
-You will learn classical and learned trajectory prediction models,
-Transformer-based multi-modal prediction architectures, and
-behavior planning approaches ranging from finite state machines
-to imitation learning with DAgger. The lecture concludes with a
-CARLA exercise integrating prediction and a behavioral planner.
+This lecture bridges motion planning and vehicle execution by adding
+the time dimension to geometric paths and designing feedback
+controllers that follow the resulting trajectories. You will learn
+how polynomial and spline methods generate smooth, feasible
+trajectories, how Model Predictive Control (MPC) optimizes a
+receding-horizon plan in real time, and how Pure Pursuit, Stanley,
+and PID controllers translate trajectory references into steering
+and throttle commands. The lecture concludes with a CARLA exercise
+implementing lane-following and obstacle avoidance.
 
 
 Learning Objectives
@@ -21,21 +21,21 @@ Learning Objectives
 
 By the end of this lecture, you will be able to:
 
-- Explain why trajectory prediction is necessary and how prediction
-  horizon affects downstream planning quality.
-- Compare physics-based, maneuver-based, and interaction-aware
-  prediction approaches and identify their trade-offs.
-- Describe how Transformer architectures encode scene context for
-  motion prediction.
-- Explain multi-modal prediction and why capturing multiple possible
-  futures is essential for safe planning.
-- Implement a finite state machine (FSM) behavior planner with
-  lane-follow, lane-change, stop, and yield states.
-- Contrast rule-based and learned decision-making approaches.
-- Formulate behavior cloning as supervised learning and identify
-  its key failure mode (distribution shift).
-- Explain how DAgger addresses distribution shift and when it
-  converges to an optimal policy.
+- Distinguish between a path (geometry only) and a trajectory
+  (geometry plus time / velocity profile).
+- Generate smooth trajectories using quintic polynomial and cubic
+  spline methods.
+- Formulate an MPC problem with prediction horizon, cost function,
+  and constraints, and explain the receding-horizon principle.
+- Implement the Pure Pursuit controller and derive the relationship
+  between lookahead distance and lateral error.
+- Implement the Stanley controller combining cross-track error and
+  heading error for path following.
+- Design a PID controller for longitudinal speed control.
+- Select among Pure Pursuit, Stanley, MPC, and PID given task
+  requirements, speed regime, and computational constraints.
+- Implement lane-following and obstacle avoidance in CARLA using
+  a trajectory planner and feedback controller.
 
 
 .. toctree::
@@ -51,14 +51,14 @@ By the end of this lecture, you will be able to:
 Next Steps
 ----------
 
-- In the next lecture, we will cover end-to-end driving and
-  foundation models:
+- In the next lecture, we will cover prediction and decision-making:
 
-  - End-to-end sensor-to-control neural networks
-  - Vision transformers and multi-modal representations
-  - Large language models as driving planners
-  - Foundation models and generalist AV agents
+  - Trajectory prediction for surrounding agents (physics-based,
+    maneuver-based, interaction-aware)
+  - Transformer-based multi-modal prediction
+  - Behavior planning with state machines and learned policies
+  - Imitation learning and DAgger for behavioral cloning
 
-- Complete the CARLA behavioral planner exercise from this lecture.
-- Read the MotionTransformer paper (Shi et al., NeurIPS 2023) for
-  deeper coverage of Transformer-based prediction.
+- Complete the CARLA trajectory following exercise from this lecture.
+- Review the MPC tutorial in *Model Predictive Control: Theory and
+  Design* (Rawlings & Mayne) Chapter 1.

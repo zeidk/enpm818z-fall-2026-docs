@@ -7,659 +7,694 @@ Lecture
    \setcounter{figure}{0}
 
 
-Path vs. Trajectory
+Motion Planning Hierarchy
 ====================================================
 
-A **path** is a purely geometric object: a curve in configuration
-space parameterized by arc length or an arbitrary monotone
-parameter. It specifies *where* the vehicle goes but says nothing
-about *when* it gets there.
+Autonomous vehicle planning is organized into three tiers, each
+operating at a different temporal and spatial resolution.
 
-A **trajectory** adds the time dimension by attaching a velocity
-(or time) profile to the path, specifying the vehicle's state
-at every point in time.
-
-.. list-table:: Path vs. Trajectory
+.. list-table:: Planning Hierarchy
    :header-rows: 1
-   :widths: 20 40 40
+   :widths: 15 20 20 25 20
 
-   * - Property
-     - Path
-     - Trajectory
-   * - Parameterization
-     - Arc length :math:`s`
-     - Time :math:`t`
-   * - Specifies position
-     - Yes
-     - Yes
-   * - Specifies velocity
-     - No
-     - Yes
-   * - Specifies acceleration
-     - No
-     - Yes (implicitly)
-   * - Feasibility check
-     - Kinematic (curvature)
-     - Kinematic + dynamic (accel limits)
-   * - Controller input
-     - Steering only
-     - Steering + throttle/brake
+   * - Tier
+     - Name
+     - Horizon
+     - Output
+     - Replanning Rate
+   * - 1
+     - Route Planning
+     - City-scale (km)
+     - Sequence of road segments
+     - Minutes / on request
+   * - 2
+     - Behavior Planning
+     - Intersection-scale (100 m)
+     - Maneuver selection (follow, change lane, yield)
+     - 1–10 Hz
+   * - 3
+     - Motion Planning
+     - Local (10–50 m)
+     - Collision-free path or trajectory
+     - 10–50 Hz
 
-.. dropdown:: Trajectory Requirements
+.. dropdown:: Tier Interactions
 
-   A trajectory :math:`\tau(t) = (x(t), y(t), \theta(t), v(t))`
-   must satisfy:
+   Each tier produces constraints that narrow the search space of the
+   tier below it. The route planner selects which roads to traverse;
+   the behavior planner decides how to interact with other agents at
+   each road segment; the motion planner finds a geometrically
+   feasible, collision-free path within the envelope defined by the
+   behavior decision.
 
-   - **Continuity:** Position :math:`C^0`, heading :math:`C^1`,
-     curvature :math:`C^1` (for passenger comfort).
-   - **Kinematic feasibility:** Curvature bounded by
-     :math:`|\kappa(t)| \leq \kappa_{\max}` everywhere.
-   - **Dynamic feasibility:** Longitudinal acceleration bounded by
-     :math:`|a(t)| \leq a_{\max}` and lateral acceleration by
-     :math:`|a_\perp(t)| \leq a_{\perp,\max}`.
-   - **Comfort:** Jerk (rate of change of acceleration) bounded
-     by :math:`|\dot{a}(t)| \leq j_{\max}`.
-   - **Safety:** No collision with obstacles for all
-     :math:`t \in [0, T]`.
+   This hierarchical decomposition keeps each planner computationally
+   tractable. A flat planner operating at city scale with
+   millimeter-level resolution is computationally infeasible.
 
-   .. admonition:: Comfort Metrics
+   .. admonition:: Key Insight
       :class: tip
 
-      Autonomous vehicle comfort standards typically require
-      lateral acceleration :math:`\leq 2\text{ m/s}^2` and
-      longitudinal jerk :math:`\leq 2\text{ m/s}^3` for a
-      smooth passenger experience.
+      The output of tier *n* is the **input constraint** of tier
+      *n+1*. Motion planners do not choose which lane to be in;
+      behavior planners do not choose which street to take.
 
 
-Polynomial Trajectory Generation
+Vehicle Kinematic Models
 ====================================================
 
-Polynomial trajectories represent each state component as a
-polynomial in time, with coefficients chosen to satisfy boundary
-conditions.
+A kinematic model captures geometric relationships between vehicle
+configuration and velocity without modeling forces.
 
 
-Quintic Polynomials
--------------------
-
-.. dropdown:: Formulation
-
-   A **quintic (5th-degree) polynomial** for a single coordinate
-   :math:`q(t)`:
-
-   .. math::
-
-      q(t) = a_0 + a_1 t + a_2 t^2 + a_3 t^3 + a_4 t^4 + a_5 t^5
-
-   has 6 free coefficients. Given boundary conditions at
-   :math:`t=0` and :math:`t=T`:
-
-   .. math::
-
-      q(0) &= q_0, \quad \dot{q}(0) = \dot{q}_0, \quad
-      \ddot{q}(0) = \ddot{q}_0 \\
-      q(T) &= q_f, \quad \dot{q}(T) = \dot{q}_f, \quad
-      \ddot{q}(T) = \ddot{q}_f
-
-   these six conditions uniquely determine the six coefficients
-   by solving a linear system :math:`A\mathbf{a} = \mathbf{b}`:
-
-   .. math::
-
-      \begin{bmatrix}
-      1 & 0 & 0 & 0 & 0 & 0 \\
-      0 & 1 & 0 & 0 & 0 & 0 \\
-      0 & 0 & 2 & 0 & 0 & 0 \\
-      1 & T & T^2 & T^3 & T^4 & T^5 \\
-      0 & 1 & 2T & 3T^2 & 4T^3 & 5T^4 \\
-      0 & 0 & 2 & 6T & 12T^2 & 20T^3
-      \end{bmatrix}
-      \begin{bmatrix} a_0 \\ a_1 \\ a_2 \\ a_3 \\ a_4 \\ a_5 \end{bmatrix}
-      =
-      \begin{bmatrix} q_0 \\ \dot{q}_0 \\ \ddot{q}_0 \\
-      q_f \\ \dot{q}_f \\ \ddot{q}_f \end{bmatrix}
-
-   Quintic polynomials are the minimum degree that can match
-   position, velocity, **and** acceleration at both endpoints,
-   guaranteeing :math:`C^2` continuity between trajectory segments.
-
-.. dropdown:: Frenet-Frame Polynomial Planning
-
-   In highway driving, trajectories are planned in the **Frenet
-   frame** :math:`(s, d)` where :math:`s` is longitudinal distance
-   along the road centerline and :math:`d` is lateral offset.
-
-   Separate quintic polynomials are fit for :math:`s(t)` and
-   :math:`d(t)`, then the Frenet trajectory is converted back to
-   Cartesian coordinates using the road geometry.
-
-   **Candidate generation:** multiple trajectory candidates are
-   generated by varying the terminal conditions
-   :math:`(d_f, \dot{d}_f, T)` over a discrete grid. Each
-   candidate is evaluated by a cost function:
-
-   .. math::
-
-      J = w_s J_{\text{safety}} + w_c J_{\text{comfort}}
-        + w_e J_{\text{efficiency}}
-
-   The lowest-cost collision-free candidate is selected.
-
-
-Spline-Based Trajectories
-====================================================
-
-Splines are piecewise polynomial curves that achieve smooth
-interpolation through a sequence of waypoints.
-
-
-Cubic Splines
+Bicycle Model
 -------------
 
-.. dropdown:: Natural Cubic Spline
+The **bicycle model** approximates a four-wheeled vehicle by merging
+the two front wheels into one steerable wheel and the two rear
+wheels into one driven wheel. This yields a tractable model for
+planning at low to moderate speeds.
 
-   A **cubic spline** through waypoints
-   :math:`(t_0, q_0), \ldots, (t_n, q_n)` consists of :math:`n`
-   cubic polynomials :math:`S_i(t)` on each interval
-   :math:`[t_i, t_{i+1}]`, subject to:
+.. dropdown:: Bicycle Model Equations
 
-   - :math:`C^0`: :math:`S_i(t_{i+1}) = S_{i+1}(t_{i+1})`
-   - :math:`C^1`: :math:`S_i'(t_{i+1}) = S_{i+1}'(t_{i+1})`
-   - :math:`C^2`: :math:`S_i''(t_{i+1}) = S_{i+1}''(t_{i+1})`
+   Let :math:`(x, y)` be the rear-axle position, :math:`\theta` the
+   heading, :math:`v` the speed, :math:`\delta` the front-wheel
+   steering angle, and :math:`L` the wheelbase.
 
-   The resulting linear system is tridiagonal and solved in
-   :math:`O(n)` time. The **natural spline** additionally sets
-   :math:`S''(t_0) = S''(t_n) = 0`.
-
-   Cubic splines minimize the bending energy:
+   The kinematic equations are:
 
    .. math::
 
-      \int_{t_0}^{t_n} \left[S''(t)\right]^2 dt
+      \dot{x} &= v \cos\theta \\
+      \dot{y} &= v \sin\theta \\
+      \dot{\theta} &= \frac{v}{L} \tan\delta
 
-   making them the smoothest interpolant for a given set of
-   waypoints.
-
-
-B-Splines
----------
-
-.. dropdown:: B-Spline Properties
-
-   **B-splines** are piecewise polynomials defined by a knot
-   vector and control points. Unlike interpolating splines,
-   B-splines are **approximating**: the curve passes near (but
-   not necessarily through) the control points.
-
-   Key properties for trajectory planning:
-
-   - **Local support:** Moving one control point affects only
-     :math:`k+1` spans (where :math:`k` is the spline degree),
-     enabling efficient local editing.
-   - **Convex hull property:** The curve lies within the convex
-     hull of its control points -- useful for conservative
-     collision checking.
-   - **Continuity:** A degree-:math:`k` B-spline is
-     :math:`C^{k-1}` everywhere (and :math:`C^{k-p}` at a
-     knot of multiplicity :math:`p`).
-
-   B-splines are widely used in AV systems for smooth lane
-   centerline representation and trajectory reference generation.
-
-
-Optimization-Based Trajectory Planning
-====================================================
-
-Optimization-based planners formulate trajectory generation as a
-constrained optimization problem.
-
-.. dropdown:: Cost Function Design
-
-   A general trajectory optimization cost:
+   The **turning radius** for steering angle :math:`\delta` is:
 
    .. math::
 
-      \min_{\tau} \; \int_0^T \left[
-        w_1 \|\dot{v}(t)\|^2
-        + w_2 \|\kappa(t)\|^2
-        + w_3 d_{\text{obs}}(\tau(t))^{-1}
-        + w_4 \|v(t) - v_{\text{ref}}(t)\|^2
-      \right] dt
+      R = \frac{L}{\tan\delta}
 
-   where the four terms penalize:
-
-   1. Longitudinal jerk (comfort)
-   2. Curvature (path smoothness)
-   3. Proximity to obstacles (safety)
-   4. Speed deviation from reference (efficiency)
-
-.. dropdown:: Constraints
-
-   Hard constraints ensure physical feasibility:
-
-   - Kinematic: :math:`|\kappa(t)| \leq \kappa_{\max}`
-   - Speed: :math:`v_{\min} \leq v(t) \leq v_{\max}`
-   - Acceleration: :math:`|a(t)| \leq a_{\max}`
-   - Collision: :math:`d_{\text{obs}}(\tau(t)) \geq d_{\min}`
-
-   The resulting problem is a **nonlinear program (NLP)** for
-   general cost functions, or a **quadratic program (QP)** when
-   the cost is quadratic and constraints are linearized --
-   the latter enables real-time solving.
-
-
-Model Predictive Control (MPC)
-====================================================
-
-MPC is the dominant trajectory-following framework in production
-autonomous vehicles, combining planning and control in a
-receding-horizon optimization loop.
-
-.. dropdown:: MPC Formulation
-
-   At time :math:`t_k`, MPC solves:
+   Maximum curvature is bounded by the physical steering limit
+   :math:`\delta_{\max}`:
 
    .. math::
 
-      \min_{u_0, \ldots, u_{N-1}} \quad
-      \sum_{i=0}^{N-1} \ell(x_i, u_i) + V_f(x_N)
+      \kappa_{\max} = \frac{\tan\delta_{\max}}{L}
 
-   subject to:
-
-   .. math::
-
-      x_{i+1} &= f(x_i, u_i), \quad i = 0, \ldots, N-1 \\
-      x_0 &= x_{\text{current}} \\
-      x_i &\in \mathcal{X}, \quad u_i \in \mathcal{U}
-
-   where:
-
-   - :math:`x_i = (x, y, \theta, v)_i` is the predicted state
-   - :math:`u_i = (\delta, a)_i` is the control input
-     (steering, acceleration)
-   - :math:`N` is the prediction horizon
-   - :math:`\ell` is the stage cost (tracking error + control effort)
-   - :math:`V_f` is the terminal cost
-   - :math:`f` is the discrete-time bicycle model
-
-.. dropdown:: Receding Horizon Principle
-
-   MPC applies only the **first control action** :math:`u_0^*`
-   from the optimal sequence, then resolves the optimization at
-   the next time step with updated state information.
-
-   .. admonition:: Why Receding Horizon?
-      :class: note
-
-      Applying the full pre-computed sequence open-loop ignores
-      disturbances and model errors. By re-solving at every step,
-      MPC becomes a **feedback** controller: errors are corrected
-      before they accumulate. The optimization produces a plan,
-      but execution is always closed-loop.
-
-.. dropdown:: Prediction Horizon and Tuning
-
-   .. list-table:: MPC Tuning Parameters
-      :header-rows: 1
-      :widths: 25 20 20 35
-
-      * - Parameter
-        - Typical value
-        - Effect if increased
-        - Trade-off
-      * - Prediction horizon :math:`N`
-        - 10--50 steps
-        - Better foresight
-        - Larger QP, slower solve
-      * - Control horizon :math:`M \leq N`
-        - :math:`N/2`
-        - More control freedom
-        - Larger QP
-      * - :math:`Q` (state cost weight)
-        - Diagonal matrix
-        - Tighter tracking
-        - More aggressive control
-      * - :math:`R` (control cost weight)
-        - Diagonal matrix
-        - Smoother inputs
-        - Larger tracking error
-
-.. dropdown:: Real-Time Solving
-
-   For real-time AV control at 10--50 Hz:
-
-   - **Linear MPC:** Linearize the bicycle model around the
-     reference trajectory. The resulting QP is solved in
-     milliseconds with active-set or interior-point solvers
-     (e.g., OSQP, qpOASES).
-   - **Nonlinear MPC (NMPC):** Use the full nonlinear model.
-     Requires sequential quadratic programming (SQP) or
-     interior-point methods. Feasible at ~10 Hz with warm starting.
-   - **Code generation:** Tools like ACADO, acados, or CasADi
-     generate C code for embedded MPC solvers running on
-     automotive ECUs.
-
-
-Pure Pursuit Controller
-====================================================
-
-Pure Pursuit is a geometric path-following controller that steers
-the vehicle toward a **lookahead point** on the reference path.
-
-.. dropdown:: Algorithm
-
-   1. Find the reference path point at lookahead distance :math:`L_d`
-      ahead of the rear axle.
-   2. Compute the curvature :math:`\kappa` required to arc from the
-      current rear-axle position to the lookahead point.
-   3. Command the steering angle that produces this curvature.
-
-   The required curvature is:
-
-   .. math::
-
-      \kappa = \frac{2 \sin\alpha}{L_d}
-
-   where :math:`\alpha` is the angle between the vehicle heading
-   and the line from the rear axle to the lookahead point.
-
-   Converting to steering angle via the bicycle model:
-
-   .. math::
-
-      \delta = \arctan\!\left(\frac{2 L \sin\alpha}{L_d}\right)
-
-.. dropdown:: Lookahead Distance
-
-   The lookahead distance :math:`L_d` is the key tuning parameter:
-
-   - **Too small:** The controller chases the path point aggressively,
-     causing oscillation.
-   - **Too large:** The controller cuts corners and tracks slowly.
-
-   A common adaptive rule:
-
-   .. math::
-
-      L_d = k_v \cdot v
-
-   where :math:`k_v \approx 0.1`--:math:`0.3` s. This scales
-   the lookahead with speed, giving consistent behavior across
-   speed ranges.
-
-   .. admonition:: Steady-State Error
+   .. admonition:: Nonholonomic Constraint
       :class: warning
 
-      Pure Pursuit has a **lateral steady-state error** at high
-      speed or high curvature because the lookahead geometry
-      approximates a circle, not the true path. This error is
-      proportional to :math:`L_d^2 / R` where :math:`R` is the
-      path radius.
+      The vehicle cannot move sideways. Formally:
+
+      .. math::
+
+         \dot{x}\sin\theta - \dot{y}\cos\theta = 0
+
+      This constraint eliminates lateral translations and
+      fundamentally distinguishes vehicle planning from point-robot
+      planning.
+
+.. dropdown:: Configuration Space
+
+   The vehicle's **configuration** is the tuple
+   :math:`q = (x, y, \theta)`. Planning must find a path through
+   3-D configuration space :math:`\mathcal{C}` that satisfies the
+   nonholonomic constraints and avoids obstacles.
+
+   For parking and low-speed maneuvers, the full nonholonomic
+   constraint must be respected. For high-speed highway driving,
+   approximate unicycle models are often sufficient because
+   lateral slipping is small.
 
 
-Stanley Controller
+Graph-Based Planning
 ====================================================
 
-The Stanley controller, originally developed for the DARPA
-Grand Challenge (Stanford Racing Team), combines heading error
-and cross-track error.
+Graph-based planners discretize the environment into a graph and
+apply shortest-path search.
 
-.. dropdown:: Formulation
 
-   The steering command is:
+Dijkstra's Algorithm
+--------------------
+
+.. dropdown:: Algorithm and Complexity
+
+   Dijkstra's algorithm finds the shortest path from a source node
+   to all reachable nodes in a weighted graph with non-negative edge
+   weights.
+
+   **Core steps:**
+
+   1. Initialize distance :math:`d[s] = 0`, :math:`d[v] = \infty`
+      for all :math:`v \neq s`.
+   2. Push :math:`(0, s)` onto a min-priority queue.
+   3. Pop the minimum-cost node :math:`u`. If already visited, skip.
+   4. For each neighbor :math:`v` of :math:`u`: if
+      :math:`d[u] + w(u,v) < d[v]`, update and push
+      :math:`(d[u] + w(u,v), v)`.
+   5. Repeat until the queue is empty or the goal is popped.
+
+   **Time complexity:** :math:`O((V + E)\log V)` with a binary heap.
+
+   **Completeness:** Yes (finds a path if one exists).
+
+   **Optimality:** Yes (with non-negative edge weights).
+
+   **Limitation:** Explores in all directions uniformly; slow on
+   large road networks.
+
+
+A* Search
+---------
+
+.. dropdown:: Heuristic and Optimality
+
+   A* augments Dijkstra with a **heuristic** :math:`h(v)` that
+   estimates the cost-to-go from node :math:`v` to the goal.
+   Nodes are prioritized by:
 
    .. math::
 
-      \delta(t) = \psi_e(t) + \arctan\!\left(
-      \frac{k \cdot e(t)}{v(t)}\right)
+      f(v) = g(v) + h(v)
 
-   where:
+   where :math:`g(v)` is the true cost-to-come and :math:`h(v)` is
+   the estimated cost-to-go.
 
-   - :math:`\psi_e` is the **heading error** (angle between
-     vehicle heading and path tangent at the nearest point)
-   - :math:`e` is the **cross-track error** (signed lateral
-     distance from the front axle to the nearest path point)
-   - :math:`k` is a gain constant
-   - :math:`v` is the vehicle speed
+   **Admissibility:** A heuristic is admissible if it never
+   overestimates the true cost:
 
-.. dropdown:: Interpretation
+   .. math::
 
-   The two terms serve distinct roles:
+      h(v) \leq h^*(v) \quad \forall v
 
-   - :math:`\psi_e`: aligns the vehicle with the path tangent --
-     zero heading error implies zero steady-state cross-track error
-     asymptotically.
-   - :math:`\arctan(k e / v)`: corrects the cross-track error
-     directly. The :math:`1/v` factor makes the correction
-     proportional to the time needed to travel a fixed distance,
-     providing speed-consistent response.
+   A common admissible heuristic for road networks is the Euclidean
+   distance to the goal.
 
-   .. admonition:: Stanley vs Pure Pursuit
+   **Optimality:** A* with an admissible heuristic always finds the
+   optimal path.
+
+   **Consistency (monotonicity):** :math:`h(u) \leq w(u,v) + h(v)`
+   for every edge :math:`(u, v)`. Consistent heuristics guarantee
+   that each node is expanded at most once.
+
+.. dropdown:: Weighted A*
+
+   **Weighted A*** inflates the heuristic by a factor
+   :math:`\varepsilon > 1`:
+
+   .. math::
+
+      f(v) = g(v) + \varepsilon \cdot h(v)
+
+   This biases search toward the goal, dramatically reducing the
+   number of expanded nodes. The solution cost is bounded:
+
+   .. math::
+
+      \text{cost}(path) \leq \varepsilon \cdot \text{cost}^*
+
+   Weighted A* is the standard choice for real-time motion planning
+   where a suboptimal but fast solution is preferable to an optimal
+   but slow one.
+
+   .. list-table:: A* Variant Comparison
+      :header-rows: 1
+      :widths: 30 20 20 30
+
+      * - Variant
+        - Optimal
+        - Speed
+        - Use case
+      * - Dijkstra
+        - Yes
+        - Slow
+        - Offline, small graphs
+      * - A* (:math:`\varepsilon=1`)
+        - Yes
+        - Medium
+        - Moderate graphs
+      * - Weighted A* (:math:`\varepsilon>1`)
+        - :math:`\varepsilon`-suboptimal
+        - Fast
+        - Real-time planning
+
+
+Sampling-Based Planning
+====================================================
+
+Sampling-based planners avoid explicit discretization by randomly
+sampling the configuration space.
+
+
+Rapidly-Exploring Random Trees (RRT)
+-------------------------------------
+
+.. dropdown:: RRT Algorithm
+
+   RRT incrementally builds a tree rooted at the start configuration
+   by randomly extending toward sampled configurations.
+
+   **Algorithm:**
+
+   .. code-block:: text
+
+      T.init(q_start)
+      for i = 1 to N:
+          q_rand = SAMPLE()           # random config, or goal with prob p_goal
+          q_near = NEAREST(T, q_rand) # nearest node in tree
+          q_new  = STEER(q_near, q_rand, step_size)
+          if COLLISION_FREE(q_near, q_new):
+              T.add_vertex(q_new)
+              T.add_edge(q_near, q_new)
+              if q_new == q_goal:
+                  return PATH(T, q_start, q_goal)
+      return FAILURE
+
+   **Properties:**
+
+   - **Probabilistically complete:** As :math:`N \to \infty`, the
+     probability of finding a path (if one exists) approaches 1.
+   - **Not optimal:** RRT returns the first path found, which is
+     typically far from optimal.
+   - **Exploration bias:** The Voronoi bias of RRT causes it to
+     preferentially expand toward unexplored regions.
+
+
+RRT*
+----
+
+.. dropdown:: Asymptotic Optimality
+
+   RRT* extends RRT with two additional steps that guarantee
+   **asymptotic optimality**: the path cost converges to optimal as
+   the number of samples :math:`N \to \infty`.
+
+   **Added steps after adding** :math:`q_{new}`:
+
+   1. **Choose parent:** Among all nodes within radius
+      :math:`r_n = \gamma(\log N / N)^{1/d}`, select the parent
+      that minimizes the cost-to-come to :math:`q_{new}`.
+
+   2. **Rewire:** For each neighbor :math:`q_{near}` within
+      :math:`r_n`, check if routing through :math:`q_{new}` reduces
+      its cost. If so, reassign its parent.
+
+   The radius :math:`r_n` shrinks as :math:`N` grows, so the
+   computational overhead per iteration remains bounded.
+
+   .. admonition:: RRT vs RRT* Summary
+      :class: note
+
+      RRT finds a feasible path quickly but never improves it.
+      RRT* continually refines the path and converges to optimal
+      given enough computation time -- making it suitable for offline
+      planning or anytime planners.
+
+
+Probabilistic Road Map (PRM)
+-----------------------------
+
+.. dropdown:: Two-Phase Construction
+
+   PRM operates in two phases:
+
+   **Construction phase:**
+
+   1. Sample :math:`N` random configurations in :math:`\mathcal{C}_{free}`.
+   2. For each sample, attempt to connect it to its :math:`k` nearest
+      neighbors using a local planner (usually straight-line).
+   3. Accept edges where the local plan is collision-free.
+
+   **Query phase:**
+
+   1. Connect the start and goal to the roadmap.
+   2. Run A* or Dijkstra on the roadmap graph.
+
+   PRM is a **multi-query** planner: the roadmap is built once and
+   reused for many start/goal pairs. This is useful for
+   semi-static environments like parking structures.
+
+
+Lattice-Based Planning
+====================================================
+
+Lattice planners discretize the configuration space using a
+structured, pre-computed graph called a **state lattice**.
+
+
+.. dropdown:: State Lattice Construction
+
+   A state lattice is a graph :math:`\mathcal{L} = (V, E)` where:
+
+   - **Vertices** :math:`V` correspond to configurations
+     :math:`(x, y, \theta, \kappa)` on a regular grid aligned
+     with the road.
+   - **Edges** :math:`E` are pre-computed **motion primitives** --
+     short kinematically feasible maneuvers (e.g., 2-second constant-
+     curvature arcs) that connect adjacent lattice states.
+
+   Motion primitives are computed offline and stored in a lookup
+   table. At runtime, planning is pure graph search on
+   :math:`\mathcal{L}`.
+
+.. dropdown:: Automotive Lattice Planning
+
+   In structured road environments:
+
+   - The lattice is aligned with the road centerline (Frenet frame).
+   - Lateral positions correspond to lane positions.
+   - Longitudinal positions correspond to distance along the road.
+   - Motion primitives include lane-following arcs, lane-change
+     maneuvers, and deceleration profiles.
+
+   **Advantages over RRT for roads:**
+
+   - Systematic coverage of the reachable space.
+   - Consistent, predictable maneuver shapes.
+   - Easy to encode traffic rules as edge costs.
+   - Real-time performance (graph is pre-built).
+
+   .. admonition:: Industrial Use
       :class: tip
 
-      Stanley converges to zero cross-track error with zero
-      steady-state error (under constant curvature). Pure Pursuit
-      has a residual lateral error at high curvature. Stanley
-      performs better at high speed on curved roads; Pure Pursuit
-      is simpler to implement and more stable at low speed.
+      Lattice-based planners are used in production AV systems at
+      Waymo and Uber ATG. The Frenet-frame lattice is the dominant
+      approach for highway and structured urban driving.
 
 
-PID Longitudinal Control
+Collision Detection
 ====================================================
 
-Longitudinal speed control is typically handled by a PID controller
-tracking the reference speed profile :math:`v_{\text{ref}}(t)`.
+Every candidate path must be checked for collisions before execution.
 
-.. dropdown:: PID Formulation
+.. dropdown:: Geometric Methods
 
-   The speed error is:
-
-   .. math::
-
-      e_v(t) = v_{\text{ref}}(t) - v(t)
-
-   The PID control output (throttle/brake command :math:`u`):
-
-   .. math::
-
-      u(t) = K_p e_v(t) + K_i \int_0^t e_v(\tau)\,d\tau
-           + K_d \dot{e}_v(t)
-
-   In discrete time (sample period :math:`\Delta t`):
-
-   .. math::
-
-      u_k = K_p e_k + K_i \sum_{j=0}^{k} e_j \Delta t
-          + K_d \frac{e_k - e_{k-1}}{\Delta t}
-
-   **Gain tuning heuristics (Ziegler-Nichols):**
-
-   .. list-table::
+   .. list-table:: Collision Detection Representations
       :header-rows: 1
-      :widths: 20 20 20 20
+      :widths: 25 30 25 20
 
-      * - Controller
-        - :math:`K_p`
-        - :math:`K_i`
-        - :math:`K_d`
-      * - P only
-        - :math:`0.5 K_u`
-        - 0
-        - 0
-      * - PD
-        - :math:`0.8 K_u`
-        - 0
-        - :math:`K_u T_u / 8`
-      * - PID
-        - :math:`0.6 K_u`
-        - :math:`2K_p / T_u`
-        - :math:`K_p T_u / 8`
+      * - Method
+        - Description
+        - Accuracy
+        - Cost
+      * - Bounding circle
+        - Single circle per object
+        - Low
+        - O(1)
+      * - Axis-aligned bounding box (AABB)
+        - Axis-aligned rectangle
+        - Medium
+        - O(1)
+      * - Oriented bounding box (OBB)
+        - Rotated rectangle
+        - High
+        - O(1)
+      * - Convex hull
+        - Tight convex polygon
+        - Very high
+        - O(n)
+      * - Swept volume
+        - Union along path
+        - Exact
+        - O(path length)
 
-   where :math:`K_u` is the ultimate gain and :math:`T_u` the
-   ultimate period at the stability boundary.
+   For real-time AV planning, **OBB** representations are the
+   standard: they are tight enough to avoid false collisions yet
+   cheap enough to evaluate at 50 Hz.
 
-.. dropdown:: Anti-Windup
+.. dropdown:: Safety Margins
 
-   Integrator **windup** occurs when the vehicle is at max throttle
-   or max brake (actuator saturation) but the integrator continues
-   to accumulate error, leading to large overshoot when the
-   constraint is released.
+   Collision checks use **inflated** obstacle representations.
+   A margin :math:`d_{\text{safe}}` is added to all obstacle
+   boundaries before checking:
 
-   Anti-windup strategies:
+   .. math::
 
-   - **Clamping:** Freeze the integrator when the output is
-     saturated.
-   - **Back-calculation:** Subtract a correction proportional to
-     the difference between the saturated and unsaturated output.
+      \mathcal{O}_{\text{inflated}} = \mathcal{O} \oplus
+      \mathcal{B}(d_{\text{safe}})
 
-   .. code-block:: python
+   where :math:`\oplus` is the Minkowski sum and
+   :math:`\mathcal{B}(r)` is a disk of radius :math:`r`.
 
-      # Discrete PID with clamping anti-windup
-      def pid_step(e, e_prev, integral, dt, Kp, Ki, Kd,
-                   u_min=-1.0, u_max=1.0):
-          u_unsat = Kp * e + Ki * integral + Kd * (e - e_prev) / dt
-          u = max(u_min, min(u_max, u_unsat))
-          if u == u_unsat:  # not saturated: update integral
-              integral += e * dt
-          return u, integral
+   Typical safety margins:
+
+   - Stationary obstacle: 0.3–0.5 m
+   - Moving vehicle (same direction): 0.5–1.0 m
+   - Pedestrian: 1.0–1.5 m
+
+   Safety margins encode **uncertainty** (localization error,
+   prediction error) and **comfort** (passengers should not feel
+   near-miss events).
 
 
-Controller Comparison
+Diffusion-Based Planning
 ====================================================
 
-.. list-table:: Lateral Controller Comparison
+A new class of motion planners formulates path generation as an
+iterative **denoising** process learned from expert driving data.
+
+.. dropdown:: Diffusion Models for Planning
+
+   **Forward process:** Given a ground-truth trajectory
+   :math:`\tau_0`, add Gaussian noise over :math:`T` steps:
+
+   .. math::
+
+      q(\tau_t | \tau_{t-1}) = \mathcal{N}(\tau_t;\,
+      \sqrt{1-\beta_t}\,\tau_{t-1},\, \beta_t I)
+
+   **Reverse process (planning):** Starting from pure noise
+   :math:`\tau_T \sim \mathcal{N}(0, I)`, a learned denoising
+   network :math:`\epsilon_\theta` iteratively removes noise:
+
+   .. math::
+
+      p_\theta(\tau_{t-1}|\tau_t) = \mathcal{N}(\tau_{t-1};\,
+      \mu_\theta(\tau_t, t),\, \Sigma_\theta(\tau_t, t))
+
+   The network :math:`\epsilon_\theta` is conditioned on the
+   **scene context** (HD map, agent states, ego history) so that
+   the denoised trajectory is consistent with the current
+   traffic situation.
+
+.. dropdown:: Diffusion Planner (ICLR 2025)
+
+   **Diffusion Planner** (Zheng et al., ICLR 2025) is a
+   diffusion-based closed-loop planner that:
+
+   - Encodes the HD map and surrounding agent trajectories using
+     a Transformer encoder.
+   - Runs a DDPM-style denoising process to generate the ego
+     trajectory.
+   - Achieves state-of-the-art closed-loop scores on the nuPlan
+     benchmark, outperforming both rule-based and regression-based
+     learned planners.
+
+   Key design choices:
+
+   - **Joint prediction:** ego trajectory and agent trajectories
+     are denoised together, enabling interaction-aware planning.
+   - **Guidance:** traffic rules and comfort metrics can be
+     incorporated as classifier guidance during inference.
+
+.. dropdown:: DiffusionDrive (CVPR 2025)
+
+   **DiffusionDrive** (Liao et al., CVPR 2025) demonstrates
+   real-time diffusion planning by:
+
+   - Using a **truncated diffusion schedule** (starting from
+     step :math:`T' < T`) to cut denoising steps from 100 to 10.
+   - Employing an **anchored Gaussian diffusion** that initializes
+     from clustered prior trajectories rather than pure noise.
+   - Achieving 45 FPS inference on a single GPU while maintaining
+     competitive nuPlan performance.
+
+   .. list-table:: Diffusion Planner Comparison
+      :header-rows: 1
+      :widths: 30 20 20 30
+
+      * - Method
+        - Venue
+        - Inference Steps
+        - Key Feature
+      * - Diffusion Planner
+        - ICLR 2025
+        - 50
+        - Joint ego + agent denoising
+      * - DiffusionDrive
+        - CVPR 2025
+        - 10
+        - Truncated + anchored diffusion
+
+
+Algorithm Comparison and Selection
+====================================================
+
+.. list-table:: Motion Planning Algorithm Summary
    :header-rows: 1
-   :widths: 20 15 15 15 15 20
+   :widths: 18 12 12 12 22 24
 
-   * - Controller
-     - Steady-state error
-     - Computation
-     - High-speed perf.
-     - Tuning effort
-     - Use case
-   * - Pure Pursuit
-     - Yes (curvature-dependent)
-     - O(1)
-     - Moderate
-     - Low (1 param)
-     - Low-speed, simple paths
-   * - Stanley
+   * - Algorithm
+     - Complete
+     - Optimal
+     - Real-time
+     - Best for
+     - Limitation
+   * - Dijkstra
+     - Yes
+     - Yes
      - No
-     - O(1)
-     - Good
-     - Low (1 gain)
-     - Highway, structured roads
-   * - Linear MPC
+     - Small road graphs
+     - Exhaustive, slow
+   * - A*
+     - Yes
+     - Yes
+     - Marginal
+     - Mid-size graphs with good heuristic
+     - Needs admissible heuristic
+   * - Weighted A*
+     - Yes
+     - :math:`\varepsilon`-suboptimal
+     - Yes
+     - Real-time road graphs
+     - Solution quality varies with :math:`\varepsilon`
+   * - RRT
+     - Prob.
      - No
-     - O(N³) per solve
-     - Excellent
-     - High (Q, R, N)
-     - High-performance, comfort-critical
-   * - Nonlinear MPC
-     - No
-     - O(N³) per solve (NLP)
-     - Excellent
-     - High
-     - Precision parking, low-speed
+     - Yes
+     - Unstructured, high-D spaces
+     - Suboptimal paths
+   * - RRT*
+     - Prob.
+     - Asymp.
+     - No (slow conv.)
+     - Offline planning
+     - Slow convergence
+   * - PRM
+     - Prob.
+     - Asymp.
+     - Yes (query)
+     - Semi-static multi-query
+     - Construction offline
+   * - Lattice
+     - Yes (in lattice)
+     - Yes (in lattice)
+     - Yes
+     - Structured roads
+     - Requires pre-built primitives
+   * - Diffusion
+     - --
+     - --
+     - Yes (DiffusionDrive)
+     - Data-rich, complex interactions
+     - Requires large training set
 
+.. dropdown:: Selection Guidelines
 
-Emergency Maneuver Synthesis
-====================================================
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-.. dropdown:: Emergency Stopping
+      .. grid-item-card:: Structured Road (Highway / Urban)
+         :class-card: sd-border-primary
 
-   When an obstacle is detected within the braking distance,
-   the planner must generate an emergency stop trajectory:
+         **Recommended:** Lattice-based planner in Frenet frame
 
-   .. math::
+         - Pre-built primitives exploit road structure.
+         - Efficient graph search at 20–50 Hz.
+         - Easy to add traffic rule costs.
 
-      v(t) = v_0 - a_{\max} t, \quad
-      d_{\text{stop}} = \frac{v_0^2}{2 a_{\max}}
+      .. grid-item-card:: Unstructured (Parking / Off-Road)
+         :class-card: sd-border-primary
 
-   The stopping distance :math:`d_{\text{stop}}` must be less than
-   the clearance to the obstacle. Typical :math:`a_{\max} = 6\text{ m/s}^2`
-   for emergency braking.
+         **Recommended:** RRT* (offline) or Hybrid A*
 
-.. dropdown:: Emergency Lane Change
+         - No road structure to exploit.
+         - Nonholonomic constraints handled by steering primitives.
+         - Hybrid A* adds a kinematic-feasible heuristic.
 
-   An emergency lane change to avoid a stationary obstacle:
+      .. grid-item-card:: Large Road Network Routing
+         :class-card: sd-border-primary
 
-   1. Generate candidate lateral trajectories to adjacent lanes
-      using quintic polynomials.
-   2. Check each candidate for kinematic feasibility and collision
-      clearance.
-   3. Select the feasible candidate with minimum lateral jerk.
+         **Recommended:** Dijkstra or A* on road graph
 
-   The maneuver must complete before the obstacle is reached:
+         - Road graph is sparse and small relative to grid.
+         - Euclidean heuristic is admissible and tight.
 
-   .. math::
+      .. grid-item-card:: Learning-Based (Complex Interactions)
+         :class-card: sd-border-primary
 
-      T_{\text{maneuver}} \leq \frac{d_{\text{clearance}}}{v_{\text{ego}}}
+         **Recommended:** Diffusion Planner / DiffusionDrive
+
+         - Captures multi-modal human behavior.
+         - Handles unstructured interactions not covered by rules.
+         - Requires annotated training data.
 
 
 CARLA Implementation Exercise
 ====================================================
 
-.. admonition:: Exercise: Lane Following and Obstacle Avoidance
+.. admonition:: Exercise: A* Planner in CARLA
    :class: note
 
-   **Goal:** Implement a trajectory-following system in CARLA that
-   maintains a target speed while following a lane centerline
-   and braking for static obstacles.
+   **Goal:** Implement a graph-based planner that navigates a
+   simulated ego vehicle from a start waypoint to a goal waypoint
+   in the CARLA Town03 map.
 
    **Tasks:**
 
-   1. **Reference extraction:** Use ``carla.Map.get_waypoint()``
-      to extract the lane centerline ahead of the ego vehicle
-      as a sequence of waypoints.
+   1. Extract the CARLA waypoint graph using the
+      ``carla.Map.generate_waypoints()`` API and build an adjacency
+      list with Euclidean edge weights.
 
-   2. **Stanley lateral controller:** Implement the Stanley
-      controller using the ego vehicle's current pose and the
-      nearest waypoint as the cross-track reference.
+   2. Implement A* search with a Euclidean heuristic to find the
+      shortest path on the waypoint graph.
 
-   3. **PID longitudinal controller:** Implement a PID speed
-      controller targeting :math:`v_{\text{ref}} = 30` km/h,
-      with emergency braking when an obstacle is detected within
-      :math:`d_{\text{stop}}`.
+   3. Visualize the planned path using CARLA's debug drawing API
+      (``world.debug.draw_point()``).
 
-   4. **Obstacle detection:** Use the CARLA ``LidarSensor`` or
-      bounding-box API to detect static actors within the
-      planned corridor.
+   4. Drive the ego vehicle along the planned path using a
+      waypoint-following controller.
 
-   5. **Integration:** Run the full control loop at 20 Hz.
-      Log cross-track error, heading error, and speed error
-      over a 60-second run.
+   5. **Extension:** Replace the Euclidean heuristic with a
+      weighted A* variant (:math:`\varepsilon = 2`) and compare the
+      number of nodes expanded vs. plain A*.
 
    **Starter code:**
 
    .. code-block:: python
 
       import carla
-      import math
+      import heapq
 
-      def stanley_control(vehicle, waypoints, k=0.5):
-          """Stanley lateral controller."""
-          transform = vehicle.get_transform()
-          v = vehicle.get_velocity()
-          speed = math.sqrt(v.x**2 + v.y**2 + v.z**2)
+      def build_graph(world, sampling_resolution=2.0):
+          waypoints = world.get_map().generate_waypoints(sampling_resolution)
+          graph = {}
+          for wp in waypoints:
+              graph[wp.id] = []
+              for next_wp in wp.next(sampling_resolution):
+                  dist = wp.transform.location.distance(
+                      next_wp.transform.location)
+                  graph[wp.id].append((next_wp.id, dist, next_wp))
+          return graph
 
-          # Find nearest waypoint (front axle reference)
-          ego_loc = transform.location
-          nearest = min(waypoints,
-              key=lambda wp: ego_loc.distance(wp.transform.location))
+      def astar(graph, start_id, goal_loc, waypoint_map):
+          def h(wp_id):
+              loc = waypoint_map[wp_id].transform.location
+              return loc.distance(goal_loc)
 
-          # Cross-track error (signed lateral distance)
-          dx = nearest.transform.location.x - ego_loc.x
-          dy = nearest.transform.location.y - ego_loc.y
-          path_yaw = math.radians(nearest.transform.rotation.yaw)
-          e = math.sin(path_yaw) * dx - math.cos(path_yaw) * dy
-
-          # Heading error
-          ego_yaw = math.radians(transform.rotation.yaw)
-          psi_e = path_yaw - ego_yaw
-          # Normalize to [-pi, pi]
-          psi_e = math.atan2(math.sin(psi_e), math.cos(psi_e))
-
-          # Stanley steering
-          delta = psi_e + math.atan2(k * e, max(speed, 1e-3))
-          return max(-1.0, min(1.0, delta / math.radians(70)))
+          open_set = [(h(start_id), 0.0, start_id, [start_id])]
+          visited = set()
+          while open_set:
+              f, g, current, path = heapq.heappop(open_set)
+              if current in visited:
+                  continue
+              visited.add(current)
+              if h(current) < 2.0:   # within 2 m of goal
+                  return path
+              for neighbor_id, cost, _ in graph.get(current, []):
+                  if neighbor_id not in visited:
+                      new_g = g + cost
+                      heapq.heappush(open_set,
+                          (new_g + h(neighbor_id), new_g,
+                           neighbor_id, path + [neighbor_id]))
+          return None

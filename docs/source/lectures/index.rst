@@ -5,7 +5,7 @@ Lectures
 Overview
 --------
 
-The lectures in ENPM818Z follow a progressive structure, starting with the autonomous vehicle landscape and sensor fundamentals, then building through perception, fusion, localization, planning, and control, and culminating with end-to-end driving, world models, and system integration. Each lecture introduces new concepts through explanation, live demonstrations, and hands-on exercises in CARLA. Lecture materials are available on Canvas and GitHub.
+The lectures in ENPM818Z follow a progressive structure, starting with the autonomous vehicle landscape and sensor fundamentals, then building through perception, fusion, localization, navigation, planning, and control, and culminating with end-to-end driving, world models, and system integration. Each lecture introduces new concepts through explanation, live demonstrations, and hands-on exercises in CARLA. Lecture materials are available on Canvas and GitHub.
 
 .. tip::
 
@@ -31,7 +31,7 @@ Schedule
      - Camera, LiDAR, RADAR, IMU, GNSS; intrinsic/extrinsic calibration; sensor placement and complementarity
    * - L3
      - Perception I: Object Detection (YOLO to DETR)
-     - CNN fundamentals, YOLO architecture, transformer attention mechanism, DETR (encoder-decoder, object queries, bipartite matching), YOLO vs. DETR comparison
+     - CNN fundamentals, YOLO architecture, transformer attention mechanism, DETR (encoder-decoder, object queries, bipartite matching), YOLO vs. DETR comparison, industrial perception architectures, deployment
    * - L4
      - Perception II: BEV Perception & Occupancy Networks
      - Bird's-Eye View representation, BEVFormer, camera-to-BEV projection, 3D occupancy grids, modern AV perception paradigm
@@ -45,21 +45,24 @@ Schedule
      - Localization & SLAM
      - GNSS/RTK, dead reckoning, visual/LiDAR odometry, probabilistic localization, SLAM frontend (ICP, feature extraction), SLAM backend (pose graphs, loop closure)
    * - L8
+     - Navigation & Route Planning
+     - Road network graphs, OpenDRIVE/Lanelet2 maps, HD maps, global route planning (Dijkstra, A*), lane-level routing, dynamic rerouting, CARLA GlobalRoutePlanner
+   * - L9
      - Motion Planning
      - Planning hierarchy, vehicle kinematic models, A*, Dijkstra, RRT, PRM, lattice planners, collision detection, diffusion-based planning
-   * - L9
+   * - L10
      - Trajectory Planning & Control
      - Path vs. trajectory, polynomial and spline generation, optimization-based planning, MPC, Pure Pursuit, Stanley controller, real-time replanning
-   * - L10
+   * - L11
      - Prediction & Decision-Making
      - Trajectory prediction (transformer-based), behavior planning, state machines, imitation learning (behavior cloning), practical decision-making in traffic
-   * - L11
+   * - L12
      - End-to-End Driving & Foundation Models
      - UniAD, DriveTransformer, Vision-Language-Action (VLA) models, DriveVLM, modular vs. end-to-end debate
-   * - L12
+   * - L13
      - World Models & Simulation
      - Learned simulators, video prediction transformers, GAIA-3, NVIDIA Cosmos, Vista, generative scenario generation, data augmentation
-   * - L13
+   * - L14
      - System Integration, Safety & Industry Outlook
      - AV system architecture, middleware, ISO 26262, SOTIF, UNECE GTR on ADS, V2X, industry trends, course wrap-up
 
@@ -81,3 +84,4 @@ Schedule
    lecture11/l11_index
    lecture12/l12_index
    lecture13/l13_index
+   lecture14/l14_index

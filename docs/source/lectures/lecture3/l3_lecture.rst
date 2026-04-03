@@ -520,6 +520,315 @@ This pattern applies identically to DETR -- swap ``YOLO('best.pt')`` for a
 DETR model loaded via ``transformers`` or ``torch.hub``.
 
 
+Industrial Perception Architectures
+--------------------------------------
+
+Understanding how leading AV companies deploy perception systems bridges
+the gap between academic algorithms and real-world engineering.
+
+
+Generic Perception Pipeline
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Most production autonomous vehicles follow a modular perception pipeline:
+
+.. list-table::
+   :widths: 20 80
+   :class: compact-table
+
+   * - **1. Sensor Layer**
+     - Multiple cameras (360-degree coverage), LiDAR, RADAR, GNSS, IMU.
+       Continuous data streams at 10--60 Hz.
+   * - **2. Preprocessing**
+     - Timestamp synchronization, calibration and coordinate frame
+       transforms, image undistortion, noise filtering.
+   * - **3. Perception Stack**
+     - Detection (vehicles, pedestrians, cyclists, traffic signs/lights),
+       segmentation (drivable area, lane boundaries), multi-object tracking
+       with ID assignment, multi-sensor fusion into a unified world model.
+   * - **4. Output**
+     - Structured world model: objects with positions, velocities,
+       trajectories. Delivered to planning at 10--30 Hz.
+
+
+Industry Case Studies
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. tab-set::
+
+   .. tab-item:: Waymo
+
+      **Philosophy:** Multi-sensor fusion, LiDAR-centric.
+
+      - **Sensors:** 5 LiDARs, 29 cameras, 6 RADARs, high-precision
+        GNSS/IMU.
+      - **Approach:** LiDAR is the primary sensor for 3D detection and
+        localization. Cameras add semantic richness (signs, lights, lane
+        markings). RADAR for velocity and adverse weather.
+      - **Architecture:** Modular pipeline (detection -> tracking ->
+        prediction). PointPillars-style LiDAR detection + camera fusion.
+        HD maps for localization priors.
+      - **Scale:** 20+ million real-world miles, 250K+ paid rides/week.
+      - **Key trade-off:** Heavy sensor investment for maximum safety.
+
+   .. tab-item:: Tesla
+
+      **Philosophy:** Vision-only, end-to-end learning.
+
+      - **Sensors:** 8 cameras (no LiDAR, no RADAR post-2023).
+      - **Approach:** "Humans drive with vision; cars should too." Depth
+        is inferred from monocular images and temporal parallax.
+      - **Architecture:** HydraNet multi-task backbone processes all 8
+        camera streams. BEV representation via spatial transformers.
+        Occupancy network predicts 3D occupancy grid. Video module for
+        temporal reasoning. FSD v12 is fully end-to-end.
+      - **Training:** Auto-labeling pipeline on fleet data, Dojo
+        supercomputer, shadow mode for edge case collection.
+      - **Key trade-off:** Cost and scalability vs. depth uncertainty and
+        weather sensitivity.
+
+   .. tab-item:: Cruise
+
+      **Philosophy:** Multi-sensor with HD maps, urban robotaxi.
+
+      - **Sensors:** 5 LiDARs, 21 cameras, 5 RADARs, GNSS/IMU.
+      - **Approach:** Camera + LiDAR + RADAR fusion. HD maps for
+        localization and environmental priors. Continuous Learner system
+        for model updates.
+      - **Status:** Fleet suspended in late 2023 after dragging incident.
+        Effectively out of the robotaxi race.
+      - **Key lesson:** Operational safety failures can end a program
+        regardless of technical capability.
+
+   .. tab-item:: Aurora
+
+      **Philosophy:** Sensor diversity, long-range trucking.
+
+      - **Sensors:** FirstLight LiDAR (400+ m range), imaging RADAR,
+        cameras, thermal cameras for night vision.
+      - **Approach:** Sensor diversity for robustness across conditions.
+        Focus on highway autonomous trucking and logistics.
+      - **Architecture:** Virtual Driver System with collaborative
+        perception (truck convoys sharing sensor data).
+
+   .. tab-item:: Mobileye
+
+      **Philosophy:** Camera-first with formal safety (RSS).
+
+      - **Sensors:** 8--11 cameras, optional RADAR/LiDAR ("True
+        Redundancy" architecture).
+      - **Approach:** EyeQ SoC optimized for vision processing. REM
+        (Road Experience Management) for crowdsourced HD maps.
+      - **RSS (Responsibility-Sensitive Safety):** Formal model defining
+        "safe" vs. "unsafe" states mathematically. Guarantees the vehicle
+        never causes an accident under RSS rules.
+      - **Scale:** Tier-1 supplier to BMW, Nissan, Ford, Geely. Millions
+        of vehicles with ADAS deployed.
+
+
+Architectural Trade-Offs
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 22 39 39
+   :header-rows: 1
+   :class: compact-table
+
+   * - Dimension
+     - Option A
+     - Option B
+   * - **Sensing**
+     - Camera-only (Tesla): Low cost, scalable, semantic-rich. But: depth
+       uncertainty, weather sensitivity.
+     - Multi-sensor fusion (Waymo): Redundant, accurate 3D, all-weather.
+       But: high cost, complex calibration.
+   * - **Pipeline**
+     - Modular (Waymo, Mobileye): Interpretable, debuggable, swappable
+       components. But: error propagation, hand-crafted interfaces.
+     - End-to-end (Tesla FSD v12): Joint optimization, fewer rules. But:
+       black-box, hard to debug, massive data requirement.
+   * - **Mapping**
+     - HD maps (Waymo, Cruise): Simplifies localization, provides priors.
+       But: expensive to create/maintain, limits ODD.
+     - Map-free (Tesla): Scales anywhere, adapts to changes. But: higher
+       perception burden, less robust in ambiguous scenarios.
+   * - **Processing**
+     - Centralized (NVIDIA Drive AGX): Unified view, easier fusion, lower
+       latency. But: single point of failure.
+     - Distributed (per-sensor nodes): Fault isolation, parallel. But:
+       synchronization challenges, network latency.
+   * - **Safety**
+     - Rule-based (Mobileye RSS): Interpretable, verifiable,
+       regulatory-friendly. But: overly conservative.
+     - Learned behavior (Tesla): Adapts to diverse scenarios. But:
+       black-box, hard to validate.
+
+.. note::
+
+   The industry has not converged on a single winning architecture. Diverse
+   approaches reflect different priorities: cost vs. safety, scalability vs.
+   redundancy, interpretability vs. flexibility.
+
+
+Deployment and Integration
+----------------------------
+
+Moving perception algorithms from research to production requires careful
+attention to real-time constraints, model optimization, and system
+integration.
+
+
+Real-Time Performance Requirements
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 35 65
+   :header-rows: 1
+   :class: compact-table
+
+   * - Constraint
+     - Target
+   * - End-to-end perception latency
+     - < 100 ms total
+   * - Sensor acquisition
+     - 10--30 ms
+   * - Detection / segmentation
+     - 30--50 ms
+   * - Tracking and fusion
+     - 10--20 ms
+   * - World model update rate
+     - 10--30 Hz
+   * - Camera streams processed
+     - 5--10 simultaneously
+   * - LiDAR points per frame
+     - 100K--1M
+
+.. important::
+
+   At 60 km/h, a vehicle travels 1.67 m in 100 ms. Every millisecond of
+   latency translates directly to stopping distance. Real-time performance
+   is a safety requirement, not an optimization goal.
+
+
+Model Optimization for Deployment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Research models are too slow and large for embedded automotive hardware.
+Production deployment requires systematic optimization:
+
+.. list-table::
+   :widths: 25 75
+   :header-rows: 1
+   :class: compact-table
+
+   * - Technique
+     - Description
+   * - **Quantization**
+     - Reduce weight precision from FP32 to INT8 or FP16. Typical speedup:
+       2--4x with <1% accuracy loss. Supported by TensorRT, ONNX Runtime.
+   * - **Pruning**
+     - Remove weights or channels with minimal contribution. Structured
+       pruning removes entire filters for hardware-friendly speedup.
+   * - **Knowledge Distillation**
+     - Train a small "student" model to mimic a large "teacher" model.
+       Preserves much of the teacher's accuracy at a fraction of the compute.
+   * - **Architecture Search (NAS)**
+     - Automatically search for efficient architectures under latency
+       constraints. Used by EfficientDet, NAS-FPN.
+   * - **TensorRT / ONNX**
+     - Framework-specific optimization: operator fusion, memory planning,
+       kernel auto-tuning. Can achieve 5--10x speedup over naive PyTorch.
+
+.. code-block:: python
+
+   # Example: Export YOLO to TensorRT for deployment
+   from ultralytics import YOLO
+
+   model = YOLO('best.pt')
+   model.export(format='engine',       # TensorRT format
+                half=True,              # FP16 quantization
+                imgsz=640,
+                device=0)
+
+   # Load optimized model for inference
+   optimized = YOLO('best.engine')
+   results = optimized.predict(source='image.jpg')
+
+
+Hardware Platforms
+~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 25 25 50
+   :header-rows: 1
+   :class: compact-table
+
+   * - Platform
+     - TOPS
+     - Used By
+   * - **NVIDIA Drive AGX Orin**
+     - 254 TOPS
+     - Waymo, Mercedes-Benz, Volvo. Supports multiple concurrent DNN
+       workloads. Dominant in L4 development.
+   * - **Tesla FSD Computer (HW4)**
+     - ~300 TOPS (est.)
+     - Tesla. Custom SoC with dual redundant chips for fail-operational
+       safety.
+   * - **Mobileye EyeQ6**
+     - 176 TOPS
+     - BMW, Geely, Ford. Optimized for camera-centric ADAS and L2+.
+   * - **Qualcomm Snapdragon Ride**
+     - 100--700 TOPS
+     - GM, BMW (ADAS). Mobile-derived platform with power efficiency.
+
+.. tip::
+
+   When choosing a model architecture, profile it on the target hardware
+   early. A model that runs at 50 FPS on an RTX 4090 may only achieve 5 FPS
+   on an embedded automotive SoC.
+
+
+Software Integration: ROS 2 and Autoware
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In this course, perception nodes are integrated into the ADS pipeline using
+ROS 2. In industry, frameworks like Autoware extend ROS 2 with production-
+grade AV components.
+
+.. list-table::
+   :widths: 20 40 40
+   :header-rows: 1
+   :class: compact-table
+
+   * - Framework
+     - Scope
+     - Use Case
+   * - **ROS 2**
+     - General-purpose robotics middleware with DDS communication, QoS
+       policies, and lifecycle management.
+     - Course projects, research prototypes, component development.
+   * - **Autoware**
+     - Open-source full-stack AV software built on ROS 2. Includes
+       perception (LiDAR detection, camera fusion), planning, and control.
+     - Production AV development, industry R&D.
+   * - **Apollo (Baidu)**
+     - End-to-end AV platform with perception, planning, control, and
+       simulation. Custom middleware (Cyber RT).
+     - Chinese robotaxi deployments, academic research.
+
+**Detector node integration pattern** (used in GP2):
+
+1. Subscribe to camera images (``/carla/ego/camera/image``).
+2. Run inference (YOLO or DETR) on each frame.
+3. Publish detections as ROS 2 messages (``/perception/detections``).
+4. Downstream nodes (tracker, planner) subscribe and consume.
+
+.. seealso::
+
+   The ROS 2 detector node code from the previous section provides a
+   complete implementation of this pattern.
+
+
 Beyond YOLO and DETR
 ----------------------
 

@@ -2,582 +2,723 @@
 Lecture
 ====================================================
 
+.. raw:: latex
 
-The Fundamental Debate: Modular vs. End-to-End
------------------------------------------------
+   \setcounter{figure}{0}
 
-The autonomous driving community has long debated two competing architectural
-philosophies for building a complete ADS stack.
 
-.. tab-set::
+Why Prediction Matters
+====================================================
 
-   .. tab-item:: Modular Pipeline
+An autonomous vehicle does not exist in isolation. At every moment,
+it shares the road with pedestrians, cyclists, motorcycles, and
+other vehicles -- all of whose future positions directly affect
+which plans are safe.
 
-      The **modular pipeline** decomposes the driving task into a sequence of
-      specialized subsystems:
+.. dropdown:: The Prediction Problem
 
-      1. **Perception** -- Detects and classifies objects, estimates 3-D bounding
-         boxes, segments the scene.
-      2. **Prediction** -- Forecasts future trajectories of agents.
-      3. **Planning** -- Generates a safe, comfortable trajectory for the ego
-         vehicle.
-      4. **Control** -- Converts the planned trajectory into actuator commands
-         (steering, throttle, brake).
+   **Planning needs future states, but only current states are
+   observable.**
 
-      Each module is developed and validated independently, with structured
-      intermediate representations (object lists, maps, trajectories) passed
-      between stages.
+   Without prediction, a planner can only react to the current
+   positions of other agents. By the time the planner computes a
+   safe maneuver and the vehicle executes it (200--500 ms latency),
+   other agents have moved -- potentially into the path.
 
-   .. tab-item:: End-to-End
+   **Prediction horizon requirements:**
 
-      An **end-to-end** (E2E) system replaces the hand-engineered pipeline with
-      a single model (or tightly coupled set of models) that maps raw sensor
-      inputs directly to driving actions or waypoints.
+   .. list-table::
+      :header-rows: 1
+      :widths: 30 20 50
 
-      - Sensors (cameras, LiDAR, radar) feed directly into a neural network.
-      - The network learns all intermediate representations implicitly.
-      - The output is typically a set of planned waypoints or direct actuator
-        commands.
+      * - Maneuver type
+        - Horizon needed
+        - Rationale
+      * - Emergency braking
+        - 1 s
+        - Collision imminent
+      * - Lane change
+        - 3--5 s
+        - Must verify clearance ahead
+      * - Intersection negotiation
+        - 5--8 s
+        - Other agents crossing at full speed
+      * - Highway merge
+        - 5--10 s
+        - Speed differential at merge point
 
-.. list-table:: Modular vs. End-to-End Trade-offs
-   :widths: 25 38 37
+   .. admonition:: The Prediction-Planning Loop
+      :class: tip
+
+      Prediction feeds planning: the planner uses predicted agent
+      trajectories to evaluate which candidate ego-trajectories are
+      collision-free. In interaction-aware systems, ego plans and
+      agent predictions are solved jointly -- the ego's action
+      changes agent behavior, which changes the optimal ego action.
+
+
+Trajectory Prediction Approaches
+====================================================
+
+Prediction methods span a spectrum from physics-based extrapolation
+to data-driven interaction modeling.
+
+.. list-table:: Prediction Approach Comparison
    :header-rows: 1
-   :class: compact-table
+   :widths: 22 22 22 34
 
-   * - Dimension
-     - Modular Pipeline
-     - End-to-End
-   * - **Interpretability**
-     - High -- each module can be inspected
-     - Low -- internal representations are opaque
-   * - **Debuggability**
-     - Failures are localizable to a module
-     - Hard to attribute failures to causes
-   * - **Joint optimization**
-     - Absent -- each module optimized separately
-     - Full -- gradients flow across the entire stack
-   * - **Information loss**
-     - Present at each module boundary
-     - Minimal -- raw data preserved throughout
-   * - **Data requirements**
-     - Moderate per module
-     - Massive -- billions of labeled driving miles
-   * - **Validation**
-     - Module-level + integration testing
-     - Requires comprehensive scenario coverage
-   * - **Regulatory acceptance**
-     - Mature frameworks available
-     - Open research question
+   * - Approach
+     - Representation
+     - Interaction-aware
+     - Key limitation
+   * - Physics-based
+     - Constant velocity / CTRA
+     - No
+     - Fails at maneuvers, intersections
+   * - Maneuver-based
+     - Intent + conditional model
+     - Partial
+     - Discrete maneuver set
+   * - Interaction-aware
+     - Social force / LSTM
+     - Yes
+     - Complex to train, slow
+   * - Transformer-based
+     - Attention over agents
+     - Yes
+     - Requires large datasets
 
 
-Information Loss at Module Boundaries
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Physics-Based Prediction
+------------------------
 
-A key theoretical argument for end-to-end approaches is the **information loss
-problem**: when perception outputs a discretized object list, geometric
-uncertainty, rare edge cases, and subtle scene context that did not fit the
-output schema are permanently discarded before the planner ever sees them.
+.. dropdown:: Constant Velocity and CTRA
 
-.. admonition:: Example
-   :class: note
+   The simplest prediction model assumes the agent continues
+   its current motion:
 
-   A modular system that represents a pedestrian as a 3-D bounding box cannot
-   convey that the pedestrian is holding a ball that may roll into the road.
-   An end-to-end system working on raw images can, in principle, learn to
-   condition its plan on such subtle visual cues.
+   **Constant Velocity (CV):**
 
+   .. math::
 
-UniAD: Planning-Oriented Autonomous Driving (CVPR 2023)
--------------------------------------------------------
+      x(t+\Delta t) &= x(t) + v_x \Delta t \\
+      y(t+\Delta t) &= y(t) + v_y \Delta t
 
-UniAD was a landmark result that demonstrated that **unifying all driving tasks
-in a single end-to-end model** outperforms carefully tuned specialized modules
-on every sub-task.
+   **Constant Turn Rate and Acceleration (CTRA):**
 
-Architecture
-~~~~~~~~~~~~
+   .. math::
 
-UniAD introduces a hierarchical query-based architecture built on a shared BEV
-backbone:
+      x(t+\Delta t) &= x + \frac{a}{\omega^2}
+        \left[\omega \Delta t \cos(\theta + \omega\Delta t)
+        + \sin(\theta+\omega\Delta t) - \sin\theta\right] \\
+      y(t+\Delta t) &= y + \frac{a}{\omega^2}
+        \left[\omega \Delta t \sin(\theta + \omega\Delta t)
+        - \cos(\theta+\omega\Delta t) + \cos\theta\right]
 
-.. code-block:: text
+   where :math:`\omega` is the measured yaw rate and :math:`a` is
+   longitudinal acceleration.
 
-   Camera inputs (multi-view)
-         |
-   BEV Feature Encoder (BEVFormer)
-         |
-   ┌─────┴──────────────────────────────────────────┐
-   │  TrackFormer   → Agent Tracking Queries        │
-   │  MapFormer     → Map Element Queries           │
-   │  MotionFormer  → Multi-modal Motion Queries    │
-   │  OccFormer     → Occupancy Grid Queries        │
-   │  Planner       → Ego Trajectory Waypoints      │
-   └────────────────────────────────────────────────┘
-
-Each downstream module receives **queries** -- learned embeddings that
-accumulate task-specific features from the shared BEV representation via
-cross-attention.
-
-Key Contributions
-~~~~~~~~~~~~~~~~~
-
-.. grid:: 1 2 2 2
-   :gutter: 3
-
-   .. grid-item-card:: Unified Query Propagation
-      :class-card: sd-border-info
-
-      Agent tracking queries flow downstream to the motion forecasting module,
-      which then informs occupancy prediction, which informs the planner. This
-      creates an explicit information flow that mimics the intuitive reasoning
-      chain a human driver uses.
-
-   .. grid-item-card:: Planning-Centric Loss
-      :class-card: sd-border-info
-
-      All sub-task losses are co-optimized with a planning loss, so every
-      component is incentivized to produce representations that ultimately
-      improve the planned trajectory rather than just maximizing its own
-      metric in isolation.
-
-   .. grid-item-card:: CVPR 2023 SOTA
-      :class-card: sd-border-info
-
-      UniAD achieved state-of-the-art results on nuScenes across tracking,
-      mapping, motion prediction, occupancy, and planning simultaneously --
-      the first single model to do so.
-
-   .. grid-item-card:: Influence
-      :class-card: sd-border-info
-
-      UniAD became the foundation for a wave of follow-on work (SparseDrive,
-      DriveTransformer) and is widely cited as the model that proved the
-      end-to-end paradigm works at the systems level.
-
-Performance Snapshot
-~~~~~~~~~~~~~~~~~~~~~
-
-.. list-table::
-   :widths: 35 35 30
-   :header-rows: 1
-   :class: compact-table
-
-   * - Task
-     - Metric
-     - UniAD Result
-   * - 3-D Object Tracking
-     - AMOTA
-     - 0.359
-   * - Motion Forecasting
-     - minADE (5s)
-     - 0.607 m
-   * - Occupancy Prediction
-     - IoU (occluded)
-     - 42.5%
-   * - Planning (L2, 3s)
-     - Average L2 distance
-     - 0.25 m
+   Physics-based models are O(1), deterministic, and run in
+   microseconds. They are accurate for the first 0.5--1 s but
+   diverge rapidly at maneuver boundaries.
 
 
-DriveTransformer (ICLR 2025)
------------------------------
+Maneuver-Based Prediction
+-------------------------
 
-DriveTransformer extended the UniAD paradigm with a key architectural
-insight: **a single set of attention operations can simultaneously serve all
-driving tasks** rather than using separate specialized decoder heads.
+.. dropdown:: Intent Classification + Conditional Model
 
-Shared Attention Mechanism
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+   Maneuver-based prediction separates the problem into two stages:
 
-In UniAD, each task head applies cross-attention to the BEV features
-independently. DriveTransformer instead defines **three unified token types**:
+   1. **Intent classification:** classify the agent's current
+      maneuver intent into a discrete set
+      :math:`\mathcal{M} = \{`keep lane, left change, right change,
+      accelerate, decelerate, stop:math:`\}`.
 
-- **Agent tokens** -- represent moving objects (vehicles, pedestrians).
-- **Map tokens** -- represent static scene elements (lanes, crosswalks).
-- **Ego token** -- represents the autonomous vehicle itself.
+   2. **Conditional trajectory model:** given intent :math:`m`,
+      predict the trajectory using a physics model or learned
+      regressor conditioned on :math:`m`.
 
-All tokens attend to each other and to raw sensor features in a **single
-joint attention block**, repeated across multiple layers.
+   **Intent classification** is typically a binary or multi-class
+   classifier taking as input:
 
-.. admonition:: Why This Matters
-   :class: tip
+   - Relative velocity and acceleration of the agent
+   - Distance to lane boundaries
+   - Turn signal state (if observable)
+   - Historical trajectory over the past 2--3 s
 
-   By sharing attention computations across tasks, DriveTransformer eliminates
-   the redundant feature extraction that each separate head in UniAD performs.
-   This leads to a **3x throughput improvement** over UniAD at equivalent
-   performance -- a critical difference for real-time deployment where inference
-   must complete in under 50 ms.
-
-Throughput Comparison
-~~~~~~~~~~~~~~~~~~~~~
-
-.. list-table::
-   :widths: 35 30 35
-   :header-rows: 1
-   :class: compact-table
-
-   * - Model
-     - Frames Per Second
-     - Planning L2 (3s)
-   * - UniAD
-     - ~1.8 FPS
-     - 0.25 m
-   * - DriveTransformer
-     - ~5.5 FPS (3x)
-     - 0.22 m
-
-.. note::
-
-   DriveTransformer was accepted at ICLR 2025, and subsequent industrial
-   implementations have pushed throughput further with quantization and
-   hardware-specific optimization.
+   **Limitation:** the maneuver set is hand-designed and may not
+   cover all real-world behaviors. Transitions between maneuvers
+   are abrupt.
 
 
-Vision-Language-Action (VLA) Models
-------------------------------------
-
-The emergence of large language models (LLMs) and vision-language models
-(VLMs) has opened a new direction in autonomous driving: embedding
-**natural language reasoning** directly into the driving loop.
-
-What Is a VLA Model?
-~~~~~~~~~~~~~~~~~~~~~
-
-A **Vision-Language-Action (VLA)** model takes visual input (camera images,
-BEV features) and conditions its output on language -- either explicit
-text commands or implicit chain-of-thought reasoning -- before producing
-driving actions or waypoints.
-
-.. code-block:: text
-
-   [Camera images] + [Language context / CoT]
-            |
-   Vision-Language Model backbone (e.g., LLaVA, InternVL)
-            |
-   [Action decoder] → Waypoints / control signals
-
-Chain-of-Thought Reasoning for Driving
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Rather than directly regressing waypoints, VLA systems can generate an
-intermediate **textual reasoning trace** that makes their logic auditable:
-
-.. code-block:: text
-
-   "The pedestrian on the left is looking toward the road and is likely
-    to cross. The traffic light ahead is yellow. I should slow down
-    and prepare to stop at the crosswalk."
-    → [decelerate, target_speed=0, stop_distance=12m]
-
-This chain-of-thought approach offers several benefits:
-
-- The reasoning trace is **human-readable**, dramatically improving
-  interpretability over pure neural planners.
-- The model can be queried in natural language to **explain a past
-  decision** (important for incident investigation).
-- Language supervision provides a rich additional training signal beyond
-  imitation labels.
-
-NVIDIA Alpamayo
-~~~~~~~~~~~~~~~
-
-NVIDIA Alpamayo is a VLA model for driving released in 2025 as part of
-NVIDIA's DRIVE platform. Key features:
-
-- Built on a large vision-language backbone fine-tuned on driving data.
-- Produces **driving decisions conditioned on natural language scene
-  descriptions** generated by the model itself.
-- Integrated with NVIDIA's end-to-end DRIVE stack and evaluated in
-  CARLA and on-road in partnership with automotive OEMs.
-- Supports **free-form language commands** from the passenger or dispatcher
-  (e.g., "take the scenic route" or "avoid the highway").
-
-DriveVLM
-~~~~~~~~~
-
-DriveVLM (Wayve / academic collaboration, 2024) demonstrated that:
-
-- A VLM backbone can successfully ground visual driving scenes to language.
-- Chain-of-thought driving outperforms direct waypoint regression on rare and
-  complex scenarios where standard E2E models fail.
-- The approach generalizes better across geographic domains because language
-  provides a universal, transferable representation.
-
-
-Tesla's End-to-End Approach
+Interaction-Aware Prediction
 ----------------------------
 
-Tesla represents the most large-scale industrial deployment of end-to-end
-driving principles.
+.. dropdown:: Social Force and Graph Models
 
-The FSD v12 Architecture
-~~~~~~~~~~~~~~~~~~~~~~~~
+   Interaction-aware models explicitly model the influence of
+   nearby agents on each other.
 
-Starting with FSD v12 (2024), Tesla replaced its modular pipeline with a
-**fully neural, camera-only end-to-end system**:
+   **Social Force Model (Helbing & Molnar, 1995):**
 
-.. code-block:: text
+   .. math::
 
-   8 Cameras (1280×960 @ 36 FPS each)
-         |
-   Video encoder (space-time transformers per camera)
-         |
-   BEV feature fusion (cross-camera attention)
-         |
-   Occupancy & flow prediction
-         |
-   Planning transformer (waypoint sequence)
-         |
-   Low-level PID / MPC controller
-         |
-   Steering, throttle, brake actuators
+      \dot{\mathbf{v}}_i = \frac{\mathbf{v}_i^0 - \mathbf{v}_i}{\tau}
+      + \sum_{j \neq i} f_{ij} + f_{i,\text{boundary}}
 
-Key characteristics:
+   where :math:`\mathbf{v}_i^0` is the desired velocity, :math:`\tau`
+   is a relaxation time, and :math:`f_{ij}` is a repulsive force
+   from agent :math:`j`.
 
-- **Camera-only** -- no LiDAR or radar. Tesla argues cameras suffice because
-  humans drive with eyes.
-- **End-to-end differentiable** -- gradients flow from control commands back
-  through the planner to the video encoder.
-- **Fleet learning** -- 8.3 billion supervised FSD miles as of early 2026,
-  continuously improving through shadow mode and human correction labels.
+   **Graph Neural Network (GNN) approaches:** agents are nodes
+   in a graph; edges encode pairwise interactions. Graph
+   convolutions propagate influence across agents at each
+   prediction step.
 
-.. admonition:: Scale as a Moat
-   :class: important
+   Interaction-aware models capture behaviors like merging
+   courtesy and pedestrian group dynamics that physics-based
+   models entirely miss.
 
-   Tesla's fleet data advantage is structural. With millions of vehicles
-   collecting edge cases daily, the system receives training signal that
-   no simulation-only approach can easily replicate.
 
+Transformer-Based Prediction
+====================================================
 
-NVIDIA's End-to-End Stack
---------------------------
+Modern state-of-the-art prediction systems use Transformer
+architectures to encode the full scene context.
 
-NVIDIA's approach combines hardware (DRIVE Orin/Thor SoC) with a full
-software stack that incorporates end-to-end learning with reinforcement
-learning fine-tuning.
+.. dropdown:: Scene Encoding
 
-Key Layers
-~~~~~~~~~~
+   A Transformer-based predictor encodes:
 
-.. grid:: 1 2 2 2
-   :gutter: 3
+   - **Agent history:** past trajectory tokens
+     :math:`\{(x_t, y_t, \theta_t, v_t)\}_{t=-T}^{0}`
+     for each agent, projected to a feature dimension
+     :math:`d_{\text{model}}`.
+   - **Map context:** road centerlines, lane boundaries,
+     stop lines, and crosswalks are encoded as polyline
+     tokens using a PointNet-style encoder.
+   - **Agent type:** pedestrian, cyclist, vehicle --
+     embedded as a learned type token.
 
-   .. grid-item-card:: Perception (NVIDIA Hydra-MDP)
-      :class-card: sd-border-primary
+   All tokens are concatenated and processed by a Transformer
+   encoder with multi-head self-attention, allowing each agent
+   to attend to all other agents and map elements.
 
-      Multi-task BEV perception trained with a single unified decoder
-      for detection, segmentation, and occupancy.
+.. dropdown:: MotionTransformer Architecture
 
-   .. grid-item-card:: World Model
-      :class-card: sd-border-primary
+   **MotionTransformer** (Shi et al., NeurIPS 2023) introduces
+   a two-stage architecture:
 
-      NVIDIA Cosmos generates synthetic training data and serves as a
-      differentiable environment for RL fine-tuning of the planner.
+   1. **Global motion transformer:** encodes all agents and map
+      elements jointly using factorized attention, producing
+      per-agent context embeddings.
 
-   .. grid-item-card:: Planner (E2E + RL)
-      :class-card: sd-border-primary
+   2. **Local motion transformer:** for each agent, decodes
+      :math:`K` future trajectory modes using a set of
+      learnable **motion query pairs** (one per mode) that
+      attend to the agent's context embedding.
 
-      A learned planner trained with imitation learning then refined
-      with reinforcement learning rewards (comfort, safety, progress).
+   The output is :math:`K` trajectory predictions with
+   associated probabilities:
 
-   .. grid-item-card:: DRIVE Thor SoC
-      :class-card: sd-border-primary
+   .. math::
 
-      Up to 2000 TOPS of compute. Executes all E2E inference at the
-      latency required for real-time vehicle control.
+      \{(\hat{\tau}_k, p_k)\}_{k=1}^{K}, \quad \sum_k p_k = 1
 
-Reinforcement Learning Fine-Tuning
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   MotionTransformer achieves state-of-the-art performance on
+   the Waymo Open Motion Dataset (WOMD) benchmark.
 
-Imitation learning alone inherits the distribution of human driving,
-including human mistakes and sub-optimal decisions. NVIDIA uses RL
-to optimize for **explicit reward functions** that humans cannot
-efficiently demonstrate:
+.. dropdown:: Scene Context Encoding Detail
 
-.. math::
+   The map encoding uses a **hierarchical polyline encoder**:
+
+   - Each road element (lane, boundary, stop line) is a polyline
+     of ordered points.
+   - A PointNet-style MLP encodes each point to a feature vector.
+   - Max-pooling over the points gives a fixed-size polyline
+     feature.
+   - Cross-attention allows each agent query to attend to all
+     polyline features, incorporating spatial map context.
 
-   \mathcal{R} = w_1 \cdot r_{\text{safety}} + w_2 \cdot r_{\text{comfort}} + w_3 \cdot r_{\text{progress}}
+   **Positional encoding** uses sinusoidal encodings of
+   :math:`(x, y, \theta)` so the attention mechanism is
+   geometry-aware.
 
-where :math:`r_{\text{safety}}` penalizes proximity to obstacles and traffic
-violations, :math:`r_{\text{comfort}}` penalizes high jerk and acceleration,
-and :math:`r_{\text{progress}}` rewards making forward progress toward the
-destination.
 
+Multi-Modal Prediction
+====================================================
 
-Advantages of End-to-End Driving
-----------------------------------
+Real agents can take multiple plausible future actions. A single
+deterministic prediction is insufficient for safe planning.
 
-.. grid:: 1 1 2 2
-   :gutter: 3
+.. dropdown:: Why Multi-Modal Matters
 
-   .. grid-item-card:: Joint Optimization
-      :class-card: sd-border-success
+   At an intersection, a vehicle approaching from the left
+   might go straight, turn right, or turn left. Any single
+   predicted trajectory represents only one hypothesis.
+
+   If the ego planner uses a single predicted trajectory and
+   the agent takes a different action, the plan may fail.
+   With multi-modal predictions, the planner can:
+
+   - Generate candidate ego-trajectories for each agent mode.
+   - Compute the worst-case (most dangerous) agent mode.
+   - Select the ego trajectory that is safe across all likely
+     agent modes weighted by probability.
+
+.. dropdown:: Evaluation Metrics
+
+   .. list-table:: Multi-Modal Prediction Metrics
+      :header-rows: 1
+      :widths: 25 30 45
+
+      * - Metric
+        - Formula
+        - Meaning
+      * - minADE_K
+        - :math:`\min_k \text{ADE}(\hat{\tau}_k, \tau^*)`
+        - Best-of-K average displacement error
+      * - minFDE_K
+        - :math:`\min_k \|\hat{\tau}_k(T) - \tau^*(T)\|`
+        - Best-of-K final displacement error
+      * - MissRate
+        - Fraction of scenarios where :math:`\text{FDE} > 2` m
+        - Prediction failure rate
+      * - mAP
+        - Mean Average Precision over modes
+        - Joint quality of positions and probabilities
+
+   .. admonition:: The Oracle Problem
+      :class: warning
+
+      MinADE and MinFDE evaluate only the *best* of :math:`K`
+      predictions. A system that outputs many diverse trajectories
+      will score well on these metrics even if its probability
+      estimates are poor. mAP jointly evaluates probability
+      calibration and trajectory accuracy.
+
+
+Behavior Planning
+====================================================
+
+Behavior planning is the **strategic layer**: it decides what the
+vehicle should *do* (which maneuver to execute) based on the
+current traffic situation.
+
+.. dropdown:: Position in the Stack
+
+   .. list-table::
+      :header-rows: 1
+      :widths: 20 30 50
+
+      * - Layer
+        - Input
+        - Output
+      * - Perception
+        - Sensor data
+        - Agent detections, HD map
+      * - Prediction
+        - Agent history + map
+        - Agent trajectory distributions
+      * - **Behavior planning**
+        - Predicted states + rules
+        - Maneuver decision (current + next N steps)
+      * - Motion planning
+        - Maneuver decision + map
+        - Collision-free path
+      * - Trajectory planning
+        - Path + speed profile
+        - Time-stamped trajectory
+      * - Control
+        - Trajectory
+        - Steering + throttle/brake
+
+
+State Machine Behavior Planner
+===============================
+
+The finite state machine (FSM) is the classical approach to
+behavior planning.
+
+.. dropdown:: States and Transitions
+
+   A highway driving FSM with four states:
+
+   .. list-table::
+      :header-rows: 1
+      :widths: 20 40 40
+
+      * - State
+        - Behavior
+        - Exit condition
+      * - ``LANE_FOLLOW``
+        - Follow lane at reference speed
+        - Slow vehicle ahead OR lane change opportunity
+      * - ``LANE_CHANGE_LEFT``
+        - Execute left lane change maneuver
+        - Maneuver complete OR abort (gap closes)
+      * - ``LANE_CHANGE_RIGHT``
+        - Execute right lane change maneuver
+        - Maneuver complete OR abort
+      * - ``FOLLOW``
+        - Adaptive cruise control behind lead vehicle
+        - Lead vehicle clears OR speed returns to reference
+      * - ``STOP``
+        - Decelerate to zero
+        - Stop line reached, signal clears, or obstacle removed
+      * - ``YIELD``
+        - Decelerate, give right-of-way
+        - Intersection clear
+
+   **Transition conditions** use predicted agent states:
+
+   - ``LANE_FOLLOW`` → ``FOLLOW``: predicted collision with lead
+     vehicle within :math:`t_{\text{ttc}} < 3` s.
+   - ``FOLLOW`` → ``LANE_CHANGE_LEFT``: speed below threshold
+     AND left lane gap :math:`> d_{\text{safe}}`.
+
+.. dropdown:: Implementation
+
+   .. code-block:: python
+
+      from enum import Enum
+
+      class State(Enum):
+          LANE_FOLLOW = 0
+          FOLLOW      = 1
+          LANE_CHANGE_LEFT  = 2
+          LANE_CHANGE_RIGHT = 3
+          STOP        = 4
+          YIELD       = 5
+
+      class BehaviorPlanner:
+          def __init__(self):
+              self.state = State.LANE_FOLLOW
+
+          def update(self, ego, predictions, map_info):
+              lead = self._find_lead(ego, predictions)
+              ttc  = self._time_to_collision(ego, lead)
+
+              if self.state == State.LANE_FOLLOW:
+                  if ttc < 3.0:
+                      self.state = State.FOLLOW
+                  elif map_info.stop_line_ahead and ego.speed > 0.1:
+                      self.state = State.STOP
+
+              elif self.state == State.FOLLOW:
+                  if ttc > 6.0:
+                      self.state = State.LANE_FOLLOW
+                  elif self._left_gap_safe(ego, predictions):
+                      self.state = State.LANE_CHANGE_LEFT
 
-      All components are optimized for the same ultimate objective (safe,
-      comfortable driving), eliminating the proxy-metric misalignment that
-      plagues modular pipelines.
+              # ... additional transitions ...
+              return self.state
 
-   .. grid-item-card:: No Information Loss
-      :class-card: sd-border-success
+.. dropdown:: Limitations of FSMs
+
+   FSMs are **brittle** at the boundary conditions between states
+   and in novel scenarios not covered by hand-designed transitions.
 
-      Raw sensor data flows through the entire computation graph. Features
-      relevant to planning that don't fit a predefined schema can still
-      influence the output.
+   - **State explosion:** a complete real-world driving FSM
+     requires hundreds of states and thousands of transition
+     conditions.
+   - **No uncertainty handling:** FSM transitions are crisp;
+     they do not naturally incorporate prediction uncertainty.
+   - **Manual engineering:** every new scenario requires a
+     new transition to be hand-coded and tested.
 
-   .. grid-item-card:: Emergent Capabilities
-      :class-card: sd-border-success
+   These limitations motivate learned decision-making approaches.
 
-      E2E models trained at scale have demonstrated emergent abilities --
-      behaviors that appear without explicit programming, analogous to
-      emergent capabilities in large language models.
 
-   .. grid-item-card:: Architectural Simplicity
-      :class-card: sd-border-success
+Rule-Based vs. Learned Decision-Making
+====================================================
 
-      A single model (or small set of coupled models) replaces dozens of
-      specialized subsystems, reducing the engineering surface area for
-      integration bugs.
+.. dropdown:: Rule-Based Systems
 
+   Rule-based behavior planners (including FSMs and decision trees)
+   encode expert knowledge as explicit logical conditions.
 
-Disadvantages and Open Challenges
------------------------------------
+   **Advantages:**
 
-.. admonition:: Black-Box Behavior
-   :class: warning
+   - Interpretable: every decision can be traced to a rule.
+   - Predictable: behavior is deterministic given the same input.
+   - Certifiable: rules can be formally verified for safety.
 
-   End-to-end models provide no interpretable intermediate representations.
-   When the system makes an error, it is extremely difficult to determine
-   whether the failure was due to perception, prediction, or planning -- or
-   some emergent interaction between them.
+   **Disadvantages:**
 
-.. admonition:: Massive Data Requirements
-   :class: warning
+   - Incomplete: rare scenarios not covered by rules cause failures.
+   - Brittle: edge cases and ambiguous situations require complex
+     rule interactions.
+   - High engineering cost: thousands of rules must be maintained.
 
-   Training competitive E2E models requires hundreds of millions of labeled
-   driving frames. Labeling cost, data diversity (geography, weather, culture),
-   and long-tail coverage all remain significant challenges.
+.. dropdown:: Learned Decision-Making
 
-.. admonition:: Validation Difficulty
-   :class: warning
+   Learned approaches replace hand-crafted rules with a policy
+   :math:`\pi(a | s)` trained from data.
 
-   ISO 26262 and SOTIF assume a modular decomposition where each component
-   can be tested in isolation. Validating a monolithic E2E system against
-   an ASIL-D safety argument is an open research problem with no settled
-   industry-wide methodology.
+   **Advantages:**
 
-.. admonition:: Distribution Shift
-   :class: warning
+   - Generalizes to unseen scenarios not covered by rules.
+   - Can capture complex multi-agent interactions implicitly.
+   - Lower engineering effort once training infrastructure exists.
 
-   E2E systems trained on one geographic region or driving culture may
-   fail silently when deployed in a different environment, with no explicit
-   module to flag the out-of-distribution condition.
+   **Disadvantages:**
 
-Interpretability Research
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+   - Interpretability: the policy is a black box.
+   - Safety guarantees are hard to prove formally.
+   - Requires large, diverse training data.
+   - Distribution shift: policy fails on inputs far from training
+     distribution.
 
-Researchers are actively developing methods to add interpretability to E2E
-systems without sacrificing performance:
 
-- **Attention visualization** -- Identifying which image regions most
-  influenced a particular action.
-- **Concept bottleneck models** -- Forcing the network to predict human-
-  interpretable concepts (e.g., "pedestrian present", "rain") as an
-  intermediate representation.
-- **Chain-of-thought supervision** (VLA models) -- Training the model to
-  produce textual reasoning before acting.
+Imitation Learning
+====================================================
 
+Imitation learning trains a policy to mimic expert (human driver)
+behavior from logged demonstrations.
 
-The Role of Simulation in Training E2E Models
-----------------------------------------------
+.. dropdown:: Behavior Cloning
 
-End-to-end models are data-hungry, and real-world data collection is slow
-and expensive. Simulation plays a critical role in closing this gap.
+   **Behavior cloning (BC)** is the simplest imitation learning
+   algorithm: treat demonstrations as a supervised learning dataset.
 
-Data Generation at Scale
-~~~~~~~~~~~~~~~~~~~~~~~~
+   Given a dataset of expert state-action pairs
+   :math:`\mathcal{D} = \{(s_i, a_i^*)\}_{i=1}^{N}` collected
+   from human drivers:
 
-.. list-table::
-   :widths: 30 70
-   :class: compact-table
+   .. math::
 
-   * - **Scenario diversity**
-     - Simulators (CARLA, Waymo Sim, NVIDIA Cosmos) can generate rare
-       events (jaywalking, debris on road, sensor degradation) that are
-       almost impossible to encounter at sufficient frequency in the real world.
-   * - **Automatic labeling**
-     - Ground-truth labels (depth, optical flow, 3-D boxes) are free in
-       simulation, eliminating human annotation cost.
-   * - **Perturbation testing**
-     - Systematic parameter sweeps (weather, traffic density, lighting) can
-       evaluate robustness.
+      \min_\theta \; \mathbb{E}_{(s,a^*) \sim \mathcal{D}}
+      \left[ \mathcal{L}(\pi_\theta(s), a^*) \right]
 
-Sim-to-Real Gap
-~~~~~~~~~~~~~~~
+   where :math:`\mathcal{L}` is a regression loss (e.g., MSE for
+   continuous actions) or cross-entropy for discrete maneuver
+   classification.
 
-The fundamental limitation of simulation-based training is the **sim-to-real
-gap**: models trained in simulation may fail in the real world because the
-simulated sensor outputs, scene textures, and agent behavior distributions
-differ from reality.
+   **BC pipeline:**
 
-Mitigation strategies include:
+   .. code-block:: text
 
-- **Domain randomization** -- Randomly varying simulation parameters during
-  training so the model learns features robust to environment variation.
-- **Generative world models** (Lecture 12) -- Using neural world models
-  trained on real data to generate photo-realistic synthetic data.
-- **Real + sim co-training** -- Mixing real and simulated data during training.
+      1. Collect expert demonstrations: (obs_t, action_t) pairs
+      2. Train policy network: obs -> action
+      3. Deploy: at each step, feed current obs and execute action
 
-.. code-block:: python
+.. dropdown:: Distribution Shift: The Key Failure Mode
 
-   # Example: CARLA batch data collection for E2E training
-   import carla
+   The fundamental problem with behavior cloning is
+   **distribution shift** (also called covariate shift).
 
-   client = carla.Client("localhost", 2000)
-   world = client.get_world()
+   During training, the policy sees states from the expert's
+   distribution :math:`d_{\pi^*}`. During deployment, the policy's
+   own actions cause it to visit states in :math:`d_{\pi_\theta}`,
+   which may be far from :math:`d_{\pi^*}`.
 
-   # Randomize weather for domain randomization
-   weathers = [
-       carla.WeatherParameters.ClearNoon,
-       carla.WeatherParameters.HardRainNoon,
-       carla.WeatherParameters.WetCloudySunset,
-   ]
-   for weather in weathers:
-       world.set_weather(weather)
-       # collect_episode(world, duration_seconds=60)
+   **Compounding error:** Small deviations from the expert
+   trajectory accumulate over time, driving the policy into
+   states never seen during training. The policy has no
+   supervision signal for recovery from these states.
 
+   .. admonition:: Compounding Error Formula
+      :class: warning
 
-Where the Industry Is Heading
-------------------------------
+      For a policy with per-step error :math:`\epsilon`:
 
-The tension between modular and end-to-end is resolving into a **spectrum**
-rather than a binary choice:
+      .. math::
 
-.. grid:: 1 1 3 3
-   :gutter: 3
+         \text{Total error after } T \text{ steps} = O(\epsilon T^2)
 
-   .. grid-item-card:: Fully Modular
-      :class-card: sd-border-secondary
+      Errors compound **quadratically** in time horizon --
+      a fundamental limitation of open-loop behavior cloning.
 
-      Traditional approach. Each module developed independently. Mature
-      validation tooling. Used by Mobileye (RSS + modular stack).
 
-   .. grid-item-card:: Hybrid (Dominant 2025-2026)
-      :class-card: sd-border-warning
+DAgger: Dataset Aggregation
+====================================================
 
-      E2E perception + learned planner, but with explicit safety monitors,
-      interpretable occupancy maps, and override logic. Used by Waymo Gen 6,
-      Baidu Apollo 6.0.
+DAgger (Ross et al., ICML 2011) addresses distribution shift
+by iteratively augmenting the training dataset with states
+visited by the learned policy.
 
-   .. grid-item-card:: Fully E2E
-      :class-card: sd-border-success
+.. dropdown:: Algorithm
 
-      Single neural model from pixels to actuators. Used by Tesla FSD v12,
-      Wayve. Requires massive fleet data and novel validation frameworks.
+   .. code-block:: text
 
-.. note::
+      Initialize: D = {} (empty dataset), pi_1 = any policy
+      For iteration i = 1, 2, ..., N:
+          1. Roll out policy pi_i in the environment
+             (or simulator) to collect trajectory states {s_t}
+          2. Query the expert at each visited state: a*_t = pi*(s_t)
+          3. Add {(s_t, a*_t)} to D
+          4. Train policy pi_{i+1} on the full aggregated D
+      Return: best pi_i on validation
 
-   No major robotaxi operator runs a fully end-to-end system without any
-   engineered safety layer. The industry consensus in 2026 is that E2E
-   models excel at perception and scene understanding, while explicit safety
-   checks (collision avoidance, traffic law compliance) remain engineered
-   components layered on top.
+.. dropdown:: Why DAgger Works
+
+   DAgger ensures the training distribution converges to the
+   deployment distribution.
+
+   - After :math:`n` iterations, the training dataset contains
+     states sampled from the policies
+     :math:`\pi_1, \pi_2, \ldots, \pi_n`.
+   - As the policy improves, the states it visits converge toward
+     the expert's states.
+   - In the limit, the training distribution matches the
+     deployment distribution and compounding errors vanish.
+
+   **DAgger guarantees** (Ross et al., 2011): Under mild
+   conditions, DAgger reduces the per-step regret to
+   :math:`O(\epsilon)` (linear) compared to BC's
+   :math:`O(\epsilon T^2)` (quadratic).
+
+.. dropdown:: Practical Considerations
+
+   .. list-table::
+      :header-rows: 1
+      :widths: 30 70
+
+      * - Challenge
+        - Solution
+      * - Expert query cost
+        - Use simulator with scripted expert; reserve human feedback for hard cases
+      * - Safety during rollout
+        - Run in simulation (CARLA); use safety fallback controller
+      * - Dataset size
+        - Prioritize states with high policy uncertainty (active DAgger)
+      * - Convergence
+        - Monitor validation loss across iterations; stop when plateaued
+
+
+Practical Decision-Making in Traffic
+====================================================
+
+.. dropdown:: Intersection Negotiation
+
+   Intersections require reasoning about right-of-way, crossing
+   trajectories, and agent intent simultaneously.
+
+   A behavior planner for intersections must:
+
+   1. **Detect the intersection** and classify the control type
+      (traffic signal, stop sign, uncontrolled, roundabout).
+   2. **Determine right-of-way** from signal state or traffic rules.
+   3. **Predict crossing agents** and compute time-to-conflict (TTC)
+      for each crossing trajectory pair.
+   4. **Decide:** proceed, yield, or stop based on TTC and
+      predicted agent gaps.
+
+   .. admonition:: Gap Acceptance
+      :class: note
+
+      The fundamental decision at an uncontrolled intersection is
+      **gap acceptance**: is the time gap in the crossing stream
+      large enough to enter safely? Gap acceptance models learned
+      from human data outperform fixed-threshold rules because
+      they incorporate speed, visibility, and vehicle type.
+
+.. dropdown:: Merging onto a Highway
+
+   Merging requires the ego vehicle to find a gap in the highway
+   traffic stream and adjust speed to reach the merge point
+   simultaneously with the gap.
+
+   Key considerations:
+
+   - Predict lead and following highway vehicles for 8--10 s.
+   - Compute the gap size at the merge point as a function of
+     ego speed.
+   - Select the target gap and compute the acceleration profile
+     (quintic polynomial) to arrive at the merge point
+     within the gap.
+   - Monitor the gap in real time; abort and re-plan if the
+     gap closes.
+
+.. dropdown:: Pedestrian Interactions
+
+   Pedestrians are the most challenging agents for prediction
+   because:
+
+   - They can change direction instantly (no kinematic constraints).
+   - Their intent is often unobservable (phone in hand, not looking).
+   - Social norms (yielding, eye contact) are implicit.
+
+   Best practices:
+
+   - Use multi-modal prediction with high-uncertainty modes.
+   - Apply conservative safety margins (1.5--2.0 m clearance).
+   - Prefer slow-speed trajectories when pedestrian uncertainty
+     is high (reduces collision energy).
+   - Never assume a pedestrian will stop or yield.
+
+
+CARLA Exercise
+====================================================
+
+.. admonition:: Exercise: Trajectory Prediction and Behavioral Planner
+   :class: note
+
+   **Goal:** Integrate a simple prediction module and FSM behavior
+   planner into a CARLA agent that navigates a multi-lane road
+   with traffic.
+
+   **Tasks:**
+
+   1. **Perception:** Use CARLA's ground-truth bounding boxes to
+      obtain the positions, velocities, and headings of all
+      nearby vehicles within 50 m.
+
+   2. **Constant-velocity prediction:** For each nearby vehicle,
+      predict its trajectory over 5 s at 0.1 s intervals using
+      the CV model. Visualize predicted positions with
+      ``world.debug.draw_point()``.
+
+   3. **FSM behavior planner:** Implement a four-state FSM
+      (``LANE_FOLLOW``, ``FOLLOW``, ``LANE_CHANGE_LEFT``,
+      ``STOP``) with transitions based on:
+
+      - TTC to lead vehicle (< 3 s → ``FOLLOW``)
+      - Speed below reference (→ attempt ``LANE_CHANGE_LEFT``)
+      - Stop sign detected ahead (→ ``STOP``)
+
+   4. **Integration:** Connect the FSM output to the Stanley
+      lateral controller and PID longitudinal controller from L9.
+      Run the agent on a multi-vehicle Town04 scenario for 120 s.
+
+   5. **Evaluation:** Log the FSM state sequence, speed profile,
+      and collision events. Report: time in each state, max speed
+      deviation, number of hard braking events (deceleration
+      > 4 m/s²).
+
+   **Starter code:**
+
+   .. code-block:: python
+
+      import carla
+      import numpy as np
+
+      def cv_predict(vehicle, horizon=5.0, dt=0.1):
+          """Constant-velocity trajectory prediction."""
+          t = vehicle.get_transform()
+          v = vehicle.get_velocity()
+          vx, vy = v.x, v.y
+          x0, y0 = t.location.x, t.location.y
+          steps = int(horizon / dt)
+          trajectory = []
+          for i in range(steps):
+              t_i = (i + 1) * dt
+              trajectory.append(
+                  carla.Location(x=x0 + vx * t_i,
+                                 y=y0 + vy * t_i,
+                                 z=t.location.z))
+          return trajectory
+
+      def time_to_collision(ego, lead, predictions):
+          """Estimate TTC using predicted lead position."""
+          ego_loc = ego.get_transform().location
+          lead_traj = predictions[lead.id]
+          ego_v = ego.get_velocity()
+          ego_speed = (ego_v.x**2 + ego_v.y**2)**0.5
+          for i, loc in enumerate(lead_traj):
+              dist = ego_loc.distance(loc)
+              if dist < 3.0:  # collision threshold (m)
+                  return (i + 1) * 0.1  # time in seconds
+          return float('inf')

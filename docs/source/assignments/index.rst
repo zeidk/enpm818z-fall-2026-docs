@@ -12,7 +12,7 @@ build a system that perceives its environment, localizes itself, plans a
 path, and controls a vehicle -- progressing from raw sensor data to
 autonomous driving.
 
-The project spans **11 weeks** through four progressive group projects
+The project spans **12 weeks** through four progressive group projects
 (GP1 through GP4), each building on the previous one. By GP4, your team
 will have a working ADS. The final deliverable integrates and evaluates
 the complete system on challenging, unseen scenarios.
@@ -21,7 +21,7 @@ the complete system on challenging, unseen scenarios.
 Project Weight
 --------------
 
-The final project accounts for **50% of your overall course grade**:
+The final project accounts for **80% of your overall course grade**:
 
 .. list-table::
    :header-rows: 1
@@ -47,16 +47,16 @@ The final project accounts for **50% of your overall course grade**:
      - 25
      - 25%
      - 3 weeks
-     - L6--L7
+     - L6--L8
    * - GP4: Planning & Control
      - 20
      - 20%
-     - 2 weeks
-     - L8--L10
+     - 3 weeks
+     - L9--L11
    * - **Total**
      - **100**
      - **100%**
-     - **11 weeks**
+     - **12 weeks**
      -
 
 .. note::
@@ -174,12 +174,14 @@ a final report. There are no classes during Weeks 14--15.
       robustness across 3+ towns and weather conditions, performance
       optimization.
 
-   .. tab-item:: Advanced Track (Optional)
+   .. tab-item:: Advanced Track (Optional -- GP5)
 
-      Replace part or all of the modular pipeline with an **end-to-end
-      driving** approach. Collect expert data from CARLA autopilot, train
-      a behavior cloning model, deploy as a ROS 2 node, and compare
-      against the modular baseline.
+      Build a **Vision-Language-Action (VLA) model** that maps camera
+      images and natural language commands directly to driving actions.
+      Collect expert data from CARLA's autopilot, train a simplified VLA
+      using frozen CLIP encoders, deploy as a ROS 2 node, and compare
+      against the modular GP1--GP4 pipeline. See :doc:`GP5 </assignments/gp5>`
+      for full specifications. Worth up to **10 bonus points**.
 
 
 Academic Integrity
@@ -231,3 +233,4 @@ Support Resources
    gp2
    gp3
    gp4
+   gp5

@@ -67,30 +67,34 @@ Course Schedule
      - L7
      -
    * - 8
-     - Motion Planning
+     - Navigation & Route Planning
      - L8
-     - Quiz 3, GP2 Due, GP3 Posted
+     - GP2 Due, GP3 Posted
    * - 9
-     - Trajectory Planning & Control
+     - Motion Planning
      - L9
-     -
+     - Quiz 3
    * - 10
-     - Prediction & Decision-Making
+     - Trajectory Planning & Control
      - L10
-     - Quiz 4
+     -
    * - 11
-     - End-to-End Driving & Foundation Models
+     - Prediction & Decision-Making
      - L11
-     - GP3 Due, GP4 Posted
+     - Quiz 4, GP3 Due, GP4 Posted
    * - 12
-     - World Models & Simulation
+     - End-to-End Driving & Foundation Models
      - L12
      -
    * - 13
-     - System Integration, Safety & Industry Outlook
+     - World Models & Simulation
      - L13
+     -
+   * - 14
+     - System Integration, Safety & Industry Outlook
+     - L14
      - Quiz 5, GP4 Due
-   * - 14--15
+   * - 15
      - No class -- Final report submission window
      -
      - Final Report Due
@@ -149,14 +153,14 @@ Teams consist of **4 students** (formed in Week 2).
      - Camera-LiDAR fusion + EKF localization.
    * - GP4: Planning & Control
      - Week 11
-     - Week 13
-     - 2 weeks
+     - Week 14
+     - 3 weeks
      - 20%
      - Path planner + controller + behavioral logic.
    * - **Final Report**
-     - Week 13
+     - Week 14
      - Week 15
-     - 2 weeks
+     - 1 week
      - (included above)
      - Integration of GP1--GP4 + evaluation on unseen scenarios + report.
 

@@ -1,163 +1,384 @@
-====================================================
 References
-====================================================
+==========
 
 
-.. dropdown:: Foundational Papers
-   :class-container: sd-border-secondary
-   :open:
+.. dropdown:: Lecture 10
+    :class-container: sd-border-secondary
+    :open:
 
-   .. grid:: 1 1 2 2
-      :gutter: 2
+    .. card::
+        :class-card: sd-border-secondary
 
-      .. grid-item-card:: UniAD (CVPR 2023)
-         :link: https://arxiv.org/abs/2212.10156
-         :class-card: sd-border-secondary
+        **ENPM818Z -- L10: Prediction & Decision-Making**
 
-         **Planning-Oriented Autonomous Driving**
-
-         Hu, Y. et al. (2023). Unified end-to-end model for tracking, mapping,
-         motion forecasting, occupancy prediction, and planning.
-
-      .. grid-item-card:: DriveTransformer (ICLR 2025)
-         :link: https://arxiv.org/abs/2408.13630
-         :class-card: sd-border-secondary
-
-         **DriveTransformer: Unified Transformer for Scalable E2E AD**
-
-         Shared attention across agent, map, and ego tokens. 3x throughput
-         improvement over UniAD at equivalent or better performance.
-
-      .. grid-item-card:: DriveVLM
-         :link: https://arxiv.org/abs/2402.12289
-         :class-card: sd-border-secondary
-
-         **DriveVLM: Chain-of-Thought Empowered Large Vision Language Model**
-
-         Tian, X. et al. (2024). VLM backbone with CoT reasoning for complex
-         autonomous driving scenarios.
-
-      .. grid-item-card:: BEVFormer
-         :link: https://arxiv.org/abs/2203.17270
-         :class-card: sd-border-secondary
-
-         **BEVFormer: Learning BEV Representation from Multi-Camera Images**
-
-         Li, Z. et al. (2022). The BEV encoder backbone used by UniAD and
-         many subsequent end-to-end driving models.
+        Covers why prediction is necessary for planning (horizon
+        requirements), physics-based prediction (CV, CTRA),
+        maneuver-based prediction (intent classification + conditional
+        model), interaction-aware prediction (Social Force, GNNs),
+        Transformer-based prediction (MotionTransformer, scene
+        context encoding, multi-modal output), multi-modal prediction
+        metrics (MinADE, MinFDE, MissRate, mAP), FSM behavior
+        planning (states, transitions, limitations), rule-based vs.
+        learned decision-making, behavior cloning (distribution shift,
+        compounding errors), and DAgger (dataset aggregation, expert
+        querying, convergence guarantees).
 
 
-.. dropdown:: Industry Systems and Blogs
-   :class-container: sd-border-secondary
+.. dropdown:: Trajectory Prediction
+    :class-container: sd-border-secondary
 
-   .. grid:: 1 1 2 2
-      :gutter: 2
+    .. grid:: 1 1 2 2
+        :gutter: 2
 
-      .. grid-item-card:: Tesla FSD Technical Blog
-         :link: https://www.tesla.com/AI
-         :class-card: sd-border-secondary
+        .. grid-item-card:: Schubert et al. -- CTRA Model (2008)
+            :class-card: sd-border-secondary
 
-         **Tesla AI & Autopilot**
+            **IEEE IV 2008**
 
-         Tesla's official AI page with technical details on FSD v12 and the
-         HydraNet / end-to-end transition.
+            Analysis and comparison of constant-motion kinematic
+            models (CV, CA, CTRA, CTRV) for vehicle trajectory
+            prediction with empirical accuracy benchmarks.
 
-      .. grid-item-card:: NVIDIA DRIVE Platform
-         :link: https://developer.nvidia.com/drive
-         :class-card: sd-border-secondary
+            +++
 
-         **NVIDIA DRIVE Developer Resources**
+            - CTRA derivation
+            - Model comparison
+            - Short-horizon accuracy
 
-         Documentation for DRIVE Orin/Thor SoCs, Hydra-MDP perception, and
-         the NVIDIA end-to-end ADS stack.
+        .. grid-item-card:: Helbing & Molnar -- Social Force (1995)
+            :class-card: sd-border-secondary
 
-      .. grid-item-card:: NVIDIA Alpamayo
-         :link: https://developer.nvidia.com/blog/alpamayo
-         :class-card: sd-border-secondary
+            **Physical Review E, 1995**
 
-         **Alpamayo VLA Model for Driving**
+            Seminal social force model for pedestrian dynamics,
+            modelling attraction toward goals and repulsion from
+            obstacles and other pedestrians.
 
-         NVIDIA's vision-language-action model for autonomous vehicles,
-         supporting natural language commands and chain-of-thought reasoning.
+            +++
 
-      .. grid-item-card:: Wayve Blog
-         :link: https://wayve.ai/thinking/
-         :class-card: sd-border-secondary
+            - Force model formulation
+            - Crowd dynamics simulation
+            - Parameter estimation
 
-         **Wayve Research Blog**
+        .. grid-item-card:: Alahi et al. -- Social LSTM (CVPR 2016)
+            :class-card: sd-border-secondary
 
-         End-to-end and world model research from the team behind LINGO and
-         GAIA-3.
+            **CVPR 2016**
 
+            Introduced the social pooling mechanism to LSTM-based
+            pedestrian trajectory prediction, enabling interaction-
+            aware learning.
 
-.. dropdown:: Survey Papers and Reviews
-   :class-container: sd-border-secondary
+            +++
 
-   - Chen, L. et al. (2024). *End-to-End Autonomous Driving: Challenges and
-     Frontiers.* arXiv:2306.16927. Comprehensive survey of E2E methods.
-   - Renz, K. et al. (2022). *Plant: Explainable Planning Transformers via
-     Object-Level Representations.* CoRL 2022. Interpretability for
-     transformer-based planners.
-   - Shao, H. et al. (2023). *ReasonNet: End-to-End Driving with Temporal and
-     Global Reasoning.* CVPR 2023.
+            - LSTM trajectory prediction
+            - Social pooling
+            - ETH/UCY benchmark results
 
+        .. grid-item-card:: Gupta et al. -- Social GAN (CVPR 2018)
+            :class-card: sd-border-secondary
 
-.. dropdown:: Safety and Validation
-   :class-container: sd-border-secondary
+            **CVPR 2018**
 
-   .. grid:: 1 1 2 2
-      :gutter: 2
+            Generative adversarial network for multi-modal
+            pedestrian trajectory prediction with socially
+            acceptable samples.
 
-      .. grid-item-card:: ISO 26262
-         :link: https://www.iso.org/standard/68383.html
-         :class-card: sd-border-secondary
+            +++
 
-         **Functional Safety for Road Vehicles**
-
-         The primary standard for hardware and software safety in automotive
-         electrical and electronic systems.
-
-      .. grid-item-card:: Responsibility-Sensitive Safety (RSS)
-         :link: https://www.mobileye.com/technology/rss/
-         :class-card: sd-border-secondary
-
-         **Mobileye RSS Framework**
-
-         Formal safety model providing mathematical guarantees on collision
-         avoidance that can be layered on top of E2E planners.
-
-   - Seshia, S. A. et al. (2018). *Formal Specification for Deep Neural
-     Networks.* ATVA 2018.
-   - Corso, A. et al. (2021). *Interpretable Safety Validation for Autonomous
-     Vehicles.* ICRA 2021.
+            - GAN-based multi-modal prediction
+            - Variety loss
+            - Social acceptability
 
 
-.. dropdown:: Simulation and Data
-   :class-container: sd-border-secondary
+.. dropdown:: Transformer-Based Prediction
+    :class-container: sd-border-secondary
 
-   .. grid:: 1 1 2 2
-      :gutter: 2
+    .. grid:: 1 1 2 2
+        :gutter: 2
 
-      .. grid-item-card:: CARLA Simulator
-         :link: https://carla.org/
-         :class-card: sd-border-secondary
+        .. grid-item-card:: Shi et al. -- MotionTransformer (NeurIPS 2023)
+            :class-card: sd-border-secondary
 
-         **Open-Source AV Simulator**
+            **NeurIPS 2023**
 
-         Primary simulation platform for this course. Used for scenario
-         generation, sensor data collection, and E2E model evaluation.
+            State-of-the-art Transformer predictor with two-stage
+            global + local motion Transformers and learnable motion
+            query pairs for multi-modal prediction on WOMD.
 
-         +++
+            +++
 
-         - `CARLA Documentation <https://carla.readthedocs.io/en/0.9.16/>`_
-         - `CARLA GitHub <https://github.com/carla-simulator/carla>`_
+            - Two-stage Transformer architecture
+            - Factorized attention
+            - WOMD state-of-the-art results
 
-      .. grid-item-card:: nuScenes Dataset
-         :link: https://www.nuscenes.org/
-         :class-card: sd-border-secondary
+        .. grid-item-card:: Nayakanti et al. -- Wayformer (ICRA 2023)
+            :class-card: sd-border-secondary
 
-         **nuScenes Benchmark**
+            **ICRA 2023**
 
-         The standard benchmark dataset used to evaluate UniAD,
-         DriveTransformer, and other E2E models. Includes 1000 driving
-         scenes with full sensor suite annotations.
+            Waymo's Transformer-based prediction model with
+            efficient factorized attention for joint agent and
+            map encoding.
+
+            +++
+
+            - Factorized attention design
+            - Scalability analysis
+            - Real-time inference
+
+        .. grid-item-card:: Ngiam et al. -- Scene Transformer (ICLR 2022)
+            :class-card: sd-border-secondary
+
+            **ICLR 2022**
+
+            Joint prediction of all agents in a scene using a
+            single Transformer, enabling fully interaction-aware
+            prediction.
+
+            +++
+
+            - Joint multi-agent prediction
+            - Factored attention masks
+            - nuScenes and WOMD results
+
+        .. grid-item-card:: Shi et al. -- MTR++ (T-PAMI 2024)
+            :class-card: sd-border-secondary
+
+            **IEEE T-PAMI 2024**
+
+            Extension of MotionTransformer with improved scene
+            encoding and multi-agent prediction, achieving SOTA
+            across multiple benchmarks.
+
+            +++
+
+            - Extended architecture
+            - Multi-dataset training
+            - Benchmark leaderboard
+
+
+.. dropdown:: Behavior Planning
+    :class-container: sd-border-secondary
+
+    .. grid:: 1 1 2 2
+        :gutter: 2
+
+        .. grid-item-card:: Paden et al. -- AV Planning Survey (IEEE T-ITS 2016)
+            :class-card: sd-border-secondary
+
+            **IEEE T-ITS, 2016**
+
+            Survey of behavior planning approaches including FSMs,
+            POMDP, and rule-based methods for autonomous vehicles.
+
+            +++
+
+            - FSM design patterns
+            - POMDP formulation
+            - Rule-based systems
+
+        .. grid-item-card:: Ulbrich & Maurer -- MOMDP for Behavior (IV 2013)
+            :class-card: sd-border-secondary
+
+            **IV 2013**
+
+            Models behavior planning as a Mixed Observability MDP,
+            enabling principled uncertainty handling beyond FSMs.
+
+            +++
+
+            - MOMDP formulation
+            - Belief-space planning
+            - Intersection scenarios
+
+        .. grid-item-card:: Brechtel et al. -- Probabilistic MDP (ITSC 2014)
+            :class-card: sd-border-secondary
+
+            **ITSC 2014**
+
+            Probabilistic behavior planning under prediction
+            uncertainty using continuous-state MDP.
+
+            +++
+
+            - MDP with probabilistic transitions
+            - Integration with prediction
+            - Risk-aware planning
+
+        .. grid-item-card:: Werber et al. -- Rule Book (IV 2019)
+            :class-card: sd-border-secondary
+
+            **IV 2019**
+
+            Formalization of traffic rules as a hierarchically
+            ordered rule book for certifiable behavior planning.
+
+            +++
+
+            - Rule formalization
+            - Hierarchical priority
+            - Verification
+
+
+.. dropdown:: Imitation Learning and DAgger
+    :class-container: sd-border-secondary
+
+    .. grid:: 1 1 2 2
+        :gutter: 2
+
+        .. grid-item-card:: Ross & Bagnell -- Behavior Cloning (2010)
+            :class-card: sd-border-secondary
+
+            **JMLR Workshop, 2010**
+
+            Analysis of distribution shift in behavior cloning with
+            the formal :math:`O(\epsilon T^2)` error bound derivation.
+
+            +++
+
+            - Distribution shift analysis
+            - Compounding error bound
+            - Theoretical foundations
+
+        .. grid-item-card:: Ross, Gordon & Bagnell -- DAgger (AISTATS 2011)
+            :class-card: sd-border-secondary
+
+            **AISTATS 2011**
+
+            Original DAgger paper introducing the dataset aggregation
+            algorithm with formal reduction from :math:`O(\epsilon T^2)`
+            to :math:`O(\epsilon T)` regret.
+
+            +++
+
+            - DAgger algorithm
+            - Convergence guarantees
+            - No-regret analysis
+
+        .. grid-item-card:: Codevilla et al. -- CILRS (ICCV 2019)
+            :class-card: sd-border-secondary
+
+            **ICCV 2019**
+
+            Conditional imitation learning with reinforcement
+            learning for robust urban driving, addressing
+            distribution shift via hybrid IL+RL training.
+
+            +++
+
+            - Conditional command inputs
+            - IL + RL hybrid
+            - CARLA benchmark results
+
+        .. grid-item-card:: Chen et al. -- TransFuser (CVPR 2021)
+            :class-card: sd-border-secondary
+
+            **CVPR 2021**
+
+            Transformer-based imitation learning agent fusing
+            camera and LiDAR via cross-attention for CARLA
+            Leaderboard challenge.
+
+            +++
+
+            - Sensor fusion via attention
+            - End-to-end imitation
+            - Leaderboard benchmark
+
+
+.. dropdown:: Datasets and Benchmarks
+    :class-container: sd-border-secondary
+
+    .. grid:: 1 1 2 2
+        :gutter: 2
+
+        .. grid-item-card:: Waymo Open Motion Dataset (WOMD)
+            :link: https://waymo.com/open/data/motion/
+            :class-card: sd-border-secondary
+
+            **Waymo Open Dataset**
+
+            Large-scale real-world prediction benchmark with 570 hours
+            of driving data across diverse scenarios. Standard benchmark
+            for MotionTransformer and similar models.
+
+            +++
+
+            - Agent trajectory annotations
+            - HD map with road graph
+            - Prediction challenge leaderboard
+
+        .. grid-item-card:: nuScenes Prediction
+            :link: https://www.nuscenes.org/prediction
+            :class-card: sd-border-secondary
+
+            **nuScenes (Motional)**
+
+            360-degree sensor suite dataset with prediction challenge
+            and standardized MinADE/MinFDE/MissRate metrics.
+
+            +++
+
+            - Multi-sensor annotations
+            - Prediction challenge
+            - MinADE/MinFDE baseline results
+
+        .. grid-item-card:: ETH/UCY Pedestrian Datasets
+            :link: https://graphics.cs.ucy.ac.cy/research/downloads/crowd-data
+            :class-card: sd-border-secondary
+
+            **ETH Zurich / UCY**
+
+            Standard pedestrian trajectory prediction benchmarks
+            used to evaluate Social LSTM, Social GAN, and subsequent
+            pedestrian prediction models.
+
+            +++
+
+            - Overhead video annotations
+            - Multiple crowd scenarios
+            - ADE/FDE metrics
+
+
+.. dropdown:: Recommended Reading
+    :class-container: sd-border-secondary
+
+    .. grid:: 1 1 2 2
+        :gutter: 2
+
+        .. grid-item-card:: Schmerling et al.
+            :class-card: sd-border-secondary
+
+            **Multimodal Probabilistic Model-Based Planning for
+            Human-Robot Interaction (ICRA 2018)**
+
+            Unified framework for prediction and planning under
+            multi-modal agent behavior uncertainty.
+
+        .. grid-item-card:: Sutton & Barto
+            :class-card: sd-border-secondary
+
+            **Reinforcement Learning: An Introduction (2nd Ed.)**
+
+            Comprehensive RL textbook. Chapters 3--6 provide the
+            MDP and policy optimization foundations underlying
+            learned behavior planners and DAgger.
+
+        .. grid-item-card:: Vaswani et al.
+            :class-card: sd-border-secondary
+
+            **Attention Is All You Need (NeurIPS 2017)**
+
+            Original Transformer paper. Essential background for
+            understanding MotionTransformer and all Transformer-based
+            prediction architectures.
+
+        .. grid-item-card:: Goodfellow, Bengio & Courville
+            :class-card: sd-border-secondary
+
+            **Deep Learning (MIT Press, 2016)**
+
+            Chapters 6--10 cover the deep learning foundations
+            (MLPs, CNNs, RNNs) underlying LSTM-based and
+            Transformer-based prediction models.

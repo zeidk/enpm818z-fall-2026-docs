@@ -2,12 +2,12 @@
 Quiz
 ====================================================
 
-This quiz covers the key concepts from Lecture 10: Prediction &
-Decision-Making, including trajectory prediction approaches
-(physics-based, maneuver-based, interaction-aware, Transformer-
-based), multi-modal prediction metrics, FSM behavior planning,
-rule-based vs. learned decision-making, behavior cloning, and
-DAgger.
+This quiz covers the key concepts from Lecture 9: Trajectory
+Planning & Control, including path vs. trajectory, quintic
+polynomial and spline methods, optimization-based trajectory
+planning, MPC formulation and receding-horizon control, Pure
+Pursuit, Stanley, and PID controllers, and emergency maneuver
+synthesis.
 
 .. note::
 
@@ -30,329 +30,318 @@ Multiple Choice
 .. admonition:: Question 1
    :class: hint
 
-   At a busy intersection, an autonomous vehicle must decide
-   whether to proceed or yield. The minimum prediction horizon
-   it needs to reason about crossing agents is approximately:
+   What is the minimum polynomial degree required to match position,
+   velocity, **and** acceleration at both the start and end of a
+   trajectory segment?
 
-   A. 0.5 seconds
+   A. 3rd degree (cubic)
 
-   B. 1 second
+   B. 4th degree (quartic)
 
-   C. 5--8 seconds
+   C. 5th degree (quintic)
 
-   D. 30 seconds
+   D. 6th degree (sextic)
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- 5--8 seconds.
+   **C** -- 5th degree (quintic).
 
-   A vehicle crossing at 50 km/h (14 m/s) takes roughly 3--5 s
-   to cross a 40--70 m intersection. The ego vehicle also needs
-   time to accelerate and clear the intersection. In total,
-   5--8 s of prediction is needed to safely evaluate whether
-   to proceed. Sub-second prediction is sufficient only for
-   emergency braking (collision imminent); it is far too short
-   for intersection negotiation.
+   A degree-:math:`n` polynomial has :math:`n+1` coefficients.
+   Matching position, velocity, and acceleration at two endpoints
+   gives 6 constraints. The minimum degree satisfying 6 constraints
+   is :math:`n = 5` (quintic), yielding exactly 6 coefficients.
+   Cubic polynomials (4 coefficients) can match only position and
+   velocity at both ends; quartics (5 coefficients) are
+   over-constrained by the 6 boundary conditions.
 
 
 .. admonition:: Question 2
    :class: hint
 
-   The Constant Turn Rate and Acceleration (CTRA) model predicts
-   agent trajectories using which measured quantities?
+   In MPC, the **receding horizon** principle means that:
 
-   A. Position, heading, yaw rate, and longitudinal acceleration
+   A. The prediction horizon :math:`N` shrinks as the vehicle
+      approaches the goal.
 
-   B. Position, velocity, jerk, and mass
+   B. Only the first control action from the optimized sequence is
+      applied; the optimization is then re-solved at the next
+      time step.
 
-   C. GPS coordinates and map-matched lane ID
+   C. The vehicle predicts the future states of surrounding agents
+      over horizon :math:`N`.
 
-   D. Optical flow from a front-facing camera
+   D. The cost function is evaluated backwards from the terminal
+      state to the current state.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **A** -- Position, heading, yaw rate, and longitudinal
-   acceleration.
+   **B** -- Only the first control action is applied; the
+   optimization is re-solved at the next time step.
 
-   CTRA assumes constant yaw rate :math:`\omega` and constant
-   longitudinal acceleration :math:`a`, integrating these over
-   time to extrapolate the future position and heading. These
-   quantities can be measured directly from the IMU (yaw rate)
-   and from differentiated GPS or odometry (acceleration).
-   CTRA outperforms CV in curved motion but still fails when
-   agents change intent (e.g., braking at a stop sign).
+   The receding horizon principle is what makes MPC a *feedback*
+   controller rather than an open-loop trajectory tracker. By
+   re-solving at every time step with the current measured state,
+   MPC corrects for disturbances, model errors, and state
+   estimation noise. The horizon "recedes" because the planning
+   window always starts from the current time.
 
 
 .. admonition:: Question 3
    :class: hint
 
-   In maneuver-based prediction, the intent classification step
-   is limited because:
+   In the Pure Pursuit controller, if the lookahead distance
+   :math:`L_d` is doubled while speed remains constant, the
+   steering response becomes:
 
-   A. Intent classifiers require GPU hardware not available
-      on embedded automotive platforms.
+   A. More aggressive (tighter turns)
 
-   B. The discrete maneuver set is hand-designed and cannot
-      cover all real-world behaviors; transitions between
-      maneuvers are abrupt.
+   B. Less aggressive (smoother, cutting corners more)
 
-   C. Intent classification requires access to the agent's
-      internal state (acceleration pedal position).
+   C. Identical, because only :math:`\alpha` determines steering
 
-   D. Classifiers require at least 10 seconds of agent history.
+   D. Unstable, because the lookahead point leaves the path
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- The discrete maneuver set is hand-designed and
-   cannot cover all real-world behaviors; transitions are abrupt.
+   **B** -- Less aggressive (smoother, cutting corners more).
 
-   Any hand-crafted maneuver taxonomy (lane keep, lane change,
-   stop, etc.) is an approximation of the continuous space of
-   possible agent behaviors. Rare behaviors (abrupt U-turns,
-   cyclists entering the road from a sidewalk) fall outside
-   the predefined set. Additionally, the boundary between
-   maneuver classes produces a step-change in predicted
-   trajectory, which is physically implausible.
+   From the steering equation
+   :math:`\delta = \arctan(2L\sin\alpha / L_d)`, increasing
+   :math:`L_d` (denominator) reduces :math:`\delta` for the same
+   angular error :math:`\alpha`. A larger lookahead point is
+   further ahead on the path, requiring less steering to reach it.
+   The result is smoother tracking but larger corner-cutting at
+   high curvature.
 
 
 .. admonition:: Question 4
    :class: hint
 
-   MotionTransformer achieves interaction-aware prediction by:
+   The Stanley controller steering command
+   :math:`\delta = \psi_e + \arctan(ke/v)` divides the cross-track
+   correction by speed :math:`v` because:
 
-   A. Simulating all agent interactions using a physics engine
-      and sampling trajectories from the simulation.
+   A. The steering actuator has a velocity-dependent deadband.
 
-   B. Using factorized multi-head self-attention over agent
-      and map tokens, allowing each agent to attend to all
-      other agents and road elements.
+   B. At higher speeds, the same steering angle produces a larger
+      lateral displacement per unit time, so less correction is
+      needed to achieve the same path convergence rate.
 
-   C. Clustering agent histories into discrete motion modes
-      using k-means and fitting a linear model per cluster.
+   C. The cross-track error :math:`e` grows proportionally to
+      speed.
 
-   D. Reusing the ego vehicle's MPC prediction model for
-      surrounding agents.
+   D. The heading error :math:`\psi_e` is inversely proportional
+      to speed.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Using factorized multi-head self-attention over
-   agent and map tokens.
+   **B** -- At higher speeds, the same steering angle produces
+   larger lateral displacement per unit time, requiring less
+   proportional correction.
 
-   The Transformer's self-attention mechanism allows every
-   agent token to exchange information with every other agent
-   token and every map token in each layer. This naturally
-   captures social interactions (yielding, gap acceptance,
-   following) without explicitly modeling pairwise interactions.
-   Factorized attention reduces the :math:`O(N^2)` cost by
-   separating agent-to-agent and agent-to-map attention.
+   The :math:`1/v` factor normalizes the cross-track correction
+   by time-to-travel: at high speed the vehicle is moving
+   quickly toward the path anyway, so a smaller steering angle
+   suffices. Without this factor, the controller would oversteer
+   at high speed and understeer at low speed.
 
 
 .. admonition:: Question 5
    :class: hint
 
-   The MinADE_K metric evaluates trajectory prediction by:
+   Integrator windup in a PID speed controller occurs when:
 
-   A. Computing the average displacement error of all K
-      predicted trajectories and averaging over K.
+   A. The derivative term grows too large due to measurement noise.
 
-   B. Selecting the single best prediction (minimum ADE) among
-      the K predictions for each scenario.
+   B. The integral accumulates error during actuator saturation,
+      causing large overshoot when the saturation constraint
+      is released.
 
-   C. Computing the maximum displacement error across all K
-      predictions.
+   C. The proportional gain is set too high, causing the system
+      to become underdamped.
 
-   D. Evaluating the calibration of predicted probabilities
-      across K modes.
+   D. The reference speed changes faster than the vehicle can
+      accelerate.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Selecting the single best prediction (minimum ADE)
-   among K predictions for each scenario.
+   **B** -- The integral accumulates error during actuator
+   saturation.
 
-   MinADE_K (also written mADE@K) evaluates the oracle performance:
-   given K predicted trajectories, how well does the best one
-   match the ground truth? This rewards *diversity* -- a system
-   that covers many possible futures will score well even if
-   individual trajectories are not highly probable. Critics of
-   MinADE argue that it ignores probability calibration, which
-   is why mAP is increasingly used alongside it.
+   When the throttle or brake is saturated (clamped at its
+   physical limit), the PID output is clipped but the integrator
+   continues to add the current error at every time step. When
+   the constraint is eventually released (e.g., vehicle reaches
+   the speed range), the large accumulated integral causes the
+   output to shoot far beyond the target. Anti-windup strategies
+   prevent accumulation during saturation.
 
 
 .. admonition:: Question 6
    :class: hint
 
-   In a highway driving FSM, the transition
-   ``LANE_FOLLOW`` → ``LANE_CHANGE_LEFT`` should be gated on which
-   conditions?
+   A natural cubic spline minimizes which quantity over the
+   interpolated curve?
 
-   A. Current speed > 100 km/h only.
+   A. Maximum curvature along the curve
 
-   B. Lead vehicle speed is below reference speed AND the left
-      lane has a safe gap > minimum safe distance ahead and
-      behind the ego.
+   B. Total arc length
 
-   C. The left turn signal has been on for more than 3 seconds.
+   C. Integral of the squared second derivative (bending energy)
 
-   D. The ego vehicle has been in ``LANE_FOLLOW`` for more
-      than 10 seconds.
+   D. Sum of squared interpolation errors at the waypoints
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Lead vehicle below reference speed AND safe gap
-   in the left lane.
+   **C** -- Integral of the squared second derivative (bending
+   energy).
 
-   Both conditions must hold: there must be a reason to change
-   lanes (blocked by a slow vehicle) and a safe opportunity
-   (gap in the target lane). Gating on speed alone would cause
-   unnecessary lane changes; gating on gap alone would change
-   lanes without motivation. The gap check uses predicted agent
-   positions (from the prediction module) to verify safety
-   for the duration of the lane-change maneuver.
+   The natural cubic spline is the unique minimum-bending-energy
+   interpolant through the given waypoints:
+
+   .. math::
+
+      \min \int_{t_0}^{t_n} \left[S''(t)\right]^2 dt
+
+   This is why cubic splines produce visually smooth curves --
+   they distribute curvature as evenly as possible. This property
+   also relates to the physical deflection of a thin elastic beam
+   (a "spline" in the engineering sense).
 
 
 .. admonition:: Question 7
    :class: hint
 
-   The fundamental problem with behavior cloning (BC) that
-   DAgger is designed to solve is:
+   In linear MPC for vehicle trajectory tracking, the bicycle
+   model is **linearized** around the reference trajectory because:
 
-   A. Behavior cloning requires labeled data, which is expensive
-      to collect.
+   A. The full nonlinear model cannot represent vehicle dynamics.
 
-   B. Distribution shift: the policy visits states not seen
-      during training, where it has no supervision signal,
-      causing compounding errors.
+   B. Linearization converts the nonlinear optimization problem
+      into a quadratic program (QP), which can be solved in
+      milliseconds at real-time rates.
 
-   C. Behavior cloning converges to the wrong policy because
-      the supervised loss is non-convex.
+   C. The bicycle model is already linear; no approximation is
+      needed.
 
-   D. Behavior cloning cannot learn from continuous action
-      spaces.
+   D. Linearization eliminates the need for a prediction horizon.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Distribution shift causing compounding errors.
+   **B** -- Linearization converts the NLP to a QP solvable in
+   milliseconds.
 
-   When a BC policy makes a small error, it moves to a state
-   slightly off the expert's trajectory. The policy was never
-   trained on this state, so it may make another error in
-   a bad direction. Errors compound quadratically in the time
-   horizon (:math:`O(\epsilon T^2)`). DAgger fixes this by
-   querying the expert at states the learned policy actually
-   visits, so the training distribution converges to the
-   deployment distribution.
+   The bicycle model is nonlinear (trigonometric functions of
+   heading). Linearizing around the reference trajectory yields
+   linear state equations, and if the cost is quadratic the
+   resulting optimization is a QP. QPs have polynomial-time
+   algorithms (active-set, interior-point) and can be solved
+   in under 1 ms with code-generated solvers, enabling
+   real-time MPC at 50 Hz.
 
 
 .. admonition:: Question 8
    :class: hint
 
-   DAgger improves over behavior cloning by:
+   A B-spline trajectory has the **local support** property,
+   meaning:
 
-   A. Using a larger neural network with more capacity.
+   A. The curve passes through all control points.
 
-   B. Iteratively rolling out the learned policy and augmenting
-      the training dataset with expert actions at visited states.
+   B. Moving one control point affects only a local portion
+      of the curve (at most :math:`k+1` spans for degree
+      :math:`k`).
 
-   C. Using reinforcement learning with a reward signal instead
-      of supervised learning.
+   C. The curve is supported (lies above) the convex hull of
+      the control points.
 
-   D. Training on randomized simulation environments to cover
-      more state diversity.
+   D. The spline can only be evaluated at the knot locations.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Iteratively rolling out the learned policy and
-   augmenting the dataset with expert labels at visited states.
+   **B** -- Moving one control point affects only the local
+   portion of the curve (at most :math:`k+1` spans).
 
-   DAgger is a supervised learning algorithm (not RL), but it
-   uses an online data collection loop. At each iteration the
-   current policy generates new states, the expert labels them,
-   and these are added to the aggregated dataset. Over iterations
-   the training distribution converges to the deployment
-   distribution, reducing compounding errors from
-   :math:`O(\epsilon T^2)` to :math:`O(\epsilon T)`.
+   Local support is a key advantage of B-splines over global
+   polynomials. It means that local adjustments to the trajectory
+   (e.g., routing around a newly detected obstacle) require
+   modifying only a few control points, and the change affects
+   only the nearby portion of the path. This is critical for
+   efficient online trajectory editing.
 
 
 .. admonition:: Question 9
    :class: hint
 
-   The **gap acceptance** problem at an uncontrolled intersection
-   requires predicting:
+   In Frenet-frame trajectory planning, generating multiple
+   candidate quintic polynomials by varying the terminal lateral
+   offset :math:`d_f` serves what purpose?
 
-   A. The traffic light phase remaining time.
+   A. It guarantees that at least one candidate is kinematically
+      feasible.
 
-   B. The time gap available in the crossing traffic stream and
-      whether the ego can cross before the next vehicle arrives.
+   B. It produces a discrete set of trajectory options that can
+      be evaluated for cost and safety, with the best feasible
+      candidate selected.
 
-   C. The number of lanes on the cross street.
+   C. It reduces the computation time by parallelizing the
+      coefficient calculation.
 
-   D. The ego vehicle's braking distance at current speed.
+   D. It ensures the trajectory converges to the road centerline
+      within one planning step.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- The time gap in the crossing traffic stream and
-   whether the ego can complete the crossing within that gap.
+   **B** -- It produces a discrete set of options evaluated for
+   cost and safety.
 
-   Gap acceptance is the decision of whether to enter a traffic
-   stream given a current gap. The ego must predict how long
-   the current gap will remain open (based on approaching
-   vehicle speed and distance) and compare it to the time
-   needed to cross (based on ego speed and intersection width).
-   Fixed-threshold rules work poorly because the required gap
-   size depends on ego speed, intersection geometry, and
-   approaching vehicle speed.
+   By sampling a grid of terminal conditions
+   :math:`(d_f, \dot{d}_f, T)`, the planner generates many
+   candidate trajectories covering different lateral positions
+   and durations. Each is evaluated for collision clearance and
+   cost. The lowest-cost collision-free candidate is selected.
+   This sampling-then-scoring approach is efficient and handles
+   multi-modal situations (e.g., passing on either side of
+   an obstacle).
 
 
 .. admonition:: Question 10
    :class: hint
 
-   Multi-modal trajectory prediction outputs
-   :math:`K` trajectories with probabilities
-   :math:`\{(\hat{\tau}_k, p_k)\}_{k=1}^K`. A planner uses
-   these to:
+   Emergency braking distance at :math:`v_0 = 20` m/s with maximum
+   deceleration :math:`a_{\max} = 6` m/s² is:
 
-   A. Execute the trajectory with the highest probability
-      :math:`k^* = \arg\max_k p_k` and ignore all others.
+   A. 20 m
 
-   B. Generate ego-trajectory candidates evaluated for safety
-      against all predicted agent modes, weighting risk by
-      mode probability.
+   B. 33.3 m
 
-   C. Compute the average predicted trajectory weighted by
-      probabilities and plan against this mean trajectory.
+   C. 60 m
 
-   D. Request more sensor data until prediction uncertainty
-      falls below a threshold.
+   D. 66.7 m
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Generate ego-trajectory candidates evaluated for
-   safety against all predicted agent modes, weighted by
-   probability.
-
-   Taking only the mode with highest probability ignores the
-   tail risk of other plausible behaviors. The correct approach
-   is to evaluate candidate ego-trajectories against all :math:`K`
-   agent modes and select the ego trajectory that minimizes
-   expected collision risk:
+   **B** -- Approximately 33.3 m.
 
    .. math::
 
-      \hat{\tau}_{\text{ego}} = \arg\min_\tau
-      \sum_k p_k \cdot \mathcal{R}(\tau, \hat{\tau}_k^{\text{agent}})
+      d_{\text{stop}} = \frac{v_0^2}{2 a_{\max}}
+      = \frac{20^2}{2 \times 6} = \frac{400}{12} \approx 33.3 \text{ m}
 
-   This ensures the ego plan is robust to the full distribution
-   of agent futures.
+   At 72 km/h, an autonomous vehicle must begin emergency braking
+   at least 33 m before an obstacle (plus any perception and
+   actuation latency). Typical system latency of 100--200 ms adds
+   2--4 m to the required detection range.
 
 
 ----
@@ -364,108 +353,105 @@ True / False
 .. admonition:: Question 11
    :class: hint
 
-   **True or False:** Physics-based trajectory prediction models
-   such as the Constant Velocity (CV) model are accurate for
-   prediction horizons of 5--8 seconds on highway roads.
+   **True or False:** A path and a trajectory contain the same
+   information; the terms can be used interchangeably in motion
+   planning.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   CV and CTRA models are accurate for approximately 0.5--1 s
-   on straight roads, where the constant-motion assumption holds.
-   Over 5--8 s, agents frequently change speed, turn, or make
-   lane changes -- all of which violate the CV assumption.
-   Prediction error grows approximately linearly with horizon
-   for CV. At 5 s, CV errors of 10--20 m are common in
-   real traffic, making it unsuitable for intersection
-   negotiation or merge planning.
+   A path specifies only the geometric shape of the route (as a
+   function of arc length or an arbitrary parameter). A trajectory
+   adds a time parameterization: it specifies where the vehicle is
+   at every point in time, implicitly defining velocity and
+   acceleration profiles. Controllers that handle speed regulation
+   (throttle, brake) require a trajectory, not just a path.
 
 
 .. admonition:: Question 12
    :class: hint
 
-   **True or False:** The mAP (mean Average Precision) metric
-   for multi-modal prediction rewards both accurate trajectory
-   positions and well-calibrated probabilities.
+   **True or False:** The Stanley controller produces a non-zero
+   steady-state lateral error on a straight road at constant speed.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False**
+
+   On a straight road at constant speed with zero initial
+   cross-track error, the Stanley controller produces zero
+   steady-state lateral error. The heading-error term
+   :math:`\psi_e` drives the vehicle parallel to the path,
+   and the :math:`\arctan(ke/v)` term drives cross-track error
+   :math:`e` to zero. Unlike Pure Pursuit, Stanley has no
+   geometry-induced steady-state error on straight or
+   gently curved roads.
+
+
+.. admonition:: Question 13
+   :class: hint
+
+   **True or False:** In MPC, increasing the prediction horizon
+   :math:`N` always improves closed-loop performance.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False**
+
+   Increasing :math:`N` provides better foresight (the optimizer
+   can plan further ahead, avoiding locally greedy actions), but
+   it also increases the size of the QP or NLP, requiring more
+   computation time per solve. If the solve time exceeds the
+   control period, the controller misses its real-time deadline
+   and performance degrades. There is an optimal :math:`N` that
+   balances foresight and computational feasibility.
+
+
+.. admonition:: Question 14
+   :class: hint
+
+   **True or False:** The convex hull property of B-splines
+   guarantees that the trajectory lies within the convex hull of
+   its control points, which is useful for conservative collision
+   checking.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **True**
 
-   mAP treats each predicted mode as a detection: a mode is a
-   true positive if its endpoint is within a distance threshold
-   of the ground truth AND its probability rank is consistent
-   with its precision-recall curve. Unlike MinADE, mAP jointly
-   penalizes both inaccurate trajectories and poor probability
-   estimates, making it a more complete evaluation metric for
-   probabilistic prediction.
-
-
-.. admonition:: Question 13
-   :class: hint
-
-   **True or False:** A finite state machine behavior planner
-   can, in principle, handle every possible traffic scenario
-   given a sufficiently large number of states and transitions.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   While an FSM can be made arbitrarily complex, the number of
-   distinct traffic situations grows combinatorially with the
-   number of agents, their states, and environmental conditions.
-   In practice, FSMs are designed for the most common scenarios
-   and fail gracefully in edge cases that were not anticipated
-   during design. The fundamental issue is that traffic scenarios
-   exist on a continuous manifold, not a discrete state space
-   that FSMs naturally represent.
-
-
-.. admonition:: Question 14
-   :class: hint
-
-   **True or False:** In DAgger, the expert is only queried at
-   states that the *expert* would visit, not states that the
-   *learned policy* visits.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   DAgger explicitly queries the expert at states that the
-   **learned policy** visits during its rollouts. This is the
-   key distinction from standard behavior cloning. By labeling
-   states on the *policy's* trajectory (not the expert's),
-   DAgger provides supervision at the states where the policy
-   will actually be deployed, closing the distribution shift gap.
+   The B-spline convex hull property states that every point on
+   the curve lies within the convex hull of its local control
+   points. For collision checking, this means: if the convex hull
+   of the control polygon is collision-free, the curve itself is
+   guaranteed to be collision-free -- a fast and conservative
+   check without evaluating the curve densely.
 
 
 .. admonition:: Question 15
    :class: hint
 
-   **True or False:** The Social Force Model (Helbing & Molnar)
-   is a learning-based prediction approach that uses neural
-   networks to model pedestrian interactions.
+   **True or False:** The Ziegler-Nichols tuning method for PID
+   controllers produces gains that are optimal in the
+   :math:`H_\infty` sense.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   The Social Force Model is a **physics-based** approach that
-   uses hand-crafted attractive and repulsive force functions to
-   model pedestrian motion. It does not use neural networks.
-   Forces are computed analytically from relative positions and
-   velocities. While the model can be parameterized and fitted to
-   data, it is not a learning-based approach in the neural network
-   sense. Learning-based social interaction models (e.g.,
-   Social GAN, MotionTransformer) emerged much later.
+   Ziegler-Nichols is a heuristic tuning method based on
+   observing the system's response at the stability boundary
+   (ultimate gain and period). It provides a practical starting
+   point for tuning but does not produce :math:`H_\infty`-optimal
+   or even :math:`H_2`-optimal gains. The resulting controller
+   typically has approximately 25% overshoot and adequate
+   disturbance rejection, which is acceptable for many applications
+   but suboptimal for comfort-critical AV control.
 
 
 ----
@@ -477,9 +463,10 @@ Essay Questions
 .. admonition:: Question 16
    :class: hint
 
-   **Explain the distribution shift problem in behavior cloning
-   and why it causes compounding errors.** Use a concrete
-   autonomous driving example to illustrate the failure mode.
+   **Compare Model Predictive Control with the Stanley controller
+   for autonomous vehicle lateral control.** What are the
+   key advantages of MPC over Stanley, and in what scenarios
+   would Stanley be preferred?
 
    *(2-4 sentences)*
 
@@ -488,30 +475,32 @@ Essay Questions
 
    *Key points to include:*
 
-   - Behavior cloning trains a policy on expert state-action pairs.
-     During deployment, the policy's own actions take it to states
-     that differ from the expert's trajectory -- these states were
-     never seen during training.
-   - Concrete example: the expert always stays centered in the lane.
-     The BC policy makes a small right-drift error, ending up
-     slightly off-center. This state was never in the training set,
-     so the policy has no reliable recovery action and may drift
-     further right -- eventually leaving the lane.
-   - Errors compound because each mistake produces a new out-of-
-     distribution state, which produces a larger mistake, which
-     produces an even more out-of-distribution state.
-   - The compounding grows as :math:`O(\epsilon T^2)` where
-     :math:`\epsilon` is the per-step error and :math:`T` is
-     the episode length -- making BC fragile for long-horizon tasks.
+   - MPC optimizes a multi-step cost function that incorporates
+     future predictions, allowing it to anticipate upcoming curves
+     and constraints, respect actuator limits explicitly, and
+     trade off multiple objectives (comfort, tracking, safety)
+     simultaneously.
+   - Stanley is a reactive, single-step controller: it responds
+     to current cross-track and heading error without planning
+     ahead. This makes it simpler but unable to proactively
+     adjust for upcoming trajectory features.
+   - MPC advantages: constraint handling (curvature limits,
+     speed bounds), look-ahead, comfort optimization, and the
+     ability to incorporate obstacle avoidance directly.
+   - Stanley is preferred in resource-constrained systems
+     (embedded microcontrollers), low-speed applications, or
+     as a baseline where MPC's computational cost is unjustified.
+     Stanley's O(1) compute cost makes it deterministic and
+     latency-free.
 
 
 .. admonition:: Question 17
    :class: hint
 
-   **Compare rule-based FSM behavior planners with learned
-   (imitation learning) behavior planners.** Under what
-   operational conditions would you choose each approach, and
-   what hybrid strategies exist?
+   **Explain why quintic polynomials are preferred over cubic
+   polynomials for trajectory segment generation.** What
+   additional property does the quintic provide, and why does it
+   matter for passenger comfort?
 
    *(2-4 sentences)*
 
@@ -520,32 +509,31 @@ Essay Questions
 
    *Key points to include:*
 
-   - FSM planners are preferred when: interpretability and
-     certifiability are required (regulatory approval), the
-     operational design domain (ODD) is well-defined and narrow,
-     or real-time guarantees with bounded computation are needed.
-   - Learned planners are preferred when: the ODD is broad and
-     difficult to enumerate (urban driving), human-like interaction
-     is required (gap acceptance, courtesy behaviors), or large
-     logged datasets are available to train from.
-   - Hybrid strategies: use an FSM for safety-critical decisions
-     (emergency stop, right-of-way) with a learned planner for
-     non-safety-critical comfort behaviors (smooth merges, yield
-     negotiation). The safety layer can override the learned policy
-     whenever a formal safety condition is violated.
-   - Another hybrid: use a learned policy as a cost function or
-     prior within a model-based planner (e.g., RL-guided lattice
-     search), combining the interpretability of the lattice with
-     the generalization of learned policies.
+   - A cubic polynomial has 4 coefficients, which can be uniquely
+     determined by 4 boundary conditions: position and velocity at
+     both endpoints. It cannot simultaneously match acceleration at
+     both endpoints.
+   - A quintic polynomial has 6 coefficients, allowing it to match
+     position, velocity, **and** acceleration at both endpoints.
+     This ensures :math:`C^2` continuity across trajectory
+     segments.
+   - Continuity of acceleration means there are no impulsive
+     changes in acceleration when the vehicle transitions between
+     trajectory segments. Without this, passengers experience a
+     jerk spike at every segment boundary.
+   - Jerk (rate of change of acceleration) is the primary
+     perceptual discomfort metric; bounding it through :math:`C^2`
+     continuity is essential for a smooth passenger experience.
 
 
 .. admonition:: Question 18
    :class: hint
 
-   **Describe the MotionTransformer architecture for trajectory
-   prediction.** Explain how the attention mechanism enables
-   interaction-aware prediction and what the multi-modal output
-   represents.
+   **Describe the Frenet-frame approach to trajectory planning.**
+   Why is the Frenet frame more convenient than Cartesian
+   coordinates for road-following trajectories, and how is a
+   Frenet trajectory converted back to a Cartesian plan for
+   execution?
 
    *(2-4 sentences)*
 
@@ -554,24 +542,20 @@ Essay Questions
 
    *Key points to include:*
 
-   - MotionTransformer uses a two-stage Transformer architecture:
-     a global motion Transformer encodes all agents and map
-     polylines jointly using factorized self-attention; a local
-     motion Transformer decodes :math:`K` trajectory modes per
-     agent using a set of learnable motion query pairs.
-   - The self-attention mechanism allows every agent token to
-     attend to every other agent and every map element in each
-     layer. Attention weights implicitly represent how much
-     each agent's future depends on neighboring agents and road
-     geometry -- capturing merging, following, and yielding
-     interactions without explicit pairwise modeling.
-   - The multi-modal output :math:`\{(\hat{\tau}_k, p_k)\}` represents
-     :math:`K` plausible future trajectories and their probabilities.
-     Each mode corresponds to a different behavioral hypothesis
-     (e.g., turn left vs. go straight vs. stop), allowing the
-     planner to reason about the full distribution of possible
-     agent behaviors.
-   - MotionTransformer achieves state-of-the-art performance on
-     the Waymo Open Motion Dataset benchmark, demonstrating that
-     joint attention over all scene elements is a powerful
-     inductive bias for trajectory prediction.
+   - The Frenet frame decomposes vehicle motion into longitudinal
+     (:math:`s`, along the road centerline) and lateral
+     (:math:`d`, perpendicular to it) components. This decouples
+     the planning problem: longitudinal and lateral trajectories
+     can be planned independently as 1-D polynomial problems.
+   - In Cartesian coordinates, a lane-following trajectory on a
+     curved road is a complex 2-D curve; in Frenet coordinates,
+     it is simply :math:`d(t) \approx 0` -- a nearly trivial
+     1-D problem.
+   - Conversion back to Cartesian: for each time sample, evaluate
+     :math:`s(t)` and :math:`d(t)`, look up the Cartesian position
+     of the road centerline at arc length :math:`s(t)`, and offset
+     perpendicular to the centerline by :math:`d(t)`.
+   - The Frenet frame is only valid where the road centerline
+     curvature is non-singular. At very sharp turns or
+     intersections, the frame may become ill-conditioned and
+     Cartesian planning must be used instead.
