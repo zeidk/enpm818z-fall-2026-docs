@@ -131,60 +131,31 @@ Fusion Architectures
       complementary features.
 
 
-Kalman Filter
---------------
+Kalman Filter for Sensor Fusion
+---------------------------------
 
-The **Kalman Filter (KF)** is the optimal linear state estimator under
-Gaussian noise assumptions. It tracks a hidden state :math:`\mathbf{x}` by
-alternating between **predict** and **update** steps.
+.. admonition:: Recap from ENPM673
+   :class: note
 
-State Space Model
-~~~~~~~~~~~~~~~~~~
+   In ENPM673, you derived the Kalman Filter from first principles: the
+   linear-Gaussian state space model, the predict-update cycle, and the
+   Kalman Gain as a trust dial between prediction and measurement. Here
+   we focus on **applying** the KF framework to multi-sensor fusion in
+   autonomous driving.
 
-.. math::
+KF Equations -- Quick Reference
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   \text{Process model:} \quad \mathbf{x}_k = F_k \mathbf{x}_{k-1} + B_k \mathbf{u}_k + \mathbf{w}_k, \quad \mathbf{w}_k \sim \mathcal{N}(0, Q_k)
+.. admonition:: KF Predict-Update Summary
+   :class: hint
 
-   \text{Measurement model:} \quad \mathbf{z}_k = H_k \mathbf{x}_k + \mathbf{v}_k, \quad \mathbf{v}_k \sim \mathcal{N}(0, R_k)
+   .. math::
 
-where:
+      \textbf{Predict:} \quad \hat{\mathbf{x}}_{k|k-1} = F_k \hat{\mathbf{x}}_{k-1|k-1} + B_k \mathbf{u}_k, \quad P_{k|k-1} = F_k P_{k-1|k-1} F_k^T + Q_k
 
-- :math:`\mathbf{x}_k` -- state vector (e.g., position, velocity)
-- :math:`F_k` -- state transition matrix
-- :math:`\mathbf{u}_k` -- control input; :math:`B_k` -- control matrix
-- :math:`Q_k` -- process noise covariance
-- :math:`\mathbf{z}_k` -- measurement vector
-- :math:`H_k` -- measurement matrix (maps state to measurement space)
-- :math:`R_k` -- measurement noise covariance
+      \textbf{Update:} \quad K_k = P_{k|k-1} H_k^T (H_k P_{k|k-1} H_k^T + R_k)^{-1}
 
-Predict Step
-~~~~~~~~~~~~~
-
-.. math::
-
-   \hat{\mathbf{x}}_{k|k-1} = F_k \hat{\mathbf{x}}_{k-1|k-1} + B_k \mathbf{u}_k
-
-   P_{k|k-1} = F_k P_{k-1|k-1} F_k^T + Q_k
-
-The prior state estimate :math:`\hat{\mathbf{x}}_{k|k-1}` and its uncertainty
-:math:`P_{k|k-1}` are propagated forward using the process model. Uncertainty
-grows (P increases) as we predict further ahead without new measurements.
-
-Update Step
-~~~~~~~~~~~~
-
-.. math::
-
-   K_k = P_{k|k-1} H_k^T \left( H_k P_{k|k-1} H_k^T + R_k \right)^{-1}
-
-   \hat{\mathbf{x}}_{k|k} = \hat{\mathbf{x}}_{k|k-1} + K_k \left( \mathbf{z}_k - H_k \hat{\mathbf{x}}_{k|k-1} \right)
-
-   P_{k|k} = (I - K_k H_k) P_{k|k-1}
-
-The **innovation** :math:`\tilde{\mathbf{y}}_k = \mathbf{z}_k - H_k \hat{\mathbf{x}}_{k|k-1}`
-is the discrepancy between the predicted measurement and the actual measurement.
-The posterior state estimate corrects the prior by a weighted fraction of the
-innovation.
+      \hat{\mathbf{x}}_{k|k} = \hat{\mathbf{x}}_{k|k-1} + K_k (\mathbf{z}_k - H_k \hat{\mathbf{x}}_{k|k-1}), \quad P_{k|k} = (I - K_k H_k) P_{k|k-1}
 
 Kalman Gain Intuition
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -212,6 +183,104 @@ Kalman Gain Intuition
    When your model is confident and sensors are noisy, trust the model. When
    sensors are accurate and your model is uncertain (e.g., at startup), trust
    the sensors.
+
+KF for Multi-Sensor Fusion in AV
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Consider tracking a vehicle ahead of the ego car. We define a state vector
+that captures the target's position, velocity, and range-rate:
+
+.. math::
+
+   \mathbf{x} = \begin{bmatrix} x \\ y \\ z \\ \dot{x} \\ \dot{y} \\ \dot{z} \end{bmatrix}
+
+Three sensors observe this target, each measuring a different subset of the
+state through its own measurement matrix :math:`H`.
+
+**LiDAR** -- measures 3D position directly:
+
+.. math::
+
+   \mathbf{z}^{L} = \begin{bmatrix} x \\ y \\ z \end{bmatrix}, \quad
+   H^{L} = \begin{bmatrix} 1 & 0 & 0 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 & 0 & 0 \\ 0 & 0 & 1 & 0 & 0 & 0 \end{bmatrix}
+
+**RADAR** -- measures range :math:`r = \sqrt{x^2+y^2}` and range-rate
+:math:`\dot{r}`. For a target directly ahead (small bearing), the linearized
+measurement simplifies to:
+
+.. math::
+
+   \mathbf{z}^{R} = \begin{bmatrix} x \\ \dot{x} \end{bmatrix}, \quad
+   H^{R} = \begin{bmatrix} 1 & 0 & 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 1 & 0 & 0 \end{bmatrix}
+
+**Camera** -- provides bearing (lateral pixel position maps to :math:`y`
+offset after projection):
+
+.. math::
+
+   \mathbf{z}^{C} = \begin{bmatrix} y \end{bmatrix}, \quad
+   H^{C} = \begin{bmatrix} 0 & 1 & 0 & 0 & 0 & 0 \end{bmatrix}
+
+Sequential Update Procedure
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+At each time step, run the **predict** step once using the constant-velocity
+process model, then apply the **update** step sequentially for each sensor
+that delivers a measurement:
+
+1. **Predict** :math:`\hat{\mathbf{x}}_{k|k-1}`, :math:`P_{k|k-1}` using :math:`F` and :math:`Q`.
+2. **Update with LiDAR**: use :math:`H^{L}`, :math:`R^{L}`, :math:`\mathbf{z}^{L}` to obtain :math:`\hat{\mathbf{x}}_{k|L}`, :math:`P_{k|L}`.
+3. **Update with RADAR**: using the posterior from step 2 as the new prior, apply :math:`H^{R}`, :math:`R^{R}`, :math:`\mathbf{z}^{R}`.
+4. **Update with Camera**: again chain the posterior, applying :math:`H^{C}`, :math:`R^{C}`, :math:`\mathbf{z}^{C}`.
+
+The order of sensor updates does not affect the final result (the KF update
+is associative for independent measurements). Each update further reduces the
+covariance :math:`P`, fusing complementary information from all three modalities.
+
+Sensor Noise and Environmental Conditions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Each sensor's measurement noise covariance :math:`R` reflects both intrinsic
+sensor precision and current environmental conditions:
+
+.. list-table::
+   :widths: 18 27 27 28
+   :header-rows: 1
+   :class: compact-table
+
+   * - Condition
+     - Camera :math:`R^{C}`
+     - LiDAR :math:`R^{L}`
+     - RADAR :math:`R^{R}`
+   * - Clear day
+     - Low (sharp images)
+     - Low (clean returns)
+     - Low
+   * - Heavy rain
+     - **High** (blur, glare)
+     - Moderate (scattering)
+     - Low (robust to rain)
+   * - Night
+     - **High** (low contrast)
+     - Low (active sensor)
+     - Low (active sensor)
+   * - Fog
+     - **High** (occlusion)
+     - **High** (backscatter)
+     - Low (penetrates fog)
+   * - Direct sunlight
+     - Moderate (saturation)
+     - Moderate (solar noise)
+     - Low
+
+.. admonition:: Adaptive Noise Tuning
+   :class: tip
+
+   In practice, the :math:`R` matrices are not static. Production AV stacks
+   **adapt** :math:`R` at runtime based on weather classification, sensor
+   health monitors, and signal-to-noise diagnostics. For example, when a rain
+   detector triggers, :math:`R^{C}` is inflated so the Kalman gain
+   automatically down-weights camera measurements in favor of RADAR.
 
 
 Extended Kalman Filter (EKF)
@@ -534,51 +603,288 @@ Performance on nuScenes: 70.2 NDS vs. 65.0 for LiDAR-only -- camera fusion
 adds semantic richness that improves small object detection.
 
 
-CARLA Hands-On: Camera + LiDAR + RADAR Fusion
+CARLA Hands-On: Multi-Sensor Kalman Filter
 ------------------------------------------------
 
-In the CARLA assignment, you will implement a simplified late-fusion pipeline:
+This exercise implements a multi-sensor fusion pipeline using the Kalman Filter
+framework discussed in this lecture. You will fuse CARLA's camera, LiDAR, and
+RADAR data to track vehicles ahead of the ego car in real time.
+
+
+Task 1: Spawn Multi-Sensor Suite and Collect Synchronized Data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Connect to CARLA, spawn an ego vehicle on autopilot, and attach three sensors.
+A ``SensorManager`` class stores the latest reading from each sensor with
+timestamps so that we can collect synchronized snapshots at 10 Hz.
 
 .. code-block:: python
 
    import carla
    import numpy as np
+   import time
 
-   # 1. Spawn sensors
+   # ---------- Sensor Manager ----------
+   class SensorManager:
+       """Stores the latest reading from each sensor with timestamps."""
+
+       def __init__(self):
+           self.latest = {}   # sensor_name -> (timestamp, data)
+
+       def make_callback(self, sensor_name):
+           def callback(data):
+               self.latest[sensor_name] = (data.timestamp, data)
+           return callback
+
+       def get_snapshot(self):
+           """Return a copy of the latest readings from all sensors."""
+           return dict(self.latest)
+
+   # ---------- CARLA setup ----------
+   client = carla.Client('localhost', 2000)
+   client.set_timeout(10.0)
    world = client.get_world()
    bp_lib = world.get_blueprint_library()
 
-   camera_bp = bp_lib.find('sensor.camera.rgb')
-   lidar_bp = bp_lib.find('sensor.lidar.ray_cast')
-   radar_bp = bp_lib.find('sensor.other.radar')
+   # Spawn ego vehicle
+   vehicle_bp = bp_lib.find('vehicle.tesla.model3')
+   spawn_point = world.get_map().get_spawn_points()[0]
+   ego = world.spawn_actor(vehicle_bp, spawn_point)
+   ego.set_autopilot(True)
 
+   # ---------- Sensor blueprints ----------
+   camera_bp = bp_lib.find('sensor.camera.rgb')
    camera_bp.set_attribute('image_size_x', '1280')
    camera_bp.set_attribute('image_size_y', '720')
+   camera_bp.set_attribute('fov', '90')
+
+   lidar_bp = bp_lib.find('sensor.lidar.ray_cast')
    lidar_bp.set_attribute('channels', '64')
    lidar_bp.set_attribute('range', '100')
+   lidar_bp.set_attribute('rotation_frequency', '10')
+   lidar_bp.set_attribute('points_per_second', '100000')
+
+   radar_bp = bp_lib.find('sensor.other.radar')
    radar_bp.set_attribute('horizontal_fov', '30')
    radar_bp.set_attribute('range', '100')
 
-   # 2. Attach to ego vehicle
-   camera_transform = carla.Transform(carla.Location(x=1.5, z=2.4))
-   lidar_transform  = carla.Transform(carla.Location(x=0.0, z=2.4))
-   radar_transform  = carla.Transform(carla.Location(x=2.0, z=1.0))
+   # ---------- Attach sensors ----------
+   camera = world.spawn_actor(
+       camera_bp,
+       carla.Transform(carla.Location(x=1.5, z=2.4)),
+       attach_to=ego)
+   lidar = world.spawn_actor(
+       lidar_bp,
+       carla.Transform(carla.Location(x=0.0, z=2.4)),
+       attach_to=ego)
+   radar = world.spawn_actor(
+       radar_bp,
+       carla.Transform(carla.Location(x=2.0, z=1.0)),
+       attach_to=ego)
 
-   camera = world.spawn_actor(camera_bp, camera_transform, attach_to=ego)
-   lidar  = world.spawn_actor(lidar_bp,  lidar_transform,  attach_to=ego)
-   radar  = world.spawn_actor(radar_bp,  radar_transform,  attach_to=ego)
+   # ---------- Register callbacks ----------
+   sm = SensorManager()
+   camera.listen(sm.make_callback('camera'))
+   lidar.listen(sm.make_callback('lidar'))
+   radar.listen(sm.make_callback('radar'))
 
-   # 3. Fusion: inverse-variance weighting on range estimates
-   def fuse_range(lidar_range, lidar_var, radar_range, radar_var):
-       w_lidar = 1.0 / lidar_var
-       w_radar = 1.0 / radar_var
-       return (w_lidar * lidar_range + w_radar * radar_range) / (w_lidar + w_radar)
+   # ---------- Collect at 10 Hz ----------
+   snapshots = []
+   for _ in range(200):          # 20 seconds of data
+       world.tick()
+       snap = sm.get_snapshot()
+       if len(snap) == 3:        # all three sensors have data
+           snapshots.append(snap)
+       time.sleep(0.1)
+
+
+Task 2: Implement a Linear Kalman Filter for Vehicle Tracking
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Define the state vector :math:`\mathbf{x} = [x, y, v_x, v_y]^T` for tracking
+a vehicle ahead. The constant-velocity model uses :math:`\Delta t = 0.1\,\text{s}`.
+
+.. code-block:: python
+
+   class KalmanFilter:
+       """Linear Kalman Filter for 2D vehicle tracking."""
+
+       def __init__(self, dt=0.1):
+           self.dt = dt
+
+           # State vector: [x, y, vx, vy]
+           self.x = np.zeros(4)
+
+           # State covariance
+           self.P = np.eye(4) * 100.0  # large initial uncertainty
+
+           # State transition (constant velocity)
+           self.F = np.array([
+               [1, 0, dt,  0],
+               [0, 1,  0, dt],
+               [0, 0,  1,  0],
+               [0, 0,  0,  1],
+           ])
+
+           # Process noise
+           q = 0.5   # acceleration noise std
+           self.Q = np.array([
+               [dt**4/4,       0, dt**3/2,       0],
+               [      0, dt**4/4,       0, dt**3/2],
+               [dt**3/2,       0,   dt**2,       0],
+               [      0, dt**3/2,       0,   dt**2],
+           ]) * q**2
+
+           # Default measurement model: observe position only
+           self.H = np.array([
+               [1, 0, 0, 0],
+               [0, 1, 0, 0],
+           ])
+
+           # Default measurement noise (overridden per sensor)
+           self.R = np.eye(2)
+
+       def predict(self):
+           """Predict step: propagate state and covariance forward."""
+           self.x = self.F @ self.x
+           self.P = self.F @ self.P @ self.F.T + self.Q
+
+       def update(self, z, R=None):
+           """Update step: incorporate measurement z with noise R."""
+           if R is None:
+               R = self.R
+           H = self.H
+           y = z - H @ self.x                       # innovation
+           S = H @ self.P @ H.T + R                  # innovation covariance
+           K = self.P @ H.T @ np.linalg.inv(S)       # Kalman gain
+           self.x = self.x + K @ y
+           self.P = (np.eye(4) - K @ H) @ self.P
+
+
+Task 3: Sequential Multi-Sensor Update
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Extract range estimates from each sensor and apply the KF update sequentially.
+Each sensor uses a different measurement noise covariance reflecting its
+precision. Printing the covariance trace after each update shows how
+uncertainty decreases as sensors are fused.
+
+.. code-block:: python
+
+   # ---------- Measurement noise per sensor ----------
+   R_lidar  = np.diag([0.1, 0.1])   # high precision
+   R_radar  = np.diag([0.5, 0.5])   # moderate precision
+   R_camera = np.diag([2.0, 2.0])   # low precision
+
+   def lidar_measurement(lidar_data, ego_transform):
+       """Nearest point cluster in the forward cone (+-15 deg, <80 m)."""
+       points = np.frombuffer(lidar_data.raw_data, dtype=np.float32)
+       points = points.reshape(-1, 4)[:, :3]        # x, y, z
+       forward = points[points[:, 0] > 0]            # positive-x is forward
+       angles = np.abs(np.arctan2(forward[:, 1], forward[:, 0]))
+       mask = angles < np.radians(15)
+       cone = forward[mask]
+       if len(cone) == 0:
+           return None
+       nearest_idx = np.argmin(np.linalg.norm(cone[:, :2], axis=1))
+       return cone[nearest_idx, :2]                  # (x, y) in sensor frame
+
+   def radar_measurement(radar_data):
+       """Closest RADAR detection by depth."""
+       detections = []
+       for det in radar_data:
+           detections.append([det.depth, det.azimuth, det.altitude])
+       if not detections:
+           return None
+       detections = np.array(detections)
+       closest = detections[np.argmin(detections[:, 0])]
+       depth, azimuth = closest[0], closest[1]
+       x = depth * np.cos(azimuth)
+       y = depth * np.sin(azimuth)
+       return np.array([x, y])
+
+   def camera_measurement(image_data, known_vehicle_width=1.8, focal_px=640):
+       """Estimate distance from bounding-box width (pinhole model)."""
+       # Placeholder: assume bbox_width_px is obtained from a detector
+       bbox_width_px = 80  # example value
+       if bbox_width_px < 5:
+           return None
+       depth = (known_vehicle_width * focal_px) / bbox_width_px
+       return np.array([depth, 0.0])   # assume centered (x = depth, y ~ 0)
+
+   # ---------- Run sequential fusion loop ----------
+   kf = KalmanFilter(dt=0.1)
+
+   for snap in snapshots:
+       kf.predict()
+       print(f"After predict  -> cov trace: {np.trace(kf.P):.4f}")
+
+       # LiDAR update
+       _, lidar_data = snap['lidar']
+       z_lidar = lidar_measurement(lidar_data, ego.get_transform())
+       if z_lidar is not None:
+           kf.update(z_lidar, R=R_lidar)
+           print(f"  + LiDAR      -> cov trace: {np.trace(kf.P):.4f}")
+
+       # RADAR update
+       _, radar_data = snap['radar']
+       z_radar = radar_measurement(radar_data)
+       if z_radar is not None:
+           kf.update(z_radar, R=R_radar)
+           print(f"  + RADAR      -> cov trace: {np.trace(kf.P):.4f}")
+
+       # Camera update
+       _, camera_data = snap['camera']
+       z_camera = camera_measurement(camera_data)
+       if z_camera is not None:
+           kf.update(z_camera, R=R_camera)
+           print(f"  + Camera     -> cov trace: {np.trace(kf.P):.4f}")
+
+       print(f"  Fused state: x={kf.x[0]:.2f}, y={kf.x[1]:.2f}, "
+             f"vx={kf.x[2]:.2f}, vy={kf.x[3]:.2f}\n")
+
+
+Task 4: Weather Degradation Experiment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. admonition:: Exercise Tasks
+   :class: tip
+
+   1. Run the tracker under three weather conditions: **clear**, **rain**,
+      and **fog**. Use ``world.set_weather()`` with CARLA weather presets.
+
+   2. For **rain**: inflate camera :math:`R` by 5x and LiDAR :math:`R` by 2x
+      (water droplets degrade both optical and LiDAR signals).
+
+      .. code-block:: python
+
+         R_camera_rain = R_camera * 5.0
+         R_lidar_rain  = R_lidar  * 2.0
+         R_radar_rain  = R_radar          # unchanged
+
+   3. For **fog**: inflate camera :math:`R` by 10x, LiDAR :math:`R` by 5x,
+      keep RADAR :math:`R` unchanged (millimeter waves penetrate fog).
+
+      .. code-block:: python
+
+         R_camera_fog = R_camera * 10.0
+         R_lidar_fog  = R_lidar  * 5.0
+         R_radar_fog  = R_radar           # unchanged
+
+   4. Plot the covariance trace over time for each weather condition.
+      Observe how the KF automatically shifts trust toward RADAR in
+      adverse weather because inflated :math:`R` values reduce the Kalman
+      gain for degraded sensors.
+
+   5. Compare the fused position estimate error against single-sensor
+      estimates under each weather condition. Verify that the fused
+      estimate consistently achieves lower error than any individual sensor.
 
 .. note::
 
-   The full assignment will guide you through synchronizing sensor timestamps,
-   projecting LiDAR points onto the camera image, and implementing a simple
-   Kalman filter for object tracking across frames.
+   This exercise demonstrates the core fusion concepts used in
+   **GP3 (Fusion & Localization)**, where students will implement a full
+   EKF fusing GNSS, IMU, and LiDAR for vehicle pose estimation.
 
 
 Summary

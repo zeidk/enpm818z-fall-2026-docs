@@ -73,16 +73,6 @@ Taxonomy of Perception Tasks
 
 .. tab-set::
 
-   .. tab-item:: Low-Level Processing
-
-      Operates at the pixel/sub-pixel level. Fast, but not semantic.
-
-      - **Edge detection:** Canny, Sobel
-      - **Corner detection:** Harris, FAST
-      - **Optical flow:** Lucas-Kanade, FlowNet
-      - **Depth estimation:** SGM, PSMNet
-      - **Feature descriptors:** SIFT, SURF, ORB
-
    .. tab-item:: Mid-Level Understanding
 
       Extracts semantic meaning from sensor data.
@@ -125,54 +115,22 @@ Taxonomy of Perception Tasks
      - Forecasting future states of other agents.
 
 
-The Deep Learning Revolution
------------------------------
+.. admonition:: Recap from ENPM673
+   :class: note
 
-Why Traditional CV Failed
-~~~~~~~~~~~~~~~~~~~~~~~~~
+   In ENPM673, you learned the fundamentals of convolutional neural networks:
+   convolution and pooling operations, stride and padding, activation functions,
+   fully connected layers, and back-propagation. You also studied how CNNs learn
+   hierarchical feature representations -- edges in early layers, textures and
+   shapes in middle layers, and high-level object templates in deeper layers --
+   replacing hand-crafted descriptors such as SIFT and HOG. You explored key
+   architectures (AlexNet, VGGNet) and saw why classical computer vision methods,
+   while effective in constrained settings, struggle with the appearance variation
+   and scale diversity encountered in real-world scenes.
 
-Classical methods (HOG + SVM for pedestrians, SIFT for matching) required
-extensive manual feature engineering, were fragile to appearance variation,
-and could not generalize across conditions. They worked in controlled settings
-but failed in the diversity of real-world driving.
-
-**Key milestones in the DL revolution:**
-
-.. list-table::
-   :widths: 15 25 60
-   :header-rows: 1
-   :class: compact-table
-
-   * - Year
-     - Model
-     - Key Innovation
-   * - 2012
-     - AlexNet
-     - First GPU-trained CNN; won ImageNet by large margin
-   * - 2014
-     - VGGNet
-     - 16--19 layers, uniform 3x3 filters
-   * - 2014
-     - GoogLeNet
-     - Inception modules for multi-scale features
-   * - 2015
-     - ResNet
-     - Residual connections; 50--152 layers without degradation
-   * - 2015
-     - Faster R-CNN
-     - Region Proposal Network for two-stage detection
-   * - 2015
-     - **YOLO v1**
-     - Single-stage detection: one forward pass predicts all boxes
-   * - 2020
-     - **DETR**
-     - Transformer-based detection: no anchors, no NMS
-
-**Why DL works:** Hierarchical feature learning -- early layers learn edges,
-middle layers learn shapes, deep layers learn object templates. Key enablers:
-large-scale datasets (ImageNet 14M images, COCO 330K, nuScenes), GPU
-acceleration, improved optimization (Adam, batch norm, residual connections),
-and transfer learning.
+   In this lecture, we apply these foundations to two state-of-the-art object
+   detection architectures designed for real-time autonomous driving: **YOLO**
+   and **DETR**.
 
 
 YOLO: You Only Look Once
@@ -855,3 +813,235 @@ landscape has evolved further:
    * - **End-to-End Perception**
      - UniAD, DriveTransformer unify perception-prediction-planning.
        *Covered in L11.*
+
+
+CARLA Hands-On: Object Detection Pipeline
+--------------------------------------------
+
+This exercise builds a complete detection pipeline from CARLA camera data
+using the YOLO and DETR models discussed in this lecture. You will collect
+frames from a simulated vehicle, run inference with both architectures, and
+compare their performance under varying conditions.
+
+
+Task 1: Spawn Vehicle and Collect Camera Frames
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   import carla
+   import numpy as np
+   import os
+   import time
+   from datetime import datetime
+
+   # ── Connect to CARLA ──────────────────────────────────────────────
+   client = carla.Client('localhost', 2000)
+   client.set_timeout(10.0)
+   world = client.get_world()
+   bp_lib = world.get_blueprint_library()
+
+   # ── Spawn ego vehicle ─────────────────────────────────────────────
+   vehicle_bp = bp_lib.find('vehicle.tesla.model3')
+   spawn_point = world.get_map().get_spawn_points()[0]
+   vehicle = world.spawn_actor(vehicle_bp, spawn_point)
+   vehicle.set_autopilot(True)
+   print(f"Spawned vehicle: {vehicle.type_id} at {spawn_point.location}")
+
+   # ── Attach an RGB camera (1280x720, fov 90) ──────────────────────
+   camera_bp = bp_lib.find('sensor.camera.rgb')
+   camera_bp.set_attribute('image_size_x', '1280')
+   camera_bp.set_attribute('image_size_y', '720')
+   camera_bp.set_attribute('fov', '90')
+   camera_transform = carla.Transform(carla.Location(x=1.5, z=2.4))
+   camera = world.spawn_actor(camera_bp, camera_transform,
+                              attach_to=vehicle)
+
+   # ── Create timestamped output directory ────────────────────────────
+   timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+   output_dir = os.path.join('carla_frames', timestamp)
+   os.makedirs(output_dir, exist_ok=True)
+   print(f"Saving frames to: {output_dir}")
+
+   # ── Collect frames with a counter ─────────────────────────────────
+   frame_count = 0
+   max_frames = 200
+
+   def camera_callback(image):
+       global frame_count
+       if frame_count >= max_frames:
+           return
+       array = np.frombuffer(image.raw_data, dtype=np.uint8)
+       array = array.reshape((image.height, image.width, 4))[:, :, :3]
+       filepath = os.path.join(output_dir, f'frame_{frame_count:04d}.png')
+       import cv2
+       cv2.imwrite(filepath, array)
+       frame_count += 1
+       if frame_count % 50 == 0:
+           print(f"Saved {frame_count}/{max_frames} frames")
+
+   camera.listen(camera_callback)
+
+   # ── Wait until all frames are collected ────────────────────────────
+   while frame_count < max_frames:
+       time.sleep(0.1)
+
+   print(f"Collection complete: {frame_count} frames saved to {output_dir}")
+
+   # ── Cleanup ────────────────────────────────────────────────────────
+   camera.stop()
+   camera.destroy()
+   vehicle.destroy()
+
+
+Task 2: Run YOLO Inference on CARLA Frames
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   import cv2
+   import os
+   import glob
+   import time
+   from ultralytics import YOLO
+
+   # ── Load pretrained YOLOv8s ────────────────────────────────────────
+   model = YOLO('yolov8s.pt')
+
+   # ── Set up paths ───────────────────────────────────────────────────
+   input_dir = 'carla_frames/<YOUR_TIMESTAMP>'   # Update with your directory
+   output_dir = input_dir + '_yolo'
+   os.makedirs(output_dir, exist_ok=True)
+
+   frames = sorted(glob.glob(os.path.join(input_dir, '*.png')))
+   print(f"Running YOLOv8s on {len(frames)} frames...")
+
+   # ── Run inference on each frame ────────────────────────────────────
+   inference_times = []
+   for i, frame_path in enumerate(frames):
+       img = cv2.imread(frame_path)
+
+       t_start = time.perf_counter()
+       results = model(img, verbose=False)[0]
+       t_end = time.perf_counter()
+
+       elapsed_ms = (t_end - t_start) * 1000
+       inference_times.append(elapsed_ms)
+
+       # ── Draw bounding boxes and class labels ──────────────────────
+       for box in results.boxes:
+           x1, y1, x2, y2 = map(int, box.xyxy[0])
+           conf = float(box.conf[0])
+           cls_id = int(box.cls[0])
+           label = f"{model.names[cls_id]} {conf:.2f}"
+           cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+           cv2.putText(img, label, (x1, y1 - 8),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
+       # ── Display and save ──────────────────────────────────────────
+       cv2.imshow("YOLOv8s Detections", img)
+       cv2.waitKey(1)
+       out_path = os.path.join(output_dir, os.path.basename(frame_path))
+       cv2.imwrite(out_path, img)
+
+       print(f"Frame {i:04d}: {elapsed_ms:.1f} ms, "
+             f"{len(results.boxes)} detections")
+
+   cv2.destroyAllWindows()
+
+   avg_time = sum(inference_times) / len(inference_times)
+   print(f"\nYOLOv8s average inference time: {avg_time:.1f} ms/frame")
+   print(f"Annotated frames saved to: {output_dir}")
+
+
+Task 3: Run DETR Inference on the Same Frames
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   import cv2
+   import os
+   import glob
+   import time
+   from ultralytics import YOLO
+
+   # ── Load pretrained RT-DETR-L ──────────────────────────────────────
+   model = YOLO('rtdetr-l.pt')
+
+   # ── Set up paths ───────────────────────────────────────────────────
+   input_dir = 'carla_frames/<YOUR_TIMESTAMP>'   # Same directory as Task 2
+   output_dir = input_dir + '_rtdetr'
+   os.makedirs(output_dir, exist_ok=True)
+
+   frames = sorted(glob.glob(os.path.join(input_dir, '*.png')))
+   print(f"Running RT-DETR-L on {len(frames)} frames...")
+
+   # ── Run inference on each frame ────────────────────────────────────
+   inference_times = []
+   for i, frame_path in enumerate(frames):
+       img = cv2.imread(frame_path)
+
+       t_start = time.perf_counter()
+       results = model(img, verbose=False)[0]
+       t_end = time.perf_counter()
+
+       elapsed_ms = (t_end - t_start) * 1000
+       inference_times.append(elapsed_ms)
+
+       # ── Draw bounding boxes and class labels ──────────────────────
+       for box in results.boxes:
+           x1, y1, x2, y2 = map(int, box.xyxy[0])
+           conf = float(box.conf[0])
+           cls_id = int(box.cls[0])
+           label = f"{model.names[cls_id]} {conf:.2f}"
+           cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), 2)
+           cv2.putText(img, label, (x1, y1 - 8),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
+
+       # ── Display and save ──────────────────────────────────────────
+       cv2.imshow("RT-DETR-L Detections", img)
+       cv2.waitKey(1)
+       out_path = os.path.join(output_dir, os.path.basename(frame_path))
+       cv2.imwrite(out_path, img)
+
+       print(f"Frame {i:04d}: {elapsed_ms:.1f} ms, "
+             f"{len(results.boxes)} detections")
+
+   cv2.destroyAllWindows()
+
+   avg_time = sum(inference_times) / len(inference_times)
+   print(f"\nRT-DETR-L average inference time: {avg_time:.1f} ms/frame")
+   print(f"Annotated frames saved to: {output_dir}")
+
+
+Task 4: Compare YOLO vs DETR
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. admonition:: Exercise Tasks
+   :class: tip
+
+   1. **Compare inference speed**: Compute the mean and standard deviation of
+      per-frame inference time (ms/frame) across all 200 frames for both
+      YOLOv8s and RT-DETR-L. Which model is faster and by how much?
+   2. **Compare detection counts and confidence distributions**: For each
+      model, compute the average number of detections per frame and plot a
+      histogram of confidence scores. Which model produces more high-confidence
+      detections?
+   3. **Weather robustness experiment**: Re-run Task 1 frame collection under
+      three weather conditions and repeat Tasks 2--3 on each set:
+
+      - Clear day: ``world.set_weather(carla.WeatherParameters.ClearNoon)``
+      - Heavy rain: ``world.set_weather(carla.WeatherParameters.HardRainNoon)``
+      - Night: ``world.set_weather(carla.WeatherParameters.ClearNight)``
+
+      Compare mAP degradation across weather conditions for both models.
+   4. **Identify failure cases**: Examine the annotated frames and find
+      examples of missed detections and false positives for each model.
+      Explain which architecture (CNN-based YOLO vs. transformer-based DETR)
+      handles these failure cases better and why.
+
+.. note::
+
+   This exercise provides the detection foundation for **GP2: Object
+   Detection & Tracking**, where you will train custom YOLO and DETR models
+   on CARLA data and deploy them as ROS 2 perception nodes.
