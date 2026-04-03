@@ -208,3 +208,5 @@ __marimo__/
 
 _build
 .claude
+*.docx
+.html
