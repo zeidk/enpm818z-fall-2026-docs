@@ -581,3 +581,14 @@ rather than a binary choice:
    models excel at perception and scene understanding, while explicit safety
    checks (collision avoidance, traffic law compliance) remain engineered
    components layered on top.
+
+.. admonition:: Bonus Assignment Unlocked -- GP5: Vision-Language-Action Driving (Optional)
+   :class: important
+
+   You now have the foundational knowledge from **L10--L12** to begin
+   **GP5: Vision-Language-Action Driving**. In this optional bonus project
+   you will build a simplified VLA model that maps camera images and
+   natural language commands directly to driving actions, bypassing the
+   modular pipeline -- and compare it against your GP4 system.
+
+   :doc:`Go to GP5 </assignments/gp5>`

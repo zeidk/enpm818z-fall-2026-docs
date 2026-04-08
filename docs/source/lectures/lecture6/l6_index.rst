@@ -41,6 +41,7 @@ By the end of this lecture, you will be able to:
    :titlesonly:
 
    l6_lecture
+   l6_exercises
    l6_quiz
    l6_references
 

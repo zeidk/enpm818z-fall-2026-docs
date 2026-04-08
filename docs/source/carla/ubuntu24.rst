@@ -1,41 +1,38 @@
 ==================================================================
-CARLA Setup Guide - ROS 2 Jazzy (Docker)
+CARLA Setup Guide - Ubuntu 24.04 (Docker)
 ==================================================================
 
 .. list-table::
    :widths: 40 60
    :header-rows: 1
    :class: compact-table
-   
 
    * - **Component**
      - **Version/Details**
    * - Course
-     - ENPM818Z — On-Road Automated Vehicles
-   * - ROS Distribution
-     - Jazzy Jalisco
+     - ENPM818Z -- On-Road Automated Vehicles
    * - Ubuntu Version
      - 24.04 (Noble Numbat)
    * - CARLA Version
      - 0.9.16
    * - Installation Method
-     - Docker 🐳
+     - Docker
 
 ---------------------------------------------------------
 Overview
 ---------------------------------------------------------
 
-This guide walks you through setting up CARLA 0.9.16 with ROS 2 Jazzy using Docker. You will use a **custom ROS 2 bridge package** that bypasses CARLA's native ROS 2 implementation due to a known bug (see :ref:`known-issue`).
+This guide walks you through setting up CARLA 0.9.16 on Ubuntu 24.04 using Docker. You will use a **custom ROS 2 bridge package** that bypasses CARLA's native ROS 2 implementation due to a known bug (see :ref:`known-issue-ubuntu24`).
 
-**What You will Install:**
+**What You Will Install:**
 
 - Docker runtime with NVIDIA GPU support
 - CARLA 0.9.16 Docker image
-- CARLA Python client (via apt)
+- CARLA Python client (via pip)
 - Custom ROS 2 bridge package
 
 .. note::
-   **Why Docker?** Due to the lack of native support for ROS 2 Jazzy in CARLA, we will deploy the simulator within a Docker container. This containerized instance will interface directly with the ROS 2 Jazzy environment running on the host system.
+   **Why Docker?** CARLA 0.9.16 does not have native support for Ubuntu 24.04. Running CARLA inside a Docker container is the supported workaround -- the containerized CARLA server interfaces directly with the ROS 2 environment running on the host system.
 
 ---------------------------------------------------------
 Prerequisites
@@ -54,7 +51,7 @@ System Requirements
    * - Operating System
      - Ubuntu 24.04 (Noble Numbat)
    * - ROS 2 Distribution
-     - Jazzy Jalisco (already installed)
+     - Already installed
    * - GPU
      - NVIDIA GPU (recommended for performance)
    * - RAM
@@ -62,8 +59,16 @@ System Requirements
    * - Disk Space
      - ~15 GB for Docker image and dependencies
    * - Python
-     - Python 3.12 (comes with Ubuntu 24.04)
+     - 3.12 (comes with Ubuntu 24.04)
 
+Verify Your Ubuntu Version
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: bash
+
+   lsb_release -a
+
+You should see ``Ubuntu 24.04`` in the output.
 
 ---------------------------------------------------------
 Step 1: Pull CARLA Docker Image
@@ -83,7 +88,7 @@ Expected output:
 
 .. code-block:: text
 
-   carlasim/carla:0.9.16             98d224668ad0       20.7GB             0B 
+   carlasim/carla:0.9.16             98d224668ad0       20.7GB             0B
 
 ---------------------------------------------------------
 Step 2: Install Additional Dependencies
@@ -93,10 +98,10 @@ Step 2: Install Additional Dependencies
 
    # Install required Python packages
    pip3 install numpy pygame
-   
+
    # Install CARLA Python client
    pip3 install carla==0.9.16
-   
+
    # Verify installations
    python3 -c "import numpy; import pygame; import carla; print('All dependencies OK')"
 
@@ -109,11 +114,10 @@ CARLA's base installation includes limited maps. For highway scenarios (e.g., be
 Download Additional Maps
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-First, download the additional maps package on your **host machine**:
+Download the additional maps package on your **host machine**:
 
 .. code-block:: bash
 
-   # Download additional maps for CARLA 0.9.16
    cd ~/Downloads
    wget https://carla-releases.s3.us-east-005.backblazeb2.com/Linux/AdditionalMaps_0.9.16.tar.gz
 
@@ -139,7 +143,7 @@ Install Maps into Docker Container
    cd /workspace
    tar -xzf AdditionalMaps_0.9.16.tar.gz
    ./ImportAssets.sh
-   rm AdditionalMaps_0.9.16.tar.gz  # Clean up
+   rm AdditionalMaps_0.9.16.tar.gz
 
    # 5. Exit the container
    exit
@@ -167,11 +171,10 @@ If you want maps to persist across container restarts:
 Verify Maps Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-After installing the maps, verify Town04 (for instance) is available:
+After installing the maps, verify Town04 is available:
 
 .. code-block:: bash
 
-   # In a Python terminal (on host)
    python3 -c "
    import carla
    client = carla.Client('localhost', 2000)
@@ -190,7 +193,7 @@ Expected output should include:
      - Town01
      - Town02
      - Town03
-     - Town04      ← Highway map
+     - Town04
      - Town04_Opt
      - Town05
      - ...
@@ -203,16 +206,16 @@ To load Town04 for highway scenarios:
 .. code-block:: python
 
    import carla
-   
+
    client = carla.Client('localhost', 2000)
    client.set_timeout(10.0)
-   
+
    # Load Town04 (highway map)
    world = client.load_world('Town04')
    print("Town04 loaded successfully!")
 
 ---------------------------------------------------------
-Step 3: Clone and Build ROS 2 Bridge Package
+Step 3: Clone and Build the ROS 2 Bridge Package
 ---------------------------------------------------------
 
 Clone the Repository
@@ -224,8 +227,8 @@ Clone the Repository
    mkdir -p ~/carla_ws/src
    cd ~/carla_ws/src
 
-   # Clone the Jazzy branch
-   git clone -b jazzy https://github.com/zeidk/enpm818z-fall-2026-carla.git carla_ros2_bridge
+   # Clone the repository
+   git clone -b ubuntu24 https://github.com/zeidk/enpm818z-fall-2026-carla.git carla_ros2_bridge
 
    # Return to workspace root
    cd ~/carla_ws
@@ -267,55 +270,53 @@ Expected output:
 Step 4: Setup Environment Configuration
 ---------------------------------------------------------
 
-Create a setup function that configures your environment for CARLA and ROS 2.
-
 Create Setup Script
 ~~~~~~~~~~~~~~~~~~~
 
-
 Add the following function to your ``~/.bashrc``:
 
-
 .. code-block:: bash
+
+   nano ~/.bashrc
 
    # Add this function at the end:
    carla_setup() {
        # Configuration
        CARLA_WS="/home/$USER/carla_ws"
-       
-       echo "🔧 Setting up CARLA ROS 2 environment..."
-       
+
+       echo "Setting up CARLA ROS 2 environment..."
+
        # Setup environment variables
        export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
        export ROS_DOMAIN_ID=0
        unset ROS_LOCALHOST_ONLY
        unset FASTRTPS_DEFAULT_PROFILES_FILE
-       
-       # Source ROS 2 Jazzy
+
+       # Source ROS 2
        if [ -f "/opt/ros/jazzy/setup.bash" ]; then
            source /opt/ros/jazzy/setup.bash
        else
-           echo "❌ Error: ROS 2 Jazzy not found"
+           echo "Error: ROS 2 not found at /opt/ros/jazzy"
            return 1
        fi
-       
+
        # Source CARLA workspace
        if [ -d "$CARLA_WS" ]; then
            if [ -f "$CARLA_WS/install/setup.bash" ]; then
                source "$CARLA_WS/install/setup.bash"
-               echo "✅ Sourced CARLA workspace"
+               echo "Sourced CARLA workspace"
            else
-               echo "⚠️  Warning: CARLA workspace not built"
+               echo "Warning: CARLA workspace not built"
                echo "   Run: cd $CARLA_WS && colcon build"
            fi
        fi
-       
+
        # Reset ROS 2 daemon
-       echo "🔄 Restarting ROS 2 daemon..."
+       echo "Restarting ROS 2 daemon..."
        ros2 daemon stop > /dev/null 2>&1
        sleep 1
        ros2 daemon start > /dev/null 2>&1
-       
+
        # Create CARLA Docker alias
        alias carla='xhost +local:root && docker run \
            --rm \
@@ -331,21 +332,21 @@ Add the following function to your ``~/.bashrc``:
            -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
            carlasim/carla:0.9.16 \
            /bin/bash -c "./CarlaUE4.sh -nosound -quality-level=Low -vulkan"'
-       
-       echo "✅ CARLA Setup Complete!"
+
+       echo "CARLA Setup Complete!"
        echo ""
-       echo "📋 Usage:"
+       echo "Usage:"
        echo "   1. Start CARLA:  carla"
        echo "   2. Run ROS 2 bridge:"
        echo "      ros2 run carla_ros2_bridge carla_camera_publisher"
        echo ""
-       echo "🔍 Environment:"
+       echo "Environment:"
        echo "   ROS_DOMAIN_ID=$ROS_DOMAIN_ID"
        echo "   RMW_IMPLEMENTATION=$RMW_IMPLEMENTATION"
-       
+
        cd "$CARLA_WS"
    }
-   
+
    # Auto-run setup when starting new terminal
    carla_setup
 
@@ -353,12 +354,9 @@ Save and reload:
 
 .. code-block:: bash
 
-   # Save (Ctrl+O, Enter, Ctrl+X)
-   
-   # Reload bashrc
    source ~/.bashrc
 
-.. _known-issue:
+.. _known-issue-ubuntu24:
 
 ---------------------------------------------------------
 Understanding the CARLA 0.9.16 ROS 2 Bug
@@ -367,7 +365,7 @@ Understanding the CARLA 0.9.16 ROS 2 Bug
 Issue Description
 ~~~~~~~~~~~~~~~~~
 
-CARLA 0.9.16 introduced **native ROS 2 support** via the ``--ros2`` flag and ``enable_for_ros()`` API. However, there is a **critical bug** in the topic name generation:
+CARLA 0.9.16 introduced **native ROS 2 support** via the ``--ros2`` flag and ``enable_for_ros()`` API. However, there is a **critical bug** in the topic name generation.
 
 **The Bug:**
 
@@ -375,21 +373,21 @@ CARLA creates topic names with double slashes: ``/carla//camera/image``
 
 **Why This Matters:**
 
-ROS 2 Jazzy strictly validates topic names and **rejects topics with consecutive slashes** as invalid. This means:
+ROS 2 strictly validates topic names and rejects topics with consecutive slashes as invalid. This means:
 
-- ❌ ``ros2 topic echo`` doesn't work
-- ❌ ``ros2 topic hz`` doesn't work  
-- ❌ ``rviz2`` can't subscribe to topics
-- ❌ Custom nodes fail to receive data
+- ``ros2 topic echo`` does not work
+- ``ros2 topic hz`` does not work
+- ``rviz2`` cannot subscribe to topics
+- Custom nodes fail to receive data
 
 **Example:**
 
 .. code-block:: bash
 
    # CARLA publishes (broken):
-   /carla//front_camera/image  ← Double slash!
-   
-   # ROS 2 Jazzy says:
+   /carla//front_camera/image  # Double slash
+
+   # ROS 2 rejects this with:
    Invalid topic name: topic name must not contain repeated '/'
 
 Our Solution
@@ -397,19 +395,19 @@ Our Solution
 
 The **custom ROS 2 bridge package** you installed:
 
-1. **Bypasses CARLA's native ROS 2** - Doesn't use ``enable_for_ros()``
-2. **Uses Python API directly** - Gets data via ``camera.listen()`` callbacks
-3. **Publishes to clean topics** - ``/carla/camera/image`` (no double slash)
-4. **Works with all ROS 2 tools** - Full compatibility
+1. **Bypasses CARLA's native ROS 2** -- does not use ``enable_for_ros()``
+2. **Uses the Python API directly** -- gets data via ``camera.listen()`` callbacks
+3. **Publishes to clean topics** -- ``/carla/camera/image`` (no double slash)
+4. **Works with all ROS 2 tools** -- full compatibility
 
-**This is why we don't use the** ``--ros2`` **flag with CARLA!**
+This is why we do not use the ``--ros2`` flag with CARLA.
 
 GitHub Issue Reference
 ~~~~~~~~~~~~~~~~~~~~~~
 
 This is a known issue tracked here: https://github.com/carla-simulator/carla/issues/9278
 
-Expected to be fixed in future CARLA releases, but for now, our bridge is the solution.
+Expected to be fixed in future CARLA releases, but for now our bridge is the correct solution.
 
 ---------------------------------------------------------
 Running CARLA with ROS 2
@@ -422,7 +420,7 @@ Basic Workflow
 
 .. code-block:: bash
 
-   carla # this is the alias from carla_setup()
+   carla
 
 Wait for the CARLA window to open and the world to load (~30 seconds).
 
@@ -430,10 +428,7 @@ Wait for the CARLA window to open and the world to load (~30 seconds).
 
 .. code-block:: bash
 
-   # Source environment (automatic if you added carla_setup to bashrc)
    source ~/.bashrc
-   
-   # Run the camera publisher node
    ros2 run carla_ros2_bridge carla_camera_publisher
 
 You should see:
@@ -444,11 +439,11 @@ You should see:
    CARLA Camera Publisher Node
    ============================================================
    Connecting to CARLA at localhost:2000...
-   ✓ Connected to CARLA 0.9.16
-   ✓ Spawned vehicle at Location(x=..., y=..., z=...)
-   ✓ Autopilot enabled
-   ✓ Camera spawned and attached
-   ✓ Camera listening
+   Connected to CARLA 0.9.16
+   Spawned vehicle at Location(x=..., y=..., z=...)
+   Autopilot enabled
+   Camera spawned and attached
+   Camera listening
    ============================================================
    Publishing to:
      /carla/camera/image
@@ -479,7 +474,7 @@ You should see:
 
 .. code-block:: text
 
-   [INFO] [carla_image_subscriber]: ✓ Received first image!
+   [INFO] [carla_image_subscriber]: Received first image!
    [INFO] [carla_image_subscriber]:   Size: 800x600
    [INFO] [carla_image_subscriber]:   Encoding: rgb8
    [INFO] [carla_image_subscriber]: Frame 30: ~20.0 Hz
@@ -622,13 +617,9 @@ Visualizing in RViz2
 
 .. code-block:: bash
 
-   # Start RViz2
    rviz2
 
-   # In RViz2:
-   # 1. Click "Add" → "By topic"
-   # 2. Select "/carla/camera/image" → "Image"
-   # 3. Set Fixed Frame to "camera_link"
+In RViz2: click **Add** then **By topic**, select ``/carla/camera/image`` and choose **Image**, then set Fixed Frame to ``camera_link``.
 
 Recording Data
 ~~~~~~~~~~~~~~
@@ -640,6 +631,9 @@ Recording Data
 
    # Record all CARLA topics
    ros2 bag record -r "/carla/.*"
+
+   # Play back recorded data
+   ros2 bag play <bag_file>
 
 Custom Resolution
 ~~~~~~~~~~~~~~~~~
@@ -697,7 +691,7 @@ Cannot Connect to CARLA
 
 1. Wait for CARLA to fully load (30-60 seconds after window appears)
 
-2. Check CARLA is running:
+2. Check CARLA container is running:
 
    .. code-block:: bash
 
@@ -713,7 +707,7 @@ Cannot Connect to CARLA
 No Topics Visible
 ~~~~~~~~~~~~~~~~~
 
-**Symptom:** ``ros2 topic list`` doesn't show ``/carla/camera/image``
+**Symptom:** ``ros2 topic list`` does not show ``/carla/camera/image``
 
 **Solutions:**
 
@@ -723,7 +717,7 @@ No Topics Visible
 
       ros2 node list
 
-2. Check for errors in bridge output
+2. Check for errors in bridge terminal output
 
 3. Restart ROS 2 daemon:
 
@@ -763,7 +757,7 @@ Build Errors
 
    .. code-block:: bash
 
-      echo $ROS_DISTRO  # Should show "jazzy"
+      echo $ROS_DISTRO
 
 ---------------------------------------------------------
 Performance Optimization
@@ -774,31 +768,63 @@ For Better Performance
 
 .. code-block:: bash
 
-   # Lower graphics quality
-   alias carla='... ./CarlaUE4.sh -quality-level=Low -nosound -vulkan'
-
    # Reduce camera resolution
    ros2 run carla_ros2_bridge carla_camera_publisher \
        --ros-args -p image_width:=640 -p image_height:=480
 
+To adjust CARLA graphics quality, edit the ``carla`` alias in ``~/.bashrc`` and change ``-quality-level=Low`` to the desired level, then run ``source ~/.bashrc``.
+
 For Better Quality
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
-
-   # Higher graphics
-   alias carla='... ./CarlaUE4.sh -quality-level=Epic -vulkan'
 
    # Higher resolution
    ros2 run carla_ros2_bridge carla_camera_publisher \
        --ros-args -p image_width:=1920 -p image_height:=1080
+
+To use ``-quality-level=Epic``, edit the ``carla`` alias in ``~/.bashrc`` accordingly.
+
+---------------------------------------------------------
+Comparison with Ubuntu 22.04 Setup
+---------------------------------------------------------
+
+.. list-table::
+   :widths: 30 35 35
+   :header-rows: 1
+   :class: compact-table
+
+   * - **Aspect**
+     - **Ubuntu 22.04**
+     - **Ubuntu 24.04 (This Guide)**
+   * - Ubuntu Version
+     - 22.04 (Jammy)
+     - 24.04 (Noble)
+   * - Python Version
+     - 3.10
+     - 3.12
+   * - Installation
+     - Native (tar.gz)
+     - Docker
+   * - Setup Complexity
+     - Simpler
+     - More complex (Docker config)
+   * - GPU Setup
+     - Direct
+     - Requires nvidia-docker
+   * - Functionality
+     - Identical
+     - Identical
+
+Both setups use the same ROS 2 package and provide identical functionality.
 
 ---------------------------------------------------------
 References
 ---------------------------------------------------------
 
 - CARLA Documentation: https://carla.readthedocs.io/en/0.9.16/
-- ROS 2 Jazzy: https://docs.ros.org/en/jazzy/
+- CARLA Downloads: https://github.com/carla-simulator/carla/releases/tag/0.9.16
+- Python API Reference: https://carla.readthedocs.io/en/0.9.16/python_api/
 - Docker Documentation: https://docs.docker.com/
 - NVIDIA Container Toolkit: https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/
 - GitHub Issue (Double Slash Bug): https://github.com/carla-simulator/carla/issues/9278

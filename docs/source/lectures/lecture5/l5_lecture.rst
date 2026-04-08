@@ -820,8 +820,13 @@ Task 4: Run the Tracker on CARLA Vehicles
       positions as reference, compute MOTA and IDF1 for your tracker over
       a 30-second driving sequence.
 
-.. note::
+.. admonition:: Assignment Unlocked -- GP2: Perception -- YOLO vs DETR
+   :class: important
 
-   This exercise uses simplified 2D bounding boxes projected from 3D world
-   positions. In GP2, you will replace these with actual YOLO/DETR detector
-   outputs, creating a full detection-and-tracking pipeline.
+   You now have the foundational knowledge from **L3--L5** to begin
+   **GP2: Perception -- YOLO vs DETR**. In GP2 you will collect a labeled
+   dataset from CARLA, fine-tune both YOLOv8 and RT-DETR, deploy each as a
+   ROS 2 perception node, and perform a rigorous comparison across weather
+   and lighting conditions.
+
+   :doc:`Go to GP2 </assignments/gp2>`

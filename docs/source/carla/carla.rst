@@ -7,7 +7,11 @@ CARLA (CAR Learning to Act) is an open-source autonomous driving simulator desig
 .. note::
    **Installation Options**
 
-   CARLA 0.9.16 runs **natively on Ubuntu 22.04** (ROS 2 Humble). This is the simplest setup and is recommended if you are running Humble — see the :doc:`Humble setup guide <humble>`. If you are running **Ubuntu 24.04 with ROS 2 Jazzy**, CARLA does not have native support for that platform — use the **Docker image** provided instead, as described in the :doc:`Jazzy setup guide <jazzy>`.
+   CARLA 0.9.16 runs natively on **Ubuntu 22.04**. This is the simplest
+   setup -- see the :doc:`Ubuntu 22.04 setup guide <ubuntu22>`. If you
+   are running **Ubuntu 24.04**, CARLA does not have native support for
+   that platform and you must use the **Docker image** instead -- see
+   the :doc:`Ubuntu 24.04 setup guide <ubuntu24>`.
 
 .. important::
    **Why CARLA 0.9.16?**
@@ -22,26 +26,11 @@ CARLA (CAR Learning to Act) is an open-source autonomous driving simulator desig
    
    While newer CARLA versions exist, 0.9.16 offers the perfect balance of features, stability, and simplicity for learning autonomous vehicle concepts.
 
-.. .. card:: 🚗 CARLA Overview
-..    :class-header: bg-primary text-white
-..    :class-card: sd-mt-3
-
-..    CARLA provides:
-   
-..    - **Realistic urban environments** with detailed cityscapes
-..    - **Physics simulation** powered by Unreal Engine 4
-..    - **Sensor suite** including cameras, LiDAR, radar, GNSS, and IMU
-..    - **Python API** for complete control and automation
-..    - **Weather control** and day-night cycles
-..    - **Blueprint library** with vehicles, pedestrians, and props
-..    - **Traffic simulation** with AI-controlled agents
-..    - **ROS integration** for robotics applications
-
 .. toctree::
    :hidden:
 
-   humble
-   jazzy
+   ubuntu22
+   ubuntu24
 
 Course Configuration
 --------------------
@@ -51,7 +40,7 @@ Course Configuration
    .. tab-item:: Native Setup (Recommended)
       :sync: native
 
-      .. card:: 💻 Native Installation
+      .. card:: Native Installation
          :class-header: bg-success text-white
 
          .. list-table::
@@ -59,9 +48,7 @@ Course Configuration
             :class: table-hover
 
             * - **Course**
-              - ENPM818Z — On-Road Automated Vehicles
-            * - **ROS Distribution**
-              - :bdg-primary:`Humble Hawksbill`
+              - ENPM818Z -- On-Road Automated Vehicles
             * - **Ubuntu Version**
               - :bdg-success:`22.04` (Jammy Jellyfish)
             * - **CARLA Version**
@@ -71,12 +58,12 @@ Course Configuration
             * - **Python Version**
               - 3.10
             * - **Complexity**
-              - ⭐⭐ Simple
+              - Simple
 
    .. tab-item:: Docker Setup
       :sync: docker
 
-      .. card:: 🐳 Docker Installation
+      .. card:: Docker Installation
          :class-header: bg-primary text-white
 
          .. list-table::
@@ -84,24 +71,22 @@ Course Configuration
             :class: table-hover
 
             * - **Course**
-              - ENPM818Z — On-Road Automated Vehicles
-            * - **ROS Distribution**
-              - :bdg-info:`Jazzy Jalisco` :bdg-light:`Latest`
+              - ENPM818Z -- On-Road Automated Vehicles
             * - **Ubuntu Version**
               - :bdg-success:`24.04` (Noble Numbat) :bdg-light:`LTS`
             * - **CARLA Version**
               - :bdg-warning:`0.9.16`
             * - **Installation Method**
-              - :bdg-primary:`Docker` 🐳
+              - :bdg-primary:`Docker`
             * - **Python Version**
               - 3.12
             * - **Complexity**
-              - ⭐⭐⭐ Moderate
+              - Moderate
 
 CARLA Command-Line Options
 --------------------------
 
-.. card:: 🎮 Launch Options Reference
+.. card:: Launch Options Reference
    :class-header: bg-dark text-white
 
    Complete reference for ``./CarlaUE4.sh`` command-line options
@@ -302,7 +287,7 @@ Common Launch Configurations
 .. grid:: 1 1 2 2
    :gutter: 3
 
-   .. grid-item-card:: 🏃 Development
+   .. grid-item-card:: Development
       :class-header: bg-success text-white
 
       **Fast iteration, good visibility**
@@ -316,7 +301,7 @@ Common Launch Configurations
            -nosound \
            -vulkan
 
-   .. grid-item-card:: 🧪 Testing
+   .. grid-item-card:: Testing
       :class-header: bg-warning
 
       **Reproducible results**
@@ -330,7 +315,7 @@ Common Launch Configurations
            -nosound \
            -quality-level=Low
 
-   .. grid-item-card:: 📊 Data Collection
+   .. grid-item-card:: Data Collection
       :class-header: bg-info text-white
 
       **High quality sensors**
@@ -343,7 +328,7 @@ Common Launch Configurations
            -vulkan \
            -windowed
 
-   .. grid-item-card:: 🖥️ Headless Server
+   .. grid-item-card:: Headless Server
       :class-header: bg-dark text-white
 
       **No GPU required**
@@ -358,7 +343,7 @@ Common Launch Configurations
 CARLA Python API
 ----------------
 
-.. card:: 🐍 Python API Overview
+.. card:: Python API Overview
    :class-header: bg-gradient-primary text-white
 
    The Python API provides complete control over the CARLA simulator
@@ -371,7 +356,7 @@ Core Concepts
    .. tab-item:: World
       :sync: world
 
-      .. card:: 🌍 carla.World
+      .. card:: carla.World
          
          The simulation environment containing all actors and providing global controls.
          
@@ -398,7 +383,7 @@ Core Concepts
    .. tab-item:: Blueprints
       :sync: blueprints
 
-      .. card:: 📘 Blueprint Library
+      .. card:: Blueprint Library
          
          Templates for creating actors (vehicles, sensors, pedestrians).
          
@@ -445,7 +430,7 @@ Core Concepts
    .. tab-item:: Actors
       :sync: actors
 
-      .. card:: 🎭 Actors
+      .. card:: Actors
          
          Entities in the simulation (vehicles, pedestrians, sensors, traffic signs).
          
@@ -477,7 +462,7 @@ Core Concepts
    .. tab-item:: Sensors
       :sync: sensors
 
-      .. card:: 📡 Sensors
+      .. card:: Sensors
          
          Perception devices that capture simulation data.
          
@@ -525,16 +510,16 @@ Core Concepts
 Common Blueprint IDs
 --------------------
 
-.. dropdown:: 🚗 Vehicle Blueprints
+.. dropdown:: Vehicle Blueprints
    :color: primary
-   :icon: rocket
+   :icon: pin
    :animate: fade-in-slide-down
 
    .. grid:: 2
       :gutter: 2
 
       .. grid-item-card:: Sedans
-         
+
          - ``vehicle.audi.a2``
          - ``vehicle.audi.tt``
          - ``vehicle.bmw.grandtourer``
@@ -545,7 +530,7 @@ Common Blueprint IDs
          - ``vehicle.tesla.model3``
 
       .. grid-item-card:: SUVs
-         
+
          - ``vehicle.audi.etron``
          - ``vehicle.jeep.wrangler_rubicon``
          - ``vehicle.nissan.patrol``
@@ -553,21 +538,21 @@ Common Blueprint IDs
          - ``vehicle.carlamotors.carlacola``
 
       .. grid-item-card:: Trucks
-         
+
          - ``vehicle.tesla.cybertruck``
          - ``vehicle.carlamotors.firetruck``
          - ``vehicle.ford.ambulance``
 
       .. grid-item-card:: Motorcycles
-         
+
          - ``vehicle.harley-davidson.low_rider``
          - ``vehicle.kawasaki.ninja``
          - ``vehicle.yamaha.yzf``
          - ``vehicle.vespa.zx125``
 
-.. dropdown:: 📷 Sensor Blueprints
-   :color: info
-   :icon: device-camera
+.. dropdown:: Sensor Blueprints
+   :color: primary
+   :icon: pin
    :animate: fade-in-slide-down
 
    .. list-table::
@@ -606,7 +591,7 @@ Common Blueprint IDs
 Weather Presets
 ---------------
 
-.. card:: 🌤️ Weather Parameters
+.. card:: Weather Parameters
    :class-header: bg-info text-white
 
    .. code-block:: python
@@ -629,15 +614,15 @@ Weather Presets
       
       # Custom weather
       weather = carla.WeatherParameters(
-          cloudiness=80.0,        # 0-100
-          precipitation=30.0,     # 0-100
+          cloudiness=80.0,              # 0-100
+          precipitation=30.0,           # 0-100
           precipitation_deposits=50.0,  # 0-100
-          wind_intensity=80.0,    # 0-100
-          sun_azimuth_angle=70.0, # 0-360
-          sun_altitude_angle=70.0,# -90-90
-          fog_density=20.0,       # 0-100
-          fog_distance=0.0,       # 0-inf
-          wetness=0.0             # 0-100
+          wind_intensity=80.0,          # 0-100
+          sun_azimuth_angle=70.0,       # 0-360
+          sun_altitude_angle=70.0,      # -90-90
+          fog_density=20.0,             # 0-100
+          fog_distance=0.0,             # 0-inf
+          wetness=0.0                   # 0-100
       )
       
       world.set_weather(weather)
@@ -715,8 +700,8 @@ Quick Start Examples
              carla.Location(x=1.5, z=2.4)
          )
          camera = world.spawn_actor(
-             camera_bp, 
-             camera_transform, 
+             camera_bp,
+             camera_transform,
              attach_to=vehicle
          )
          
@@ -778,14 +763,14 @@ Quick Start Examples
 Performance Tips
 ----------------
 
-.. card:: ⚡ Optimization Guide
+.. card:: Optimization Guide
    :class-header: bg-warning
 
    .. grid:: 1 1 2 2
       :gutter: 2
 
       .. grid-item-card:: For Better FPS
-         
+
          - Use ``-quality-level=Low``
          - Add ``-nosound`` flag
          - Reduce sensor resolution
@@ -794,7 +779,7 @@ Performance Tips
          - Use ``-RenderOffScreen`` for headless
 
       .. grid-item-card:: For Better Quality
-         
+
          - Use ``-quality-level=Epic``
          - Increase sensor resolution
          - Enable all weather effects
@@ -803,7 +788,7 @@ Performance Tips
          - Use synchronous mode
 
       .. grid-item-card:: For Reproducibility
-         
+
          - Use ``-deterministic``
          - Set ``-fixed-delta-seconds=0.05``
          - Use synchronous mode in API
@@ -812,7 +797,7 @@ Performance Tips
          - Record and replay
 
       .. grid-item-card:: For Development
-         
+
          - Use ``-windowed`` mode
          - Set comfortable resolution
          - Enable reload world
@@ -823,7 +808,7 @@ Performance Tips
 Troubleshooting
 ---------------
 
-.. dropdown:: 🔧 Common Issues and Solutions
+.. dropdown:: Common Issues and Solutions
    :color: danger
    :icon: tools
    :animate: fade-in-slide-down
@@ -915,11 +900,10 @@ Troubleshooting
             sudo apt-get update && sudo apt-get install -y nvidia-docker2
             sudo systemctl restart docker
 
-
 References
 ----------
 
-.. card:: 📚 Additional Resources
+.. card:: Additional Resources
    :class-header: bg-dark text-white
 
    - **Official Documentation**: https://carla.readthedocs.io/en/0.9.16/

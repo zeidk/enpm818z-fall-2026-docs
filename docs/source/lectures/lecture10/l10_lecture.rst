@@ -663,3 +663,14 @@ CARLA Implementation Exercise
           # Stanley steering
           delta = psi_e + math.atan2(k * e, max(speed, 1e-3))
           return max(-1.0, min(1.0, delta / math.radians(70)))
+
+.. admonition:: Assignment Unlocked -- GP4: Planning & Control
+   :class: important
+
+   You now have the foundational knowledge from **L8--L10** to begin
+   **GP4: Planning & Control**. In GP4 you will implement A* path planning
+   on the CARLA waypoint graph, Pure Pursuit and PID controllers, and a
+   behavioral state machine -- closing the loop on a fully autonomous
+   driving pipeline.
+
+   :doc:`Go to GP4 </assignments/gp4>`

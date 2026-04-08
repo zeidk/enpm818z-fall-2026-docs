@@ -694,3 +694,14 @@ Summary
       - Backend: pose graph optimization, loop closure detection
       - Systems: LOAM, LeGO-LOAM, LIO-SAM, KISS-ICP
       - Metrics: APE (global), RPE (local drift rate)
+
+.. admonition:: Assignment Unlocked -- GP3: Fusion & Localization
+   :class: important
+
+   You now have the foundational knowledge from **L6--L7** to begin
+   **GP3: Fusion & Localization**. In GP3 you will implement camera-LiDAR
+   frustum fusion for 3D object detection, build an Extended Kalman Filter
+   that fuses GNSS and IMU for vehicle localization, and evaluate both
+   against CARLA ground truth.
+
+   :doc:`Go to GP3 </assignments/gp3>`
