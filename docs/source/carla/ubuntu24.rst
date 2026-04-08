@@ -35,6 +35,18 @@ This guide walks you through setting up CARLA 0.9.16 on Ubuntu 24.04 using Docke
    **Why Docker?** CARLA 0.9.16 does not have native support for Ubuntu 24.04. Running CARLA inside a Docker container is the supported workaround -- the containerized CARLA server interfaces directly with the ROS 2 environment running on the host system.
 
 ---------------------------------------------------------
+Terminology
+---------------------------------------------------------
+
+.. admonition:: Key Terms
+
+   **Host**
+      The physical or virtual machine (your Ubuntu 24.04 system) on which Docker is installed. The host runs the Docker engine and provides the underlying hardware resources -- CPU, GPU, memory, and network -- to containers. In this guide, ROS 2 and the CARLA Python client run directly on the host.
+
+   **Container**
+      A lightweight, isolated runtime environment created from a Docker image. A container packages an application and all its dependencies so it runs consistently regardless of the host OS. In this guide, the CARLA server runs inside a container while communicating with the host over the network.
+
+---------------------------------------------------------
 Prerequisites
 ---------------------------------------------------------
 
@@ -105,6 +117,17 @@ Step 2: Install Additional Dependencies
    # Verify installations
    python3 -c "import numpy; import pygame; import carla; print('All dependencies OK')"
 
+**Command breakdown:**
+
+- ``pip3 install numpy pygame`` — Installs two Python packages using pip:
+
+  - **NumPy** — A numerical computing library used for array operations, linear algebra, and mathematical transformations. CARLA scripts use NumPy to process sensor data (e.g., converting raw camera/lidar buffers into arrays) and to perform coordinate transformations.
+  - **Pygame** — A multimedia library for creating graphical windows and handling keyboard/mouse input. CARLA's example scripts use Pygame to render the simulation camera feed in a display window and to capture user input for manual vehicle control.
+
+- ``pip3 install carla==0.9.16`` — Installs the CARLA Python client library, pinned to version **0.9.16** to match the Docker server image pulled in Step 1. This library provides the Python API (``carla.Client``, ``carla.World``, ``carla.Vehicle``, etc.) that your scripts use to connect to the CARLA server, spawn actors, attach sensors, and control the simulation.
+
+- ``python3 -c "import numpy; import pygame; import carla; print('All dependencies OK')"`` — Runs a one-line Python script that attempts to import all three packages. If any package is missing or improperly installed, Python will raise an ``ImportError`` and you will know which dependency needs to be reinstalled. If all imports succeed, it prints ``All dependencies OK``.
+
 ---------------------------------------------------------
 Step 2.5: Download Additional Maps (Town04)
 ---------------------------------------------------------
@@ -124,16 +147,20 @@ Download the additional maps package on your **host machine**:
 Install Maps into Docker Container
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Method 1: Copy and Extract (Recommended)**
-
 .. code-block:: bash
 
    # 1. Start CARLA container with a name
    docker run --privileged --gpus all --net=host \
+     -e DISPLAY=$DISPLAY \
+     -e XDG_RUNTIME_DIR=/tmp/runtime-carla \
+     -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
      --name carla-server \
      -it carlasim/carla:0.9.16
 
-   # 2. In a NEW terminal, copy the maps to the container
+   # 1b. In a NEW terminal, verify the container is running
+   docker ps --filter "name=carla-server"
+
+   # 2. In the same NEW terminal, copy the maps to the container
    docker cp ~/Downloads/AdditionalMaps_0.9.16.tar.gz carla-server:/workspace/
 
    # 3. Enter the container as root to extract
@@ -152,26 +179,41 @@ Install Maps into Docker Container
    docker stop carla-server
    docker start -ai carla-server
 
-**Method 2: Mount Volume (Persistent)**
+.. note::
 
-If you want maps to persist across container restarts:
+   ``./ImportAssets.sh`` produces **no output on success**. It silently moves files from
+   ``/workspace/Import/`` into ``CarlaUE4/Content/``. You can verify the maps were installed by
+   checking that the ``Import/`` directory is now empty and that the map files exist:
 
-.. code-block:: bash
+   .. code-block:: bash
 
-   # Extract maps on host
-   mkdir -p ~/carla-maps
-   tar -xzf ~/Downloads/AdditionalMaps_0.9.16.tar.gz -C ~/carla-maps
+      ls Import/                              # Should be empty
+      ls CarlaUE4/Content/Carla/Maps/ | grep Town04  # Should show Town04 files
 
-   # Run CARLA with volume mount
-   docker run --privileged --gpus all --net=host \
-     -v ~/carla-maps:/workspace/Import \
-     -it carlasim/carla:0.9.16 \
-     /bin/bash -c "./ImportAssets.sh && ./CarlaUE4.sh -nosound -quality-level=Low -vulkan"
+   
+
 
 Verify Maps Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-After installing the maps, verify Town04 is available:
+After installing the maps, make sure the CARLA server is running before verifying. In one terminal,
+start (or restart) the container so it loads the newly imported maps:
+
+.. code-block:: bash
+
+   # Remove the old container if it still exists
+   docker rm carla-server 2>/dev/null
+
+   # Start CARLA
+   docker run --privileged --gpus all --net=host \
+     -e DISPLAY=$DISPLAY \
+     -e XDG_RUNTIME_DIR=/tmp/runtime-carla \
+     -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+     --name carla-server \
+     -it carlasim/carla:0.9.16
+
+Wait 30-60 seconds for CARLA to fully initialize. Then, in a **second terminal**, run the
+following Python script to query the available maps:
 
 .. code-block:: bash
 
@@ -327,6 +369,7 @@ Add the following function to your ``~/.bashrc``:
            --ipc=host \
            -v /dev/shm:/dev/shm \
            -e DISPLAY=$DISPLAY \
+           -e XDG_RUNTIME_DIR=/tmp/runtime-carla \
            -e NVIDIA_VISIBLE_DEVICES=all \
            -e NVIDIA_DRIVER_CAPABILITIES=all \
            -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
@@ -682,6 +725,44 @@ CARLA Won't Start
 
       xhost +local:root
 
+XDG_RUNTIME_DIR Errors on Startup
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Symptom:** CARLA container starts but prints repeated errors:
+
+.. code-block:: text
+
+   error: XDG_RUNTIME_DIR not set in the environment.
+
+**Explanation:** ``XDG_RUNTIME_DIR`` is a Linux environment variable that points to a per-user
+directory (typically ``/run/user/<UID>``) used by display servers and Wayland/X11 compositors to
+store runtime sockets. When Docker runs the CARLA process inside the container, this variable is
+not set by default, so libraries that look for it (e.g., Vulkan, SDL, PulseAudio) emit these warnings.
+
+**These errors are usually harmless** — CARLA will still run and render correctly as long as GPU
+access and X11 forwarding are configured properly. However, if you want to suppress them or if
+CARLA fails to render, try the following:
+
+1. Set the variable explicitly when launching the container:
+
+   .. code-block:: bash
+
+      docker run --privileged --gpus all --net=host \
+        -e XDG_RUNTIME_DIR=/tmp/runtime-carla \
+        -e DISPLAY=$DISPLAY \
+        -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+        --name carla-server \
+        -it carlasim/carla:0.9.16
+
+2. Ensure X11 forwarding is allowed on the host before starting the container:
+
+   .. code-block:: bash
+
+      xhost +local:root
+
+3. If you are on a **Wayland** session (default on Ubuntu 24.04), you may also need to set
+   ``WAYLAND_DISPLAY`` or switch to an X11 session at the login screen.
+
 Cannot Connect to CARLA
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -696,13 +777,47 @@ Cannot Connect to CARLA
    .. code-block:: bash
 
       docker ps
+
+   You should see output similar to:
+
+   .. code-block:: text
+
+      CONTAINER ID   IMAGE                      STATUS          NAMES
+      a1b2c3d4e5f6   carlasim/carla:0.9.16      Up 2 minutes    carla-server
+
+   - If the ``STATUS`` column says ``Up``, the container is running.
+   - If the container is not listed, it may have exited. Run ``docker ps -a`` to see all containers
+     (including stopped ones). The ``STATUS`` column will show the exit code
+     (e.g., ``Exited (1) 30 seconds ago``), which can help diagnose why it stopped.
+   - To restart a stopped container: ``docker start -ai carla-server``
+
+3. Verify CARLA is listening on its default port (2000):
+
+   .. code-block:: bash
+
       netstat -tuln | grep 2000
 
-3. Verify port is accessible:
+   Expected output:
+
+   .. code-block:: text
+
+      tcp   0   0   0.0.0.0:2000   0.0.0.0:*   LISTEN
+
+   If there is no output, CARLA has not finished starting yet or crashed during initialization.
+   Check the container logs for errors:
+
+   .. code-block:: bash
+
+      docker logs carla-server
+
+4. Verify the CARLA Python client can connect:
 
    .. code-block:: bash
 
       python3 -c "import carla; c = carla.Client('localhost', 2000); c.set_timeout(2.0); print(c.get_server_version())"
+
+   This should print the server version (e.g., ``0.9.16``). If it raises a timeout error, CARLA
+   is either still loading or the ``--net=host`` flag was not used when starting the container.
 
 No Topics Visible
 ~~~~~~~~~~~~~~~~~
