@@ -39,6 +39,7 @@ By the end of this lecture, you will be able to:
    :titlesonly:
 
    l3_lecture
+   l3_exercises
    l3_quiz
    l3_references
 

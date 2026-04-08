@@ -45,5 +45,6 @@ By the end of this lecture, you will be able to:
    :maxdepth: 2
 
    l8_lecture
+   l8_exercises
    l8_quiz
    l8_references

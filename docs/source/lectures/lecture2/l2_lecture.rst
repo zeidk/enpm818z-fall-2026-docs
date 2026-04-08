@@ -904,8 +904,13 @@ known sensor transforms to project 3D LiDAR points into the camera image.
       (``world.set_weather(carla.WeatherParameters.HardRainNoon)``) and
       observe the impact on each sensor's data quality.
 
-.. note::
+.. admonition:: Assignment Unlocked -- GP1: Sensor Suite & Data Pipeline
+   :class: important
 
-   This exercise provides the foundation for **GP1: Sensor Suite & Data
-   Pipeline**, where you will build a complete ROS 2 package around these
-   sensors.
+   You now have the foundational knowledge from **L1--L2** to begin
+   **GP1: Sensor Suite & Data Pipeline**. In GP1 you will build the
+   ``ads_pipeline`` ROS 2 package, spawn an ego vehicle with a full sensor
+   suite in CARLA, record and visualize sensor data, and implement
+   LiDAR-to-camera projection.
+
+   :doc:`Go to GP1 </assignments/gp1>`

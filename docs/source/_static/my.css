@@ -1,0 +1,21 @@
+/* ------------------------------------------------------------
+ * Compact Table Variant
+ * Usage: .. list-table::
+ *           :class: compact-table
+ * ------------------------------------------------------------ */
+table.compact-table {
+  font-size: 0.85em;
+}
+
+table.compact-table th,
+table.compact-table td {
+  padding: 0.15rem 0.4rem !important;
+  line-height: 1.25;
+}
+
+table.compact-table td p,
+table.compact-table th p {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  line-height: 1.25;
+}

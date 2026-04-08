@@ -38,6 +38,7 @@ By the end of this lecture, you will be able to:
    :titlesonly:
 
    l2_lecture
+   l2_exercises
    l2_quiz
    l2_references
 

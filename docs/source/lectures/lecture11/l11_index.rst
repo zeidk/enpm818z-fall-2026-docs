@@ -44,6 +44,7 @@ By the end of this lecture, you will be able to:
    :titlesonly:
 
    l11_lecture
+   l11_exercises
    l11_quiz
    l11_references
 

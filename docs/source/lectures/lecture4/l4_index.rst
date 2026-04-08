@@ -37,6 +37,7 @@ By the end of this lecture, you will be able to:
    :titlesonly:
 
    l4_lecture
+   l4_exercises
    l4_quiz
    l4_references
 
