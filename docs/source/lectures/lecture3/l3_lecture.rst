@@ -3,1045 +3,866 @@ Lecture
 ====================================================
 
 
-Foundations of Perception
--------------------------
+Why Sensor Fusion Is Essential
+--------------------------------
 
-What Is Perception?
-~~~~~~~~~~~~~~~~~~~
-
-.. admonition:: Definition
-   :class: note
-
-   **Perception** is the process by which an autonomous system transforms
-   unstructured, noisy sensor data into a structured, semantic understanding
-   of the surrounding environment.
-
-Without perception, an AV cannot distinguish between a pedestrian and a
-plastic bag, cannot determine if the road ahead is clear, and cannot make
-informed decisions about navigation and safety.
-
-**Perception in the AV stack:**
+Each sensor modality has complementary strengths and weaknesses. Relying on
+any single sensor creates gaps in perception that can lead to safety-critical
+failures.
 
 .. list-table::
-   :widths: 15 45 40
+   :widths: 15 28 28 29
    :header-rows: 1
    :class: compact-table
 
-   * - Module
-     - Function
-     - Key Question
-   * - **Sensing**
-     - Physical sensors + signal processing
-     - "What raw data do we have?"
-   * - **Perception**
-     - Semantic world representation
-     - "What is out there?"
-   * - **Planning**
-     - Route, behavior, trajectory generation
-     - "What should we do?"
-   * - **Control**
-     - Actuator commands
-     - "How do we do it?"
+   * - Property
+     - Camera
+     - LiDAR
+     - RADAR
+   * - **Resolution**
+     - Very high (megapixels)
+     - Medium (64-128 beams)
+     - Low (sparse)
+   * - **Range**
+     - 50-200 m (visual range)
+     - 50-200 m
+     - 200-300 m
+   * - **Night performance**
+     - Poor (needs illumination)
+     - Good
+     - Excellent
+   * - **Rain / fog**
+     - Degraded
+     - Degraded
+     - Robust
+   * - **Depth accuracy**
+     - Low (inferred)
+     - High (direct ToF)
+     - High (direct)
+   * - **Velocity measurement**
+     - Indirect (optical flow)
+     - Via scan matching
+     - Direct (Doppler)
+   * - **Semantic richness**
+     - Very high (texture, color)
+     - Low (geometry only)
+     - Very low
+   * - **Cost**
+     - Low
+     - High ($5K-$75K)
+     - Low-medium
 
-.. important::
+.. admonition:: Key Point
+   :class: important
 
-   No amount of sophisticated planning or control can compensate for
-   perception failures. Perception is the foundation of the entire AV stack.
-
-
-Perception Inputs and Outputs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-**Inputs:**
-
-- Camera images (1920x1200 at 30--60 Hz)
-- LiDAR point clouds (100K--1M points at 10--20 Hz)
-- RADAR returns (10--20 Hz)
-- GNSS/IMU (50--200 Hz)
-
-**Outputs:**
-
-- Detected objects with class labels, 3D bounding boxes, and tracking IDs
-- Lane geometry (polynomial/spline boundaries)
-- Traffic light states with position and confidence
-- Free space (drivable corridor)
-- HD map alignment
+   Fusion exploits the **complementary** nature of these sensors. A camera-only
+   system fails in fog; a LiDAR-only system misses semantic classes; a RADAR-only
+   system cannot detect lane markings. Together, the combined system is more
+   accurate, reliable, and complete than any individual sensor.
 
 
-Taxonomy of Perception Tasks
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Sensor Relationships
+---------------------
 
 .. tab-set::
 
-   .. tab-item:: Mid-Level Understanding
+   .. tab-item:: Complementary
 
-      Extracts semantic meaning from sensor data.
+      Sensors measure **different physical phenomena** and provide non-overlapping
+      information. Combining them adds new capabilities.
 
-      - **Object detection:** YOLO, Faster R-CNN, PointPillars, CenterPoint
-      - **Semantic segmentation:** FCN, U-Net, DeepLabv3+
-      - **Instance segmentation:** Mask R-CNN, YOLACT
-      - **Panoptic segmentation:** Combines semantic + instance
-      - **Lane detection:** SCNN, LaneNet, PolyLaneNet
-      - **Traffic sign/light recognition**
+      *Example*: Camera detects traffic light color; LiDAR measures precise
+      distance. Neither alone can both classify the light AND measure its range.
 
-   .. tab-item:: High-Level Reasoning
+   .. tab-item:: Competitive (Redundant)
 
-      Interprets the scene over time for decision-making.
+      Sensors measure the **same quantity** using different physical principles.
+      Fusion improves accuracy and provides fallback if one sensor fails.
 
-      - **Multi-object tracking (MOT):** DeepSORT, ByteTrack
-      - **Scene understanding:** Occupancy grids, HD map integration
-      - **Behavior/intent prediction:** RNNs, Transformers, GNNs
-      - **Anomaly detection**
+      *Example*: Both LiDAR and RADAR can measure the distance to the car ahead.
+      Fusing their measurements reduces variance. If the LiDAR is occluded by
+      rain, RADAR maintains coverage.
 
-**Key terminology:**
+   .. tab-item:: Cooperative
 
-.. list-table::
-   :widths: 25 75
-   :class: compact-table
+      Sensors work together where the output of one sensor **contextualizes** the
+      output of another.
 
-   * - **Detection**
-     - Locating objects (bounding box + confidence).
-   * - **Classification**
-     - Assigning a category label to an object.
-   * - **Semantic segmentation**
-     - All pixels of the same class share a label (e.g., "road").
-   * - **Instance segmentation**
-     - Each object gets a unique ID + pixel mask.
-   * - **Panoptic segmentation**
-     - Combines semantic (stuff) + instance (things).
-   * - **Tracking**
-     - Estimating current/past states from observations over time.
-   * - **Prediction**
-     - Forecasting future states of other agents.
+      *Example*: IMU provides high-frequency motion data (100-1000 Hz) that
+      enables precise interpolation of LiDAR scan points (acquired at 10-20 Hz),
+      correcting for motion distortion during the scan.
 
+
+Fusion Architectures
+---------------------
+
+.. grid:: 1 2 2 3
+   :gutter: 3
+
+   .. grid-item-card:: Early Fusion (Raw Data)
+      :class-card: sd-border-info
+
+      Combine raw sensor data before any feature extraction. Example: project
+      LiDAR points onto camera image and concatenate depth as extra channels.
+
+      **Pros**: maximum information available.
+      **Cons**: modality mismatch (resolution, format), requires careful
+      alignment, high data volume.
+
+   .. grid-item-card:: Intermediate Fusion (Feature-Level)
+      :class-card: sd-border-info
+
+      Each sensor extracts features independently; features are fused in a
+      shared representation space. Example: BEVFusion -- camera BEV features
+      + LiDAR BEV features fused by concatenation or attention.
+
+      **Pros**: balances information richness with compute efficiency.
+      **Cons**: features must be aligned (requires calibration).
+
+   .. grid-item-card:: Late Fusion (Decision-Level)
+      :class-card: sd-border-info
+
+      Each sensor produces independent outputs (detections, tracks); fusion
+      occurs at the decision level. Example: camera 3D boxes + LiDAR 3D boxes
+      → fused object list via weighted averaging or NMS.
+
+      **Pros**: simple, modular, each sensor stack is independently testable.
+      **Cons**: information lost at intermediate stages; fusion cannot recover
+      complementary features.
+
+
+Kalman Filter for Sensor Fusion
+---------------------------------
 
 .. admonition:: Recap from ENPM673
    :class: note
 
-   In ENPM673, you learned the fundamentals of convolutional neural networks:
-   convolution and pooling operations, stride and padding, activation functions,
-   fully connected layers, and back-propagation. You also studied how CNNs learn
-   hierarchical feature representations -- edges in early layers, textures and
-   shapes in middle layers, and high-level object templates in deeper layers --
-   replacing hand-crafted descriptors such as SIFT and HOG. You explored key
-   architectures (AlexNet, VGGNet) and saw why classical computer vision methods,
-   while effective in constrained settings, struggle with the appearance variation
-   and scale diversity encountered in real-world scenes.
+   In ENPM673, you derived the Kalman Filter from first principles: the
+   linear-Gaussian state space model, the predict-update cycle, and the
+   Kalman Gain as a trust dial between prediction and measurement. Here
+   we focus on **applying** the KF framework to multi-sensor fusion in
+   autonomous driving.
 
-   In this lecture, we apply these foundations to two state-of-the-art object
-   detection architectures designed for real-time autonomous driving: **YOLO**
-   and **DETR**.
+KF Equations -- Quick Reference
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. admonition:: KF Predict-Update Summary
+   :class: hint
 
-YOLO: You Only Look Once
---------------------------
+   .. math::
 
-YOLO revolutionized real-time object detection by framing detection as a
-**single regression problem**: one forward pass predicts all bounding boxes
-and class probabilities simultaneously.
+      \textbf{Predict:} \quad \hat{\mathbf{x}}_{k|k-1} = F_k \hat{\mathbf{x}}_{k-1|k-1} + B_k \mathbf{u}_k, \quad P_{k|k-1} = F_k P_{k-1|k-1} F_k^T + Q_k
 
-YOLO Evolution
-~~~~~~~~~~~~~~
+      \textbf{Update:} \quad K_k = P_{k|k-1} H_k^T (H_k P_{k|k-1} H_k^T + R_k)^{-1}
+
+      \hat{\mathbf{x}}_{k|k} = \hat{\mathbf{x}}_{k|k-1} + K_k (\mathbf{z}_k - H_k \hat{\mathbf{x}}_{k|k-1}), \quad P_{k|k} = (I - K_k H_k) P_{k|k-1}
+
+Kalman Gain Intuition
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. math::
+
+   K_k = \frac{P_{k|k-1} H_k^T}{H_k P_{k|k-1} H_k^T + R_k}
+       \approx \frac{\text{prior uncertainty}}{\text{prior uncertainty} + \text{measurement noise}}
 
 .. list-table::
-   :widths: 12 15 50 23
-   :header-rows: 1
+   :widths: 40 60
    :class: compact-table
 
-   * - Version
-     - Year
-     - Key Innovation
-     - COCO mAP
-   * - v1
-     - 2015
-     - Single-stage detection, 7x7 grid
-     - 63.4% (VOC)
-   * - v2
-     - 2017
-     - Batch norm, anchor boxes, Darknet-19
-     - 78.6% (VOC)
-   * - v3
-     - 2018
-     - FPN multi-scale, Darknet-53, 3 detection scales
-     - 57.9%
-   * - v4
-     - 2020
-     - CSPDarknet53, Mosaic augmentation, PAN, CIoU loss
-     - 43.5%
-   * - v5
-     - 2020
-     - PyTorch native, model scaling (n/s/m/l/x), AutoAugment
-     - 50.7%
-   * - v7
-     - 2022
-     - E-ELAN, SOTA at the time
-     - 56.8%
-   * - v8
-     - 2023
-     - **Anchor-free**, decoupled head, multi-task (det/seg/pose)
-     - 53.9%
-   * - v10
-     - 2024
-     - NMS-free training, dual label assignment
-     - 54.4%
-   * - v11
-     - 2024
-     - C3k2 blocks, SPPF modifications
-     - 54.7%
+   * - :math:`K_k \to 0` (small gain)
+     - Measurement very noisy (:math:`R_k` large) OR prior very certain
+       (:math:`P_{k|k-1}` small). Trust the prediction, barely update.
+   * - :math:`K_k \to H^{-1}` (large gain)
+     - Measurement very accurate (:math:`R_k` small) OR prior very uncertain
+       (:math:`P_{k|k-1}` large). Trust the measurement, update aggressively.
 
-
-Architecture: Backbone-Neck-Head
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. grid:: 1 3 3 3
-   :gutter: 3
-
-   .. grid-item-card:: Backbone (Feature Extraction)
-      :class-card: sd-border-info
-
-      Extracts hierarchical features from the input image.
-
-      - CSPDarknet53 (v4--v7), C2f blocks (v8+)
-      - Progressive downsampling: 640 -> 320 -> ... -> 20
-      - Increasing channels: 3 -> 64 -> ... -> 1024
-      - Residual connections, SiLU/Mish activation
-
-   .. grid-item-card:: Neck (Multi-Scale Fusion)
-      :class-card: sd-border-info
-
-      Fuses features across scales for detecting objects of different sizes.
-
-      - **FPN:** Top-down pathway + lateral connections
-      - **PAN:** FPN + bottom-up pathway (v4, v5)
-      - Output scales: 80x80 (small), 40x40 (medium), 20x20 (large)
-
-   .. grid-item-card:: Head (Detection)
-      :class-card: sd-border-info
-
-      Produces final bounding boxes and class predictions.
-
-      - **Anchor-based (v3--v7):** Predefined boxes, predict offsets
-      - **Anchor-free (v8+):** Directly predict (x,y,w,h), decoupled head
-      - NMS post-processing (or NMS-free in v10)
-
-
-Loss Functions
-~~~~~~~~~~~~~~
-
-YOLO's training loss combines three components:
-
-1. **Localization (box regression):** CIoU loss -- penalizes overlap, center
-   distance, and aspect ratio simultaneously.
-2. **Objectness (confidence):** Binary cross-entropy -- is there an object?
-3. **Classification:** Binary cross-entropy per class (multi-label).
-
-
-Training YOLO on Custom Data
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-   from ultralytics import YOLO
-
-   # Load pretrained model
-   model = YOLO('yolov8s.pt')
-
-   # Train on custom dataset
-   results = model.train(
-       data='data.yaml',    # Dataset config
-       epochs=100,
-       imgsz=640,
-       batch=16,
-       name='carla_detector',
-       pretrained=True
-   )
-
-   # Evaluate
-   metrics = model.val(data='data.yaml', split='test')
-
-   # Export for deployment
-   model.export(format='onnx')
-   model.export(format='engine', half=True)  # TensorRT FP16
-
-**Dataset format (YOLO):**
-
-.. code-block:: text
-
-   # Each label file: one line per object
-   <class_id> <x_center> <y_center> <width> <height>
-   # All values normalized to [0, 1]
-
-**Dataset structure:**
-
-.. code-block:: text
-
-   dataset/
-   ├── images/
-   │   ├── train/
-   │   ├── val/
-   │   └── test/
-   ├── labels/
-   │   ├── train/
-   │   ├── val/
-   │   └── test/
-   └── data.yaml
-
-**Evaluation metrics:**
-
-- **mAP@0.5** -- Mean Average Precision at IoU threshold 0.5.
-- **mAP@0.5:0.95** -- Averaged across IoU thresholds 0.5 to 0.95 (stricter).
-- **Precision** -- TP / (TP + FP). How many detections are correct?
-- **Recall** -- TP / (TP + FN). How many real objects are found?
-- **Inference time** -- Milliseconds per image.
-
-
-DETR: Detection Transformer
------------------------------
-
-DETR (DEtection TRansformer) was introduced by Carion et al. (2020) and
-represents a fundamentally different approach to object detection: **no
-anchors, no NMS, end-to-end set prediction**.
-
-.. admonition:: Key Insight
+.. admonition:: Engineering Intuition
    :class: tip
 
-   DETR treats object detection as a **set prediction problem**: given an
-   image, predict a fixed-size set of objects in a single forward pass,
-   using a transformer encoder-decoder architecture.
+   Think of :math:`K_k` as a "trust dial" between prediction and measurement.
+   When your model is confident and sensors are noisy, trust the model. When
+   sensors are accurate and your model is uncertain (e.g., at startup), trust
+   the sensors.
 
+KF for Multi-Sensor Fusion in AV
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-DETR Architecture
-~~~~~~~~~~~~~~~~~
+Consider tracking a vehicle ahead of the ego car. We define a state vector
+that captures the target's position, velocity, and range-rate:
 
-.. grid:: 1 2 2 4
-   :gutter: 2
+.. math::
 
-   .. grid-item-card:: 1. CNN Backbone
-      :class-card: sd-border-primary
+   \mathbf{x} = \begin{bmatrix} x \\ y \\ z \\ \dot{x} \\ \dot{y} \\ \dot{z} \end{bmatrix}
 
-      ResNet-50 extracts a feature map from the input image.
-      Output: flattened spatial features + positional encoding.
+Three sensors observe this target, each measuring a different subset of the
+state through its own measurement matrix :math:`H`.
 
-   .. grid-item-card:: 2. Transformer Encoder
-      :class-card: sd-border-primary
+**LiDAR** -- measures 3D position directly:
 
-      Self-attention over the feature map. Each position attends to
-      all other positions -- **global context** from the start.
+.. math::
 
-   .. grid-item-card:: 3. Transformer Decoder
-      :class-card: sd-border-primary
+   \mathbf{z}^{L} = \begin{bmatrix} x \\ y \\ z \end{bmatrix}, \quad
+   H^{L} = \begin{bmatrix} 1 & 0 & 0 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 & 0 & 0 \\ 0 & 0 & 1 & 0 & 0 & 0 \end{bmatrix}
 
-      N learned **object queries** (e.g., 100) attend to encoder output
-      via cross-attention. Each query specializes in detecting one object.
+**RADAR** -- measures range :math:`r = \sqrt{x^2+y^2}` and range-rate
+:math:`\dot{r}`. For a target directly ahead (small bearing), the linearized
+measurement simplifies to:
 
-   .. grid-item-card:: 4. Prediction Heads
-      :class-card: sd-border-primary
+.. math::
 
-      Each query outputs a class label + bounding box (or "no object").
-      **No NMS needed** -- bipartite matching ensures one prediction per
-      object.
+   \mathbf{z}^{R} = \begin{bmatrix} x \\ \dot{x} \end{bmatrix}, \quad
+   H^{R} = \begin{bmatrix} 1 & 0 & 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 1 & 0 & 0 \end{bmatrix}
 
+**Camera** -- provides bearing (lateral pixel position maps to :math:`y`
+offset after projection):
 
-Bipartite Matching
-~~~~~~~~~~~~~~~~~~
+.. math::
 
-Instead of NMS, DETR uses the **Hungarian algorithm** to find the optimal
-one-to-one assignment between predicted objects and ground truth during
-training:
+   \mathbf{z}^{C} = \begin{bmatrix} y \end{bmatrix}, \quad
+   H^{C} = \begin{bmatrix} 0 & 1 & 0 & 0 & 0 & 0 \end{bmatrix}
 
-- Each prediction is matched to at most one ground truth object.
-- Unmatched predictions are assigned the "no object" class.
-- The matching cost combines classification loss and box loss (L1 + GIoU).
+Sequential Update Procedure
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This eliminates duplicate detections by design.
+At each time step, run the **predict** step once using the constant-velocity
+process model, then apply the **update** step sequentially for each sensor
+that delivers a measurement:
 
+1. **Predict** :math:`\hat{\mathbf{x}}_{k|k-1}`, :math:`P_{k|k-1}` using :math:`F` and :math:`Q`.
+2. **Update with LiDAR**: use :math:`H^{L}`, :math:`R^{L}`, :math:`\mathbf{z}^{L}` to obtain :math:`\hat{\mathbf{x}}_{k|L}`, :math:`P_{k|L}`.
+3. **Update with RADAR**: using the posterior from step 2 as the new prior, apply :math:`H^{R}`, :math:`R^{R}`, :math:`\mathbf{z}^{R}`.
+4. **Update with Camera**: again chain the posterior, applying :math:`H^{C}`, :math:`R^{C}`, :math:`\mathbf{z}^{C}`.
 
-DETR Variants
-~~~~~~~~~~~~~
+The order of sensor updates does not affect the final result (the KF update
+is associative for independent measurements). Each update further reduces the
+covariance :math:`P`, fusing complementary information from all three modalities.
+
+Sensor Noise and Environmental Conditions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Each sensor's measurement noise covariance :math:`R` reflects both intrinsic
+sensor precision and current environmental conditions:
 
 .. list-table::
-   :widths: 20 40 40
+   :widths: 18 27 27 28
    :header-rows: 1
    :class: compact-table
 
-   * - Model
-     - Key Improvement
-     - Impact
-   * - **Deformable DETR**
-     - Deformable attention (attend to sparse key positions)
-     - 10x faster convergence, better small object detection
-   * - **DINO**
-     - Contrastive denoising + mixed query selection
-     - 63+ AP on COCO (SOTA)
-   * - **RT-DETR**
-     - Real-time DETR with efficient hybrid encoder
-     - Competitive with YOLO on speed; no NMS
+   * - Condition
+     - Camera :math:`R^{C}`
+     - LiDAR :math:`R^{L}`
+     - RADAR :math:`R^{R}`
+   * - Clear day
+     - Low (sharp images)
+     - Low (clean returns)
+     - Low
+   * - Heavy rain
+     - **High** (blur, glare)
+     - Moderate (scattering)
+     - Low (robust to rain)
+   * - Night
+     - **High** (low contrast)
+     - Low (active sensor)
+     - Low (active sensor)
+   * - Fog
+     - **High** (occlusion)
+     - **High** (backscatter)
+     - Low (penetrates fog)
+   * - Direct sunlight
+     - Moderate (saturation)
+     - Moderate (solar noise)
+     - Low
+
+.. admonition:: Adaptive Noise Tuning
+   :class: tip
+
+   In practice, the :math:`R` matrices are not static. Production AV stacks
+   **adapt** :math:`R` at runtime based on weather classification, sensor
+   health monitors, and signal-to-noise diagnostics. For example, when a rain
+   detector triggers, :math:`R^{C}` is inflated so the Kalman gain
+   automatically down-weights camera measurements in favor of RADAR.
 
 
-YOLO vs. DETR Comparison
---------------------------
+Extended Kalman Filter (EKF)
+-----------------------------
 
-.. list-table::
-   :widths: 25 37 38
-   :header-rows: 1
-   :class: compact-table
+The standard KF assumes **linear** process and measurement models. Most AV
+applications are nonlinear (e.g., vehicle dynamics with heading angle, radar
+measurement in polar coordinates).
 
-   * - Dimension
-     - YOLO (v8+)
-     - DETR (RT-DETR)
-   * - **Architecture**
-     - CNN backbone + FPN neck + detection head
-     - CNN backbone + transformer encoder-decoder
-   * - **Context**
-     - Local (CNN receptive field)
-     - Global (self-attention from the start)
-   * - **Post-Processing**
-     - NMS required (except v10)
-     - No NMS -- bipartite matching
-   * - **Anchors**
-     - Anchor-free (v8+)
-     - No anchors (object queries)
-   * - **Speed**
-     - Very fast (1--5 ms on GPU)
-     - Fast with RT-DETR; original DETR is slower
-   * - **Small Objects**
-     - Good (multi-scale FPN)
-     - Improved with Deformable DETR
-   * - **Training Data**
-     - Efficient with moderate data
-     - Needs more data (transformer data hunger)
-   * - **Simplicity**
-     - More components (anchors, NMS, FPN)
-     - Cleaner end-to-end design
-   * - **AV Suitability**
-     - Production-ready, real-time
-     - Emerging; RT-DETR closing the gap
+The **Extended Kalman Filter (EKF)** linearizes nonlinear functions via their
+**Jacobian** (first-order Taylor expansion):
 
-.. tip::
+.. math::
 
-   In Assignment A2, you will fine-tune both YOLO and DETR on the same CARLA
-   dataset and compare their performance under different conditions (day/night,
-   rain, occlusion).
+   \mathbf{x}_k = f(\mathbf{x}_{k-1}, \mathbf{u}_k) + \mathbf{w}_k
 
+   \mathbf{z}_k = h(\mathbf{x}_k) + \mathbf{v}_k
 
-Deploying a Detector as a ROS 2 Node
---------------------------------------
-
-The practical output of this lecture is a perception node that subscribes to
-CARLA camera images and publishes detected objects.
-
-.. code-block:: python
-
-   import rclpy
-   from rclpy.node import Node
-   from sensor_msgs.msg import Image
-   from vision_msgs.msg import Detection2DArray, Detection2D
-   from cv_bridge import CvBridge
-   from ultralytics import YOLO
-
-
-   class YoloDetectorNode(Node):
-       def __init__(self):
-           super().__init__('yolo_detector')
-           self.model = YOLO('best.pt')
-           self.bridge = CvBridge()
-
-           self.sub = self.create_subscription(
-               Image, '/carla/camera/image',
-               self.image_callback, 10)
-
-           self.pub = self.create_publisher(
-               Detection2DArray, '/perception/detections', 10)
-
-       def image_callback(self, msg):
-           cv_image = self.bridge.imgmsg_to_cv2(msg, 'rgb8')
-           results = self.model(cv_image, verbose=False)
-
-           det_array = Detection2DArray()
-           det_array.header = msg.header
-
-           for r in results[0].boxes:
-               det = Detection2D()
-               # ... populate bounding box and class ...
-               det_array.detections.append(det)
-
-           self.pub.publish(det_array)
-
-
-   def main():
-       rclpy.init()
-       node = YoloDetectorNode()
-       rclpy.spin(node)
-       rclpy.shutdown()
-
-This pattern applies identically to DETR -- swap ``YOLO('best.pt')`` for a
-DETR model loaded via ``transformers`` or ``torch.hub``.
-
-
-Industrial Perception Architectures
---------------------------------------
-
-Understanding how leading AV companies deploy perception systems bridges
-the gap between academic algorithms and real-world engineering.
-
-
-Generic Perception Pipeline
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Most production autonomous vehicles follow a modular perception pipeline:
-
-.. list-table::
-   :widths: 20 80
-   :class: compact-table
-
-   * - **1. Sensor Layer**
-     - Multiple cameras (360-degree coverage), LiDAR, RADAR, GNSS, IMU.
-       Continuous data streams at 10--60 Hz.
-   * - **2. Preprocessing**
-     - Timestamp synchronization, calibration and coordinate frame
-       transforms, image undistortion, noise filtering.
-   * - **3. Perception Stack**
-     - Detection (vehicles, pedestrians, cyclists, traffic signs/lights),
-       segmentation (drivable area, lane boundaries), multi-object tracking
-       with ID assignment, multi-sensor fusion into a unified world model.
-   * - **4. Output**
-     - Structured world model: objects with positions, velocities,
-       trajectories. Delivered to planning at 10--30 Hz.
-
-
-Industry Case Studies
-~~~~~~~~~~~~~~~~~~~~~~
+EKF Equations
+~~~~~~~~~~~~~~
 
 .. tab-set::
 
-   .. tab-item:: Waymo
+   .. tab-item:: Predict
 
-      **Philosophy:** Multi-sensor fusion, LiDAR-centric.
+      .. math::
 
-      - **Sensors:** 5 LiDARs, 29 cameras, 6 RADARs, high-precision
-        GNSS/IMU.
-      - **Approach:** LiDAR is the primary sensor for 3D detection and
-        localization. Cameras add semantic richness (signs, lights, lane
-        markings). RADAR for velocity and adverse weather.
-      - **Architecture:** Modular pipeline (detection -> tracking ->
-        prediction). PointPillars-style LiDAR detection + camera fusion.
-        HD maps for localization priors.
-      - **Scale:** 20+ million real-world miles, 250K+ paid rides/week.
-      - **Key trade-off:** Heavy sensor investment for maximum safety.
+         \hat{\mathbf{x}}_{k|k-1} = f(\hat{\mathbf{x}}_{k-1|k-1}, \mathbf{u}_k)
 
-   .. tab-item:: Tesla
+         P_{k|k-1} = F_k P_{k-1|k-1} F_k^T + Q_k
 
-      **Philosophy:** Vision-only, end-to-end learning.
+         \text{where } F_k = \left. \frac{\partial f}{\partial \mathbf{x}} \right|_{\hat{\mathbf{x}}_{k-1|k-1}}
 
-      - **Sensors:** 8 cameras (no LiDAR, no RADAR post-2023).
-      - **Approach:** "Humans drive with vision; cars should too." Depth
-        is inferred from monocular images and temporal parallax.
-      - **Architecture:** HydraNet multi-task backbone processes all 8
-        camera streams. BEV representation via spatial transformers.
-        Occupancy network predicts 3D occupancy grid. Video module for
-        temporal reasoning. FSD v12 is fully end-to-end.
-      - **Training:** Auto-labeling pipeline on fleet data, Dojo
-        supercomputer, shadow mode for edge case collection.
-      - **Key trade-off:** Cost and scalability vs. depth uncertainty and
-        weather sensitivity.
+   .. tab-item:: Update
 
-   .. tab-item:: Cruise
+      .. math::
 
-      **Philosophy:** Multi-sensor with HD maps, urban robotaxi.
+         H_k = \left. \frac{\partial h}{\partial \mathbf{x}} \right|_{\hat{\mathbf{x}}_{k|k-1}}
 
-      - **Sensors:** 5 LiDARs, 21 cameras, 5 RADARs, GNSS/IMU.
-      - **Approach:** Camera + LiDAR + RADAR fusion. HD maps for
-        localization and environmental priors. Continuous Learner system
-        for model updates.
-      - **Status:** Fleet suspended in late 2023 after dragging incident.
-        Effectively out of the robotaxi race.
-      - **Key lesson:** Operational safety failures can end a program
-        regardless of technical capability.
+         K_k = P_{k|k-1} H_k^T (H_k P_{k|k-1} H_k^T + R_k)^{-1}
 
-   .. tab-item:: Aurora
+         \hat{\mathbf{x}}_{k|k} = \hat{\mathbf{x}}_{k|k-1} + K_k(\mathbf{z}_k - h(\hat{\mathbf{x}}_{k|k-1}))
 
-      **Philosophy:** Sensor diversity, long-range trucking.
+         P_{k|k} = (I - K_k H_k) P_{k|k-1}
 
-      - **Sensors:** FirstLight LiDAR (400+ m range), imaging RADAR,
-        cameras, thermal cameras for night vision.
-      - **Approach:** Sensor diversity for robustness across conditions.
-        Focus on highway autonomous trucking and logistics.
-      - **Architecture:** Virtual Driver System with collaborative
-        perception (truck convoys sharing sensor data).
+.. admonition:: EKF Limitation
+   :class: warning
 
-   .. tab-item:: Mobileye
-
-      **Philosophy:** Camera-first with formal safety (RSS).
-
-      - **Sensors:** 8--11 cameras, optional RADAR/LiDAR ("True
-        Redundancy" architecture).
-      - **Approach:** EyeQ SoC optimized for vision processing. REM
-        (Road Experience Management) for crowdsourced HD maps.
-      - **RSS (Responsibility-Sensitive Safety):** Formal model defining
-        "safe" vs. "unsafe" states mathematically. Guarantees the vehicle
-        never causes an accident under RSS rules.
-      - **Scale:** Tier-1 supplier to BMW, Nissan, Ford, Geely. Millions
-        of vehicles with ADAS deployed.
+   The Jacobian linearization is only accurate near the expansion point. For
+   highly nonlinear functions, the linearization error can cause the EKF to
+   diverge or produce overconfident (underestimated) covariance estimates.
 
 
-Architectural Trade-Offs
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Unscented Kalman Filter (UKF)
+------------------------------
+
+The **Unscented Kalman Filter (UKF)** avoids explicit Jacobian computation by
+using **sigma points** -- a carefully chosen set of sample points that capture
+the mean and covariance of the prior distribution.
+
+.. admonition:: Core Idea
+   :class: note
+
+   "It is easier to approximate a probability distribution than it is to
+   approximate an arbitrary nonlinear function." -- Julier & Uhlmann (1997)
+
+Sigma Point Generation
+~~~~~~~~~~~~~~~~~~~~~~~
+
+For a state of dimension :math:`n`, generate :math:`2n+1` sigma points:
+
+.. math::
+
+   \mathcal{X}_0 = \hat{\mathbf{x}}
+
+   \mathcal{X}_i = \hat{\mathbf{x}} + \left(\sqrt{(n+\lambda)P}\right)_i, \quad i = 1,\ldots,n
+
+   \mathcal{X}_{i+n} = \hat{\mathbf{x}} - \left(\sqrt{(n+\lambda)P}\right)_i, \quad i = 1,\ldots,n
+
+where :math:`\lambda = \alpha^2(n+\kappa) - n` is a scaling parameter.
+
+Each sigma point is propagated through the **full nonlinear function** (no
+linearization). The posterior mean and covariance are recovered as
+weighted averages of the propagated sigma points.
+
+UKF vs EKF
+~~~~~~~~~~~
 
 .. list-table::
-   :widths: 22 39 39
+   :widths: 30 35 35
    :header-rows: 1
    :class: compact-table
 
-   * - Dimension
-     - Option A
-     - Option B
-   * - **Sensing**
-     - Camera-only (Tesla): Low cost, scalable, semantic-rich. But: depth
-       uncertainty, weather sensitivity.
-     - Multi-sensor fusion (Waymo): Redundant, accurate 3D, all-weather.
-       But: high cost, complex calibration.
-   * - **Pipeline**
-     - Modular (Waymo, Mobileye): Interpretable, debuggable, swappable
-       components. But: error propagation, hand-crafted interfaces.
-     - End-to-end (Tesla FSD v12): Joint optimization, fewer rules. But:
-       black-box, hard to debug, massive data requirement.
-   * - **Mapping**
-     - HD maps (Waymo, Cruise): Simplifies localization, provides priors.
-       But: expensive to create/maintain, limits ODD.
-     - Map-free (Tesla): Scales anywhere, adapts to changes. But: higher
-       perception burden, less robust in ambiguous scenarios.
-   * - **Processing**
-     - Centralized (NVIDIA Drive AGX): Unified view, easier fusion, lower
-       latency. But: single point of failure.
-     - Distributed (per-sensor nodes): Fault isolation, parallel. But:
-       synchronization challenges, network latency.
-   * - **Safety**
-     - Rule-based (Mobileye RSS): Interpretable, verifiable,
-       regulatory-friendly. But: overly conservative.
-     - Learned behavior (Tesla): Adapts to diverse scenarios. But:
-       black-box, hard to validate.
-
-.. note::
-
-   The industry has not converged on a single winning architecture. Diverse
-   approaches reflect different priorities: cost vs. safety, scalability vs.
-   redundancy, interpretability vs. flexibility.
+   * - Property
+     - EKF
+     - UKF
+   * - Linearization
+     - First-order Taylor (Jacobian)
+     - None (sigma points)
+   * - Accuracy
+     - First-order accurate
+     - Second-order accurate
+   * - Compute
+     - Jacobian evaluation (complex for large state)
+     - :math:`2n+1` nonlinear evaluations (simple)
+   * - Implementation
+     - Requires analytical Jacobians
+     - Only needs :math:`f()` and :math:`h()` functions
 
 
-Deployment and Integration
-----------------------------
+Particle Filter
+----------------
 
-Moving perception algorithms from research to production requires careful
-attention to real-time constraints, model optimization, and system
-integration.
+The **Particle Filter (PF)** is a sequential Monte Carlo method for Bayesian
+estimation. It represents the posterior distribution as a **set of weighted
+samples (particles)**.
+
+.. math::
+
+   p(\mathbf{x}_k | \mathbf{z}_{1:k}) \approx \sum_{i=1}^{N} w_k^{(i)} \delta(\mathbf{x}_k - \mathbf{x}_k^{(i)})
+
+Algorithm
+~~~~~~~~~~
+
+.. code-block:: text
+
+   Initialize N particles: x^(i) ~ p(x_0), w^(i) = 1/N
+
+   For each time step k:
+   1. PREDICT: Propagate each particle through process model
+              x^(i) ~ p(x_k | x^(i)_{k-1})  [sample from process noise]
+
+   2. UPDATE:  Weight each particle by measurement likelihood
+              w^(i) = p(z_k | x^(i))
+
+   3. NORMALIZE: w^(i) = w^(i) / sum_j w^(j)
+
+   4. RESAMPLE: Draw N new particles with replacement, proportional to weights
+              [eliminates low-weight particles, duplicates high-weight ones]
+
+Advantages and Limitations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. grid:: 1 2 2 2
+   :gutter: 3
+
+   .. grid-item-card:: Advantages
+      :class-card: sd-border-success
+
+      - Handles **non-Gaussian** noise (multi-modal posteriors, heavy tails)
+      - Handles **nonlinear** models without any approximation
+      - Can represent **multi-hypothesis** scenarios (e.g., ambiguous localization)
+      - Simple to implement -- only needs sampling and likelihood evaluation
+
+   .. grid-item-card:: Limitations
+      :class-card: sd-border-warning
+
+      - **Computationally expensive**: accuracy scales with particle count N
+      - **Curse of dimensionality**: number of particles needed grows
+        exponentially with state dimension
+      - **Particle collapse**: with insufficient particles, all weight
+        concentrates on a few samples (degeneracy)
 
 
-Real-Time Performance Requirements
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Filter Comparison Table
+------------------------
 
 .. list-table::
-   :widths: 35 65
+   :widths: 18 20 20 20 22
    :header-rows: 1
    :class: compact-table
 
-   * - Constraint
-     - Target
-   * - End-to-end perception latency
-     - < 100 ms total
-   * - Sensor acquisition
-     - 10--30 ms
-   * - Detection / segmentation
-     - 30--50 ms
-   * - Tracking and fusion
-     - 10--20 ms
-   * - World model update rate
-     - 10--30 Hz
-   * - Camera streams processed
-     - 5--10 simultaneously
-   * - LiDAR points per frame
-     - 100K--1M
-
-.. important::
-
-   At 60 km/h, a vehicle travels 1.67 m in 100 ms. Every millisecond of
-   latency translates directly to stopping distance. Real-time performance
-   is a safety requirement, not an optimization goal.
-
-
-Model Optimization for Deployment
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Research models are too slow and large for embedded automotive hardware.
-Production deployment requires systematic optimization:
-
-.. list-table::
-   :widths: 25 75
-   :header-rows: 1
-   :class: compact-table
-
-   * - Technique
-     - Description
-   * - **Quantization**
-     - Reduce weight precision from FP32 to INT8 or FP16. Typical speedup:
-       2--4x with <1% accuracy loss. Supported by TensorRT, ONNX Runtime.
-   * - **Pruning**
-     - Remove weights or channels with minimal contribution. Structured
-       pruning removes entire filters for hardware-friendly speedup.
-   * - **Knowledge Distillation**
-     - Train a small "student" model to mimic a large "teacher" model.
-       Preserves much of the teacher's accuracy at a fraction of the compute.
-   * - **Architecture Search (NAS)**
-     - Automatically search for efficient architectures under latency
-       constraints. Used by EfficientDet, NAS-FPN.
-   * - **TensorRT / ONNX**
-     - Framework-specific optimization: operator fusion, memory planning,
-       kernel auto-tuning. Can achieve 5--10x speedup over naive PyTorch.
-
-.. code-block:: python
-
-   # Example: Export YOLO to TensorRT for deployment
-   from ultralytics import YOLO
-
-   model = YOLO('best.pt')
-   model.export(format='engine',       # TensorRT format
-                half=True,              # FP16 quantization
-                imgsz=640,
-                device=0)
-
-   # Load optimized model for inference
-   optimized = YOLO('best.engine')
-   results = optimized.predict(source='image.jpg')
+   * - Property
+     - KF
+     - EKF
+     - UKF
+     - Particle Filter
+   * - Model type
+     - Linear
+     - Nonlinear (linearized)
+     - Nonlinear
+     - Nonlinear
+   * - Noise distribution
+     - Gaussian
+     - Gaussian
+     - Gaussian
+     - Arbitrary
+   * - Accuracy
+     - Optimal (linear)
+     - 1st-order
+     - 2nd-order
+     - Asymptotically exact
+   * - Multi-modal
+     - No
+     - No
+     - No
+     - Yes
+   * - Compute cost
+     - Low
+     - Medium
+     - Medium
+     - High
+   * - AV use case
+     - Simple tracking
+     - Object tracking, SLAM
+     - IMU/GPS fusion
+     - Localization (AMCL)
 
 
-Hardware Platforms
-~~~~~~~~~~~~~~~~~~~
+Data Association Problem
+-------------------------
 
-.. list-table::
-   :widths: 25 25 50
-   :header-rows: 1
-   :class: compact-table
+In multi-sensor, multi-object scenarios, we must answer: **which measurement
+belongs to which tracked object?**
 
-   * - Platform
-     - TOPS
-     - Used By
-   * - **NVIDIA Drive AGX Orin**
-     - 254 TOPS
-     - Waymo, Mercedes-Benz, Volvo. Supports multiple concurrent DNN
-       workloads. Dominant in L4 development.
-   * - **Tesla FSD Computer (HW4)**
-     - ~300 TOPS (est.)
-     - Tesla. Custom SoC with dual redundant chips for fail-operational
-       safety.
-   * - **Mobileye EyeQ6**
-     - 176 TOPS
-     - BMW, Geely, Ford. Optimized for camera-centric ADAS and L2+.
-   * - **Qualcomm Snapdragon Ride**
-     - 100--700 TOPS
-     - GM, BMW (ADAS). Mobile-derived platform with power efficiency.
+This is the **data association problem**. Incorrect association causes Kalman
+filter divergence and track confusion.
 
-.. tip::
+.. tab-set::
 
-   When choosing a model architecture, profile it on the target hardware
-   early. A model that runs at 50 FPS on an RTX 4090 may only achieve 5 FPS
-   on an embedded automotive SoC.
+   .. tab-item:: Nearest Neighbor (NN)
 
+      Assign each measurement to the nearest existing track (by Mahalanobis
+      or Euclidean distance). Simple but fails in cluttered scenes.
 
-Software Integration: ROS 2 and Autoware
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   .. tab-item:: Global Nearest Neighbor (GNN)
 
-In this course, perception nodes are integrated into the ADS pipeline using
-ROS 2. In industry, frameworks like Autoware extend ROS 2 with production-
-grade AV components.
+      Solve the **global** optimal assignment using the Hungarian algorithm on
+      a cost matrix built from all measurement-track distances. Optimal for
+      a single assignment step.
 
-.. list-table::
-   :widths: 20 40 40
-   :header-rows: 1
-   :class: compact-table
+   .. tab-item:: JPDA
 
-   * - Framework
-     - Scope
-     - Use Case
-   * - **ROS 2**
-     - General-purpose robotics middleware with DDS communication, QoS
-       policies, and lifecycle management.
-     - Course projects, research prototypes, component development.
-   * - **Autoware**
-     - Open-source full-stack AV software built on ROS 2. Includes
-       perception (LiDAR detection, camera fusion), planning, and control.
-     - Production AV development, industry R&D.
-   * - **Apollo (Baidu)**
-     - End-to-end AV platform with perception, planning, control, and
-       simulation. Custom middleware (Cyber RT).
-     - Chinese robotaxi deployments, academic research.
+      **Joint Probabilistic Data Association**: instead of hard assignment,
+      computes a probability distribution over all possible assignments and
+      updates each track as a weighted mixture. Robust in high-clutter
+      environments.
 
-**Detector node integration pattern** (used in GP2):
+   .. tab-item:: MHT
 
-1. Subscribe to camera images (``/carla/ego/camera/image``).
-2. Run inference (YOLO or DETR) on each frame.
-3. Publish detections as ROS 2 messages (``/perception/detections``).
-4. Downstream nodes (tracker, planner) subscribe and consume.
+      **Multiple Hypothesis Tracking**: maintains a tree of all possible
+      assignment hypotheses across multiple time steps. Most accurate but
+      exponential complexity without pruning.
 
-.. seealso::
+.. admonition:: Mahalanobis Distance
+   :class: note
 
-   The ROS 2 detector node code from the previous section provides a
-   complete implementation of this pattern.
+   The Mahalanobis distance accounts for track uncertainty (covariance):
+
+   .. math::
+
+      d_M(\mathbf{z}, \hat{\mathbf{z}}) = \sqrt{(\mathbf{z} - \hat{\mathbf{z}})^T S^{-1} (\mathbf{z} - \hat{\mathbf{z}})}
+
+   where :math:`S = H P H^T + R` is the innovation covariance. This is
+   preferred over Euclidean distance because it accounts for how uncertain
+   the prediction is in each direction.
 
 
-Beyond YOLO and DETR
-----------------------
+Weighted Averaging and Inverse Variance Weighting
+---------------------------------------------------
 
-While YOLO and DETR are the focus of this lecture, the AV perception
-landscape has evolved further:
+For simple sensor fusion of independent estimates :math:`\hat{x}_1, \hat{x}_2`
+with variances :math:`\sigma_1^2, \sigma_2^2`:
 
-.. list-table::
-   :widths: 25 75
-   :class: compact-table
+.. math::
 
-   * - **BEV Perception**
-     - Bird's-Eye View representations (BEVFormer, LSS) project camera
-       features into a top-down view -- the dominant paradigm in modern AV
-       perception. *Covered in L4.*
-   * - **3D Occupancy Networks**
-     - Predict per-voxel semantic occupancy, handling arbitrary-shaped
-       obstacles that bounding boxes miss. *Covered in L4.*
-   * - **Multi-Task Learning**
-     - Single backbone with multiple heads (detection + segmentation + lane
-       detection). Example: Tesla HydraNet.
-   * - **3D Object Detection**
-     - LiDAR-based (PointPillars, CenterPoint) and camera-based (FCOS3D)
-       methods for 3D bounding boxes.
-   * - **End-to-End Perception**
-     - UniAD, DriveTransformer unify perception-prediction-planning.
-       *Covered in L11.*
+   w_i = \frac{1/\sigma_i^2}{\sum_j 1/\sigma_j^2}
+
+   \hat{x}_{fused} = \sum_i w_i \hat{x}_i
+
+   \sigma_{fused}^2 = \frac{1}{\sum_i 1/\sigma_i^2}
+
+This is **optimal** for unbiased, independent, Gaussian-distributed estimates.
+More uncertain sensors receive lower weight automatically.
+
+*Example*: GPS position variance :math:`\sigma_{GPS}^2 = 4 \text{ m}^2`,
+LiDAR scan-match position variance :math:`\sigma_{LiDAR}^2 = 0.01 \text{ m}^2`.
+The fused estimate will be almost entirely determined by LiDAR -- correctly so.
 
 
-CARLA Hands-On: Object Detection Pipeline
---------------------------------------------
+CARLA Hands-On: Multi-Sensor Kalman Filter
+------------------------------------------------
 
-This exercise builds a complete detection pipeline from CARLA camera data
-using the YOLO and DETR models discussed in this lecture. You will collect
-frames from a simulated vehicle, run inference with both architectures, and
-compare their performance under varying conditions.
+This exercise implements a multi-sensor fusion pipeline using the Kalman Filter
+framework discussed in this lecture. You will fuse CARLA's camera, LiDAR, and
+RADAR data to track vehicles ahead of the ego car in real time.
 
 
-Task 1: Spawn Vehicle and Collect Camera Frames
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Task 1: Spawn Multi-Sensor Suite and Collect Synchronized Data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Connect to CARLA, spawn an ego vehicle on autopilot, and attach three sensors.
+A ``SensorManager`` class stores the latest reading from each sensor with
+timestamps so that we can collect synchronized snapshots at 10 Hz.
 
 .. code-block:: python
 
    import carla
    import numpy as np
-   import os
    import time
-   from datetime import datetime
 
-   # ── Connect to CARLA ──────────────────────────────────────────────
+   # ---------- Sensor Manager ----------
+   class SensorManager:
+       """Stores the latest reading from each sensor with timestamps."""
+
+       def __init__(self):
+           self.latest = {}   # sensor_name -> (timestamp, data)
+
+       def make_callback(self, sensor_name):
+           def callback(data):
+               self.latest[sensor_name] = (data.timestamp, data)
+           return callback
+
+       def get_snapshot(self):
+           """Return a copy of the latest readings from all sensors."""
+           return dict(self.latest)
+
+   # ---------- CARLA setup ----------
    client = carla.Client('localhost', 2000)
    client.set_timeout(10.0)
    world = client.get_world()
    bp_lib = world.get_blueprint_library()
 
-   # ── Spawn ego vehicle ─────────────────────────────────────────────
+   # Spawn ego vehicle
    vehicle_bp = bp_lib.find('vehicle.tesla.model3')
    spawn_point = world.get_map().get_spawn_points()[0]
-   vehicle = world.spawn_actor(vehicle_bp, spawn_point)
-   vehicle.set_autopilot(True)
-   print(f"Spawned vehicle: {vehicle.type_id} at {spawn_point.location}")
+   ego = world.spawn_actor(vehicle_bp, spawn_point)
+   ego.set_autopilot(True)
 
-   # ── Attach an RGB camera (1280x720, fov 90) ──────────────────────
+   # ---------- Sensor blueprints ----------
    camera_bp = bp_lib.find('sensor.camera.rgb')
    camera_bp.set_attribute('image_size_x', '1280')
    camera_bp.set_attribute('image_size_y', '720')
    camera_bp.set_attribute('fov', '90')
-   camera_transform = carla.Transform(carla.Location(x=1.5, z=2.4))
-   camera = world.spawn_actor(camera_bp, camera_transform,
-                              attach_to=vehicle)
 
-   # ── Create timestamped output directory ────────────────────────────
-   timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-   output_dir = os.path.join('carla_frames', timestamp)
-   os.makedirs(output_dir, exist_ok=True)
-   print(f"Saving frames to: {output_dir}")
+   lidar_bp = bp_lib.find('sensor.lidar.ray_cast')
+   lidar_bp.set_attribute('channels', '64')
+   lidar_bp.set_attribute('range', '100')
+   lidar_bp.set_attribute('rotation_frequency', '10')
+   lidar_bp.set_attribute('points_per_second', '100000')
 
-   # ── Collect frames with a counter ─────────────────────────────────
-   frame_count = 0
-   max_frames = 200
+   radar_bp = bp_lib.find('sensor.other.radar')
+   radar_bp.set_attribute('horizontal_fov', '30')
+   radar_bp.set_attribute('range', '100')
 
-   def camera_callback(image):
-       global frame_count
-       if frame_count >= max_frames:
-           return
-       array = np.frombuffer(image.raw_data, dtype=np.uint8)
-       array = array.reshape((image.height, image.width, 4))[:, :, :3]
-       filepath = os.path.join(output_dir, f'frame_{frame_count:04d}.png')
-       import cv2
-       cv2.imwrite(filepath, array)
-       frame_count += 1
-       if frame_count % 50 == 0:
-           print(f"Saved {frame_count}/{max_frames} frames")
+   # ---------- Attach sensors ----------
+   camera = world.spawn_actor(
+       camera_bp,
+       carla.Transform(carla.Location(x=1.5, z=2.4)),
+       attach_to=ego)
+   lidar = world.spawn_actor(
+       lidar_bp,
+       carla.Transform(carla.Location(x=0.0, z=2.4)),
+       attach_to=ego)
+   radar = world.spawn_actor(
+       radar_bp,
+       carla.Transform(carla.Location(x=2.0, z=1.0)),
+       attach_to=ego)
 
-   camera.listen(camera_callback)
+   # ---------- Register callbacks ----------
+   sm = SensorManager()
+   camera.listen(sm.make_callback('camera'))
+   lidar.listen(sm.make_callback('lidar'))
+   radar.listen(sm.make_callback('radar'))
 
-   # ── Wait until all frames are collected ────────────────────────────
-   while frame_count < max_frames:
+   # ---------- Collect at 10 Hz ----------
+   snapshots = []
+   for _ in range(200):          # 20 seconds of data
+       world.tick()
+       snap = sm.get_snapshot()
+       if len(snap) == 3:        # all three sensors have data
+           snapshots.append(snap)
        time.sleep(0.1)
 
-   print(f"Collection complete: {frame_count} frames saved to {output_dir}")
 
-   # ── Cleanup ────────────────────────────────────────────────────────
-   camera.stop()
-   camera.destroy()
-   vehicle.destroy()
+Task 2: Implement a Linear Kalman Filter for Vehicle Tracking
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
-Task 2: Run YOLO Inference on CARLA Frames
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Define the state vector :math:`\mathbf{x} = [x, y, v_x, v_y]^T` for tracking
+a vehicle ahead. The constant-velocity model uses :math:`\Delta t = 0.1\,\text{s}`.
 
 .. code-block:: python
 
-   import cv2
-   import os
-   import glob
-   import time
-   from ultralytics import YOLO
+   class KalmanFilter:
+       """Linear Kalman Filter for 2D vehicle tracking."""
 
-   # ── Load pretrained YOLOv8s ────────────────────────────────────────
-   model = YOLO('yolov8s.pt')
+       def __init__(self, dt=0.1):
+           self.dt = dt
 
-   # ── Set up paths ───────────────────────────────────────────────────
-   input_dir = 'carla_frames/<YOUR_TIMESTAMP>'   # Update with your directory
-   output_dir = input_dir + '_yolo'
-   os.makedirs(output_dir, exist_ok=True)
+           # State vector: [x, y, vx, vy]
+           self.x = np.zeros(4)
 
-   frames = sorted(glob.glob(os.path.join(input_dir, '*.png')))
-   print(f"Running YOLOv8s on {len(frames)} frames...")
+           # State covariance
+           self.P = np.eye(4) * 100.0  # large initial uncertainty
 
-   # ── Run inference on each frame ────────────────────────────────────
-   inference_times = []
-   for i, frame_path in enumerate(frames):
-       img = cv2.imread(frame_path)
+           # State transition (constant velocity)
+           self.F = np.array([
+               [1, 0, dt,  0],
+               [0, 1,  0, dt],
+               [0, 0,  1,  0],
+               [0, 0,  0,  1],
+           ])
 
-       t_start = time.perf_counter()
-       results = model(img, verbose=False)[0]
-       t_end = time.perf_counter()
+           # Process noise
+           q = 0.5   # acceleration noise std
+           self.Q = np.array([
+               [dt**4/4,       0, dt**3/2,       0],
+               [      0, dt**4/4,       0, dt**3/2],
+               [dt**3/2,       0,   dt**2,       0],
+               [      0, dt**3/2,       0,   dt**2],
+           ]) * q**2
 
-       elapsed_ms = (t_end - t_start) * 1000
-       inference_times.append(elapsed_ms)
+           # Default measurement model: observe position only
+           self.H = np.array([
+               [1, 0, 0, 0],
+               [0, 1, 0, 0],
+           ])
 
-       # ── Draw bounding boxes and class labels ──────────────────────
-       for box in results.boxes:
-           x1, y1, x2, y2 = map(int, box.xyxy[0])
-           conf = float(box.conf[0])
-           cls_id = int(box.cls[0])
-           label = f"{model.names[cls_id]} {conf:.2f}"
-           cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-           cv2.putText(img, label, (x1, y1 - 8),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+           # Default measurement noise (overridden per sensor)
+           self.R = np.eye(2)
 
-       # ── Display and save ──────────────────────────────────────────
-       cv2.imshow("YOLOv8s Detections", img)
-       cv2.waitKey(1)
-       out_path = os.path.join(output_dir, os.path.basename(frame_path))
-       cv2.imwrite(out_path, img)
+       def predict(self):
+           """Predict step: propagate state and covariance forward."""
+           self.x = self.F @ self.x
+           self.P = self.F @ self.P @ self.F.T + self.Q
 
-       print(f"Frame {i:04d}: {elapsed_ms:.1f} ms, "
-             f"{len(results.boxes)} detections")
-
-   cv2.destroyAllWindows()
-
-   avg_time = sum(inference_times) / len(inference_times)
-   print(f"\nYOLOv8s average inference time: {avg_time:.1f} ms/frame")
-   print(f"Annotated frames saved to: {output_dir}")
+       def update(self, z, R=None):
+           """Update step: incorporate measurement z with noise R."""
+           if R is None:
+               R = self.R
+           H = self.H
+           y = z - H @ self.x                       # innovation
+           S = H @ self.P @ H.T + R                  # innovation covariance
+           K = self.P @ H.T @ np.linalg.inv(S)       # Kalman gain
+           self.x = self.x + K @ y
+           self.P = (np.eye(4) - K @ H) @ self.P
 
 
-Task 3: Run DETR Inference on the Same Frames
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Task 3: Sequential Multi-Sensor Update
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Extract range estimates from each sensor and apply the KF update sequentially.
+Each sensor uses a different measurement noise covariance reflecting its
+precision. Printing the covariance trace after each update shows how
+uncertainty decreases as sensors are fused.
 
 .. code-block:: python
 
-   import cv2
-   import os
-   import glob
-   import time
-   from ultralytics import YOLO
+   # ---------- Measurement noise per sensor ----------
+   R_lidar  = np.diag([0.1, 0.1])   # high precision
+   R_radar  = np.diag([0.5, 0.5])   # moderate precision
+   R_camera = np.diag([2.0, 2.0])   # low precision
 
-   # ── Load pretrained RT-DETR-L ──────────────────────────────────────
-   model = YOLO('rtdetr-l.pt')
+   def lidar_measurement(lidar_data, ego_transform):
+       """Nearest point cluster in the forward cone (+-15 deg, <80 m)."""
+       points = np.frombuffer(lidar_data.raw_data, dtype=np.float32)
+       points = points.reshape(-1, 4)[:, :3]        # x, y, z
+       forward = points[points[:, 0] > 0]            # positive-x is forward
+       angles = np.abs(np.arctan2(forward[:, 1], forward[:, 0]))
+       mask = angles < np.radians(15)
+       cone = forward[mask]
+       if len(cone) == 0:
+           return None
+       nearest_idx = np.argmin(np.linalg.norm(cone[:, :2], axis=1))
+       return cone[nearest_idx, :2]                  # (x, y) in sensor frame
 
-   # ── Set up paths ───────────────────────────────────────────────────
-   input_dir = 'carla_frames/<YOUR_TIMESTAMP>'   # Same directory as Task 2
-   output_dir = input_dir + '_rtdetr'
-   os.makedirs(output_dir, exist_ok=True)
+   def radar_measurement(radar_data):
+       """Closest RADAR detection by depth."""
+       detections = []
+       for det in radar_data:
+           detections.append([det.depth, det.azimuth, det.altitude])
+       if not detections:
+           return None
+       detections = np.array(detections)
+       closest = detections[np.argmin(detections[:, 0])]
+       depth, azimuth = closest[0], closest[1]
+       x = depth * np.cos(azimuth)
+       y = depth * np.sin(azimuth)
+       return np.array([x, y])
 
-   frames = sorted(glob.glob(os.path.join(input_dir, '*.png')))
-   print(f"Running RT-DETR-L on {len(frames)} frames...")
+   def camera_measurement(image_data, known_vehicle_width=1.8, focal_px=640):
+       """Estimate distance from bounding-box width (pinhole model)."""
+       # Placeholder: assume bbox_width_px is obtained from a detector
+       bbox_width_px = 80  # example value
+       if bbox_width_px < 5:
+           return None
+       depth = (known_vehicle_width * focal_px) / bbox_width_px
+       return np.array([depth, 0.0])   # assume centered (x = depth, y ~ 0)
 
-   # ── Run inference on each frame ────────────────────────────────────
-   inference_times = []
-   for i, frame_path in enumerate(frames):
-       img = cv2.imread(frame_path)
+   # ---------- Run sequential fusion loop ----------
+   kf = KalmanFilter(dt=0.1)
 
-       t_start = time.perf_counter()
-       results = model(img, verbose=False)[0]
-       t_end = time.perf_counter()
+   for snap in snapshots:
+       kf.predict()
+       print(f"After predict  -> cov trace: {np.trace(kf.P):.4f}")
 
-       elapsed_ms = (t_end - t_start) * 1000
-       inference_times.append(elapsed_ms)
+       # LiDAR update
+       _, lidar_data = snap['lidar']
+       z_lidar = lidar_measurement(lidar_data, ego.get_transform())
+       if z_lidar is not None:
+           kf.update(z_lidar, R=R_lidar)
+           print(f"  + LiDAR      -> cov trace: {np.trace(kf.P):.4f}")
 
-       # ── Draw bounding boxes and class labels ──────────────────────
-       for box in results.boxes:
-           x1, y1, x2, y2 = map(int, box.xyxy[0])
-           conf = float(box.conf[0])
-           cls_id = int(box.cls[0])
-           label = f"{model.names[cls_id]} {conf:.2f}"
-           cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), 2)
-           cv2.putText(img, label, (x1, y1 - 8),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
+       # RADAR update
+       _, radar_data = snap['radar']
+       z_radar = radar_measurement(radar_data)
+       if z_radar is not None:
+           kf.update(z_radar, R=R_radar)
+           print(f"  + RADAR      -> cov trace: {np.trace(kf.P):.4f}")
 
-       # ── Display and save ──────────────────────────────────────────
-       cv2.imshow("RT-DETR-L Detections", img)
-       cv2.waitKey(1)
-       out_path = os.path.join(output_dir, os.path.basename(frame_path))
-       cv2.imwrite(out_path, img)
+       # Camera update
+       _, camera_data = snap['camera']
+       z_camera = camera_measurement(camera_data)
+       if z_camera is not None:
+           kf.update(z_camera, R=R_camera)
+           print(f"  + Camera     -> cov trace: {np.trace(kf.P):.4f}")
 
-       print(f"Frame {i:04d}: {elapsed_ms:.1f} ms, "
-             f"{len(results.boxes)} detections")
-
-   cv2.destroyAllWindows()
-
-   avg_time = sum(inference_times) / len(inference_times)
-   print(f"\nRT-DETR-L average inference time: {avg_time:.1f} ms/frame")
-   print(f"Annotated frames saved to: {output_dir}")
+       print(f"  Fused state: x={kf.x[0]:.2f}, y={kf.x[1]:.2f}, "
+             f"vx={kf.x[2]:.2f}, vy={kf.x[3]:.2f}\n")
 
 
-Task 4: Compare YOLO vs DETR
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Task 4: Weather Degradation Experiment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. admonition:: Exercise Tasks
    :class: tip
 
-   1. **Compare inference speed**: Compute the mean and standard deviation of
-      per-frame inference time (ms/frame) across all 200 frames for both
-      YOLOv8s and RT-DETR-L. Which model is faster and by how much?
-   2. **Compare detection counts and confidence distributions**: For each
-      model, compute the average number of detections per frame and plot a
-      histogram of confidence scores. Which model produces more high-confidence
-      detections?
-   3. **Weather robustness experiment**: Re-run Task 1 frame collection under
-      three weather conditions and repeat Tasks 2--3 on each set:
+   1. Run the tracker under three weather conditions: **clear**, **rain**,
+      and **fog**. Use ``world.set_weather()`` with CARLA weather presets.
 
-      - Clear day: ``world.set_weather(carla.WeatherParameters.ClearNoon)``
-      - Heavy rain: ``world.set_weather(carla.WeatherParameters.HardRainNoon)``
-      - Night: ``world.set_weather(carla.WeatherParameters.ClearNight)``
+   2. For **rain**: inflate camera :math:`R` by 5x and LiDAR :math:`R` by 2x
+      (water droplets degrade both optical and LiDAR signals).
 
-      Compare mAP degradation across weather conditions for both models.
-   4. **Identify failure cases**: Examine the annotated frames and find
-      examples of missed detections and false positives for each model.
-      Explain which architecture (CNN-based YOLO vs. transformer-based DETR)
-      handles these failure cases better and why.
+      .. code-block:: python
+
+         R_camera_rain = R_camera * 5.0
+         R_lidar_rain  = R_lidar  * 2.0
+         R_radar_rain  = R_radar          # unchanged
+
+   3. For **fog**: inflate camera :math:`R` by 10x, LiDAR :math:`R` by 5x,
+      keep RADAR :math:`R` unchanged (millimeter waves penetrate fog).
+
+      .. code-block:: python
+
+         R_camera_fog = R_camera * 10.0
+         R_lidar_fog  = R_lidar  * 5.0
+         R_radar_fog  = R_radar           # unchanged
+
+   4. Plot the covariance trace over time for each weather condition.
+      Observe how the KF automatically shifts trust toward RADAR in
+      adverse weather because inflated :math:`R` values reduce the Kalman
+      gain for degraded sensors.
+
+   5. Compare the fused position estimate error against single-sensor
+      estimates under each weather condition. Verify that the fused
+      estimate consistently achieves lower error than any individual sensor.
 
 .. note::
 
-   This exercise provides the detection foundation for **GP2: Object
-   Detection & Tracking**, where you will train custom YOLO and DETR models
-   on CARLA data and deploy them as ROS 2 perception nodes.
+   This exercise demonstrates the core fusion concepts used in
+   **GP3 (Fusion & Localization)**, where students will implement a full
+   EKF fusing GNSS, IMU, and LiDAR for vehicle pose estimation.
+
+
+Summary
+--------
+
+.. grid:: 1 2 2 2
+   :gutter: 3
+
+   .. grid-item-card:: Fusion Foundations
+      :class-card: sd-border-primary
+
+      - Sensors: complementary (camera + LiDAR + RADAR)
+      - Architectures: early, intermediate (feature-level), late (decision)
+      - Weighted averaging: optimal for independent Gaussian estimates
+
+   .. grid-item-card:: Probabilistic Filters
+      :class-card: sd-border-primary
+
+      - KF: linear, Gaussian, optimal
+      - EKF: nonlinear via Jacobian, 1st-order
+      - UKF: nonlinear via sigma points, 2nd-order, no Jacobian needed
+      - PF: arbitrary distributions, high compute
+      - Data association: NN, GNN, JPDA, MHT

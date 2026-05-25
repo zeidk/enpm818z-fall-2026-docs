@@ -1,19 +1,24 @@
-====================================================
-L12: End-to-End Driving & Foundation Models
-====================================================
+============================================================
+L12: End-to-End Driving, VLA & Imitation Learning
+============================================================
 
 Overview
 --------
 
-This lecture examines the fundamental architectural shift from modular autonomous
-driving pipelines to end-to-end learned systems. We analyze landmark systems
-such as UniAD (CVPR 2023) and DriveTransformer (ICLR 2025), explore how
-Vision-Language-Action (VLA) models are beginning to encode common-sense
-reasoning into driving, and assess the practical trade-offs of black-box neural
-approaches versus interpretable, hand-engineered pipelines. The lecture also
-covers the industrial deployments of Tesla and NVIDIA and addresses the
-outstanding challenges of validation, safety, and interpretability for
-data-driven end-to-end systems.
+This lecture examines the fundamental architectural shift from
+modular autonomous driving pipelines to end-to-end learned systems
+and develops the imitation-learning theory that underpins them.
+We analyze landmark E2E systems such as UniAD (CVPR 2023) and
+DriveTransformer (ICLR 2025), explore how Vision-Language-Action
+(VLA) models are beginning to encode common-sense reasoning into
+driving, and assess the practical trade-offs of black-box neural
+approaches versus interpretable, hand-engineered pipelines. The
+imitation-learning section -- previously folded into the prediction
+lecture -- now lives here alongside the policies it teaches:
+behavior cloning, distribution shift, and DAgger. The lecture also
+covers the industrial deployments of Tesla and NVIDIA and addresses
+the outstanding challenges of validation, safety, and
+interpretability for data-driven end-to-end systems.
 
 
 Learning Objectives
@@ -38,6 +43,11 @@ By the end of this lecture, you will be able to:
   resolved before end-to-end systems can be deployed at scale.
 - Explain the role of simulation in generating the training data and evaluation
   benchmarks required by end-to-end driving models.
+- Formulate behavior cloning as supervised learning and identify
+  its key failure mode (distribution shift, compounding-error
+  bound :math:`O(\epsilon T^2)`).
+- Explain how DAgger addresses distribution shift and when it
+  reduces regret to :math:`O(\epsilon)`.
 
 
 .. toctree::

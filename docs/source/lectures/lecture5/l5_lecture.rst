@@ -3,6 +3,367 @@ Lecture
 ====================================================
 
 
+Why Bird's-Eye View?
+--------------------
+
+In earlier perception lectures we processed sensor data in the native
+coordinate frame of each sensor -- perspective images from cameras, 3D point
+clouds from LiDAR. While these representations are natural for detection, they
+carry a fundamental tension with the downstream stack:
+
+.. admonition:: The Representation Mismatch Problem
+   :class: note
+
+   Motion planning and control operate in **metric 2D/3D world space**.
+   Perspective camera images are **projective** -- depth is ambiguous, object
+   sizes change with distance, and distances between objects are not preserved.
+   Bringing perception outputs into a unified, metric top-down space simplifies
+   every downstream module.
+
+.. grid:: 1 2 2 3
+   :gutter: 3
+
+   .. grid-item-card:: Planning-Friendly
+      :class-card: sd-border-info
+
+      Path planners, trajectory optimizers, and behavior predictors all reason
+      in flat ground-plane coordinates. A BEV map is a direct match.
+
+   .. grid-item-card:: Natural for Fusion
+      :class-card: sd-border-info
+
+      Camera, LiDAR, and RADAR data can all be projected into the same BEV
+      grid, enabling straightforward feature-level fusion without sensor-specific
+      coordinate transforms at every module boundary.
+
+   .. grid-item-card:: Scale Preservation
+      :class-card: sd-border-info
+
+      Object sizes and inter-object distances are metric and consistent across
+      the scene. A pedestrian 5 m away looks the same size as one 50 m away.
+
+
+Perspective vs. BEV vs. Occupancy
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 20 27 27 26
+   :header-rows: 1
+   :class: compact-table
+
+   * - Property
+     - 2D Perspective Detection
+     - BEV Detection
+     - 3D Occupancy Network
+   * - Output
+     - 2D bounding boxes (u, v, w, h)
+     - 3D boxes in BEV (x, y, yaw, l, w)
+     - Per-voxel semantic label
+   * - Depth info
+     - Inferred / absent
+     - Explicit
+     - Explicit per voxel
+   * - Planning utility
+     - Low (needs unprojection)
+     - High
+     - Very high (arbitrary geometry)
+   * - Handles irregular shapes
+     - No (box assumption)
+     - Partially
+     - Yes
+   * - Compute cost
+     - Low
+     - Medium
+     - High
+
+
+Camera-to-BEV Projection: Lift-Splat-Shoot
+-------------------------------------------
+
+Lift-Splat-Shoot (LSS), introduced by Philion & Fidler (NeurIPS 2020), is the
+foundational camera-only BEV method. It comprises three stages.
+
+Stage 1 -- Lift
+~~~~~~~~~~~~~~~~
+
+For each camera image pixel, LSS predicts a **depth distribution** over
+:math:`D` discrete depth bins using a learned network head.
+
+.. math::
+
+   \mathbf{c}_{u,v} = \sum_{d=1}^{D} \alpha_{u,v,d} \cdot \mathbf{f}_{u,v}
+
+where :math:`\alpha_{u,v,d}` is the softmax probability of depth bin :math:`d`
+at pixel :math:`(u, v)`, and :math:`\mathbf{f}_{u,v}` is the 2D feature vector.
+
+Each pixel is thus "lifted" into a **frustum of features** -- one feature vector
+at each depth candidate. This creates a 3D tensor of shape
+:math:`[D \times H \times W \times C]` per camera.
+
+Stage 2 -- Splat
+~~~~~~~~~~~~~~~~~
+
+The frustum features are unprojected into a **voxel grid** in ego-vehicle
+coordinates using known camera intrinsics and extrinsics. Each 3D point votes
+into its corresponding voxel. The voxel pooling uses a **sum-pooling** over all
+features landing in each voxel, giving a 3D occupancy-weighted feature volume.
+
+.. code-block:: python
+
+   # Pseudocode: frustum-to-voxel projection
+   for cam in cameras:
+       points_3d = unproject(frustum_depths, cam.intrinsics, cam.extrinsics)
+       for point, feat in zip(points_3d, features):
+           voxel_idx = world_to_voxel(point)
+           voxel_grid[voxel_idx] += feat
+
+Stage 3 -- Shoot
+~~~~~~~~~~~~~~~~~
+
+The 3D voxel grid is **collapsed along the Z-axis** (height) via max/mean
+pooling to produce a 2D BEV feature map. This feature map is then passed to
+standard 2D detection heads (e.g., a BEV anchor-free head) to predict 3D
+object parameters.
+
+.. admonition:: LSS Key Insight
+   :class: tip
+
+   LSS is fully differentiable end-to-end. The depth distribution is learned
+   implicitly by the network, guided only by 3D bounding box supervision.
+   No explicit depth labels are required during training.
+
+
+BEVFormer: Attention-Based BEV Construction
+--------------------------------------------
+
+BEVFormer (Li et al., ECCV 2022) replaces LSS's geometry-based voxel projection
+with a **Transformer attention mechanism** that queries image features at
+learned 3D reference points.
+
+Architecture Overview
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. tab-set::
+
+   .. tab-item:: BEV Queries
+
+      BEVFormer maintains a **grid of learnable BEV query embeddings**
+      :math:`Q \in \mathbb{R}^{H \times W \times C}`, one per BEV grid cell.
+      Each query represents "what is the content of this grid cell in the
+      world?" and is updated by attending to relevant image regions.
+
+   .. tab-item:: Spatial Cross-Attention
+
+      For each BEV query at world position :math:`(x, y)`:
+
+      1. Sample :math:`N_z` 3D reference points at different heights
+         :math:`z_1, \ldots, z_{N_z}` above the ground plane.
+      2. Project each 3D reference point into all camera images using
+         calibration parameters.
+      3. Sample image features at the projected pixel locations using
+         deformable attention.
+      4. Aggregate these multi-camera, multi-height features to update the
+         BEV query.
+
+      .. math::
+
+         \text{SCA}(Q_p, F) = \frac{1}{|V_{hit}|} \sum_{i \in V_{hit}}
+         \sum_{j=1}^{N_z} \text{DeformAttn}(Q_p, \mathcal{P}(p, i, j), F_i)
+
+   .. tab-item:: Temporal Self-Attention
+
+      BEVFormer exploits past BEV feature maps by warping the previous frame's
+      BEV into the current ego frame using the ego-motion transform and then
+      computing cross-attention between current queries and the warped history:
+
+      .. math::
+
+         \text{TSA}(Q_p, \{Q_t, Q_{t-1}'\}) =
+         \text{DeformAttn}(Q_p, p, \text{concat}(Q_t, Q_{t-1}'))
+
+      This allows the network to integrate velocity cues, occlusion reasoning,
+      and multi-frame context without explicit tracking.
+
+BEVFormer Performance on nuScenes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 35 20 20 25
+   :header-rows: 1
+   :class: compact-table
+
+   * - Method
+     - mAP
+     - NDS
+     - Backbone
+   * - DETR3D
+     - 34.9
+     - 42.5
+     - ResNet-101
+   * - BEVFormer-S (no temporal)
+     - 37.5
+     - 44.8
+     - ResNet-101
+   * - BEVFormer (with temporal)
+     - 41.6
+     - 51.7
+     - ResNet-101
+   * - BEVFormer-Base
+     - 48.1
+     - 56.9
+     - VoVNet-99
+
+.. note::
+
+   The gap between BEVFormer-S and BEVFormer highlights the impact of temporal
+   self-attention: +4.1 mAP and +6.9 NDS purely from adding multi-frame context.
+
+
+Multi-Camera Fusion in BEV Space
+----------------------------------
+
+Modern AV systems use 6--12 cameras to achieve full 360-degree surround
+coverage. Fusing these in BEV space requires careful handling of:
+
+Camera Rig Setup
+~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 25 35 40
+   :header-rows: 1
+   :class: compact-table
+
+   * - Camera Position
+     - Field of View
+     - Primary Coverage
+   * - Front
+     - 60-120 deg
+     - Long-range forward, traffic lights
+   * - Front-Left / Front-Right
+     - 90-120 deg
+     - Intersection cross-traffic, lane changes
+   * - Side-Left / Side-Right
+     - 90 deg
+     - Blind spots, adjacent lanes
+   * - Rear
+     - 120 deg
+     - Vehicles approaching from behind
+
+Overlap and Consistency
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Regions covered by multiple cameras can be fused by aggregating features in the
+shared BEV cells. Strategies include:
+
+- **Max pooling** -- Take the strongest activation. Simple, works well when
+  one camera has a clear view.
+- **Attention-weighted sum** -- Learn a confidence weight per camera per BEV
+  cell. Used in cross-view transformers and BEVFusion.
+- **Feature concatenation + projection** -- Concatenate multi-camera features
+  at each BEV cell and project with a learned MLP.
+
+.. admonition:: Extrinsic Calibration Is Critical
+   :class: warning
+
+   BEV fusion assumes all cameras are accurately calibrated to the vehicle
+   frame. Even 1-degree extrinsic error causes significant object position
+   errors at 50 m range. Online calibration monitoring is an active research
+   area.
+
+
+3D Occupancy Networks
+----------------------
+
+While BEV detection predicts bounding boxes for known object classes,
+**3D Occupancy Networks** predict the semantic state of every voxel in a 3D
+volume around the vehicle.
+
+Motivation
+~~~~~~~~~~~
+
+.. grid:: 1 2 2 2
+   :gutter: 3
+
+   .. grid-item-card:: Beyond Bounding Boxes
+      :class-card: sd-border-warning
+
+      Bounding boxes fail for irregular shapes: construction barriers,
+      overhanging vegetation, parked vehicles partially occluded. Occupancy
+      captures arbitrary geometry.
+
+   .. grid-item-card:: Complete Scene Representation
+      :class-card: sd-border-warning
+
+      Planning systems benefit from knowing not just ``where objects are``
+      but ``what the free space is`` -- critical for path clearance checks.
+
+Output Representation
+~~~~~~~~~~~~~~~~~~~~~~
+
+The scene is divided into a 3D voxel grid, e.g., :math:`200 \times 200 \times 16`
+voxels covering :math:`[-50\text{m}, +50\text{m}] \times [-50\text{m},
++50\text{m}] \times [-5\text{m}, +3\text{m}]`. Each voxel receives:
+
+- A **semantic label**: one of :math:`K` classes (free, vehicle, pedestrian,
+  cyclist, vegetation, building, etc.) plus ``unknown/occluded``.
+- Optionally, a **flow vector** indicating velocity of dynamic voxels
+  (MonoOcc, UniOcc extensions).
+
+.. math::
+
+   \hat{y}_{i,j,k} = \text{argmax}_{c} \; p(c \mid \mathbf{v}_{i,j,k})
+
+where :math:`\mathbf{v}_{i,j,k}` is the feature vector at voxel
+:math:`(i, j, k)`.
+
+Key Methods
+~~~~~~~~~~~~
+
+.. tab-set::
+
+   .. tab-item:: MonoScene (2022)
+
+      First occupancy prediction from a **single monocular camera**. Uses 2D-3D
+      feature projection with a U-Net-like 3D decoder. Introduced the nuScenes
+      occupancy prediction benchmark.
+
+   .. tab-item:: TPVFormer (2023)
+
+      Extends BEVFormer to a **Tri-Perspective View** (top, front, side) to
+      capture full 3D geometry without full 3D voxel attention. Computationally
+      efficient while maintaining accuracy.
+
+   .. tab-item:: OpenOccupancy / Occ3D
+
+      Large-scale annotation frameworks for training occupancy networks on
+      nuScenes and Waymo. Defines standard evaluation metrics:
+      **mIoU** (mean Intersection over Union) per semantic class.
+
+Occupancy vs. Detection: When to Use Which
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 30 35 35
+   :header-rows: 1
+   :class: compact-table
+
+   * - Scenario
+     - BEV Detection Adequate?
+     - Occupancy Needed?
+   * - Counting vehicles in parking lot
+     - Yes
+     - No
+   * - Navigating construction zone
+     - No (irregular obstacles)
+     - Yes
+   * - Freespace for lane change
+     - Partially
+     - Yes (accurate boundaries)
+   * - Traffic light / sign detection
+     - Yes
+     - No (2D sufficient)
+
+
 Segmentation for Autonomous Driving
 -------------------------------------
 
@@ -15,7 +376,7 @@ Segmentation for Autonomous Driving
    This lecture focuses on how these techniques are **deployed in autonomous
    driving** and introduces AV-specific architectures and tasks.
 
-Object detection from L3 gives us **where objects are** (bounding boxes) but
+Object detection from L4 gives us **where objects are** (bounding boxes) but
 not **what every pixel is**. In autonomous driving, dense pixel-level
 understanding is critical: the planner needs to know which surfaces are safe to
 drive on, where lane boundaries lie, and which regions are occupied by
@@ -129,14 +490,14 @@ Two specialized segmentation tasks critical for AV systems:
 .. admonition:: BEV Projection Simplifies Lane Detection
    :class: tip
 
-   Both tasks benefit enormously from the BEV representation introduced in
-   L4. In perspective view, foreshortening makes lane width and curvature
-   appear non-uniform -- lanes converge toward the horizon and curvature
-   is compressed at distance. In BEV, lanes become **uniform-width curves**
-   that are simpler to predict, fit with polynomials, and post-process.
-   Several state-of-the-art lane detectors (PersFormer, Anchor3DLane) now
-   predict lanes directly in BEV space, side-stepping perspective distortion
-   entirely.
+   Both tasks benefit enormously from the BEV representation introduced
+   earlier in this lecture. In perspective view, foreshortening makes lane
+   width and curvature appear non-uniform -- lanes converge toward the
+   horizon and curvature is compressed at distance. In BEV, lanes become
+   **uniform-width curves** that are simpler to predict, fit with
+   polynomials, and post-process. Several state-of-the-art lane detectors
+   (PersFormer, Anchor3DLane) now predict lanes directly in BEV space,
+   side-stepping perspective distortion entirely.
 
 
 Instance and Panoptic Segmentation
@@ -196,267 +557,82 @@ The **Panoptic Quality (PQ)** metric:
                 \underbrace{\frac{\sum \text{IoU}}{|TP|}}_{\text{SQ segmentation quality}}
 
 
-Multi-Object Tracking (MOT)
------------------------------
+Industry Adoption
+------------------
 
-Detection gives us objects in a single frame. **Multi-Object Tracking (MOT)**
-maintains consistent identities for all objects across a video sequence.
-
-Problem Formulation
-~~~~~~~~~~~~~~~~~~~~
-
-Given detections :math:`\mathcal{D}_t = \{d_1, d_2, \ldots\}` at each frame
-:math:`t`, produce **tracks** :math:`\mathcal{T} = \{T_1, T_2, \ldots\}` where
-each track is a sequence of states associated with the same physical object:
-
-.. math::
-
-   T_i = \{(t, s_t^i) : t \in [t_{start}^i, t_{end}^i]\}
-
-where :math:`s_t^i` is the state (position, velocity, class) of track :math:`i`
-at time :math:`t`.
-
-Challenges: occlusion, similar-looking objects, appearance changes, variable
-frame rate, missed detections, false positives from the detector.
-
-
-SORT: Simple Online and Realtime Tracking
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-SORT (Bewley et al., 2016) is a minimal, highly efficient tracker built on
-two components:
-
-.. tab-set::
-
-   .. tab-item:: Kalman Filter State
-
-      Each track maintains a Kalman Filter state:
-
-      .. math::
-
-         \mathbf{x} = [u, v, s, r, \dot{u}, \dot{v}, \dot{s}]^T
-
-      where :math:`(u, v)` is the bounding box center, :math:`s` is scale
-      (area), :math:`r` is aspect ratio (constant), and the dots denote
-      velocities. The state is propagated with a constant-velocity model.
-
-   .. tab-item:: Hungarian Algorithm
-
-      At each frame, detections and tracks are associated using the **Hungarian
-      algorithm** (optimal bipartite matching) on an IoU cost matrix:
-
-      .. math::
-
-         C_{ij} = 1 - \text{IoU}(\hat{b}_i, d_j)
-
-      where :math:`\hat{b}_i` is the predicted bounding box of track :math:`i`
-      and :math:`d_j` is detection :math:`j`. Pairs below a minimum IoU
-      threshold are rejected.
-
-   .. tab-item:: Track Management
-
-      - **New track**: created for unmatched detections.
-      - **Confirmed track**: promoted after 3 consecutive matches.
-      - **Dead track**: removed after :math:`T_{lost}` frames without a match.
-
-SORT achieves real-time tracking (260 Hz on a standard CPU for 6 tracks)
-but re-assigns IDs after occlusion because it uses no appearance features.
-
-
-DeepSORT
-~~~~~~~~~
-
-DeepSORT (Wojke et al., 2017) extends SORT with a **deep appearance
-descriptor** to handle re-identification after occlusion:
-
-1. A CNN (trained on person re-ID datasets) extracts a 128-dimensional
-   appearance embedding for each detection crop.
-2. Each track maintains a **gallery** of the last 100 appearance embeddings.
-3. The cost matrix combines IoU distance and **cosine appearance distance**:
-
-   .. math::
-
-      C_{ij} = \lambda \cdot d_{appear}(i, j) + (1 - \lambda) \cdot d_{IoU}(i, j)
-
-4. Tracks are confirmed/tentative/deleted as in SORT.
-
-The appearance matching allows DeepSORT to correctly re-identify an object
-returning from a long occlusion, at the cost of slightly higher compute.
-
-
-ByteTrack
-~~~~~~~~~~
-
-ByteTrack (Zhang et al., 2022) addresses a fundamental issue in tracking:
-SORT and DeepSORT only associate **high-confidence** detections with tracks,
-discarding low-confidence detections as noise.
-
-ByteTrack's insight: **low-confidence detections often correspond to occluded
-or distant objects** -- exactly the objects most likely to cause ID switches.
-
-.. admonition:: ByteTrack Algorithm
-   :class: note
-
-   1. Run detector; split detections into high-score (:math:`\tau_{high} = 0.6`)
-      and low-score (:math:`\tau_{low} = 0.1` to :math:`\tau_{high}`).
-   2. **First association**: match high-score detections to all tracks via
-      IoU-based Hungarian matching.
-   3. **Second association**: match low-score detections to **unmatched tracks**
-      from step 2 -- recovering occluded objects.
-   4. Initialize new tracks from unmatched high-score detections only.
-
-ByteTrack achieves state-of-the-art on MOT17 (80.3 MOTA, 77.3 IDF1) at
-30 FPS, with no appearance model required.
-
-
-Tracking Metrics
+Tesla's Approach
 ~~~~~~~~~~~~~~~~~
 
-.. list-table::
-   :widths: 15 40 45
-   :header-rows: 1
-   :class: compact-table
+Tesla's FSD v12 perception stack relies heavily on BEV representation. Key
+architectural choices:
 
-   * - Metric
-     - Formula
-     - Interpretation
-   * - **MOTA**
-     - :math:`1 - \frac{\sum_t (FN_t + FP_t + IDSW_t)}{\sum_t GT_t}`
-     - Overall tracking accuracy; penalizes FN, FP, and ID switches. Range: :math:`(-\infty, 1]`.
-   * - **MOTP**
-     - :math:`\frac{\sum_{i,t} d_t^i}{\sum_t c_t}`
-     - Average localization precision for matched pairs (IoU or distance). Higher = better.
-   * - **IDF1**
-     - :math:`\frac{2 \cdot IDTP}{2 \cdot IDTP + IDFP + IDFN}`
-     - F1 score for correct identity assignments. Emphasizes consistent ID maintenance.
-   * - **HOTA**
-     - Geometric mean of detection and association accuracy
-     - Balances detection quality and track association quality equally.
+.. card::
+   :class-card: sd-border-success sd-shadow-sm
 
-.. admonition:: Metric Intuition
-   :class: tip
+   **Tesla Occupancy Network (announced 2022 AI Day)**
 
-   - MOTA is dominated by detection quality (FP/FN). A perfect detector with
-     random IDs can still score high MOTA.
-   - IDF1 better captures ID consistency -- important for downstream tasks
-     like trajectory prediction.
-   - HOTA (newer metric) explicitly balances both.
+   - Input: 8 cameras (front, B-pillar front/rear, fisheye rears, main rear)
+   - BEV feature construction via **video-based transformer** (not just single
+     frame -- full temporal context)
+   - Output: 4D occupancy (3D space + time), predicting future occupancy states
+     enabling implicit trajectory prediction
+   - Trained on **billions of frames** of auto-labeled data via Tesla's
+     in-house data engine
+   - No LiDAR -- camera-only, with depth inferred entirely from monocular
+     multi-frame parallax and learned depth priors
+
+Waymo, Cruise, and Others
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Most Tier-1 AV companies use LiDAR as the primary BEV input (point clouds are
+already in 3D metric space) and fuse camera BEV features at the feature level.
+The dominant paradigm for LiDAR-based BEV is:
+
+1. Voxelize point cloud into a 3D grid.
+2. Apply 3D sparse convolution (Sparse ConvNet, VoxelNet) to extract features.
+3. Compress to BEV by collapsing the Z-axis.
+4. Apply 2D detection head or dense occupancy prediction head.
+
+.. seealso::
+
+   Classical multi-sensor fusion (KF/EKF/UKF, data association,
+   weighted averaging) was covered in **L3: Probabilistic State
+   Estimation & Fusion**; deep-learning fusion of camera + LiDAR in
+   BEV space (cross-attention, BEVFusion) is covered in **L6:
+   Perception III**.
 
 
-Temporal Reasoning
--------------------
+nuScenes Benchmark Metrics
+---------------------------
 
-Single-frame perception has fundamental limits: a fast-moving car is a static
-snapshot, an occluded pedestrian is invisible, noise has no temporal structure.
-**Temporal reasoning** uses multiple frames to overcome these limits.
-
-Why Temporal Context Matters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. grid:: 1 2 2 3
-   :gutter: 3
-
-   .. grid-item-card:: Velocity Estimation
-      :class-card: sd-border-success
-
-      Observing the same object across consecutive frames provides direct
-      velocity estimates via optical flow or Kalman filter -- impossible from
-      a single frame without additional assumptions.
-
-   .. grid-item-card:: Occlusion Handling
-      :class-card: sd-border-success
-
-      An object occluded in frame :math:`t` was visible in frame :math:`t-1`.
-      Temporal models can propagate its estimated state through occlusion gaps.
-
-   .. grid-item-card:: Noise Reduction
-      :class-card: sd-border-success
-
-      Random detection noise is uncorrelated across frames. Temporal smoothing
-      (Kalman filter, temporal attention) averages out noise while preserving
-      true object motion.
-
-Methods for Temporal Perception
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The nuScenes dataset is the standard benchmark for BEV perception evaluation.
 
 .. list-table::
    :widths: 25 75
    :header-rows: 1
    :class: compact-table
 
-   * - Method
-     - Mechanism
-   * - **Recurrent Networks (LSTM/GRU)**
-     - Maintain a hidden state that accumulates frame history. Used in
-       early video object detection models.
-   * - **3D Convolutions**
-     - Apply convolutions along both spatial and temporal dimensions
-       simultaneously (C3D, SlowFast, Video Swin).
-   * - **Temporal BEV Attention**
-     - BEVFormer-style: warp previous BEV frame to current ego pose, then
-       cross-attend with current queries (most practical for AV systems).
-   * - **Optical Flow**
-     - Estimate dense pixel motion between frames; used to warp features
-       or as an explicit velocity prior.
+   * - Metric
+     - Definition
+   * - **mAP**
+     - Mean Average Precision over 10 classes at 4 BEV distance thresholds
+       (0.5m, 1m, 2m, 4m). Higher is better.
+   * - **NDS**
+     - nuScenes Detection Score: weighted combination of mAP and 5 attribute
+       errors (ATE, ASE, AOE, AVE, AAE). Single scalar for ranking.
+   * - **ATE**
+     - Average Translation Error: 2D center distance in BEV (meters).
+   * - **ASE**
+     - Average Scale Error: 3D IoU between predicted and GT box sizes.
+   * - **AOE**
+     - Average Orientation Error: yaw angle error (radians).
+   * - **mIoU**
+     - Mean IoU across semantic classes (used for occupancy benchmarks).
 
-Tracking-by-Detection Paradigm
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. math::
 
-The dominant MOT paradigm in autonomous driving:
-
-.. code-block:: text
-
-   Frame t:
-   ┌──────────────┐     ┌──────────────────┐     ┌────────────────────┐
-   │  Detector    │────>│  State Predictor │────>│  Data Association  │
-   │  (YOLO,      │     │  (Kalman Filter) │     │  (Hungarian Algo / │
-   │   DETR, etc) │     │  Predict track   │     │   Appearance dist) │
-   └──────────────┘     │  positions to t  │     └────────┬───────────┘
-                        └──────────────────┘              │
-                                                   ┌──────▼──────────┐
-                                                   │  Track Update   │
-                                                   │  + Management   │
-                                                   │  (new/dead)     │
-                                                   └─────────────────┘
-
-The detector is completely independent of the tracker. This means improving
-either component independently improves overall tracking.
-
-
-Integration with the L3-L4 Pipeline
--------------------------------------
-
-The full perception pipeline for autonomous driving:
-
-.. list-table::
-   :widths: 15 85
-   :class: compact-table
-
-   * - **L3**
-     - Raw sensor inputs → 3D object detection (LiDAR PointPillars/VoxelNet,
-       camera DETR/YOLO) → 3D bounding boxes with class and confidence.
-   * - **L4**
-     - Multi-camera images → BEV feature construction (LSS, BEVFormer) →
-       BEV detection heads → 3D boxes or occupancy voxels in ego frame.
-   * - **L5 (segmentation)**
-     - Camera images → semantic/panoptic segmentation → driveable surface mask,
-       lane lines, free space boundaries. BEV projection for planning.
-   * - **L5 (tracking)**
-     - 3D bounding boxes from L3/L4 → Kalman filter state prediction →
-       Hungarian / ByteTrack association → confirmed tracks with IDs and
-       velocity estimates.
-   * - **Output**
-     - Per-object tracks with state history: position, velocity, orientation,
-       class, ID. Input to prediction and planning modules.
-
-.. admonition:: Real-World Performance Trade-offs
-   :class: warning
-
-   In production AV systems, tracking must run within a strict latency budget
-   (typically <50 ms total for the perception stack). Appearance-based methods
-   (DeepSORT) improve ID consistency but add compute. ByteTrack's approach of
-   using all detections (not just high-confidence) significantly reduces ID
-   switches at negligible compute cost -- a favorable engineering trade-off.
+   \text{NDS} = \frac{1}{10} \left[ 5 \cdot \text{mAP} +
+   \sum_{mtp \in \mathcal{TP}} (1 - \min(1, mtp)) \right]
 
 
 Summary
@@ -465,32 +641,239 @@ Summary
 .. grid:: 1 2 2 2
    :gutter: 3
 
+   .. grid-item-card:: BEV Foundations
+      :class-card: sd-border-primary
+
+      - BEV is metric, planning-friendly, and enables natural multi-sensor fusion
+      - LSS: predict depth per pixel, lift to frustum, splat to voxel, shoot to BEV
+      - BEVFormer: learnable queries + spatial cross-attention + temporal attention
+
+   .. grid-item-card:: Occupancy
+      :class-card: sd-border-primary
+
+      - Occupancy networks: per-voxel semantic prediction, handles arbitrary geometry
+      - Evaluation: mIoU per class on nuScenes/Waymo benchmarks
+      - Tesla: camera-only 4D occupancy; others fuse LiDAR for higher accuracy
+
    .. grid-item-card:: Segmentation
       :class-card: sd-border-primary
 
-      - Semantic: per-pixel class labels (U-Net, DeepLabv3+)
-      - Instance: per-object masks (Mask R-CNN)
-      - Panoptic: unified things + stuff (PQ metric)
-      - Specialized: driveable surface, lane detection
+      - DeepLabv3+: dilated convolutions + ASPP for multi-scale context
+      - Driveable surface + lane detection as specialised seg tasks
+      - Instance / Panoptic seg (Mask R-CNN), unified PQ metric
 
-   .. grid-item-card:: Tracking & Temporal
-      :class-card: sd-border-primary
+.. note::
 
-      - MOT paradigm: tracking-by-detection
-      - SORT: Kalman filter + IoU Hungarian matching
-      - DeepSORT: adds appearance embedding for re-ID
-      - ByteTrack: uses low-confidence detections for occlusion recovery
-      - Metrics: MOTA (accuracy), IDF1 (identity), HOTA (balanced)
+   The progression from 2D detection (L4) to BEV detection (L5) to occupancy
+   prediction (L5 advanced) mirrors how the industry has evolved from early
+   prototype systems to production AV stacks. Segmentation completes the
+   picture: pixel-level scene understanding feeds both BEV reconstruction
+   and downstream planning.
 
 
-CARLA Hands-On: Segmentation and Object Tracking
---------------------------------------------------
+CARLA Hands-On: BEV Grid & Semantic Segmentation
+------------------------------------------------------------
 
-This exercise uses CARLA's ground-truth semantic camera and vehicle
-detections to implement segmentation visualization and a basic SORT tracker.
+This exercise walks through the core steps of constructing a BEV
+representation from CARLA's multi-camera setup (Tasks 1-4) and then
+explores semantic segmentation with CARLA's ground-truth labels
+(Tasks 5-6).
 
 
-Task 1: Semantic Segmentation from CARLA
+Task 1: Set Up a Multi-Camera Rig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Spawn six cameras to achieve 360-degree surround coverage, mimicking a
+production AV sensor configuration.
+
+.. code-block:: python
+
+   import carla
+   import numpy as np
+   import cv2
+
+   client = carla.Client('localhost', 2000)
+   client.set_timeout(10.0)
+   world = client.get_world()
+   bp_lib = world.get_blueprint_library()
+
+   # Spawn ego vehicle
+   vehicle_bp = bp_lib.find('vehicle.tesla.model3')
+   spawn_point = world.get_map().get_spawn_points()[0]
+   vehicle = world.spawn_actor(vehicle_bp, spawn_point)
+   vehicle.set_autopilot(True)
+
+   # Define 6-camera rig (position, yaw)
+   camera_configs = [
+       {'name': 'front',       'x':  1.5, 'y':  0.0, 'z': 2.4, 'yaw':   0},
+       {'name': 'front_left',  'x':  1.0, 'y': -0.5, 'z': 2.4, 'yaw': -60},
+       {'name': 'front_right', 'x':  1.0, 'y':  0.5, 'z': 2.4, 'yaw':  60},
+       {'name': 'back',        'x': -1.5, 'y':  0.0, 'z': 2.4, 'yaw': 180},
+       {'name': 'back_left',   'x': -1.0, 'y': -0.5, 'z': 2.4, 'yaw':-120},
+       {'name': 'back_right',  'x': -1.0, 'y':  0.5, 'z': 2.4, 'yaw': 120},
+   ]
+
+   IMAGE_W, IMAGE_H, FOV = 800, 600, 90
+   cameras = {}
+
+   for cfg in camera_configs:
+       cam_bp = bp_lib.find('sensor.camera.rgb')
+       cam_bp.set_attribute('image_size_x', str(IMAGE_W))
+       cam_bp.set_attribute('image_size_y', str(IMAGE_H))
+       cam_bp.set_attribute('fov', str(FOV))
+       transform = carla.Transform(
+           carla.Location(x=cfg['x'], y=cfg['y'], z=cfg['z']),
+           carla.Rotation(yaw=cfg['yaw']))
+       cam = world.spawn_actor(cam_bp, transform, attach_to=vehicle)
+       cameras[cfg['name']] = cam
+
+   # Also spawn a depth camera co-located with the front camera
+   # (to provide ground-truth depth for the LSS exercise)
+   depth_bp = bp_lib.find('sensor.camera.depth')
+   depth_bp.set_attribute('image_size_x', str(IMAGE_W))
+   depth_bp.set_attribute('image_size_y', str(IMAGE_H))
+   depth_bp.set_attribute('fov', str(FOV))
+   depth_cam = world.spawn_actor(
+       depth_bp,
+       carla.Transform(carla.Location(x=1.5, z=2.4)),
+       attach_to=vehicle)
+
+   print(f"Spawned {len(cameras)} RGB cameras + 1 depth camera.")
+
+
+Task 2: Build Camera Intrinsics and Extrinsics
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   def get_camera_intrinsic(image_w, image_h, fov):
+       """Compute the 3x3 camera intrinsic matrix from CARLA parameters."""
+       focal = image_w / (2.0 * np.tan(np.radians(fov / 2.0)))
+       K = np.array([
+           [focal,  0.0,   image_w / 2.0],
+           [0.0,    focal, image_h / 2.0],
+           [0.0,    0.0,   1.0]
+       ])
+       return K
+
+   def get_extrinsic_matrix(camera_actor):
+       """Get the 4x4 camera-to-world extrinsic matrix."""
+       transform = camera_actor.get_transform()
+       return np.array(transform.get_matrix())
+
+   K = get_camera_intrinsic(IMAGE_W, IMAGE_H, FOV)
+   print(f"Intrinsic matrix:\n{K}")
+
+   for name, cam in cameras.items():
+       E = get_extrinsic_matrix(cam)
+       print(f"{name} extrinsic (camera-to-world):\n{E[:3]}\n")
+
+
+Task 3: Simplified LSS -- Lift Depth to 3D and Splat to BEV
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Using the ground-truth depth from CARLA's depth camera, implement the core
+LSS steps: "lift" pixels to 3D points and "splat" them into a BEV grid.
+
+.. code-block:: python
+
+   # BEV grid parameters
+   BEV_X_RANGE = (-50.0, 50.0)   # meters, left-right
+   BEV_Y_RANGE = (-50.0, 50.0)   # meters, front-back
+   BEV_RESOLUTION = 0.5           # meters per cell
+   BEV_W = int((BEV_X_RANGE[1] - BEV_X_RANGE[0]) / BEV_RESOLUTION)
+   BEV_H = int((BEV_Y_RANGE[1] - BEV_Y_RANGE[0]) / BEV_RESOLUTION)
+
+   def depth_image_to_3d_points(depth_array, K, extrinsic):
+       """Lift a depth image to 3D world points (LSS 'Lift' stage)."""
+       H, W = depth_array.shape
+       u, v = np.meshgrid(np.arange(W), np.arange(H))
+
+       # Back-project pixels to camera frame using intrinsics
+       x_cam = (u - K[0, 2]) * depth_array / K[0, 0]
+       y_cam = (v - K[1, 2]) * depth_array / K[1, 1]
+       z_cam = depth_array
+
+       # Stack into (N, 4) homogeneous coordinates
+       ones = np.ones_like(z_cam)
+       cam_points = np.stack([x_cam, y_cam, z_cam, ones], axis=-1)
+       cam_points = cam_points.reshape(-1, 4)
+
+       # Transform to world frame
+       world_points = (extrinsic @ cam_points.T).T[:, :3]
+       return world_points
+
+   def splat_to_bev(points_3d, bev_x_range, bev_y_range, resolution):
+       """Splat 3D points into a 2D BEV occupancy grid (LSS 'Splat' stage)."""
+       bev_w = int((bev_x_range[1] - bev_x_range[0]) / resolution)
+       bev_h = int((bev_y_range[1] - bev_y_range[0]) / resolution)
+       bev_grid = np.zeros((bev_h, bev_w), dtype=np.float32)
+
+       # Convert world XY to grid indices
+       xi = ((points_3d[:, 0] - bev_x_range[0]) / resolution).astype(int)
+       yi = ((points_3d[:, 1] - bev_y_range[0]) / resolution).astype(int)
+
+       # Filter to within grid bounds
+       valid = (xi >= 0) & (xi < bev_w) & (yi >= 0) & (yi < bev_h)
+       xi, yi = xi[valid], yi[valid]
+
+       # Accumulate point counts per cell
+       np.add.at(bev_grid, (yi, xi), 1.0)
+       return bev_grid
+
+   # Usage (inside depth camera callback):
+   # depth_array = parse_carla_depth_image(depth_image)
+   # E = get_extrinsic_matrix(depth_cam)
+   # points_3d = depth_image_to_3d_points(depth_array, K, E)
+   # bev = splat_to_bev(points_3d, BEV_X_RANGE, BEV_Y_RANGE, BEV_RESOLUTION)
+
+
+Task 4: Visualize and Analyze the BEV Grid
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   def visualize_bev(bev_grid, title="BEV Occupancy"):
+       """Display the BEV grid as a heatmap."""
+       # Normalize for visualization
+       bev_vis = np.clip(bev_grid, 0, 50)  # cap at 50 points per cell
+       bev_vis = (bev_vis / 50.0 * 255).astype(np.uint8)
+       bev_colored = cv2.applyColorMap(bev_vis, cv2.COLORMAP_JET)
+
+       # Mark ego vehicle at center
+       center = (bev_grid.shape[1] // 2, bev_grid.shape[0] // 2)
+       cv2.circle(bev_colored, center, 5, (0, 255, 0), -1)
+       cv2.putText(bev_colored, "EGO", (center[0]+8, center[1]+5),
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
+
+       cv2.imshow(title, bev_colored)
+       cv2.waitKey(1)
+
+.. admonition:: Exercise Tasks
+   :class: tip
+
+   1. **Run the multi-camera rig** and display all six camera views in a
+      tiled window.
+   2. **Implement the LSS pipeline** using CARLA's ground-truth depth camera.
+      Visualize the resulting BEV occupancy grid.
+   3. **Multi-camera BEV fusion**: Extend the pipeline to use all six cameras
+      (each with a co-located depth camera). Merge all BEV grids using
+      sum-pooling and compare coverage against a single front camera.
+   4. **Vary the BEV resolution**: Test 0.25 m, 0.5 m, and 1.0 m resolution.
+      How does resolution affect object visibility and compute time?
+   5. **Compare to LiDAR BEV**: Spawn a 64-channel LiDAR, project its point
+      cloud into the same BEV grid, and compare the camera-based vs.
+      LiDAR-based BEV representations side-by-side.
+
+.. note::
+
+   In a real LSS implementation, the depth distribution is *learned* by a
+   neural network rather than using ground-truth depth. This exercise uses
+   CARLA's depth camera as a stand-in to focus on the geometric concepts.
+   The learned depth version is what makes LSS end-to-end differentiable.
+
+
+Task 5: Semantic Segmentation from CARLA
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 CARLA provides a ground-truth semantic segmentation camera that assigns
@@ -558,7 +941,7 @@ without training a model.
    seg_cam.listen(seg_callback)
 
 
-Task 2: Compute Segmentation Metrics
+Task 6: Compute Segmentation Metrics
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
@@ -579,254 +962,11 @@ Task 2: Compute Segmentation Metrics
    # miou = compute_miou(model_output, carla_gt_labels, num_classes=23)
 
 
-Task 3: Implement a Basic SORT Tracker
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This implements the core SORT algorithm: Kalman filter prediction +
-IoU-based Hungarian matching.
-
-.. code-block:: python
-
-   from scipy.optimize import linear_sum_assignment
-
-   class KalmanBoxTracker:
-       """Kalman filter tracker for a single bounding box."""
-       _count = 0
-
-       def __init__(self, bbox):
-           """Initialize with bounding box [x1, y1, x2, y2]."""
-           self.id = KalmanBoxTracker._count
-           KalmanBoxTracker._count += 1
-
-           # State: [cx, cy, area, aspect_ratio, vx, vy, va]
-           cx = (bbox[0] + bbox[2]) / 2
-           cy = (bbox[1] + bbox[3]) / 2
-           area = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1])
-           aspect = (bbox[2] - bbox[0]) / max(bbox[3] - bbox[1], 1)
-
-           self.state = np.array([cx, cy, area, aspect, 0, 0, 0],
-                                 dtype=np.float64)
-           self.hits = 1
-           self.age = 0
-           self.time_since_update = 0
-
-       def predict(self):
-           """Constant-velocity prediction."""
-           self.state[:3] += self.state[4:7]  # update position with velocity
-           self.age += 1
-           self.time_since_update += 1
-           return self._state_to_bbox()
-
-       def update(self, bbox):
-           """Update state with matched detection."""
-           cx = (bbox[0] + bbox[2]) / 2
-           cy = (bbox[1] + bbox[3]) / 2
-           area = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1])
-
-           # Simple exponential moving average (alpha = 0.7)
-           alpha = 0.7
-           old_cx, old_cy, old_area = self.state[:3]
-           self.state[4] = alpha * (cx - old_cx) + (1 - alpha) * self.state[4]
-           self.state[5] = alpha * (cy - old_cy) + (1 - alpha) * self.state[5]
-           self.state[6] = alpha * (area - old_area) + (1-alpha) * self.state[6]
-           self.state[0] = cx
-           self.state[1] = cy
-           self.state[2] = area
-           self.hits += 1
-           self.time_since_update = 0
-
-       def _state_to_bbox(self):
-           """Convert state back to [x1, y1, x2, y2]."""
-           cx, cy, area, aspect = self.state[:4]
-           w = np.sqrt(max(area * aspect, 1))
-           h = max(area / w, 1)
-           return np.array([cx - w/2, cy - h/2, cx + w/2, cy + h/2])
-
-
-   def iou_batch(bb_det, bb_trk):
-       """Compute IoU between all pairs of detection and track boxes."""
-       # bb_det: (M, 4), bb_trk: (N, 4) -- [x1, y1, x2, y2]
-       M, N = len(bb_det), len(bb_trk)
-       iou_matrix = np.zeros((M, N))
-       for m in range(M):
-           for n in range(N):
-               x1 = max(bb_det[m, 0], bb_trk[n, 0])
-               y1 = max(bb_det[m, 1], bb_trk[n, 1])
-               x2 = min(bb_det[m, 2], bb_trk[n, 2])
-               y2 = min(bb_det[m, 3], bb_trk[n, 3])
-               inter = max(0, x2 - x1) * max(0, y2 - y1)
-               area_d = ((bb_det[m, 2] - bb_det[m, 0])
-                         * (bb_det[m, 3] - bb_det[m, 1]))
-               area_t = ((bb_trk[n, 2] - bb_trk[n, 0])
-                         * (bb_trk[n, 3] - bb_trk[n, 1]))
-               iou_matrix[m, n] = inter / max(area_d + area_t - inter, 1e-6)
-       return iou_matrix
-
-
-   class SORTTracker:
-       """Simple Online and Realtime Tracking."""
-
-       def __init__(self, max_age=5, min_hits=3, iou_threshold=0.3):
-           self.max_age = max_age
-           self.min_hits = min_hits
-           self.iou_threshold = iou_threshold
-           self.trackers = []
-
-       def update(self, detections):
-           """
-           Update tracks with new detections.
-
-           Args:
-               detections: np.array of shape (M, 4) -- [x1, y1, x2, y2]
-
-           Returns:
-               np.array of shape (K, 5) -- [x1, y1, x2, y2, track_id]
-           """
-           # Predict existing tracks
-           predicted = []
-           for trk in self.trackers:
-               predicted.append(trk.predict())
-           predicted = np.array(predicted) if predicted else np.empty((0, 4))
-
-           # Associate detections to tracks via Hungarian algorithm
-           if len(detections) > 0 and len(predicted) > 0:
-               iou_matrix = iou_batch(detections, predicted)
-               row_idx, col_idx = linear_sum_assignment(-iou_matrix)
-
-               matched, unmatched_dets, unmatched_trks = [], [], []
-               for m, t in zip(row_idx, col_idx):
-                   if iou_matrix[m, t] >= self.iou_threshold:
-                       matched.append((m, t))
-                   else:
-                       unmatched_dets.append(m)
-                       unmatched_trks.append(t)
-
-               unmatched_dets += [m for m in range(len(detections))
-                                  if m not in row_idx]
-               unmatched_trks += [t for t in range(len(predicted))
-                                  if t not in col_idx]
-           else:
-               matched = []
-               unmatched_dets = list(range(len(detections)))
-               unmatched_trks = list(range(len(predicted)))
-
-           # Update matched tracks
-           for m, t in matched:
-               self.trackers[t].update(detections[m])
-
-           # Create new tracks for unmatched detections
-           for m in unmatched_dets:
-               self.trackers.append(KalmanBoxTracker(detections[m]))
-
-           # Remove dead tracks
-           self.trackers = [t for t in self.trackers
-                            if t.time_since_update <= self.max_age]
-
-           # Return confirmed tracks
-           results = []
-           for trk in self.trackers:
-               if trk.hits >= self.min_hits:
-                   bbox = trk._state_to_bbox()
-                   results.append([*bbox, trk.id])
-           return np.array(results) if results else np.empty((0, 5))
-
-
-Task 4: Run the Tracker on CARLA Vehicles
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-   def get_vehicle_bboxes_2d(world, camera_actor, K):
-       """Get 2D bounding boxes for all vehicles visible to a camera."""
-       vehicles = world.get_actors().filter('vehicle.*')
-       ego_id = vehicle.id
-       cam_transform = camera_actor.get_transform()
-       world_to_cam = np.array(cam_transform.get_inverse_matrix())
-
-       bboxes = []
-       for v in vehicles:
-           if v.id == ego_id:
-               continue
-
-           # Get vehicle center in world frame
-           v_loc = v.get_transform().location
-           v_world = np.array([v_loc.x, v_loc.y, v_loc.z, 1.0])
-
-           # Transform to camera frame
-           v_cam = world_to_cam @ v_world
-           if v_cam[2] < 1.0:  # behind camera
-               continue
-
-           # Project to pixel coordinates
-           px = K[0, 0] * v_cam[0] / v_cam[2] + K[0, 2]
-           py = K[1, 1] * v_cam[1] / v_cam[2] + K[1, 2]
-
-           # Approximate bounding box size based on distance
-           half_w = max(30, 2000 / v_cam[2])
-           half_h = max(20, 1500 / v_cam[2])
-
-           x1 = max(0, int(px - half_w))
-           y1 = max(0, int(py - half_h))
-           x2 = min(1280, int(px + half_w))
-           y2 = min(720, int(py + half_h))
-
-           if x2 > x1 and y2 > y1:
-               bboxes.append([x1, y1, x2, y2])
-
-       return np.array(bboxes) if bboxes else np.empty((0, 4))
-
-   # ── Main tracking loop ────────────────────────────────────────────
-   tracker = SORTTracker(max_age=5, min_hits=3, iou_threshold=0.3)
-   # Assign unique colors per track ID
-   track_colors = {}
-
-   def tracking_callback(image):
-       array = np.frombuffer(image.raw_data, dtype=np.uint8)
-       frame = array.reshape((image.height, image.width, 4))[:, :, :3].copy()
-
-       detections = get_vehicle_bboxes_2d(world, cameras['front'], K)
-       tracks = tracker.update(detections)
-
-       for trk in tracks:
-           x1, y1, x2, y2, tid = trk.astype(int)
-           if tid not in track_colors:
-               track_colors[tid] = tuple(
-                   int(c) for c in np.random.randint(50, 255, 3))
-           color = track_colors[tid]
-           cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
-           cv2.putText(frame, f"ID:{tid}", (x1, y1 - 8),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
-
-       cv2.imshow("SORT Tracker", frame)
-       cv2.waitKey(1)
-
-   cameras['front'].listen(tracking_callback)
-
-.. admonition:: Exercise Tasks
-   :class: tip
-
-   1. **Visualize CARLA semantic segmentation** using the ground-truth camera.
-      Identify the driveable surface, lane markings, and vehicle pixels.
-   2. **Run the SORT tracker** on CARLA vehicle detections. Observe how track
-      IDs are assigned and maintained as vehicles move through the scene.
-   3. **Stress-test with occlusion**: Drive through a busy intersection and
-      observe ID switches when vehicles occlude each other. Count the number
-      of ID switches over 100 frames.
-   4. **Implement ByteTrack's two-pass association**: Modify the
-      ``SORTTracker.update()`` method to split detections into high-confidence
-      and low-confidence sets, run two rounds of Hungarian matching, and
-      compare the ID switch count against basic SORT.
-   5. **Compute tracking metrics**: Using CARLA's ground-truth vehicle
-      positions as reference, compute MOTA and IDF1 for your tracker over
-      a 30-second driving sequence.
-
-.. admonition:: Assignment Unlocked -- GP2: Perception -- YOLO vs DETR
+.. admonition:: Assignment Unlocked -- GP2: Perception
    :class: important
 
-   You now have the foundational knowledge from **L3--L5** to begin
-   **GP2: Perception -- YOLO vs DETR**. In GP2 you will collect a labeled
-   dataset from CARLA, fine-tune both YOLOv8 and RT-DETR, deploy each as a
-   ROS 2 perception node, and perform a rigorous comparison across weather
-   and lighting conditions.
+   You now have the foundational knowledge from **L4 and L5** to begin
+   **GP2: Perception**. In GP2 you will integrate object detection, BEV
+   construction, and segmentation into a unified perception node.
 
    :doc:`Go to GP2 </assignments/gp2>`

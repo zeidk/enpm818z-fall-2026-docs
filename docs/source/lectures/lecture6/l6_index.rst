@@ -1,39 +1,37 @@
-====================================================
-L6: Multi-Sensor Fusion
-====================================================
+========================================================================
+L6: Perception III -- Tracking, Temporal Reasoning & Deep Fusion
+========================================================================
 
 Overview
 --------
 
-No single sensor provides complete, reliable information about the world at
-all times and under all conditions. This lecture covers the theory and practice
-of **multi-sensor fusion** for autonomous driving, starting from the fundamental
-motivation and progressing through classical probabilistic filters (Kalman, EKF,
-UKF, Particle) to modern deep learning fusion architectures. You will learn how
-to combine camera, LiDAR, and RADAR data into a unified, accurate, and robust
-representation of the vehicle's environment.
+This lecture completes the perception pipeline by linking single-frame
+detections into persistent object tracks and by fusing modalities with
+learned attention. It builds directly on the Kalman / EKF / UKF
+machinery taught in L3 (SORT and DeepSORT rest on those filters) and
+on the BEV representation from L5 (cross-attention and BEVFusion
+operate in BEV space). The lecture closes with a CARLA exercise
+implementing a basic SORT tracker on the detections produced by your
+L4 / L5 perception stack.
 
 Learning Objectives
 -------------------
 
 By the end of this lecture, you will be able to:
 
-- Explain why sensor fusion is essential for accuracy, reliability, and coverage
-  in autonomous driving.
-- Distinguish complementary, competitive (redundant), and cooperative sensor
-  relationships.
-- Compare early (raw data), intermediate (feature-level), and late (decision-level)
-  fusion architectures.
-- Derive and apply the Kalman Filter prediction and update equations.
-- Explain Kalman Gain behavior and its intuitive interpretation.
-- Describe the Extended Kalman Filter (EKF) and how Jacobian linearization
-  handles nonlinear dynamics.
-- Describe the Unscented Kalman Filter (UKF) and how sigma-point sampling
-  avoids Jacobian computation.
-- Explain the Particle Filter and when it is preferred over KF/EKF/UKF.
-- Formulate the data association problem and describe common solutions.
-- Apply weighted averaging and inverse variance weighting for sensor fusion.
-- Describe cross-attention fusion as a modern deep learning approach.
+- Formulate the multi-object tracking (MOT) problem and the
+  tracking-by-detection paradigm.
+- Describe the SORT, DeepSORT, and ByteTrack algorithms and their key
+  design choices, and connect SORT's state estimation to the Kalman
+  filter from L3.
+- Evaluate tracking performance using MOTA, MOTP, and IDF1 metrics.
+- Explain how temporal reasoning -- using sequences of frames --
+  improves perception beyond single-frame methods.
+- Describe how tracking integrates with the L4 (Detection) /
+  L5 (BEV + Occupancy + Segmentation) pipeline.
+- Explain cross-attention fusion of camera and LiDAR BEV features.
+- Describe BEVFusion as a representative modern deep-learning fusion
+  architecture and its trade-offs vs. classical fusion from L3.
 
 .. toctree::
    :hidden:
@@ -48,10 +46,14 @@ By the end of this lecture, you will be able to:
 Next Steps
 ----------
 
-- The next lecture covers **Localization & SLAM**: coordinate systems, GNSS/RTK,
-  dead reckoning, probabilistic localization, scan matching, pose graph
-  optimization, and loop closure detection.
-- Review the original Kalman (1960) paper or a linear algebra refresher if
-  matrix operations feel unfamiliar.
-- Explore the ``filterpy`` Python library for practical KF/UKF implementation:
-  `https://filterpy.readthedocs.io <https://filterpy.readthedocs.io>`_.
+- The next lecture covers **Localization & SLAM**: GNSS / RTK, dead
+  reckoning, visual / LiDAR odometry, probabilistic localization with
+  EKF (built on L3), SLAM frontend (ICP, feature extraction), and
+  SLAM backend (pose graphs, loop closure).
+- Review the ByteTrack paper: Zhang et al. (2022) for an efficient,
+  highly accurate modern tracker used in production systems.
+- Explore the MOTChallenge benchmark at `https://motchallenge.net
+  <https://motchallenge.net>`_ to understand evaluation protocols.
+- (Follow-up content) The current Temporal Reasoning section can be
+  extended with transformer-based MOT (MOTR, TrackFormer) and video
+  transformer methods; this is on the v2 polish list.
