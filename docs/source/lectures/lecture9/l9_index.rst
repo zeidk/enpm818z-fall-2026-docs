@@ -1,18 +1,23 @@
 ====================================================
-L9: Motion Planning
+L9: Prediction & Behavior Modeling
 ====================================================
 
 Overview
 --------
 
-This lecture covers the full motion planning stack for autonomous
-vehicles, from high-level route planning down to collision-aware
-path generation. You will learn the mathematical foundations of
-vehicle kinematic models, implement classical graph-based and
-sampling-based planners, and explore the emerging class of
-diffusion-based neural planners that are redefining the state of
-the art. The lecture concludes with algorithm selection criteria
-and a hands-on CARLA implementation exercise.
+A motion planner that ignores what other agents will do is unsafe;
+this lecture supplies the missing piece by covering how to predict
+surrounding agents' future trajectories and how to make strategic
+behavioral decisions. You will study classical (physics-based,
+maneuver-based) and modern (Transformer-based, multi-modal) prediction
+models, then move into behavior planning with finite state machines
+and learned policies. The lecture deliberately precedes Motion
+Planning (L10): everything the planner does in L10-L11 consumes the
+prediction outputs developed here.
+
+Imitation learning and DAgger -- mentioned briefly as one form of
+learned policy -- are developed in depth in L12 (End-to-End Driving,
+VLA & Imitation Learning).
 
 
 Learning Objectives
@@ -20,22 +25,19 @@ Learning Objectives
 
 By the end of this lecture, you will be able to:
 
-- Describe the three-tier motion planning hierarchy (route, behavior,
-  motion) and explain how each tier constrains the next.
-- Derive the bicycle kinematic model and articulate its nonholonomic
-  constraints.
-- Implement Dijkstra's algorithm and A* search with admissible
-  heuristics on a road network graph.
-- Explain how RRT and RRT* explore configuration space and why RRT*
-  achieves asymptotic optimality.
-- Construct a state lattice and perform graph search over it for
-  structured road scenarios.
-- Apply geometric collision detection methods with appropriate safety
-  margins.
-- Describe how diffusion-based planners (Diffusion Planner, DiffusionDrive)
-  formulate planning as iterative denoising.
-- Select an appropriate planning algorithm given task requirements,
-  environment structure, and computational constraints.
+- Explain why trajectory prediction is necessary and how prediction
+  horizon affects downstream planning quality.
+- Compare physics-based, maneuver-based, and interaction-aware
+  prediction approaches and identify their trade-offs.
+- Describe how Transformer architectures encode scene context for
+  motion prediction.
+- Explain multi-modal prediction and why capturing multiple possible
+  futures is essential for safe planning.
+- Implement a finite state machine (FSM) behavior planner with
+  lane-follow, lane-change, stop, and yield states.
+- Contrast rule-based and learned decision-making approaches.
+- Analyse common decision-making scenarios in traffic (intersections,
+  merges, unprotected turns).
 
 
 .. toctree::
@@ -52,13 +54,12 @@ By the end of this lecture, you will be able to:
 Next Steps
 ----------
 
-- In the next lecture, we will cover trajectory planning and control:
-
-  - Adding the time dimension: converting paths into trajectories
-  - Polynomial and spline-based trajectory generation
-  - Model Predictive Control (MPC) formulation
-  - Pure Pursuit, Stanley, and PID lateral/longitudinal controllers
-
-- Complete the CARLA motion planning exercise from this lecture.
-- Read Chapter 4 of *Principles of Robot Motion* (Choset et al.)
-  for deeper coverage of sampling-based planners.
+- The next lecture covers **Motion Planning** (L10): planning
+  hierarchy, vehicle kinematic models, A* / Dijkstra / RRT / lattice
+  planners, collision detection, and diffusion-based planning. The
+  planner will consume the predictions you build here.
+- Read the MotionTransformer paper (Shi et al., NeurIPS 2023) for
+  deeper coverage of Transformer-based prediction.
+- The imitation-learning material that used to share this lecture
+  has moved to L12, where it sits alongside the rest of the
+  end-to-end / foundation-model treatment.

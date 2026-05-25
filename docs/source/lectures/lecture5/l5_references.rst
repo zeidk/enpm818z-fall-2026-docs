@@ -3,124 +3,125 @@ References
 ====================================================
 
 
-.. dropdown:: Semantic Segmentation
+.. dropdown:: Foundational BEV Papers
    :class-container: sd-border-secondary
    :open:
 
    .. grid:: 1 1 2 2
       :gutter: 2
 
-      .. grid-item-card:: U-Net
-         :link: https://arxiv.org/abs/1505.04597
+      .. grid-item-card:: Lift-Splat-Shoot (LSS)
+         :link: https://arxiv.org/abs/2008.05711
          :class-card: sd-border-secondary
 
-         **Ronneberger et al., MICCAI 2015**
+         **Philion & Fidler, NeurIPS 2020**
 
-         Encoder-decoder with skip connections. The foundational architecture
-         for dense prediction tasks.
+         Lifting image features into 3D space and splatting into a BEV grid.
+         The seminal camera-only BEV method.
 
-      .. grid-item-card:: DeepLabv3+
-         :link: https://arxiv.org/abs/1802.02611
+      .. grid-item-card:: BEVFormer
+         :link: https://arxiv.org/abs/2203.17270
          :class-card: sd-border-secondary
 
-         **Chen et al., ECCV 2018**
+         **Li et al., ECCV 2022**
 
-         Atrous convolutions and ASPP for multi-scale context. State-of-the-art
-         semantic segmentation architecture.
+         Learnable BEV queries with spatial cross-attention and temporal
+         self-attention. State-of-the-art camera-only BEV detection.
 
-      .. grid-item-card:: SegFormer
-         :link: https://arxiv.org/abs/2105.15203
+      .. grid-item-card:: DETR3D
+         :link: https://arxiv.org/abs/2110.06922
          :class-card: sd-border-secondary
 
-         **Xie et al., NeurIPS 2021**
+         **Wang et al., CoRL 2021**
 
-         Transformer-based segmentation with hierarchical feature extraction
-         and a lightweight MLP decoder head.
+         3D object detection from multi-camera images using set-to-set
+         prediction with 3D reference points and camera-based attention.
 
-      .. grid-item-card:: CLRNet (Lane Detection)
-         :link: https://arxiv.org/abs/2203.10350
+      .. grid-item-card:: BEVDet
+         :link: https://arxiv.org/abs/2112.11790
          :class-card: sd-border-secondary
 
-         **Zheng et al., CVPR 2022**
+         **Huang et al., 2021**
 
-         Cross Layer Refinement Network for accurate lane detection using
-         lane-specific prior and multi-scale feature fusion.
+         Adapts image backbones to BEV space using the LSS view transformer
+         with improved data augmentation strategies.
 
 
-.. dropdown:: Instance and Panoptic Segmentation
+.. dropdown:: 3D Occupancy Networks
    :class-container: sd-border-secondary
 
    .. grid:: 1 1 2 2
       :gutter: 2
 
-      .. grid-item-card:: Mask R-CNN
-         :link: https://arxiv.org/abs/1703.06870
+      .. grid-item-card:: MonoScene
+         :link: https://arxiv.org/abs/2112.00726
          :class-card: sd-border-secondary
 
-         **He et al., ICCV 2017**
+         **Cao & de Charette, CVPR 2022**
 
-         Extends Faster R-CNN with a mask prediction head. Foundation of
-         instance segmentation.
+         First semantic scene completion from a single monocular camera.
+         Introduced the camera-based occupancy prediction task.
 
-      .. grid-item-card:: Panoptic Segmentation
-         :link: https://arxiv.org/abs/1801.00868
+      .. grid-item-card:: TPVFormer
+         :link: https://arxiv.org/abs/2302.07817
          :class-card: sd-border-secondary
 
-         **Kirillov et al., CVPR 2019**
+         **Huang et al., CVPR 2023**
 
-         Defines the panoptic segmentation task and the PQ metric.
+         Tri-Perspective View representation for efficient 3D occupancy
+         prediction without full 3D voxel attention.
 
-      .. grid-item-card:: Panoptic-DeepLab
-         :link: https://arxiv.org/abs/1911.10194
+      .. grid-item-card:: Occ3D
+         :link: https://arxiv.org/abs/2304.14365
          :class-card: sd-border-secondary
 
-         **Cheng et al., CVPR 2020**
+         **Tian et al., NeurIPS 2023**
 
-         Bottom-up panoptic segmentation with semantic and instance
-         prediction branches.
+         Large-scale 3D occupancy benchmark on nuScenes and Waymo with
+         dense annotations and standardized evaluation.
+
+      .. grid-item-card:: OpenOccupancy
+         :link: https://arxiv.org/abs/2303.03991
+         :class-card: sd-border-secondary
+
+         **Wang et al., 2023**
+
+         Open-source occupancy prediction benchmark and augmented annotation
+         framework for nuScenes.
 
 
-.. dropdown:: Multi-Object Tracking
+.. dropdown:: Multi-Camera Fusion
    :class-container: sd-border-secondary
 
    .. grid:: 1 1 2 2
       :gutter: 2
 
-      .. grid-item-card:: SORT
-         :link: https://arxiv.org/abs/1602.00763
+      .. grid-item-card:: BEVFusion (MIT)
+         :link: https://arxiv.org/abs/2205.13542
          :class-card: sd-border-secondary
 
-         **Bewley et al., ICIP 2016**
+         **Liu et al., ICRA 2023**
 
-         Simple Online and Realtime Tracking using Kalman filter and
-         Hungarian algorithm. Runs at 260 Hz.
+         Efficient LiDAR-camera BEV fusion using a shared BEV feature space
+         with camera-to-BEV transformation.
 
-      .. grid-item-card:: DeepSORT
-         :link: https://arxiv.org/abs/1703.07402
+      .. grid-item-card:: BEVFusion (Nanjing)
+         :link: https://arxiv.org/abs/2205.13790
          :class-card: sd-border-secondary
 
-         **Wojke et al., ICIP 2017**
+         **Liang et al., NeurIPS 2022**
 
-         Extends SORT with a deep appearance descriptor for robust
-         re-identification after occlusion.
+         Multi-task multi-sensor fusion for 3D detection, segmentation,
+         and map prediction in BEV space.
 
-      .. grid-item-card:: ByteTrack
-         :link: https://arxiv.org/abs/2110.06864
+      .. grid-item-card:: Cross-View Transformers
+         :link: https://arxiv.org/abs/2205.02833
          :class-card: sd-border-secondary
 
-         **Zhang et al., ECCV 2022**
+         **Zhou & Krähenbühl, NeurIPS 2022**
 
-         Uses every detection including low-confidence ones for robust
-         tracking. State-of-the-art on MOT17.
-
-      .. grid-item-card:: StrongSORT
-         :link: https://arxiv.org/abs/2202.13514
-         :class-card: sd-border-secondary
-
-         **Du et al., 2022**
-
-         Enhanced SORT with better Kalman filter motion model and stronger
-         appearance features for improved performance.
+         Attention-based cross-view feature aggregation for BEV semantic
+         map prediction from surround cameras.
 
 
 .. dropdown:: Datasets and Benchmarks
@@ -129,45 +130,45 @@ References
    .. grid:: 1 1 2 2
       :gutter: 2
 
-      .. grid-item-card:: MOTChallenge
-         :link: https://motchallenge.net/
+      .. grid-item-card:: nuScenes Dataset
+         :link: https://www.nuscenes.org/
          :class-card: sd-border-secondary
 
-         **Benchmark for MOT evaluation**
+         **Caesar et al., CVPR 2020**
 
-         MOT17 and MOT20 datasets with standardized MOTA/IDF1 evaluation.
+         1000-scene dataset with 6-camera surround, LiDAR, RADAR, and
+         3D bounding box + tracking annotations.
 
          +++
 
-         - `Leaderboard <https://motchallenge.net/results/MOT17/>`_
+         - `Object Detection Leaderboard <https://nuscenes.org/object-det>`_
+         - `Occupancy Prediction Benchmark <https://github.com/nutonomy/nuscenes-devkit>`_
 
-      .. grid-item-card:: Cityscapes
-         :link: https://www.cityscapes-dataset.com/
+      .. grid-item-card:: Waymo Open Dataset
+         :link: https://waymo.com/open/
          :class-card: sd-border-secondary
 
-         **Cordts et al., CVPR 2016**
+         **Sun et al., CVPR 2020**
 
-         5000 finely annotated urban driving images for semantic and
-         instance segmentation benchmarking.
-
-      .. grid-item-card:: nuScenes Panoptic
-         :link: https://nuscenes.org/panoptic
-         :class-card: sd-border-secondary
-
-         **Fong et al., CVPR 2022**
-
-         Panoptic segmentation annotations for the nuScenes LiDAR point
-         clouds, enabling 3D panoptic benchmarking.
+         1,950 scenes with 5-camera, 5-LiDAR sensor setup and high-quality
+         3D annotations including occupancy flow.
 
 
-.. dropdown:: Survey Papers and Textbooks
+.. dropdown:: Industry Resources
    :class-container: sd-border-secondary
 
-   - Garcia-Garcia, A. et al. (2018). *A Survey on Deep Learning Techniques
-     for Image and Video Semantic Segmentation.* Applied Soft Computing.
-   - Luo, W. et al. (2021). *Multiple Object Tracking: A Literature Review.*
-     Artificial Intelligence, 293.
-   - Ciaparrone, G. et al. (2020). *Deep Learning in Video Multi-Object
-     Tracking: A Survey.* Neurocomputing, 381.
-   - HOTA metric: Luiten, J. et al. (2021). *HOTA: A Higher Order Metric for
-     Evaluating Multi-Object Tracking.* IJCV.
+   - `Tesla AI Day 2022 -- Occupancy Networks <https://youtu.be/ODSJsviD_SU>`_
+   - `Andrej Karpathy: Tesla Autopilot and Multi-Task Learning <https://www.youtube.com/watch?v=hx7BXih7zx8>`_
+   - `Waymo Research Blog -- Perception <https://waymo.com/research/>`_
+   - `nuScenes Detection Metric Definition <https://www.nuscenes.org/object-det>`_
+
+
+.. dropdown:: Textbooks and Survey Papers
+   :class-container: sd-border-secondary
+
+   - Ma, Y. et al. (2022). *Vision-Centric BEV Perception: A Survey.*
+     arXiv:2208.02797.
+   - Li, Z. et al. (2022). *Delving into the Devils of Bird's-Eye-View
+     Perception: A Review, Evaluation and Recipe.* IEEE TPAMI.
+   - Mao, J. et al. (2023). *A Survey on Occupancy Prediction for Autonomous
+     Driving.* arXiv:2305.07922.

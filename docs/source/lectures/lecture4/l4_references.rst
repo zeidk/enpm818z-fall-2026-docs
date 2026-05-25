@@ -3,172 +3,67 @@ References
 ====================================================
 
 
-.. dropdown:: Foundational BEV Papers
+.. dropdown:: Object Detection
    :class-container: sd-border-secondary
    :open:
 
-   .. grid:: 1 1 2 2
-      :gutter: 2
-
-      .. grid-item-card:: Lift-Splat-Shoot (LSS)
-         :link: https://arxiv.org/abs/2008.05711
-         :class-card: sd-border-secondary
-
-         **Philion & Fidler, NeurIPS 2020**
-
-         Lifting image features into 3D space and splatting into a BEV grid.
-         The seminal camera-only BEV method.
-
-      .. grid-item-card:: BEVFormer
-         :link: https://arxiv.org/abs/2203.17270
-         :class-card: sd-border-secondary
-
-         **Li et al., ECCV 2022**
-
-         Learnable BEV queries with spatial cross-attention and temporal
-         self-attention. State-of-the-art camera-only BEV detection.
-
-      .. grid-item-card:: DETR3D
-         :link: https://arxiv.org/abs/2110.06922
-         :class-card: sd-border-secondary
-
-         **Wang et al., CoRL 2021**
-
-         3D object detection from multi-camera images using set-to-set
-         prediction with 3D reference points and camera-based attention.
-
-      .. grid-item-card:: BEVDet
-         :link: https://arxiv.org/abs/2112.11790
-         :class-card: sd-border-secondary
-
-         **Huang et al., 2021**
-
-         Adapts image backbones to BEV space using the LSS view transformer
-         with improved data augmentation strategies.
+   - Redmon, J. et al. (2016). *You Only Look Once: Unified, Real-Time Object Detection.* CVPR.
+   - Redmon, J. & Farhadi, A. (2018). *YOLOv3: An Incremental Improvement.* arXiv:1804.02767.
+   - Bochkovskiy, A. et al. (2020). *YOLOv4: Optimal Speed and Accuracy of Object Detection.* arXiv:2004.10934.
+   - `Ultralytics YOLOv8 Documentation <https://docs.ultralytics.com/>`_
+   - Carion, N. et al. (2020). `End-to-End Object Detection with Transformers (DETR) <https://arxiv.org/abs/2005.12872>`_. ECCV.
+   - Zhu, X. et al. (2021). `Deformable DETR <https://arxiv.org/abs/2010.04159>`_. ICLR.
+   - Zhang, H. et al. (2023). `DINO: DETR with Improved DeNoising Anchor Boxes <https://arxiv.org/abs/2203.03605>`_. ICLR.
+   - Zhao, Y. et al. (2024). `RT-DETR: DETRs Beat YOLOs on Real-time Object Detection <https://arxiv.org/abs/2304.08069>`_.
 
 
-.. dropdown:: 3D Occupancy Networks
+.. dropdown:: Deep Learning Foundations
    :class-container: sd-border-secondary
 
-   .. grid:: 1 1 2 2
-      :gutter: 2
-
-      .. grid-item-card:: MonoScene
-         :link: https://arxiv.org/abs/2112.00726
-         :class-card: sd-border-secondary
-
-         **Cao & de Charette, CVPR 2022**
-
-         First semantic scene completion from a single monocular camera.
-         Introduced the camera-based occupancy prediction task.
-
-      .. grid-item-card:: TPVFormer
-         :link: https://arxiv.org/abs/2302.07817
-         :class-card: sd-border-secondary
-
-         **Huang et al., CVPR 2023**
-
-         Tri-Perspective View representation for efficient 3D occupancy
-         prediction without full 3D voxel attention.
-
-      .. grid-item-card:: Occ3D
-         :link: https://arxiv.org/abs/2304.14365
-         :class-card: sd-border-secondary
-
-         **Tian et al., NeurIPS 2023**
-
-         Large-scale 3D occupancy benchmark on nuScenes and Waymo with
-         dense annotations and standardized evaluation.
-
-      .. grid-item-card:: OpenOccupancy
-         :link: https://arxiv.org/abs/2303.03991
-         :class-card: sd-border-secondary
-
-         **Wang et al., 2023**
-
-         Open-source occupancy prediction benchmark and augmented annotation
-         framework for nuScenes.
+   - Krizhevsky, A. et al. (2012). *ImageNet Classification with Deep Convolutional Neural Networks (AlexNet).* NeurIPS.
+   - Simonyan, K. & Zisserman, A. (2015). *Very Deep Convolutional Networks for Large-Scale Image Recognition (VGGNet).* ICLR.
+   - He, K. et al. (2016). *Deep Residual Learning for Image Recognition (ResNet).* CVPR.
+   - Vaswani, A. et al. (2017). `Attention Is All You Need <https://arxiv.org/abs/1706.03762>`_. NeurIPS.
+   - Dosovitskiy, A. et al. (2021). `An Image Is Worth 16x16 Words: Transformers for Image Recognition (ViT) <https://arxiv.org/abs/2010.11929>`_. ICLR.
 
 
-.. dropdown:: Multi-Camera Fusion
+.. dropdown:: Segmentation and Tracking
    :class-container: sd-border-secondary
 
-   .. grid:: 1 1 2 2
-      :gutter: 2
-
-      .. grid-item-card:: BEVFusion (MIT)
-         :link: https://arxiv.org/abs/2205.13542
-         :class-card: sd-border-secondary
-
-         **Liu et al., ICRA 2023**
-
-         Efficient LiDAR-camera BEV fusion using a shared BEV feature space
-         with camera-to-BEV transformation.
-
-      .. grid-item-card:: BEVFusion (Nanjing)
-         :link: https://arxiv.org/abs/2205.13790
-         :class-card: sd-border-secondary
-
-         **Liang et al., NeurIPS 2022**
-
-         Multi-task multi-sensor fusion for 3D detection, segmentation,
-         and map prediction in BEV space.
-
-      .. grid-item-card:: Cross-View Transformers
-         :link: https://arxiv.org/abs/2205.02833
-         :class-card: sd-border-secondary
-
-         **Zhou & Krähenbühl, NeurIPS 2022**
-
-         Attention-based cross-view feature aggregation for BEV semantic
-         map prediction from surround cameras.
+   - Long, J. et al. (2015). *Fully Convolutional Networks for Semantic Segmentation (FCN).* CVPR.
+   - Ronneberger, O. et al. (2015). *U-Net: Convolutional Networks for Biomedical Image Segmentation.* MICCAI.
+   - He, K. et al. (2017). *Mask R-CNN.* ICCV.
+   - Chen, L.-C. et al. (2018). *DeepLab: Semantic Image Segmentation with Deep Convolutional Nets, Atrous Convolution, and Fully Connected CRFs.* IEEE TPAMI.
+   - Wojke, N. et al. (2017). *Simple Online and Realtime Tracking with a Deep Association Metric (DeepSORT).* ICIP.
+   - Zhang, Y. et al. (2022). *ByteTrack: Multi-Object Tracking by Associating Every Detection Box.* ECCV.
 
 
 .. dropdown:: Datasets and Benchmarks
    :class-container: sd-border-secondary
 
-   .. grid:: 1 1 2 2
-      :gutter: 2
-
-      .. grid-item-card:: nuScenes Dataset
-         :link: https://www.nuscenes.org/
-         :class-card: sd-border-secondary
-
-         **Caesar et al., CVPR 2020**
-
-         1000-scene dataset with 6-camera surround, LiDAR, RADAR, and
-         3D bounding box + tracking annotations.
-
-         +++
-
-         - `Object Detection Leaderboard <https://nuscenes.org/object-det>`_
-         - `Occupancy Prediction Benchmark <https://github.com/nutonomy/nuscenes-devkit>`_
-
-      .. grid-item-card:: Waymo Open Dataset
-         :link: https://waymo.com/open/
-         :class-card: sd-border-secondary
-
-         **Sun et al., CVPR 2020**
-
-         1,950 scenes with 5-camera, 5-LiDAR sensor setup and high-quality
-         3D annotations including occupancy flow.
+   - `COCO Dataset <https://cocodataset.org/>`_ -- 330K images, 80 object categories.
+   - `ImageNet <https://www.image-net.org/>`_ -- 14M images, 1000 classes.
+   - `KITTI Vision Benchmark <https://www.cvlibs.net/datasets/kitti/>`_ -- Autonomous driving benchmark.
+   - `nuScenes <https://www.nuscenes.org/>`_ -- 1000 driving scenes, 3D annotations.
+   - `Cityscapes <https://www.cityscapes-dataset.com/>`_ -- Urban scene understanding.
+   - `Waymo Open Dataset <https://waymo.com/open/>`_ -- Large-scale driving dataset.
 
 
-.. dropdown:: Industry Resources
+.. dropdown:: Tools and Frameworks
    :class-container: sd-border-secondary
 
-   - `Tesla AI Day 2022 -- Occupancy Networks <https://youtu.be/ODSJsviD_SU>`_
-   - `Andrej Karpathy: Tesla Autopilot and Multi-Task Learning <https://www.youtube.com/watch?v=hx7BXih7zx8>`_
-   - `Waymo Research Blog -- Perception <https://waymo.com/research/>`_
-   - `nuScenes Detection Metric Definition <https://www.nuscenes.org/object-det>`_
+   - `Ultralytics (YOLOv8) <https://docs.ultralytics.com/>`_
+   - `Hugging Face Transformers <https://huggingface.co/docs/transformers/>`_ -- DETR models.
+   - `NVIDIA TensorRT <https://developer.nvidia.com/tensorrt>`_ -- Inference optimization.
+   - `ONNX Runtime <https://onnxruntime.ai/>`_ -- Cross-platform inference.
+   - `CVAT <https://www.cvat.ai/>`_ -- Annotation tool.
+   - `Roboflow <https://roboflow.com/>`_ -- Dataset management and augmentation.
+   - `ROS 2 vision_msgs <https://github.com/ros-perception/vision_msgs>`_ -- Standard detection messages.
 
 
-.. dropdown:: Textbooks and Survey Papers
+.. dropdown:: Textbooks
    :class-container: sd-border-secondary
 
-   - Ma, Y. et al. (2022). *Vision-Centric BEV Perception: A Survey.*
-     arXiv:2208.02797.
-   - Li, Z. et al. (2022). *Delving into the Devils of Bird's-Eye-View
-     Perception: A Review, Evaluation and Recipe.* IEEE TPAMI.
-   - Mao, J. et al. (2023). *A Survey on Occupancy Prediction for Autonomous
-     Driving.* arXiv:2305.07922.
+   - Goodfellow, I., Bengio, Y., & Courville, A. (2016). *Deep Learning.* MIT Press.
+   - Szeliski, R. (2022). *Computer Vision: Algorithms and Applications (2nd Edition).* Springer.
+   - Prince, S. (2023). *Understanding Deep Learning.* MIT Press.

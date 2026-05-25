@@ -546,6 +546,124 @@ Mitigation strategies include:
        # collect_episode(world, duration_seconds=60)
 
 
+Imitation Learning
+------------------
+
+Imitation learning trains a policy to mimic expert (human driver)
+behavior from logged demonstrations. It is the most direct way to
+distil human driving skill into the kinds of end-to-end networks
+covered earlier in this lecture.
+
+.. dropdown:: Behavior Cloning
+
+   **Behavior cloning (BC)** is the simplest imitation learning
+   algorithm: treat demonstrations as a supervised learning dataset.
+
+   Given a dataset of expert state-action pairs
+   :math:`\mathcal{D} = \{(s_i, a_i^*)\}_{i=1}^{N}` collected
+   from human drivers:
+
+   .. math::
+
+      \min_\theta \; \mathbb{E}_{(s,a^*) \sim \mathcal{D}}
+      \left[ \mathcal{L}(\pi_\theta(s), a^*) \right]
+
+   where :math:`\mathcal{L}` is a regression loss (e.g., MSE for
+   continuous actions) or cross-entropy for discrete maneuver
+   classification.
+
+   **BC pipeline:**
+
+   .. code-block:: text
+
+      1. Collect expert demonstrations: (obs_t, action_t) pairs
+      2. Train policy network: obs -> action
+      3. Deploy: at each step, feed current obs and execute action
+
+.. dropdown:: Distribution Shift: The Key Failure Mode
+
+   The fundamental problem with behavior cloning is
+   **distribution shift** (also called covariate shift).
+
+   During training, the policy sees states from the expert's
+   distribution :math:`d_{\pi^*}`. During deployment, the policy's
+   own actions cause it to visit states in :math:`d_{\pi_\theta}`,
+   which may be far from :math:`d_{\pi^*}`.
+
+   **Compounding error:** Small deviations from the expert
+   trajectory accumulate over time, driving the policy into
+   states never seen during training. The policy has no
+   supervision signal for recovery from these states.
+
+   .. admonition:: Compounding Error Formula
+      :class: warning
+
+      For a policy with per-step error :math:`\epsilon`:
+
+      .. math::
+
+         \text{Total error after } T \text{ steps} = O(\epsilon T^2)
+
+      Errors compound **quadratically** in time horizon --
+      a fundamental limitation of open-loop behavior cloning.
+
+
+DAgger: Dataset Aggregation
+----------------------------
+
+DAgger (Ross et al., ICML 2011) addresses distribution shift
+by iteratively augmenting the training dataset with states
+visited by the learned policy.
+
+.. dropdown:: Algorithm
+
+   .. code-block:: text
+
+      Initialize: D = {} (empty dataset), pi_1 = any policy
+      For iteration i = 1, 2, ..., N:
+          1. Roll out policy pi_i in the environment
+             (or simulator) to collect trajectory states {s_t}
+          2. Query the expert at each visited state: a*_t = pi*(s_t)
+          3. Add {(s_t, a*_t)} to D
+          4. Train policy pi_{i+1} on the full aggregated D
+      Return: best pi_i on validation
+
+.. dropdown:: Why DAgger Works
+
+   DAgger ensures the training distribution converges to the
+   deployment distribution.
+
+   - After :math:`n` iterations, the training dataset contains
+     states sampled from the policies
+     :math:`\pi_1, \pi_2, \ldots, \pi_n`.
+   - As the policy improves, the states it visits converge toward
+     the expert's states.
+   - In the limit, the training distribution matches the
+     deployment distribution and compounding errors vanish.
+
+   **DAgger guarantees** (Ross et al., 2011): Under mild
+   conditions, DAgger reduces the per-step regret to
+   :math:`O(\epsilon)` (linear) compared to BC's
+   :math:`O(\epsilon T^2)` (quadratic).
+
+.. dropdown:: Practical Considerations
+
+   .. list-table::
+      :header-rows: 1
+      :widths: 30 70
+
+      * - Challenge
+        - Solution
+      * - Expert query cost
+        - Use simulator with scripted expert; reserve human feedback for hard cases
+      * - Safety during rollout
+        - Run in simulation (CARLA); use safety fallback controller
+      * - Dataset size
+        - Prioritize states with high policy uncertainty (active DAgger)
+      * - Convergence
+        - Monitor validation loss across iterations; stop when plateaued
+
+
 Where the Industry Is Heading
 ------------------------------
 

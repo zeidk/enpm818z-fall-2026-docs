@@ -1,35 +1,37 @@
-================================================================
-L4: Perception II -- BEV Perception & Occupancy Networks
-================================================================
+====================================================
+L4: Perception I -- Object Detection (YOLO to DETR)
+====================================================
 
 Overview
 --------
 
-This lecture extends the perception pipeline from L3 into the Bird's-Eye View
-(BEV) representation, explaining why top-down spatial maps are better suited
-for downstream planning and multi-sensor fusion. You will study two landmark
-architectures -- Lift-Splat-Shoot (LSS) and BEVFormer -- and then progress
-to 3D Occupancy Networks, which replace object bounding boxes with dense,
-per-voxel semantic predictions of the complete scene.
+This lecture covers the foundations of visual perception for autonomous driving,
+progressing from traditional computer vision to modern deep learning approaches.
+You will learn how perception fits into the AV stack, understand the taxonomy
+of perception tasks, and study two landmark object detection architectures:
+YOLO (CNN-based) and DETR (transformer-based). The lecture concludes with a
+hands-on comparison of both models on CARLA data.
+
 
 Learning Objectives
 -------------------
 
 By the end of this lecture, you will be able to:
 
-- Explain why BEV is a preferred representation for autonomous driving
-  planning and multi-sensor fusion.
-- Describe the Lift-Splat-Shoot (LSS) pipeline for camera-to-BEV projection
-  including depth estimation, voxel pooling, and BEV feature extraction.
-- Explain BEVFormer's learnable BEV queries, spatial cross-attention, and
-  temporal self-attention mechanisms.
-- Compare 2D perspective detection, BEV detection, and 3D occupancy prediction
-  in terms of representational power and planning utility.
-- Define 3D occupancy networks and explain per-voxel semantic prediction.
-- Describe how multi-camera views are fused in BEV space.
-- Summarize how Tesla and other industry players adopt BEV perception.
-- Interpret nuScenes benchmark metrics (mAP, NDS) in the context of modern
-  BEV methods.
+- Define perception and explain its role in the AV stack (sensing ->
+  perception -> planning -> control).
+- Describe the taxonomy of perception tasks: low-level processing, mid-level
+  understanding, and high-level reasoning.
+- Explain why traditional CV methods (HOG, SIFT) failed for robust AV
+  perception and how deep learning changed the field.
+- Trace the YOLO architecture evolution from v1 (2015) to v11 (2024).
+- Explain the backbone-neck-head architecture and the difference between
+  anchor-based and anchor-free detection.
+- Describe the DETR architecture: encoder-decoder transformer, object queries,
+  and bipartite matching.
+- Compare YOLO and DETR on speed, accuracy, and failure modes.
+- Train and deploy an object detector on CARLA data as a ROS 2 node.
+
 
 .. toctree::
    :hidden:
@@ -41,14 +43,19 @@ By the end of this lecture, you will be able to:
    l4_quiz
    l4_references
 
+
 Next Steps
 ----------
 
-- The next lecture covers **Perception III -- Segmentation, Tracking & Temporal
-  Reasoning**: semantic, instance, and panoptic segmentation; multi-object
-  tracking (SORT, DeepSORT, ByteTrack); and using temporal context to improve
-  perception quality.
-- Review the BEVFormer paper: Li et al. (2022) ``BEVFormer: Learning Bird's-Eye-View
-  Representation from Multi-Camera Images via Spatiotemporal Transformers.``
-- Explore the `nuScenes leaderboard <https://nuscenes.org/object-det>`_ to see
-  where current BEV methods rank in 3D object detection.
+- In the next lecture, we will cover **Perception II: BEV, Occupancy
+  & Segmentation**:
+
+  - Bird's-Eye View representation and why it matters for AV planning.
+  - BEVFormer and camera-to-BEV projection.
+  - 3D occupancy networks.
+  - Semantic segmentation (U-Net, DeepLabv3+) for driveable surface
+    and lane detection.
+
+- Start working on **A2: Object Detection -- YOLO vs. DETR** (posted Week 6).
+- Read the `Ultralytics YOLOv8 documentation <https://docs.ultralytics.com/>`_.
+- Read the `DETR paper <https://arxiv.org/abs/2005.12872>`_ (Carion et al., 2020).

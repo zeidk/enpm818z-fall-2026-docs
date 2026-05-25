@@ -30,35 +30,35 @@ Schedule
      - Sensor Technologies & Calibration
      - Camera, LiDAR, RADAR, IMU, GNSS; intrinsic/extrinsic calibration; sensor placement and complementarity
    * - L3
+     - Probabilistic State Estimation & Fusion
+     - Kalman Filter, EKF, UKF, particle filters; fusion architectures (early/intermediate/late); data association; weighted averaging / inverse-variance weighting
+   * - L4
      - Perception I: Object Detection (YOLO to DETR)
      - CNN fundamentals, YOLO architecture, transformer attention mechanism, DETR (encoder-decoder, object queries, bipartite matching), YOLO vs. DETR comparison, industrial perception architectures, deployment
-   * - L4
-     - Perception II: BEV Perception & Occupancy Networks
-     - Bird's-Eye View representation, BEVFormer, camera-to-BEV projection, 3D occupancy grids, modern AV perception paradigm
    * - L5
-     - Perception III: Segmentation, Tracking & Temporal Reasoning
-     - Semantic segmentation (U-Net, DeepLab), driveable surface and lane detection, multi-object tracking (SORT, DeepSORT), temporal fusion
+     - Perception II: BEV, Occupancy & Segmentation
+     - Bird's-Eye View representation, BEVFormer, camera-to-BEV projection (LSS), 3D occupancy networks, semantic / instance / panoptic segmentation (DeepLabv3+, Mask R-CNN, PQ), driveable surface & lane detection
    * - L6
-     - Multi-Sensor Fusion
-     - Fusion architectures (early, intermediate, late), Kalman Filter, EKF, UKF, particle filters, cross-attention fusion, data association, uncertainty quantification
+     - Perception III: Tracking, Temporal & Deep Fusion
+     - Multi-object tracking (SORT, DeepSORT, ByteTrack), tracking metrics (MOTA, IDF1, HOTA), temporal reasoning, cross-attention / BEVFusion deep-learning fusion
    * - L7
      - Localization & SLAM
-     - GNSS/RTK, dead reckoning, visual/LiDAR odometry, probabilistic localization, SLAM frontend (ICP, feature extraction), SLAM backend (pose graphs, loop closure)
+     - GNSS/RTK, dead reckoning, visual/LiDAR odometry, probabilistic localization (EKF from L3), SLAM frontend (ICP, feature extraction), SLAM backend (pose graphs, loop closure)
    * - L8
      - Navigation & Route Planning
      - Road network graphs, OpenDRIVE/Lanelet2 maps, HD maps, global route planning (Dijkstra, A*), lane-level routing, dynamic rerouting, CARLA GlobalRoutePlanner
    * - L9
-     - Motion Planning
-     - Planning hierarchy, vehicle kinematic models, A*, Dijkstra, RRT, PRM, lattice planners, collision detection, diffusion-based planning
+     - Prediction & Behavior Modeling
+     - Trajectory prediction (physics-based, maneuver-based, interaction-aware, Transformer-based), multi-modal prediction, behavior planning, FSM, rule-based vs learned decision-making
    * - L10
-     - Trajectory Planning & Control
-     - Path vs. trajectory, polynomial and spline generation, optimization-based planning, MPC, Pure Pursuit, Stanley controller, real-time replanning
+     - Motion Planning
+     - Planning hierarchy, vehicle kinematic models, A*, Dijkstra, RRT, PRM, lattice planners, collision detection, diffusion-based planning (consumes L9 predictions)
    * - L11
-     - Prediction & Decision-Making
-     - Trajectory prediction (transformer-based), behavior planning, state machines, imitation learning (behavior cloning), practical decision-making in traffic
+     - Trajectory Generation & Control
+     - Path vs. trajectory, polynomial and spline generation, optimization-based planning, MPC, Pure Pursuit, Stanley controller, real-time replanning
    * - L12
-     - End-to-End Driving & Foundation Models
-     - UniAD, DriveTransformer, Vision-Language-Action (VLA) models, DriveVLM, modular vs. end-to-end debate
+     - End-to-End Driving, VLA & Imitation Learning
+     - UniAD, DriveTransformer, Vision-Language-Action (VLA) models, DriveVLM, modular vs. end-to-end debate, behavior cloning, distribution shift, DAgger
    * - L13
      - World Models & Simulation
      - Learned simulators, video prediction transformers, GAIA-3, NVIDIA Cosmos, Vista, generative scenario generation, data augmentation

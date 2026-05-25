@@ -2,11 +2,11 @@
 Quiz
 ====================================================
 
-This quiz covers the key concepts from Lecture 3: Perception I -- Object
-Detection (YOLO to DETR). Topics include the role of perception in the AV
-stack, perception taxonomy, the deep learning revolution, YOLO architecture
-and evolution, DETR and transformer-based detection, and the comparison
-between CNN-based and transformer-based approaches.
+This quiz covers the key concepts from Lecture 3: Probabilistic State
+Estimation & Fusion. Topics include the motivation for sensor fusion,
+fusion architectures (early, intermediate, late), Kalman filter
+predict/update equations, Kalman gain, EKF, UKF, particle filter,
+filter comparison, data association, and inverse-variance weighting.
 
 .. note::
 
@@ -22,572 +22,464 @@ between CNN-based and transformer-based approaches.
 ----
 
 
-Multiple Choice (Questions 1-15)
+Multiple Choice (Questions 1-10)
 =================================
 
 .. admonition:: Question 1
    :class: hint
 
-   What is the primary role of perception in the AV stack?
+   A camera detects traffic light color while LiDAR measures precise distance
+   to the traffic light pole. This sensor combination exemplifies which type
+   of sensor relationship?
 
-   A. To control the vehicle's steering and throttle.
+   A. Competitive (redundant)
 
-   B. To transform raw sensor data into a structured, semantic understanding
-      of the environment.
+   B. Cooperative
 
-   C. To plan the vehicle's trajectory through an intersection.
+   C. Complementary
 
-   D. To calibrate sensors before each drive.
+   D. Adversarial
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- To transform raw sensor data into a structured, semantic
-   understanding of the environment.
+   **C** -- Complementary
 
-   Perception bridges sensing (raw data acquisition) and planning (decision-
-   making). It converts unstructured sensor data into structured outputs
-   like detected objects, lane geometry, and free space.
+   Complementary sensors measure different physical phenomena, and their
+   combination provides information that neither can provide alone. Here,
+   the camera provides color/semantic information (which light is active)
+   while LiDAR provides precise range -- a combination that enables both
+   detection and accurate localization of the traffic light.
 
 
 .. admonition:: Question 2
    :class: hint
 
-   Which perception task assigns a **unique ID and pixel mask** to each
-   individual object in the scene?
+   Which fusion architecture processes sensor data from each modality
+   independently through its own feature extractor and then combines the
+   extracted features in a shared representation space?
 
-   A. Semantic segmentation
+   A. Early fusion (raw data level)
 
-   B. Object detection
+   B. Intermediate fusion (feature-level)
 
-   C. Instance segmentation
+   C. Late fusion (decision level)
 
-   D. Panoptic segmentation
+   D. Cascade fusion
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- Instance segmentation
+   **B** -- Intermediate fusion (feature-level)
 
-   Instance segmentation gives each object a unique ID and pixel-level mask.
-   Semantic segmentation labels all pixels by class (but doesn't distinguish
-   individual objects). Panoptic segmentation combines both.
+   In intermediate (feature-level) fusion, each sensor modality processes
+   its raw data through its own backbone network to extract features. The
+   extracted features are then fused in a shared space (e.g., a BEV grid
+   where both camera and LiDAR BEV features are concatenated or combined
+   via attention). This balances information richness with computational
+   efficiency.
 
 
 .. admonition:: Question 3
    :class: hint
 
-   What was the key innovation of YOLO v1 (2015) compared to two-stage
-   detectors like Faster R-CNN?
+   In the Kalman Filter **predict** step, what happens to the uncertainty
+   (covariance matrix P) when no new measurement is received?
 
-   A. It used a transformer encoder.
+   A. P decreases because the filter becomes more confident about the state.
 
-   B. It framed detection as a single regression problem -- one forward
-      pass predicts all bounding boxes and classes.
+   B. P stays constant because no new information has been added.
 
-   C. It used anchor-free detection.
+   C. P increases because the process noise (Q) is added, reflecting growing
+      uncertainty about the state over time.
 
-   D. It eliminated the need for training data.
+   D. P is reset to zero because the previous estimate is discarded.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- It framed detection as a single regression problem -- one
-   forward pass predicts all bounding boxes and classes.
+   **C** -- P increases because the process noise (Q) is added, reflecting
+   growing uncertainty about the state over time.
 
-   Two-stage detectors (Faster R-CNN) first propose regions, then classify
-   them. YOLO processes the entire image in a single pass, making it
-   dramatically faster and enabling real-time detection.
+   The predict step propagates uncertainty: :math:`P_{k|k-1} = F P_{k-1} F^T + Q`.
+   The process noise covariance Q is always added, representing uncertainty
+   from unmodeled dynamics, actuator noise, and disturbances. Without
+   measurements, the filter's state estimate becomes progressively less
+   certain.
 
 
 .. admonition:: Question 4
    :class: hint
 
-   In YOLO's backbone-neck-head architecture, what is the role of the
-   **neck** (e.g., FPN + PAN)?
+   The **Kalman Gain** :math:`K_k` approaches zero when:
 
-   A. Extract features from the raw image.
+   A. The measurement noise covariance R is very small (accurate sensor).
 
-   B. Fuse features across multiple scales to detect objects of different
-      sizes.
+   B. The prior covariance P is very large (uncertain prediction).
 
-   C. Produce the final bounding box predictions.
+   C. The measurement noise covariance R is very large (noisy sensor) OR the
+      prior covariance P is very small (confident prediction).
 
-   D. Apply non-maximum suppression.
+   D. The state transition matrix F is the identity matrix.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Fuse features across multiple scales to detect objects of
-   different sizes.
+   **C** -- The measurement noise covariance R is very large (noisy sensor)
+   OR the prior covariance P is very small (confident prediction).
 
-   The neck combines high-resolution features (good for small objects) with
-   semantically rich features (good for large objects) through FPN (top-down)
-   and PAN (bottom-up) pathways. Output scales: 80x80, 40x40, 20x20.
+   K ≈ P / (P + R). When R >> P, K → 0: the measurement is too noisy to
+   be useful, so the filter trusts the prediction. When P << R, K → 0 for
+   the same reason: the prediction is already very accurate. Conversely,
+   when R << P (accurate sensor, uncertain prediction), K is large and the
+   update aggressively corrects the prediction.
 
 
 .. admonition:: Question 5
    :class: hint
 
-   Starting from YOLOv8, what major architectural change was introduced?
+   What is the key innovation of the **Extended Kalman Filter (EKF)** compared
+   to the standard Kalman Filter?
 
-   A. Switching from CNN to transformer backbone.
+   A. It uses sigma points to propagate uncertainty through nonlinear functions.
 
-   B. Anchor-free detection with a decoupled head.
+   B. It represents the posterior as a set of weighted particles.
 
-   C. Removing the neck entirely.
+   C. It linearizes nonlinear process and measurement functions using their
+      Jacobian matrices at the current state estimate.
 
-   D. Using only a single detection scale.
+   D. It eliminates the need for a process model by using only measurements.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Anchor-free detection with a decoupled head.
+   **C** -- It linearizes nonlinear process and measurement functions using
+   their Jacobian matrices at the current state estimate.
 
-   YOLOv8 eliminated predefined anchor boxes, instead directly predicting
-   (x,y,w,h) with separate (decoupled) branches for classification and
-   localization. This simplifies the architecture and improves flexibility.
+   The EKF replaces F and H in the standard KF with the Jacobians
+   ∂f/∂x and ∂h/∂x evaluated at the current estimate. The state
+   propagation itself uses the full nonlinear function f(x), but the
+   covariance propagation uses the linearized Jacobian. This is the
+   first-order approximation to the true nonlinear transform.
 
 
 .. admonition:: Question 6
    :class: hint
 
-   What does DETR use instead of anchor boxes and NMS?
+   The **Unscented Kalman Filter (UKF)** propagates uncertainty through
+   nonlinear functions by:
 
-   A. Region proposals and selective search.
+   A. Computing the Jacobian and applying first-order Taylor expansion.
 
-   B. Learned object queries and bipartite matching via the Hungarian
-      algorithm.
+   B. Drawing random Monte Carlo samples from the prior distribution.
 
-   C. Grid cells with fixed aspect ratios.
+   C. Selecting 2n+1 deterministic sigma points that capture the prior mean
+      and covariance, propagating them through the nonlinear function, and
+      computing the posterior as a weighted mean of the results.
 
-   D. K-means clustering of bounding boxes.
+   D. Using a lookup table of precomputed linearizations.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Learned object queries and bipartite matching via the Hungarian
-   algorithm.
+   **C** -- Selecting 2n+1 deterministic sigma points that capture the prior
+   mean and covariance, propagating them through the nonlinear function, and
+   computing the posterior as a weighted mean of the results.
 
-   DETR uses N learned object queries (e.g., 100) that attend to image
-   features via cross-attention. During training, the Hungarian algorithm
-   finds the optimal one-to-one assignment between predictions and ground
-   truth, eliminating duplicate detections without NMS.
+   The UKF uses the "unscented transform" to exactly compute the mean and
+   covariance of a nonlinear function applied to a Gaussian distribution,
+   accurate to second-order. Unlike the EKF, no Jacobian is required -- only
+   function evaluations at the sigma points.
 
 
 .. admonition:: Question 7
    :class: hint
 
-   What is the key advantage of DETR's transformer encoder over a CNN?
+   A **Particle Filter** is most appropriate when:
 
-   A. It processes images faster than any CNN.
+   A. The system has linear dynamics and Gaussian noise.
 
-   B. It captures **global context** -- every position attends to all other
-      positions via self-attention.
+   B. The posterior distribution is multi-modal (e.g., multiple possible
+      positions) and/or the noise is non-Gaussian.
 
-   C. It uses less GPU memory.
+   C. Low compute budget requires a fast, closed-form filter.
 
-   D. It does not require any training data.
+   D. The state dimension is very high (hundreds of variables).
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- It captures global context -- every position attends to all
-   other positions via self-attention.
+   **B** -- The posterior distribution is multi-modal (e.g., multiple possible
+   positions) and/or the noise is non-Gaussian.
 
-   CNNs have a limited receptive field determined by kernel size and depth.
-   Transformers use self-attention to model relationships between all spatial
-   positions simultaneously, enabling global reasoning from the first layer.
+   Particle filters approximate the posterior as a weighted set of samples,
+   which can represent any distribution including multi-modal ones. Classic
+   use case: robot localization when the robot is initially uncertain about
+   which room it is in -- the particle filter maintains hypotheses across
+   multiple rooms until sensor evidence resolves the ambiguity.
 
 
 .. admonition:: Question 8
    :class: hint
 
-   What problem does **Deformable DETR** solve compared to the original
-   DETR?
+   In the **data association problem**, the **Mahalanobis distance** is
+   preferred over Euclidean distance because it:
 
-   A. It adds anchor boxes back to the architecture.
+   A. Is faster to compute than Euclidean distance.
 
-   B. It uses deformable attention to attend to sparse key positions,
-      achieving 10x faster convergence and better small object detection.
+   B. Accounts for the uncertainty (covariance) of the predicted track
+      position, so that a measurement far in a poorly-constrained direction
+      is not over-penalized.
 
-   C. It replaces the transformer with a CNN.
+   C. Is always smaller than the Euclidean distance.
 
-   D. It removes the bipartite matching loss.
+   D. Does not require knowledge of the measurement noise covariance R.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- It uses deformable attention to attend to sparse key positions,
-   achieving 10x faster convergence and better small object detection.
+   **B** -- Accounts for the uncertainty (covariance) of the predicted track
+   position, so that a measurement far in a poorly-constrained direction
+   is not over-penalized.
 
-   Original DETR attends to all positions (quadratic cost) and converges
-   slowly (500 epochs). Deformable DETR samples a small set of key
-   positions around a reference point, dramatically reducing computation
-   and improving performance on small objects.
+   Mahalanobis distance: d_M = sqrt((z - z_pred)^T S^-1 (z - z_pred))
+   where S is the innovation covariance (= HPH^T + R). It scales the
+   distance by the inverse of the prediction uncertainty -- a measurement
+   that is 3 m away in a direction where the prediction variance is 9 m^2
+   is treated very differently from one that is 3 m away in a direction
+   with variance 0.01 m^2.
 
 
 .. admonition:: Question 9
    :class: hint
 
-   What is **mAP@0.5:0.95** and why is it a stricter metric than
-   mAP@0.5?
+   Two independent range sensors measure the distance to an obstacle:
+   Sensor A gives 10.0 m with variance 0.25 m², Sensor B gives 10.4 m with
+   variance 1.0 m². What is the **inverse-variance weighted** fused estimate?
 
-   A. It measures speed at different batch sizes.
+   A. 10.20 m (simple average)
 
-   B. It averages precision across IoU thresholds from 0.5 to 0.95,
-      requiring tighter bounding box alignment.
+   B. 10.10 m
 
-   C. It counts only detections with confidence above 0.95.
+   C. 10.32 m
 
-   D. It measures recall at 50% to 95% thresholds.
+   D. 10.08 m
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- It averages precision across IoU thresholds from 0.5 to 0.95,
-   requiring tighter bounding box alignment.
+   **B** -- 10.10 m
 
-   mAP@0.5 only requires 50% overlap between predicted and ground truth
-   boxes. mAP@0.5:0.95 averages across thresholds (0.5, 0.55, ..., 0.95),
-   penalizing imprecise localization. It is the primary COCO benchmark.
+   Weights: w_A = 1/0.25 = 4, w_B = 1/1.0 = 1.
+   Fused = (4 * 10.0 + 1 * 10.4) / (4 + 1) = (40.0 + 10.4) / 5 = 50.4 / 5
+   = **10.08 m** (closest to B among given choices; exact answer 10.08 m).
+
+   Note: The exact answer is 10.08 m. The fused estimate is pulled strongly
+   toward Sensor A (lower variance = higher weight = 80% contribution).
 
 
 .. admonition:: Question 10
    :class: hint
 
-   Which YOLO loss component penalizes the overlap, center distance, and
-   aspect ratio between predicted and ground truth boxes simultaneously?
+   In **BEVFusion**'s cross-attention fusion, what role do the LiDAR BEV
+   features play in the attention mechanism?
 
-   A. Binary cross-entropy loss.
+   A. They serve as Values (V) -- providing the content that is read out.
 
-   B. Mean squared error loss.
+   B. They serve as Queries (Q) -- asking "what camera features are relevant
+      to this spatial location?"
 
-   C. CIoU (Complete Intersection over Union) loss.
+   C. They serve as Keys (K) -- indexing which camera features to attend to.
 
-   D. Focal loss.
+   D. They are not used in the attention; only camera features are fused.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- CIoU (Complete Intersection over Union) loss.
+   **B** -- They serve as Queries (Q) -- asking "what camera features are
+   relevant to this spatial location?"
 
-   CIoU combines IoU with penalties for center point distance and aspect
-   ratio difference, providing a more informative gradient signal than
-   simple IoU or L1/L2 losses for bounding box regression.
+   In cross-attention fusion: LiDAR BEV features → Q (queries); Camera BEV
+   features → K (keys) and V (values). The LiDAR features "query" the
+   camera features: for each LiDAR BEV cell (which knows geometry), the
+   attention mechanism selectively retrieves relevant semantic information
+   from the camera BEV. This is directional fusion where geometry guides
+   semantic information retrieval.
 
+
+----
+
+
+True or False (Questions 11-15)
+================================
 
 .. admonition:: Question 11
    :class: hint
 
-   Why did traditional CV methods (HOG + SVM, SIFT) fail for robust AV
-   perception?
-
-   A. They were too computationally expensive.
-
-   B. They required manual feature engineering, were fragile to appearance
-      variation, and could not generalize across diverse conditions.
-
-   C. They only worked with LiDAR data.
-
-   D. They achieved higher accuracy than deep learning.
+   **True or False:** RADAR is robust to rain and fog conditions that
+   significantly degrade camera and LiDAR performance, making it an
+   essential complementary sensor for adverse weather driving.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- They required manual feature engineering, were fragile to
-   appearance variation, and could not generalize across diverse conditions.
+   **True**
 
-   Hand-crafted features like HOG work in controlled settings but fail under
-   varying lighting, weather, viewpoints, and object appearance. Deep
-   learning learns features automatically from data, enabling much better
-   generalization.
+   RADAR operates at millimeter wavelengths (~77 GHz) that pass through rain,
+   fog, and snow with minimal attenuation. Camera performance degrades sharply
+   in heavy rain (water droplets on lens, reduced visibility) and LiDAR
+   degrades due to laser backscatter from water droplets. RADAR also provides
+   direct Doppler velocity measurements unavailable from LiDAR or cameras.
 
 
 .. admonition:: Question 12
    :class: hint
 
-   What event is widely considered the start of the deep learning
-   revolution in computer vision?
-
-   A. The release of OpenCV in 2000.
-
-   B. AlexNet winning the ImageNet competition in 2012.
-
-   C. The invention of the Kalman Filter in 1960.
-
-   D. The first self-driving car demo by DARPA in 2005.
+   **True or False:** The Extended Kalman Filter (EKF) provides an exact
+   (optimal) solution for nonlinear state estimation under Gaussian noise.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- AlexNet winning the ImageNet competition in 2012.
+   **False**
 
-   AlexNet was the first GPU-trained CNN to win ImageNet by a large margin,
-   reducing top-5 error from 26% to 16%. This demonstrated that deep
-   convolutional networks could dramatically outperform hand-crafted
-   features.
+   The EKF is only a first-order approximation. It linearizes the nonlinear
+   functions at the current state estimate via Jacobians, which introduces
+   linearization error. For highly nonlinear functions or far from the
+   operating point, this approximation can be poor, causing the EKF to be
+   overconfident (underestimate covariance) or even diverge. The Unscented
+   KF provides a second-order accurate approximation without linearization.
 
 
 .. admonition:: Question 13
    :class: hint
 
-   In the YOLO dataset format, what do the five values per line represent?
-
-   A. ``<image_id> <x_min> <y_min> <x_max> <y_max>``
-
-   B. ``<class_id> <x_center> <y_center> <width> <height>`` (normalized)
-
-   C. ``<class_name> <confidence> <x> <y> <area>``
-
-   D. ``<class_id> <top_left_x> <top_left_y> <bottom_right_x> <bottom_right_y>``
+   **True or False:** A Particle Filter with a very small number of particles
+   (e.g., N=10) will always converge to the true state given enough time.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``<class_id> <x_center> <y_center> <width> <height>`` (normalized)
+   **False**
 
-   YOLO format uses center coordinates and dimensions, all normalized to
-   [0, 1] relative to image dimensions. One line per object, one label
-   file per image.
+   With too few particles, particle filters suffer from "particle collapse"
+   (degeneracy) -- over time, after repeated resampling, all weight
+   concentrates on just one or a few particles, losing diversity. The filter
+   then cannot recover if the true state is far from that particle's location.
+   Practical particle filters for AV localization (like Monte Carlo
+   Localization / AMCL) typically use 1,000-10,000+ particles for reliability.
 
 
 .. admonition:: Question 14
    :class: hint
 
-   What does **RT-DETR** achieve that the original DETR could not?
-
-   A. Higher accuracy than any other detector.
-
-   B. Real-time inference speed competitive with YOLO, while maintaining
-      the NMS-free transformer architecture.
-
-   C. Training without any labeled data.
-
-   D. Detection of 3D bounding boxes from monocular images.
+   **True or False:** In late (decision-level) fusion, if the camera detector
+   misses an object but the LiDAR detector correctly detects it, the fused
+   output will still include that object.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Real-time inference speed competitive with YOLO, while
-   maintaining the NMS-free transformer architecture.
+   **True**
 
-   The original DETR was slow and required 500 epochs to converge. RT-DETR
-   uses an efficient hybrid encoder to achieve real-time speed while keeping
-   the clean end-to-end design (no anchors, no NMS).
+   Late fusion combines independent detection outputs from each sensor.
+   If LiDAR detects an object with sufficient confidence, it will appear
+   in the LiDAR detection list. The late fusion module (e.g., via NMS or
+   track-level fusion) will include it even if the camera missed it. This
+   is one of the key reliability benefits of multi-sensor fusion.
 
 
 .. admonition:: Question 15
    :class: hint
 
-   At 60 mph (27 m/s), how far does a vehicle travel during 100 ms of
-   perception latency?
-
-   A. 0.27 m
-
-   B. 2.7 m
-
-   C. 27 m
-
-   D. 100 m
+   **True or False:** In the Kalman Filter update step, the posterior
+   covariance P_{k|k} is always smaller than or equal to the prior
+   covariance P_{k|k-1}.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- 2.7 m
+   **True**
 
-   At 27 m/s, the vehicle travels 27 x 0.1 = 2.7 meters during 100 ms.
-   This illustrates why perception latency is safety-critical -- every
-   millisecond matters for reaction distance.
+   The update equation P_{k|k} = (I - K H) P_{k|k-1} always reduces
+   uncertainty. The measurement provides new information, and the Kalman
+   filter is the optimal linear estimator that minimally reduces uncertainty
+   consistent with that information. Mathematically, K is chosen to minimize
+   the trace of P_{k|k}, guaranteeing it is less than or equal to P_{k|k-1}.
 
 
 ----
 
 
-True or False (Questions 16-25)
-================================
+Essay Questions (Questions 16-18)
+===================================
 
 .. admonition:: Question 16
    :class: hint
 
-   **True or False:** YOLO is a two-stage detector that first proposes
-   regions, then classifies them.
+   **Describe the Kalman Filter predict and update cycle** using an example
+   from autonomous driving (e.g., tracking a vehicle). Explain what the
+   Kalman Gain represents and how its value changes based on sensor noise
+   vs. prediction uncertainty.
 
-.. dropdown:: Answer
+   *(2-4 sentences)*
+
+.. dropdown:: Answer Guidelines
    :class-container: sd-border-success
 
-   **False**
+   *Key points to include:*
 
-   YOLO is a single-stage detector. It predicts all bounding boxes and
-   class probabilities in a single forward pass, without a separate region
-   proposal step. Two-stage detectors like Faster R-CNN use the region
-   proposal approach.
+   - Example: tracking a vehicle's position and velocity. State x = [px, py,
+     vx, vy]. Predict step: use constant-velocity model to propagate x and
+     increase P (uncertainty grows). Update step: receive a LiDAR measurement
+     z = [px_lidar, py_lidar] and correct the estimate.
+   - Innovation = z - H*x_pred: the discrepancy between predicted and actual
+     measurement. The posterior estimate = prior + K * innovation.
+   - Kalman Gain K = P_prior * H^T * (H*P_prior*H^T + R)^-1. When R is small
+     (accurate LiDAR), K is large and the correction is aggressive. When R
+     is large (noisy sensor) or P_prior is small (confident prediction), K
+     is small and the prediction changes little.
+   - Physical interpretation: K is a "trust dial" between prediction and
+     measurement. At startup (high P), trust the measurement heavily. After
+     converging (low P), trust the model more.
 
 
 .. admonition:: Question 17
    :class: hint
 
-   **True or False:** DETR requires Non-Maximum Suppression (NMS) as a
-   post-processing step.
+   **Compare the EKF and UKF** for tracking a vehicle with nonlinear motion
+   (e.g., turning with constant angular rate -- the CTRV model). When would
+   you prefer the UKF over the EKF?
 
-.. dropdown:: Answer
+   *(2-4 sentences)*
+
+.. dropdown:: Answer Guidelines
    :class-container: sd-border-success
 
-   **False**
+   *Key points to include:*
 
-   DETR eliminates NMS by using bipartite matching (Hungarian algorithm)
-   during training, which ensures each prediction corresponds to at most
-   one ground truth object. This produces non-duplicate predictions by
-   design.
+   - The CTRV (Constant Turn Rate and Velocity) model has process function
+     f(x) involving sin/cos of the heading angle -- a nonlinear function.
+     EKF computes the Jacobian of f(x), which involves partial derivatives
+     of sin(psi) -- analytically complex and prone to numerical errors.
+   - UKF selects 2n+1 sigma points around the current state, propagates
+     each through f(x) directly (evaluating sin/cos at specific angles), and
+     recovers the posterior mean and covariance. No Jacobian required.
+   - Prefer UKF when: (1) the Jacobian is difficult to derive analytically
+     (complex models), (2) the motion is highly nonlinear (sharp turns,
+     large timesteps), (3) higher accuracy is needed (UKF is second-order
+     accurate vs. EKF's first-order). EKF may be preferred when compute
+     budget is very tight and the model is mildly nonlinear.
+   - In practice, UKF is the standard for IMU + GPS fusion in AV systems
+     (PointOne Nav, SBG Systems) due to its superior accuracy in nonlinear
+     attitude estimation.
 
 
 .. admonition:: Question 18
    :class: hint
 
-   **True or False:** Transfer learning means training a model from scratch
-   on your target dataset.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   Transfer learning means starting with a model pre-trained on a large
-   dataset (e.g., COCO, ImageNet) and fine-tuning it on your target
-   dataset. This leverages learned features and typically requires less
-   data and training time than training from scratch.
-
-
-.. admonition:: Question 19
-   :class: hint
-
-   **True or False:** Semantic segmentation distinguishes between
-   individual instances of the same class (e.g., car #1 vs. car #2).
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   Semantic segmentation assigns a class label to every pixel but does
-   not distinguish individual instances. All car pixels get the same
-   "car" label. Instance segmentation is needed to separate individual
-   objects of the same class.
-
-
-.. admonition:: Question 20
-   :class: hint
-
-   **True or False:** ResNet's key innovation was residual connections
-   (skip connections) that enabled training of much deeper networks.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**
-
-   Residual connections allow gradients to flow directly through skip
-   paths, solving the vanishing gradient problem in very deep networks.
-   This enabled training of 50--152+ layer networks without degradation,
-   a breakthrough that underpins most modern CNN architectures.
-
-
-.. admonition:: Question 21
-   :class: hint
-
-   **True or False:** In DETR, object queries are learned parameters that
-   each specialize in detecting one object in the scene.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**
-
-   DETR uses N learned object queries (typically 100) as inputs to the
-   transformer decoder. Each query attends to the encoder output via
-   cross-attention and specializes in detecting one object (or predicting
-   "no object"). They are learned during training.
-
-
-.. admonition:: Question 22
-   :class: hint
-
-   **True or False:** YOLO's FPN (Feature Pyramid Network) neck enables
-   detection of objects at multiple scales by fusing features from
-   different backbone layers.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**
-
-   FPN creates a top-down pathway that combines semantically rich
-   low-resolution features with high-resolution features via lateral
-   connections. This allows the network to detect both large objects
-   (at coarse scales) and small objects (at fine scales).
-
-
-.. admonition:: Question 23
-   :class: hint
-
-   **True or False:** Transformers are more data-efficient than CNNs,
-   requiring less training data to achieve good performance.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   Transformers are generally more data-hungry than CNNs because they lack
-   the built-in inductive biases of convolutions (locality, translation
-   equivariance). They need larger datasets to learn spatial relationships
-   that CNNs capture by design.
-
-
-.. admonition:: Question 24
-   :class: hint
-
-   **True or False:** Precision measures the fraction of real objects that
-   the detector successfully found.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   Precision measures the fraction of detections that are correct:
-   TP / (TP + FP). The metric described (fraction of real objects found)
-   is **recall**: TP / (TP + FN).
-
-
-.. admonition:: Question 25
-   :class: hint
-
-   **True or False:** The same ROS 2 node pattern (subscribe to image,
-   run inference, publish detections) works for both YOLO and DETR.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**
-
-   The ROS 2 integration pattern is model-agnostic. The node subscribes to
-   ``/carla/camera/image``, converts the image, runs inference (regardless
-   of whether the model is YOLO or DETR), and publishes a
-   ``Detection2DArray`` message.
-
-
-----
-
-
-Essay Questions (Questions 26-30)
-==================================
-
-.. admonition:: Question 26
-   :class: hint
-
-   **Compare YOLO and DETR** across at least four dimensions. In what
-   scenarios would you choose one over the other for an AV application?
+   **Explain the data association problem** in multi-sensor, multi-object
+   tracking. Describe two approaches to solving it and the trade-offs of each.
 
    *(2-4 sentences)*
 
@@ -596,101 +488,20 @@ Essay Questions (Questions 26-30)
 
    *Key points to include:*
 
-   - YOLO: CNN-based, local context, fast (1-5 ms), requires NMS (except
-     v10), mature and production-ready.
-   - DETR: Transformer-based, global context, cleaner design (no anchors,
-     no NMS), needs more training data, slower (improving with RT-DETR).
-   - Choose YOLO for real-time production systems where latency is critical.
-   - Choose DETR when global reasoning matters (e.g., detecting heavily
-     occluded objects, complex scenes) and compute budget allows it.
-
-
-.. admonition:: Question 27
-   :class: hint
-
-   **Explain how bipartite matching in DETR eliminates the need for NMS.**
-   What problem does NMS solve in YOLO, and why doesn't DETR have this
-   problem?
-
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
-   :class-container: sd-border-success
-
-   *Key points to include:*
-
-   - YOLO produces many overlapping predictions for the same object. NMS
-     removes duplicates by suppressing lower-confidence boxes that overlap
-     with a higher-confidence box.
-   - DETR uses the Hungarian algorithm during training to enforce a
-     one-to-one assignment between predictions and ground truth objects.
-   - Each object query learns to detect at most one object, so duplicate
-     predictions do not arise by design.
-
-
-.. admonition:: Question 28
-   :class: hint
-
-   **Explain the YOLO backbone-neck-head architecture.** What does each
-   component do, and why is multi-scale feature fusion important for AV
-   perception?
-
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
-   :class-container: sd-border-success
-
-   *Key points to include:*
-
-   - Backbone: Extracts hierarchical features from the image (edges ->
-     textures -> object parts -> objects).
-   - Neck (FPN + PAN): Fuses features across scales so the detector can
-     handle objects of different sizes.
-   - Head: Produces final bounding box and class predictions.
-   - Multi-scale fusion is critical for AV perception because the scene
-     contains both large nearby vehicles and small distant pedestrians.
-
-
-.. admonition:: Question 29
-   :class: hint
-
-   **Why did deep learning replace traditional CV methods** (HOG, SIFT,
-   etc.) for AV perception? What were the key enablers of this transition?
-
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
-   :class-container: sd-border-success
-
-   *Key points to include:*
-
-   - Traditional methods required hand-crafted features that were fragile
-     and couldn't generalize across diverse conditions.
-   - Deep learning learns features automatically from data, adapting to
-     variation in lighting, weather, viewpoints, and object appearance.
-   - Key enablers: large-scale datasets (ImageNet, COCO), GPU acceleration,
-     improved training techniques (batch norm, residual connections), and
-     transfer learning.
-
-
-.. admonition:: Question 30
-   :class: hint
-
-   **Describe how you would deploy a YOLO-based perception node** in a
-   ROS 2 system connected to CARLA. What topics would it subscribe to
-   and publish?
-
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
-   :class-container: sd-border-success
-
-   *Key points to include:*
-
-   - The node subscribes to ``/carla/camera/image`` (``sensor_msgs/Image``).
-   - In the callback, it converts the ROS image to OpenCV format using
-     ``cv_bridge``, runs YOLO inference, and constructs a
-     ``Detection2DArray`` message with bounding boxes and class labels.
-   - It publishes detections on a topic like ``/perception/detections``.
-   - This same pattern works for any detector (YOLO, DETR, etc.) since the
-     ROS 2 interface is model-agnostic.
+   - The data association problem: given a set of measurements z_1,...,z_m
+     and a set of tracks T_1,...,T_n at each timestep, determine which
+     measurement was produced by which track (or background clutter).
+     Incorrect association causes Kalman filter divergence and track confusion.
+   - Approach 1 -- Global Nearest Neighbor (GNN) / Hungarian algorithm:
+     compute a cost matrix (e.g., Mahalanobis distance for each
+     measurement-track pair), solve for optimal global assignment. Pros:
+     optimal for a single timestep, O(n^3) compute. Cons: makes hard
+     assignments that cannot be undone; fails in high clutter.
+   - Approach 2 -- Joint Probabilistic Data Association (JPDA): instead of
+     hard assignment, computes probabilities over all possible assignments
+     and updates each track as a weighted mixture. Pros: robust in cluttered
+     environments (multiple nearby objects). Cons: higher compute, tracks
+     can "merge" in high-density scenes.
+   - For AV systems at moderate object densities: GNN (via Hungarian) is
+     standard. JPDA is used when clutter is high (dense urban intersections,
+     parking lots with many closely-spaced vehicles).

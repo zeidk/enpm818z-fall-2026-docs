@@ -2,20 +2,25 @@
 Exercises
 ====================================================
 
-This page contains five take-home exercises that reinforce the concepts
-from Lecture 9. Exercises cover vehicle kinematics, graph-based planning,
-sampling-based planning, and collision detection.
+This page contains take-home exercises that reinforce the concepts
+from Lecture 9. Exercises cover trajectory prediction and behavior
+planning.
+
+.. note::
+
+   Imitation-learning exercises that previously lived here are
+   migrated to the new L12 exercises in a follow-up polish pass.
 
 
-.. dropdown:: Exercise 1 -- Bicycle Model Kinematics
+.. dropdown:: Exercise 1 -- Constant Velocity Prediction
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Simulate vehicle motion using the kinematic bicycle model and
-   understand the effect of steering angle on turning radius.
+   Implement the constant velocity (CV) prediction model and
+   understand its limitations for turning vehicles.
 
 
    .. raw:: html
@@ -25,92 +30,40 @@ sampling-based planning, and collision detection.
 
    **Specification**
 
-   The bicycle model equations are:
+   Create the file ``cv_prediction.py`` that performs the following:
 
-   .. math::
+   A vehicle is observed at position :math:`(20, 10)` m with velocity
+   :math:`(12, 3)` m/s.
 
-      \dot{x} = v \cos(\theta), \quad
-      \dot{y} = v \sin(\theta), \quad
-      \dot{\theta} = \frac{v}{L} \tan(\delta)
-
-   with wheelbase :math:`L = 2.9` m.
-
-   Create the file ``bicycle_model.py`` that performs the following:
-
-   1. With :math:`v = 10` m/s and :math:`\delta = 15°`, compute the
-      **turning radius** :math:`R = L / \tan(\delta)`.
-   2. Starting from :math:`(x, y, \theta) = (0, 0, 0)`, simulate the
-      vehicle for **5 seconds** with :math:`\Delta t = 0.1` s using
-      Euler integration. **Plot the resulting path**.
-   3. Repeat with :math:`\delta = 0°` and :math:`\delta = 30°`. Plot
-      all three paths on the same figure.
-   4. The vehicle has a maximum steering angle of **35°**. Compute the
-      **minimum turning radius**.
-
-   **Expected output**
-
-   A plot showing three paths (straight, gentle curve, tight curve)
-   and printed turning radius values.
-
-   **Deliverable**
-
-   The script and the plot (PNG or PDF).
-
-
-.. dropdown:: Exercise 2 -- A* on an Occupancy Grid
-   :icon: gear
-   :class-container: sd-border-primary
-   :class-title: sd-font-weight-bold
-
-   **Goal**
-
-   Implement A* search on a 2D occupancy grid with obstacles and
-   evaluate the effect of obstacle inflation.
-
-
-   .. raw:: html
-
-      <hr>
-
-
-   **Specification**
-
-   Create the file ``astar_grid.py`` that performs the following:
-
-   1. Create a **50 × 50 occupancy grid** with these obstacles:
-
-      - A wall from (10, 0) to (10, 35)
-      - A wall from (30, 15) to (30, 49)
-      - A rectangular block at (20, 20) to (25, 25)
-
-   2. Implement **A* search** with 8-connected neighbors and Euclidean
-      distance heuristic.
-   3. Find the shortest path from **(0, 0)** to **(49, 49)**.
-   4. Report **path length** and **nodes expanded**.
-   5. **Inflate obstacles** by 2 cells (to account for vehicle width)
-      and replan. Report new path length and nodes expanded.
-   6. Visualize both paths on the grid (original in blue, inflated in
-      red).
+   1. Using the **CV model**, predict positions at
+      :math:`t = 1, 2, 3, 4, 5` s.
+   2. Plot the predicted trajectory.
+   3. The vehicle is actually turning right. At :math:`t = 3` s, its
+      true position is :math:`(52, 5)`. Compute the **prediction
+      error** (Euclidean distance).
+   4. On the same plot, show the true position at :math:`t = 3` s and
+      draw a line between predicted and actual.
 
    **Written analysis**
 
-   Replace the Euclidean heuristic with **Manhattan distance**. Is it
-   still admissible for 8-connected grids? Does the path change?
+   - Why does the CV model fail for turning maneuvers?
+   - Write the **CTRA** (Constant Turn Rate and Acceleration) model
+     equations and explain how they would improve this prediction.
 
    **Deliverable**
 
-   The script, grid visualization, results table, and written answer.
+   The script, trajectory plot, and written analysis.
 
 
-.. dropdown:: Exercise 3 -- RRT vs. RRT*
+.. dropdown:: Exercise 2 -- Multi-Modal Prediction
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Implement both RRT and RRT* and compare path quality as a function
-   of iteration count.
+   Reason about why multi-modal prediction is essential and how
+   planners should consume probabilistic forecasts.
 
 
    .. raw:: html
@@ -120,43 +73,134 @@ sampling-based planning, and collision detection.
 
    **Specification**
 
-   Create the file ``rrt_comparison.py`` that performs the following:
+   A vehicle is approaching a T-intersection and can either turn left
+   or continue straight.
 
-   1. Define a **50 × 50 m** workspace with 5 circular obstacles
-      (radius 2 m each) at fixed locations.
-   2. Implement **RRT** with step size 2.0 m and 2000 iterations.
-      Find a path from **(5, 5)** to **(45, 45)**.
-   3. Implement **RRT*** with the same parameters, using rewiring
-      radius:
+   1. A **unimodal** predictor outputs the mean trajectory. Sketch
+      this trajectory and explain in 2--3 sentences why it is
+      **dangerous** (hint: the mean of two valid paths may be
+      invalid).
+   2. A **multi-modal** predictor outputs two trajectories:
+
+      - Left turn: :math:`p = 0.6`
+      - Straight: :math:`p = 0.4`
+
+      How should the planner use these? Should it plan for the most
+      likely one, or consider both? Why?
+
+   3. Define **minADE₅** and **minFDE₅** in your own words (1--2
+      sentences each).
+   4. A model predicts 5 trajectories for an agent. The closest to
+      ground truth is prediction #3 with ADE = 1.2 m and FDE = 2.5 m.
+      What are minADE₅ and minFDE₅?
+
+   **Deliverable**
+
+   Sketch, written answers, and metric values.
+
+
+.. dropdown:: Exercise 3 -- FSM Behavior Planner Design
+   :icon: gear
+   :class-container: sd-border-primary
+   :class-title: sd-font-weight-bold
+
+   **Goal**
+
+   Design a finite state machine for highway driving with clearly
+   defined states and transition conditions.
+
+
+   .. raw:: html
+
+      <hr>
+
+
+   **Specification**
+
+   Design an FSM with the following states:
+
+   - ``LANE_FOLLOW`` -- maintain lane at reference speed
+   - ``FOLLOW`` -- match speed of lead vehicle
+   - ``PREPARE_LANE_CHANGE`` -- signal and check adjacent lane
+   - ``LANE_CHANGE`` -- execute lane change
+   - ``EMERGENCY_STOP`` -- maximum deceleration
+
+   1. Draw the **state transition diagram** with labeled edges.
+   2. Define transitions using TTC thresholds:
+
+      - TTC < 2 s → ``EMERGENCY_STOP``
+      - TTC < 5 s → ``FOLLOW``
+      - In ``FOLLOW`` and speed < 60% of reference →
+        ``PREPARE_LANE_CHANGE``
+      - Adjacent lane clear for > 3 s →
+        ``LANE_CHANGE``
+
+   3. What happens if the adjacent lane is also blocked during
+      ``PREPARE_LANE_CHANGE``? Add a transition for this case.
+   4. Name **two limitations** of FSM-based behavior planning.
+   5. How many states would you need for a busy urban intersection
+      (traffic lights, pedestrians, cyclists)? Why do FSMs struggle
+      at this scale?
+
+   **Deliverable**
+
+   State transition diagram (hand-drawn or digital) and written
+   answers.
+
+
+.. dropdown:: Exercise 4 -- Time-to-Collision
+   :icon: gear
+   :class-container: sd-border-primary
+   :class-title: sd-font-weight-bold
+
+   **Goal**
+
+   Compute TTC for various scenarios and reason about its limitations
+   as a safety metric.
+
+
+   .. raw:: html
+
+      <hr>
+
+
+   **Specification**
+
+   The ego vehicle is at :math:`x = 0` m traveling at
+   :math:`v_{\text{ego}} = 20` m/s. A lead vehicle is at
+   :math:`x = 50` m traveling at :math:`v_{\text{lead}} = 10` m/s.
+   Both are 4.5 m long.
+
+   1. Compute **TTC** assuming constant velocities:
 
       .. math::
 
-         r = \gamma \left(\frac{\log n}{n}\right)^{1/d}, \quad
-         \gamma = 50, \; d = 2
+         \text{TTC} = \frac{x_{\text{lead}} - x_{\text{ego}} - L}
+                           {v_{\text{ego}} - v_{\text{lead}}}
 
-   4. Plot both trees and final paths side-by-side.
-   5. Run RRT* with **500, 1000, 2000, and 5000 iterations**. Plot
-      **path length vs. iterations**.
-
-   **Expected result**
-
-   RRT* should produce progressively shorter paths as iterations
-   increase, while RRT's path length does not improve.
+   2. If the ego brakes at :math:`a = -4` m/s², compute the
+      **stopping distance**. Will it stop before hitting the lead
+      vehicle?
+   3. At what **following distance** is TTC exactly 3 seconds?
+   4. A vehicle in the adjacent lane is approaching at 20 m/s on a
+      **parallel path** (lateral offset 3.7 m). The TTC is very low,
+      but there is **no collision risk**. Why is TTC alone
+      insufficient for safe decisions?
 
    **Deliverable**
 
-   The script, tree visualizations, and path length convergence plot.
+   All calculations shown and written answer for question 4.
 
 
-.. dropdown:: Exercise 4 -- Lattice-Based Planning
+.. dropdown:: Exercise 5 -- Behavior Cloning Failure Modes
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Design motion primitives for a highway lattice planner and reason
-   about the combinatorial structure.
+   Understand the distribution shift problem in behavior cloning and
+   evaluate mitigation strategies.
 
 
    .. raw:: html
@@ -166,68 +210,22 @@ sampling-based planning, and collision detection.
 
    **Specification**
 
-   A state lattice planner uses pre-computed motion primitives in the
-   Frenet frame. Define **5 primitives** for a highway scenario:
+   A behavior cloning model is trained on 10 hours of expert driving
+   data.
 
-   - Stay in lane (straight, 30 m longitudinal)
-   - Slight left offset (+0.5 m lateral over 30 m)
-   - Slight right offset (-0.5 m lateral over 30 m)
-   - Lane change left (+3.7 m lateral over 30 m)
-   - Lane change right (-3.7 m lateral over 30 m)
-
-   1. Sketch the resulting **lattice** for 3 steps, showing all
-      reachable states from the start position.
-   2. How many **total unique paths** exist after 3 steps?
-      (Hint: :math:`5^3`, but some may overlap.)
-   3. Design a **cost function** that penalizes:
-
-      - Lateral deviation from lane center
-      - Lateral acceleration (comfort)
-      - Proximity to obstacles
-
-   4. Why are lattice planners preferred on **highways** but not in
-      **unstructured parking lots**?
+   1. Explain the **distribution shift** problem with a concrete
+      example: the vehicle drifts 10 cm left of center. The training
+      data never included this state. What happens next?
+   2. Compounding error grows as :math:`O(\varepsilon T^2)`. If the
+      per-step error is :math:`\varepsilon = 0.01` rad, compute the
+      bound at :math:`T = 50` and :math:`T = 100` steps.
+   3. **DAgger** addresses this by querying the expert on the
+      learner's visited states. Describe **one practical challenge**
+      of using DAgger for autonomous driving.
+   4. Name one alternative approach that does not suffer from
+      distribution shift. Explain in 2--3 sentences how it avoids
+      the problem.
 
    **Deliverable**
 
-   Lattice sketch, path count, cost function definition, and written
-   answer.
-
-
-.. dropdown:: Exercise 5 -- Collision Checking
-   :icon: gear
-   :class-container: sd-border-primary
-   :class-title: sd-font-weight-bold
-
-   **Goal**
-
-   Implement oriented bounding box collision detection using the
-   separating axis theorem.
-
-
-   .. raw:: html
-
-      <hr>
-
-
-   **Specification**
-
-   A vehicle is represented as an **OBB** with dimensions 4.5 m × 2.0 m,
-   centered at (10, 5) with heading 30°. An obstacle is a **circle**
-   centered at (13, 7) with radius 1.0 m.
-
-   Create the file ``collision_check.py`` that performs the following:
-
-   1. Compute the **four corners** of the OBB in world coordinates.
-   2. Implement the **separating axis theorem (SAT)** to determine if
-      the OBB and circle collide.
-   3. **Inflate** the vehicle by a **0.5 m safety margin** on all
-      sides and check again.
-   4. Compute the **minimum center-to-center distance** at which the
-      inflated OBB and circle just touch.
-   5. Visualize the OBB, inflated OBB, and circle using matplotlib.
-
-   **Deliverable**
-
-   The script, collision results (True/False for each case), minimum
-   distance value, and visualization plot.
+   Written answers (one paragraph per question).

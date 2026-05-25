@@ -2,10 +2,11 @@
 Quiz
 ====================================================
 
-This quiz covers the key concepts from Lecture 4: Perception II -- BEV
-Perception & Occupancy Networks. Topics include the motivation for BEV
-representations, Lift-Splat-Shoot, BEVFormer, multi-camera fusion, 3D
-occupancy networks, nuScenes metrics, and industry adoption.
+This quiz covers the key concepts from Lecture 4: Perception I -- Object
+Detection (YOLO to DETR). Topics include the role of perception in the AV
+stack, perception taxonomy, the deep learning revolution, YOLO architecture
+and evolution, DETR and transformer-based detection, and the comparison
+between CNN-based and transformer-based approaches.
 
 .. note::
 
@@ -21,381 +22,572 @@ occupancy networks, nuScenes metrics, and industry adoption.
 ----
 
 
-Multiple Choice (Questions 1-10)
+Multiple Choice (Questions 1-15)
 =================================
 
 .. admonition:: Question 1
    :class: hint
 
-   Which of the following best describes why **Bird's-Eye View (BEV)** is
-   preferred for autonomous driving planning over perspective camera images?
+   What is the primary role of perception in the AV stack?
 
-   A. BEV requires less compute than perspective images.
+   A. To control the vehicle's steering and throttle.
 
-   B. BEV preserves metric distances and object sizes, directly matching the
-      coordinate system used by motion planners.
+   B. To transform raw sensor data into a structured, semantic understanding
+      of the environment.
 
-   C. BEV images can be captured directly by a single wide-angle camera.
+   C. To plan the vehicle's trajectory through an intersection.
 
-   D. BEV eliminates the need for sensor calibration.
+   D. To calibrate sensors before each drive.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- BEV preserves metric distances and object sizes, directly matching
-   the coordinate system used by motion planners.
+   **B** -- To transform raw sensor data into a structured, semantic
+   understanding of the environment.
 
-   In perspective images, depth is ambiguous and object sizes decrease with
-   distance. BEV places all objects in a metric top-down map where distances
-   and sizes are consistent -- directly compatible with path planning,
-   trajectory prediction, and control modules.
+   Perception bridges sensing (raw data acquisition) and planning (decision-
+   making). It converts unstructured sensor data into structured outputs
+   like detected objects, lane geometry, and free space.
 
 
 .. admonition:: Question 2
    :class: hint
 
-   In the **Lift-Splat-Shoot** (LSS) pipeline, what does the **Lift** stage do?
+   Which perception task assigns a **unique ID and pixel mask** to each
+   individual object in the scene?
 
-   A. Converts a 3D voxel grid to a 2D BEV feature map.
+   A. Semantic segmentation
 
-   B. Applies a detection head to the BEV feature map.
+   B. Object detection
 
-   C. Predicts a depth distribution per pixel and creates a 3D frustum of
-      features for each camera.
+   C. Instance segmentation
 
-   D. Warps the previous frame's BEV features to the current ego frame.
+   D. Panoptic segmentation
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- Predicts a depth distribution per pixel and creates a 3D frustum
-   of features for each camera.
+   **C** -- Instance segmentation
 
-   The Lift stage takes the 2D image feature map and, for each pixel, predicts
-   a softmax distribution over discrete depth bins. Each pixel's feature is
-   weighted by its depth probabilities and replicated along the camera ray,
-   creating a 3D frustum (a tensor of shape D x H x W x C per camera).
+   Instance segmentation gives each object a unique ID and pixel-level mask.
+   Semantic segmentation labels all pixels by class (but doesn't distinguish
+   individual objects). Panoptic segmentation combines both.
 
 
 .. admonition:: Question 3
    :class: hint
 
-   In **BEVFormer**, what is the role of **Spatial Cross-Attention**?
+   What was the key innovation of YOLO v1 (2015) compared to two-stage
+   detectors like Faster R-CNN?
 
-   A. It warps previous BEV frames into the current ego coordinate frame.
+   A. It used a transformer encoder.
 
-   B. It fuses BEV features from LiDAR and camera modalities.
+   B. It framed detection as a single regression problem -- one forward
+      pass predicts all bounding boxes and classes.
 
-   C. It allows each BEV query to attend to relevant features in all camera
-      images by projecting 3D reference points onto image planes.
+   C. It used anchor-free detection.
 
-   D. It compresses the 3D voxel grid into a 2D BEV by max-pooling along Z.
+   D. It eliminated the need for training data.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- It allows each BEV query to attend to relevant features in all
-   camera images by projecting 3D reference points onto image planes.
+   **B** -- It framed detection as a single regression problem -- one
+   forward pass predicts all bounding boxes and classes.
 
-   For each BEV grid cell query, BEVFormer samples several 3D reference points
-   at different heights, projects them into each camera image using calibration
-   parameters, and samples image features at those projected locations via
-   deformable attention. This provides geometry-guided feature aggregation
-   across all cameras.
+   Two-stage detectors (Faster R-CNN) first propose regions, then classify
+   them. YOLO processes the entire image in a single pass, making it
+   dramatically faster and enabling real-time detection.
 
 
 .. admonition:: Question 4
    :class: hint
 
-   What is the purpose of **Temporal Self-Attention** in BEVFormer?
+   In YOLO's backbone-neck-head architecture, what is the role of the
+   **neck** (e.g., FPN + PAN)?
 
-   A. To apply attention across all pixels in a single camera image.
+   A. Extract features from the raw image.
 
-   B. To integrate previous BEV feature maps (warped to the current frame)
-      with the current BEV queries, providing multi-frame context.
+   B. Fuse features across multiple scales to detect objects of different
+      sizes.
 
-   C. To synchronize feature extraction across all cameras in the rig.
+   C. Produce the final bounding box predictions.
 
-   D. To reduce compute by skipping attention for static background cells.
+   D. Apply non-maximum suppression.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- To integrate previous BEV feature maps (warped to the current
-   frame) with the current BEV queries, providing multi-frame context.
+   **B** -- Fuse features across multiple scales to detect objects of
+   different sizes.
 
-   Temporal Self-Attention warps the prior frame's BEV using ego-motion
-   estimates and then computes cross-attention between the current BEV queries
-   and the concatenated current + warped-past features. This provides velocity
-   cues, helps with occluded objects, and significantly boosts detection of
-   moving objects (up to +6.9 NDS on nuScenes).
+   The neck combines high-resolution features (good for small objects) with
+   semantically rich features (good for large objects) through FPN (top-down)
+   and PAN (bottom-up) pathways. Output scales: 80x80, 40x40, 20x20.
 
 
 .. admonition:: Question 5
    :class: hint
 
-   A 3D Occupancy Network outputs which of the following?
+   Starting from YOLOv8, what major architectural change was introduced?
 
-   A. A set of 3D bounding boxes with class labels.
+   A. Switching from CNN to transformer backbone.
 
-   B. A 2D semantic segmentation map in the camera image plane.
+   B. Anchor-free detection with a decoupled head.
 
-   C. A per-voxel semantic label across a 3D volume around the vehicle.
+   C. Removing the neck entirely.
 
-   D. A depth map for each camera in the rig.
+   D. Using only a single detection scale.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- A per-voxel semantic label across a 3D volume around the vehicle.
+   **B** -- Anchor-free detection with a decoupled head.
 
-   Occupancy networks divide the scene into a 3D voxel grid and assign each
-   voxel a semantic class (free, vehicle, pedestrian, vegetation, etc.) plus
-   an unknown/occluded category. This dense representation captures arbitrary
-   scene geometry that cannot be represented by bounding boxes.
+   YOLOv8 eliminated predefined anchor boxes, instead directly predicting
+   (x,y,w,h) with separate (decoupled) branches for classification and
+   localization. This simplifies the architecture and improves flexibility.
 
 
 .. admonition:: Question 6
    :class: hint
 
-   Which nuScenes metric is a **composite score** combining mAP with five
-   attribute error terms?
+   What does DETR use instead of anchor boxes and NMS?
 
-   A. mIoU
+   A. Region proposals and selective search.
 
-   B. ATE
+   B. Learned object queries and bipartite matching via the Hungarian
+      algorithm.
 
-   C. NDS
+   C. Grid cells with fixed aspect ratios.
 
-   D. AOE
+   D. K-means clustering of bounding boxes.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- NDS (nuScenes Detection Score)
+   **B** -- Learned object queries and bipartite matching via the Hungarian
+   algorithm.
 
-   NDS is the primary ranking metric on nuScenes. It is computed as a
-   weighted combination of mAP and five True Positive metrics: Average
-   Translation Error (ATE), Average Scale Error (ASE), Average Orientation
-   Error (AOE), Average Velocity Error (AVE), and Average Attribute Error
-   (AAE). A single NDS scalar enables fair ranking of methods.
+   DETR uses N learned object queries (e.g., 100) that attend to image
+   features via cross-attention. During training, the Hungarian algorithm
+   finds the optimal one-to-one assignment between predictions and ground
+   truth, eliminating duplicate detections without NMS.
 
 
 .. admonition:: Question 7
    :class: hint
 
-   In the **Splat** stage of LSS, what operation converts the 3D frustum
-   features into a voxel grid?
+   What is the key advantage of DETR's transformer encoder over a CNN?
 
-   A. Deformable attention over reference points in image space.
+   A. It processes images faster than any CNN.
 
-   B. Unprojection of frustum features into ego-vehicle coordinates using
-      camera intrinsics and extrinsics, then sum-pooling into voxels.
+   B. It captures **global context** -- every position attends to all other
+      positions via self-attention.
 
-   C. Warping the image feature map using a homography transformation.
+   C. It uses less GPU memory.
 
-   D. Applying 3D sparse convolution to the point cloud.
+   D. It does not require any training data.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Unprojection of frustum features into ego-vehicle coordinates
-   using camera intrinsics and extrinsics, then sum-pooling into voxels.
+   **B** -- It captures global context -- every position attends to all
+   other positions via self-attention.
 
-   The Splat stage uses known camera calibration to unproject the 3D frustum
-   points (which are in camera space) into the world/ego-vehicle 3D space.
-   Multiple frustum points that land in the same voxel are aggregated via
-   sum-pooling, producing a dense 3D feature volume.
+   CNNs have a limited receptive field determined by kernel size and depth.
+   Transformers use self-attention to model relationships between all spatial
+   positions simultaneously, enabling global reasoning from the first layer.
 
 
 .. admonition:: Question 8
    :class: hint
 
-   Tesla's occupancy network (as described at AI Day 2022) takes which sensors
-   as input?
+   What problem does **Deformable DETR** solve compared to the original
+   DETR?
 
-   A. LiDAR + 8 cameras
+   A. It adds anchor boxes back to the architecture.
 
-   B. RADAR + front camera
+   B. It uses deformable attention to attend to sparse key positions,
+      achieving 10x faster convergence and better small object detection.
 
-   C. 8 cameras only (no LiDAR)
+   C. It replaces the transformer with a CNN.
 
-   D. LiDAR + RADAR (no cameras)
+   D. It removes the bipartite matching loss.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- 8 cameras only (no LiDAR)
+   **B** -- It uses deformable attention to attend to sparse key positions,
+   achieving 10x faster convergence and better small object detection.
 
-   Tesla's approach is camera-only. Their 8-camera rig provides surround
-   coverage and the network infers depth via multi-frame parallax and learned
-   depth priors. Tesla has argued this matches human driving (eyes only) and
-   enables lower hardware costs at scale.
+   Original DETR attends to all positions (quadratic cost) and converges
+   slowly (500 epochs). Deformable DETR samples a small set of key
+   positions around a reference point, dramatically reducing computation
+   and improving performance on small objects.
 
 
 .. admonition:: Question 9
    :class: hint
 
-   Which of the following scenarios is **best handled by a 3D occupancy
-   network** rather than a standard 3D bounding box detector?
+   What is **mAP@0.5:0.95** and why is it a stricter metric than
+   mAP@0.5?
 
-   A. Counting the exact number of vehicles in a parking lot.
+   A. It measures speed at different batch sizes.
 
-   B. Detecting and tracking traffic lights at intersections.
+   B. It averages precision across IoU thresholds from 0.5 to 0.95,
+      requiring tighter bounding box alignment.
 
-   C. Navigating a construction zone with irregular barriers and debris.
+   C. It counts only detections with confidence above 0.95.
 
-   D. Classifying pedestrian gestures at a crosswalk.
+   D. It measures recall at 50% to 95% thresholds.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- Navigating a construction zone with irregular barriers and debris.
+   **B** -- It averages precision across IoU thresholds from 0.5 to 0.95,
+   requiring tighter bounding box alignment.
 
-   Bounding box detectors assume rectangular box shapes for all objects.
-   Construction barriers, debris piles, and irregular obstacles do not fit
-   this assumption. Occupancy networks capture arbitrary geometry per voxel,
-   making them far more suitable for construction zones and novel obstacle
-   shapes.
+   mAP@0.5 only requires 50% overlap between predicted and ground truth
+   boxes. mAP@0.5:0.95 averages across thresholds (0.5, 0.55, ..., 0.95),
+   penalizing imprecise localization. It is the primary COCO benchmark.
 
 
 .. admonition:: Question 10
    :class: hint
 
-   In BEV multi-camera fusion, why is **extrinsic calibration** so critical?
+   Which YOLO loss component penalizes the overlap, center distance, and
+   aspect ratio between predicted and ground truth boxes simultaneously?
 
-   A. It determines the resolution of each camera image.
+   A. Binary cross-entropy loss.
 
-   B. It controls the field of view overlap between adjacent cameras.
+   B. Mean squared error loss.
 
-   C. It maps each camera's 3D frustum features into the correct position in
-      the shared ego-vehicle BEV grid -- errors cause spatial misalignment
-      and ghost detections.
+   C. CIoU (Complete Intersection over Union) loss.
 
-   D. It sets the depth bin resolution for the LSS depth distribution.
+   D. Focal loss.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- It maps each camera's 3D frustum features into the correct
-   position in the shared ego-vehicle BEV grid -- errors cause spatial
-   misalignment and ghost detections.
+   **C** -- CIoU (Complete Intersection over Union) loss.
 
-   BEV fusion relies on accurate knowledge of each camera's position and
-   orientation relative to the vehicle frame (extrinsic calibration). Even a
-   1-degree rotation error causes object position errors of ~0.87 m at 50 m
-   range, creating duplicated or misplaced detections in the fused BEV map.
+   CIoU combines IoU with penalties for center point distance and aspect
+   ratio difference, providing a more informative gradient signal than
+   simple IoU or L1/L2 losses for bounding box regression.
 
-
-----
-
-
-True or False (Questions 11-15)
-================================
 
 .. admonition:: Question 11
    :class: hint
 
-   **True or False:** The Lift-Splat-Shoot method requires explicit depth
-   sensor supervision (e.g., LiDAR depth labels) during training.
+   Why did traditional CV methods (HOG + SVM, SIFT) fail for robust AV
+   perception?
+
+   A. They were too computationally expensive.
+
+   B. They required manual feature engineering, were fragile to appearance
+      variation, and could not generalize across diverse conditions.
+
+   C. They only worked with LiDAR data.
+
+   D. They achieved higher accuracy than deep learning.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **B** -- They required manual feature engineering, were fragile to
+   appearance variation, and could not generalize across diverse conditions.
 
-   LSS learns its depth distribution implicitly from 3D bounding box
-   supervision alone. The depth prediction network is trained end-to-end
-   alongside the detection head -- no explicit depth ground truth labels are
-   required. This is one of LSS's key advantages: it works with camera-only
-   setups.
+   Hand-crafted features like HOG work in controlled settings but fail under
+   varying lighting, weather, viewpoints, and object appearance. Deep
+   learning learns features automatically from data, enabling much better
+   generalization.
 
 
 .. admonition:: Question 12
    :class: hint
 
-   **True or False:** BEVFormer's temporal self-attention warps the previous
-   BEV feature map into the current ego frame using ego-motion estimates before
-   computing attention.
+   What event is widely considered the start of the deep learning
+   revolution in computer vision?
+
+   A. The release of OpenCV in 2000.
+
+   B. AlexNet winning the ImageNet competition in 2012.
+
+   C. The invention of the Kalman Filter in 1960.
+
+   D. The first self-driving car demo by DARPA in 2005.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **True**
+   **B** -- AlexNet winning the ImageNet competition in 2012.
 
-   Before computing temporal self-attention, BEVFormer applies the ego-motion
-   transformation (from vehicle odometry or localization) to spatially align
-   the previous BEV frame with the current ego frame. This alignment is
-   necessary so that a stationary object at the same world position aligns in
-   both BEV grids, while moving objects will have a visible offset.
+   AlexNet was the first GPU-trained CNN to win ImageNet by a large margin,
+   reducing top-5 error from 26% to 16%. This demonstrated that deep
+   convolutional networks could dramatically outperform hand-crafted
+   features.
 
 
 .. admonition:: Question 13
    :class: hint
 
-   **True or False:** 3D occupancy networks evaluate primarily using mAP
-   (mean Average Precision) as their main metric.
+   In the YOLO dataset format, what do the five values per line represent?
+
+   A. ``<image_id> <x_min> <y_min> <x_max> <y_max>``
+
+   B. ``<class_id> <x_center> <y_center> <width> <height>`` (normalized)
+
+   C. ``<class_name> <confidence> <x> <y> <area>``
+
+   D. ``<class_id> <top_left_x> <top_left_y> <bottom_right_x> <bottom_right_y>``
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **B** -- ``<class_id> <x_center> <y_center> <width> <height>`` (normalized)
+
+   YOLO format uses center coordinates and dimensions, all normalized to
+   [0, 1] relative to image dimensions. One line per object, one label
+   file per image.
+
+
+.. admonition:: Question 14
+   :class: hint
+
+   What does **RT-DETR** achieve that the original DETR could not?
+
+   A. Higher accuracy than any other detector.
+
+   B. Real-time inference speed competitive with YOLO, while maintaining
+      the NMS-free transformer architecture.
+
+   C. Training without any labeled data.
+
+   D. Detection of 3D bounding boxes from monocular images.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **B** -- Real-time inference speed competitive with YOLO, while
+   maintaining the NMS-free transformer architecture.
+
+   The original DETR was slow and required 500 epochs to converge. RT-DETR
+   uses an efficient hybrid encoder to achieve real-time speed while keeping
+   the clean end-to-end design (no anchors, no NMS).
+
+
+.. admonition:: Question 15
+   :class: hint
+
+   At 60 mph (27 m/s), how far does a vehicle travel during 100 ms of
+   perception latency?
+
+   A. 0.27 m
+
+   B. 2.7 m
+
+   C. 27 m
+
+   D. 100 m
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **B** -- 2.7 m
+
+   At 27 m/s, the vehicle travels 27 x 0.1 = 2.7 meters during 100 ms.
+   This illustrates why perception latency is safety-critical -- every
+   millisecond matters for reaction distance.
+
+
+----
+
+
+True or False (Questions 16-25)
+================================
+
+.. admonition:: Question 16
+   :class: hint
+
+   **True or False:** YOLO is a two-stage detector that first proposes
+   regions, then classifies them.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   3D occupancy networks are evaluated using **mIoU** (mean Intersection over
-   Union) across semantic voxel classes. mAP is used for bounding box
-   detection benchmarks. Since occupancy produces dense per-voxel predictions,
-   IoU-based metrics that compare predicted and ground-truth voxel masks are
-   the appropriate choice.
+   YOLO is a single-stage detector. It predicts all bounding boxes and
+   class probabilities in a single forward pass, without a separate region
+   proposal step. Two-stage detectors like Faster R-CNN use the region
+   proposal approach.
 
 
-.. admonition:: Question 14
+.. admonition:: Question 17
    :class: hint
 
-   **True or False:** The nuScenes NDS metric rewards methods that have both
-   high detection recall (mAP) and low attribute errors (e.g., position,
-   size, orientation, velocity).
+   **True or False:** DETR requires Non-Maximum Suppression (NMS) as a
+   post-processing step.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False**
+
+   DETR eliminates NMS by using bipartite matching (Hungarian algorithm)
+   during training, which ensures each prediction corresponds to at most
+   one ground truth object. This produces non-duplicate predictions by
+   design.
+
+
+.. admonition:: Question 18
+   :class: hint
+
+   **True or False:** Transfer learning means training a model from scratch
+   on your target dataset.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False**
+
+   Transfer learning means starting with a model pre-trained on a large
+   dataset (e.g., COCO, ImageNet) and fine-tuning it on your target
+   dataset. This leverages learned features and typically requires less
+   data and training time than training from scratch.
+
+
+.. admonition:: Question 19
+   :class: hint
+
+   **True or False:** Semantic segmentation distinguishes between
+   individual instances of the same class (e.g., car #1 vs. car #2).
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False**
+
+   Semantic segmentation assigns a class label to every pixel but does
+   not distinguish individual instances. All car pixels get the same
+   "car" label. Instance segmentation is needed to separate individual
+   objects of the same class.
+
+
+.. admonition:: Question 20
+   :class: hint
+
+   **True or False:** ResNet's key innovation was residual connections
+   (skip connections) that enabled training of much deeper networks.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **True**
 
-   NDS = (1/10) * [5 * mAP + sum over TP metrics of (1 - min(1, error))].
-   It equally rewards accurate detection (mAP) and precise attribute
-   estimation (ATE, ASE, AOE, AVE, AAE). A method with high mAP but poor
-   velocity estimation will score lower than one with balanced performance
-   across all attributes.
+   Residual connections allow gradients to flow directly through skip
+   paths, solving the vanishing gradient problem in very deep networks.
+   This enabled training of 50--152+ layer networks without degradation,
+   a breakthrough that underpins most modern CNN architectures.
 
 
-.. admonition:: Question 15
+.. admonition:: Question 21
    :class: hint
 
-   **True or False:** BEV detection completely eliminates the need for
-   perspective-view camera features and processes only top-down image data.
+   **True or False:** In DETR, object queries are learned parameters that
+   each specialize in detecting one object in the scene.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **True**
+
+   DETR uses N learned object queries (typically 100) as inputs to the
+   transformer decoder. Each query attends to the encoder output via
+   cross-attention and specializes in detecting one object (or predicting
+   "no object"). They are learned during training.
+
+
+.. admonition:: Question 22
+   :class: hint
+
+   **True or False:** YOLO's FPN (Feature Pyramid Network) neck enables
+   detection of objects at multiple scales by fusing features from
+   different backbone layers.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **True**
+
+   FPN creates a top-down pathway that combines semantically rich
+   low-resolution features with high-resolution features via lateral
+   connections. This allows the network to detect both large objects
+   (at coarse scales) and small objects (at fine scales).
+
+
+.. admonition:: Question 23
+   :class: hint
+
+   **True or False:** Transformers are more data-efficient than CNNs,
+   requiring less training data to achieve good performance.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   BEV detection methods like LSS and BEVFormer start from perspective-view
-   camera images and transform those features into BEV space. The perspective
-   images are the input; BEV is the output representation. Only LiDAR-based
-   methods can directly produce BEV features without perspective images.
+   Transformers are generally more data-hungry than CNNs because they lack
+   the built-in inductive biases of convolutions (locality, translation
+   equivariance). They need larger datasets to learn spatial relationships
+   that CNNs capture by design.
+
+
+.. admonition:: Question 24
+   :class: hint
+
+   **True or False:** Precision measures the fraction of real objects that
+   the detector successfully found.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False**
+
+   Precision measures the fraction of detections that are correct:
+   TP / (TP + FP). The metric described (fraction of real objects found)
+   is **recall**: TP / (TP + FN).
+
+
+.. admonition:: Question 25
+   :class: hint
+
+   **True or False:** The same ROS 2 node pattern (subscribe to image,
+   run inference, publish detections) works for both YOLO and DETR.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **True**
+
+   The ROS 2 integration pattern is model-agnostic. The node subscribes to
+   ``/carla/camera/image``, converts the image, runs inference (regardless
+   of whether the model is YOLO or DETR), and publishes a
+   ``Detection2DArray`` message.
 
 
 ----
 
 
-Essay Questions (Questions 16-18)
-===================================
+Essay Questions (Questions 26-30)
+==================================
 
-.. admonition:: Question 16
+.. admonition:: Question 26
    :class: hint
 
-   **Compare and contrast Lift-Splat-Shoot (LSS) and BEVFormer** as approaches
-   for camera-to-BEV transformation. What are the key architectural differences
-   and the trade-offs of each?
+   **Compare YOLO and DETR** across at least four dimensions. In what
+   scenarios would you choose one over the other for an AV application?
 
    *(2-4 sentences)*
 
@@ -404,27 +596,21 @@ Essay Questions (Questions 16-18)
 
    *Key points to include:*
 
-   - LSS uses explicit geometry: it predicts a per-pixel depth distribution,
-     lifts features into a 3D frustum, and splats them into a voxel grid using
-     camera calibration. It is conceptually simple and does not require
-     Transformer attention mechanisms.
-   - BEVFormer uses learnable BEV queries that attend to image features via
-     deformable attention at geometrically-projected 3D reference points. It
-     is more flexible and can be extended with temporal attention.
-   - LSS trade-off: depends on accurate depth prediction; depth errors propagate
-     into BEV position errors. BEVFormer trade-off: higher computational cost
-     due to attention; requires careful tuning of query initialization and
-     reference point sampling.
-   - BEVFormer with temporal attention significantly outperforms LSS on nuScenes
-     (41.6 vs. ~32 mAP for comparable backbones), at higher compute cost.
+   - YOLO: CNN-based, local context, fast (1-5 ms), requires NMS (except
+     v10), mature and production-ready.
+   - DETR: Transformer-based, global context, cleaner design (no anchors,
+     no NMS), needs more training data, slower (improving with RT-DETR).
+   - Choose YOLO for real-time production systems where latency is critical.
+   - Choose DETR when global reasoning matters (e.g., detecting heavily
+     occluded objects, complex scenes) and compute budget allows it.
 
 
-.. admonition:: Question 17
+.. admonition:: Question 27
    :class: hint
 
-   **Explain why 3D occupancy networks represent an advance over bounding box
-   detection** for autonomous driving. Give two concrete scenarios where
-   occupancy prediction is superior.
+   **Explain how bipartite matching in DETR eliminates the need for NMS.**
+   What problem does NMS solve in YOLO, and why doesn't DETR have this
+   problem?
 
    *(2-4 sentences)*
 
@@ -433,26 +619,21 @@ Essay Questions (Questions 16-18)
 
    *Key points to include:*
 
-   - Bounding boxes assume rectangular box shapes, which fail for non-rigid
-     or irregular objects. Occupancy networks assign a semantic label to every
-     voxel independently, capturing arbitrary geometry.
-   - Scenario 1: construction zone -- barriers, debris, and scaffolding have
-     complex non-box shapes. Occupancy correctly maps the free space boundary
-     while a box detector would fail or produce very loose boxes.
-   - Scenario 2: overhanging tree branches or low-clearance obstacles -- a
-     3D box cannot represent objects that extend into part of the vehicle's
-     path. Occupancy precisely maps which voxels are occupied.
-   - Additionally, occupancy provides a direct "free space" representation
-     needed for trajectory optimization, while box detection requires a
-     separate freespace estimation step.
+   - YOLO produces many overlapping predictions for the same object. NMS
+     removes duplicates by suppressing lower-confidence boxes that overlap
+     with a higher-confidence box.
+   - DETR uses the Hungarian algorithm during training to enforce a
+     one-to-one assignment between predictions and ground truth objects.
+   - Each object query learns to detect at most one object, so duplicate
+     predictions do not arise by design.
 
 
-.. admonition:: Question 18
+.. admonition:: Question 28
    :class: hint
 
-   **Describe Tesla's BEV occupancy network approach** and explain why Tesla
-   chose a camera-only strategy instead of adding LiDAR. What are the
-   potential advantages and risks of this approach?
+   **Explain the YOLO backbone-neck-head architecture.** What does each
+   component do, and why is multi-scale feature fusion important for AV
+   perception?
 
    *(2-4 sentences)*
 
@@ -461,16 +642,55 @@ Essay Questions (Questions 16-18)
 
    *Key points to include:*
 
-   - Tesla uses 8 cameras to produce a 4D occupancy prediction (3D space +
-     predicted future states) using a video transformer trained on billions
-     of auto-labeled frames from its fleet.
-   - Tesla argues cameras are sufficient because humans drive with eyes only,
-     and a sufficiently powerful neural network can infer depth from multi-frame
-     parallax and learned scene priors.
-   - Advantages: lower hardware cost (LiDAR adds $1,000-$10,000+ per unit),
-     massively scalable data collection from the existing fleet, no sensor
-     interference or point sparsity at long range.
-   - Risks: camera-based depth inference is less reliable in low-texture
-     scenes, fog, rain, and low-light conditions compared to LiDAR. Validation
-     of safety margins is harder without a ground-truth depth sensor. Most
-     Tier-1 robotaxi competitors (Waymo, Cruise) retain LiDAR for redundancy.
+   - Backbone: Extracts hierarchical features from the image (edges ->
+     textures -> object parts -> objects).
+   - Neck (FPN + PAN): Fuses features across scales so the detector can
+     handle objects of different sizes.
+   - Head: Produces final bounding box and class predictions.
+   - Multi-scale fusion is critical for AV perception because the scene
+     contains both large nearby vehicles and small distant pedestrians.
+
+
+.. admonition:: Question 29
+   :class: hint
+
+   **Why did deep learning replace traditional CV methods** (HOG, SIFT,
+   etc.) for AV perception? What were the key enablers of this transition?
+
+   *(2-4 sentences)*
+
+.. dropdown:: Answer Guidelines
+   :class-container: sd-border-success
+
+   *Key points to include:*
+
+   - Traditional methods required hand-crafted features that were fragile
+     and couldn't generalize across diverse conditions.
+   - Deep learning learns features automatically from data, adapting to
+     variation in lighting, weather, viewpoints, and object appearance.
+   - Key enablers: large-scale datasets (ImageNet, COCO), GPU acceleration,
+     improved training techniques (batch norm, residual connections), and
+     transfer learning.
+
+
+.. admonition:: Question 30
+   :class: hint
+
+   **Describe how you would deploy a YOLO-based perception node** in a
+   ROS 2 system connected to CARLA. What topics would it subscribe to
+   and publish?
+
+   *(2-4 sentences)*
+
+.. dropdown:: Answer Guidelines
+   :class-container: sd-border-success
+
+   *Key points to include:*
+
+   - The node subscribes to ``/carla/camera/image`` (``sensor_msgs/Image``).
+   - In the callback, it converts the ROS image to OpenCV format using
+     ``cv_bridge``, runs YOLO inference, and constructs a
+     ``Detection2DArray`` message with bounding boxes and class labels.
+   - It publishes detections on a topic like ``/perception/detections``.
+   - This same pattern works for any detector (YOLO, DETR, etc.) since the
+     ROS 2 interface is model-agnostic.
