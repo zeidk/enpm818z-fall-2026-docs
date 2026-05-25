@@ -16,7 +16,7 @@ GP5: Vision-Language-Action Driving (Optional)
       * - **Weight**
         - Bonus: up to 10 points added to the final project score (100-point scale)
       * - **Lectures**
-        - L10 (Trajectory Planning & Control), L11 (Prediction & Decision-Making), L12 (End-to-End Driving & Foundation Models)
+        - L9 (Prediction & Behavior Modeling), L11 (Trajectory Generation & Control), L12 (End-to-End Driving, VLA & Imitation Learning)
       * - **Team Size**
         - Same team as GP1--GP4
       * - **Submission**

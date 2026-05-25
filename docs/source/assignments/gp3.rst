@@ -16,7 +16,7 @@ GP3: Fusion & Localization
       * - **Weight**
         - 25 points (25% of final project)
       * - **Lectures**
-        - L6--L7
+        - L3, L6--L7
       * - **Team Size**
         - 4 students
       * - **Submission**

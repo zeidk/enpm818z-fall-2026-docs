@@ -16,7 +16,7 @@ GP4: Planning & Control
       * - **Weight**
         - 20 points (20% of final project)
       * - **Lectures**
-        - L8--L10
+        - L8--L11
       * - **Team Size**
         - 4 students
       * - **Submission**
