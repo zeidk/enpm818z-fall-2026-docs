@@ -42,12 +42,12 @@ The final project accounts for **80% of your overall course grade**:
      - 40
      - 40%
      - 3 weeks
-     - L3--L5
+     - L4--L5
    * - GP3: Fusion & Localization
      - 25
      - 25%
      - 3 weeks
-     - L6--L8
+     - L3, L6--L8
    * - GP4: Planning & Control
      - 20
      - 20%
