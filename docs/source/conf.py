@@ -41,7 +41,7 @@ proof_numbered = {
 todo_include_todos = True
 
 templates_path = ["_templates"]
-exclude_patterns = []
+exclude_patterns = ["lectures/_new/**"]
 
 # ---------------------------------------------------------------------------
 # PyData Sphinx Theme
