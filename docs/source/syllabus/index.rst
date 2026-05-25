@@ -47,19 +47,19 @@ Course Schedule
      - L2
      - Team Formation, GP1 Posted
    * - 3
-     - Perception I: Object Detection (YOLO to DETR)
+     - Probabilistic State Estimation & Fusion
      - L3
      - Quiz 1
    * - 4
-     - Perception II: BEV Perception & Occupancy Networks
+     - Perception I: Object Detection (YOLO to DETR)
      - L4
      -
    * - 5
-     - Perception III: Segmentation, Tracking & Temporal Reasoning
+     - Perception II: BEV, Occupancy & Segmentation
      - L5
      - GP1 Due, GP2 Posted
    * - 6
-     - Multi-Sensor Fusion
+     - Perception III: Tracking, Temporal & Deep Fusion
      - L6
      - Quiz 2
    * - 7
@@ -71,19 +71,19 @@ Course Schedule
      - L8
      - GP2 Due, GP3 Posted
    * - 9
-     - Motion Planning
+     - Prediction & Behavior Modeling
      - L9
      - Quiz 3
    * - 10
-     - Trajectory Planning & Control
+     - Motion Planning
      - L10
      -
    * - 11
-     - Prediction & Decision-Making
+     - Trajectory Generation & Control
      - L11
      - Quiz 4, GP3 Due, GP4 Posted
    * - 12
-     - End-to-End Driving & Foundation Models
+     - End-to-End Driving, VLA & Imitation Learning
      - L12
      -
    * - 13
