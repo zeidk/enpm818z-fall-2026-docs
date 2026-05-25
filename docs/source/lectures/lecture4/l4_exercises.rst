@@ -3,19 +3,19 @@ Exercises
 ====================================================
 
 This page contains five take-home exercises that reinforce the concepts
-from Lecture 4. Exercises cover BEV representation, the Lift-Splat-Shoot
-pipeline, and occupancy networks.
+from Lecture 4. Exercises cover object detection architectures,
+inference benchmarking, and evaluation metrics.
 
 
-.. dropdown:: Exercise 1 -- Perspective vs. BEV Representation
+.. dropdown:: Exercise 1 -- YOLO Architecture Analysis
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Build geometric intuition for why BEV is preferred for planning
-   while perspective views are better for recognition.
+   Develop a deeper understanding of the YOLOv8 detection pipeline by
+   reasoning about grid sizes, anchor-free design, and post-processing.
 
 
    .. raw:: html
@@ -25,34 +25,33 @@ pipeline, and occupancy networks.
 
    **Specification**
 
-   A vehicle is located **30 m ahead** and **5 m to the left** of the
-   ego vehicle. A second vehicle is **60 m ahead** in the same lane.
+   Answer the following questions in writing:
 
-   1. In a front-facing camera image (640 × 480, 90° FOV), roughly
-      where does the first vehicle appear (left/center/right)? Would
-      it appear large or small?
-   2. In a BEV grid (100 m × 100 m, 0.5 m/cell, ego at center), what
-      are the **grid coordinates** (row, col) of the first vehicle?
-   3. In the camera image, how does the second vehicle's apparent size
-      compare to the first? In BEV?
-   4. Write 3--4 sentences explaining why BEV is preferred for
-      **planning** while perspective is better for **fine-grained
-      recognition** (e.g., reading a traffic sign).
+   1. YOLOv8 uses a feature pyramid with three detection heads at
+      strides 8, 16, and 32. If the input image is ``640 × 640``,
+      what is the **grid size** at each stride?
+   2. YOLOv8 is an **anchor-free** detector. Explain in 2--3 sentences
+      what this means and how it differs from anchor-based detectors
+      like YOLOv5.
+   3. The model outputs ``(cx, cy, w, h, class_scores)`` per grid cell.
+      Why is **Non-Maximum Suppression (NMS)** still needed as a
+      post-processing step?
+   4. Name **one advantage** and **one disadvantage** of NMS.
 
    **Deliverable**
 
-   Written answers with coordinate calculations shown.
+   Written answers (one paragraph per question).
 
 
-.. dropdown:: Exercise 2 -- Multi-Camera Rig Coverage
+.. dropdown:: Exercise 2 -- DETR Object Queries
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Analyze the coverage pattern of a multi-camera rig and identify
-   blind spots and overlap regions.
+   Understand how DETR uses learned object queries and bipartite
+   matching instead of NMS.
 
 
    .. raw:: html
@@ -62,36 +61,33 @@ pipeline, and occupancy networks.
 
    **Specification**
 
-   A six-camera rig is mounted on a vehicle:
+   Answer the following questions in writing:
 
-   - Front: ``(2.0, 0, 1.5)`` m, yaw ``0°``, FOV ``110°``
-   - Front-Left: ``(1.5, -0.8, 1.5)`` m, yaw ``-55°``, FOV ``110°``
-   - Front-Right: ``(1.5, 0.8, 1.5)`` m, yaw ``55°``, FOV ``110°``
-   - Rear: ``(-2.0, 0, 1.5)`` m, yaw ``180°``, FOV ``110°``
-   - Rear-Left: ``(-1.5, -0.8, 1.5)`` m, yaw ``-125°``, FOV ``110°``
-   - Rear-Right: ``(-1.5, 0.8, 1.5)`` m, yaw ``125°``, FOV ``110°``
-
-   1. Sketch a **top-down view** of the camera coverage (show FOV
-      cones). Is there any blind spot around the vehicle?
-   2. Compute the **angular overlap** between the Front and Front-Left
-      cameras. Why is overlap important for BEV construction?
-   3. A pedestrian stands at ``(0, -3, 0)`` relative to the vehicle
-      (directly to the left, 3 m away). Which camera(s) can see them?
+   1. DETR uses a fixed set of **100 object queries** that are decoded
+      into detections. What happens if a scene contains more than 100
+      objects?
+   2. DETR uses **bipartite matching** (Hungarian algorithm) during
+      training to assign predictions to ground-truth objects. Why is
+      this preferred over the anchor/NMS assignment used in YOLO?
+   3. What is the computational complexity of the Hungarian algorithm
+      in terms of the number of queries :math:`N`?
+   4. RT-DETR improves inference speed over the original DETR. Name
+      **two specific techniques** it uses to achieve this.
 
    **Deliverable**
 
-   Top-down coverage sketch and written answers.
+   Written answers (2--4 sentences per question).
 
 
-.. dropdown:: Exercise 3 -- Lift-Splat-Shoot Pipeline
+.. dropdown:: Exercise 3 -- Inference Speed Benchmark
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Understand the computational structure of the LSS pipeline by
-   working through the numbers.
+   Quantitatively compare YOLOv8 and RT-DETR inference performance on
+   CARLA data.
 
 
    .. raw:: html
@@ -101,36 +97,52 @@ pipeline, and occupancy networks.
 
    **Specification**
 
-   In the LSS pipeline, each pixel predicts a **depth distribution**
-   over :math:`D` discrete bins.
+   Create the file ``inference_benchmark.py`` that performs the
+   following:
 
-   1. If the depth range is ``[2 m, 50 m]`` with 1 m bins, how many
-      bins :math:`D` are there?
-   2. Each pixel generates :math:`D` feature points in 3D. For an
-      image of size ``H = 224, W = 400``, how many 3D points does a
-      **single camera** produce?
-   3. With **6 cameras**, what is the total number of 3D points before
-      splatting?
-   4. The BEV grid covers ``[-50 m, 50 m]`` in X and Y with 0.5 m
-      resolution. How many cells does the grid have?
-   5. Why does LSS use **sum pooling** (not max pooling) when
-      accumulating features in the BEV grid?
+   1. Load both ``yolov8s.pt`` and ``rtdetr-l.pt`` using the
+      Ultralytics library.
+   2. Collect **100 frames** from a CARLA RGB camera (640 × 480).
+   3. For each model, run inference on all 100 frames and record:
+
+      - Per-frame inference time (ms)
+      - Number of detections per frame (confidence > 0.5)
+
+   4. Print a summary table:
+
+      .. list-table::
+         :widths: 30 35 35
+         :header-rows: 1
+         :class: compact-table
+
+         * - Metric
+           - YOLOv8s
+           - RT-DETR-L
+         * - Mean inference time (ms)
+           -
+           -
+         * - Std inference time (ms)
+           -
+           -
+         * - Mean detections/frame
+           -
+           -
 
    **Deliverable**
 
-   Numerical answers with calculations shown, plus a written
-   explanation for question 5.
+   The script and a completed results table. Include a 2--3 sentence
+   comparison of the two models.
 
 
-.. dropdown:: Exercise 4 -- BEV Grid Resolution Trade-Off
+.. dropdown:: Exercise 4 -- Detection Under Adverse Conditions
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Empirically evaluate how BEV grid resolution affects detail and
-   computational cost using CARLA.
+   Evaluate how weather and lighting conditions impact object detection
+   quality.
 
 
    .. raw:: html
@@ -140,45 +152,47 @@ pipeline, and occupancy networks.
 
    **Specification**
 
-   Create the file ``bev_resolution.py`` that performs the following:
+   Create the file ``weather_detection.py`` that performs the following:
 
-   1. Spawn an ego vehicle with a depth camera in Town03.
-   2. Using the simplified LSS pipeline from the lecture (ground-truth
-      depth), generate BEV grids at three resolutions:
+   1. Spawn an ego vehicle with an RGB camera in Town03.
+   2. Collect **20 frames** under each of these four conditions:
 
-      - **0.25 m** per cell
-      - **0.5 m** per cell
-      - **1.0 m** per cell
+      - ``ClearNoon``
+      - ``HardRainNoon``
+      - ``ClearNight``
+      - ``SoftFogNoon``
 
-   3. For each resolution, measure and report:
+   3. Run YOLOv8s inference on all 80 frames and compute per condition:
 
-      - BEV grid dimensions (rows × cols) for a 100 m × 100 m area.
-      - Computation time to generate one BEV frame.
-      - Number of occupied cells (cells with ≥ 1 point).
+      - **Mean confidence** of all detections.
+      - **Total detection count**.
+      - **False positive estimate** -- detections with no matching
+        CARLA ground-truth bounding box within 5 pixels.
 
-   4. Save the three BEV visualizations as images.
+   4. Print a results table with one row per condition.
 
    **Written analysis**
 
-   - Can you distinguish between two vehicles parked side-by-side at
-     each resolution?
-   - Recommend a resolution that balances detail and compute cost for
-     real-time driving at 10 Hz.
+   - Which condition causes the **largest drop** in detection quality?
+   - Why does that condition specifically degrade camera-based
+     detection?
+   - Propose one sensor or algorithmic solution to improve robustness
+     in that condition.
 
    **Deliverable**
 
-   The script, three BEV images, results table, and recommendation.
+   The script, results table, and written analysis (5--8 sentences).
 
 
-.. dropdown:: Exercise 5 -- Occupancy vs. Detection
+.. dropdown:: Exercise 5 -- mAP Computation by Hand
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Reason about when detection-based vs. occupancy-based perception
-   is more appropriate for safe navigation.
+   Understand the Average Precision metric by computing it manually
+   from a small set of detection results.
 
 
    .. raw:: html
@@ -188,45 +202,44 @@ pipeline, and occupancy networks.
 
    **Specification**
 
-   Consider a scene with the following four objects:
-
-   - A **parked car** (standard rectangular shape)
-   - A **fallen tree** across the road (irregular shape)
-   - A **construction barrier** (thin, elongated)
-   - An **overhanging branch** at 2.5 m height
-
-   For each object, fill in the table:
+   A detector produces the following results on a single image (sorted
+   by confidence). Ground truth contains **3 cars**.
 
    .. list-table::
-      :widths: 25 25 25 25
+      :widths: 20 20 30
       :header-rows: 1
       :class: compact-table
 
-      * - Object
-        - Well represented by 3D bbox?
-        - Well represented by occupancy?
-        - More useful for planner?
-      * - Parked car
-        -
-        -
-        -
-      * - Fallen tree
-        -
-        -
-        -
-      * - Construction barrier
-        -
-        -
-        -
-      * - Overhanging branch
-        -
-        -
-        -
+      * - Detection
+        - Confidence
+        - Correct? (IoU > 0.5)
+      * - D1
+        - 0.95
+        - Yes (TP)
+      * - D2
+        - 0.88
+        - Yes (TP)
+      * - D3
+        - 0.80
+        - No (FP)
+      * - D4
+        - 0.72
+        - Yes (TP)
+      * - D5
+        - 0.60
+        - No (FP)
 
-   Write a concluding paragraph (5--7 sentences) arguing when a
-   production ADS should use detection-based vs. occupancy-based
-   perception, or both.
+   1. Compute **precision** and **recall** at each detection threshold
+      (i.e., after including D1, after D1+D2, after D1+D2+D3, etc.).
+      Fill in a table with columns: Detection, TP, FP, Precision,
+      Recall.
+   2. Sketch the **precision-recall curve** (by hand or using
+      matplotlib).
+   3. Compute **AP@0.5** using the all-point interpolation method.
+   4. If the detector missed one of the three ground-truth cars
+      entirely, what is the maximum possible recall?
 
    **Deliverable**
 
-   Completed table and written analysis.
+   Completed precision/recall table, PR curve sketch, and final AP
+   value with work shown.

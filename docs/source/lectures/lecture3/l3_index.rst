@@ -1,16 +1,21 @@
 ====================================================
-L3: Perception I -- Object Detection (YOLO to DETR)
+L3: Probabilistic State Estimation & Fusion
 ====================================================
 
 Overview
 --------
 
-This lecture covers the foundations of visual perception for autonomous driving,
-progressing from traditional computer vision to modern deep learning approaches.
-You will learn how perception fits into the AV stack, understand the taxonomy
-of perception tasks, and study two landmark object detection architectures:
-YOLO (CNN-based) and DETR (transformer-based). The lecture concludes with a
-hands-on comparison of both models on CARLA data.
+Robust autonomous driving rests on a probabilistic foundation: every
+sensor measurement is noisy, every motion model is approximate, and the
+job of the AV stack is to track belief about the world over time rather
+than to commit to single point estimates. This lecture introduces that
+foundation -- the Bayesian filtering family (Kalman, Extended Kalman,
+Unscented Kalman, Particle) and the classical multi-sensor fusion
+architectures built on top of it. You will derive each filter from
+first principles, work through their AV-specific failure modes, and
+implement a multi-sensor Kalman filter in CARLA. The deep-learning
+fusion techniques that complement these tools (cross-attention,
+BEVFusion) appear later, alongside perception in L6.
 
 
 Learning Objectives
@@ -18,19 +23,25 @@ Learning Objectives
 
 By the end of this lecture, you will be able to:
 
-- Define perception and explain its role in the AV stack (sensing ->
-  perception -> planning -> control).
-- Describe the taxonomy of perception tasks: low-level processing, mid-level
-  understanding, and high-level reasoning.
-- Explain why traditional CV methods (HOG, SIFT) failed for robust AV
-  perception and how deep learning changed the field.
-- Trace the YOLO architecture evolution from v1 (2015) to v11 (2024).
-- Explain the backbone-neck-head architecture and the difference between
-  anchor-based and anchor-free detection.
-- Describe the DETR architecture: encoder-decoder transformer, object queries,
-  and bipartite matching.
-- Compare YOLO and DETR on speed, accuracy, and failure modes.
-- Train and deploy an object detector on CARLA data as a ROS 2 node.
+- Explain why sensor fusion is essential for accuracy, reliability, and
+  coverage in autonomous driving.
+- Distinguish complementary, competitive (redundant), and cooperative
+  sensor relationships.
+- Compare early (raw data), intermediate (feature-level), and late
+  (decision-level) fusion architectures.
+- Derive and apply the Kalman Filter prediction and update equations,
+  and explain the Kalman Gain intuition.
+- Describe the Extended Kalman Filter (EKF) and how Jacobian
+  linearization handles nonlinear dynamics.
+- Describe the Unscented Kalman Filter (UKF) and how sigma-point
+  sampling avoids Jacobian computation.
+- Explain the Particle Filter and when it is preferred over KF/EKF/UKF.
+- Formulate the data association problem and describe common solutions
+  (NN, GNN, JPDA, MHT).
+- Apply weighted averaging and inverse-variance weighting for fusing
+  independent Gaussian estimates.
+- Implement a multi-sensor Kalman Filter in CARLA and reason about
+  degraded-weather performance.
 
 
 .. toctree::
@@ -47,13 +58,16 @@ By the end of this lecture, you will be able to:
 Next Steps
 ----------
 
-- In the next lecture, we will cover **Perception II: BEV Perception &
-  Occupancy Networks**:
+- In the next lecture, we will cover **Perception I: Object Detection
+  (YOLO to DETR)**:
 
-  - Bird's-Eye View representation and why it matters for AV planning.
-  - BEVFormer and camera-to-BEV projection.
-  - 3D occupancy networks.
+  - CNN fundamentals and the YOLO architecture family (v1 -> v11).
+  - DETR and the transformer-based detection paradigm.
+  - Trade-offs between CNN-based and transformer-based detectors.
+  - Deployment patterns: detector-as-ROS-2-node, model optimization.
 
-- Start working on **A2: Object Detection -- YOLO vs. DETR** (posted Week 6).
-- Read the `Ultralytics YOLOv8 documentation <https://docs.ultralytics.com/>`_.
-- Read the `DETR paper <https://arxiv.org/abs/2005.12872>`_ (Carion et al., 2020).
+- Review the original Kalman (1960) paper or a linear algebra refresher
+  if matrix operations feel unfamiliar.
+- Explore the ``filterpy`` Python library for practical KF/UKF
+  implementation: `https://filterpy.readthedocs.io
+  <https://filterpy.readthedocs.io>`_.

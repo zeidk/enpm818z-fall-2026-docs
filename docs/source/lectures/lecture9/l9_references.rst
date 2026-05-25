@@ -2,345 +2,383 @@ References
 ==========
 
 
-.. dropdown:: Lecture 8
+.. dropdown:: Lecture 10
     :class-container: sd-border-secondary
     :open:
 
     .. card::
         :class-card: sd-border-secondary
 
-        **ENPM818Z -- L8: Motion Planning**
+        **ENPM818Z -- L10: Prediction & Decision-Making**
 
-        Covers the three-tier motion planning hierarchy (route,
-        behavior, motion), bicycle kinematic model and nonholonomic
-        constraints, graph-based planners (Dijkstra, A*, Weighted
-        A*), sampling-based planners (RRT, RRT*, PRM), lattice-based
-        planning in the Frenet frame with pre-computed motion
-        primitives, geometric collision detection with safety
-        margins (OBB, Minkowski sum), and diffusion-based planners
-        (Diffusion Planner ICLR 2025, DiffusionDrive CVPR 2025).
+        Covers why prediction is necessary for planning (horizon
+        requirements), physics-based prediction (CV, CTRA),
+        maneuver-based prediction (intent classification + conditional
+        model), interaction-aware prediction (Social Force, GNNs),
+        Transformer-based prediction (MotionTransformer, scene
+        context encoding, multi-modal output), multi-modal prediction
+        metrics (MinADE, MinFDE, MissRate, mAP), FSM behavior
+        planning (states, transitions, limitations), rule-based vs.
+        learned decision-making, behavior cloning (distribution shift,
+        compounding errors), and DAgger (dataset aggregation, expert
+        querying, convergence guarantees).
 
 
-.. dropdown:: Foundational Textbooks
+.. dropdown:: Trajectory Prediction
     :class-container: sd-border-secondary
 
     .. grid:: 1 1 2 2
         :gutter: 2
 
-        .. grid-item-card:: Choset et al. -- Principles of Robot Motion
+        .. grid-item-card:: Schubert et al. -- CTRA Model (2008)
             :class-card: sd-border-secondary
 
-            **MIT Press, 2005**
+            **IEEE IV 2008**
 
-            Comprehensive coverage of configuration spaces,
-            potential fields, graph-based planning, and sampling-
-            based planners. Chapters 4--7 are directly relevant
-            to this lecture.
+            Analysis and comparison of constant-motion kinematic
+            models (CV, CA, CTRA, CTRV) for vehicle trajectory
+            prediction with empirical accuracy benchmarks.
 
             +++
 
-            - Configuration space theory
-            - PRM and RRT derivations
-            - Completeness and optimality proofs
+            - CTRA derivation
+            - Model comparison
+            - Short-horizon accuracy
 
-        .. grid-item-card:: LaValle -- Planning Algorithms
+        .. grid-item-card:: Helbing & Molnar -- Social Force (1995)
             :class-card: sd-border-secondary
 
-            **Cambridge University Press, 2006**
-            (freely available at planning.cs.uiuc.edu)
+            **Physical Review E, 1995**
 
-            The definitive reference for motion planning
-            algorithms. Covers discrete planning, sampling-based
-            methods, and nonholonomic systems.
+            Seminal social force model for pedestrian dynamics,
+            modelling attraction toward goals and repulsion from
+            obstacles and other pedestrians.
 
             +++
 
-            - RRT and PRM foundations
-            - Nonholonomic planning
-            - Optimality analysis
+            - Force model formulation
+            - Crowd dynamics simulation
+            - Parameter estimation
 
-        .. grid-item-card:: Thrun, Burgard, Fox -- Probabilistic Robotics
+        .. grid-item-card:: Alahi et al. -- Social LSTM (CVPR 2016)
             :class-card: sd-border-secondary
 
-            **MIT Press, 2005**
+            **CVPR 2016**
 
-            Probabilistic foundations for robotics including
-            localization, mapping, and planning under uncertainty.
-            Relevant for understanding safety margins and
-            uncertainty-aware planning.
+            Introduced the social pooling mechanism to LSTM-based
+            pedestrian trajectory prediction, enabling interaction-
+            aware learning.
 
             +++
 
-            - Probabilistic state estimation
-            - Occupancy grid maps
-            - Planning under uncertainty
+            - LSTM trajectory prediction
+            - Social pooling
+            - ETH/UCY benchmark results
 
-        .. grid-item-card:: Paden et al. -- Survey of AV Motion Planning
+        .. grid-item-card:: Gupta et al. -- Social GAN (CVPR 2018)
+            :class-card: sd-border-secondary
+
+            **CVPR 2018**
+
+            Generative adversarial network for multi-modal
+            pedestrian trajectory prediction with socially
+            acceptable samples.
+
+            +++
+
+            - GAN-based multi-modal prediction
+            - Variety loss
+            - Social acceptability
+
+
+.. dropdown:: Transformer-Based Prediction
+    :class-container: sd-border-secondary
+
+    .. grid:: 1 1 2 2
+        :gutter: 2
+
+        .. grid-item-card:: Shi et al. -- MotionTransformer (NeurIPS 2023)
+            :class-card: sd-border-secondary
+
+            **NeurIPS 2023**
+
+            State-of-the-art Transformer predictor with two-stage
+            global + local motion Transformers and learnable motion
+            query pairs for multi-modal prediction on WOMD.
+
+            +++
+
+            - Two-stage Transformer architecture
+            - Factorized attention
+            - WOMD state-of-the-art results
+
+        .. grid-item-card:: Nayakanti et al. -- Wayformer (ICRA 2023)
+            :class-card: sd-border-secondary
+
+            **ICRA 2023**
+
+            Waymo's Transformer-based prediction model with
+            efficient factorized attention for joint agent and
+            map encoding.
+
+            +++
+
+            - Factorized attention design
+            - Scalability analysis
+            - Real-time inference
+
+        .. grid-item-card:: Ngiam et al. -- Scene Transformer (ICLR 2022)
+            :class-card: sd-border-secondary
+
+            **ICLR 2022**
+
+            Joint prediction of all agents in a scene using a
+            single Transformer, enabling fully interaction-aware
+            prediction.
+
+            +++
+
+            - Joint multi-agent prediction
+            - Factored attention masks
+            - nuScenes and WOMD results
+
+        .. grid-item-card:: Shi et al. -- MTR++ (T-PAMI 2024)
+            :class-card: sd-border-secondary
+
+            **IEEE T-PAMI 2024**
+
+            Extension of MotionTransformer with improved scene
+            encoding and multi-agent prediction, achieving SOTA
+            across multiple benchmarks.
+
+            +++
+
+            - Extended architecture
+            - Multi-dataset training
+            - Benchmark leaderboard
+
+
+.. dropdown:: Behavior Planning
+    :class-container: sd-border-secondary
+
+    .. grid:: 1 1 2 2
+        :gutter: 2
+
+        .. grid-item-card:: Paden et al. -- AV Planning Survey (IEEE T-ITS 2016)
             :class-card: sd-border-secondary
 
             **IEEE T-ITS, 2016**
 
-            Comprehensive survey of motion planning techniques
-            specifically for autonomous vehicles, covering all
-            algorithm families in this lecture.
+            Survey of behavior planning approaches including FSMs,
+            POMDP, and rule-based methods for autonomous vehicles.
 
             +++
 
-            - Route, behavior, motion hierarchy
-            - Graph-based and sampling-based planners
-            - AV-specific constraints
+            - FSM design patterns
+            - POMDP formulation
+            - Rule-based systems
+
+        .. grid-item-card:: Ulbrich & Maurer -- MOMDP for Behavior (IV 2013)
+            :class-card: sd-border-secondary
+
+            **IV 2013**
+
+            Models behavior planning as a Mixed Observability MDP,
+            enabling principled uncertainty handling beyond FSMs.
+
+            +++
+
+            - MOMDP formulation
+            - Belief-space planning
+            - Intersection scenarios
+
+        .. grid-item-card:: Brechtel et al. -- Probabilistic MDP (ITSC 2014)
+            :class-card: sd-border-secondary
+
+            **ITSC 2014**
+
+            Probabilistic behavior planning under prediction
+            uncertainty using continuous-state MDP.
+
+            +++
+
+            - MDP with probabilistic transitions
+            - Integration with prediction
+            - Risk-aware planning
+
+        .. grid-item-card:: Werber et al. -- Rule Book (IV 2019)
+            :class-card: sd-border-secondary
+
+            **IV 2019**
+
+            Formalization of traffic rules as a hierarchically
+            ordered rule book for certifiable behavior planning.
+
+            +++
+
+            - Rule formalization
+            - Hierarchical priority
+            - Verification
 
 
-.. dropdown:: Graph-Based Planning
+.. dropdown:: Imitation Learning and DAgger
     :class-container: sd-border-secondary
 
     .. grid:: 1 1 2 2
         :gutter: 2
 
-        .. grid-item-card:: Hart, Nilsson, Raphael -- A* (1968)
+        .. grid-item-card:: Ross & Bagnell -- Behavior Cloning (2010)
             :class-card: sd-border-secondary
 
-            **IEEE T-SSC, 1968**
+            **JMLR Workshop, 2010**
 
-            The original A* paper introducing the heuristic
-            search algorithm and proving its optimality under
-            admissible heuristics.
+            Analysis of distribution shift in behavior cloning with
+            the formal :math:`O(\epsilon T^2)` error bound derivation.
 
             +++
 
-            - Original A* formulation
-            - Admissibility proof
-            - Heuristic design
+            - Distribution shift analysis
+            - Compounding error bound
+            - Theoretical foundations
 
-        .. grid-item-card:: Likhachev et al. -- Weighted A* (2003)
+        .. grid-item-card:: Ross, Gordon & Bagnell -- DAgger (AISTATS 2011)
             :class-card: sd-border-secondary
 
-            **NIPS 2003**
+            **AISTATS 2011**
 
-            Introduces the :math:`\varepsilon`-suboptimal
-            weighted A* variant with formal bounds on solution
-            quality vs. computation time.
+            Original DAgger paper introducing the dataset aggregation
+            algorithm with formal reduction from :math:`O(\epsilon T^2)`
+            to :math:`O(\epsilon T)` regret.
 
             +++
 
-            - Inflation factor analysis
-            - Anytime planning extensions
-            - Practical implementation
+            - DAgger algorithm
+            - Convergence guarantees
+            - No-regret analysis
+
+        .. grid-item-card:: Codevilla et al. -- CILRS (ICCV 2019)
+            :class-card: sd-border-secondary
+
+            **ICCV 2019**
+
+            Conditional imitation learning with reinforcement
+            learning for robust urban driving, addressing
+            distribution shift via hybrid IL+RL training.
+
+            +++
+
+            - Conditional command inputs
+            - IL + RL hybrid
+            - CARLA benchmark results
+
+        .. grid-item-card:: Chen et al. -- TransFuser (CVPR 2021)
+            :class-card: sd-border-secondary
+
+            **CVPR 2021**
+
+            Transformer-based imitation learning agent fusing
+            camera and LiDAR via cross-attention for CARLA
+            Leaderboard challenge.
+
+            +++
+
+            - Sensor fusion via attention
+            - End-to-end imitation
+            - Leaderboard benchmark
 
 
-.. dropdown:: Sampling-Based Planning
+.. dropdown:: Datasets and Benchmarks
     :class-container: sd-border-secondary
 
     .. grid:: 1 1 2 2
         :gutter: 2
 
-        .. grid-item-card:: LaValle -- RRT (1998)
+        .. grid-item-card:: Waymo Open Motion Dataset (WOMD)
+            :link: https://waymo.com/open/data/motion/
             :class-card: sd-border-secondary
 
-            **Technical Report, Iowa State, 1998**
+            **Waymo Open Dataset**
 
-            Original RRT paper introducing rapidly-exploring
-            random trees for single-query kinodynamic planning.
+            Large-scale real-world prediction benchmark with 570 hours
+            of driving data across diverse scenarios. Standard benchmark
+            for MotionTransformer and similar models.
 
             +++
 
-            - RRT algorithm
-            - Probabilistic completeness proof
-            - Kinodynamic extension
+            - Agent trajectory annotations
+            - HD map with road graph
+            - Prediction challenge leaderboard
 
-        .. grid-item-card:: Karaman & Frazzoli -- RRT* (2011)
+        .. grid-item-card:: nuScenes Prediction
+            :link: https://www.nuscenes.org/prediction
             :class-card: sd-border-secondary
 
-            **IJRR, 2011**
+            **nuScenes (Motional)**
 
-            Introduces RRT* with asymptotic optimality guarantee.
-            Also introduces PRM* and formal analysis of
-            sampling-based planner convergence rates.
+            360-degree sensor suite dataset with prediction challenge
+            and standardized MinADE/MinFDE/MissRate metrics.
 
             +++
 
-            - RRT* rewiring algorithm
-            - Asymptotic optimality proof
-            - Convergence rate analysis
+            - Multi-sensor annotations
+            - Prediction challenge
+            - MinADE/MinFDE baseline results
 
-        .. grid-item-card:: Kavraki et al. -- PRM (1996)
+        .. grid-item-card:: ETH/UCY Pedestrian Datasets
+            :link: https://graphics.cs.ucy.ac.cy/research/downloads/crowd-data
             :class-card: sd-border-secondary
 
-            **IEEE T-RA, 1996**
+            **ETH Zurich / UCY**
 
-            Original PRM paper introducing probabilistic road
-            maps for multi-query planning in high-dimensional
-            configuration spaces.
+            Standard pedestrian trajectory prediction benchmarks
+            used to evaluate Social LSTM, Social GAN, and subsequent
+            pedestrian prediction models.
 
             +++
 
-            - Two-phase construction
-            - Probabilistic completeness
-            - Multi-query efficiency
+            - Overhead video annotations
+            - Multiple crowd scenarios
+            - ADE/FDE metrics
 
 
-.. dropdown:: Lattice-Based Planning
+.. dropdown:: Recommended Reading
     :class-container: sd-border-secondary
 
     .. grid:: 1 1 2 2
         :gutter: 2
 
-        .. grid-item-card:: Pivtoraiko et al. -- State Lattice (2009)
+        .. grid-item-card:: Schmerling et al.
             :class-card: sd-border-secondary
 
-            **JFR, 2009**
+            **Multimodal Probabilistic Model-Based Planning for
+            Human-Robot Interaction (ICRA 2018)**
 
-            Introduces the state lattice framework with
-            pre-computed motion primitives for kinematically
-            feasible robot motion planning.
+            Unified framework for prediction and planning under
+            multi-modal agent behavior uncertainty.
 
-            +++
-
-            - Lattice construction methodology
-            - Motion primitive generation
-            - Search algorithms
-
-        .. grid-item-card:: McNaughton et al. -- Frenet Lattice (2011)
+        .. grid-item-card:: Sutton & Barto
             :class-card: sd-border-secondary
 
-            **ICRA 2011 (Uber ATG)**
+            **Reinforcement Learning: An Introduction (2nd Ed.)**
 
-            Describes the Frenet-frame lattice planner used
-            in structured autonomous driving, including
-            lane-change and yield maneuver encoding.
+            Comprehensive RL textbook. Chapters 3--6 provide the
+            MDP and policy optimization foundations underlying
+            learned behavior planners and DAgger.
 
-            +++
-
-            - Road-aligned lattice design
-            - Lane change primitives
-            - Real-time performance
-
-
-.. dropdown:: Diffusion-Based Planning
-    :class-container: sd-border-secondary
-
-    .. grid:: 1 1 2 2
-        :gutter: 2
-
-        .. grid-item-card:: Zheng et al. -- Diffusion Planner (ICLR 2025)
+        .. grid-item-card:: Vaswani et al.
             :class-card: sd-border-secondary
 
-            **ICLR 2025**
+            **Attention Is All You Need (NeurIPS 2017)**
 
-            Joint ego-agent diffusion planner achieving
-            state-of-the-art closed-loop performance on the
-            nuPlan benchmark through interaction-aware trajectory
-            denoising.
+            Original Transformer paper. Essential background for
+            understanding MotionTransformer and all Transformer-based
+            prediction architectures.
 
-            +++
-
-            - Joint prediction and planning
-            - Scene context encoding
-            - nuPlan benchmark results
-
-        .. grid-item-card:: Liao et al. -- DiffusionDrive (CVPR 2025)
+        .. grid-item-card:: Goodfellow, Bengio & Courville
             :class-card: sd-border-secondary
 
-            **CVPR 2025**
+            **Deep Learning (MIT Press, 2016)**
 
-            Real-time diffusion planner using truncated schedule
-            and anchored Gaussian initialization achieving 45 FPS
-            while maintaining competitive nuPlan performance.
-
-            +++
-
-            - Truncated diffusion schedule
-            - Anchored Gaussian initialization
-            - Real-time inference analysis
-
-        .. grid-item-card:: Ho et al. -- DDPM (NeurIPS 2020)
-            :class-card: sd-border-secondary
-
-            **NeurIPS 2020**
-
-            Foundational paper establishing denoising diffusion
-            probabilistic models, the framework underlying
-            all diffusion-based planners.
-
-            +++
-
-            - Forward/reverse process formulation
-            - Denoising score matching
-            - Image generation results
-
-
-.. dropdown:: Collision Detection
-    :class-container: sd-border-secondary
-
-    .. grid:: 1 1 2 2
-        :gutter: 2
-
-        .. grid-item-card:: Ericson -- Real-Time Collision Detection
-            :class-card: sd-border-secondary
-
-            **Morgan Kaufmann, 2004**
-
-            Comprehensive reference for geometric collision
-            detection algorithms including AABB, OBB, GJK,
-            and sweep-based methods.
-
-            +++
-
-            - Bounding volume hierarchies
-            - OBB intersection tests
-            - Minkowski sum computation
-
-        .. grid-item-card:: Berg et al. -- Reciprocal Velocity Obstacles
-            :class-card: sd-border-secondary
-
-            **IJRR, 2011**
-
-            Velocity-obstacle-based collision avoidance for
-            multi-agent scenarios, relevant to dynamic obstacle
-            handling in AV planning.
-
-            +++
-
-            - Velocity obstacles
-            - Multi-agent collision avoidance
-            - Real-time performance
-
-
-.. dropdown:: Benchmarks and Datasets
-    :class-container: sd-border-secondary
-
-    .. grid:: 1 1 2 2
-        :gutter: 2
-
-        .. grid-item-card:: nuPlan Benchmark
-            :link: https://nuplan.org/
-            :class-card: sd-border-secondary
-
-            **Motional / nuPlan**
-
-            Closed-loop planning benchmark used to evaluate
-            Diffusion Planner and DiffusionDrive, based on
-            real-world driving logs.
-
-            +++
-
-            - Closed-loop reactive simulation
-            - 1300+ hours of driving data
-            - Standardized metrics
-
-        .. grid-item-card:: CARLA Simulator
-            :link: https://carla.org/
-            :class-card: sd-border-secondary
-
-            **CARLA Open-Source Simulator**
-
-            High-fidelity autonomous driving simulator used
-            for the lecture's implementation exercise. Provides
-            waypoint graphs, sensor simulation, and traffic
-            scenarios.
-
-            +++
-
-            - Python API documentation
-            - Waypoint graph API
-            - Traffic scenario library
+            Chapters 6--10 cover the deep learning foundations
+            (MLPs, CNNs, RNNs) underlying LSTM-based and
+            Transformer-based prediction models.

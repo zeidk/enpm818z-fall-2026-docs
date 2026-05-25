@@ -3,665 +3,1045 @@ Lecture
 ====================================================
 
 
-Why Bird's-Eye View?
---------------------
+Foundations of Perception
+-------------------------
 
-In earlier perception lectures we processed sensor data in the native
-coordinate frame of each sensor -- perspective images from cameras, 3D point
-clouds from LiDAR. While these representations are natural for detection, they
-carry a fundamental tension with the downstream stack:
+What Is Perception?
+~~~~~~~~~~~~~~~~~~~
 
-.. admonition:: The Representation Mismatch Problem
+.. admonition:: Definition
    :class: note
 
-   Motion planning and control operate in **metric 2D/3D world space**.
-   Perspective camera images are **projective** -- depth is ambiguous, object
-   sizes change with distance, and distances between objects are not preserved.
-   Bringing perception outputs into a unified, metric top-down space simplifies
-   every downstream module.
+   **Perception** is the process by which an autonomous system transforms
+   unstructured, noisy sensor data into a structured, semantic understanding
+   of the surrounding environment.
 
-.. grid:: 1 2 2 3
-   :gutter: 3
+Without perception, an AV cannot distinguish between a pedestrian and a
+plastic bag, cannot determine if the road ahead is clear, and cannot make
+informed decisions about navigation and safety.
 
-   .. grid-item-card:: Planning-Friendly
-      :class-card: sd-border-info
-
-      Path planners, trajectory optimizers, and behavior predictors all reason
-      in flat ground-plane coordinates. A BEV map is a direct match.
-
-   .. grid-item-card:: Natural for Fusion
-      :class-card: sd-border-info
-
-      Camera, LiDAR, and RADAR data can all be projected into the same BEV
-      grid, enabling straightforward feature-level fusion without sensor-specific
-      coordinate transforms at every module boundary.
-
-   .. grid-item-card:: Scale Preservation
-      :class-card: sd-border-info
-
-      Object sizes and inter-object distances are metric and consistent across
-      the scene. A pedestrian 5 m away looks the same size as one 50 m away.
-
-
-Perspective vs. BEV vs. Occupancy
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+**Perception in the AV stack:**
 
 .. list-table::
-   :widths: 20 27 27 26
+   :widths: 15 45 40
    :header-rows: 1
    :class: compact-table
 
-   * - Property
-     - 2D Perspective Detection
-     - BEV Detection
-     - 3D Occupancy Network
-   * - Output
-     - 2D bounding boxes (u, v, w, h)
-     - 3D boxes in BEV (x, y, yaw, l, w)
-     - Per-voxel semantic label
-   * - Depth info
-     - Inferred / absent
-     - Explicit
-     - Explicit per voxel
-   * - Planning utility
-     - Low (needs unprojection)
-     - High
-     - Very high (arbitrary geometry)
-   * - Handles irregular shapes
-     - No (box assumption)
-     - Partially
-     - Yes
-   * - Compute cost
-     - Low
-     - Medium
-     - High
+   * - Module
+     - Function
+     - Key Question
+   * - **Sensing**
+     - Physical sensors + signal processing
+     - "What raw data do we have?"
+   * - **Perception**
+     - Semantic world representation
+     - "What is out there?"
+   * - **Planning**
+     - Route, behavior, trajectory generation
+     - "What should we do?"
+   * - **Control**
+     - Actuator commands
+     - "How do we do it?"
+
+.. important::
+
+   No amount of sophisticated planning or control can compensate for
+   perception failures. Perception is the foundation of the entire AV stack.
 
 
-Camera-to-BEV Projection: Lift-Splat-Shoot
--------------------------------------------
+Perception Inputs and Outputs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Lift-Splat-Shoot (LSS), introduced by Philion & Fidler (NeurIPS 2020), is the
-foundational camera-only BEV method. It comprises three stages.
+**Inputs:**
 
-Stage 1 -- Lift
-~~~~~~~~~~~~~~~~
+- Camera images (1920x1200 at 30--60 Hz)
+- LiDAR point clouds (100K--1M points at 10--20 Hz)
+- RADAR returns (10--20 Hz)
+- GNSS/IMU (50--200 Hz)
 
-For each camera image pixel, LSS predicts a **depth distribution** over
-:math:`D` discrete depth bins using a learned network head.
+**Outputs:**
 
-.. math::
+- Detected objects with class labels, 3D bounding boxes, and tracking IDs
+- Lane geometry (polynomial/spline boundaries)
+- Traffic light states with position and confidence
+- Free space (drivable corridor)
+- HD map alignment
 
-   \mathbf{c}_{u,v} = \sum_{d=1}^{D} \alpha_{u,v,d} \cdot \mathbf{f}_{u,v}
 
-where :math:`\alpha_{u,v,d}` is the softmax probability of depth bin :math:`d`
-at pixel :math:`(u, v)`, and :math:`\mathbf{f}_{u,v}` is the 2D feature vector.
+Taxonomy of Perception Tasks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Each pixel is thus "lifted" into a **frustum of features** -- one feature vector
-at each depth candidate. This creates a 3D tensor of shape
-:math:`[D \times H \times W \times C]` per camera.
+.. tab-set::
 
-Stage 2 -- Splat
-~~~~~~~~~~~~~~~~~
+   .. tab-item:: Mid-Level Understanding
 
-The frustum features are unprojected into a **voxel grid** in ego-vehicle
-coordinates using known camera intrinsics and extrinsics. Each 3D point votes
-into its corresponding voxel. The voxel pooling uses a **sum-pooling** over all
-features landing in each voxel, giving a 3D occupancy-weighted feature volume.
+      Extracts semantic meaning from sensor data.
+
+      - **Object detection:** YOLO, Faster R-CNN, PointPillars, CenterPoint
+      - **Semantic segmentation:** FCN, U-Net, DeepLabv3+
+      - **Instance segmentation:** Mask R-CNN, YOLACT
+      - **Panoptic segmentation:** Combines semantic + instance
+      - **Lane detection:** SCNN, LaneNet, PolyLaneNet
+      - **Traffic sign/light recognition**
+
+   .. tab-item:: High-Level Reasoning
+
+      Interprets the scene over time for decision-making.
+
+      - **Multi-object tracking (MOT):** DeepSORT, ByteTrack
+      - **Scene understanding:** Occupancy grids, HD map integration
+      - **Behavior/intent prediction:** RNNs, Transformers, GNNs
+      - **Anomaly detection**
+
+**Key terminology:**
+
+.. list-table::
+   :widths: 25 75
+   :class: compact-table
+
+   * - **Detection**
+     - Locating objects (bounding box + confidence).
+   * - **Classification**
+     - Assigning a category label to an object.
+   * - **Semantic segmentation**
+     - All pixels of the same class share a label (e.g., "road").
+   * - **Instance segmentation**
+     - Each object gets a unique ID + pixel mask.
+   * - **Panoptic segmentation**
+     - Combines semantic (stuff) + instance (things).
+   * - **Tracking**
+     - Estimating current/past states from observations over time.
+   * - **Prediction**
+     - Forecasting future states of other agents.
+
+
+.. admonition:: Recap from ENPM673
+   :class: note
+
+   In ENPM673, you learned the fundamentals of convolutional neural networks:
+   convolution and pooling operations, stride and padding, activation functions,
+   fully connected layers, and back-propagation. You also studied how CNNs learn
+   hierarchical feature representations -- edges in early layers, textures and
+   shapes in middle layers, and high-level object templates in deeper layers --
+   replacing hand-crafted descriptors such as SIFT and HOG. You explored key
+   architectures (AlexNet, VGGNet) and saw why classical computer vision methods,
+   while effective in constrained settings, struggle with the appearance variation
+   and scale diversity encountered in real-world scenes.
+
+   In this lecture, we apply these foundations to two state-of-the-art object
+   detection architectures designed for real-time autonomous driving: **YOLO**
+   and **DETR**.
+
+
+YOLO: You Only Look Once
+--------------------------
+
+YOLO revolutionized real-time object detection by framing detection as a
+**single regression problem**: one forward pass predicts all bounding boxes
+and class probabilities simultaneously.
+
+YOLO Evolution
+~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 12 15 50 23
+   :header-rows: 1
+   :class: compact-table
+
+   * - Version
+     - Year
+     - Key Innovation
+     - COCO mAP
+   * - v1
+     - 2015
+     - Single-stage detection, 7x7 grid
+     - 63.4% (VOC)
+   * - v2
+     - 2017
+     - Batch norm, anchor boxes, Darknet-19
+     - 78.6% (VOC)
+   * - v3
+     - 2018
+     - FPN multi-scale, Darknet-53, 3 detection scales
+     - 57.9%
+   * - v4
+     - 2020
+     - CSPDarknet53, Mosaic augmentation, PAN, CIoU loss
+     - 43.5%
+   * - v5
+     - 2020
+     - PyTorch native, model scaling (n/s/m/l/x), AutoAugment
+     - 50.7%
+   * - v7
+     - 2022
+     - E-ELAN, SOTA at the time
+     - 56.8%
+   * - v8
+     - 2023
+     - **Anchor-free**, decoupled head, multi-task (det/seg/pose)
+     - 53.9%
+   * - v10
+     - 2024
+     - NMS-free training, dual label assignment
+     - 54.4%
+   * - v11
+     - 2024
+     - C3k2 blocks, SPPF modifications
+     - 54.7%
+
+
+Architecture: Backbone-Neck-Head
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. grid:: 1 3 3 3
+   :gutter: 3
+
+   .. grid-item-card:: Backbone (Feature Extraction)
+      :class-card: sd-border-info
+
+      Extracts hierarchical features from the input image.
+
+      - CSPDarknet53 (v4--v7), C2f blocks (v8+)
+      - Progressive downsampling: 640 -> 320 -> ... -> 20
+      - Increasing channels: 3 -> 64 -> ... -> 1024
+      - Residual connections, SiLU/Mish activation
+
+   .. grid-item-card:: Neck (Multi-Scale Fusion)
+      :class-card: sd-border-info
+
+      Fuses features across scales for detecting objects of different sizes.
+
+      - **FPN:** Top-down pathway + lateral connections
+      - **PAN:** FPN + bottom-up pathway (v4, v5)
+      - Output scales: 80x80 (small), 40x40 (medium), 20x20 (large)
+
+   .. grid-item-card:: Head (Detection)
+      :class-card: sd-border-info
+
+      Produces final bounding boxes and class predictions.
+
+      - **Anchor-based (v3--v7):** Predefined boxes, predict offsets
+      - **Anchor-free (v8+):** Directly predict (x,y,w,h), decoupled head
+      - NMS post-processing (or NMS-free in v10)
+
+
+Loss Functions
+~~~~~~~~~~~~~~
+
+YOLO's training loss combines three components:
+
+1. **Localization (box regression):** CIoU loss -- penalizes overlap, center
+   distance, and aspect ratio simultaneously.
+2. **Objectness (confidence):** Binary cross-entropy -- is there an object?
+3. **Classification:** Binary cross-entropy per class (multi-label).
+
+
+Training YOLO on Custom Data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
-   # Pseudocode: frustum-to-voxel projection
-   for cam in cameras:
-       points_3d = unproject(frustum_depths, cam.intrinsics, cam.extrinsics)
-       for point, feat in zip(points_3d, features):
-           voxel_idx = world_to_voxel(point)
-           voxel_grid[voxel_idx] += feat
+   from ultralytics import YOLO
 
-Stage 3 -- Shoot
-~~~~~~~~~~~~~~~~~
+   # Load pretrained model
+   model = YOLO('yolov8s.pt')
 
-The 3D voxel grid is **collapsed along the Z-axis** (height) via max/mean
-pooling to produce a 2D BEV feature map. This feature map is then passed to
-standard 2D detection heads (e.g., a BEV anchor-free head) to predict 3D
-object parameters.
+   # Train on custom dataset
+   results = model.train(
+       data='data.yaml',    # Dataset config
+       epochs=100,
+       imgsz=640,
+       batch=16,
+       name='carla_detector',
+       pretrained=True
+   )
 
-.. admonition:: LSS Key Insight
+   # Evaluate
+   metrics = model.val(data='data.yaml', split='test')
+
+   # Export for deployment
+   model.export(format='onnx')
+   model.export(format='engine', half=True)  # TensorRT FP16
+
+**Dataset format (YOLO):**
+
+.. code-block:: text
+
+   # Each label file: one line per object
+   <class_id> <x_center> <y_center> <width> <height>
+   # All values normalized to [0, 1]
+
+**Dataset structure:**
+
+.. code-block:: text
+
+   dataset/
+   ├── images/
+   │   ├── train/
+   │   ├── val/
+   │   └── test/
+   ├── labels/
+   │   ├── train/
+   │   ├── val/
+   │   └── test/
+   └── data.yaml
+
+**Evaluation metrics:**
+
+- **mAP@0.5** -- Mean Average Precision at IoU threshold 0.5.
+- **mAP@0.5:0.95** -- Averaged across IoU thresholds 0.5 to 0.95 (stricter).
+- **Precision** -- TP / (TP + FP). How many detections are correct?
+- **Recall** -- TP / (TP + FN). How many real objects are found?
+- **Inference time** -- Milliseconds per image.
+
+
+DETR: Detection Transformer
+-----------------------------
+
+DETR (DEtection TRansformer) was introduced by Carion et al. (2020) and
+represents a fundamentally different approach to object detection: **no
+anchors, no NMS, end-to-end set prediction**.
+
+.. admonition:: Key Insight
    :class: tip
 
-   LSS is fully differentiable end-to-end. The depth distribution is learned
-   implicitly by the network, guided only by 3D bounding box supervision.
-   No explicit depth labels are required during training.
+   DETR treats object detection as a **set prediction problem**: given an
+   image, predict a fixed-size set of objects in a single forward pass,
+   using a transformer encoder-decoder architecture.
 
 
-BEVFormer: Attention-Based BEV Construction
---------------------------------------------
+DETR Architecture
+~~~~~~~~~~~~~~~~~
 
-BEVFormer (Li et al., ECCV 2022) replaces LSS's geometry-based voxel projection
-with a **Transformer attention mechanism** that queries image features at
-learned 3D reference points.
+.. grid:: 1 2 2 4
+   :gutter: 2
 
-Architecture Overview
+   .. grid-item-card:: 1. CNN Backbone
+      :class-card: sd-border-primary
+
+      ResNet-50 extracts a feature map from the input image.
+      Output: flattened spatial features + positional encoding.
+
+   .. grid-item-card:: 2. Transformer Encoder
+      :class-card: sd-border-primary
+
+      Self-attention over the feature map. Each position attends to
+      all other positions -- **global context** from the start.
+
+   .. grid-item-card:: 3. Transformer Decoder
+      :class-card: sd-border-primary
+
+      N learned **object queries** (e.g., 100) attend to encoder output
+      via cross-attention. Each query specializes in detecting one object.
+
+   .. grid-item-card:: 4. Prediction Heads
+      :class-card: sd-border-primary
+
+      Each query outputs a class label + bounding box (or "no object").
+      **No NMS needed** -- bipartite matching ensures one prediction per
+      object.
+
+
+Bipartite Matching
+~~~~~~~~~~~~~~~~~~
+
+Instead of NMS, DETR uses the **Hungarian algorithm** to find the optimal
+one-to-one assignment between predicted objects and ground truth during
+training:
+
+- Each prediction is matched to at most one ground truth object.
+- Unmatched predictions are assigned the "no object" class.
+- The matching cost combines classification loss and box loss (L1 + GIoU).
+
+This eliminates duplicate detections by design.
+
+
+DETR Variants
+~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 20 40 40
+   :header-rows: 1
+   :class: compact-table
+
+   * - Model
+     - Key Improvement
+     - Impact
+   * - **Deformable DETR**
+     - Deformable attention (attend to sparse key positions)
+     - 10x faster convergence, better small object detection
+   * - **DINO**
+     - Contrastive denoising + mixed query selection
+     - 63+ AP on COCO (SOTA)
+   * - **RT-DETR**
+     - Real-time DETR with efficient hybrid encoder
+     - Competitive with YOLO on speed; no NMS
+
+
+YOLO vs. DETR Comparison
+--------------------------
+
+.. list-table::
+   :widths: 25 37 38
+   :header-rows: 1
+   :class: compact-table
+
+   * - Dimension
+     - YOLO (v8+)
+     - DETR (RT-DETR)
+   * - **Architecture**
+     - CNN backbone + FPN neck + detection head
+     - CNN backbone + transformer encoder-decoder
+   * - **Context**
+     - Local (CNN receptive field)
+     - Global (self-attention from the start)
+   * - **Post-Processing**
+     - NMS required (except v10)
+     - No NMS -- bipartite matching
+   * - **Anchors**
+     - Anchor-free (v8+)
+     - No anchors (object queries)
+   * - **Speed**
+     - Very fast (1--5 ms on GPU)
+     - Fast with RT-DETR; original DETR is slower
+   * - **Small Objects**
+     - Good (multi-scale FPN)
+     - Improved with Deformable DETR
+   * - **Training Data**
+     - Efficient with moderate data
+     - Needs more data (transformer data hunger)
+   * - **Simplicity**
+     - More components (anchors, NMS, FPN)
+     - Cleaner end-to-end design
+   * - **AV Suitability**
+     - Production-ready, real-time
+     - Emerging; RT-DETR closing the gap
+
+.. tip::
+
+   In Assignment A2, you will fine-tune both YOLO and DETR on the same CARLA
+   dataset and compare their performance under different conditions (day/night,
+   rain, occlusion).
+
+
+Deploying a Detector as a ROS 2 Node
+--------------------------------------
+
+The practical output of this lecture is a perception node that subscribes to
+CARLA camera images and publishes detected objects.
+
+.. code-block:: python
+
+   import rclpy
+   from rclpy.node import Node
+   from sensor_msgs.msg import Image
+   from vision_msgs.msg import Detection2DArray, Detection2D
+   from cv_bridge import CvBridge
+   from ultralytics import YOLO
+
+
+   class YoloDetectorNode(Node):
+       def __init__(self):
+           super().__init__('yolo_detector')
+           self.model = YOLO('best.pt')
+           self.bridge = CvBridge()
+
+           self.sub = self.create_subscription(
+               Image, '/carla/camera/image',
+               self.image_callback, 10)
+
+           self.pub = self.create_publisher(
+               Detection2DArray, '/perception/detections', 10)
+
+       def image_callback(self, msg):
+           cv_image = self.bridge.imgmsg_to_cv2(msg, 'rgb8')
+           results = self.model(cv_image, verbose=False)
+
+           det_array = Detection2DArray()
+           det_array.header = msg.header
+
+           for r in results[0].boxes:
+               det = Detection2D()
+               # ... populate bounding box and class ...
+               det_array.detections.append(det)
+
+           self.pub.publish(det_array)
+
+
+   def main():
+       rclpy.init()
+       node = YoloDetectorNode()
+       rclpy.spin(node)
+       rclpy.shutdown()
+
+This pattern applies identically to DETR -- swap ``YOLO('best.pt')`` for a
+DETR model loaded via ``transformers`` or ``torch.hub``.
+
+
+Industrial Perception Architectures
+--------------------------------------
+
+Understanding how leading AV companies deploy perception systems bridges
+the gap between academic algorithms and real-world engineering.
+
+
+Generic Perception Pipeline
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Most production autonomous vehicles follow a modular perception pipeline:
+
+.. list-table::
+   :widths: 20 80
+   :class: compact-table
+
+   * - **1. Sensor Layer**
+     - Multiple cameras (360-degree coverage), LiDAR, RADAR, GNSS, IMU.
+       Continuous data streams at 10--60 Hz.
+   * - **2. Preprocessing**
+     - Timestamp synchronization, calibration and coordinate frame
+       transforms, image undistortion, noise filtering.
+   * - **3. Perception Stack**
+     - Detection (vehicles, pedestrians, cyclists, traffic signs/lights),
+       segmentation (drivable area, lane boundaries), multi-object tracking
+       with ID assignment, multi-sensor fusion into a unified world model.
+   * - **4. Output**
+     - Structured world model: objects with positions, velocities,
+       trajectories. Delivered to planning at 10--30 Hz.
+
+
+Industry Case Studies
 ~~~~~~~~~~~~~~~~~~~~~~
 
 .. tab-set::
 
-   .. tab-item:: BEV Queries
+   .. tab-item:: Waymo
 
-      BEVFormer maintains a **grid of learnable BEV query embeddings**
-      :math:`Q \in \mathbb{R}^{H \times W \times C}`, one per BEV grid cell.
-      Each query represents "what is the content of this grid cell in the
-      world?" and is updated by attending to relevant image regions.
+      **Philosophy:** Multi-sensor fusion, LiDAR-centric.
 
-   .. tab-item:: Spatial Cross-Attention
+      - **Sensors:** 5 LiDARs, 29 cameras, 6 RADARs, high-precision
+        GNSS/IMU.
+      - **Approach:** LiDAR is the primary sensor for 3D detection and
+        localization. Cameras add semantic richness (signs, lights, lane
+        markings). RADAR for velocity and adverse weather.
+      - **Architecture:** Modular pipeline (detection -> tracking ->
+        prediction). PointPillars-style LiDAR detection + camera fusion.
+        HD maps for localization priors.
+      - **Scale:** 20+ million real-world miles, 250K+ paid rides/week.
+      - **Key trade-off:** Heavy sensor investment for maximum safety.
 
-      For each BEV query at world position :math:`(x, y)`:
+   .. tab-item:: Tesla
 
-      1. Sample :math:`N_z` 3D reference points at different heights
-         :math:`z_1, \ldots, z_{N_z}` above the ground plane.
-      2. Project each 3D reference point into all camera images using
-         calibration parameters.
-      3. Sample image features at the projected pixel locations using
-         deformable attention.
-      4. Aggregate these multi-camera, multi-height features to update the
-         BEV query.
+      **Philosophy:** Vision-only, end-to-end learning.
 
-      .. math::
+      - **Sensors:** 8 cameras (no LiDAR, no RADAR post-2023).
+      - **Approach:** "Humans drive with vision; cars should too." Depth
+        is inferred from monocular images and temporal parallax.
+      - **Architecture:** HydraNet multi-task backbone processes all 8
+        camera streams. BEV representation via spatial transformers.
+        Occupancy network predicts 3D occupancy grid. Video module for
+        temporal reasoning. FSD v12 is fully end-to-end.
+      - **Training:** Auto-labeling pipeline on fleet data, Dojo
+        supercomputer, shadow mode for edge case collection.
+      - **Key trade-off:** Cost and scalability vs. depth uncertainty and
+        weather sensitivity.
 
-         \text{SCA}(Q_p, F) = \frac{1}{|V_{hit}|} \sum_{i \in V_{hit}}
-         \sum_{j=1}^{N_z} \text{DeformAttn}(Q_p, \mathcal{P}(p, i, j), F_i)
+   .. tab-item:: Cruise
 
-   .. tab-item:: Temporal Self-Attention
+      **Philosophy:** Multi-sensor with HD maps, urban robotaxi.
 
-      BEVFormer exploits past BEV feature maps by warping the previous frame's
-      BEV into the current ego frame using the ego-motion transform and then
-      computing cross-attention between current queries and the warped history:
+      - **Sensors:** 5 LiDARs, 21 cameras, 5 RADARs, GNSS/IMU.
+      - **Approach:** Camera + LiDAR + RADAR fusion. HD maps for
+        localization and environmental priors. Continuous Learner system
+        for model updates.
+      - **Status:** Fleet suspended in late 2023 after dragging incident.
+        Effectively out of the robotaxi race.
+      - **Key lesson:** Operational safety failures can end a program
+        regardless of technical capability.
 
-      .. math::
+   .. tab-item:: Aurora
 
-         \text{TSA}(Q_p, \{Q_t, Q_{t-1}'\}) =
-         \text{DeformAttn}(Q_p, p, \text{concat}(Q_t, Q_{t-1}'))
+      **Philosophy:** Sensor diversity, long-range trucking.
 
-      This allows the network to integrate velocity cues, occlusion reasoning,
-      and multi-frame context without explicit tracking.
+      - **Sensors:** FirstLight LiDAR (400+ m range), imaging RADAR,
+        cameras, thermal cameras for night vision.
+      - **Approach:** Sensor diversity for robustness across conditions.
+        Focus on highway autonomous trucking and logistics.
+      - **Architecture:** Virtual Driver System with collaborative
+        perception (truck convoys sharing sensor data).
 
-BEVFormer Performance on nuScenes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   .. tab-item:: Mobileye
+
+      **Philosophy:** Camera-first with formal safety (RSS).
+
+      - **Sensors:** 8--11 cameras, optional RADAR/LiDAR ("True
+        Redundancy" architecture).
+      - **Approach:** EyeQ SoC optimized for vision processing. REM
+        (Road Experience Management) for crowdsourced HD maps.
+      - **RSS (Responsibility-Sensitive Safety):** Formal model defining
+        "safe" vs. "unsafe" states mathematically. Guarantees the vehicle
+        never causes an accident under RSS rules.
+      - **Scale:** Tier-1 supplier to BMW, Nissan, Ford, Geely. Millions
+        of vehicles with ADAS deployed.
+
+
+Architectural Trade-Offs
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
-   :widths: 35 20 20 25
+   :widths: 22 39 39
    :header-rows: 1
    :class: compact-table
 
-   * - Method
-     - mAP
-     - NDS
-     - Backbone
-   * - DETR3D
-     - 34.9
-     - 42.5
-     - ResNet-101
-   * - BEVFormer-S (no temporal)
-     - 37.5
-     - 44.8
-     - ResNet-101
-   * - BEVFormer (with temporal)
-     - 41.6
-     - 51.7
-     - ResNet-101
-   * - BEVFormer-Base
-     - 48.1
-     - 56.9
-     - VoVNet-99
+   * - Dimension
+     - Option A
+     - Option B
+   * - **Sensing**
+     - Camera-only (Tesla): Low cost, scalable, semantic-rich. But: depth
+       uncertainty, weather sensitivity.
+     - Multi-sensor fusion (Waymo): Redundant, accurate 3D, all-weather.
+       But: high cost, complex calibration.
+   * - **Pipeline**
+     - Modular (Waymo, Mobileye): Interpretable, debuggable, swappable
+       components. But: error propagation, hand-crafted interfaces.
+     - End-to-end (Tesla FSD v12): Joint optimization, fewer rules. But:
+       black-box, hard to debug, massive data requirement.
+   * - **Mapping**
+     - HD maps (Waymo, Cruise): Simplifies localization, provides priors.
+       But: expensive to create/maintain, limits ODD.
+     - Map-free (Tesla): Scales anywhere, adapts to changes. But: higher
+       perception burden, less robust in ambiguous scenarios.
+   * - **Processing**
+     - Centralized (NVIDIA Drive AGX): Unified view, easier fusion, lower
+       latency. But: single point of failure.
+     - Distributed (per-sensor nodes): Fault isolation, parallel. But:
+       synchronization challenges, network latency.
+   * - **Safety**
+     - Rule-based (Mobileye RSS): Interpretable, verifiable,
+       regulatory-friendly. But: overly conservative.
+     - Learned behavior (Tesla): Adapts to diverse scenarios. But:
+       black-box, hard to validate.
 
 .. note::
 
-   The gap between BEVFormer-S and BEVFormer highlights the impact of temporal
-   self-attention: +4.1 mAP and +6.9 NDS purely from adding multi-frame context.
+   The industry has not converged on a single winning architecture. Diverse
+   approaches reflect different priorities: cost vs. safety, scalability vs.
+   redundancy, interpretability vs. flexibility.
 
 
-Multi-Camera Fusion in BEV Space
-----------------------------------
+Deployment and Integration
+----------------------------
 
-Modern AV systems use 6--12 cameras to achieve full 360-degree surround
-coverage. Fusing these in BEV space requires careful handling of:
+Moving perception algorithms from research to production requires careful
+attention to real-time constraints, model optimization, and system
+integration.
 
-Camera Rig Setup
-~~~~~~~~~~~~~~~~~
+
+Real-Time Performance Requirements
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
-   :widths: 25 35 40
+   :widths: 35 65
    :header-rows: 1
    :class: compact-table
 
-   * - Camera Position
-     - Field of View
-     - Primary Coverage
-   * - Front
-     - 60-120 deg
-     - Long-range forward, traffic lights
-   * - Front-Left / Front-Right
-     - 90-120 deg
-     - Intersection cross-traffic, lane changes
-   * - Side-Left / Side-Right
-     - 90 deg
-     - Blind spots, adjacent lanes
-   * - Rear
-     - 120 deg
-     - Vehicles approaching from behind
+   * - Constraint
+     - Target
+   * - End-to-end perception latency
+     - < 100 ms total
+   * - Sensor acquisition
+     - 10--30 ms
+   * - Detection / segmentation
+     - 30--50 ms
+   * - Tracking and fusion
+     - 10--20 ms
+   * - World model update rate
+     - 10--30 Hz
+   * - Camera streams processed
+     - 5--10 simultaneously
+   * - LiDAR points per frame
+     - 100K--1M
 
-Overlap and Consistency
-~~~~~~~~~~~~~~~~~~~~~~~~
+.. important::
 
-Regions covered by multiple cameras can be fused by aggregating features in the
-shared BEV cells. Strategies include:
-
-- **Max pooling** -- Take the strongest activation. Simple, works well when
-  one camera has a clear view.
-- **Attention-weighted sum** -- Learn a confidence weight per camera per BEV
-  cell. Used in cross-view transformers and BEVFusion.
-- **Feature concatenation + projection** -- Concatenate multi-camera features
-  at each BEV cell and project with a learned MLP.
-
-.. admonition:: Extrinsic Calibration Is Critical
-   :class: warning
-
-   BEV fusion assumes all cameras are accurately calibrated to the vehicle
-   frame. Even 1-degree extrinsic error causes significant object position
-   errors at 50 m range. Online calibration monitoring is an active research
-   area.
+   At 60 km/h, a vehicle travels 1.67 m in 100 ms. Every millisecond of
+   latency translates directly to stopping distance. Real-time performance
+   is a safety requirement, not an optimization goal.
 
 
-3D Occupancy Networks
-----------------------
+Model Optimization for Deployment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-While BEV detection predicts bounding boxes for known object classes,
-**3D Occupancy Networks** predict the semantic state of every voxel in a 3D
-volume around the vehicle.
-
-Motivation
-~~~~~~~~~~~
-
-.. grid:: 1 2 2 2
-   :gutter: 3
-
-   .. grid-item-card:: Beyond Bounding Boxes
-      :class-card: sd-border-warning
-
-      Bounding boxes fail for irregular shapes: construction barriers,
-      overhanging vegetation, parked vehicles partially occluded. Occupancy
-      captures arbitrary geometry.
-
-   .. grid-item-card:: Complete Scene Representation
-      :class-card: sd-border-warning
-
-      Planning systems benefit from knowing not just ``where objects are``
-      but ``what the free space is`` -- critical for path clearance checks.
-
-Output Representation
-~~~~~~~~~~~~~~~~~~~~~~
-
-The scene is divided into a 3D voxel grid, e.g., :math:`200 \times 200 \times 16`
-voxels covering :math:`[-50\text{m}, +50\text{m}] \times [-50\text{m},
-+50\text{m}] \times [-5\text{m}, +3\text{m}]`. Each voxel receives:
-
-- A **semantic label**: one of :math:`K` classes (free, vehicle, pedestrian,
-  cyclist, vegetation, building, etc.) plus ``unknown/occluded``.
-- Optionally, a **flow vector** indicating velocity of dynamic voxels
-  (MonoOcc, UniOcc extensions).
-
-.. math::
-
-   \hat{y}_{i,j,k} = \text{argmax}_{c} \; p(c \mid \mathbf{v}_{i,j,k})
-
-where :math:`\mathbf{v}_{i,j,k}` is the feature vector at voxel
-:math:`(i, j, k)`.
-
-Key Methods
-~~~~~~~~~~~~
-
-.. tab-set::
-
-   .. tab-item:: MonoScene (2022)
-
-      First occupancy prediction from a **single monocular camera**. Uses 2D-3D
-      feature projection with a U-Net-like 3D decoder. Introduced the nuScenes
-      occupancy prediction benchmark.
-
-   .. tab-item:: TPVFormer (2023)
-
-      Extends BEVFormer to a **Tri-Perspective View** (top, front, side) to
-      capture full 3D geometry without full 3D voxel attention. Computationally
-      efficient while maintaining accuracy.
-
-   .. tab-item:: OpenOccupancy / Occ3D
-
-      Large-scale annotation frameworks for training occupancy networks on
-      nuScenes and Waymo. Defines standard evaluation metrics:
-      **mIoU** (mean Intersection over Union) per semantic class.
-
-Occupancy vs. Detection: When to Use Which
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. list-table::
-   :widths: 30 35 35
-   :header-rows: 1
-   :class: compact-table
-
-   * - Scenario
-     - BEV Detection Adequate?
-     - Occupancy Needed?
-   * - Counting vehicles in parking lot
-     - Yes
-     - No
-   * - Navigating construction zone
-     - No (irregular obstacles)
-     - Yes
-   * - Freespace for lane change
-     - Partially
-     - Yes (accurate boundaries)
-   * - Traffic light / sign detection
-     - Yes
-     - No (2D sufficient)
-
-
-Industry Adoption
-------------------
-
-Tesla's Approach
-~~~~~~~~~~~~~~~~~
-
-Tesla's FSD v12 perception stack relies heavily on BEV representation. Key
-architectural choices:
-
-.. card::
-   :class-card: sd-border-success sd-shadow-sm
-
-   **Tesla Occupancy Network (announced 2022 AI Day)**
-
-   - Input: 8 cameras (front, B-pillar front/rear, fisheye rears, main rear)
-   - BEV feature construction via **video-based transformer** (not just single
-     frame -- full temporal context)
-   - Output: 4D occupancy (3D space + time), predicting future occupancy states
-     enabling implicit trajectory prediction
-   - Trained on **billions of frames** of auto-labeled data via Tesla's
-     in-house data engine
-   - No LiDAR -- camera-only, with depth inferred entirely from monocular
-     multi-frame parallax and learned depth priors
-
-Waymo, Cruise, and Others
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Most Tier-1 AV companies use LiDAR as the primary BEV input (point clouds are
-already in 3D metric space) and fuse camera BEV features at the feature level.
-The dominant paradigm for LiDAR-based BEV is:
-
-1. Voxelize point cloud into a 3D grid.
-2. Apply 3D sparse convolution (Sparse ConvNet, VoxelNet) to extract features.
-3. Compress to BEV by collapsing the Z-axis.
-4. Apply 2D detection head or dense occupancy prediction head.
-
-.. seealso::
-
-   Multi-sensor BEV fusion of camera + LiDAR + RADAR is covered in depth in
-   **L6: Multi-Sensor Fusion**.
-
-
-nuScenes Benchmark Metrics
----------------------------
-
-The nuScenes dataset is the standard benchmark for BEV perception evaluation.
+Research models are too slow and large for embedded automotive hardware.
+Production deployment requires systematic optimization:
 
 .. list-table::
    :widths: 25 75
    :header-rows: 1
    :class: compact-table
 
-   * - Metric
-     - Definition
-   * - **mAP**
-     - Mean Average Precision over 10 classes at 4 BEV distance thresholds
-       (0.5m, 1m, 2m, 4m). Higher is better.
-   * - **NDS**
-     - nuScenes Detection Score: weighted combination of mAP and 5 attribute
-       errors (ATE, ASE, AOE, AVE, AAE). Single scalar for ranking.
-   * - **ATE**
-     - Average Translation Error: 2D center distance in BEV (meters).
-   * - **ASE**
-     - Average Scale Error: 3D IoU between predicted and GT box sizes.
-   * - **AOE**
-     - Average Orientation Error: yaw angle error (radians).
-   * - **mIoU**
-     - Mean IoU across semantic classes (used for occupancy benchmarks).
+   * - Technique
+     - Description
+   * - **Quantization**
+     - Reduce weight precision from FP32 to INT8 or FP16. Typical speedup:
+       2--4x with <1% accuracy loss. Supported by TensorRT, ONNX Runtime.
+   * - **Pruning**
+     - Remove weights or channels with minimal contribution. Structured
+       pruning removes entire filters for hardware-friendly speedup.
+   * - **Knowledge Distillation**
+     - Train a small "student" model to mimic a large "teacher" model.
+       Preserves much of the teacher's accuracy at a fraction of the compute.
+   * - **Architecture Search (NAS)**
+     - Automatically search for efficient architectures under latency
+       constraints. Used by EfficientDet, NAS-FPN.
+   * - **TensorRT / ONNX**
+     - Framework-specific optimization: operator fusion, memory planning,
+       kernel auto-tuning. Can achieve 5--10x speedup over naive PyTorch.
 
-.. math::
+.. code-block:: python
 
-   \text{NDS} = \frac{1}{10} \left[ 5 \cdot \text{mAP} +
-   \sum_{mtp \in \mathcal{TP}} (1 - \min(1, mtp)) \right]
+   # Example: Export YOLO to TensorRT for deployment
+   from ultralytics import YOLO
 
+   model = YOLO('best.pt')
+   model.export(format='engine',       # TensorRT format
+                half=True,              # FP16 quantization
+                imgsz=640,
+                device=0)
 
-Summary
---------
-
-.. grid:: 1 2 2 2
-   :gutter: 3
-
-   .. grid-item-card:: BEV Foundations
-      :class-card: sd-border-primary
-
-      - BEV is metric, planning-friendly, and enables natural multi-sensor fusion
-      - LSS: predict depth per pixel, lift to frustum, splat to voxel, shoot to BEV
-      - BEVFormer: learnable queries + spatial cross-attention + temporal attention
-
-   .. grid-item-card:: Occupancy & Industry
-      :class-card: sd-border-primary
-
-      - Occupancy networks: per-voxel semantic prediction, handles arbitrary geometry
-      - Evaluation: mIoU per class on nuScenes/Waymo benchmarks
-      - Tesla: camera-only 4D occupancy; others fuse LiDAR for higher accuracy
-
-.. note::
-
-   The progression from 2D detection (L3) to BEV detection (L4) to occupancy
-   prediction (L4 advanced) mirrors how the industry has evolved from early
-   prototype systems to production AV stacks.
+   # Load optimized model for inference
+   optimized = YOLO('best.engine')
+   results = optimized.predict(source='image.jpg')
 
 
-CARLA Hands-On: Building a BEV Grid from Multi-Camera Data
-------------------------------------------------------------
+Hardware Platforms
+~~~~~~~~~~~~~~~~~~~
 
-This exercise walks through the core steps of constructing a BEV
-representation from CARLA's multi-camera setup, implementing a simplified
-version of the Lift-Splat-Shoot pipeline.
+.. list-table::
+   :widths: 25 25 50
+   :header-rows: 1
+   :class: compact-table
+
+   * - Platform
+     - TOPS
+     - Used By
+   * - **NVIDIA Drive AGX Orin**
+     - 254 TOPS
+     - Waymo, Mercedes-Benz, Volvo. Supports multiple concurrent DNN
+       workloads. Dominant in L4 development.
+   * - **Tesla FSD Computer (HW4)**
+     - ~300 TOPS (est.)
+     - Tesla. Custom SoC with dual redundant chips for fail-operational
+       safety.
+   * - **Mobileye EyeQ6**
+     - 176 TOPS
+     - BMW, Geely, Ford. Optimized for camera-centric ADAS and L2+.
+   * - **Qualcomm Snapdragon Ride**
+     - 100--700 TOPS
+     - GM, BMW (ADAS). Mobile-derived platform with power efficiency.
+
+.. tip::
+
+   When choosing a model architecture, profile it on the target hardware
+   early. A model that runs at 50 FPS on an RTX 4090 may only achieve 5 FPS
+   on an embedded automotive SoC.
 
 
-Task 1: Set Up a Multi-Camera Rig
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Software Integration: ROS 2 and Autoware
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Spawn six cameras to achieve 360-degree surround coverage, mimicking a
-production AV sensor configuration.
+In this course, perception nodes are integrated into the ADS pipeline using
+ROS 2. In industry, frameworks like Autoware extend ROS 2 with production-
+grade AV components.
+
+.. list-table::
+   :widths: 20 40 40
+   :header-rows: 1
+   :class: compact-table
+
+   * - Framework
+     - Scope
+     - Use Case
+   * - **ROS 2**
+     - General-purpose robotics middleware with DDS communication, QoS
+       policies, and lifecycle management.
+     - Course projects, research prototypes, component development.
+   * - **Autoware**
+     - Open-source full-stack AV software built on ROS 2. Includes
+       perception (LiDAR detection, camera fusion), planning, and control.
+     - Production AV development, industry R&D.
+   * - **Apollo (Baidu)**
+     - End-to-end AV platform with perception, planning, control, and
+       simulation. Custom middleware (Cyber RT).
+     - Chinese robotaxi deployments, academic research.
+
+**Detector node integration pattern** (used in GP2):
+
+1. Subscribe to camera images (``/carla/ego/camera/image``).
+2. Run inference (YOLO or DETR) on each frame.
+3. Publish detections as ROS 2 messages (``/perception/detections``).
+4. Downstream nodes (tracker, planner) subscribe and consume.
+
+.. seealso::
+
+   The ROS 2 detector node code from the previous section provides a
+   complete implementation of this pattern.
+
+
+Beyond YOLO and DETR
+----------------------
+
+While YOLO and DETR are the focus of this lecture, the AV perception
+landscape has evolved further:
+
+.. list-table::
+   :widths: 25 75
+   :class: compact-table
+
+   * - **BEV Perception**
+     - Bird's-Eye View representations (BEVFormer, LSS) project camera
+       features into a top-down view -- the dominant paradigm in modern AV
+       perception. *Covered in L5.*
+   * - **3D Occupancy Networks**
+     - Predict per-voxel semantic occupancy, handling arbitrary-shaped
+       obstacles that bounding boxes miss. *Covered in L5.*
+   * - **Multi-Task Learning**
+     - Single backbone with multiple heads (detection + segmentation + lane
+       detection). Example: Tesla HydraNet.
+   * - **3D Object Detection**
+     - LiDAR-based (PointPillars, CenterPoint) and camera-based (FCOS3D)
+       methods for 3D bounding boxes.
+   * - **End-to-End Perception**
+     - UniAD, DriveTransformer unify perception-prediction-planning.
+       *Covered in L12.*
+
+
+CARLA Hands-On: Object Detection Pipeline
+--------------------------------------------
+
+This exercise builds a complete detection pipeline from CARLA camera data
+using the YOLO and DETR models discussed in this lecture. You will collect
+frames from a simulated vehicle, run inference with both architectures, and
+compare their performance under varying conditions.
+
+
+Task 1: Spawn Vehicle and Collect Camera Frames
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
    import carla
    import numpy as np
-   import cv2
+   import os
+   import time
+   from datetime import datetime
 
+   # ── Connect to CARLA ──────────────────────────────────────────────
    client = carla.Client('localhost', 2000)
    client.set_timeout(10.0)
    world = client.get_world()
    bp_lib = world.get_blueprint_library()
 
-   # Spawn ego vehicle
+   # ── Spawn ego vehicle ─────────────────────────────────────────────
    vehicle_bp = bp_lib.find('vehicle.tesla.model3')
    spawn_point = world.get_map().get_spawn_points()[0]
    vehicle = world.spawn_actor(vehicle_bp, spawn_point)
    vehicle.set_autopilot(True)
+   print(f"Spawned vehicle: {vehicle.type_id} at {spawn_point.location}")
 
-   # Define 6-camera rig (position, yaw)
-   camera_configs = [
-       {'name': 'front',       'x':  1.5, 'y':  0.0, 'z': 2.4, 'yaw':   0},
-       {'name': 'front_left',  'x':  1.0, 'y': -0.5, 'z': 2.4, 'yaw': -60},
-       {'name': 'front_right', 'x':  1.0, 'y':  0.5, 'z': 2.4, 'yaw':  60},
-       {'name': 'back',        'x': -1.5, 'y':  0.0, 'z': 2.4, 'yaw': 180},
-       {'name': 'back_left',   'x': -1.0, 'y': -0.5, 'z': 2.4, 'yaw':-120},
-       {'name': 'back_right',  'x': -1.0, 'y':  0.5, 'z': 2.4, 'yaw': 120},
-   ]
+   # ── Attach an RGB camera (1280x720, fov 90) ──────────────────────
+   camera_bp = bp_lib.find('sensor.camera.rgb')
+   camera_bp.set_attribute('image_size_x', '1280')
+   camera_bp.set_attribute('image_size_y', '720')
+   camera_bp.set_attribute('fov', '90')
+   camera_transform = carla.Transform(carla.Location(x=1.5, z=2.4))
+   camera = world.spawn_actor(camera_bp, camera_transform,
+                              attach_to=vehicle)
 
-   IMAGE_W, IMAGE_H, FOV = 800, 600, 90
-   cameras = {}
+   # ── Create timestamped output directory ────────────────────────────
+   timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+   output_dir = os.path.join('carla_frames', timestamp)
+   os.makedirs(output_dir, exist_ok=True)
+   print(f"Saving frames to: {output_dir}")
 
-   for cfg in camera_configs:
-       cam_bp = bp_lib.find('sensor.camera.rgb')
-       cam_bp.set_attribute('image_size_x', str(IMAGE_W))
-       cam_bp.set_attribute('image_size_y', str(IMAGE_H))
-       cam_bp.set_attribute('fov', str(FOV))
-       transform = carla.Transform(
-           carla.Location(x=cfg['x'], y=cfg['y'], z=cfg['z']),
-           carla.Rotation(yaw=cfg['yaw']))
-       cam = world.spawn_actor(cam_bp, transform, attach_to=vehicle)
-       cameras[cfg['name']] = cam
+   # ── Collect frames with a counter ─────────────────────────────────
+   frame_count = 0
+   max_frames = 200
 
-   # Also spawn a depth camera co-located with the front camera
-   # (to provide ground-truth depth for the LSS exercise)
-   depth_bp = bp_lib.find('sensor.camera.depth')
-   depth_bp.set_attribute('image_size_x', str(IMAGE_W))
-   depth_bp.set_attribute('image_size_y', str(IMAGE_H))
-   depth_bp.set_attribute('fov', str(FOV))
-   depth_cam = world.spawn_actor(
-       depth_bp,
-       carla.Transform(carla.Location(x=1.5, z=2.4)),
-       attach_to=vehicle)
+   def camera_callback(image):
+       global frame_count
+       if frame_count >= max_frames:
+           return
+       array = np.frombuffer(image.raw_data, dtype=np.uint8)
+       array = array.reshape((image.height, image.width, 4))[:, :, :3]
+       filepath = os.path.join(output_dir, f'frame_{frame_count:04d}.png')
+       import cv2
+       cv2.imwrite(filepath, array)
+       frame_count += 1
+       if frame_count % 50 == 0:
+           print(f"Saved {frame_count}/{max_frames} frames")
 
-   print(f"Spawned {len(cameras)} RGB cameras + 1 depth camera.")
+   camera.listen(camera_callback)
 
+   # ── Wait until all frames are collected ────────────────────────────
+   while frame_count < max_frames:
+       time.sleep(0.1)
 
-Task 2: Build Camera Intrinsics and Extrinsics
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   print(f"Collection complete: {frame_count} frames saved to {output_dir}")
 
-.. code-block:: python
-
-   def get_camera_intrinsic(image_w, image_h, fov):
-       """Compute the 3x3 camera intrinsic matrix from CARLA parameters."""
-       focal = image_w / (2.0 * np.tan(np.radians(fov / 2.0)))
-       K = np.array([
-           [focal,  0.0,   image_w / 2.0],
-           [0.0,    focal, image_h / 2.0],
-           [0.0,    0.0,   1.0]
-       ])
-       return K
-
-   def get_extrinsic_matrix(camera_actor):
-       """Get the 4x4 camera-to-world extrinsic matrix."""
-       transform = camera_actor.get_transform()
-       return np.array(transform.get_matrix())
-
-   K = get_camera_intrinsic(IMAGE_W, IMAGE_H, FOV)
-   print(f"Intrinsic matrix:\n{K}")
-
-   for name, cam in cameras.items():
-       E = get_extrinsic_matrix(cam)
-       print(f"{name} extrinsic (camera-to-world):\n{E[:3]}\n")
+   # ── Cleanup ────────────────────────────────────────────────────────
+   camera.stop()
+   camera.destroy()
+   vehicle.destroy()
 
 
-Task 3: Simplified LSS -- Lift Depth to 3D and Splat to BEV
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Using the ground-truth depth from CARLA's depth camera, implement the core
-LSS steps: "lift" pixels to 3D points and "splat" them into a BEV grid.
-
-.. code-block:: python
-
-   # BEV grid parameters
-   BEV_X_RANGE = (-50.0, 50.0)   # meters, left-right
-   BEV_Y_RANGE = (-50.0, 50.0)   # meters, front-back
-   BEV_RESOLUTION = 0.5           # meters per cell
-   BEV_W = int((BEV_X_RANGE[1] - BEV_X_RANGE[0]) / BEV_RESOLUTION)
-   BEV_H = int((BEV_Y_RANGE[1] - BEV_Y_RANGE[0]) / BEV_RESOLUTION)
-
-   def depth_image_to_3d_points(depth_array, K, extrinsic):
-       """Lift a depth image to 3D world points (LSS 'Lift' stage)."""
-       H, W = depth_array.shape
-       u, v = np.meshgrid(np.arange(W), np.arange(H))
-
-       # Back-project pixels to camera frame using intrinsics
-       x_cam = (u - K[0, 2]) * depth_array / K[0, 0]
-       y_cam = (v - K[1, 2]) * depth_array / K[1, 1]
-       z_cam = depth_array
-
-       # Stack into (N, 4) homogeneous coordinates
-       ones = np.ones_like(z_cam)
-       cam_points = np.stack([x_cam, y_cam, z_cam, ones], axis=-1)
-       cam_points = cam_points.reshape(-1, 4)
-
-       # Transform to world frame
-       world_points = (extrinsic @ cam_points.T).T[:, :3]
-       return world_points
-
-   def splat_to_bev(points_3d, bev_x_range, bev_y_range, resolution):
-       """Splat 3D points into a 2D BEV occupancy grid (LSS 'Splat' stage)."""
-       bev_w = int((bev_x_range[1] - bev_x_range[0]) / resolution)
-       bev_h = int((bev_y_range[1] - bev_y_range[0]) / resolution)
-       bev_grid = np.zeros((bev_h, bev_w), dtype=np.float32)
-
-       # Convert world XY to grid indices
-       xi = ((points_3d[:, 0] - bev_x_range[0]) / resolution).astype(int)
-       yi = ((points_3d[:, 1] - bev_y_range[0]) / resolution).astype(int)
-
-       # Filter to within grid bounds
-       valid = (xi >= 0) & (xi < bev_w) & (yi >= 0) & (yi < bev_h)
-       xi, yi = xi[valid], yi[valid]
-
-       # Accumulate point counts per cell
-       np.add.at(bev_grid, (yi, xi), 1.0)
-       return bev_grid
-
-   # Usage (inside depth camera callback):
-   # depth_array = parse_carla_depth_image(depth_image)
-   # E = get_extrinsic_matrix(depth_cam)
-   # points_3d = depth_image_to_3d_points(depth_array, K, E)
-   # bev = splat_to_bev(points_3d, BEV_X_RANGE, BEV_Y_RANGE, BEV_RESOLUTION)
-
-
-Task 4: Visualize and Analyze the BEV Grid
+Task 2: Run YOLO Inference on CARLA Frames
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
-   def visualize_bev(bev_grid, title="BEV Occupancy"):
-       """Display the BEV grid as a heatmap."""
-       # Normalize for visualization
-       bev_vis = np.clip(bev_grid, 0, 50)  # cap at 50 points per cell
-       bev_vis = (bev_vis / 50.0 * 255).astype(np.uint8)
-       bev_colored = cv2.applyColorMap(bev_vis, cv2.COLORMAP_JET)
+   import cv2
+   import os
+   import glob
+   import time
+   from ultralytics import YOLO
 
-       # Mark ego vehicle at center
-       center = (bev_grid.shape[1] // 2, bev_grid.shape[0] // 2)
-       cv2.circle(bev_colored, center, 5, (0, 255, 0), -1)
-       cv2.putText(bev_colored, "EGO", (center[0]+8, center[1]+5),
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
+   # ── Load pretrained YOLOv8s ────────────────────────────────────────
+   model = YOLO('yolov8s.pt')
 
-       cv2.imshow(title, bev_colored)
+   # ── Set up paths ───────────────────────────────────────────────────
+   input_dir = 'carla_frames/<YOUR_TIMESTAMP>'   # Update with your directory
+   output_dir = input_dir + '_yolo'
+   os.makedirs(output_dir, exist_ok=True)
+
+   frames = sorted(glob.glob(os.path.join(input_dir, '*.png')))
+   print(f"Running YOLOv8s on {len(frames)} frames...")
+
+   # ── Run inference on each frame ────────────────────────────────────
+   inference_times = []
+   for i, frame_path in enumerate(frames):
+       img = cv2.imread(frame_path)
+
+       t_start = time.perf_counter()
+       results = model(img, verbose=False)[0]
+       t_end = time.perf_counter()
+
+       elapsed_ms = (t_end - t_start) * 1000
+       inference_times.append(elapsed_ms)
+
+       # ── Draw bounding boxes and class labels ──────────────────────
+       for box in results.boxes:
+           x1, y1, x2, y2 = map(int, box.xyxy[0])
+           conf = float(box.conf[0])
+           cls_id = int(box.cls[0])
+           label = f"{model.names[cls_id]} {conf:.2f}"
+           cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+           cv2.putText(img, label, (x1, y1 - 8),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
+       # ── Display and save ──────────────────────────────────────────
+       cv2.imshow("YOLOv8s Detections", img)
        cv2.waitKey(1)
+       out_path = os.path.join(output_dir, os.path.basename(frame_path))
+       cv2.imwrite(out_path, img)
+
+       print(f"Frame {i:04d}: {elapsed_ms:.1f} ms, "
+             f"{len(results.boxes)} detections")
+
+   cv2.destroyAllWindows()
+
+   avg_time = sum(inference_times) / len(inference_times)
+   print(f"\nYOLOv8s average inference time: {avg_time:.1f} ms/frame")
+   print(f"Annotated frames saved to: {output_dir}")
+
+
+Task 3: Run DETR Inference on the Same Frames
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   import cv2
+   import os
+   import glob
+   import time
+   from ultralytics import YOLO
+
+   # ── Load pretrained RT-DETR-L ──────────────────────────────────────
+   model = YOLO('rtdetr-l.pt')
+
+   # ── Set up paths ───────────────────────────────────────────────────
+   input_dir = 'carla_frames/<YOUR_TIMESTAMP>'   # Same directory as Task 2
+   output_dir = input_dir + '_rtdetr'
+   os.makedirs(output_dir, exist_ok=True)
+
+   frames = sorted(glob.glob(os.path.join(input_dir, '*.png')))
+   print(f"Running RT-DETR-L on {len(frames)} frames...")
+
+   # ── Run inference on each frame ────────────────────────────────────
+   inference_times = []
+   for i, frame_path in enumerate(frames):
+       img = cv2.imread(frame_path)
+
+       t_start = time.perf_counter()
+       results = model(img, verbose=False)[0]
+       t_end = time.perf_counter()
+
+       elapsed_ms = (t_end - t_start) * 1000
+       inference_times.append(elapsed_ms)
+
+       # ── Draw bounding boxes and class labels ──────────────────────
+       for box in results.boxes:
+           x1, y1, x2, y2 = map(int, box.xyxy[0])
+           conf = float(box.conf[0])
+           cls_id = int(box.cls[0])
+           label = f"{model.names[cls_id]} {conf:.2f}"
+           cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), 2)
+           cv2.putText(img, label, (x1, y1 - 8),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
+
+       # ── Display and save ──────────────────────────────────────────
+       cv2.imshow("RT-DETR-L Detections", img)
+       cv2.waitKey(1)
+       out_path = os.path.join(output_dir, os.path.basename(frame_path))
+       cv2.imwrite(out_path, img)
+
+       print(f"Frame {i:04d}: {elapsed_ms:.1f} ms, "
+             f"{len(results.boxes)} detections")
+
+   cv2.destroyAllWindows()
+
+   avg_time = sum(inference_times) / len(inference_times)
+   print(f"\nRT-DETR-L average inference time: {avg_time:.1f} ms/frame")
+   print(f"Annotated frames saved to: {output_dir}")
+
+
+Task 4: Compare YOLO vs DETR
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. admonition:: Exercise Tasks
    :class: tip
 
-   1. **Run the multi-camera rig** and display all six camera views in a
-      tiled window.
-   2. **Implement the LSS pipeline** using CARLA's ground-truth depth camera.
-      Visualize the resulting BEV occupancy grid.
-   3. **Multi-camera BEV fusion**: Extend the pipeline to use all six cameras
-      (each with a co-located depth camera). Merge all BEV grids using
-      sum-pooling and compare coverage against a single front camera.
-   4. **Vary the BEV resolution**: Test 0.25 m, 0.5 m, and 1.0 m resolution.
-      How does resolution affect object visibility and compute time?
-   5. **Compare to LiDAR BEV**: Spawn a 64-channel LiDAR, project its point
-      cloud into the same BEV grid, and compare the camera-based vs.
-      LiDAR-based BEV representations side-by-side.
+   1. **Compare inference speed**: Compute the mean and standard deviation of
+      per-frame inference time (ms/frame) across all 200 frames for both
+      YOLOv8s and RT-DETR-L. Which model is faster and by how much?
+   2. **Compare detection counts and confidence distributions**: For each
+      model, compute the average number of detections per frame and plot a
+      histogram of confidence scores. Which model produces more high-confidence
+      detections?
+   3. **Weather robustness experiment**: Re-run Task 1 frame collection under
+      three weather conditions and repeat Tasks 2--3 on each set:
+
+      - Clear day: ``world.set_weather(carla.WeatherParameters.ClearNoon)``
+      - Heavy rain: ``world.set_weather(carla.WeatherParameters.HardRainNoon)``
+      - Night: ``world.set_weather(carla.WeatherParameters.ClearNight)``
+
+      Compare mAP degradation across weather conditions for both models.
+   4. **Identify failure cases**: Examine the annotated frames and find
+      examples of missed detections and false positives for each model.
+      Explain which architecture (CNN-based YOLO vs. transformer-based DETR)
+      handles these failure cases better and why.
 
 .. note::
 
-   In a real LSS implementation, the depth distribution is *learned* by a
-   neural network rather than using ground-truth depth. This exercise uses
-   CARLA's depth camera as a stand-in to focus on the geometric concepts.
-   The learned depth version is what makes LSS end-to-end differentiable.
+   This exercise provides the detection foundation for **GP2: Object
+   Detection & Tracking**, where you will train custom YOLO and DETR models
+   on CARLA data and deploy them as ROS 2 perception nodes.

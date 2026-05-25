@@ -1,36 +1,48 @@
-========================================================================
-L5: Perception III -- Segmentation, Tracking & Temporal Reasoning
-========================================================================
+====================================================================
+L5: Perception II -- BEV, Occupancy & Segmentation
+====================================================================
 
 Overview
 --------
 
-This lecture completes the perception pipeline by covering two essential tasks
-that go beyond object detection: **segmentation** (assigning semantic meaning
-to every pixel or instance in the scene) and **multi-object tracking** (linking
-detections across frames to maintain consistent object identities over time).
-You will also study how temporal context -- reasoning over sequences of frames
-rather than single images -- significantly improves perception quality and
-enables velocity estimation for downstream prediction.
+This lecture extends the perception pipeline from L4 (Detection) along
+two complementary axes: **representation** -- moving from per-image
+bounding boxes to the Bird's-Eye View (BEV) and full 3D occupancy --
+and **density** -- moving from sparse detections to dense, per-pixel
+segmentation. You will study two landmark BEV architectures
+(Lift-Splat-Shoot and BEVFormer), 3D Occupancy Networks, and
+DeepLabv3+-style segmentation including driveable surface and lane
+detection. The lecture closes with industry adoption notes,
+nuScenes benchmarks, and a CARLA exercise that builds a BEV grid
+from a multi-camera rig and explores CARLA's semantic-segmentation
+ground truth.
 
 Learning Objectives
 -------------------
 
 By the end of this lecture, you will be able to:
 
-- Distinguish semantic, instance, and panoptic segmentation and explain when
-  each is appropriate.
-- Describe the U-Net and DeepLabv3+ architectures for semantic segmentation.
-- Explain driveable surface and lane detection as specialized segmentation tasks.
-- Formulate the multi-object tracking (MOT) problem and the tracking-by-detection
-  paradigm.
-- Describe the SORT, DeepSORT, and ByteTrack algorithms and their key design
-  choices.
-- Evaluate tracking performance using MOTA, MOTP, and IDF1 metrics.
-- Explain how temporal reasoning -- using sequences of frames -- improves
-  perception beyond single-frame methods.
-- Describe how segmentation and tracking integrate with the L3-L4 perception
-  pipeline.
+- Explain why BEV is a preferred representation for autonomous driving
+  planning and multi-sensor fusion.
+- Describe the Lift-Splat-Shoot (LSS) pipeline for camera-to-BEV
+  projection including depth estimation, voxel pooling, and BEV
+  feature extraction.
+- Explain BEVFormer's learnable BEV queries, spatial cross-attention,
+  and temporal self-attention mechanisms.
+- Compare 2D perspective detection, BEV detection, and 3D occupancy
+  prediction in terms of representational power and planning utility.
+- Define 3D occupancy networks and explain per-voxel semantic
+  prediction.
+- Describe how multi-camera views are fused in BEV space.
+- Explain DeepLabv3+'s use of dilated convolutions and ASPP for
+  multi-scale segmentation.
+- Implement driveable-surface and lane segmentation pipelines, and
+  reason about their role in trajectory planning.
+- Distinguish semantic, instance, and panoptic segmentation; compute
+  Panoptic Quality (PQ).
+- Summarize how Tesla and other industry players adopt BEV perception.
+- Interpret nuScenes benchmark metrics (mAP, NDS) in the context of
+  modern BEV methods.
 
 .. toctree::
    :hidden:
@@ -45,10 +57,14 @@ By the end of this lecture, you will be able to:
 Next Steps
 ----------
 
-- The next lecture covers **Multi-Sensor Fusion**: Kalman filter theory (KF,
-  EKF, UKF), particle filters, data association, and modern deep learning
-  fusion approaches combining camera, LiDAR, and RADAR.
-- Review the ByteTrack paper: Zhang et al. (2022) for an efficient, highly
-  accurate modern tracker used in production systems.
-- Explore the MOTChallenge benchmark at `https://motchallenge.net
-  <https://motchallenge.net>`_ to understand evaluation protocols.
+- The next lecture covers **Perception III -- Tracking, Temporal
+  Reasoning & Deep-Learning Fusion**: multi-object tracking (SORT,
+  DeepSORT, ByteTrack, transformer-based MOT), temporal context for
+  perception, and cross-attention / BEVFusion as the modern
+  deep-learning fusion paradigm built on top of the BEV
+  representation introduced here.
+- Review the BEVFormer paper: Li et al. (2022) ``BEVFormer: Learning
+  Bird's-Eye-View Representation from Multi-Camera Images via
+  Spatiotemporal Transformers.``
+- Explore the `nuScenes leaderboard <https://nuscenes.org/object-det>`_
+  to see where current BEV methods rank in 3D object detection.

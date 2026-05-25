@@ -2,19 +2,20 @@
 Exercises
 ====================================================
 
-This page contains five take-home exercises that reinforce the concepts
-from Lecture 5. Exercises cover segmentation metrics, Kalman filter
-tracking, and the Hungarian algorithm.
+This page contains take-home exercises that reinforce the concepts from
+Lecture 5. Exercises cover BEV representation, the Lift-Splat-Shoot
+pipeline, occupancy networks, and semantic segmentation.
 
 
-.. dropdown:: Exercise 1 -- Segmentation Metrics
+.. dropdown:: Exercise 1 -- Perspective vs. BEV Representation
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Practice computing IoU and mIoU from a confusion matrix.
+   Build geometric intuition for why BEV is preferred for planning
+   while perspective views are better for recognition.
 
 
    .. raw:: html
@@ -24,267 +25,208 @@ tracking, and the Hungarian algorithm.
 
    **Specification**
 
-   A semantic segmentation model produces the following confusion
-   matrix for three classes:
+   A vehicle is located **30 m ahead** and **5 m to the left** of the
+   ego vehicle. A second vehicle is **60 m ahead** in the same lane.
+
+   1. In a front-facing camera image (640 × 480, 90° FOV), roughly
+      where does the first vehicle appear (left/center/right)? Would
+      it appear large or small?
+   2. In a BEV grid (100 m × 100 m, 0.5 m/cell, ego at center), what
+      are the **grid coordinates** (row, col) of the first vehicle?
+   3. In the camera image, how does the second vehicle's apparent size
+      compare to the first? In BEV?
+   4. Write 3--4 sentences explaining why BEV is preferred for
+      **planning** while perspective is better for **fine-grained
+      recognition** (e.g., reading a traffic sign).
+
+   **Deliverable**
+
+   Written answers with coordinate calculations shown.
+
+
+.. dropdown:: Exercise 2 -- Multi-Camera Rig Coverage
+   :icon: gear
+   :class-container: sd-border-primary
+   :class-title: sd-font-weight-bold
+
+   **Goal**
+
+   Analyze the coverage pattern of a multi-camera rig and identify
+   blind spots and overlap regions.
+
+
+   .. raw:: html
+
+      <hr>
+
+
+   **Specification**
+
+   A six-camera rig is mounted on a vehicle:
+
+   - Front: ``(2.0, 0, 1.5)`` m, yaw ``0°``, FOV ``110°``
+   - Front-Left: ``(1.5, -0.8, 1.5)`` m, yaw ``-55°``, FOV ``110°``
+   - Front-Right: ``(1.5, 0.8, 1.5)`` m, yaw ``55°``, FOV ``110°``
+   - Rear: ``(-2.0, 0, 1.5)`` m, yaw ``180°``, FOV ``110°``
+   - Rear-Left: ``(-1.5, -0.8, 1.5)`` m, yaw ``-125°``, FOV ``110°``
+   - Rear-Right: ``(-1.5, 0.8, 1.5)`` m, yaw ``125°``, FOV ``110°``
+
+   1. Sketch a **top-down view** of the camera coverage (show FOV
+      cones). Is there any blind spot around the vehicle?
+   2. Compute the **angular overlap** between the Front and Front-Left
+      cameras. Why is overlap important for BEV construction?
+   3. A pedestrian stands at ``(0, -3, 0)`` relative to the vehicle
+      (directly to the left, 3 m away). Which camera(s) can see them?
+
+   **Deliverable**
+
+   Top-down coverage sketch and written answers.
+
+
+.. dropdown:: Exercise 3 -- Lift-Splat-Shoot Pipeline
+   :icon: gear
+   :class-container: sd-border-primary
+   :class-title: sd-font-weight-bold
+
+   **Goal**
+
+   Understand the computational structure of the LSS pipeline by
+   working through the numbers.
+
+
+   .. raw:: html
+
+      <hr>
+
+
+   **Specification**
+
+   In the LSS pipeline, each pixel predicts a **depth distribution**
+   over :math:`D` discrete bins.
+
+   1. If the depth range is ``[2 m, 50 m]`` with 1 m bins, how many
+      bins :math:`D` are there?
+   2. Each pixel generates :math:`D` feature points in 3D. For an
+      image of size ``H = 224, W = 400``, how many 3D points does a
+      **single camera** produce?
+   3. With **6 cameras**, what is the total number of 3D points before
+      splatting?
+   4. The BEV grid covers ``[-50 m, 50 m]`` in X and Y with 0.5 m
+      resolution. How many cells does the grid have?
+   5. Why does LSS use **sum pooling** (not max pooling) when
+      accumulating features in the BEV grid?
+
+   **Deliverable**
+
+   Numerical answers with calculations shown, plus a written
+   explanation for question 5.
+
+
+.. dropdown:: Exercise 4 -- BEV Grid Resolution Trade-Off
+   :icon: gear
+   :class-container: sd-border-primary
+   :class-title: sd-font-weight-bold
+
+   **Goal**
+
+   Empirically evaluate how BEV grid resolution affects detail and
+   computational cost using CARLA.
+
+
+   .. raw:: html
+
+      <hr>
+
+
+   **Specification**
+
+   Create the file ``bev_resolution.py`` that performs the following:
+
+   1. Spawn an ego vehicle with a depth camera in Town03.
+   2. Using the simplified LSS pipeline from the lecture (ground-truth
+      depth), generate BEV grids at three resolutions:
+
+      - **0.25 m** per cell
+      - **0.5 m** per cell
+      - **1.0 m** per cell
+
+   3. For each resolution, measure and report:
+
+      - BEV grid dimensions (rows × cols) for a 100 m × 100 m area.
+      - Computation time to generate one BEV frame.
+      - Number of occupied cells (cells with ≥ 1 point).
+
+   4. Save the three BEV visualizations as images.
+
+   **Written analysis**
+
+   - Can you distinguish between two vehicles parked side-by-side at
+     each resolution?
+   - Recommend a resolution that balances detail and compute cost for
+     real-time driving at 10 Hz.
+
+   **Deliverable**
+
+   The script, three BEV images, results table, and recommendation.
+
+
+.. dropdown:: Exercise 5 -- Occupancy vs. Detection
+   :icon: gear
+   :class-container: sd-border-primary
+   :class-title: sd-font-weight-bold
+
+   **Goal**
+
+   Reason about when detection-based vs. occupancy-based perception
+   is more appropriate for safe navigation.
+
+
+   .. raw:: html
+
+      <hr>
+
+
+   **Specification**
+
+   Consider a scene with the following four objects:
+
+   - A **parked car** (standard rectangular shape)
+   - A **fallen tree** across the road (irregular shape)
+   - A **construction barrier** (thin, elongated)
+   - An **overhanging branch** at 2.5 m height
+
+   For each object, fill in the table:
 
    .. list-table::
       :widths: 25 25 25 25
       :header-rows: 1
       :class: compact-table
 
-      * - Predicted \\ Actual
-        - Road
-        - Vehicle
-        - Pedestrian
-      * - Road
-        - 8000
-        - 200
-        - 50
-      * - Vehicle
-        - 300
-        - 1500
-        - 100
-      * - Pedestrian
-        - 100
-        - 50
-        - 700
+      * - Object
+        - Well represented by 3D bbox?
+        - Well represented by occupancy?
+        - More useful for planner?
+      * - Parked car
+        -
+        -
+        -
+      * - Fallen tree
+        -
+        -
+        -
+      * - Construction barrier
+        -
+        -
+        -
+      * - Overhanging branch
+        -
+        -
+        -
 
-   1. Compute the **IoU** for each class using
-      :math:`\text{IoU} = \frac{TP}{TP + FP + FN}`.
-   2. Compute the **mIoU** across all three classes.
-   3. Which class has the worst IoU? Suggest one reason why.
-   4. If you could only optimize one class for safety, which would you
-      choose and why?
-
-   **Deliverable**
-
-   All IoU calculations shown with final mIoU value, plus written
-   answers to questions 3 and 4.
-
-
-.. dropdown:: Exercise 2 -- Kalman Filter Tracking (Pen and Paper)
-   :icon: gear
-   :class-container: sd-border-primary
-   :class-title: sd-font-weight-bold
-
-   **Goal**
-
-   Work through two full Kalman filter predict-update cycles by hand
-   to build intuition for state estimation.
-
-
-   .. raw:: html
-
-      <hr>
-
-
-   **Specification**
-
-   A tracked vehicle has state
-   :math:`\mathbf{x} = [x, v_x]^T` (1D position and velocity).
-
-   - Motion model:
-     :math:`F = \begin{bmatrix} 1 & \Delta t \\ 0 & 1 \end{bmatrix}`
-   - Measurement model: :math:`H = [1 \;\; 0]` (observe position only)
-   - Initial state: :math:`\mathbf{x}_0 = [0, 5]^T`
-   - Initial covariance:
-     :math:`P_0 = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}`
-   - Process noise:
-     :math:`Q = \begin{bmatrix} 0.1 & 0 \\ 0 & 0.1 \end{bmatrix}`
-   - Measurement noise: :math:`R = [2]`
-   - Time step: :math:`\Delta t = 1` s
-
-   Perform **two full predict-update cycles** with measurements
-   :math:`z_1 = 4.5` m and :math:`z_2 = 10.2` m.
-
-   For each cycle, show:
-
-   1. **Predicted state** :math:`\hat{\mathbf{x}}^-` and
-      **predicted covariance** :math:`P^-`.
-   2. **Kalman gain** :math:`K`.
-   3. **Updated state** :math:`\hat{\mathbf{x}}^+` and
-      **updated covariance** :math:`P^+`.
+   Write a concluding paragraph (5--7 sentences) arguing when a
+   production ADS should use detection-based vs. occupancy-based
+   perception, or both.
 
    **Deliverable**
 
-   Complete hand calculations for both cycles (show all matrix
-   operations).
-
-
-.. dropdown:: Exercise 3 -- Hungarian Algorithm
-   :icon: gear
-   :class-container: sd-border-primary
-   :class-title: sd-font-weight-bold
-
-   **Goal**
-
-   Practice the detection-to-track association step used in SORT.
-
-
-   .. raw:: html
-
-      <hr>
-
-
-   **Specification**
-
-   At time :math:`t`, three tracked objects have predicted positions:
-
-   - Track A: (10, 20)
-   - Track B: (30, 15)
-   - Track C: (50, 40)
-
-   Four new detections arrive:
-
-   - D1: (11, 21)
-   - D2: (52, 38)
-   - D3: (31, 14)
-   - D4: (70, 60)
-
-   1. Compute the **Euclidean distance cost matrix** (3 tracks ×
-      4 detections).
-   2. Apply a **gating threshold** of 10 m -- mark which assignments
-      are impossible.
-   3. Find the **optimal assignment** (by inspection or using
-      ``scipy.optimize.linear_sum_assignment``).
-   4. Which detection is **unmatched**? What should the tracker do
-      with it?
-   5. If Track C had no valid match (all distances > 10 m), how many
-      consecutive frames of no match before the track should be
-      **deleted**?
-
-   **Deliverable**
-
-   Cost matrix, gated matrix, optimal assignment, and written answers.
-
-
-.. dropdown:: Exercise 4 -- SORT vs. ByteTrack
-   :icon: gear
-   :class-container: sd-border-primary
-   :class-title: sd-font-weight-bold
-
-   **Goal**
-
-   Compare SORT and ByteTrack tracking performance in CARLA and
-   understand why the second association pass helps.
-
-
-   .. raw:: html
-
-      <hr>
-
-
-   **Specification**
-
-   Create the file ``tracker_comparison.py`` that performs the
-   following:
-
-   1. Spawn traffic in a busy intersection (Town03 or Town05, 30+
-      vehicles).
-   2. Implement a **basic SORT tracker** using the lecture code (Kalman
-      filter + Hungarian matching at confidence > 0.5).
-   3. Run for **200 frames** and count the number of **ID switches**.
-   4. Modify the tracker to implement **ByteTrack's two-pass
-      association**:
-
-      - First pass: match high-confidence detections (> 0.5).
-      - Second pass: match low-confidence detections (0.2--0.5) to
-        remaining unmatched tracks.
-
-   5. Run ByteTrack on the same 200 frames and count ID switches.
-   6. Print a comparison:
-
-      .. code-block:: text
-
-         SORT:      ID switches = ??
-         ByteTrack: ID switches = ??
-
-   **Written analysis**
-
-   Explain in 3--5 sentences **why** the second pass helps during
-   occlusions.
-
-   **Deliverable**
-
-   The script, comparison results, and written analysis.
-
-
-.. dropdown:: Exercise 5 -- Tracking Metrics Computation
-   :icon: gear
-   :class-container: sd-border-primary
-   :class-title: sd-font-weight-bold
-
-   **Goal**
-
-   Compute MOTA from tracking results and reason about acceptable
-   performance thresholds.
-
-
-   .. raw:: html
-
-      <hr>
-
-
-   **Specification**
-
-   Given the following tracking results over 5 frames:
-
-   .. list-table::
-      :widths: 12 16 16 20 20 16
-      :header-rows: 1
-      :class: compact-table
-
-      * - Frame
-        - GT
-        - Matched
-        - Missed (FN)
-        - False pos (FP)
-        - ID switches
-      * - 1
-        - 4
-        - 3
-        - 1
-        - 1
-        - 0
-      * - 2
-        - 4
-        - 4
-        - 0
-        - 0
-        - 0
-      * - 3
-        - 5
-        - 3
-        - 2
-        - 2
-        - 1
-      * - 4
-        - 5
-        - 4
-        - 1
-        - 1
-        - 0
-      * - 5
-        - 4
-        - 4
-        - 0
-        - 0
-        - 1
-
-   1. Compute **MOTA** using:
-
-      .. math::
-
-         \text{MOTA} = 1 - \frac{\sum(\text{FN} + \text{FP} + \text{IDSW})}{\sum \text{GT}}
-
-   2. Is this a good MOTA score? What value is typically considered
-      acceptable for autonomous driving?
-   3. Which frame has the worst performance? What might have caused
-      the spike in errors?
-   4. If you could improve only one component (reduce FN, reduce FP,
-      or reduce IDSW), which would have the largest impact on MOTA?
-
-   **Deliverable**
-
-   MOTA calculation with all intermediate sums shown, plus written
-   answers.
+   Completed table and written analysis.

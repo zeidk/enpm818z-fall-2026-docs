@@ -2,12 +2,19 @@
 Quiz
 ====================================================
 
-This quiz covers the key concepts from Lecture 11: End-to-End Driving &
-Foundation Models. Topics include the modular vs. end-to-end debate, UniAD
-(CVPR 2023), DriveTransformer (ICLR 2025), Vision-Language-Action (VLA)
-models, Tesla's FSD v12 architecture, NVIDIA's end-to-end stack with
-reinforcement learning, and the safety and validation challenges of
-black-box neural driving systems.
+This quiz covers the key concepts from Lecture 12: End-to-End Driving,
+VLA & Imitation Learning. Topics include the modular vs. end-to-end
+debate, UniAD (CVPR 2023), DriveTransformer (ICLR 2025),
+Vision-Language-Action (VLA) models, Tesla's FSD v12 architecture,
+NVIDIA's end-to-end stack with reinforcement learning, behavior
+cloning and the distribution-shift / compounding-error problem,
+DAgger, and the safety and validation challenges of black-box neural
+driving systems.
+
+.. note::
+
+   Behavior-cloning / DAgger quiz questions previously lived in the
+   old L11 quiz; migration into this quiz is a follow-up polish task.
 
 .. note::
 

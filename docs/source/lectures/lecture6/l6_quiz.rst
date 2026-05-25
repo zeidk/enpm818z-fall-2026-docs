@@ -2,11 +2,18 @@
 Quiz
 ====================================================
 
-This quiz covers the key concepts from Lecture 6: Multi-Sensor Fusion.
-Topics include the motivation for sensor fusion, fusion architectures
-(early, intermediate, late), Kalman filter predict/update equations, Kalman
-gain, EKF, UKF, particle filter, filter comparison, data association,
-inverse-variance weighting, and cross-attention deep learning fusion.
+This quiz covers the key concepts from Lecture 6: Perception III --
+Tracking, Temporal Reasoning & Deep Fusion. Topics include multi-object
+tracking (SORT, DeepSORT, ByteTrack); tracking metrics (MOTA, MOTP,
+IDF1); temporal reasoning for improved perception; and deep-learning
+fusion (cross-attention, BEVFusion).
+
+.. note::
+
+   Segmentation questions from the previous L5 quiz have been
+   migrated to the new L5 quiz; cross-attention / BEVFusion questions
+   from the previous L6 quiz will be migrated to this quiz in a
+   follow-up polish pass.
 
 .. note::
 
@@ -28,283 +35,277 @@ Multiple Choice (Questions 1-10)
 .. admonition:: Question 1
    :class: hint
 
-   A camera detects traffic light color while LiDAR measures precise distance
-   to the traffic light pole. This sensor combination exemplifies which type
-   of sensor relationship?
+   Which segmentation task assigns a unique instance ID to each individual
+   object AND provides a label for every pixel in the image (including
+   background "stuff" regions)?
 
-   A. Competitive (redundant)
+   A. Semantic segmentation
 
-   B. Cooperative
+   B. Instance segmentation
 
-   C. Complementary
+   C. Panoptic segmentation
 
-   D. Adversarial
+   D. Binary segmentation
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- Complementary
+   **C** -- Panoptic segmentation
 
-   Complementary sensors measure different physical phenomena, and their
-   combination provides information that neither can provide alone. Here,
-   the camera provides color/semantic information (which light is active)
-   while LiDAR provides precise range -- a combination that enables both
-   detection and accurate localization of the traffic light.
+   Panoptic segmentation unifies semantic and instance segmentation. Every
+   pixel receives a class label (like semantic segmentation), and every
+   "thing" (countable object like a car or pedestrian) also receives a unique
+   instance ID. "Stuff" regions (road, sky) get class labels but no instance
+   IDs.
 
 
 .. admonition:: Question 2
    :class: hint
 
-   Which fusion architecture processes sensor data from each modality
-   independently through its own feature extractor and then combines the
-   extracted features in a shared representation space?
+   What is the primary architectural innovation of **U-Net** that allows it
+   to produce high-resolution segmentation masks?
 
-   A. Early fusion (raw data level)
+   A. Atrous (dilated) convolutions at multiple dilation rates.
 
-   B. Intermediate fusion (feature-level)
+   B. Skip connections that concatenate encoder feature maps with decoder
+      feature maps at the same resolution.
 
-   C. Late fusion (decision level)
+   C. A Region Proposal Network that identifies candidate object locations.
 
-   D. Cascade fusion
+   D. A deformable attention mechanism over learned reference points.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Intermediate fusion (feature-level)
+   **B** -- Skip connections that concatenate encoder feature maps with decoder
+   feature maps at the same resolution.
 
-   In intermediate (feature-level) fusion, each sensor modality processes
-   its raw data through its own backbone network to extract features. The
-   extracted features are then fused in a shared space (e.g., a BEV grid
-   where both camera and LiDAR BEV features are concatenated or combined
-   via attention). This balances information richness with computational
-   efficiency.
+   U-Net's encoder progressively downsamples the input to extract
+   high-level semantic features, while the decoder upsamples back to full
+   resolution. The skip connections from encoder to decoder at matching
+   resolutions provide fine-grained spatial detail (edges, boundaries) that
+   would otherwise be lost during downsampling.
 
 
 .. admonition:: Question 3
    :class: hint
 
-   In the Kalman Filter **predict** step, what happens to the uncertainty
-   (covariance matrix P) when no new measurement is received?
+   In **DeepLabv3+**, what is the purpose of Atrous Spatial Pyramid Pooling
+   (ASPP)?
 
-   A. P decreases because the filter becomes more confident about the state.
+   A. To extract region proposals for instance segmentation.
 
-   B. P stays constant because no new information has been added.
+   B. To apply dilated convolutions at multiple rates in parallel, capturing
+      multi-scale contextual information in a single forward pass.
 
-   C. P increases because the process noise (Q) is added, reflecting growing
-      uncertainty about the state over time.
+   C. To warp features from previous frames using ego-motion.
 
-   D. P is reset to zero because the previous estimate is discarded.
+   D. To perform bilinear interpolation for upsampling the feature map.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- P increases because the process noise (Q) is added, reflecting
-   growing uncertainty about the state over time.
+   **B** -- To apply dilated convolutions at multiple rates in parallel,
+   capturing multi-scale contextual information in a single forward pass.
 
-   The predict step propagates uncertainty: :math:`P_{k|k-1} = F P_{k-1} F^T + Q`.
-   The process noise covariance Q is always added, representing uncertainty
-   from unmodeled dynamics, actuator noise, and disturbances. Without
-   measurements, the filter's state estimate becomes progressively less
-   certain.
+   ASPP uses several parallel dilated convolutional branches with different
+   dilation rates (e.g., 6, 12, 18) plus global average pooling. Each branch
+   captures context at a different scale without reducing spatial resolution.
+   The outputs are concatenated and passed to the decoder.
 
 
 .. admonition:: Question 4
    :class: hint
 
-   The **Kalman Gain** :math:`K_k` approaches zero when:
+   In the **SORT** tracker, how are detections in a new frame associated with
+   existing tracks?
 
-   A. The measurement noise covariance R is very small (accurate sensor).
+   A. By comparing appearance embeddings (CNN features) from each detection
+      and track.
 
-   B. The prior covariance P is very large (uncertain prediction).
+   B. By using a Kalman filter to predict track positions and then solving a
+      bipartite matching problem minimizing IoU distance via the Hungarian
+      algorithm.
 
-   C. The measurement noise covariance R is very large (noisy sensor) OR the
-      prior covariance P is very small (confident prediction).
+   C. By computing optical flow between frames and linking detections along
+      flow vectors.
 
-   D. The state transition matrix F is the identity matrix.
+   D. By comparing 3D LiDAR point cloud segments across frames.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- The measurement noise covariance R is very large (noisy sensor)
-   OR the prior covariance P is very small (confident prediction).
+   **B** -- By using a Kalman filter to predict track positions and then
+   solving a bipartite matching problem minimizing IoU distance via the
+   Hungarian algorithm.
 
-   K ≈ P / (P + R). When R >> P, K → 0: the measurement is too noisy to
-   be useful, so the filter trusts the prediction. When P << R, K → 0 for
-   the same reason: the prediction is already very accurate. Conversely,
-   when R << P (accurate sensor, uncertain prediction), K is large and the
-   update aggressively corrects the prediction.
+   SORT propagates each track's state (position, velocity) forward with a
+   Kalman filter to predict where it should be in the new frame. It then
+   constructs an IoU-based cost matrix between predicted track boxes and new
+   detections, and solves the optimal assignment with the Hungarian algorithm.
 
 
 .. admonition:: Question 5
    :class: hint
 
-   What is the key innovation of the **Extended Kalman Filter (EKF)** compared
-   to the standard Kalman Filter?
+   What key limitation of SORT does **DeepSORT** address?
 
-   A. It uses sigma points to propagate uncertainty through nonlinear functions.
+   A. SORT cannot run in real time on embedded hardware.
 
-   B. It represents the posterior as a set of weighted particles.
+   B. SORT fails at long-range detection because it uses only IoU for matching
+      and has no appearance model to re-identify objects after occlusion.
 
-   C. It linearizes nonlinear process and measurement functions using their
-      Jacobian matrices at the current state estimate.
+   C. SORT cannot handle more than 10 simultaneous tracks.
 
-   D. It eliminates the need for a process model by using only measurements.
+   D. SORT requires LiDAR input and cannot process camera-only data.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- It linearizes nonlinear process and measurement functions using
-   their Jacobian matrices at the current state estimate.
+   **B** -- SORT fails at long-range detection because it uses only IoU for
+   matching and has no appearance model to re-identify objects after occlusion.
 
-   The EKF replaces F and H in the standard KF with the Jacobians
-   ∂f/∂x and ∂h/∂x evaluated at the current estimate. The state
-   propagation itself uses the full nonlinear function f(x), but the
-   covariance propagation uses the linearized Jacobian. This is the
-   first-order approximation to the true nonlinear transform.
+   When an object is occluded, SORT's track dies (no IoU match available).
+   When the object reappears, SORT assigns a new ID -- an "ID switch." DeepSORT
+   addresses this by maintaining a CNN-based appearance embedding gallery per
+   track, enabling re-identification based on visual similarity even after
+   long occlusions.
 
 
 .. admonition:: Question 6
    :class: hint
 
-   The **Unscented Kalman Filter (UKF)** propagates uncertainty through
-   nonlinear functions by:
+   **ByteTrack's** key innovation over SORT/DeepSORT is:
 
-   A. Computing the Jacobian and applying first-order Taylor expansion.
+   A. Using a Transformer-based detector instead of YOLO.
 
-   B. Drawing random Monte Carlo samples from the prior distribution.
+   B. Performing a second association pass that matches low-confidence
+      detections to unmatched tracks, recovering occluded objects.
 
-   C. Selecting 2n+1 deterministic sigma points that capture the prior mean
-      and covariance, propagating them through the nonlinear function, and
-      computing the posterior as a weighted mean of the results.
+   C. Replacing the Kalman filter with an LSTM for state prediction.
 
-   D. Using a lookup table of precomputed linearizations.
+   D. Running tracking in BEV space instead of image space.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- Selecting 2n+1 deterministic sigma points that capture the prior
-   mean and covariance, propagating them through the nonlinear function, and
-   computing the posterior as a weighted mean of the results.
+   **B** -- Performing a second association pass that matches low-confidence
+   detections to unmatched tracks, recovering occluded objects.
 
-   The UKF uses the "unscented transform" to exactly compute the mean and
-   covariance of a nonlinear function applied to a Gaussian distribution,
-   accurate to second-order. Unlike the EKF, no Jacobian is required -- only
-   function evaluations at the sigma points.
+   ByteTrack observes that occluded objects often produce low-confidence
+   (but valid) detections that SORT/DeepSORT discard. ByteTrack first
+   associates high-confidence detections, then in a second pass associates
+   remaining (unmatched) tracks with low-confidence detections, significantly
+   reducing ID switches at essentially zero additional compute.
 
 
 .. admonition:: Question 7
    :class: hint
 
-   A **Particle Filter** is most appropriate when:
+   The **MOTA** (Multi-Object Tracking Accuracy) metric penalizes which three
+   types of errors?
 
-   A. The system has linear dynamics and Gaussian noise.
+   A. False positives, false negatives, and localization errors.
 
-   B. The posterior distribution is multi-modal (e.g., multiple possible
-      positions) and/or the noise is non-Gaussian.
+   B. False positives, false negatives, and ID switches.
 
-   C. Low compute budget requires a fast, closed-form filter.
+   C. ID switches, localization errors, and classification errors.
 
-   D. The state dimension is very high (hundreds of variables).
+   D. False negatives, velocity errors, and ID switches.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- The posterior distribution is multi-modal (e.g., multiple possible
-   positions) and/or the noise is non-Gaussian.
+   **B** -- False positives, false negatives, and ID switches.
 
-   Particle filters approximate the posterior as a weighted set of samples,
-   which can represent any distribution including multi-modal ones. Classic
-   use case: robot localization when the robot is initially uncertain about
-   which room it is in -- the particle filter maintains hypotheses across
-   multiple rooms until sensor evidence resolves the ambiguity.
+   MOTA = 1 - (FN + FP + IDSW) / GT. It penalizes all three error types:
+   missed detections (FN), spurious detections (FP), and identity switches
+   (IDSW) where a track's ID changes on the same object. MOTA does NOT
+   penalize localization errors -- that is captured by MOTP.
 
 
 .. admonition:: Question 8
    :class: hint
 
-   In the **data association problem**, the **Mahalanobis distance** is
-   preferred over Euclidean distance because it:
+   Which segmentation architecture adds a **mask prediction head** to a
+   two-stage detector framework to produce instance-level binary masks?
 
-   A. Is faster to compute than Euclidean distance.
+   A. U-Net
 
-   B. Accounts for the uncertainty (covariance) of the predicted track
-      position, so that a measurement far in a poorly-constrained direction
-      is not over-penalized.
+   B. DeepLabv3+
 
-   C. Is always smaller than the Euclidean distance.
+   C. Mask R-CNN
 
-   D. Does not require knowledge of the measurement noise covariance R.
+   D. SegNet
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Accounts for the uncertainty (covariance) of the predicted track
-   position, so that a measurement far in a poorly-constrained direction
-   is not over-penalized.
+   **C** -- Mask R-CNN
 
-   Mahalanobis distance: d_M = sqrt((z - z_pred)^T S^-1 (z - z_pred))
-   where S is the innovation covariance (= HPH^T + R). It scales the
-   distance by the inverse of the prediction uncertainty -- a measurement
-   that is 3 m away in a direction where the prediction variance is 9 m^2
-   is treated very differently from one that is 3 m away in a direction
-   with variance 0.01 m^2.
+   Mask R-CNN extends Faster R-CNN by adding a third head alongside the
+   classification and bounding box regression heads. For each detected region
+   proposal, this mask head predicts a 28x28 binary mask per class using a
+   small FCN. RoIAlign (instead of RoIPool) ensures pixel-precise feature
+   alignment for accurate mask prediction.
 
 
 .. admonition:: Question 9
    :class: hint
 
-   Two independent range sensors measure the distance to an obstacle:
-   Sensor A gives 10.0 m with variance 0.25 m², Sensor B gives 10.4 m with
-   variance 1.0 m². What is the **inverse-variance weighted** fused estimate?
+   Why is the **IDF1** metric preferred over MOTA for evaluating tracking
+   algorithms in autonomous driving applications?
 
-   A. 10.20 m (simple average)
+   A. IDF1 is faster to compute than MOTA.
 
-   B. 10.10 m
+   B. IDF1 focuses on ID consistency over time, which is critical for
+      trajectory prediction -- knowing it is the same car across frames
+      matters more than counting detections.
 
-   C. 10.32 m
+   C. IDF1 penalizes localization errors more strictly than MOTA.
 
-   D. 10.08 m
+   D. IDF1 requires no ground-truth annotations.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- 10.10 m
+   **B** -- IDF1 focuses on ID consistency over time, which is critical for
+   trajectory prediction -- knowing it is the same car across frames matters
+   more than counting detections.
 
-   Weights: w_A = 1/0.25 = 4, w_B = 1/1.0 = 1.
-   Fused = (4 * 10.0 + 1 * 10.4) / (4 + 1) = (40.0 + 10.4) / 5 = 50.4 / 5
-   = **10.08 m** (closest to B among given choices; exact answer 10.08 m).
-
-   Note: The exact answer is 10.08 m. The fused estimate is pulled strongly
-   toward Sensor A (lower variance = higher weight = 80% contribution).
+   MOTA is dominated by detection quality (FP/FN). A tracker with many ID
+   switches can still achieve high MOTA if the detector is good. For
+   downstream prediction, consistent IDs are essential -- the predictor must
+   know it is tracking the same pedestrian over 2 seconds. IDF1 directly
+   measures this identity consistency.
 
 
 .. admonition:: Question 10
    :class: hint
 
-   In **BEVFusion**'s cross-attention fusion, what role do the LiDAR BEV
-   features play in the attention mechanism?
+   Which approach for **temporal reasoning** in autonomous driving is most
+   commonly used in production BEV perception stacks (as covered in L4)?
 
-   A. They serve as Values (V) -- providing the content that is read out.
+   A. 3D convolutions over a video volume (C3D, SlowFast).
 
-   B. They serve as Queries (Q) -- asking "what camera features are relevant
-      to this spatial location?"
+   B. LSTM hidden state over flattened image features.
 
-   C. They serve as Keys (K) -- indexing which camera features to attend to.
+   C. Warping the previous BEV feature map to the current ego frame using
+      ego-motion and computing temporal cross-attention.
 
-   D. They are not used in the attention; only camera features are fused.
+   D. Optical flow estimation between consecutive camera frames.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- They serve as Queries (Q) -- asking "what camera features are
-   relevant to this spatial location?"
+   **C** -- Warping the previous BEV feature map to the current ego frame
+   using ego-motion and computing temporal cross-attention.
 
-   In cross-attention fusion: LiDAR BEV features → Q (queries); Camera BEV
-   features → K (keys) and V (values). The LiDAR features "query" the
-   camera features: for each LiDAR BEV cell (which knows geometry), the
-   attention mechanism selectively retrieves relevant semantic information
-   from the camera BEV. This is directional fusion where geometry guides
-   semantic information retrieval.
+   BEVFormer's temporal self-attention is the dominant approach in modern
+   production-adjacent stacks. It uses known ego-motion (from odometry/
+   localization) to spatially align previous BEV features with the current
+   frame, then applies attention to selectively integrate temporal information.
+   This is efficient, interpretable, and achieves large gains (+4-7 NDS).
 
 
 ----
@@ -316,96 +317,97 @@ True or False (Questions 11-15)
 .. admonition:: Question 11
    :class: hint
 
-   **True or False:** RADAR is robust to rain and fog conditions that
-   significantly degrade camera and LiDAR performance, making it an
-   essential complementary sensor for adverse weather driving.
+   **True or False:** In semantic segmentation, two pedestrians standing
+   next to each other will receive different instance IDs but the same
+   class label.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **True**
+   **False**
 
-   RADAR operates at millimeter wavelengths (~77 GHz) that pass through rain,
-   fog, and snow with minimal attenuation. Camera performance degrades sharply
-   in heavy rain (water droplets on lens, reduced visibility) and LiDAR
-   degrades due to laser backscatter from water droplets. RADAR also provides
-   direct Doppler velocity measurements unavailable from LiDAR or cameras.
+   Semantic segmentation only assigns class labels -- it has no concept of
+   instances. Both pedestrians would receive the class label "pedestrian"
+   but NO instance IDs. Differentiating individual instances requires
+   instance segmentation or panoptic segmentation.
 
 
 .. admonition:: Question 12
    :class: hint
 
-   **True or False:** The Extended Kalman Filter (EKF) provides an exact
-   (optimal) solution for nonlinear state estimation under Gaussian noise.
+   **True or False:** U-Net's skip connections are the primary mechanism
+   that allows the network to recover fine spatial detail that is lost
+   during encoding (downsampling).
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **True**
 
-   The EKF is only a first-order approximation. It linearizes the nonlinear
-   functions at the current state estimate via Jacobians, which introduces
-   linearization error. For highly nonlinear functions or far from the
-   operating point, this approximation can be poor, causing the EKF to be
-   overconfident (underestimate covariance) or even diverge. The Unscented
-   KF provides a second-order accurate approximation without linearization.
+   During encoding, spatial resolution is progressively reduced (via max
+   pooling or strided convolutions) to build high-level semantic features.
+   Skip connections directly copy encoder feature maps at each resolution
+   to the corresponding decoder level, bypassing the bottleneck. This
+   allows the decoder to combine high-level semantics (from the bottleneck)
+   with fine spatial detail (from the encoder skip).
 
 
 .. admonition:: Question 13
    :class: hint
 
-   **True or False:** A Particle Filter with a very small number of particles
-   (e.g., N=10) will always converge to the true state given enough time.
+   **True or False:** SORT uses a deep convolutional neural network to
+   compute appearance embeddings for matching detections to tracks.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   With too few particles, particle filters suffer from "particle collapse"
-   (degeneracy) -- over time, after repeated resampling, all weight
-   concentrates on just one or a few particles, losing diversity. The filter
-   then cannot recover if the true state is far from that particle's location.
-   Practical particle filters for AV localization (like Monte Carlo
-   Localization / AMCL) typically use 1,000-10,000+ particles for reliability.
+   SORT does NOT use appearance embeddings. Its matching relies solely on
+   IoU between predicted bounding boxes (from the Kalman filter) and new
+   detections, solved via the Hungarian algorithm. Appearance embeddings
+   were introduced in DeepSORT, which is the extension of SORT that adds
+   a CNN-based re-identification module.
 
 
 .. admonition:: Question 14
    :class: hint
 
-   **True or False:** In late (decision-level) fusion, if the camera detector
-   misses an object but the LiDAR detector correctly detects it, the fused
-   output will still include that object.
+   **True or False:** The Panoptic Quality (PQ) metric can be decomposed
+   into a recognition quality component and a segmentation quality component.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **True**
 
-   Late fusion combines independent detection outputs from each sensor.
-   If LiDAR detects an object with sufficient confidence, it will appear
-   in the LiDAR detection list. The late fusion module (e.g., via NMS or
-   track-level fusion) will include it even if the camera missed it. This
-   is one of the key reliability benefits of multi-sensor fusion.
+   PQ = RQ * SQ, where:
+   RQ (Recognition Quality) = TP / (TP + 0.5*FP + 0.5*FN) measures how
+   well the model detects objects (like F1 score).
+   SQ (Segmentation Quality) = average IoU of matched pairs measures how
+   well the masks are segmented.
+   This decomposition allows analysis of whether errors come from missed
+   detections or poor mask quality.
 
 
 .. admonition:: Question 15
    :class: hint
 
-   **True or False:** In the Kalman Filter update step, the posterior
-   covariance P_{k|k} is always smaller than or equal to the prior
-   covariance P_{k|k-1}.
+   **True or False:** In the tracking-by-detection paradigm, the detector
+   and tracker are trained jointly end-to-end to optimize tracking performance
+   directly.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **True**
+   **False**
 
-   The update equation P_{k|k} = (I - K H) P_{k|k-1} always reduces
-   uncertainty. The measurement provides new information, and the Kalman
-   filter is the optimal linear estimator that minimally reduces uncertainty
-   consistent with that information. Mathematically, K is chosen to minimize
-   the trace of P_{k|k}, guaranteeing it is less than or equal to P_{k|k-1}.
+   In tracking-by-detection, the detector and tracker are completely
+   independent modules. The detector is trained separately (often on static
+   image datasets) and produces detection outputs. The tracker then processes
+   these outputs to maintain object identities. This modularity allows
+   improving either component independently but means the detector is not
+   optimized for tracking.
 
 
 ----
@@ -417,10 +419,9 @@ Essay Questions (Questions 16-18)
 .. admonition:: Question 16
    :class: hint
 
-   **Describe the Kalman Filter predict and update cycle** using an example
-   from autonomous driving (e.g., tracking a vehicle). Explain what the
-   Kalman Gain represents and how its value changes based on sensor noise
-   vs. prediction uncertainty.
+   **Compare SORT, DeepSORT, and ByteTrack** in terms of their key design
+   choices, strengths, and weaknesses. Which would you choose for a
+   production AV system and why?
 
    *(2-4 sentences)*
 
@@ -429,27 +430,27 @@ Essay Questions (Questions 16-18)
 
    *Key points to include:*
 
-   - Example: tracking a vehicle's position and velocity. State x = [px, py,
-     vx, vy]. Predict step: use constant-velocity model to propagate x and
-     increase P (uncertainty grows). Update step: receive a LiDAR measurement
-     z = [px_lidar, py_lidar] and correct the estimate.
-   - Innovation = z - H*x_pred: the discrepancy between predicted and actual
-     measurement. The posterior estimate = prior + K * innovation.
-   - Kalman Gain K = P_prior * H^T * (H*P_prior*H^T + R)^-1. When R is small
-     (accurate LiDAR), K is large and the correction is aggressive. When R
-     is large (noisy sensor) or P_prior is small (confident prediction), K
-     is small and the prediction changes little.
-   - Physical interpretation: K is a "trust dial" between prediction and
-     measurement. At startup (high P), trust the measurement heavily. After
-     converging (low P), trust the model more.
+   - SORT: Kalman filter + IoU Hungarian matching. Extremely fast (260 Hz),
+     minimal compute. Weakness: no appearance model, poor re-ID after
+     occlusion, frequent ID switches in crowded scenes.
+   - DeepSORT: adds CNN appearance embedding gallery. Improves re-ID but
+     adds compute (CNN inference per detection crop) and requires a
+     separate re-ID training dataset.
+   - ByteTrack: uses all detections (high + low confidence) in two-pass
+     association. Matches SORT speed with significantly fewer ID switches.
+     No appearance model needed.
+   - For production AV: ByteTrack or ByteTrack + lightweight appearance
+     model is the best trade-off -- low latency, robust to occlusion, no
+     re-ID dataset dependency. DeepSORT suits pedestrian-heavy scenarios
+     where re-ID matters most.
 
 
 .. admonition:: Question 17
    :class: hint
 
-   **Compare the EKF and UKF** for tracking a vehicle with nonlinear motion
-   (e.g., turning with constant angular rate -- the CTRV model). When would
-   you prefer the UKF over the EKF?
+   **Explain the difference between MOTA and IDF1 as tracking metrics.**
+   Give a concrete example where a tracker with high MOTA has poor IDF1,
+   and explain why IDF1 matters for autonomous driving.
 
    *(2-4 sentences)*
 
@@ -458,28 +459,25 @@ Essay Questions (Questions 16-18)
 
    *Key points to include:*
 
-   - The CTRV (Constant Turn Rate and Velocity) model has process function
-     f(x) involving sin/cos of the heading angle -- a nonlinear function.
-     EKF computes the Jacobian of f(x), which involves partial derivatives
-     of sin(psi) -- analytically complex and prone to numerical errors.
-   - UKF selects 2n+1 sigma points around the current state, propagates
-     each through f(x) directly (evaluating sin/cos at specific angles), and
-     recovers the posterior mean and covariance. No Jacobian required.
-   - Prefer UKF when: (1) the Jacobian is difficult to derive analytically
-     (complex models), (2) the motion is highly nonlinear (sharp turns,
-     large timesteps), (3) higher accuracy is needed (UKF is second-order
-     accurate vs. EKF's first-order). EKF may be preferred when compute
-     budget is very tight and the model is mildly nonlinear.
-   - In practice, UKF is the standard for IMU + GPS fusion in AV systems
-     (PointOne Nav, SBG Systems) due to its superior accuracy in nonlinear
-     attitude estimation.
+   - MOTA = 1 - (FN + FP + IDSW) / GT. It is dominated by detection
+     quality -- a perfect detector with frequent ID switches can achieve
+     high MOTA.
+   - IDF1 measures F1 score for correct identity assignments across the
+     full track lifetime, directly measuring ID consistency.
+   - Concrete example: a tracker that detects every vehicle correctly
+     (zero FP/FN) but switches the ID of Vehicle A and Vehicle B at every
+     occlusion would have MOTA near 1.0 but IDF1 near 0.5.
+   - For AV: downstream prediction modules track a vehicle's trajectory
+     to predict where it will be in 3 seconds. If IDs switch frequently,
+     the predictor mixes trajectories of different vehicles -- producing
+     catastrophically wrong predictions. High IDF1 is therefore safety-critical.
 
 
 .. admonition:: Question 18
    :class: hint
 
-   **Explain the data association problem** in multi-sensor, multi-object
-   tracking. Describe two approaches to solving it and the trade-offs of each.
+   **Describe three ways that temporal reasoning improves perception quality**
+   in autonomous driving beyond what a single-frame detector can provide.
 
    *(2-4 sentences)*
 
@@ -488,20 +486,17 @@ Essay Questions (Questions 16-18)
 
    *Key points to include:*
 
-   - The data association problem: given a set of measurements z_1,...,z_m
-     and a set of tracks T_1,...,T_n at each timestep, determine which
-     measurement was produced by which track (or background clutter).
-     Incorrect association causes Kalman filter divergence and track confusion.
-   - Approach 1 -- Global Nearest Neighbor (GNN) / Hungarian algorithm:
-     compute a cost matrix (e.g., Mahalanobis distance for each
-     measurement-track pair), solve for optimal global assignment. Pros:
-     optimal for a single timestep, O(n^3) compute. Cons: makes hard
-     assignments that cannot be undone; fails in high clutter.
-   - Approach 2 -- Joint Probabilistic Data Association (JPDA): instead of
-     hard assignment, computes probabilities over all possible assignments
-     and updates each track as a weighted mixture. Pros: robust in cluttered
-     environments (multiple nearby objects). Cons: higher compute, tracks
-     can "merge" in high-density scenes.
-   - For AV systems at moderate object densities: GNN (via Hungarian) is
-     standard. JPDA is used when clutter is high (dense urban intersections,
-     parking lots with many closely-spaced vehicles).
+   - Velocity estimation: observing the same object across multiple frames
+     provides direct velocity measurements via state propagation (Kalman
+     filter) or feature-level optical flow. Single frames provide no velocity.
+   - Occlusion handling: an object invisible in frame t was visible in frame
+     t-1. A temporal model (tracker, temporal BEV attention) can propagate
+     the estimated state through the occlusion window, maintaining awareness
+     of the object.
+   - Noise suppression: random detection noise is temporally uncorrelated.
+     Averaging estimates over multiple frames (or Kalman filter smoothing)
+     reduces variance in position and classification confidence, while true
+     object signals are correlated across frames and survive averaging.
+   - Additionally: attribute estimation (classification confidence improves
+     with multiple views of the same object from different angles as the
+     vehicle moves).

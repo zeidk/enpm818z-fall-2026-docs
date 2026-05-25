@@ -3,166 +3,171 @@ References
 ====================================================
 
 
-.. dropdown:: Kalman Filter Theory
+.. dropdown:: Semantic Segmentation
    :class-container: sd-border-secondary
    :open:
 
    .. grid:: 1 1 2 2
       :gutter: 2
 
-      .. grid-item-card:: Original Kalman Filter Paper
-         :link: https://www.cs.unc.edu/~welch/kalman/media/pdf/Kalman1960.pdf
+      .. grid-item-card:: U-Net
+         :link: https://arxiv.org/abs/1505.04597
          :class-card: sd-border-secondary
 
-         **Kalman, R.E. (1960)**
+         **Ronneberger et al., MICCAI 2015**
 
-         "A New Approach to Linear Filtering and Prediction Problems."
-         Transactions of the ASME -- Journal of Basic Engineering.
+         Encoder-decoder with skip connections. The foundational architecture
+         for dense prediction tasks.
 
-      .. grid-item-card:: EKF and UKF Overview
-         :link: https://groups.seas.harvard.edu/courses/cs281/papers/unscented.pdf
+      .. grid-item-card:: DeepLabv3+
+         :link: https://arxiv.org/abs/1802.02611
          :class-card: sd-border-secondary
 
-         **Julier & Uhlmann (1997)**
+         **Chen et al., ECCV 2018**
 
-         "A New Extension of the Kalman Filter to Nonlinear Systems."
-         The paper introducing the Unscented Transform and UKF.
+         Atrous convolutions and ASPP for multi-scale context. State-of-the-art
+         semantic segmentation architecture.
 
-      .. grid-item-card:: Probabilistic Robotics
-         :link: https://probabilistic-robotics.org/
+      .. grid-item-card:: SegFormer
+         :link: https://arxiv.org/abs/2105.15203
          :class-card: sd-border-secondary
 
-         **Thrun, Burgard & Fox (2005)**
+         **Xie et al., NeurIPS 2021**
 
-         The definitive textbook on probabilistic robotics. Chapters 3-4
-         cover Kalman filters, EKF, UKF, and particle filters in depth.
+         Transformer-based segmentation with hierarchical feature extraction
+         and a lightweight MLP decoder head.
 
-      .. grid-item-card:: filterpy Python Library
-         :link: https://filterpy.readthedocs.io/
+      .. grid-item-card:: CLRNet (Lane Detection)
+         :link: https://arxiv.org/abs/2203.10350
          :class-card: sd-border-secondary
 
-         **Roger Labbe**
+         **Zheng et al., CVPR 2022**
 
-         Python library implementing KF, EKF, UKF, and particle filters.
-         Companion to the "Kalman and Bayesian Filters in Python" textbook.
+         Cross Layer Refinement Network for accurate lane detection using
+         lane-specific prior and multi-scale feature fusion.
+
+
+.. dropdown:: Instance and Panoptic Segmentation
+   :class-container: sd-border-secondary
+
+   .. grid:: 1 1 2 2
+      :gutter: 2
+
+      .. grid-item-card:: Mask R-CNN
+         :link: https://arxiv.org/abs/1703.06870
+         :class-card: sd-border-secondary
+
+         **He et al., ICCV 2017**
+
+         Extends Faster R-CNN with a mask prediction head. Foundation of
+         instance segmentation.
+
+      .. grid-item-card:: Panoptic Segmentation
+         :link: https://arxiv.org/abs/1801.00868
+         :class-card: sd-border-secondary
+
+         **Kirillov et al., CVPR 2019**
+
+         Defines the panoptic segmentation task and the PQ metric.
+
+      .. grid-item-card:: Panoptic-DeepLab
+         :link: https://arxiv.org/abs/1911.10194
+         :class-card: sd-border-secondary
+
+         **Cheng et al., CVPR 2020**
+
+         Bottom-up panoptic segmentation with semantic and instance
+         prediction branches.
+
+
+.. dropdown:: Multi-Object Tracking
+   :class-container: sd-border-secondary
+
+   .. grid:: 1 1 2 2
+      :gutter: 2
+
+      .. grid-item-card:: SORT
+         :link: https://arxiv.org/abs/1602.00763
+         :class-card: sd-border-secondary
+
+         **Bewley et al., ICIP 2016**
+
+         Simple Online and Realtime Tracking using Kalman filter and
+         Hungarian algorithm. Runs at 260 Hz.
+
+      .. grid-item-card:: DeepSORT
+         :link: https://arxiv.org/abs/1703.07402
+         :class-card: sd-border-secondary
+
+         **Wojke et al., ICIP 2017**
+
+         Extends SORT with a deep appearance descriptor for robust
+         re-identification after occlusion.
+
+      .. grid-item-card:: ByteTrack
+         :link: https://arxiv.org/abs/2110.06864
+         :class-card: sd-border-secondary
+
+         **Zhang et al., ECCV 2022**
+
+         Uses every detection including low-confidence ones for robust
+         tracking. State-of-the-art on MOT17.
+
+      .. grid-item-card:: StrongSORT
+         :link: https://arxiv.org/abs/2202.13514
+         :class-card: sd-border-secondary
+
+         **Du et al., 2022**
+
+         Enhanced SORT with better Kalman filter motion model and stronger
+         appearance features for improved performance.
+
+
+.. dropdown:: Datasets and Benchmarks
+   :class-container: sd-border-secondary
+
+   .. grid:: 1 1 2 2
+      :gutter: 2
+
+      .. grid-item-card:: MOTChallenge
+         :link: https://motchallenge.net/
+         :class-card: sd-border-secondary
+
+         **Benchmark for MOT evaluation**
+
+         MOT17 and MOT20 datasets with standardized MOTA/IDF1 evaluation.
 
          +++
 
-         - `GitHub <https://github.com/rlabbe/filterpy>`_
-         - `Jupyter Book <https://github.com/rlabbe/Kalman-and-Bayesian-Filters-in-Python>`_
+         - `Leaderboard <https://motchallenge.net/results/MOT17/>`_
+
+      .. grid-item-card:: Cityscapes
+         :link: https://www.cityscapes-dataset.com/
+         :class-card: sd-border-secondary
+
+         **Cordts et al., CVPR 2016**
+
+         5000 finely annotated urban driving images for semantic and
+         instance segmentation benchmarking.
+
+      .. grid-item-card:: nuScenes Panoptic
+         :link: https://nuscenes.org/panoptic
+         :class-card: sd-border-secondary
+
+         **Fong et al., CVPR 2022**
+
+         Panoptic segmentation annotations for the nuScenes LiDAR point
+         clouds, enabling 3D panoptic benchmarking.
 
 
-.. dropdown:: Multi-Sensor Fusion Architectures
+.. dropdown:: Survey Papers and Textbooks
    :class-container: sd-border-secondary
 
-   .. grid:: 1 1 2 2
-      :gutter: 2
-
-      .. grid-item-card:: BEVFusion (MIT)
-         :link: https://arxiv.org/abs/2205.13542
-         :class-card: sd-border-secondary
-
-         **Liu et al., ICRA 2023**
-
-         Efficient LiDAR-camera BEV fusion using shared BEV space with
-         cross-attention feature fusion. 70.2 NDS on nuScenes.
-
-      .. grid-item-card:: BEVFusion (Nanjing)
-         :link: https://arxiv.org/abs/2205.13790
-         :class-card: sd-border-secondary
-
-         **Liang et al., NeurIPS 2022**
-
-         Multi-task multi-sensor fusion for detection, map segmentation,
-         and motion prediction in unified BEV space.
-
-      .. grid-item-card:: DeepFusion
-         :link: https://arxiv.org/abs/2203.08195
-         :class-card: sd-border-secondary
-
-         **Li et al., CVPR 2022**
-
-         LiDAR-camera fusion using point-to-voxel cross-attention for
-         3D object detection.
-
-      .. grid-item-card:: CenterFusion
-         :link: https://arxiv.org/abs/2011.04841
-         :class-card: sd-border-secondary
-
-         **Nabati & Qi, WACV 2021**
-
-         Camera-RADAR fusion for 3D object detection using pillar-based
-         radar point cloud association.
-
-
-.. dropdown:: Data Association
-   :class-container: sd-border-secondary
-
-   .. grid:: 1 1 2 2
-      :gutter: 2
-
-      .. grid-item-card:: Hungarian Algorithm
-         :link: https://en.wikipedia.org/wiki/Hungarian_algorithm
-         :class-card: sd-border-secondary
-
-         **Kuhn-Munkres Algorithm**
-
-         Optimal bipartite graph matching in O(n^3). Standard for global
-         nearest neighbor data association.
-
-         +++
-
-         - `scipy.optimize.linear_sum_assignment <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linear_sum_assignment.html>`_
-
-      .. grid-item-card:: JPDA Survey
-         :link: https://ieeexplore.ieee.org/document/989947
-         :class-card: sd-border-secondary
-
-         **Fortmann, Bar-Shalom & Scheffe (1983)**
-
-         Original Joint Probabilistic Data Association paper for tracking
-         in cluttered environments.
-
-      .. grid-item-card:: Bar-Shalom et al.
-         :class-card: sd-border-secondary
-
-         **Bar-Shalom, Y., Willett, P.K., & Tian, X. (2011)**
-
-         *Tracking and Data Fusion: A Handbook of Algorithms.*
-         YBS Publishing. Comprehensive reference for all association methods.
-
-
-.. dropdown:: Particle Filters
-   :class-container: sd-border-secondary
-
-   .. grid:: 1 1 2 2
-      :gutter: 2
-
-      .. grid-item-card:: Monte Carlo Localization
-         :link: https://people.eecs.berkeley.edu/~pabbeel/cs287-fa12/slides/mcl.pdf
-         :class-card: sd-border-secondary
-
-         **Dellaert et al. (1999)**
-
-         Original MCL paper: particle filter for robot localization.
-         Foundation of AMCL used in ROS.
-
-      .. grid-item-card:: Particle Filters Tutorial
-         :link: https://www.irisa.fr/aspi/legland/ref/arulampalam02a.pdf
-         :class-card: sd-border-secondary
-
-         **Arulampalam et al. (2002)**
-
-         "A Tutorial on Particle Filters for Online Nonlinear/Non-Gaussian
-         Bayesian Tracking." IEEE Transactions on Signal Processing.
-
-
-.. dropdown:: Survey Papers
-   :class-container: sd-border-secondary
-
-   - Faion, F. et al. (2021). *A Survey on Data Fusion Techniques for
-     Autonomous Driving.* IEEE Intelligent Transportation Systems Magazine.
-   - Yeong, D.J. et al. (2021). *Sensor and Sensor Fusion Technology in
-     Autonomous Vehicles: A Review.* Sensors, 21(6), 2140.
-   - Liang, M. et al. (2022). *BEVFusion: A Simple and Robust LiDAR-Camera
-     Fusion Framework.* arXiv:2205.13790.
+   - Garcia-Garcia, A. et al. (2018). *A Survey on Deep Learning Techniques
+     for Image and Video Semantic Segmentation.* Applied Soft Computing.
+   - Luo, W. et al. (2021). *Multiple Object Tracking: A Literature Review.*
+     Artificial Intelligence, 293.
+   - Ciaparrone, G. et al. (2020). *Deep Learning in Video Multi-Object
+     Tracking: A Survey.* Neurocomputing, 381.
+   - HOTA metric: Luiten, J. et al. (2021). *HOTA: A Higher Order Metric for
+     Evaluating Multi-Object Tracking.* IJCV.

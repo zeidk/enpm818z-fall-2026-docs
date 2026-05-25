@@ -3,67 +3,166 @@ References
 ====================================================
 
 
-.. dropdown:: Object Detection
+.. dropdown:: Kalman Filter Theory
    :class-container: sd-border-secondary
    :open:
 
-   - Redmon, J. et al. (2016). *You Only Look Once: Unified, Real-Time Object Detection.* CVPR.
-   - Redmon, J. & Farhadi, A. (2018). *YOLOv3: An Incremental Improvement.* arXiv:1804.02767.
-   - Bochkovskiy, A. et al. (2020). *YOLOv4: Optimal Speed and Accuracy of Object Detection.* arXiv:2004.10934.
-   - `Ultralytics YOLOv8 Documentation <https://docs.ultralytics.com/>`_
-   - Carion, N. et al. (2020). `End-to-End Object Detection with Transformers (DETR) <https://arxiv.org/abs/2005.12872>`_. ECCV.
-   - Zhu, X. et al. (2021). `Deformable DETR <https://arxiv.org/abs/2010.04159>`_. ICLR.
-   - Zhang, H. et al. (2023). `DINO: DETR with Improved DeNoising Anchor Boxes <https://arxiv.org/abs/2203.03605>`_. ICLR.
-   - Zhao, Y. et al. (2024). `RT-DETR: DETRs Beat YOLOs on Real-time Object Detection <https://arxiv.org/abs/2304.08069>`_.
+   .. grid:: 1 1 2 2
+      :gutter: 2
+
+      .. grid-item-card:: Original Kalman Filter Paper
+         :link: https://www.cs.unc.edu/~welch/kalman/media/pdf/Kalman1960.pdf
+         :class-card: sd-border-secondary
+
+         **Kalman, R.E. (1960)**
+
+         "A New Approach to Linear Filtering and Prediction Problems."
+         Transactions of the ASME -- Journal of Basic Engineering.
+
+      .. grid-item-card:: EKF and UKF Overview
+         :link: https://groups.seas.harvard.edu/courses/cs281/papers/unscented.pdf
+         :class-card: sd-border-secondary
+
+         **Julier & Uhlmann (1997)**
+
+         "A New Extension of the Kalman Filter to Nonlinear Systems."
+         The paper introducing the Unscented Transform and UKF.
+
+      .. grid-item-card:: Probabilistic Robotics
+         :link: https://probabilistic-robotics.org/
+         :class-card: sd-border-secondary
+
+         **Thrun, Burgard & Fox (2005)**
+
+         The definitive textbook on probabilistic robotics. Chapters 3-4
+         cover Kalman filters, EKF, UKF, and particle filters in depth.
+
+      .. grid-item-card:: filterpy Python Library
+         :link: https://filterpy.readthedocs.io/
+         :class-card: sd-border-secondary
+
+         **Roger Labbe**
+
+         Python library implementing KF, EKF, UKF, and particle filters.
+         Companion to the "Kalman and Bayesian Filters in Python" textbook.
+
+         +++
+
+         - `GitHub <https://github.com/rlabbe/filterpy>`_
+         - `Jupyter Book <https://github.com/rlabbe/Kalman-and-Bayesian-Filters-in-Python>`_
 
 
-.. dropdown:: Deep Learning Foundations
+.. dropdown:: Multi-Sensor Fusion Architectures
    :class-container: sd-border-secondary
 
-   - Krizhevsky, A. et al. (2012). *ImageNet Classification with Deep Convolutional Neural Networks (AlexNet).* NeurIPS.
-   - Simonyan, K. & Zisserman, A. (2015). *Very Deep Convolutional Networks for Large-Scale Image Recognition (VGGNet).* ICLR.
-   - He, K. et al. (2016). *Deep Residual Learning for Image Recognition (ResNet).* CVPR.
-   - Vaswani, A. et al. (2017). `Attention Is All You Need <https://arxiv.org/abs/1706.03762>`_. NeurIPS.
-   - Dosovitskiy, A. et al. (2021). `An Image Is Worth 16x16 Words: Transformers for Image Recognition (ViT) <https://arxiv.org/abs/2010.11929>`_. ICLR.
+   .. grid:: 1 1 2 2
+      :gutter: 2
+
+      .. grid-item-card:: BEVFusion (MIT)
+         :link: https://arxiv.org/abs/2205.13542
+         :class-card: sd-border-secondary
+
+         **Liu et al., ICRA 2023**
+
+         Efficient LiDAR-camera BEV fusion using shared BEV space with
+         cross-attention feature fusion. 70.2 NDS on nuScenes.
+
+      .. grid-item-card:: BEVFusion (Nanjing)
+         :link: https://arxiv.org/abs/2205.13790
+         :class-card: sd-border-secondary
+
+         **Liang et al., NeurIPS 2022**
+
+         Multi-task multi-sensor fusion for detection, map segmentation,
+         and motion prediction in unified BEV space.
+
+      .. grid-item-card:: DeepFusion
+         :link: https://arxiv.org/abs/2203.08195
+         :class-card: sd-border-secondary
+
+         **Li et al., CVPR 2022**
+
+         LiDAR-camera fusion using point-to-voxel cross-attention for
+         3D object detection.
+
+      .. grid-item-card:: CenterFusion
+         :link: https://arxiv.org/abs/2011.04841
+         :class-card: sd-border-secondary
+
+         **Nabati & Qi, WACV 2021**
+
+         Camera-RADAR fusion for 3D object detection using pillar-based
+         radar point cloud association.
 
 
-.. dropdown:: Segmentation and Tracking
+.. dropdown:: Data Association
    :class-container: sd-border-secondary
 
-   - Long, J. et al. (2015). *Fully Convolutional Networks for Semantic Segmentation (FCN).* CVPR.
-   - Ronneberger, O. et al. (2015). *U-Net: Convolutional Networks for Biomedical Image Segmentation.* MICCAI.
-   - He, K. et al. (2017). *Mask R-CNN.* ICCV.
-   - Chen, L.-C. et al. (2018). *DeepLab: Semantic Image Segmentation with Deep Convolutional Nets, Atrous Convolution, and Fully Connected CRFs.* IEEE TPAMI.
-   - Wojke, N. et al. (2017). *Simple Online and Realtime Tracking with a Deep Association Metric (DeepSORT).* ICIP.
-   - Zhang, Y. et al. (2022). *ByteTrack: Multi-Object Tracking by Associating Every Detection Box.* ECCV.
+   .. grid:: 1 1 2 2
+      :gutter: 2
+
+      .. grid-item-card:: Hungarian Algorithm
+         :link: https://en.wikipedia.org/wiki/Hungarian_algorithm
+         :class-card: sd-border-secondary
+
+         **Kuhn-Munkres Algorithm**
+
+         Optimal bipartite graph matching in O(n^3). Standard for global
+         nearest neighbor data association.
+
+         +++
+
+         - `scipy.optimize.linear_sum_assignment <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linear_sum_assignment.html>`_
+
+      .. grid-item-card:: JPDA Survey
+         :link: https://ieeexplore.ieee.org/document/989947
+         :class-card: sd-border-secondary
+
+         **Fortmann, Bar-Shalom & Scheffe (1983)**
+
+         Original Joint Probabilistic Data Association paper for tracking
+         in cluttered environments.
+
+      .. grid-item-card:: Bar-Shalom et al.
+         :class-card: sd-border-secondary
+
+         **Bar-Shalom, Y., Willett, P.K., & Tian, X. (2011)**
+
+         *Tracking and Data Fusion: A Handbook of Algorithms.*
+         YBS Publishing. Comprehensive reference for all association methods.
 
 
-.. dropdown:: Datasets and Benchmarks
+.. dropdown:: Particle Filters
    :class-container: sd-border-secondary
 
-   - `COCO Dataset <https://cocodataset.org/>`_ -- 330K images, 80 object categories.
-   - `ImageNet <https://www.image-net.org/>`_ -- 14M images, 1000 classes.
-   - `KITTI Vision Benchmark <https://www.cvlibs.net/datasets/kitti/>`_ -- Autonomous driving benchmark.
-   - `nuScenes <https://www.nuscenes.org/>`_ -- 1000 driving scenes, 3D annotations.
-   - `Cityscapes <https://www.cityscapes-dataset.com/>`_ -- Urban scene understanding.
-   - `Waymo Open Dataset <https://waymo.com/open/>`_ -- Large-scale driving dataset.
+   .. grid:: 1 1 2 2
+      :gutter: 2
+
+      .. grid-item-card:: Monte Carlo Localization
+         :link: https://people.eecs.berkeley.edu/~pabbeel/cs287-fa12/slides/mcl.pdf
+         :class-card: sd-border-secondary
+
+         **Dellaert et al. (1999)**
+
+         Original MCL paper: particle filter for robot localization.
+         Foundation of AMCL used in ROS.
+
+      .. grid-item-card:: Particle Filters Tutorial
+         :link: https://www.irisa.fr/aspi/legland/ref/arulampalam02a.pdf
+         :class-card: sd-border-secondary
+
+         **Arulampalam et al. (2002)**
+
+         "A Tutorial on Particle Filters for Online Nonlinear/Non-Gaussian
+         Bayesian Tracking." IEEE Transactions on Signal Processing.
 
 
-.. dropdown:: Tools and Frameworks
+.. dropdown:: Survey Papers
    :class-container: sd-border-secondary
 
-   - `Ultralytics (YOLOv8) <https://docs.ultralytics.com/>`_
-   - `Hugging Face Transformers <https://huggingface.co/docs/transformers/>`_ -- DETR models.
-   - `NVIDIA TensorRT <https://developer.nvidia.com/tensorrt>`_ -- Inference optimization.
-   - `ONNX Runtime <https://onnxruntime.ai/>`_ -- Cross-platform inference.
-   - `CVAT <https://www.cvat.ai/>`_ -- Annotation tool.
-   - `Roboflow <https://roboflow.com/>`_ -- Dataset management and augmentation.
-   - `ROS 2 vision_msgs <https://github.com/ros-perception/vision_msgs>`_ -- Standard detection messages.
-
-
-.. dropdown:: Textbooks
-   :class-container: sd-border-secondary
-
-   - Goodfellow, I., Bengio, Y., & Courville, A. (2016). *Deep Learning.* MIT Press.
-   - Szeliski, R. (2022). *Computer Vision: Algorithms and Applications (2nd Edition).* Springer.
-   - Prince, S. (2023). *Understanding Deep Learning.* MIT Press.
+   - Faion, F. et al. (2021). *A Survey on Data Fusion Techniques for
+     Autonomous Driving.* IEEE Intelligent Transportation Systems Magazine.
+   - Yeong, D.J. et al. (2021). *Sensor and Sensor Fusion Technology in
+     Autonomous Vehicles: A Review.* Sensors, 21(6), 2140.
+   - Liang, M. et al. (2022). *BEVFusion: A Simple and Robust LiDAR-Camera
+     Fusion Framework.* arXiv:2205.13790.
