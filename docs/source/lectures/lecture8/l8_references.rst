@@ -132,7 +132,7 @@ CARLA Navigation
    * - .. dropdown:: CARLA Documentation -- Navigation and Maps
 
          | **CARLA Documentation: Maps and Navigation**
-         | `carla.readthedocs.io <https://carla.readthedocs.io/en/0.9.16/core_map/>`_
+         | `carla.readthedocs.io <https://carla.readthedocs.io/en/0.9.16/core_map/>`__
 
          Official documentation for CARLA's map and waypoint system,
          including the GlobalRoutePlanner API.
@@ -147,7 +147,7 @@ CARLA Navigation
    * - .. dropdown:: CARLA Documentation -- Agents Module
 
          | **CARLA Agents**
-         | `carla.readthedocs.io <https://carla.readthedocs.io/en/0.9.16/adv_agents/>`_
+         | `carla.readthedocs.io <https://carla.readthedocs.io/en/0.9.16/adv_agents/>`__
 
          Documentation for CARLA's built-in agent implementations,
          including the BasicAgent and BehaviorAgent that use the
