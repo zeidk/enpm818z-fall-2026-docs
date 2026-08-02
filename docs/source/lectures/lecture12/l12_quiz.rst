@@ -13,11 +13,6 @@ driving systems.
 
 .. note::
 
-   Behavior-cloning / DAgger quiz questions previously lived in the
-   old L11 quiz; migration into this quiz is a follow-up polish task.
-
-.. note::
-
    **Instructions:**
 
    - Answer all questions to the best of your ability.
@@ -228,56 +223,66 @@ Multiple Choice (Questions 1-10)
 .. admonition:: Question 8
    :class: hint
 
-   What is **NVIDIA Alpamayo**?
+   The fundamental problem with behavior cloning (BC) that
+   DAgger is designed to solve is:
 
-   A. NVIDIA's hardware SoC for autonomous driving compute.
+   A. Behavior cloning requires labeled data, which is expensive
+      to collect.
 
-   B. A vision-language-action model for driving released as part of
-      NVIDIA's DRIVE platform in 2025.
+   B. Distribution shift: the policy visits states not seen
+      during training, where it has no supervision signal,
+      causing compounding errors.
 
-   C. NVIDIA's simulation environment that replaces CARLA.
+   C. Behavior cloning converges to the wrong policy because
+      the supervised loss is non-convex.
 
-   D. A LiDAR sensor used in NVIDIA's reference vehicle.
+   D. Behavior cloning cannot learn from continuous action
+      spaces.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- A vision-language-action model for driving released as part of
-   NVIDIA's DRIVE platform in 2025.
+   **B** -- Distribution shift causing compounding errors.
 
-   Alpamayo is a VLA model that generates driving decisions conditioned on
-   natural language scene descriptions produced by the model itself. It
-   supports free-form language commands from passengers and is integrated
-   with NVIDIA's broader DRIVE end-to-end stack.
+   When a BC policy makes a small error, it moves to a state
+   slightly off the expert's trajectory. The policy was never
+   trained on this state, so it may make another error in
+   a bad direction. Errors compound quadratically in the time
+   horizon (:math:`O(\epsilon T^2)`). DAgger fixes this by
+   querying the expert at states the learned policy actually
+   visits, so the training distribution converges to the
+   deployment distribution.
 
 
 .. admonition:: Question 9
    :class: hint
 
-   What is the primary purpose of **domain randomization** when training
-   end-to-end models in simulation?
+   DAgger improves over behavior cloning by:
 
-   A. To speed up CARLA rendering by simplifying scene geometry.
+   A. Using a larger neural network with more capacity.
 
-   B. To vary simulation parameters during training so the model learns
-      features that are robust to environment variation, reducing the
-      sim-to-real gap.
+   B. Iteratively rolling out the learned policy and augmenting
+      the training dataset with expert actions at visited states.
 
-   C. To generate additional training data by randomly cropping camera images.
+   C. Using reinforcement learning with a reward signal instead
+      of supervised learning.
 
-   D. To test model performance across different geographic locations.
+   D. Training on randomized simulation environments to cover
+      more state diversity.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- To vary simulation parameters during training so the model learns
-   features that are robust to environment variation, reducing the sim-to-real gap.
+   **B** -- Iteratively rolling out the learned policy and
+   augmenting the dataset with expert labels at visited states.
 
-   Domain randomization intentionally introduces variation in lighting,
-   weather, texture, and object properties during simulation-based training.
-   If the model is never presented with a consistent simulation "look", it
-   cannot overfit to simulation artifacts and must learn more general features
-   that transfer to the real world.
+   DAgger is a supervised learning algorithm (not RL), but it
+   uses an online data collection loop. At each iteration the
+   current policy generates new states, the expert labels them,
+   and these are added to the aggregated dataset. Over iterations
+   the training distribution converges to the deployment
+   distribution, reducing compounding errors from
+   :math:`O(\epsilon T^2)` to :math:`O(\epsilon T)`.
 
 
 .. admonition:: Question 10
@@ -360,18 +365,21 @@ True or False (Questions 11-15)
 .. admonition:: Question 13
    :class: hint
 
-   **True or False:** Tesla's FSD v12 uses a LiDAR sensor as its primary
-   perception modality.
+   **True or False:** In DAgger, the expert is only queried at
+   states that the *expert* would visit, not states that the
+   *learned policy* visits.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   Tesla's FSD is camera-only. Tesla argues that cameras provide sufficient
-   information for driving because humans navigate with vision alone. The
-   FSD v12 architecture uses 8 cameras feeding space-time transformers to
-   produce BEV features, with no LiDAR or radar primary sensor.
+   DAgger explicitly queries the expert at states that the
+   **learned policy** visits during its rollouts. This is the
+   key distinction from standard behavior cloning. By labeling
+   states on the *policy's* trajectory (not the expert's),
+   DAgger provides supervision at the states where the policy
+   will actually be deployed, closing the distribution shift gap.
 
 
 .. admonition:: Question 14
@@ -423,10 +431,9 @@ Essay Questions (Questions 16-18)
 .. admonition:: Question 16
    :class: hint
 
-   **Compare and contrast the UniAD and DriveTransformer architectures.**
-   What specific problem does DriveTransformer solve, and what is the
-   practical significance of the 3x throughput improvement for real-time
-   ADS deployment?
+   **Explain the distribution shift problem in behavior cloning
+   and why it causes compounding errors.** Use a concrete
+   autonomous driving example to illustrate the failure mode.
 
    *(2-4 sentences)*
 
@@ -435,19 +442,21 @@ Essay Questions (Questions 16-18)
 
    *Key points to include:*
 
-   - UniAD uses separate decoder heads per task (TrackFormer, MapFormer,
-     MotionFormer, OccFormer), each independently attending to BEV features,
-     leading to redundant computation and low throughput (~1.8 FPS).
-   - DriveTransformer defines unified agent, map, and ego tokens that share
-     a single joint attention block across all tasks, eliminating redundant
-     feature extraction.
-   - The 3x throughput improvement (from ~1.8 to ~5.5 FPS) is practically
-     significant because real-time ADS requires inference within a 50-100 ms
-     window to maintain safe reaction times. UniAD's throughput is too low
-     for production deployment without significant simplification.
-   - DriveTransformer achieves this throughput gain while matching or improving
-     on UniAD's planning L2 metric, demonstrating that efficiency and
-     accuracy are not in conflict.
+   - Behavior cloning trains a policy on expert state-action pairs.
+     During deployment, the policy's own actions take it to states
+     that differ from the expert's trajectory -- these states were
+     never seen during training.
+   - Concrete example: the expert always stays centered in the lane.
+     The BC policy makes a small right-drift error, ending up
+     slightly off-center. This state was never in the training set,
+     so the policy has no reliable recovery action and may drift
+     further right -- eventually leaving the lane.
+   - Errors compound because each mistake produces a new out-of-
+     distribution state, which produces a larger mistake, which
+     produces an even more out-of-distribution state.
+   - The compounding grows as :math:`O(\epsilon T^2)` where
+     :math:`\epsilon` is the per-step error and :math:`T` is
+     the episode length -- making BC fragile for long-horizon tasks.
 
 
 .. admonition:: Question 17
@@ -485,9 +494,10 @@ Essay Questions (Questions 16-18)
 .. admonition:: Question 18
    :class: hint
 
-   **Explain why Tesla's fleet data advantage is often described as a
-   structural moat** in the end-to-end driving paradigm. What are the limits
-   of this advantage, and what could competitors do to close the gap?
+   **Compare rule-based FSM behavior planners with learned
+   (imitation learning) behavior planners.** Under what
+   operational conditions would you choose each approach, and
+   what hybrid strategies exist?
 
    *(2-4 sentences)*
 
@@ -496,20 +506,20 @@ Essay Questions (Questions 16-18)
 
    *Key points to include:*
 
-   - Tesla has millions of vehicles on the road collecting 8 cameras × 36
-     FPS of continuous video, with shadow mode capturing human corrections
-     to model errors. This self-reinforcing flywheel -- more vehicles →
-     more data → better models → more vehicles -- is extremely difficult
-     for a competitor starting from zero fleet to replicate.
-   - The advantage is structural because edge cases (rare weather, unusual
-     road markings, non-standard lane configurations) are encountered at
-     frequency proportional to total fleet miles. With 8.3 billion
-     supervised FSD miles, Tesla has covered a vast space of long-tail
-     events.
-   - Limits: geographic coverage is skewed toward North America; data
-     requires annotation cost even with shadow mode; regulatory constraints
-     prevent data collection in some regions.
-   - Competitors can partially close the gap through: generative world
-     models that synthesize rare scenarios from limited real data,
-     simulation-to-real techniques, and strategic partnership with OEMs
-     for data access (as Mobileye and NVIDIA do).
+   - FSM planners are preferred when: interpretability and
+     certifiability are required (regulatory approval), the
+     operational design domain (ODD) is well-defined and narrow,
+     or real-time guarantees with bounded computation are needed.
+   - Learned planners are preferred when: the ODD is broad and
+     difficult to enumerate (urban driving), human-like interaction
+     is required (gap acceptance, courtesy behaviors), or large
+     logged datasets are available to train from.
+   - Hybrid strategies: use an FSM for safety-critical decisions
+     (emergency stop, right-of-way) with a learned planner for
+     non-safety-critical comfort behaviors (smooth merges, yield
+     negotiation). The safety layer can override the learned policy
+     whenever a formal safety condition is violated.
+   - Another hybrid: use a learned policy as a cost function or
+     prior within a model-based planner (e.g., RL-guided lattice
+     search), combining the interpretability of the lattice with
+     the generalization of learned policies.

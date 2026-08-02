@@ -4,16 +4,9 @@ Quiz
 
 This quiz covers the key concepts from Lecture 5: Perception II -- BEV,
 Occupancy & Segmentation. Topics include the motivation for BEV
-representations, Lift-Splat-Shoot, BEVFormer, multi-camera fusion, 3D
-occupancy networks, semantic / instance / panoptic segmentation
-(DeepLabv3+, Mask R-CNN, PQ), driveable-surface and lane detection,
-nuScenes metrics, and industry adoption.
-
-.. note::
-
-   Segmentation-specific questions live in this quiz alongside the BEV
-   and occupancy questions; the previous standalone segmentation quiz
-   has been merged into this one.
+representations, Lift-Splat-Shoot, BEVFormer, 3D occupancy networks, and
+semantic / instance / panoptic segmentation (U-Net, DeepLabv3+, Mask R-CNN,
+Panoptic Quality).
 
 .. note::
 
@@ -115,33 +108,6 @@ Multiple Choice (Questions 1-10)
 .. admonition:: Question 4
    :class: hint
 
-   What is the purpose of **Temporal Self-Attention** in BEVFormer?
-
-   A. To apply attention across all pixels in a single camera image.
-
-   B. To integrate previous BEV feature maps (warped to the current frame)
-      with the current BEV queries, providing multi-frame context.
-
-   C. To synchronize feature extraction across all cameras in the rig.
-
-   D. To reduce compute by skipping attention for static background cells.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **B** -- To integrate previous BEV feature maps (warped to the current
-   frame) with the current BEV queries, providing multi-frame context.
-
-   Temporal Self-Attention warps the prior frame's BEV using ego-motion
-   estimates and then computes cross-attention between the current BEV queries
-   and the concatenated current + warped-past features. This provides velocity
-   cues, helps with occluded objects, and significantly boosts detection of
-   moving objects (up to +6.9 NDS on nuScenes).
-
-
-.. admonition:: Question 5
-   :class: hint
-
    A 3D Occupancy Network outputs which of the following?
 
    A. A set of 3D bounding boxes with class labels.
@@ -163,85 +129,7 @@ Multiple Choice (Questions 1-10)
    scene geometry that cannot be represented by bounding boxes.
 
 
-.. admonition:: Question 6
-   :class: hint
-
-   Which nuScenes metric is a **composite score** combining mAP with five
-   attribute error terms?
-
-   A. mIoU
-
-   B. ATE
-
-   C. NDS
-
-   D. AOE
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **C** -- NDS (nuScenes Detection Score)
-
-   NDS is the primary ranking metric on nuScenes. It is computed as a
-   weighted combination of mAP and five True Positive metrics: Average
-   Translation Error (ATE), Average Scale Error (ASE), Average Orientation
-   Error (AOE), Average Velocity Error (AVE), and Average Attribute Error
-   (AAE). A single NDS scalar enables fair ranking of methods.
-
-
-.. admonition:: Question 7
-   :class: hint
-
-   In the **Splat** stage of LSS, what operation converts the 3D frustum
-   features into a voxel grid?
-
-   A. Deformable attention over reference points in image space.
-
-   B. Unprojection of frustum features into ego-vehicle coordinates using
-      camera intrinsics and extrinsics, then sum-pooling into voxels.
-
-   C. Warping the image feature map using a homography transformation.
-
-   D. Applying 3D sparse convolution to the point cloud.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **B** -- Unprojection of frustum features into ego-vehicle coordinates
-   using camera intrinsics and extrinsics, then sum-pooling into voxels.
-
-   The Splat stage uses known camera calibration to unproject the 3D frustum
-   points (which are in camera space) into the world/ego-vehicle 3D space.
-   Multiple frustum points that land in the same voxel are aggregated via
-   sum-pooling, producing a dense 3D feature volume.
-
-
-.. admonition:: Question 8
-   :class: hint
-
-   Tesla's occupancy network (as described at AI Day 2022) takes which sensors
-   as input?
-
-   A. LiDAR + 8 cameras
-
-   B. RADAR + front camera
-
-   C. 8 cameras only (no LiDAR)
-
-   D. LiDAR + RADAR (no cameras)
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **C** -- 8 cameras only (no LiDAR)
-
-   Tesla's approach is camera-only. Their 8-camera rig provides surround
-   coverage and the network infers depth via multi-frame parallax and learned
-   depth priors. Tesla has argued this matches human driving (eyes only) and
-   enables lower hardware costs at scale.
-
-
-.. admonition:: Question 9
+.. admonition:: Question 5
    :class: hint
 
    Which of the following scenarios is **best handled by a 3D occupancy
@@ -267,7 +155,7 @@ Multiple Choice (Questions 1-10)
    shapes.
 
 
-.. admonition:: Question 10
+.. admonition:: Question 6
    :class: hint
 
    In BEV multi-camera fusion, why is **extrinsic calibration** so critical?
@@ -295,6 +183,114 @@ Multiple Choice (Questions 1-10)
    range, creating duplicated or misplaced detections in the fused BEV map.
 
 
+.. admonition:: Question 7
+   :class: hint
+
+   Which segmentation task assigns a unique instance ID to each individual
+   object AND provides a label for every pixel in the image (including
+   background "stuff" regions)?
+
+   A. Semantic segmentation
+
+   B. Instance segmentation
+
+   C. Panoptic segmentation
+
+   D. Binary segmentation
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **C** -- Panoptic segmentation
+
+   Panoptic segmentation unifies semantic and instance segmentation. Every
+   pixel receives a class label (like semantic segmentation), and every
+   "thing" (countable object like a car or pedestrian) also receives a unique
+   instance ID. "Stuff" regions (road, sky) get class labels but no instance
+   IDs.
+
+
+.. admonition:: Question 8
+   :class: hint
+
+   What is the primary architectural innovation of **U-Net** that allows it
+   to produce high-resolution segmentation masks?
+
+   A. Atrous (dilated) convolutions at multiple dilation rates.
+
+   B. Skip connections that concatenate encoder feature maps with decoder
+      feature maps at the same resolution.
+
+   C. A Region Proposal Network that identifies candidate object locations.
+
+   D. A deformable attention mechanism over learned reference points.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **B** -- Skip connections that concatenate encoder feature maps with decoder
+   feature maps at the same resolution.
+
+   U-Net's encoder progressively downsamples the input to extract
+   high-level semantic features, while the decoder upsamples back to full
+   resolution. The skip connections from encoder to decoder at matching
+   resolutions provide fine-grained spatial detail (edges, boundaries) that
+   would otherwise be lost during downsampling.
+
+
+.. admonition:: Question 9
+   :class: hint
+
+   In **DeepLabv3+**, what is the purpose of Atrous Spatial Pyramid Pooling
+   (ASPP)?
+
+   A. To extract region proposals for instance segmentation.
+
+   B. To apply dilated convolutions at multiple rates in parallel, capturing
+      multi-scale contextual information in a single forward pass.
+
+   C. To warp features from previous frames using ego-motion.
+
+   D. To perform bilinear interpolation for upsampling the feature map.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **B** -- To apply dilated convolutions at multiple rates in parallel,
+   capturing multi-scale contextual information in a single forward pass.
+
+   ASPP uses several parallel dilated convolutional branches with different
+   dilation rates (e.g., 6, 12, 18) plus global average pooling. Each branch
+   captures context at a different scale without reducing spatial resolution.
+   The outputs are concatenated and passed to the decoder.
+
+
+.. admonition:: Question 10
+   :class: hint
+
+   Which segmentation architecture adds a **mask prediction head** to a
+   two-stage detector framework to produce instance-level binary masks?
+
+   A. U-Net
+
+   B. DeepLabv3+
+
+   C. Mask R-CNN
+
+   D. SegNet
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **C** -- Mask R-CNN
+
+   Mask R-CNN extends Faster R-CNN by adding a third head alongside the
+   classification and bounding box regression heads. For each detected region
+   proposal, this mask head predicts a 28x28 binary mask per class using a
+   small FCN. RoIAlign (instead of RoIPool) ensures pixel-precise feature
+   alignment for accurate mask prediction.
+
+
 ----
 
 
@@ -302,43 +298,6 @@ True or False (Questions 11-15)
 ================================
 
 .. admonition:: Question 11
-   :class: hint
-
-   **True or False:** The Lift-Splat-Shoot method requires explicit depth
-   sensor supervision (e.g., LiDAR depth labels) during training.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   LSS learns its depth distribution implicitly from 3D bounding box
-   supervision alone. The depth prediction network is trained end-to-end
-   alongside the detection head -- no explicit depth ground truth labels are
-   required. This is one of LSS's key advantages: it works with camera-only
-   setups.
-
-
-.. admonition:: Question 12
-   :class: hint
-
-   **True or False:** BEVFormer's temporal self-attention warps the previous
-   BEV feature map into the current ego frame using ego-motion estimates before
-   computing attention.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**
-
-   Before computing temporal self-attention, BEVFormer applies the ego-motion
-   transformation (from vehicle odometry or localization) to spatially align
-   the previous BEV frame with the current ego frame. This alignment is
-   necessary so that a stationary object at the same world position aligns in
-   both BEV grids, while moving objects will have a visible offset.
-
-
-.. admonition:: Question 13
    :class: hint
 
    **True or False:** 3D occupancy networks evaluate primarily using mAP
@@ -356,26 +315,7 @@ True or False (Questions 11-15)
    the appropriate choice.
 
 
-.. admonition:: Question 14
-   :class: hint
-
-   **True or False:** The nuScenes NDS metric rewards methods that have both
-   high detection recall (mAP) and low attribute errors (e.g., position,
-   size, orientation, velocity).
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**
-
-   NDS = (1/10) * [5 * mAP + sum over TP metrics of (1 - min(1, error))].
-   It equally rewards accurate detection (mAP) and precise attribute
-   estimation (ATE, ASE, AOE, AVE, AAE). A method with high mAP but poor
-   velocity estimation will score lower than one with balanced performance
-   across all attributes.
-
-
-.. admonition:: Question 15
+.. admonition:: Question 12
    :class: hint
 
    **True or False:** BEV detection completely eliminates the need for
@@ -390,6 +330,64 @@ True or False (Questions 11-15)
    camera images and transform those features into BEV space. The perspective
    images are the input; BEV is the output representation. Only LiDAR-based
    methods can directly produce BEV features without perspective images.
+
+
+.. admonition:: Question 13
+   :class: hint
+
+   **True or False:** In semantic segmentation, two pedestrians standing
+   next to each other will receive different instance IDs but the same
+   class label.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False**
+
+   Semantic segmentation only assigns class labels -- it has no concept of
+   instances. Both pedestrians would receive the class label "pedestrian"
+   but NO instance IDs. Differentiating individual instances requires
+   instance segmentation or panoptic segmentation.
+
+
+.. admonition:: Question 14
+   :class: hint
+
+   **True or False:** U-Net's skip connections are the primary mechanism
+   that allows the network to recover fine spatial detail that is lost
+   during encoding (downsampling).
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **True**
+
+   During encoding, spatial resolution is progressively reduced (via max
+   pooling or strided convolutions) to build high-level semantic features.
+   Skip connections directly copy encoder feature maps at each resolution
+   to the corresponding decoder level, bypassing the bottleneck. This
+   allows the decoder to combine high-level semantics (from the bottleneck)
+   with fine spatial detail (from the encoder skip).
+
+
+.. admonition:: Question 15
+   :class: hint
+
+   **True or False:** The Panoptic Quality (PQ) metric can be decomposed
+   into a recognition quality component and a segmentation quality component.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **True**
+
+   PQ = RQ * SQ, where:
+   RQ (Recognition Quality) = TP / (TP + 0.5*FP + 0.5*FN) measures how
+   well the model detects objects (like F1 score).
+   SQ (Segmentation Quality) = average IoU of matched pairs measures how
+   well the masks are segmented.
+   This decomposition allows analysis of whether errors come from missed
+   detections or poor mask quality.
 
 
 ----

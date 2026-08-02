@@ -230,3 +230,58 @@ pipeline, occupancy networks, and semantic segmentation.
    **Deliverable**
 
    Completed table and written analysis.
+
+
+.. dropdown:: Exercise 6 -- Segmentation Metrics
+   :icon: gear
+   :class-container: sd-border-primary
+   :class-title: sd-font-weight-bold
+
+   **Goal**
+
+   Practice computing IoU and mIoU from a confusion matrix.
+
+
+   .. raw:: html
+
+      <hr>
+
+
+   **Specification**
+
+   A semantic segmentation model produces the following confusion
+   matrix for three classes:
+
+   .. list-table::
+      :widths: 25 25 25 25
+      :header-rows: 1
+      :class: compact-table
+
+      * - Predicted \\ Actual
+        - Road
+        - Vehicle
+        - Pedestrian
+      * - Road
+        - 8000
+        - 200
+        - 50
+      * - Vehicle
+        - 300
+        - 1500
+        - 100
+      * - Pedestrian
+        - 100
+        - 50
+        - 700
+
+   1. Compute the **IoU** for each class using
+      :math:`\text{IoU} = \frac{TP}{TP + FP + FN}`.
+   2. Compute the **mIoU** across all three classes.
+   3. Which class has the worst IoU? Suggest one reason why.
+   4. If you could only optimize one class for safety, which would you
+      choose and why?
+
+   **Deliverable**
+
+   All IoU calculations shown with final mIoU value, plus written
+   answers to questions 3 and 4.
