@@ -7,7 +7,7 @@
 **Email:** zeidk@umd.edu
 **Office Hours:** By Appointment
 **Credits:** 3
-**Course Dates:** From August 31, 2026 – December 11, 2026
+**Course Dates:** From August 31, 2026 to December 11, 2026
 **Course Times:** 7:00 PM – 9:40 PM (Mondays)
 **Classroom:** J.M. Patterson Building (JMP), Room 2116
 
@@ -441,19 +441,25 @@ others.
 | 3        | 09/21   | L3 — Probabilistic State Estimation & Fusion         | Quiz 1                            |
 | 4        | 09/28   | L4 — Perception I: Object Detection (YOLO → DETR)    | GP1 Due, GP2 Posted               |
 | 5        | 10/05   | L5 — Perception II: BEV, Occupancy & Segmentation    |                                   |
-| 6        | 10/12   | L6 — Perception III: Tracking, Temporal & Deep Fusion| Quiz 2                            |
-| 7        | 10/19   | L7 — Localization & SLAM                             | GP2 Due, GP3 Posted               |
-| 8        | 10/26   | L8 — Navigation & Route Planning (HD Maps)           | Quiz 3                            |
-| 9        | 11/02   | L9 — Prediction & Behavior Modeling                  |                                   |
-| 10       | 11/09   | L10 — Motion Planning                                | GP3 Due, GP4 Posted, GP5 Posted   |
-| 11       | 11/16   | L11 — Trajectory Generation & Control                | Quiz 4                            |
-| 12       | 11/23   | L12 — End-to-End Driving, VLA & Imitation Learning   |                                   |
-| (no class) | 11/30 | **THANKSGIVING / FALL BREAK — no class**             |                                   |
+| (no class) | 10/12 | **FALL BREAK — no class**                            |                                   |
+| 6        | 10/19   | L6 — Perception III: Tracking, Temporal & Deep Fusion| Quiz 2                            |
+| 7        | 10/26   | L7 — Localization & SLAM                             | GP2 Due, GP3 Posted               |
+| 8        | 11/02   | L8 — Navigation & Route Planning (HD Maps)           | Quiz 3                            |
+| 9        | 11/09   | L9 — Prediction & Behavior Modeling                  |                                   |
+| 10       | 11/16   | L10 — Motion Planning                                | GP3 Due, GP4 Posted, GP5 Posted   |
+| 11       | 11/23   | L11 — Trajectory Generation & Control                | Quiz 4                            |
+| 12       | 11/30   | L12 — End-to-End Driving, VLA & Imitation Learning   |                                   |
 | 13       | 12/07   | L13 — World Models & Simulation                      | Quiz 5, GP4 Due                   |
 | 14       | 12/11*  | L14 — System Integration, Safety & Industry Outlook  | GP5 Due (bonus, application + report) |
 
-\* Week 14 falls in the final-exam window; exact date / time will be
-posted on ELMS-Canvas and the Canvas calendar.
+\* Dec 11, 2026 is the last day of classes (a Friday). Because there is
+no Monday class meeting between Dec 7 and the start of finals, the Week 14
+session is held on this date; exact time will be posted on ELMS-Canvas and
+the Canvas calendar. The Thanksgiving recess (Nov 25 to 29, Wednesday to
+Sunday) does not fall on a Monday, so no Monday class meeting is affected.
+The two campus no-class Mondays are Labor Day (Sep 7) and Fall Break
+(Oct 12); all 14 lectures fit the remaining 13 Monday meetings plus the
+Dec 11 session.
 
 **Note:** This is a tentative schedule, and subject to change as
 necessary — monitor ELMS-Canvas for current deadlines. In the
@@ -610,9 +616,9 @@ regarding acceptable levels of collaboration.
 
 | Assignment Type | Open Notes | Read Book | Learn Online | Gather Content with AI | Ask Friends | Work in Groups |
 | --------------- | :--------: | :-------: | :----------: | :--------------------: | :---------: | :------------: |
-| Quizzes         | —          | ✓         | ✓            | —                      | —           | —              |
-| Group Projects  | ✓          | ✓         | ✓            | ✓                      | ✓           | ✓              |
-| GP5 (Bonus)     | ✓          | ✓         | ✓            | ✓                      | ✓           | ✓              |
+| Quizzes         | No         | Yes       | Yes          | No                     | No          | No             |
+| Group Projects  | Yes        | Yes       | Yes          | Yes                    | Yes         | Yes            |
+| GP5 (Bonus)     | Yes        | Yes       | Yes          | Yes                    | Yes         | Yes            |
 
 ### Course Evaluation
 
