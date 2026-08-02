@@ -29,72 +29,98 @@ Grade Breakdown
 Course Schedule
 ---------------
 
+Lectures meet on **Thursdays**. The first lecture is **September 3, 2026**
+and the last lecture is **December 10, 2026**. The Thanksgiving recess
+(**Nov 25 to 29**) includes Thursday Nov 26, so there is no class that week;
+all other Thursdays meet as scheduled. Dates below are given as MM/DD.
+
 .. list-table::
    :header-rows: 1
-   :widths: 10 40 25 25
+   :widths: 10 8 34 20 28
    :class: compact-table
 
-   * - Week
+   * - Date
+     - Week
      - Topic
      - Lecture
      - Deliverable
-   * - 1
+   * - 09/03
+     - 1
      - Course Introduction & AV Landscape
      - L1
      -
-   * - 2
+   * - 09/10
+     - 2
      - Sensor Technologies & Calibration
      - L2
      - Team Formation, GP1 Posted
-   * - 3
+   * - 09/17
+     - 3
      - Probabilistic State Estimation & Fusion
      - L3
      - Quiz 1
-   * - 4
+   * - 09/24
+     - 4
      - Perception I: Object Detection (YOLO to DETR)
      - L4
      -
-   * - 5
+   * - 10/01
+     - 5
      - Perception II: BEV, Occupancy & Segmentation
      - L5
      - GP1 Due, GP2 Posted
-   * - 6
+   * - 10/08
+     - 6
      - Perception III: Tracking, Temporal & Deep Fusion
      - L6
      - Quiz 2
-   * - 7
+   * - 10/15
+     - 7
      - Localization & SLAM
      - L7
      -
-   * - 8
+   * - 10/22
+     - 8
      - Navigation & Route Planning
      - L8
      - GP2 Due, GP3 Posted
-   * - 9
+   * - 10/29
+     - 9
      - Prediction & Behavior Modeling
      - L9
      - Quiz 3
-   * - 10
+   * - 11/05
+     - 10
      - Motion Planning
      - L10
      -
-   * - 11
+   * - 11/12
+     - 11
      - Trajectory Generation & Control
      - L11
      - Quiz 4, GP3 Due, GP4 Posted
-   * - 12
+   * - 11/19
+     - 12
      - End-to-End Driving, VLA & Imitation Learning
      - L12
      -
-   * - 13
+   * - 11/26
+     - --
+     - **Thanksgiving recess -- no class**
+     -
+     -
+   * - 12/03
+     - 13
      - World Models & Simulation
      - L13
      -
-   * - 14
+   * - 12/10
+     - 14
      - System Integration, Safety & Industry Outlook
      - L14
      - Quiz 5, GP4 Due
-   * - 15
+   * - 12/17
+     - 15
      - No class -- Final report submission window
      -
      - Final Report Due

@@ -5,15 +5,9 @@ Quiz
 This quiz covers the key concepts from Lecture 9: Prediction &
 Behavior Modeling, including trajectory prediction approaches
 (physics-based, maneuver-based, interaction-aware, Transformer-
-based), multi-modal prediction metrics, FSM behavior planning,
-rule-based vs. learned decision-making, and practical decision-making
-in traffic.
-
-.. note::
-
-   Behavior-cloning / DAgger questions that previously lived in this
-   quiz are migrated to the new L12 quiz alongside the rest of the
-   imitation-learning content in a follow-up polish pass.
+based), scene encoding, multi-modal prediction metrics, FSM behavior
+planning, rule-based vs. learned decision-making, and practical
+decision-making in traffic.
 
 .. note::
 
@@ -225,66 +219,64 @@ Multiple Choice
 .. admonition:: Question 7
    :class: hint
 
-   The fundamental problem with behavior cloning (BC) that
-   DAgger is designed to solve is:
+   Modern learned trajectory predictors (e.g., VectorNet) encode
+   the map and agent histories as **vectorized polylines** rather
+   than rasterized BEV images primarily because:
 
-   A. Behavior cloning requires labeled data, which is expensive
-      to collect.
+   A. Rasterized images cannot be processed by neural networks.
 
-   B. Distribution shift: the policy visits states not seen
-      during training, where it has no supervision signal,
-      causing compounding errors.
+   B. Polylines are a sparse, structured representation that
+      preserves geometric relationships and is far more compute-
+      and memory-efficient than dense image rasters.
 
-   C. Behavior cloning converges to the wrong policy because
-      the supervised loss is non-convex.
+   C. Vectorized inputs remove the need for any map data.
 
-   D. Behavior cloning cannot learn from continuous action
-      spaces.
+   D. Rasterization requires LiDAR, which is often unavailable.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Distribution shift causing compounding errors.
+   **B** -- Polylines are a sparse, structured representation that
+   preserves geometric relationships and is far more compute- and
+   memory-efficient than dense image rasters.
 
-   When a BC policy makes a small error, it moves to a state
-   slightly off the expert's trajectory. The policy was never
-   trained on this state, so it may make another error in
-   a bad direction. Errors compound quadratically in the time
-   horizon (:math:`O(\epsilon T^2)`). DAgger fixes this by
-   querying the expert at states the learned policy actually
-   visits, so the training distribution converges to the
-   deployment distribution.
+   Early predictors rendered the HD map and agent tracks into a
+   multi-channel BEV image processed by a CNN, which is wasteful
+   (most pixels are empty) and blurs precise geometry. VectorNet
+   instead represents lanes, crosswalks, and agent tracks as sets
+   of polylines encoded with a graph/attention network, keeping
+   exact coordinates and connectivity at a fraction of the cost.
 
 
 .. admonition:: Question 8
    :class: hint
 
-   DAgger improves over behavior cloning by:
+   A predictor that outputs an **independent (marginal)** trajectory
+   distribution for each agent can be unsafe for planning because:
 
-   A. Using a larger neural network with more capacity.
+   A. Marginal predictions are always less accurate than a constant
+      velocity baseline.
 
-   B. Iteratively rolling out the learned policy and augmenting
-      the training dataset with expert actions at visited states.
+   B. The per-agent predictions may be mutually inconsistent -- e.g.,
+      two agents each predicted to occupy the same space, or both
+      predicted to yield to each other.
 
-   C. Using reinforcement learning with a reward signal instead
-      of supervised learning.
+   C. Marginal predictions cannot be evaluated with MinADE.
 
-   D. Training on randomized simulation environments to cover
-      more state diversity.
+   D. Marginal predictions require joint LiDAR-camera fusion.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Iteratively rolling out the learned policy and
-   augmenting the dataset with expert labels at visited states.
+   **B** -- The per-agent predictions may be mutually inconsistent.
 
-   DAgger is a supervised learning algorithm (not RL), but it
-   uses an online data collection loop. At each iteration the
-   current policy generates new states, the expert labels them,
-   and these are added to the aggregated dataset. Over iterations
-   the training distribution converges to the deployment
-   distribution, reducing compounding errors from
-   :math:`O(\epsilon T^2)` to :math:`O(\epsilon T)`.
+   Marginal prediction estimates each agent's future in isolation,
+   so the combination of most-likely modes across agents need not
+   form a physically consistent scene: two cars can both be predicted
+   into the same gap, or a "both yield" / "both go" deadlock can
+   appear. Scene-level (joint) prediction models the agents' futures
+   together, producing a self-consistent set of trajectories that a
+   planner can reason about safely.
 
 
 .. admonition:: Question 9
@@ -435,21 +427,23 @@ True / False
 .. admonition:: Question 14
    :class: hint
 
-   **True or False:** In DAgger, the expert is only queried at
-   states that the *expert* would visit, not states that the
-   *learned policy* visits.
+   **True or False:** A unimodal predictor trained to regress a
+   single trajectory with mean-squared-error loss tends to output
+   the *average* of several distinct possible futures, which can be
+   a trajectory no real agent would take.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **True**
 
-   DAgger explicitly queries the expert at states that the
-   **learned policy** visits during its rollouts. This is the
-   key distinction from standard behavior cloning. By labeling
-   states on the *policy's* trajectory (not the expert's),
-   DAgger provides supervision at the states where the policy
-   will actually be deployed, closing the distribution shift gap.
+   MSE regression to a single output is minimized by the conditional
+   mean. When the true future is multi-modal (e.g., an agent will
+   either turn left or go straight), the mean of those modes points
+   "up the middle" -- straight into the median island or oncoming
+   lane. This mode-averaging pathology is the core motivation for
+   multi-modal prediction, which outputs several distinct trajectories
+   with probabilities instead of one averaged path.
 
 
 .. admonition:: Question 15
@@ -483,9 +477,10 @@ Essay Questions
 .. admonition:: Question 16
    :class: hint
 
-   **Explain the distribution shift problem in behavior cloning
-   and why it causes compounding errors.** Use a concrete
-   autonomous driving example to illustrate the failure mode.
+   **Compare physics-based, maneuver-based, and learned (Transformer)
+   trajectory prediction.** Describe the strengths and weaknesses of
+   each and the prediction horizon and scenario where each is most
+   appropriate.
 
    *(2-4 sentences)*
 
@@ -494,30 +489,31 @@ Essay Questions
 
    *Key points to include:*
 
-   - Behavior cloning trains a policy on expert state-action pairs.
-     During deployment, the policy's own actions take it to states
-     that differ from the expert's trajectory -- these states were
-     never seen during training.
-   - Concrete example: the expert always stays centered in the lane.
-     The BC policy makes a small right-drift error, ending up
-     slightly off-center. This state was never in the training set,
-     so the policy has no reliable recovery action and may drift
-     further right -- eventually leaving the lane.
-   - Errors compound because each mistake produces a new out-of-
-     distribution state, which produces a larger mistake, which
-     produces an even more out-of-distribution state.
-   - The compounding grows as :math:`O(\epsilon T^2)` where
-     :math:`\epsilon` is the per-step error and :math:`T` is
-     the episode length -- making BC fragile for long-horizon tasks.
+   - Physics-based (CV, CTRA): no training data, interpretable, and
+     accurate for very short horizons (0.5--1 s) and simple motion.
+     Weakness: assumes constant motion, so it fails during turns,
+     stops, and any intent change; unusable beyond ~2 s.
+   - Maneuver-based: classifies a discrete intent (lane keep, turn,
+     stop) then predicts a trajectory per maneuver. Strength: adds
+     semantic structure and multi-modality. Weakness: the hand-designed
+     maneuver set cannot cover all behaviors and produces abrupt
+     class-boundary transitions.
+   - Learned/Transformer (MotionTransformer, VectorNet): jointly
+     encodes agents and map with attention, producing interaction-aware,
+     multi-modal predictions accurate to 5--8 s. Strength: state of the
+     art in complex urban interaction. Weakness: needs large datasets,
+     is less interpretable, and can fail out of distribution.
+   - Practical takeaway: short-horizon safety fallbacks often use a
+     physics model, while the primary predictor for planning in urban
+     ODDs is a learned interaction-aware model.
 
 
 .. admonition:: Question 17
    :class: hint
 
-   **Compare rule-based FSM behavior planners with learned
-   (imitation learning) behavior planners.** Under what
-   operational conditions would you choose each approach, and
-   what hybrid strategies exist?
+   **Explain why single-trajectory prediction is insufficient for
+   autonomous driving and what multi-modal prediction provides.**
+   Contrast how MinADE_K and mAP evaluate a multi-modal predictor.
 
    *(2-4 sentences)*
 
@@ -526,23 +522,22 @@ Essay Questions
 
    *Key points to include:*
 
-   - FSM planners are preferred when: interpretability and
-     certifiability are required (regulatory approval), the
-     operational design domain (ODD) is well-defined and narrow,
-     or real-time guarantees with bounded computation are needed.
-   - Learned planners are preferred when: the ODD is broad and
-     difficult to enumerate (urban driving), human-like interaction
-     is required (gap acceptance, courtesy behaviors), or large
-     logged datasets are available to train from.
-   - Hybrid strategies: use an FSM for safety-critical decisions
-     (emergency stop, right-of-way) with a learned planner for
-     non-safety-critical comfort behaviors (smooth merges, yield
-     negotiation). The safety layer can override the learned policy
-     whenever a formal safety condition is violated.
-   - Another hybrid: use a learned policy as a cost function or
-     prior within a model-based planner (e.g., RL-guided lattice
-     search), combining the interpretability of the lattice with
-     the generalization of learned policies.
+   - A single predicted trajectory collapses genuinely ambiguous
+     futures (turn vs. straight, yield vs. go) into one path, and an
+     MSE-trained regressor averages those modes into an implausible
+     "middle" trajectory. Planning against a single wrong future is
+     unsafe.
+   - Multi-modal prediction outputs K trajectories with probabilities
+     :math:`\{(\hat{\tau}_k, p_k)\}`, each representing a distinct
+     behavioral hypothesis, so the planner can hedge against all
+     plausible agent intents.
+   - MinADE_K is an oracle metric: it scores only the best-matching of
+     the K modes, rewarding coverage/diversity but ignoring whether the
+     probabilities are calibrated.
+   - mAP treats each mode as a detection and jointly rewards accurate
+     endpoints and well-ranked probabilities, so it penalizes an
+     overconfident wrong mode. Reporting both gives a fuller picture:
+     MinADE for coverage, mAP for calibration.
 
 
 .. admonition:: Question 18

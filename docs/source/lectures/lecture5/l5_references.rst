@@ -90,6 +90,58 @@ References
          framework for nuScenes.
 
 
+.. dropdown:: Semantic Segmentation
+   :class-container: sd-border-secondary
+
+   .. grid:: 1 1 2 2
+      :gutter: 2
+
+      .. grid-item-card:: Fully Convolutional Networks (FCN)
+         :link: https://arxiv.org/abs/1411.4038
+         :class-card: sd-border-secondary
+
+         **Long et al., CVPR 2015**
+
+         The foundational end-to-end network for dense per-pixel semantic
+         segmentation.
+
+      .. grid-item-card:: DeepLabv3+
+         :link: https://arxiv.org/abs/1802.02611
+         :class-card: sd-border-secondary
+
+         **Chen et al., ECCV 2018**
+
+         Encoder-decoder with atrous separable convolution and ASPP for
+         multi-scale context. A common driveable-surface baseline.
+
+      .. grid-item-card:: Mask R-CNN
+         :link: https://arxiv.org/abs/1703.06870
+         :class-card: sd-border-secondary
+
+         **He et al., ICCV 2017**
+
+         Adds a mask branch to Faster R-CNN for instance segmentation of
+         vehicles and pedestrians.
+
+      .. grid-item-card:: SegFormer
+         :link: https://arxiv.org/abs/2105.15203
+         :class-card: sd-border-secondary
+
+         **Xie et al., NeurIPS 2021**
+
+         Efficient transformer encoder with a lightweight MLP decoder for
+         semantic segmentation.
+
+      .. grid-item-card:: Panoptic Segmentation
+         :link: https://arxiv.org/abs/1801.00868
+         :class-card: sd-border-secondary
+
+         **Kirillov et al., CVPR 2019**
+
+         Unifies semantic (stuff) and instance (things) segmentation into a
+         single coherent scene labeling task and metric (PQ).
+
+
 .. dropdown:: Multi-Camera Fusion
    :class-container: sd-border-secondary
 
