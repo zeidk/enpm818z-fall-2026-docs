@@ -268,43 +268,45 @@ Multiple Choice (Questions 1-10)
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- 10.10 m
+   **D** -- 10.08 m
 
    Weights: w_A = 1/0.25 = 4, w_B = 1/1.0 = 1.
    Fused = (4 * 10.0 + 1 * 10.4) / (4 + 1) = (40.0 + 10.4) / 5 = 50.4 / 5
-   = **10.08 m** (closest to B among given choices; exact answer 10.08 m).
+   = **10.08 m**.
 
-   Note: The exact answer is 10.08 m. The fused estimate is pulled strongly
-   toward Sensor A (lower variance = higher weight = 80% contribution).
+   The fused estimate is pulled strongly toward Sensor A (lower variance =
+   higher weight = 80% contribution).
 
 
 .. admonition:: Question 10
    :class: hint
 
-   In **BEVFusion**'s cross-attention fusion, what role do the LiDAR BEV
-   features play in the attention mechanism?
+   A vehicle is making a sharp turn at an intersection. Which motion model is
+   most appropriate for the Kalman-filter-based state estimator tracking it?
 
-   A. They serve as Values (V) -- providing the content that is read out.
+   A. Constant Velocity (CV) -- it assumes straight-line motion and stays
+      linear, so a standard Kalman filter suffices.
 
-   B. They serve as Queries (Q) -- asking "what camera features are relevant
-      to this spatial location?"
+   B. Constant Turn Rate and Velocity (CTRV) -- it models the yaw rate, but
+      because it is nonlinear it requires an EKF or UKF.
 
-   C. They serve as Keys (K) -- indexing which camera features to attend to.
+   C. Random walk -- no motion model is needed for turning vehicles.
 
-   D. They are not used in the attention; only camera features are fused.
+   D. Constant Acceleration (CA) in a straight line -- acceleration fully
+      captures turning behavior.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- They serve as Queries (Q) -- asking "what camera features are
-   relevant to this spatial location?"
+   **B** -- Constant Turn Rate and Velocity (CTRV) -- it models the yaw rate,
+   but because it is nonlinear it requires an EKF or UKF.
 
-   In cross-attention fusion: LiDAR BEV features → Q (queries); Camera BEV
-   features → K (keys) and V (values). The LiDAR features "query" the
-   camera features: for each LiDAR BEV cell (which knows geometry), the
-   attention mechanism selectively retrieves relevant semantic information
-   from the camera BEV. This is directional fusion where geometry guides
-   semantic information retrieval.
+   A CV model assumes the object moves in a straight line, so it lags and
+   overshoots during turns. CTRV augments the state with a yaw rate and
+   propagates position through sin/cos of the heading, which is nonlinear.
+   That nonlinearity is exactly why turning-vehicle trackers use an EKF
+   (Jacobian linearization) or a UKF (sigma points) rather than the plain
+   linear Kalman filter.
 
 
 ----

@@ -1,0 +1,58 @@
+ENPM818Z: On-Road Automated Vehicles - Fall 2026
+Canvas Quizzes and Group Projects: Titles and Due Dates
+
+Lectures meet on Thursdays. First lecture: September 3, 2026.
+Dates below are the Thursday of that week (UMD Fall 2026 calendar).
+
+
+=====================================================
+QUIZZES (in-class, closed-notes)
+=====================================================
+
+Quiz 1: Foundations, Sensors & State Estimation
+    Covers: L1-L3
+    Due: Thursday, September 17, 2026 (Week 3)
+
+Quiz 2: Perception - Detection, BEV & Tracking
+    Covers: L4-L6
+    Due: Thursday, October 8, 2026 (Week 6)
+
+Quiz 3: Localization, Navigation & Prediction
+    Covers: L7-L9
+    Due: Thursday, October 29, 2026 (Week 9)
+
+Quiz 4: Motion Planning & Control
+    Covers: L10-L11
+    Due: Thursday, November 12, 2026 (Week 11)
+
+Quiz 5: End-to-End Driving, World Models & Safety
+    Covers: L12-L14
+    Due: Thursday, December 10, 2026 (Week 14)
+
+
+=====================================================
+ASSIGNMENTS (Group Projects + Final Report)
+=====================================================
+
+GP1: Sensor Suite & Data Pipeline
+    Posted: Thursday, September 10, 2026 (Week 2)
+    Due:    Thursday, October 1, 2026 (Week 5)
+
+GP2: Perception - YOLO vs DETR
+    Posted: Thursday, October 1, 2026 (Week 5)
+    Due:    Thursday, October 22, 2026 (Week 8)
+
+GP3: Fusion & Localization
+    Posted: Thursday, October 22, 2026 (Week 8)
+    Due:    Thursday, November 12, 2026 (Week 11)
+
+GP4: Planning & Control
+    Posted: Thursday, November 12, 2026 (Week 11)
+    Due:    Thursday, December 10, 2026 (Week 14)
+
+GP5 (Bonus): Vision-Language-Action Driving
+    Optional bonus, up to +10 points on the final project score.
+    Due:    Thursday, December 17, 2026 (with the Final Report)
+
+Final Report: Integrated ADS Pipeline
+    Due:    Thursday, December 17, 2026 (Week 15, final report window)

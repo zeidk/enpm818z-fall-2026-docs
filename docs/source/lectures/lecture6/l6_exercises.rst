@@ -4,70 +4,10 @@ Exercises
 
 This page contains take-home exercises that reinforce the concepts
 from Lecture 6. Exercises cover Kalman filter tracking, the Hungarian
-algorithm, and tracking metrics.
-
-.. note::
-
-   The Segmentation Metrics exercise that used to live here has been
-   migrated to the new L5 exercises page.
+algorithm, multi-object tracker comparison, and tracking metrics.
 
 
-.. dropdown:: Exercise 1 -- Segmentation Metrics
-   :icon: gear
-   :class-container: sd-border-primary
-   :class-title: sd-font-weight-bold
-
-   **Goal**
-
-   Practice computing IoU and mIoU from a confusion matrix.
-
-
-   .. raw:: html
-
-      <hr>
-
-
-   **Specification**
-
-   A semantic segmentation model produces the following confusion
-   matrix for three classes:
-
-   .. list-table::
-      :widths: 25 25 25 25
-      :header-rows: 1
-      :class: compact-table
-
-      * - Predicted \\ Actual
-        - Road
-        - Vehicle
-        - Pedestrian
-      * - Road
-        - 8000
-        - 200
-        - 50
-      * - Vehicle
-        - 300
-        - 1500
-        - 100
-      * - Pedestrian
-        - 100
-        - 50
-        - 700
-
-   1. Compute the **IoU** for each class using
-      :math:`\text{IoU} = \frac{TP}{TP + FP + FN}`.
-   2. Compute the **mIoU** across all three classes.
-   3. Which class has the worst IoU? Suggest one reason why.
-   4. If you could only optimize one class for safety, which would you
-      choose and why?
-
-   **Deliverable**
-
-   All IoU calculations shown with final mIoU value, plus written
-   answers to questions 3 and 4.
-
-
-.. dropdown:: Exercise 2 -- Kalman Filter Tracking (Pen and Paper)
+.. dropdown:: Exercise 1 -- Kalman Filter Tracking (Pen and Paper)
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
@@ -116,7 +56,7 @@ algorithm, and tracking metrics.
    operations).
 
 
-.. dropdown:: Exercise 3 -- Hungarian Algorithm
+.. dropdown:: Exercise 2 -- Hungarian Algorithm
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
@@ -163,7 +103,7 @@ algorithm, and tracking metrics.
    Cost matrix, gated matrix, optimal assignment, and written answers.
 
 
-.. dropdown:: Exercise 4 -- SORT vs. ByteTrack
+.. dropdown:: Exercise 3 -- SORT vs. ByteTrack
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
@@ -214,7 +154,7 @@ algorithm, and tracking metrics.
    The script, comparison results, and written analysis.
 
 
-.. dropdown:: Exercise 5 -- Tracking Metrics Computation
+.. dropdown:: Exercise 4 -- Tracking Metrics Computation
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold

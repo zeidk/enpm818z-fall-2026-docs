@@ -4,16 +4,9 @@ Quiz
 
 This quiz covers the key concepts from Lecture 6: Perception III --
 Tracking, Temporal Reasoning & Deep Fusion. Topics include multi-object
-tracking (SORT, DeepSORT, ByteTrack); tracking metrics (MOTA, MOTP,
-IDF1); temporal reasoning for improved perception; and deep-learning
-fusion (cross-attention, BEVFusion).
-
-.. note::
-
-   Segmentation questions from the previous L5 quiz have been
-   migrated to the new L5 quiz; cross-attention / BEVFusion questions
-   from the previous L6 quiz will be migrated to this quiz in a
-   follow-up polish pass.
+tracking (SORT, DeepSORT, ByteTrack); track lifecycle management;
+tracking metrics (MOTA, MOTP, IDF1); temporal reasoning for improved
+perception; and deep-learning fusion (cross-attention, BEVFusion).
 
 .. note::
 
@@ -35,83 +28,87 @@ Multiple Choice (Questions 1-10)
 .. admonition:: Question 1
    :class: hint
 
-   Which segmentation task assigns a unique instance ID to each individual
-   object AND provides a label for every pixel in the image (including
-   background "stuff" regions)?
+   In a tracking-by-detection system, how is a new track typically promoted
+   from **tentative** to **confirmed**, and when is a track **deleted**?
 
-   A. Semantic segmentation
+   A. A track is confirmed after a single detection and deleted after a
+      single missed frame.
 
-   B. Instance segmentation
+   B. A track is confirmed once it is matched to detections for several
+      consecutive frames, and deleted after it goes unmatched for more than
+      a set number of frames (``max_age``).
 
-   C. Panoptic segmentation
+   C. Tracks are never deleted; they persist for the entire sequence.
 
-   D. Binary segmentation
+   D. Confirmation and deletion are decided by the detector confidence alone,
+      independent of matching history.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- Panoptic segmentation
+   **B** -- A track is confirmed once it is matched to detections for several
+   consecutive frames, and deleted after it goes unmatched for more than a set
+   number of frames (``max_age``).
 
-   Panoptic segmentation unifies semantic and instance segmentation. Every
-   pixel receives a class label (like semantic segmentation), and every
-   "thing" (countable object like a car or pedestrian) also receives a unique
-   instance ID. "Stuff" regions (road, sky) get class labels but no instance
-   IDs.
+   Track lifecycle management avoids reacting to spurious single-frame
+   detections (require ``n_init`` consecutive hits to confirm) and tolerates
+   short occlusions (keep coasting a track on Kalman prediction until
+   ``max_age`` misses accumulate, then delete it).
 
 
 .. admonition:: Question 2
    :class: hint
 
-   What is the primary architectural innovation of **U-Net** that allows it
-   to produce high-resolution segmentation masks?
+   The **MOTP** (Multi-Object Tracking Precision) metric measures:
 
-   A. Atrous (dilated) convolutions at multiple dilation rates.
+   A. The fraction of ground-truth objects that were tracked without any
+      ID switch.
 
-   B. Skip connections that concatenate encoder feature maps with decoder
-      feature maps at the same resolution.
+   B. The average localization accuracy (e.g., IoU or distance error) of the
+      matched track-detection pairs.
 
-   C. A Region Proposal Network that identifies candidate object locations.
+   C. The number of false positives per frame.
 
-   D. A deformable attention mechanism over learned reference points.
+   D. The ratio of confirmed tracks to tentative tracks.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Skip connections that concatenate encoder feature maps with decoder
-   feature maps at the same resolution.
+   **B** -- The average localization accuracy (e.g., IoU or distance error)
+   of the matched track-detection pairs.
 
-   U-Net's encoder progressively downsamples the input to extract
-   high-level semantic features, while the decoder upsamples back to full
-   resolution. The skip connections from encoder to decoder at matching
-   resolutions provide fine-grained spatial detail (edges, boundaries) that
-   would otherwise be lost during downsampling.
+   MOTP captures *how precisely* matched objects are localized, independent of
+   how many are detected. It is complementary to MOTA (which counts FN, FP, and
+   ID switches): a tracker can have high MOTA but mediocre MOTP if boxes are
+   consistently matched but loosely localized.
 
 
 .. admonition:: Question 3
    :class: hint
 
-   In **DeepLabv3+**, what is the purpose of Atrous Spatial Pyramid Pooling
-   (ASPP)?
+   Why is a shared **BEV feature space** an effective representation for deep
+   **LiDAR-camera fusion**?
 
-   A. To extract region proposals for instance segmentation.
+   A. It discards camera features and keeps only LiDAR points.
 
-   B. To apply dilated convolutions at multiple rates in parallel, capturing
-      multi-scale contextual information in a single forward pass.
+   B. It removes the need for extrinsic calibration between the sensors.
 
-   C. To warp features from previous frames using ego-motion.
+   C. Both modalities can be projected into the same top-down metric grid,
+      where their features are spatially aligned and can be combined per cell.
 
-   D. To perform bilinear interpolation for upsampling the feature map.
+   D. It converts LiDAR points into RGB images so a 2D CNN can process them.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- To apply dilated convolutions at multiple rates in parallel,
-   capturing multi-scale contextual information in a single forward pass.
+   **C** -- Both modalities can be projected into the same top-down metric
+   grid, where their features are spatially aligned and can be combined per
+   cell.
 
-   ASPP uses several parallel dilated convolutional branches with different
-   dilation rates (e.g., 6, 12, 18) plus global average pooling. Each branch
-   captures context at a different scale without reducing spatial resolution.
-   The outputs are concatenated and passed to the decoder.
+   LiDAR provides accurate geometry and camera provides dense semantics. A
+   shared BEV grid gives a common, metric, ego-centered coordinate frame in
+   which a camera BEV feature and a LiDAR BEV feature for the same location
+   line up, so they can be concatenated or fused with attention per cell.
 
 
 .. admonition:: Question 4
@@ -227,27 +224,30 @@ Multiple Choice (Questions 1-10)
 .. admonition:: Question 8
    :class: hint
 
-   Which segmentation architecture adds a **mask prediction head** to a
-   two-stage detector framework to produce instance-level binary masks?
+   In **BEVFusion**'s cross-attention fusion, what role do the LiDAR BEV
+   features play in the attention mechanism?
 
-   A. U-Net
+   A. They serve as Values (V) -- providing the content that is read out.
 
-   B. DeepLabv3+
+   B. They serve as Queries (Q) -- asking "what camera features are relevant
+      to this spatial location?"
 
-   C. Mask R-CNN
+   C. They serve as Keys (K) -- indexing which camera features to attend to.
 
-   D. SegNet
+   D. They are not used in the attention; only camera features are fused.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- Mask R-CNN
+   **B** -- They serve as Queries (Q) -- asking "what camera features are
+   relevant to this spatial location?"
 
-   Mask R-CNN extends Faster R-CNN by adding a third head alongside the
-   classification and bounding box regression heads. For each detected region
-   proposal, this mask head predicts a 28x28 binary mask per class using a
-   small FCN. RoIAlign (instead of RoIPool) ensures pixel-precise feature
-   alignment for accurate mask prediction.
+   In cross-attention fusion: LiDAR BEV features → Q (queries); Camera BEV
+   features → K (keys) and V (values). The LiDAR features "query" the
+   camera features: for each LiDAR BEV cell (which knows geometry), the
+   attention mechanism selectively retrieves relevant semantic information
+   from the camera BEV. This is directional fusion where geometry guides
+   semantic information retrieval.
 
 
 .. admonition:: Question 9
@@ -284,7 +284,7 @@ Multiple Choice (Questions 1-10)
    :class: hint
 
    Which approach for **temporal reasoning** in autonomous driving is most
-   commonly used in production BEV perception stacks (as covered in L4)?
+   commonly used in production BEV perception stacks?
 
    A. 3D convolutions over a video volume (C3D, SlowFast).
 
@@ -317,39 +317,38 @@ True or False (Questions 11-15)
 .. admonition:: Question 11
    :class: hint
 
-   **True or False:** In semantic segmentation, two pedestrians standing
-   next to each other will receive different instance IDs but the same
-   class label.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   Semantic segmentation only assigns class labels -- it has no concept of
-   instances. Both pedestrians would receive the class label "pedestrian"
-   but NO instance IDs. Differentiating individual instances requires
-   instance segmentation or panoptic segmentation.
-
-
-.. admonition:: Question 12
-   :class: hint
-
-   **True or False:** U-Net's skip connections are the primary mechanism
-   that allows the network to recover fine spatial detail that is lost
-   during encoding (downsampling).
+   **True or False:** MOTP measures the localization precision of matched
+   track-detection pairs, while MOTA measures detection and identity errors;
+   the two metrics are complementary.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **True**
 
-   During encoding, spatial resolution is progressively reduced (via max
-   pooling or strided convolutions) to build high-level semantic features.
-   Skip connections directly copy encoder feature maps at each resolution
-   to the corresponding decoder level, bypassing the bottleneck. This
-   allows the decoder to combine high-level semantics (from the bottleneck)
-   with fine spatial detail (from the encoder skip).
+   MOTP answers "how precisely are the matched objects localized?" (average
+   IoU or distance error of matches), while MOTA answers "how many objects
+   were missed, hallucinated, or swapped?" (FN + FP + IDSW). A complete
+   tracking evaluation reports both, since a tracker can score well on one and
+   poorly on the other.
+
+
+.. admonition:: Question 12
+   :class: hint
+
+   **True or False:** The Kalman filter used inside a SORT tracker typically
+   assumes a constant-velocity motion model for each object.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **True**
+
+   SORT models each track with a linear constant-velocity Kalman filter (state
+   includes box center, scale, aspect ratio, and their velocities). Between
+   frames it predicts the box forward assuming constant velocity; the IoU
+   matching then corrects the estimate. The constant-velocity assumption is
+   why fast maneuvers and long occlusions cause the prediction to drift.
 
 
 .. admonition:: Question 13
@@ -373,21 +372,20 @@ True or False (Questions 11-15)
 .. admonition:: Question 14
    :class: hint
 
-   **True or False:** The Panoptic Quality (PQ) metric can be decomposed
-   into a recognition quality component and a segmentation quality component.
+   **True or False:** In BEVFusion, LiDAR and camera features are combined in
+   a shared bird's-eye-view representation rather than being concatenated at
+   the raw sensor level.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **True**
 
-   PQ = RQ * SQ, where:
-   RQ (Recognition Quality) = TP / (TP + 0.5*FP + 0.5*FN) measures how
-   well the model detects objects (like F1 score).
-   SQ (Segmentation Quality) = average IoU of matched pairs measures how
-   well the masks are segmented.
-   This decomposition allows analysis of whether errors come from missed
-   detections or poor mask quality.
+   BEVFusion transforms both the camera features (via a view transform such as
+   LSS) and the LiDAR features into a common BEV grid, then fuses them there.
+   Fusing in a shared, spatially-aligned BEV space is what makes the fusion
+   robust to calibration noise and lets a single downstream head consume both
+   modalities.
 
 
 .. admonition:: Question 15
