@@ -265,37 +265,51 @@ ASIL classifies the severity of safety risks on a scale from A (lowest) to D
 
 .. math::
 
-   \text{ASIL} = f(\text{Severity} \times \text{Exposure} \times \text{Controllability})
+   \text{ASIL} = f(\text{Severity},\; \text{Exposure},\; \text{Controllability})
 
 .. list-table::
-   :widths: 15 25 20 40
+   :widths: 14 26 20 40
    :header-rows: 1
    :class: compact-table
 
    * - ASIL
      - Example AV System
-     - Max PFH
+     - Max PMHF
      - Development Requirements
    * - **QM**
      - Cabin lighting
-     - None
-     - Standard quality management
+     - Not applicable
+     - Standard quality management only
    * - **ASIL A**
      - Windshield wiper
-     - 10\ :sup:`-6` /h
+     - No target specified
      - Basic safety measures
    * - **ASIL B**
      - Electric power steering assist
-     - 10\ :sup:`-7` /h
+     - < 10\ :sup:`-7` /h
      - Moderate testing and analysis
    * - **ASIL C**
      - Automatic emergency braking
-     - 10\ :sup:`-8` /h
-     - Formal verification required
+     - < 10\ :sup:`-7` /h
+     - Rigorous testing; fault-injection analysis
    * - **ASIL D**
      - Brake-by-wire, steer-by-wire
-     - 10\ :sup:`-9` /h
-     - Highest rigor; independent review
+     - < 10\ :sup:`-8` /h
+     - Highest rigor; formal methods highly recommended;
+       independent review
+
+.. note::
+
+   The PMHF (Probabilistic Metric for random Hardware Failures) targets
+   are from ISO 26262-5. Two points students routinely get wrong:
+   **ASIL B and C share the same** :math:`10^{-7}` **/h target** -- they
+   are distinguished by *process* rigor, not by the hardware metric --
+   and **ASIL D is** :math:`10^{-8}`, not :math:`10^{-9}`.
+
+   Note also that PMHF addresses **random hardware failures** only. It
+   says nothing about systematic faults, which is precisely where
+   software -- and therefore everything in this course -- lives. That gap
+   is one reason SOTIF exists.
 
 The V-Model Development Process
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -318,10 +332,39 @@ Functional Safety Concept
 
 The safety lifecycle begins with a **Hazard Analysis and Risk Assessment
 (HARA)**, which identifies all foreseeable hazardous events and assigns an
-ASIL to each. For example:
+ASIL to each.
+
+.. important::
+
+   **Get the scales the right way round.** All three run from least to
+   most severe as the number increases:
+
+   .. list-table::
+      :widths: 20 80
+      :header-rows: 1
+      :class: compact-table
+
+      * - Class
+        - Meaning
+      * - **S0 -- S3**
+        - Severity: S0 no injuries, S3 life-threatening or fatal.
+      * - **E0 -- E4**
+        - Exposure: E0 incredibly unlikely, E4 high probability
+          (occurs during almost every drive).
+      * - **C0 -- C3**
+        - Controllability: **C0 = controllable in general**,
+          C1 simply controllable, C2 normally controllable,
+          **C3 = difficult to control or uncontrollable**.
+
+   C0 and C3 are frequently swapped in secondary sources. Anything
+   rated **C0 is automatically QM** regardless of severity and
+   exposure -- if the driver can reliably handle it, it is not a
+   functional-safety hazard.
+
+Worked examples:
 
 .. list-table::
-   :widths: 40 15 15 15 15
+   :widths: 36 14 14 18 10
    :header-rows: 1
    :class: compact-table
 
@@ -333,18 +376,31 @@ ASIL to each. For example:
    * - Unintended steering while driving at highway speed
      - S3 (fatal)
      - E4 (frequent)
-     - C0 (uncontrollable)
-     - D
+     - C3 (uncontrollable)
+     - **D**
    * - Incorrect speed displayed on HMI
      - S1 (minor)
      - E4
-     - C3 (easily controllable)
-     - QM
+     - C0 (controllable in general)
+     - **QM**
    * - Incorrect object detection causing emergency brake
      - S2 (serious)
      - E3
      - C2 (normally controllable)
-     - B
+     - **A**
+
+.. admonition:: Reading the determination table
+   :class: note
+
+   ASIL is looked up from a table in ISO 26262-3, not computed. Working
+   the third row: at **S2**, exposure **E3** and controllability **C2**
+   gives **ASIL A** -- not B. Raising exposure to E4 would give B;
+   raising controllability to C3 as well would give C.
+
+   The sensitivity is the lesson: one classification step in any of the
+   three dimensions moves the ASIL, and with it the entire development
+   process, verification burden, and cost. HARA arguments are where
+   safety engineering actually happens.
 
 
 ISO 21448: Safety of the Intended Functionality (SOTIF)
@@ -442,73 +498,34 @@ Key Features
 
    The US (NHTSA) and China are not UNECE member states but are closely
    monitoring the GTR as they develop their own national frameworks. The US
-   still lacks federal AV legislation as of March 2026.
+   still lacks comprehensive federal AV legislation, regulating
+   instead through NHTSA exemptions and guidance. Check the current
+   status before relying on this -- it is under active debate.
 
 
 Cybersecurity: ISO/SAE 21434
 -----------------------------
 
-Autonomous vehicles are networked computers on wheels -- and therefore
-significant cybersecurity targets.
+An autonomous vehicle is a networked computer on wheels, so
+cybersecurity is a functional-safety concern rather than an IT
+afterthought: a spoofed LiDAR return or an injected CAN frame is a
+safety hazard, not just a data breach.
 
-Attack Surfaces
-~~~~~~~~~~~~~~~
+.. admonition:: Covered in the pre-read
+   :class: important
 
-.. tab-set::
+   The attack surfaces (sensor spoofing, communication attacks, backend
+   compromise), the ISO/SAE 21434 lifecycle, and the TARA process are
+   covered on the
+   :doc:`Pre-Read: Automotive Cybersecurity </preread/cybersecurity>`
+   page. Read it before this lecture -- the integration discussion below
+   assumes it.
 
-   .. tab-item:: Sensor Spoofing
-
-      - **LiDAR spoofing** -- Firing laser pulses at an AV's LiDAR sensor to
-        inject phantom objects or remove real obstacles from the point cloud.
-      - **GPS spoofing** -- Broadcasting false GPS signals to mislocalize the
-        vehicle.
-      - **Camera adversarial attacks** -- Applying specially crafted stickers to
-        stop signs or lane markings that fool CNN-based perception.
-
-   .. tab-item:: Communication Attacks
-
-      - **V2X man-in-the-middle** -- Intercepting and modifying V2X messages
-        to provide false traffic or hazard information.
-      - **CAN bus injection** -- If physical access is obtained, injecting
-        malicious CAN messages to override vehicle actuators.
-      - **OTA update hijacking** -- Compromising the over-the-air update
-        channel to install malicious software.
-
-   .. tab-item:: Backend Attacks
-
-      - **Fleet management server compromise** -- Attacking the cloud servers
-        that push map updates or planner versions to the vehicle fleet.
-      - **Data poisoning** -- Injecting adversarial data into the fleet's
-        training pipeline to degrade the next model version.
-
-ISO/SAE 21434 Framework
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-ISO/SAE 21434 (Road Vehicles -- Cybersecurity Engineering) defines the
-processes and requirements for managing cybersecurity throughout the vehicle
-lifecycle:
-
-1. **Threat Analysis and Risk Assessment (TARA)** -- Enumerate threat actors,
-   attack vectors, and potential impacts. Assign a **CSMS attack feasibility**
-   rating and risk level.
-2. **Cybersecurity Goals** -- Define cybersecurity requirements for each
-   identified risk.
-3. **Implementation** -- Apply controls: encryption (TLS 1.3 for V2X),
-   code signing (OTA updates), hardware security modules (HSM) for key storage.
-4. **Post-deployment monitoring** -- Continuous vulnerability monitoring and
-   incident response.
-
-Secure Communication
-~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: text
-
-   V2X Message                     Authenticated with:
-   ─────────────────────────────────────────────────
-   Basic Safety Message (BSM)  → IEEE 1609.2 certificates + ECDSA
-   Service Advertisement       → ETSI ITS Security
-   OTA Update Payload          → Code signing (RSA-4096 or ECDSA P-384)
-   Sensor data (internal LAN)  → TLS 1.3 or DDS-Security
+The key architectural consequence for this lecture: **security controls
+consume the same latency budget as everything else**. Message
+authentication on V2X, TLS on internal links, and secure boot all cost
+time, and that cost has to be accounted for in the budget table above
+rather than discovered at integration.
 
 
 V2X and Connected Vehicles
@@ -644,15 +661,17 @@ a **pragmatic hybrid**:
    .. grid-item-card:: 2020-2023
       :class-card: sd-border-secondary
 
-      Modular dominates production. Mobileye RSS, Waymo Gen 5, Apollo 5.0
-      all use explicit intermediate representations.
+      Modular dominates production. Mobileye RSS, Waymo's 5th-generation
+      Driver, and the Apollo releases of that era all use explicit
+      intermediate representations.
 
    .. grid-item-card:: 2024-2026
       :class-card: sd-border-warning
 
       Hybrid era. E2E neural backbones for perception + learned planners,
-      with explicit safety monitors layered on top. Waymo Gen 6, Apollo 6,
-      Tesla FSD v12.
+      with explicit safety monitors layered on top. Waymo's current
+      generation, recent Apollo releases, and Tesla FSD from v12
+      onward.
 
    .. grid-item-card:: 2027+
       :class-card: sd-border-success
@@ -776,56 +795,73 @@ Course Summary and Final Project Guidance
 ENPM818Z Course Summary
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Over the past 13 lectures, we have covered the complete autonomous driving
-stack:
+Across the semester's 14 lectures, we have covered the complete
+autonomous driving stack:
 
 .. list-table::
-   :widths: 10 30 60
+   :widths: 8 32 60
    :header-rows: 1
    :class: compact-table
 
    * - Lecture
      - Topic
      - Key Concepts
-   * - 1
-     - Introduction & AV Landscape
-     - SAE levels, DDT, ODD, industry players, CARLA setup
-   * - 2
-     - Sensor Technologies
-     - Camera, LiDAR, RADAR, IMU, GNSS, calibration
-   * - 3
-     - Perception I: Detection & Segmentation
-     - YOLO, DETR, BEV perception, semantic segmentation
-   * - 4
-     - Perception II: Tracking & Fusion
-     - Kalman filters, multi-sensor fusion, cross-attention
-   * - 5
-     - Localization & Mapping
-     - GNSS/RTK, SLAM, scan matching, pose graphs
-   * - 6
-     - Motion Planning I
-     - A*, RRT, lattice planners, cost functions
-   * - 7
-     - Motion Planning II
-     - Diffusion planning, learned cost functions, nuPlan
-   * - 8
-     - Trajectory Planning & Control
-     - MPC, Pure Pursuit, polynomial trajectories
-   * - 9
-     - Prediction & Behavior
-     - Trajectory forecasting, behavior planning, TNT, MTR
-   * - 10
-     - Imitation & Reinforcement Learning
-     - BC, DAGGER, PPO, reward shaping for driving
-   * - 11
-     - End-to-End & Foundation Models
-     - UniAD, DriveTransformer, VLA, Tesla FSD v12, NVIDIA
-   * - 12
+   * - L1
+     - Course Intro, AV Landscape, Safety, CARLA
+     - SAE levels, DDT, ODD, industry status, ISO 26262 / SOTIF
+       overview, Uber and Cruise case studies, CARLA architecture
+   * - L2
+     - Sensor Technologies & Calibration
+     - Camera, LiDAR, RADAR, IMU, GNSS; intrinsic and extrinsic
+       calibration; sensor placement, coverage, complementarity
+   * - L3
+     - Probabilistic State Estimation & Fusion
+     - KF, EKF, UKF, particle filters; fusion architectures;
+       data association (NN, GNN, JPDA, MHT); inverse-variance weighting
+   * - L4
+     - Perception I: Detection
+     - IoU, NMS, mAP; YOLO; DETR and bipartite matching;
+       3-D LiDAR detection (PointPillars, CenterPoint); deployment
+   * - L5
+     - Perception II: BEV, Occupancy & Segmentation
+     - Lift-Splat-Shoot, BEVFormer, 3-D occupancy networks,
+       DeepLabv3+, panoptic segmentation and PQ, nuScenes NDS
+   * - L6
+     - Perception III: Tracking, Temporal & Deep Fusion
+     - SORT, DeepSORT, ByteTrack; MOTA / IDF1 / HOTA; transformer MOT;
+       3-D tracking; cross-attention and BEVFusion
+   * - L7
+     - Localization & SLAM
+     - GNSS/RTK, dead reckoning, visual and LiDAR odometry, MCL/AMCL,
+       ICP, pose-graph optimization, loop closure
+   * - L8
+     - Navigation & Route Planning
+     - Road-network graphs, OpenDRIVE and Lanelet2, HD maps,
+       Dijkstra and A*, lane-level routing, dynamic rerouting
+   * - L9
+     - Prediction & Behavior Modeling
+     - CV/CTRA, maneuver-based and interaction-aware prediction,
+       Transformer prediction, multi-modal metrics, FSM behavior planning
+   * - L10
+     - Motion Planning
+     - Bicycle model, Frenet frame, A* and Weighted A*, Hybrid A*,
+       RRT/RRT*/PRM, lattice planners, collision checking, diffusion planning
+   * - L11
+     - Trajectory Generation & Control
+     - Quintic polynomials, splines, optimization-based planning,
+       MPC, Pure Pursuit, Stanley, PID with anti-windup
+   * - L12
+     - End-to-End Driving, VLA & Imitation Learning
+     - Modular vs E2E, UniAD, DriveTransformer, VLA models,
+       behavior cloning, distribution shift, DAgger
+   * - L13
      - World Models & Simulation
-     - GAIA-3, Cosmos, Vista, scenario generation, sim-to-real
-   * - 13
-     - System Integration & Safety
-     - ROS 2, DDS, ISO 26262, SOTIF, UNECE GTR, V2X, outlook
+     - GAIA, Cosmos, Vista; scenario generation; offline closed-loop
+       policy evaluation; sim-to-real gap
+   * - L14
+     - System Integration, Safety & Industry Outlook
+     - ROS 2 and DDS QoS, latency budgets, ISO 26262 and ASIL, SOTIF,
+       UNECE GTR, V2X, ethics and liability, careers
 
 Final Project Guidance
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -839,12 +875,19 @@ in CARLA:
    .. grid-item-card:: Required Components
       :class-card: sd-border-success
 
-      - Multi-camera + LiDAR perception (3-D detection + tracking)
-      - Localization using GNSS + IMU fusion
-      - Occupancy grid and BEV map construction
-      - Behavior planning + motion planning (lattice or optimization)
-      - MPC trajectory controller
-      - ROS 2 integration with visualization in rviz2
+      These are the GP1--GP4 deliverables, integrated:
+
+      - **GP1** -- Sensor suite and data pipeline, LiDAR-to-camera projection
+      - **GP2** -- Detection (YOLO / RT-DETR) and multi-object tracking
+      - **GP3** -- Camera-LiDAR fusion and EKF localization (GNSS + IMU)
+      - **GP4** -- A* planning, behavioral FSM, Pure Pursuit and PID control
+      - ROS 2 integration throughout, with visualization in rviz2
+
+      .. note::
+
+         Consult the :doc:`assignment pages </assignments/index>` for the
+         authoritative specification. Where this summary and a GP page
+         disagree, the GP page wins.
 
    .. grid-item-card:: Evaluation Criteria
       :class-card: sd-border-success
@@ -859,17 +902,52 @@ in CARLA:
    .. grid-item-card:: Optional Extensions
       :class-card: sd-border-warning
 
-      - End-to-end imitation learning component (replace planner)
-      - Trajectory prediction for NPC agents
+      Not required and not separately graded, but strong material for
+      the report's discussion section:
+
+      - End-to-end imitation learning component (replace the planner)
+      - Trajectory prediction for NPC agents (L9)
+      - MPC in place of Pure Pursuit (L11)
       - V2X simulation using CARLA's co-simulation API
-      - World model integration for data augmentation
 
    .. grid-item-card:: Key Deadlines
       :class-card: sd-border-warning
 
       See the course syllabus for exact dates. Contact the course
-      instructors via Piazza for technical questions. CARLA scenarios
+      instructor via ELMS-Canvas for technical questions. CARLA scenarios
       for evaluation will be released two weeks before submission.
+
+Summary
+--------
+
+.. grid:: 1 2 2 2
+   :gutter: 3
+
+   .. grid-item-card:: Integration
+      :class-card: sd-border-primary
+
+      - ROS 2 over DDS; **QoS is a design decision**: BEST_EFFORT for
+        sensor streams, RELIABLE for commands, TRANSIENT_LOCAL for maps
+      - Hard real-time: a 100 ms end-to-end budget, with perception
+        consuming roughly 40 ms of it
+      - Every safety-critical module needs a **watchdog** and a defined
+        Minimal Risk Condition when its deadline is missed
+      - Security controls draw on the same latency budget as everything
+        else -- account for them up front
+
+   .. grid-item-card:: Safety and Regulation
+      :class-card: sd-border-primary
+
+      - **ISO 26262** covers hazards from *failures*; ASIL is looked up
+        from Severity, Exposure and Controllability (C0 controllable,
+        C3 uncontrollable -- do not invert them)
+      - **SOTIF (ISO 21448)** covers hazards with *no failure at all*;
+        the goal is shrinking the "unknown unsafe" region
+      - **UNECE GTR** shifts regulation from prescriptive requirements to
+        a **safety case** argued against a documented ODD
+      - Applying either framework to a monolithic end-to-end model is an
+        open problem -- the decomposition they assume is exactly what E2E
+        removes
 
 .. admonition:: Final Advice
    :class: important

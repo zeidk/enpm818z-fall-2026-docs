@@ -150,21 +150,67 @@ is the incremental motion estimate.
 Wheel Odometry
 ~~~~~~~~~~~~~~~
 
-Integrates wheel encoder measurements to estimate 2D pose:
+Integrates wheel encoder measurements to estimate 2D pose. **The model
+must match the vehicle**, and cars are not differential-drive robots.
 
-.. math::
+.. tab-set::
 
-   \Delta d = \frac{\Delta d_L + \Delta d_R}{2}, \quad \Delta \theta = \frac{\Delta d_R - \Delta d_L}{L}
+   .. tab-item:: Ackermann (cars) -- use this one
 
-   x_{k+1} = x_k + \Delta d \cos(\theta_k + \Delta\theta/2)
+      A passenger car steers its front wheels and cannot change heading
+      without moving forward. Heading rate comes from the **steering
+      angle** via the bicycle model (L10), not from a left/right wheel
+      speed difference:
 
-   y_{k+1} = y_k + \Delta d \sin(\theta_k + \Delta\theta/2)
+      .. math::
 
-   \theta_{k+1} = \theta_k + \Delta\theta
+         \Delta d &= \frac{\Delta d_{RL} + \Delta d_{RR}}{2}
+           \quad \text{(rear wheels: undriven by steering)} \\
+         \Delta \theta &= \frac{\Delta d}{L_{wb}} \tan \delta
+
+      where :math:`L_{wb}` is the wheelbase (front axle to rear axle) and
+      :math:`\delta` is the road-wheel steering angle. Integration then
+      uses the midpoint heading:
+
+      .. math::
+
+         x_{k+1} &= x_k + \Delta d \cos(\theta_k + \Delta\theta/2) \\
+         y_{k+1} &= y_k + \Delta d \sin(\theta_k + \Delta\theta/2) \\
+         \theta_{k+1} &= \theta_k + \Delta\theta
+
+      In practice the yaw rate is taken from the **IMU gyroscope**
+      instead, which is far more accurate than differentiating a
+      steering-angle sensor.
+
+   .. tab-item:: Differential drive (not cars)
+
+      For a two-wheeled robot that steers by driving its wheels at
+      different speeds:
+
+      .. math::
+
+         \Delta d = \frac{\Delta d_L + \Delta d_R}{2}, \quad
+         \Delta \theta = \frac{\Delta d_R - \Delta d_L}{b}
+
+      where :math:`b` is the **track width** between the two wheels.
+
+      .. warning::
+
+         This model appears in most robotics textbooks and is wrong for
+         a car. On an Ackermann vehicle the left/right rear wheel speed
+         difference during a turn is a small geometric side-effect, not
+         the steering input, and it vanishes entirely when driving
+         straight. Applying this formula to a car gives a heading
+         estimate dominated by tyre-radius mismatch and noise.
 
 **Error sources**: wheel slip (especially on turns, wet roads), uneven terrain
-(suspension deflection changes wheel-ground contact), encoder resolution.
-Drift accumulates quadratically over distance (systematic) or as a random walk.
+(suspension deflection changes wheel-ground contact), encoder resolution,
+and tyre radius changing with load, temperature, and pressure.
+
+**Drift behaviour**: distance error grows roughly linearly with distance
+travelled, but a *heading* bias causes position error to grow
+**quadratically** -- which is why a small uncorrected yaw error is far
+more damaging than a scale error.
 
 Visual Odometry (VO)
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -174,9 +220,21 @@ frames:
 
 1. Detect keypoints (ORB, SIFT, SuperPoint).
 2. Match keypoints between frames.
-3. Compute essential matrix :math:`E` using RANSAC.
-4. Decompose :math:`E = R t^{\times}` to get rotation and (scale-ambiguous) translation.
-5. (Stereo VO) Use stereo baseline to recover metric scale.
+3. Compute the essential matrix :math:`E` using RANSAC.
+4. Decompose :math:`E = [\mathbf{t}]_\times R` to recover rotation and
+   (scale-ambiguous) translation, where :math:`[\mathbf{t}]_\times` is the
+   skew-symmetric matrix of the translation vector:
+
+   .. math::
+
+      [\mathbf{t}]_\times = \begin{bmatrix}
+        0 & -t_z & t_y \\ t_z & 0 & -t_x \\ -t_y & t_x & 0
+      \end{bmatrix}
+
+   The decomposition yields **four** candidate :math:`(R, \mathbf{t})`
+   solutions; the correct one is selected by the cheirality check --
+   requiring triangulated points to lie in front of both cameras.
+5. (Stereo VO) Use the stereo baseline to recover metric scale.
 
 **Monocular VO**: scale-ambiguous; scale drift over long sequences.
 **Stereo VO**: metric scale recovered from baseline; drift ~0.5-1% of distance.
@@ -236,7 +294,8 @@ Given a known map of landmarks :math:`m = \{m_1, \ldots, m_N\}`:
 1. **Predict**: propagate pose estimate using motion model (wheel odometry or
    IMU).
 2. **Update**: when a landmark is observed, compute expected observation
-   :math:`h(\mathbf{x}, m_j)` and update using the EKF equations from L6.
+   :math:`h(\mathbf{x}, m_j)` and update using the EKF equations from
+   :doc:`L3 </lectures/lecture3/l3_index>`.
 
 The observation function :math:`h` is typically nonlinear (e.g., range-bearing
 to a known landmark), requiring the EKF's Jacobian linearization.
@@ -327,13 +386,24 @@ where :math:`(p_i, q_i)` are corresponding point pairs. ICP alternates between:
 
 1. **Correspondence**: find nearest neighbor in :math:`\mathcal{Q}` for each
    point in :math:`T \cdot \mathcal{P}`.
-2. **Minimize**: solve for optimal rigid transform T using SVD:
+2. **Minimize**: solve for the optimal rigid transform using SVD (the
+   Kabsch algorithm):
 
    .. math::
 
       [U, S, V^T] = \text{SVD}(H) \quad \text{where } H = \sum_i (p_i - \bar{p})(q_i - \bar{q})^T
 
-      R = V U^T, \quad t = \bar{q} - R \bar{p}
+      R = V D U^T, \quad t = \bar{q} - R \bar{p}
+
+   where :math:`D = \text{diag}(1, 1, \det(VU^T))`.
+
+   .. warning::
+
+      The :math:`D` term is not optional. Without it, degenerate or
+      noisy correspondences can produce a matrix with
+      :math:`\det = -1` -- a **reflection** rather than a rotation. It
+      minimizes the cost function perfectly while describing a physically
+      impossible motion, and it is a classic silent ICP failure.
 
 3. **Update**: apply transform and check convergence.
 
@@ -463,7 +533,7 @@ ICP-Based Scan-to-Scan Matching
 The frontend matches each new scan to the previous scan (scan-to-scan) or
 to a local map (scan-to-map):
 
-.. code-block:: python
+.. code-block:: text
 
    # Pseudocode: LOAM-style frontend
    for each new_scan:
@@ -555,11 +625,26 @@ long-range edge to the pose graph, correcting accumulated drift globally.
 .. admonition:: Why Loop Closure Matters
    :class: important
 
-   After 100 m of LOAM operation (~0.5% drift), the map has accumulated
-   ~0.5 m of error. After 1 km, ~5 m error -- unusable for lane-level
-   driving. A single correct loop closure over 1 km reduces this error
-   to sub-centimeter level by distributing the correction across the
-   entire trajectory.
+   Odometry drift is **unbounded**: at ~0.5% translational drift, 100 m
+   of driving accumulates ~0.5 m of error and 1 km accumulates ~5 m --
+   already unusable for lane-level driving, and it keeps growing.
+
+   A correct loop closure adds a constraint saying "these two poses are
+   the same place." The optimizer then distributes the accumulated error
+   backwards across the whole loop, so drift becomes **bounded by the
+   loop-closure constraint's own accuracy** (typically a few centimetres
+   to tens of centimetres, set by the ICP registration quality) rather
+   than growing with distance travelled.
+
+   .. warning::
+
+      Loop closure bounds error; it does not eliminate it. Claims of
+      "sub-centimetre after loop closure" are not achievable in practice
+      -- the corrected trajectory is only as good as the registration
+      that produced the constraint. And a **false** loop closure is far
+      worse than none at all: it warps the entire map irrecoverably,
+      which is why geometric verification is mandatory before accepting
+      a candidate.
 
 
 SLAM Evaluation Metrics
@@ -603,7 +688,11 @@ Modern LiDAR SLAM Systems
 
       - Frontend: edge + planar feature extraction and matching (scan-to-map).
       - Backend: none (no pose graph, no loop closure).
-      - Performance: ~5-10 cm APE on KITTI odometry benchmark (top result in 2014).
+      - Performance: ~0.55% average translational error on the KITTI
+        odometry benchmark -- the top-ranked method at publication.
+        (KITTI scores odometry as *relative* translation/rotation error
+        over 100--800 m sub-sequences, expressed as a percentage; it does
+        not report an absolute pose error in centimetres.)
       - Limitation: drift accumulates without loop closure; memory grows unbounded.
       - Legacy: LOAM's feature extraction approach inspired all later systems.
 
@@ -640,36 +729,162 @@ Modern LiDAR SLAM Systems
       - Highlights that well-designed ICP with adaptive parameters can
         compete with complex feature-based systems.
 
-CARLA SLAM Implementation
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+CARLA Hands-On: LiDAR Odometry and Mapping
+--------------------------------------------
 
-In the CARLA assignment for this lecture, you will:
+This exercise builds a minimal LiDAR odometry system: collect scans,
+register consecutive scans with ICP, chain the transforms into a
+trajectory, and measure how far it has drifted from ground truth.
 
-1. Collect LiDAR point clouds at 10 Hz while driving through Town03.
-2. Implement voxel downsampling and motion distortion correction using
-   the IMU data.
-3. Apply Open3D's point-to-plane ICP to estimate scan-to-scan transforms.
-4. Accumulate poses into a trajectory and visualize the reconstructed map.
-5. Compare your trajectory against CARLA's ground-truth transform using EVO.
+Task 1: Collect Synchronized LiDAR and Ground-Truth Poses
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
-   import open3d as o3d
+   import carla
    import numpy as np
+   import open3d as o3d
 
-   def icp_registration(source, target, init_transform=np.eye(4), threshold=0.3):
-       """Point-to-plane ICP registration."""
-       source.estimate_normals(
-           o3d.geometry.KDTreeSearchParamHybrid(radius=0.5, max_nn=30))
-       target.estimate_normals(
-           o3d.geometry.KDTreeSearchParamHybrid(radius=0.5, max_nn=30))
+   client = carla.Client('localhost', 2000)
+   client.set_timeout(10.0)
+   world = client.load_world('Town03')
+
+   # Synchronous mode -- essential here, because scan-to-scan
+   # registration assumes a fixed time step between scans (see L3).
+   settings = world.get_settings()
+   settings.synchronous_mode = True
+   settings.fixed_delta_seconds = 0.1          # 10 Hz
+   world.apply_settings(settings)
+   tm = client.get_trafficmanager()
+   tm.set_synchronous_mode(True)
+
+   bp_lib = world.get_blueprint_library()
+   vehicle = world.spawn_actor(
+       bp_lib.find('vehicle.tesla.model3'),
+       world.get_map().get_spawn_points()[0])
+   vehicle.set_autopilot(True, tm.get_port())
+
+   lidar_bp = bp_lib.find('sensor.lidar.ray_cast')
+   lidar_bp.set_attribute('channels', '64')
+   lidar_bp.set_attribute('range', '80')
+   lidar_bp.set_attribute('points_per_second', '1000000')
+   lidar_bp.set_attribute('rotation_frequency', '10')   # match the tick
+   lidar = world.spawn_actor(
+       lidar_bp, carla.Transform(carla.Location(z=2.4)), attach_to=vehicle)
+
+   scans, gt_poses = [], []
+
+   def lidar_callback(data):
+       pts = np.frombuffer(data.raw_data, dtype=np.float32).reshape(-1, 4)
+       scans.append(pts[:, :3].copy())
+       # Ground-truth pose for evaluation ONLY -- never feed this to ICP
+       gt_poses.append(np.array(data.transform.get_matrix()))
+
+   lidar.listen(lidar_callback)
+
+   try:
+       for _ in range(600):        # 60 s at 10 Hz
+           world.tick()
+   finally:
+       lidar.destroy()
+       vehicle.destroy()
+       settings.synchronous_mode = False
+       settings.fixed_delta_seconds = None
+       world.apply_settings(settings)
+       tm.set_synchronous_mode(False)
+
+Task 2: Preprocess and Register Consecutive Scans
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   def to_o3d(points, voxel_size=0.2, z_min=-1.6):
+       """Numpy -> Open3D cloud, with ground removed and downsampling."""
+       # Dropping the ground plane matters: it is a large, locally flat
+       # region that constrains z/roll/pitch well but slides freely in
+       # x/y, so leaving it in lets ICP converge to a confidently wrong
+       # answer along the direction of travel.
+       pts = points[points[:, 2] > z_min]
+       pcd = o3d.geometry.PointCloud()
+       pcd.points = o3d.utility.Vector3dVector(pts)
+       return pcd.voxel_down_sample(voxel_size)
+
+   def icp_registration(source, target, init_transform=np.eye(4),
+                        threshold=0.5):
+       """Point-to-plane ICP registration (converges faster than point-to-point)."""
+       for cloud in (source, target):
+           cloud.estimate_normals(
+               o3d.geometry.KDTreeSearchParamHybrid(radius=1.0, max_nn=30))
 
        result = o3d.pipelines.registration.registration_icp(
            source, target, threshold, init_transform,
            o3d.pipelines.registration.TransformationEstimationPointToPlane(),
            o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=50))
 
-       return result.transformation, result.inlier_rmse
+       return result.transformation, result.inlier_rmse, result.fitness
+
+Task 3: Chain Transforms into a Trajectory
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   pose = np.eye(4)
+   trajectory = [pose.copy()]
+   prev = to_o3d(scans[0])
+
+   for i in range(1, len(scans)):
+       curr = to_o3d(scans[i])
+
+       # Constant-velocity initial guess: assume this frame's motion
+       # resembles the last one. ICP is local, so a good seed is the
+       # difference between converging and diverging.
+       if len(trajectory) >= 2:
+           init = np.linalg.inv(trajectory[-2]) @ trajectory[-1]
+       else:
+           init = np.eye(4)
+
+       T_delta, rmse, fitness = icp_registration(curr, prev, init)
+
+       if fitness < 0.3:
+           print(f"Frame {i}: ICP failed (fitness={fitness:.2f}), "
+                 f"falling back to constant velocity")
+           T_delta = init
+
+       pose = pose @ T_delta
+       trajectory.append(pose.copy())
+       prev = curr
+
+Task 4: Evaluate Against Ground Truth
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. admonition:: Exercise Tasks
+   :class: tip
+
+   1. **Plot the trajectory** against ground truth (top-down x-y). The
+      shapes should agree early and diverge progressively -- that
+      divergence *is* the drift.
+   2. **Quantify the drift.** Compute final position error as a
+      percentage of total path length, and compare against the
+      0.1--0.5% figure quoted for LOAM earlier in this lecture. Expect
+      to do worse: you have no feature extraction and no backend.
+   3. **Vary the voxel size** (0.1, 0.2, 0.5, 1.0 m). Plot registration
+      time and drift against voxel size. Where is the knee?
+   4. **Remove the ground-removal step** and re-run. Explain the change
+      in longitudinal drift using the degeneracy argument above.
+   5. **Break it deliberately**: replace the constant-velocity seed with
+      ``np.eye(4)`` and drive a fast, curving route. Count how many
+      frames report ``fitness < 0.3``. This is why every production
+      system seeds ICP with IMU or wheel odometry.
+   6. **Export to TUM format** and compute APE/RPE with ``evo``:
+
+      .. code-block:: bash
+
+         evo_ape tum groundtruth.txt estimated.txt -va --plot
+         evo_rpe tum groundtruth.txt estimated.txt --delta 100 \
+                 --delta_unit m -va
+
+      Note how RPE stays roughly constant while APE grows without bound
+      -- the signature of drift with no loop closure.
 
 
 Summary
@@ -698,7 +913,7 @@ Summary
 .. admonition:: Assignment Unlocked -- GP3: Fusion & Localization
    :class: important
 
-   You now have the foundational knowledge from **L6--L7** to begin
+   You now have the foundational knowledge from **L3 and L7** to begin
    **GP3: Fusion & Localization**. In GP3 you will implement camera-LiDAR
    frustum fusion for 3D object detection, build an Extended Kalman Filter
    that fuses GNSS and IMU for vehicle localization, and evaluate both

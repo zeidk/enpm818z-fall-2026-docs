@@ -87,50 +87,94 @@ Stage 1 -- Lift
 ~~~~~~~~~~~~~~~~
 
 For each camera image pixel, LSS predicts a **depth distribution** over
-:math:`D` discrete depth bins using a learned network head.
+:math:`D` discrete depth bins using a learned network head. The pixel's
+context feature :math:`\mathbf{f}_{u,v} \in \mathbb{R}^C` is then spread
+across those bins by an **outer product** with the depth distribution:
 
 .. math::
 
-   \mathbf{c}_{u,v} = \sum_{d=1}^{D} \alpha_{u,v,d} \cdot \mathbf{f}_{u,v}
+   \mathbf{c}_{u,v,d} = \alpha_{u,v,d} \cdot \mathbf{f}_{u,v},
+   \qquad d = 1, \ldots, D
 
-where :math:`\alpha_{u,v,d}` is the softmax probability of depth bin :math:`d`
-at pixel :math:`(u, v)`, and :math:`\mathbf{f}_{u,v}` is the 2D feature vector.
+where :math:`\alpha_{u,v,d}` is the softmax probability of depth bin
+:math:`d` at pixel :math:`(u, v)`, with
+:math:`\sum_{d} \alpha_{u,v,d} = 1`.
 
-Each pixel is thus "lifted" into a **frustum of features** -- one feature vector
-at each depth candidate. This creates a 3D tensor of shape
+.. important::
+
+   Note that this is **not** a sum over :math:`d`. Summing would collapse
+   the distribution back to :math:`\mathbf{f}_{u,v}` (since the
+   probabilities sum to 1) and destroy exactly the depth information the
+   Lift step exists to create. The output has an extra dimension, not one
+   fewer.
+
+Each pixel is thus "lifted" into a **frustum of features** -- one weighted
+feature vector at each depth candidate. This creates a 4-D tensor of shape
 :math:`[D \times H \times W \times C]` per camera.
+
+.. admonition:: What the network is really saying
+   :class: tip
+
+   If the network is confident a pixel is at 12 m, :math:`\alpha` is
+   sharply peaked there and the feature appears at essentially one depth.
+   If it is uncertain, the same feature is smeared across many depths at
+   reduced magnitude. Downstream pooling then lets confident predictions
+   dominate the BEV cell they land in -- **soft depth estimation falls out
+   of the architecture** rather than requiring a separate depth loss.
 
 Stage 2 -- Splat
 ~~~~~~~~~~~~~~~~~
 
-The frustum features are unprojected into a **voxel grid** in ego-vehicle
-coordinates using known camera intrinsics and extrinsics. Each 3D point votes
-into its corresponding voxel. The voxel pooling uses a **sum-pooling** over all
-features landing in each voxel, giving a 3D occupancy-weighted feature volume.
+The frustum features are unprojected into **pillars** on a BEV grid in
+ego-vehicle coordinates, using known camera intrinsics and extrinsics.
+Every frustum point from every camera votes into the BEV cell it lands in,
+and the features falling in each cell are **sum-pooled**. Collapsing the
+vertical dimension is part of this step -- the result is a 2-D BEV feature
+map, ready for a standard 2-D detection or segmentation head.
 
 .. code-block:: python
 
-   # Pseudocode: frustum-to-voxel projection
+   # Pseudocode: frustum-to-BEV pillar pooling
    for cam in cameras:
        points_3d = unproject(frustum_depths, cam.intrinsics, cam.extrinsics)
        for point, feat in zip(points_3d, features):
-           voxel_idx = world_to_voxel(point)
-           voxel_grid[voxel_idx] += feat
+           bev_idx = world_to_bev_cell(point)   # x-y only; z is collapsed
+           bev_grid[bev_idx] += feat            # sum-pool
+
+.. note::
+
+   Doing this naively -- a Python loop over millions of frustum points --
+   is hopeless. LSS makes it fast with the "cumulative sum trick": sort
+   points by BEV cell index, take a cumulative sum over the feature
+   tensor, then subtract at the cell boundaries. That turns the whole
+   pooling operation into a sort plus a prefix sum, both of which are
+   fast and differentiable on GPU.
 
 Stage 3 -- Shoot
 ~~~~~~~~~~~~~~~~~
 
-The 3D voxel grid is **collapsed along the Z-axis** (height) via max/mean
-pooling to produce a 2D BEV feature map. This feature map is then passed to
-standard 2D detection heads (e.g., a BEV anchor-free head) to predict 3D
-object parameters.
+**Shoot** is the planning stage, and it is the part of the name most
+often misremembered. Having built the BEV representation, LSS "shoots" a
+fixed set of **candidate ego trajectories** (templates clustered from
+recorded human driving) into the BEV cost map, scores each one, and
+selects the best.
+
+.. warning::
+
+   A common misreading is that "Shoot" refers to collapsing the voxel
+   grid down to BEV. It does not -- that height collapse belongs to
+   **Splat**. Shoot is what makes the paper's title
+   *"Lift, Splat, Shoot: Encoding Images from Arbitrary Camera Rigs by
+   Implicitly Unprojecting to 3D"* end in a planning verb: the whole
+   pipeline was designed to be trained end-to-end **for planning**, not
+   just for perception.
 
 .. admonition:: LSS Key Insight
    :class: tip
 
    LSS is fully differentiable end-to-end. The depth distribution is learned
-   implicitly by the network, guided only by 3D bounding box supervision.
-   No explicit depth labels are required during training.
+   implicitly by the network, guided only by downstream supervision --
+   no explicit depth labels are required during training.
 
 
 BEVFormer: Attention-Based BEV Construction
@@ -188,7 +232,7 @@ BEVFormer Performance on nuScenes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
-   :widths: 35 20 20 25
+   :widths: 30 15 15 25 15
    :header-rows: 1
    :class: compact-table
 
@@ -196,27 +240,39 @@ BEVFormer Performance on nuScenes
      - mAP
      - NDS
      - Backbone
+     - Split
    * - DETR3D
      - 34.9
      - 42.5
      - ResNet-101
+     - val
    * - BEVFormer-S (no temporal)
      - 37.5
      - 44.8
      - ResNet-101
+     - val
    * - BEVFormer (with temporal)
      - 41.6
      - 51.7
      - ResNet-101
+     - val
    * - BEVFormer-Base
      - 48.1
      - 56.9
      - VoVNet-99
+     - test
 
 .. note::
 
-   The gap between BEVFormer-S and BEVFormer highlights the impact of temporal
-   self-attention: +4.1 mAP and +6.9 NDS purely from adding multi-frame context.
+   The controlled comparison here is **BEVFormer-S vs BEVFormer** -- same
+   backbone, same split, differing only in temporal self-attention:
+   +4.1 mAP and +6.9 NDS purely from adding multi-frame context.
+
+   The BEVFormer-Base row uses both a stronger backbone **and** the test
+   split, so its higher numbers are not evidence about temporal
+   attention. Comparing across splits is a standard way to accidentally
+   overstate a result; always check the split column before drawing a
+   conclusion from a leaderboard.
 
 
 Multi-Camera Fusion in BEV Space
@@ -552,9 +608,15 @@ The **Panoptic Quality (PQ)** metric:
 
    \text{PQ} = \frac{\sum_{(p,g) \in TP} \text{IoU}(p,g)}
                 {|TP| + \frac{1}{2}|FP| + \frac{1}{2}|FN|}
-              = \underbrace{\frac{|TP|}{|TP| + \frac{1}{2}|FP| + \frac{1}{2}|FN|}}_{\text{SQ-like recognition}}
+              = \underbrace{\frac{\sum_{(p,g) \in TP} \text{IoU}(p,g)}{|TP|}}_{\text{SQ (Segmentation Quality)}}
                 \times
-                \underbrace{\frac{\sum \text{IoU}}{|TP|}}_{\text{SQ segmentation quality}}
+                \underbrace{\frac{|TP|}{|TP| + \frac{1}{2}|FP| + \frac{1}{2}|FN|}}_{\text{RQ (Recognition Quality)}}
+
+The factorization is the useful part: **RQ** is an F\ :sub:`1` score over
+segments -- did you find the right objects? -- while **SQ** is the mean IoU
+of the segments you did match -- how well did you delineate them? A low PQ
+tells you little on its own; the split tells you whether to work on
+detection or on boundaries.
 
 
 Industry Adoption
@@ -623,7 +685,9 @@ The nuScenes dataset is the standard benchmark for BEV perception evaluation.
    * - **ATE**
      - Average Translation Error: 2D center distance in BEV (meters).
    * - **ASE**
-     - Average Scale Error: 3D IoU between predicted and GT box sizes.
+     - Average Scale Error: :math:`1 - \text{IoU}` between predicted and GT
+       box sizes after aligning translation and orientation. It is an
+       *error*, so lower is better.
    * - **AOE**
      - Average Orientation Error: yaw angle error (radians).
    * - **mIoU**
@@ -777,55 +841,91 @@ LSS steps: "lift" pixels to 3D points and "splat" them into a BEV grid.
 
 .. code-block:: python
 
-   # BEV grid parameters
-   BEV_X_RANGE = (-50.0, 50.0)   # meters, left-right
-   BEV_Y_RANGE = (-50.0, 50.0)   # meters, front-back
+   # BEV grid parameters, expressed in the EGO frame.
+   # CARLA/UE ego axes: x FORWARD, y RIGHT, z UP.
+   BEV_X_RANGE = (-50.0, 50.0)   # meters, behind <-> ahead
+   BEV_Y_RANGE = (-50.0, 50.0)   # meters, left <-> right
    BEV_RESOLUTION = 0.5           # meters per cell
-   BEV_W = int((BEV_X_RANGE[1] - BEV_X_RANGE[0]) / BEV_RESOLUTION)
-   BEV_H = int((BEV_Y_RANGE[1] - BEV_Y_RANGE[0]) / BEV_RESOLUTION)
 
-   def depth_image_to_3d_points(depth_array, K, extrinsic):
-       """Lift a depth image to 3D world points (LSS 'Lift' stage)."""
+   def parse_carla_depth_image(depth_image):
+       """Decode CARLA's depth camera into metres.
+
+       CARLA encodes depth across the BGR channels as a 24-bit integer
+       normalized to the far plane (1000 m). Reading the raw bytes as an
+       image and treating them as depth gives nonsense.
+       """
+       array = np.frombuffer(depth_image.raw_data, dtype=np.uint8)
+       array = array.reshape((depth_image.height, depth_image.width, 4))
+       b = array[:, :, 0].astype(np.float32)
+       g = array[:, :, 1].astype(np.float32)
+       r = array[:, :, 2].astype(np.float32)
+       normalized = (r + g * 256.0 + b * 256.0 * 256.0) / (256.0**3 - 1)
+       return normalized * 1000.0        # metres
+
+   def depth_image_to_ego_points(depth_array, K, cam_to_ego):
+       """Lift a depth image to 3D points in the EGO frame (LSS 'Lift').
+
+       Two conventions collide here and both must be handled:
+         * K assumes OPTICAL axes  (x right, y down, z forward)
+         * CARLA transforms use UE axes (x forward, y right, z up)
+       """
        H, W = depth_array.shape
        u, v = np.meshgrid(np.arange(W), np.arange(H))
 
-       # Back-project pixels to camera frame using intrinsics
-       x_cam = (u - K[0, 2]) * depth_array / K[0, 0]
-       y_cam = (v - K[1, 2]) * depth_array / K[1, 1]
-       z_cam = depth_array
+       # Back-project pixels into the OPTICAL camera frame
+       x_opt = (u - K[0, 2]) * depth_array / K[0, 0]
+       y_opt = (v - K[1, 2]) * depth_array / K[1, 1]
+       z_opt = depth_array
 
-       # Stack into (N, 4) homogeneous coordinates
-       ones = np.ones_like(z_cam)
-       cam_points = np.stack([x_cam, y_cam, z_cam, ones], axis=-1)
-       cam_points = cam_points.reshape(-1, 4)
+       # Optical -> UE axes (the inverse of the L2 permutation):
+       #   UE x (fwd)   =  optical z
+       #   UE y (right) =  optical x
+       #   UE z (up)    = -optical y
+       x_ue, y_ue, z_ue = z_opt, x_opt, -y_opt
 
-       # Transform to world frame
-       world_points = (extrinsic @ cam_points.T).T[:, :3]
-       return world_points
+       ones = np.ones_like(x_ue)
+       cam_points = np.stack([x_ue, y_ue, z_ue, ones], axis=-1).reshape(-1, 4)
 
-   def splat_to_bev(points_3d, bev_x_range, bev_y_range, resolution):
-       """Splat 3D points into a 2D BEV occupancy grid (LSS 'Splat' stage)."""
-       bev_w = int((bev_x_range[1] - bev_x_range[0]) / resolution)
-       bev_h = int((bev_y_range[1] - bev_y_range[0]) / resolution)
+       # Camera -> ego. Build cam_to_ego from the two world transforms:
+       #   T_ego<-cam = (T_world<-ego)^-1 @ T_world<-cam
+       return (cam_to_ego @ cam_points.T).T[:, :3]
+
+   def splat_to_bev(points_ego, bev_x_range, bev_y_range, resolution,
+                    z_range=(-2.0, 4.0)):
+       """Splat EGO-frame points into a 2D BEV grid (LSS 'Splat' stage).
+
+       The grid is ego-centred, so the vehicle really is at the middle
+       cell -- splatting world-frame points here would place the ego
+       marker correctly only if the car sat at the world origin.
+       """
+       bev_w = int((bev_y_range[1] - bev_y_range[0]) / resolution)  # y -> cols
+       bev_h = int((bev_x_range[1] - bev_x_range[0]) / resolution)  # x -> rows
        bev_grid = np.zeros((bev_h, bev_w), dtype=np.float32)
 
-       # Convert world XY to grid indices
-       xi = ((points_3d[:, 0] - bev_x_range[0]) / resolution).astype(int)
-       yi = ((points_3d[:, 1] - bev_y_range[0]) / resolution).astype(int)
+       # Drop the road surface and anything above the vehicle envelope
+       zmask = (points_ego[:, 2] > z_range[0]) & (points_ego[:, 2] < z_range[1])
+       pts = points_ego[zmask]
 
-       # Filter to within grid bounds
-       valid = (xi >= 0) & (xi < bev_w) & (yi >= 0) & (yi < bev_h)
-       xi, yi = xi[valid], yi[valid]
+       # Ego x (forward) -> row, ego y (right) -> column
+       ri = ((pts[:, 0] - bev_x_range[0]) / resolution).astype(int)
+       ci = ((pts[:, 1] - bev_y_range[0]) / resolution).astype(int)
 
-       # Accumulate point counts per cell
-       np.add.at(bev_grid, (yi, xi), 1.0)
-       return bev_grid
+       valid = (ri >= 0) & (ri < bev_h) & (ci >= 0) & (ci < bev_w)
+       ri, ci = ri[valid], ci[valid]
 
-   # Usage (inside depth camera callback):
+       # Accumulate point counts per cell (sum-pooling, as in LSS)
+       np.add.at(bev_grid, (ri, ci), 1.0)
+
+       # Row 0 is the rear of the grid; flip so "up" on screen is forward
+       return np.flipud(bev_grid)
+
+   # Usage (inside the depth camera callback):
    # depth_array = parse_carla_depth_image(depth_image)
-   # E = get_extrinsic_matrix(depth_cam)
-   # points_3d = depth_image_to_3d_points(depth_array, K, E)
-   # bev = splat_to_bev(points_3d, BEV_X_RANGE, BEV_Y_RANGE, BEV_RESOLUTION)
+   # world_to_ego = np.array(vehicle.get_transform().get_inverse_matrix())
+   # cam_to_world = np.array(depth_cam.get_transform().get_matrix())
+   # cam_to_ego   = world_to_ego @ cam_to_world
+   # points = depth_image_to_ego_points(depth_array, K, cam_to_ego)
+   # bev = splat_to_bev(points, BEV_X_RANGE, BEV_Y_RANGE, BEV_RESOLUTION)
 
 
 Task 4: Visualize and Analyze the BEV Grid
@@ -907,38 +1007,65 @@ without training a model.
        carla.Transform(carla.Location(x=1.5, z=2.4)),
        attach_to=vehicle)
 
-   # CARLA semantic labels (subset)
+   # CARLA semantic tags (CityScapes-aligned scheme, CARLA 0.9.14+).
+   # These IDs CHANGED in CARLA 0.9.12 -- older tutorials use the legacy
+   # set where Road=7 and Car=10, which will silently produce a black
+   # image on 0.9.16. Verify against the "Semantic segmentation sensor"
+   # table in the CARLA docs for YOUR version before trusting them.
+   ROAD, ROADLINE, SIDEWALK = 1, 24, 2
    LABEL_COLORS = {
-       0: (0, 0, 0),        # Unlabeled
-       1: (70, 70, 70),     # Building
-       4: (128, 64, 128),   # Road
-       5: (244, 35, 232),   # Sidewalk
-       6: (107, 142, 35),   # Vegetation
-       7: (0, 0, 142),      # Vehicle
-       9: (0, 0, 230),      # Traffic Light
-       10: (220, 20, 60),   # Pedestrian
-       12: (220, 220, 0),   # Traffic Sign
-       24: (157, 234, 50),  # Lane Marking
+       0:  (0, 0, 0),        # Unlabeled
+       1:  (128, 64, 128),   # Roads
+       2:  (244, 35, 232),   # SideWalks
+       3:  (70, 70, 70),     # Building
+       7:  (250, 170, 30),   # TrafficLight
+       8:  (220, 220, 0),    # TrafficSign
+       9:  (107, 142, 35),   # Vegetation
+       12: (220, 20, 60),    # Pedestrian
+       14: (0, 0, 142),      # Car
+       15: (0, 0, 70),       # Truck
+       16: (0, 60, 100),     # Bus
+       24: (157, 234, 50),   # RoadLine
    }
 
    def seg_callback(image):
        """Colorize semantic segmentation output."""
        array = np.frombuffer(image.raw_data, dtype=np.uint8)
        array = array.reshape((image.height, image.width, 4))
-       labels = array[:, :, 2]  # semantic tag is in the red channel
+       # raw_data is BGRA, so index 2 is the RED channel, which is where
+       # CARLA stores the semantic tag.
+       labels = array[:, :, 2]
 
        colored = np.zeros((image.height, image.width, 3), dtype=np.uint8)
        for label_id, color in LABEL_COLORS.items():
            colored[labels == label_id] = color
 
-       # Compute driveable surface mask (road + lane markings)
-       driveable = ((labels == 4) | (labels == 24)).astype(np.uint8) * 255
+       # Driveable surface mask (road + lane markings)
+       driveable = ((labels == ROAD) | (labels == ROADLINE))
+       driveable = driveable.astype(np.uint8) * 255
 
        cv2.imshow("Semantic Segmentation", colored)
        cv2.imshow("Driveable Surface", driveable)
        cv2.waitKey(1)
 
    seg_cam.listen(seg_callback)
+
+.. admonition:: Confirm the tag IDs before you build on them
+   :class: warning
+
+   If your colorized output is mostly black, or the "driveable surface"
+   mask is empty, the tag IDs are wrong for your CARLA build. Print what
+   is actually in the image rather than guessing:
+
+   .. code-block:: python
+
+      print(np.unique(labels, return_counts=True))
+
+   The tag covering most of the lower half of a forward-facing camera is
+   the road. Alternatively, use CARLA's own palette by listening with
+   ``carla.ColorConverter.CityScapesPalette``, which sidesteps the ID
+   table entirely for visualization (though you still need raw tags for
+   the mask).
 
 
 Task 6: Compute Segmentation Metrics
@@ -962,11 +1089,8 @@ Task 6: Compute Segmentation Metrics
    # miou = compute_miou(model_output, carla_gt_labels, num_classes=23)
 
 
-.. admonition:: Assignment Unlocked -- GP2: Perception
-   :class: important
+.. note::
 
-   You now have the foundational knowledge from **L4 and L5** to begin
-   **GP2: Perception**. In GP2 you will integrate object detection, BEV
-   construction, and segmentation into a unified perception node.
-
-   :doc:`Go to GP2 </assignments/gp2>`
+   **GP2** builds on this lecture, but wait for L6 before starting: the
+   assignment requires tracking as well as detection, and the tracker is
+   covered there. Use the time to collect and label your CARLA dataset.

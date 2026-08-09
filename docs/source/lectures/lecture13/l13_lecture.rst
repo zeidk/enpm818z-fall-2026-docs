@@ -130,32 +130,38 @@ via cross-attention between the action embeddings and the latent video tokens:
    [Past latent tokens] → Transformer → Cross-Attention ← → Next token prediction
 
 
-Wayve GAIA-3 (December 2025)
-------------------------------
+Wayve GAIA
+------------
 
-GAIA-3 is Wayve's third-generation generative driving world model, released
-in December 2025. It represents a major leap in scale and capability over its
-predecessors (GAIA-1, GAIA-2).
+**GAIA** is Wayve's family of generative driving world models, and the
+clearest example of the "learned simulator" idea applied at industrial
+scale on real fleet data.
 
-.. list-table:: GAIA-3 Key Specifications
-   :widths: 35 65
+.. list-table:: The GAIA line
+   :widths: 20 80
    :header-rows: 1
    :class: compact-table
 
-   * - Property
-     - Value
-   * - **Parameters**
-     - 15 billion
-   * - **Architecture**
-     - Video generation transformer with action conditioning
-   * - **Training data**
-     - Millions of kilometers of Wayve fleet driving video
-   * - **Output resolution**
-     - Up to 1920×1080, multi-camera (6+ cameras simultaneously)
-   * - **Conditioning**
-     - Ego actions, scene text descriptions, map layout, weather
-   * - **Release**
-     - December 2025
+   * - Model
+     - Contribution
+   * - **GAIA-1** (2023)
+     - ~9B-parameter proof of concept. Established the recipe: tokenize
+       driving video, model it autoregressively in latent space, and
+       condition generation on **ego actions and text**, so the model can
+       be asked "what if I steered left here?"
+   * - **GAIA-2** (2025)
+     - Latent-diffusion successor. Multi-camera generation with
+       cross-view consistency, and richer structured conditioning (ego
+       action, other agents, road layout, weather, time of day) aimed
+       squarely at controllable safety-critical scenario synthesis.
+
+.. warning::
+
+   Vendor world models are announced frequently and the version numbers
+   move quickly. Confirm the **current** generation, its parameter count,
+   and its published capabilities from Wayve's own technical report
+   before citing specifications -- do not carry forward figures from
+   lecture notes, including these.
 
 Key Capabilities
 ~~~~~~~~~~~~~~~~
@@ -166,7 +172,7 @@ Key Capabilities
    .. grid-item-card:: Multi-Camera Consistency
       :class-card: sd-border-primary
 
-      GAIA-3 generates video across multiple cameras simultaneously, maintaining
+      GAIA-2 generates video across multiple cameras simultaneously, maintaining
       geometric consistency between views. This is critical for training BEV
       perception models that require multi-camera input.
 
@@ -188,18 +194,23 @@ Key Capabilities
    .. grid-item-card:: Action-Conditional Rollouts
       :class-card: sd-border-primary
 
-      Given a sequence of planned waypoints, GAIA-3 renders what the scene
+      Given a sequence of planned waypoints, GAIA renders what the scene
       would look like if the ego vehicle executed those waypoints -- enabling
       closed-loop policy evaluation entirely within the world model.
 
-.. admonition:: Scale vs. Previous GAIA Models
+.. admonition:: The trajectory of the GAIA line
    :class: tip
 
-   GAIA-1 (2023, 9B parameters) demonstrated proof-of-concept action-conditioned
-   driving video generation. GAIA-2 (2024) added multi-camera support.
-   GAIA-3 (15B, Dec 2025) scales to production-quality output and controllable
-   scenario editing, making it the most capable open-publication driving world
-   model at the time of this course.
+   The progression is instructive: GAIA-1 proved that action-conditioned
+   driving video generation was possible at all; GAIA-2 shifted the
+   emphasis from raw generation quality to **controllability** --
+   multi-camera consistency and structured conditioning on the things a
+   safety engineer actually wants to vary.
+
+   That shift matters more than the parameter count. A world model is
+   only useful for validation if you can *ask it for a specific
+   scenario*; an uncontrollable model that produces beautiful video is a
+   demo, not a tool.
 
 
 NVIDIA Cosmos
@@ -211,7 +222,7 @@ announced at CES 2025 and developed as part of NVIDIA's end-to-end ADS stack.
 Design Philosophy
 ~~~~~~~~~~~~~~~~~
 
-Unlike GAIA-3, which is specialized for driving video, Cosmos is a general
+Unlike GAIA, which is specialized for driving video, Cosmos is a general
 physical world model trained on diverse real-world video (robotics,
 manufacturing, driving, outdoor scenes). It is then fine-tuned for specific
 domains such as autonomous driving.
@@ -237,9 +248,9 @@ NVIDIA integrates Cosmos directly into its ADS development pipeline:
 1. **Synthetic data generation** -- Cosmos generates additional training data
    from existing fleet footage, augmenting with rare weather, unusual agents,
    and edge-case scenarios.
-2. **RL environment** -- The planner trained via reinforcement learning (Lecture
-   11) uses Cosmos as a differentiable environment, receiving visual feedback
-   on the consequences of planned actions.
+2. **RL environment** -- The planner trained via reinforcement learning
+   (L12) uses Cosmos as a differentiable environment, receiving visual
+   feedback on the consequences of planned actions.
 3. **Test oracle** -- Candidate planners are evaluated in Cosmos rollouts before
    any on-road testing, reducing safety risk.
 
@@ -253,10 +264,11 @@ NVIDIA integrates Cosmos directly into its ADS development pipeline:
 Vista: Generalizable Driving World Models (NeurIPS 2024)
 ---------------------------------------------------------
 
-Vista was published at NeurIPS 2024 by a team from the University of Cambridge
-and Waymo. Its central contribution is **generalizability**: previous world
-models were trained and evaluated on a single dataset (nuScenes, Wayve fleet),
-with limited transfer to unseen locations and driving styles.
+Vista (Gao et al., NeurIPS 2024) comes from **OpenDriveLab / Shanghai AI
+Laboratory** and, unlike the proprietary models above, is **openly
+released**. Its central contribution is **generalizability**: earlier
+world models were trained and evaluated largely on a single dataset, with
+limited transfer to unseen locations and driving styles.
 
 Key Contributions
 ~~~~~~~~~~~~~~~~~
@@ -265,29 +277,37 @@ Key Contributions
    :widths: 30 70
    :class: compact-table
 
-   * - **Multi-dataset training**
-     - Vista is trained jointly on nuScenes, Waymo Open Dataset, and two
-       additional datasets. It learns a unified model that generalizes to
-       unseen geographic regions and sensor configurations.
-   * - **Structured state representation**
-     - Rather than conditioning purely on video tokens, Vista explicitly
-       represents ego velocity, yaw rate, and near-future waypoints as
-       structured inputs, improving action-conditional controllability.
-   * - **Evaluation protocol**
-     - The paper introduces a standard evaluation protocol for driving world
-       models, measuring FID, FVD, and **action controllability error** --
-       how accurately the generated video reflects the input action sequence.
+   * - **Web-scale pre-training**
+     - Vista pre-trains on **OpenDV-2K**, a large corpus assembled from
+       publicly available driving video (thousands of hours spanning many
+       countries, vehicles, and cameras), then fine-tunes on curated
+       datasets such as nuScenes. The scale and diversity of the
+       pre-training corpus is what drives the generalization.
+   * - **High fidelity and long horizon**
+     - Generates at higher spatial resolution and frame rate than prior
+       driving world models, with a latent-replacement scheme to extend
+       rollouts beyond a single generation window without collapsing.
+   * - **Versatile action conditioning**
+     - Accepts control at several levels of abstraction -- steering
+       angle, speed, trajectory, or a high-level command -- rather than a
+       single fixed action format.
+   * - **Evaluation without ground truth**
+     - Proposes a reward formulation that scores generated futures
+       without requiring matched real-world video, addressing the
+       awkward problem of evaluating counterfactual rollouts.
    * - **Open source**
-     - Model weights and training code are available on GitHub, enabling
-       direct use in research and coursework.
+     - Model weights and training code are publicly available, which is
+       what makes Vista usable in coursework -- GAIA and Cosmos-Drive are
+       not.
 
 Why Vista Matters
 ~~~~~~~~~~~~~~~~~~
 
-Vista addresses the **generalization problem** that limits deployment of
-real-world driving world models: a model trained on data from London (Wayve)
-may not accurately simulate driving in Tokyo or Los Angeles. By training across
-diverse datasets, Vista takes a step toward a universal driving world model.
+Vista addresses the **generalization problem** that limits real-world
+driving world models: a model trained on data from one city may not
+simulate driving in another. Training on a geographically diverse,
+web-scale corpus is a step toward a universal driving world model -- and
+being open, it is the one model in this lecture you can actually run.
 
 
 Applications of Driving World Models
@@ -587,9 +607,10 @@ in ADS education and research for several reasons:
    .. grid-item-card:: Compute Accessibility
       :class-card: sd-border-secondary
 
-      Running CARLA requires a consumer-grade GPU. Running GAIA-3 or
-      Cosmos at full resolution requires 8--80× A100 GPUs. CARLA is
-      realistic for coursework and academic research.
+      Running CARLA requires a consumer-grade GPU. Running a
+      large driving world model at full resolution requires a
+      multi-GPU datacenter node. CARLA is realistic for coursework
+      and academic research; these models are not.
 
    .. grid-item-card:: Education
       :class-card: sd-border-secondary
@@ -607,7 +628,51 @@ in ADS education and research for several reasons:
 
 .. tip::
 
-   In production AV companies (Waymo, Cruise, Mobileye), CARLA-like
+   In production AV companies (Waymo, Zoox, Mobileye), CARLA-like
    physics simulators and neural world models operate in parallel. Physics
    simulation handles algorithm development and unit testing; world models
    handle large-scale synthetic data generation and system-level evaluation.
+
+
+Summary
+--------
+
+.. grid:: 1 2 2 2
+   :gutter: 3
+
+   .. grid-item-card:: World Models
+      :class-card: sd-border-primary
+
+      - A world model learns :math:`p(o_{t+1:t+H} \mid o_{1:t}, a_{t:t+H})`
+        -- a **learned simulator** conditioned on the ego's own actions
+      - Built as video generation transformers over a compressed latent
+        space, either autoregressive or diffusion-based
+      - **GAIA** (Wayve): fleet-data driving models; the arc runs from
+        raw generation quality toward *controllability*
+      - **Cosmos** (NVIDIA): general physical-world foundation models,
+        fine-tuned per domain
+      - **Vista** (OpenDriveLab): web-scale pre-training for
+        generalization, and the one that is openly available
+
+   .. grid-item-card:: Why They Matter
+      :class-card: sd-border-primary
+
+      - **Long-tail generation**: synthesize rare safety-critical events
+        that are too infrequent to collect
+      - **Offline closed-loop evaluation**: replay fleet logs with a new
+        planner's actions substituted, before any on-road testing
+      - **Imagination-based planning**: roll out candidate action
+        sequences internally and pick the best (the Dreamer idea, scaled)
+      - Complementary to CARLA, not a replacement: CARLA gives exact
+        control and free ground-truth labels; world models give
+        photorealism and scale
+
+.. admonition:: The honest caveat
+   :class: warning
+
+   World models are **approximate**. They learn physics from data rather
+   than enforcing it, they can be asked for a scenario and quietly
+   deliver something slightly different, and they inherit every bias in
+   their training distribution. A model trained on one region's driving
+   culture does not faithfully simulate another's. Treat generated video
+   as a rich data source, not as ground truth about the world.

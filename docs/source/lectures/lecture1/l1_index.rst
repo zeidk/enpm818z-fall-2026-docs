@@ -8,10 +8,19 @@ Overview
 This lecture introduces ENPM818Z and provides a comprehensive overview of the
 autonomous vehicle (AV) landscape. You will learn about the core technologies
 that enable self-driving capabilities, the current state of the industry, and
-the key challenges that remain. The lecture also covers the course structure,
-grading policies, development environment setup (Ubuntu, ROS 2, VS Code, Git),
-and an introduction to the CARLA simulator that will be used throughout the
+the key challenges that remain. The lecture also covers the course structure
+and grading, two real-world incident case studies (Uber ATG and Cruise), and
+an introduction to the CARLA simulator that will be used throughout the
 semester.
+
+.. important::
+
+   Development environment setup (Ubuntu, ROS 2, VS Code, Git, shell
+   basics) is **pre-read material** and is not covered in lecture. Work
+   through
+   :doc:`Pre-Read: Development Environment </preread/dev-environment>`
+   before this class, then install CARLA with the
+   :doc:`setup guide </carla/carla>`.
 
 
 Learning Objectives
@@ -28,7 +37,8 @@ By the end of this lecture, you will be able to:
   prediction, planning, control, and validation.
 - Summarize the key safety standards (ISO 26262, ISO 21448/SOTIF) and the
   evolving regulatory landscape.
-- Set up the development environment: Ubuntu, ROS 2, VS Code, and Git.
+- Analyze the Uber ATG and Cruise incidents and extract the system-level
+  design lessons from each.
 - Explain the CARLA simulator architecture and its role in this course.
 
 

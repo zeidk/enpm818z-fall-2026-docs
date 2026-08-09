@@ -58,7 +58,7 @@ Next Steps
   hierarchy, vehicle kinematic models, A* / Dijkstra / RRT / lattice
   planners, collision detection, and diffusion-based planning. The
   planner will consume the predictions you build here.
-- Read the MotionTransformer paper (Shi et al., NeurIPS 2023) for
+- Read the MotionTransformer paper (Shi et al., NeurIPS 2022) for
   deeper coverage of Transformer-based prediction.
 - The imitation-learning material that used to share this lecture
   has moved to L12, where it sits alongside the rest of the

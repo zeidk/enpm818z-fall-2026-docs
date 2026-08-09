@@ -42,17 +42,17 @@ The final project accounts for **80% of your overall course grade**:
      - 40
      - 40%
      - 3 weeks
-     - L4--L5
+     - L4--L6
    * - GP3: Fusion & Localization
      - 25
      - 25%
      - 3 weeks
-     - L3, L6--L8
+     - L3, L7
    * - GP4: Planning & Control
      - 20
      - 20%
      - 3 weeks
-     - L9--L11
+     - L8--L11
    * - **Total**
      - **100**
      - **100%**
@@ -165,23 +165,10 @@ a final report. There are no classes during Weeks 14--15.
    results, failure analysis, lessons learned.
 4. **Peer evaluation** -- Individual contribution assessment.
 
-.. tab-set::
-
-   .. tab-item:: Standard Track
-
-      Integrate and refine the modular pipeline from GP1--GP4. Add
-      improvements: enhanced behavioral planner (intersections, yielding),
-      robustness across 3+ towns and weather conditions, performance
-      optimization.
-
-   .. tab-item:: Advanced Track (Optional -- GP5)
-
-      Build a **Vision-Language-Action (VLA) model** that maps camera
-      images and natural language commands directly to driving actions.
-      Collect expert data from CARLA's autopilot, train a simplified VLA
-      using frozen CLIP encoders, deploy as a ROS 2 node, and compare
-      against the modular GP1--GP4 pipeline. See :doc:`GP5 </assignments/gp5>`
-      for full specifications. Worth up to **10 bonus points**.
+Integrate and refine the modular pipeline from GP1--GP4. Add
+improvements: enhanced behavioral planner (intersections, yielding),
+robustness across 3+ towns and weather conditions, and performance
+optimization.
 
 
 Academic Integrity
@@ -233,4 +220,3 @@ Support Resources
    gp2
    gp3
    gp4
-   gp5

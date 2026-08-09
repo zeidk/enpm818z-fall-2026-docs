@@ -11,7 +11,8 @@ and then zooming out to the regulatory, ethical, and economic landscape that
 will shape the industry through 2030 and beyond. We cover the middleware
 infrastructure (ROS 2, DDS) that enables real-time communication between AV
 modules, the safety standards (ISO 26262, SOTIF, UNECE GTR January 2026)
-that govern deployment, cybersecurity threats and defenses (ISO/SAE 21434),
+that govern deployment, the cybersecurity implications for system
+integration (with the ISO/SAE 21434 background covered in the pre-read),
 and the emerging role of V2X connectivity. The lecture concludes with an
 honest assessment of where the industry is heading, an exploration of ethics
 and liability, guidance on career paths, and a summary of the course.
@@ -32,8 +33,9 @@ By the end of this lecture, you will be able to:
   and deadline misses -- and explain their safety implications for ADS.
 - Summarize ISO 26262 (functional safety, ASIL levels, V-model), ISO 21448
   (SOTIF), and the UNECE Global Technical Regulation on ADS (January 2026).
-- Describe the automotive cybersecurity threat landscape and how ISO/SAE 21434
-  and secure communication protocols address it.
+- Explain how cybersecurity controls consume the same latency budget as
+  the rest of the stack, and how ISO/SAE 21434 and secure communication
+  protocols address the automotive threat landscape.
 - Explain the two dominant V2X standards (DSRC and C-V2X) and how V2X
   enables cooperative perception beyond line-of-sight.
 - Assess the current state and near-term trajectory of the global AV

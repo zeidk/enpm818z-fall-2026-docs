@@ -169,14 +169,47 @@ Performance Snapshot
      - AMOTA
      - 0.359
    * - Motion Forecasting
-     - minADE (5s)
-     - 0.607 m
+     - minADE
+     - ~0.7 m
    * - Occupancy Prediction
-     - IoU (occluded)
-     - 42.5%
-   * - Planning (L2, 3s)
-     - Average L2 distance
-     - 0.25 m
+     - IoU
+     - ~63% (near) / ~40% (far)
+   * - Planning
+     - Average L2 over 1/2/3 s
+     - ~1.0 m (rising to ~1.65 m at 3 s)
+
+.. warning::
+
+   **Check these against the paper before quoting them.** Reported
+   numbers for UniAD vary considerably between the original paper,
+   subsequent reproductions, and re-evaluations under corrected
+   protocols -- especially the planning L2 figures, which depend heavily
+   on whether ego status is fed to the model. Treat the table above as
+   indicative of magnitude, not as citable values.
+
+.. admonition:: Open-loop planning metrics are weaker evidence than they look
+   :class: important
+
+   Before accepting "UniAD achieves 1.0 m L2, therefore end-to-end
+   works," note the critique that followed. **AD-MLP** (Zhai et al.,
+   2023) and the paper *"Is Ego Status All You Need for Open-Loop
+   End-to-End Autonomous Driving?"* (Li et al., CVPR 2024) showed that a
+   trivial MLP fed **only the ego vehicle's own state** -- no camera
+   input at all -- matches or beats sophisticated E2E models on the
+   nuScenes open-loop L2 metric.
+
+   The reason is that nuScenes driving is overwhelmingly "continue doing
+   what you were just doing." Extrapolating your own recent motion is
+   therefore a very strong baseline, and the metric rewards it. The
+   models may still be learning something real, but **this benchmark
+   cannot demonstrate it**.
+
+   The field's response has been to move toward closed-loop evaluation
+   (nuPlan, CARLA leaderboards, NAVSIM), where the policy's own actions
+   determine the states it subsequently sees, and compounding error --
+   the failure mode from behavior cloning later in this lecture --
+   actually shows up. When you read any planning result, the first
+   question is: **open-loop or closed-loop?**
 
 
 DriveTransformer (ICLR 2025)
@@ -217,14 +250,21 @@ Throughput Comparison
    :class: compact-table
 
    * - Model
-     - Frames Per Second
-     - Planning L2 (3s)
+     - Relative throughput
+     - Planning quality
    * - UniAD
-     - ~1.8 FPS
-     - 0.25 m
+     - 1x (baseline)
+     - baseline
    * - DriveTransformer
-     - ~5.5 FPS (3x)
-     - 0.22 m
+     - ~3x
+     - comparable or slightly better
+
+.. note::
+
+   The throughput ratio is the meaningful claim here and is what the
+   paper argues for. Absolute FPS depends entirely on GPU, batch size,
+   resolution, and precision, so it is not quoted. Apply the open-loop
+   caveat above to the planning column as well.
 
 .. note::
 
@@ -295,13 +335,22 @@ NVIDIA's DRIVE platform. Key features:
 DriveVLM
 ~~~~~~~~~
 
-DriveVLM (Wayve / academic collaboration, 2024) demonstrated that:
+DriveVLM (Tsinghua University with Li Auto, 2024) demonstrated that:
 
 - A VLM backbone can successfully ground visual driving scenes to language.
-- Chain-of-thought driving outperforms direct waypoint regression on rare and
-  complex scenarios where standard E2E models fail.
-- The approach generalizes better across geographic domains because language
-  provides a universal, transferable representation.
+- Chain-of-thought driving -- scene description, then analysis, then
+  hierarchical planning -- outperforms direct waypoint regression on rare
+  and complex scenarios where standard E2E models fail.
+- A **dual-system** design is what makes it practical: the slow VLM
+  reasons about the scene while a fast conventional planner runs at
+  control rate, because a large VLM cannot itself meet a 10 Hz deadline.
+
+.. note::
+
+   **Wayve** pursues a related but distinct line of work: LINGO-1 and
+   LINGO-2 add natural-language commentary and instruction-following to
+   their driving models. Do not conflate the two -- they are different
+   groups with different architectures.
 
 
 Tesla's End-to-End Approach
@@ -523,7 +572,7 @@ Mitigation strategies include:
 
 - **Domain randomization** -- Randomly varying simulation parameters during
   training so the model learns features robust to environment variation.
-- **Generative world models** (Lecture 12) -- Using neural world models
+- **Generative world models** (L13) -- Using neural world models
   trained on real data to generate photo-realistic synthetic data.
 - **Real + sim co-training** -- Mixing real and simulated data during training.
 
@@ -554,59 +603,60 @@ behavior from logged demonstrations. It is the most direct way to
 distil human driving skill into the kinds of end-to-end networks
 covered earlier in this lecture.
 
-.. dropdown:: Behavior Cloning
+Behavior Cloning
+~~~~~~~~~~~~~~~~
 
-   **Behavior cloning (BC)** is the simplest imitation learning
-   algorithm: treat demonstrations as a supervised learning dataset.
+**Behavior cloning (BC)** is the simplest imitation learning
+algorithm: treat demonstrations as a supervised learning dataset.
 
-   Given a dataset of expert state-action pairs
-   :math:`\mathcal{D} = \{(s_i, a_i^*)\}_{i=1}^{N}` collected
-   from human drivers:
+Given a dataset of expert state-action pairs
+:math:`\mathcal{D} = \{(s_i, a_i^*)\}_{i=1}^{N}` collected
+from human drivers:
+
+.. math::
+
+   \min_\theta \; \mathbb{E}_{(s,a^*) \sim \mathcal{D}}
+   \left[ \mathcal{L}(\pi_\theta(s), a^*) \right]
+
+where :math:`\mathcal{L}` is a regression loss (e.g., MSE for
+continuous actions) or cross-entropy for discrete maneuver
+classification.
+
+**BC pipeline:**
+
+.. code-block:: text
+
+   1. Collect expert demonstrations: (obs_t, action_t) pairs
+   2. Train policy network: obs -> action
+   3. Deploy: at each step, feed current obs and execute action
+
+Distribution Shift: The Key Failure Mode
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The fundamental problem with behavior cloning is
+**distribution shift** (also called covariate shift).
+
+During training, the policy sees states from the expert's
+distribution :math:`d_{\pi^*}`. During deployment, the policy's
+own actions cause it to visit states in :math:`d_{\pi_\theta}`,
+which may be far from :math:`d_{\pi^*}`.
+
+**Compounding error:** Small deviations from the expert
+trajectory accumulate over time, driving the policy into
+states never seen during training. The policy has no
+supervision signal for recovery from these states.
+
+.. admonition:: Compounding Error Formula
+   :class: warning
+
+   For a policy with per-step error :math:`\epsilon`:
 
    .. math::
 
-      \min_\theta \; \mathbb{E}_{(s,a^*) \sim \mathcal{D}}
-      \left[ \mathcal{L}(\pi_\theta(s), a^*) \right]
+      \text{Total error after } T \text{ steps} = O(\epsilon T^2)
 
-   where :math:`\mathcal{L}` is a regression loss (e.g., MSE for
-   continuous actions) or cross-entropy for discrete maneuver
-   classification.
-
-   **BC pipeline:**
-
-   .. code-block:: text
-
-      1. Collect expert demonstrations: (obs_t, action_t) pairs
-      2. Train policy network: obs -> action
-      3. Deploy: at each step, feed current obs and execute action
-
-.. dropdown:: Distribution Shift: The Key Failure Mode
-
-   The fundamental problem with behavior cloning is
-   **distribution shift** (also called covariate shift).
-
-   During training, the policy sees states from the expert's
-   distribution :math:`d_{\pi^*}`. During deployment, the policy's
-   own actions cause it to visit states in :math:`d_{\pi_\theta}`,
-   which may be far from :math:`d_{\pi^*}`.
-
-   **Compounding error:** Small deviations from the expert
-   trajectory accumulate over time, driving the policy into
-   states never seen during training. The policy has no
-   supervision signal for recovery from these states.
-
-   .. admonition:: Compounding Error Formula
-      :class: warning
-
-      For a policy with per-step error :math:`\epsilon`:
-
-      .. math::
-
-         \text{Total error after } T \text{ steps} = O(\epsilon T^2)
-
-      Errors compound **quadratically** in time horizon --
-      a fundamental limitation of open-loop behavior cloning.
-
+   Errors compound **quadratically** in time horizon --
+   a fundamental limitation of open-loop behavior cloning.
 
 DAgger: Dataset Aggregation
 ----------------------------
@@ -615,54 +665,56 @@ DAgger (Ross et al., ICML 2011) addresses distribution shift
 by iteratively augmenting the training dataset with states
 visited by the learned policy.
 
-.. dropdown:: Algorithm
+Algorithm
+~~~~~~~~~
 
-   .. code-block:: text
+.. code-block:: text
 
-      Initialize: D = {} (empty dataset), pi_1 = any policy
-      For iteration i = 1, 2, ..., N:
-          1. Roll out policy pi_i in the environment
-             (or simulator) to collect trajectory states {s_t}
-          2. Query the expert at each visited state: a*_t = pi*(s_t)
-          3. Add {(s_t, a*_t)} to D
-          4. Train policy pi_{i+1} on the full aggregated D
-      Return: best pi_i on validation
+   Initialize: D = {} (empty dataset), pi_1 = any policy
+   For iteration i = 1, 2, ..., N:
+       1. Roll out policy pi_i in the environment
+          (or simulator) to collect trajectory states {s_t}
+       2. Query the expert at each visited state: a*_t = pi*(s_t)
+       3. Add {(s_t, a*_t)} to D
+       4. Train policy pi_{i+1} on the full aggregated D
+   Return: best pi_i on validation
 
-.. dropdown:: Why DAgger Works
+Why DAgger Works
+~~~~~~~~~~~~~~~~
 
-   DAgger ensures the training distribution converges to the
-   deployment distribution.
+DAgger ensures the training distribution converges to the
+deployment distribution.
 
-   - After :math:`n` iterations, the training dataset contains
-     states sampled from the policies
-     :math:`\pi_1, \pi_2, \ldots, \pi_n`.
-   - As the policy improves, the states it visits converge toward
-     the expert's states.
-   - In the limit, the training distribution matches the
-     deployment distribution and compounding errors vanish.
+- After :math:`n` iterations, the training dataset contains
+  states sampled from the policies
+  :math:`\pi_1, \pi_2, \ldots, \pi_n`.
+- As the policy improves, the states it visits converge toward
+  the expert's states.
+- In the limit, the training distribution matches the
+  deployment distribution and compounding errors vanish.
 
-   **DAgger guarantees** (Ross et al., 2011): Under mild
-   conditions, DAgger reduces the per-step regret to
-   :math:`O(\epsilon)` (linear) compared to BC's
-   :math:`O(\epsilon T^2)` (quadratic).
+**DAgger guarantees** (Ross et al., 2011): Under mild
+conditions, DAgger reduces the per-step regret to
+:math:`O(\epsilon)` (linear) compared to BC's
+:math:`O(\epsilon T^2)` (quadratic).
 
-.. dropdown:: Practical Considerations
+Practical Considerations
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-   .. list-table::
-      :header-rows: 1
-      :widths: 30 70
+.. list-table::
+   :header-rows: 1
+   :widths: 30 70
 
-      * - Challenge
-        - Solution
-      * - Expert query cost
-        - Use simulator with scripted expert; reserve human feedback for hard cases
-      * - Safety during rollout
-        - Run in simulation (CARLA); use safety fallback controller
-      * - Dataset size
-        - Prioritize states with high policy uncertainty (active DAgger)
-      * - Convergence
-        - Monitor validation loss across iterations; stop when plateaued
-
+   * - Challenge
+     - Solution
+   * - Expert query cost
+     - Use simulator with scripted expert; reserve human feedback for hard cases
+   * - Safety during rollout
+     - Run in simulation (CARLA); use safety fallback controller
+   * - Dataset size
+     - Prioritize states with high policy uncertainty (active DAgger)
+   * - Convergence
+     - Monitor validation loss across iterations; stop when plateaued
 
 Where the Industry Is Heading
 ------------------------------
@@ -679,18 +731,20 @@ rather than a binary choice:
       Traditional approach. Each module developed independently. Mature
       validation tooling. Used by Mobileye (RSS + modular stack).
 
-   .. grid-item-card:: Hybrid (Dominant 2025-2026)
+   .. grid-item-card:: Hybrid (Dominant today)
       :class-card: sd-border-warning
 
       E2E perception + learned planner, but with explicit safety monitors,
-      interpretable occupancy maps, and override logic. Used by Waymo Gen 6,
-      Baidu Apollo 6.0.
+      interpretable occupancy maps, and override logic. Used by Waymo's
+      current-generation stack and recent Baidu Apollo releases.
 
    .. grid-item-card:: Fully E2E
       :class-card: sd-border-success
 
-      Single neural model from pixels to actuators. Used by Tesla FSD v12,
-      Wayve. Requires massive fleet data and novel validation frameworks.
+      Single neural model from pixels to actuators. Tesla FSD has been
+      end-to-end since v12 (and has iterated well past it); Wayve builds
+      on the same principle. Requires massive fleet data and novel
+      validation frameworks.
 
 .. note::
 
@@ -700,13 +754,40 @@ rather than a binary choice:
    checks (collision avoidance, traffic law compliance) remain engineered
    components layered on top.
 
-.. admonition:: Bonus Assignment Unlocked -- GP5: Vision-Language-Action Driving (Optional)
-   :class: important
+Summary
+--------
 
-   You now have the foundational knowledge from **L10--L12** to begin
-   **GP5: Vision-Language-Action Driving**. In this optional bonus project
-   you will build a simplified VLA model that maps camera images and
-   natural language commands directly to driving actions, bypassing the
-   modular pipeline -- and compare it against your GP4 system.
+.. grid:: 1 2 2 2
+   :gutter: 3
 
-   :doc:`Go to GP5 </assignments/gp5>`
+   .. grid-item-card:: End-to-End Architectures
+      :class-card: sd-border-primary
+
+      - Modular vs E2E: interpretability and validation traded against
+        joint optimization and no information loss at boundaries
+      - UniAD: query propagation through tracking -> motion -> occupancy
+        -> planning, all co-optimized with a planning loss
+      - DriveTransformer: one shared attention block over agent, map and
+        ego tokens; ~3x throughput at comparable quality
+      - VLA: language as an intermediate representation, giving auditable
+        chain-of-thought reasoning (DriveVLM, and Wayve's LINGO line)
+
+   .. grid-item-card:: Imitation Learning
+      :class-card: sd-border-primary
+
+      - Behavior cloning is supervised learning on expert demonstrations
+      - Its failure mode is distribution shift: error compounds as
+        :math:`O(\epsilon T^2)` because the policy visits states the
+        expert never did
+      - DAgger fixes this by querying the expert **on states the learner
+        actually visits**, reducing the bound to linear
+      - Open-loop benchmarks flatter these methods; insist on closed-loop
+        evaluation before believing a planning result
+
+.. note::
+
+   **On the numbers in this lecture.** Nearly every quantitative claim
+   here comes from a fast-moving literature with inconsistent evaluation
+   protocols. The architectural ideas are durable; the leaderboard
+   positions are not. Cite the paper, state the benchmark, and say
+   whether it was open-loop.
