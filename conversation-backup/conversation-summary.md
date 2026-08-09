@@ -1,6 +1,6 @@
 # Conversation Backup — ENPM818Z Working Notes
 
-**Last updated:** 2026-08-02
+**Last updated:** 2026-08-09
 **Branch:** `main`
 **Purpose:** Snapshot of completed work + open items, so the conversation
 can be resumed on another PC without losing context.
@@ -8,6 +8,54 @@ can be resumed on another PC without losing context.
 The original handoff goal (apply the lecture reorder sketched on the
 previous PC) has been **completed in full**. This document now captures
 the current state — what was shipped, what's open, and where to look.
+
+---
+
+## Session 2026-08-09 (full lecture review + remediation)
+
+Reviewed all 14 lectures line by line and fixed everything found. Sphinx
+build clean (0 warnings) after every change.
+
+**Two course-policy decisions were made and applied everywhere:**
+
+- **Meeting day: Thursdays**, Sep 3 → Dec 10, 2026, with a Week 15
+  (Dec 17) final-report window. The `.md`/`.pdf` syllabus previously said
+  Mondays and has been rewritten to match the website.
+- **Grading: 80% final project (GP1–GP4 + report) / 20% quizzes.**
+  **GP5 has been removed from the course** — `gp5.rst` deleted, dropped
+  from the toctree, the L12 unlock box replaced with a Summary, and all
+  references purged from the syllabus.
+
+**What was fixed:**
+
+- **Stale cross-references** from the reorder, in L1, L2, L7, L8, L9,
+  L12, L13, L14 and `l9_references.rst`. The worst were L8's ASCII stack
+  diagram and L14's course-summary table, which described a course
+  structure that never existed.
+- **Math/factual errors**: L5 LSS Lift equation and the Shoot
+  definition; L5 PQ→RQ mislabel and ASE; L9 CTRA (velocity term was
+  missing entirely); L7 essential-matrix form, Kabsch reflection guard,
+  loop-closure overclaim, LOAM units, differential-drive odometry on an
+  Ackermann vehicle; L11 continuity and Ziegler-Nichols PD row;
+  L14 ASIL PMHF targets and an inverted C0/C3 controllability scale.
+- **Code bugs**: the UE→optical axis permutation (L2, L5, L6); CARLA
+  0.9.16 semantic tag IDs and depth decoding (L5); L6's "Kalman filter"
+  that was actually an exponential moving average; L3 synchronous mode;
+  L8 waypoint-graph keying (produced a graph with zero edges) and an
+  infinite loop in the route follower; L4 BGR/RGB and the RT-DETR API.
+- **Content gaps filled**: IoU/NMS/mAP and 3-D LiDAR detection (L4);
+  Hybrid A\* and the Frenet frame (L10); transformer MOT and 3-D
+  tracking (L6); a full CARLA hands-on for L7; the open-loop planning
+  critique (L12).
+- **Structure normalized**: L9–L12's collapsed dropdowns converted to
+  open sections (54 total); Summary cards added to the 5 lectures that
+  lacked them; L8's quiz rewritten from 10 ad-hoc questions to the
+  standard 18 (10 MC / 5 TF / 3 essay).
+- **New**: `docs/source/preread/` holding the L1 dev-environment setup
+  and the L14 cybersecurity material, both trimmed out of lecture time
+  (the long-deferred "L1 trim" and "L14 trim" items).
+
+**Still open:** see the reduced list at the bottom.
 
 ---
 
@@ -182,11 +230,14 @@ repo and `zeid.kootbally@nist.gov` outside `~/github/docs/`.
 
 ```
 Branch:          main
-Latest commit:   e0ecd73  added syllabus MD
-Working tree:    clean except for 3 untracked items:
-                 - MULTIPLE-GITHUB-ACCOUNTS.md      (dev-setup notes)
-                 - SYLLABUS-ENPM818Z-Fall2026.pdf   (pandoc output)
-                 - conversation-backup/             (this folder)
+Latest commit:   3f5a960  updates
+Working tree:    extensive uncommitted changes from the 2026-08-09
+                 lecture review (all 14 lectures, syllabus, assignments,
+                 new preread/ directory, gp5.rst deleted)
+Untracked:       - MULTIPLE-GITHUB-ACCOUNTS.md      (dev-setup notes)
+                 - SYLLABUS-ENPM818Z-Fall2026.pdf   (pandoc output,
+                   regenerated 2026-08-09 for the Thursday schedule)
+                 - docs/source/preread/             (new)
 Sphinx build:    clean (0 warnings)
 ```
 
@@ -211,25 +262,30 @@ e0ecd73  added syllabus MD
 
 ## Open items / future work
 
-### Reorder polish (deferred from v1)
+### Reorder polish
 
-Each was flagged in commit messages as "v2 polish":
+**All items in this section are now done** — quiz migration, L5
+segmentation exercise and references, L6 Exercise 1, L6 temporal
+reasoning (transformer MOT added), the L1 dev-environment trim, and the
+L14 cybersecurity trim. The last two moved to `docs/source/preread/`.
 
-- **Quiz question migration.** Question 10 of the new L3 quiz
-  (BEVFusion cross-attention) belongs in new L6 once that quiz is
-  split. Similar migrations needed for L5 ↔ L6 (segmentation vs
-  tracking questions) and L9 ↔ L12 (prediction vs IL/DAgger
-  questions).
-- **New L5 segmentation exercise.** `l5_exercises.rst` currently has
-  only BEV exercises; segmentation exercise needs to be added.
-- **New L5 segmentation references.** `l5_references.rst` should pick
-  up DeepLabv3+, Mask R-CNN, etc.
-- **New L6 Exercise 1.** Currently "Segmentation Metrics" carried
-  over from old L5 — belongs in new L5.
-- **New L6 Temporal Reasoning growth.** User authorised but deferred
-  — could add a Transformer-MOT (MOTR / TrackFormer) section.
-- **L1 trim.** Dev environment material to a pre-read page.
-- **L14 trim.** Cybersecurity material to a pre-read page.
+### Needs your verification
+
+These were flagged during the 2026-08-09 review as claims I could not
+confirm. They are written conservatively in the lectures now, but should
+be checked against primary sources before teaching:
+
+- **L12 UniAD metrics.** The planning L2 figures were badly wrong
+  (0.25 m at 3 s, when the paper reports ~1.65 m). Replaced with
+  approximate values and a warning; verify against the paper.
+- **L13 GAIA generation.** The lecture previously described a
+  "GAIA-3, 15B parameters, December 2025" that I could not verify.
+  Rewritten around GAIA-1 and GAIA-2 only. If GAIA-3 exists, add it.
+- **L1 Tesla robotaxi supervision status** in Austin — changes often.
+- **L5 CARLA semantic tag IDs.** Corrected to the CityScapes-aligned
+  scheme (Road=1, Car=14), but confirm against the CARLA docs for the
+  exact version students install.
+- **L10 diffusion planner** step counts and benchmarks.
 
 ### GitHub workflow
 
