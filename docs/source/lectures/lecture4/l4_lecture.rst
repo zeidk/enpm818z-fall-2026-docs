@@ -133,6 +133,96 @@ Taxonomy of Perception Tasks
    and **DETR**.
 
 
+Detection Fundamentals: IoU, NMS, and mAP
+------------------------------------------
+
+Three primitives underpin every detector in this lecture. They are worth
+pinning down before the architectures, because the architectures are
+largely defined by how they handle them.
+
+Intersection over Union (IoU)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**IoU** measures how well two boxes overlap -- the currency of both
+training targets and evaluation:
+
+.. math::
+
+   \text{IoU}(A, B) = \frac{|A \cap B|}{|A \cup B|}
+
+It ranges from 0 (disjoint) to 1 (identical). A detection is normally
+counted as correct if its IoU with a ground-truth box of the same class
+exceeds a threshold, conventionally 0.5.
+
+.. admonition:: Why IoU and not centre distance?
+   :class: tip
+
+   IoU is **scale-invariant**: being 10 px off matters enormously for a
+   distant pedestrian and barely at all for a nearby truck, and IoU
+   captures that automatically. This is also why IoU appears inside the
+   loss (as CIoU/GIoU) rather than a plain L2 on box coordinates.
+
+Non-Maximum Suppression (NMS)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A CNN detector fires at **many** nearby locations for the same object,
+producing a cluster of overlapping boxes. **NMS** is the post-processing
+step that keeps one per object:
+
+.. code-block:: text
+
+   Sort all detections by confidence, descending
+   While detections remain:
+       Take the highest-confidence box B; add it to the output
+       Discard every remaining box with IoU(B, box) > nms_threshold
+                                       and the same class
+
+Typical ``nms_threshold`` is 0.45--0.7.
+
+.. admonition:: NMS is a real limitation, not just plumbing
+   :class: warning
+
+   NMS is a **hand-tuned, non-differentiable heuristic** sitting outside
+   the network, and it fails in a specific way: when two objects of the
+   same class genuinely overlap -- a pedestrian partially behind another,
+   two cars in dense traffic -- NMS deletes the second one as a
+   "duplicate." Its runtime also grows with the number of detections,
+   which hurts the latency budget in crowded scenes.
+
+   This is precisely what DETR's bipartite matching and YOLOv10's
+   NMS-free training are designed to eliminate. When you read "no NMS
+   required" later in this lecture, this is the problem being solved.
+
+Mean Average Precision (mAP)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For a given class, sweep the confidence threshold from high to low. Each
+threshold yields a (precision, recall) pair; plotting them traces the
+**precision-recall curve**, and **Average Precision (AP)** is the area
+under it. **mAP** averages AP over all classes.
+
+.. list-table::
+   :widths: 22 78
+   :class: compact-table
+
+   * - **mAP@0.5**
+     - AP computed with a single IoU threshold of 0.5. Lenient about
+       localization quality. (Also written AP\ :sub:`50`.)
+   * - **mAP@0.5:0.95**
+     - AP averaged over IoU thresholds 0.5, 0.55, ..., 0.95, then
+       averaged over classes. The COCO default, usually written just
+       **AP**. Rewards precise localization and is always the lower
+       number.
+
+.. important::
+
+   **mAP requires ground-truth labels.** It is a comparison between
+   predictions and annotations -- you cannot compute it from predictions
+   alone. This matters for the exercises at the end of this lecture: to
+   report mAP on CARLA frames you must first export CARLA's ground-truth
+   bounding boxes, not merely run the detector.
+
+
 YOLO: You Only Look Once
 --------------------------
 
@@ -151,43 +241,65 @@ YOLO Evolution
    * - Version
      - Year
      - Key Innovation
-     - COCO mAP
+     - Reported accuracy
    * - v1
      - 2015
      - Single-stage detection, 7x7 grid
-     - 63.4% (VOC)
+     - 63.4 mAP\ :sub:`50` (VOC 2007)
    * - v2
      - 2017
      - Batch norm, anchor boxes, Darknet-19
-     - 78.6% (VOC)
+     - 78.6 mAP\ :sub:`50` (VOC 2007)
    * - v3
      - 2018
      - FPN multi-scale, Darknet-53, 3 detection scales
-     - 57.9%
+     - 57.9 AP\ :sub:`50` / 33.0 AP (COCO)
    * - v4
      - 2020
      - CSPDarknet53, Mosaic augmentation, PAN, CIoU loss
-     - 43.5%
+     - 43.5 AP (COCO)
    * - v5
      - 2020
      - PyTorch native, model scaling (n/s/m/l/x), AutoAugment
-     - 50.7%
+     - 50.7 AP (COCO, v5x)
    * - v7
      - 2022
      - E-ELAN, SOTA at the time
-     - 56.8%
+     - 56.8 AP (COCO, v7-E6E)
    * - v8
      - 2023
      - **Anchor-free**, decoupled head, multi-task (det/seg/pose)
-     - 53.9%
+     - 53.9 AP (COCO, v8x)
    * - v10
      - 2024
      - NMS-free training, dual label assignment
-     - 54.4%
+     - 54.4 AP (COCO, v10x)
    * - v11
      - 2024
      - C3k2 blocks, SPPF modifications
-     - 54.7%
+     - 54.7 AP (COCO, v11x)
+
+.. warning::
+
+   **These numbers are not directly comparable.** Three different
+   metrics appear in the column above:
+
+   - **mAP**\ :sub:`50` **on VOC** (v1, v2) -- an easier dataset and a
+     single, lenient IoU threshold.
+   - **AP**\ :sub:`50` **on COCO** (the 57.9 for v3) -- COCO, but still a
+     single IoU threshold.
+   - **AP on COCO** (v4 onward) -- the modern default, averaged over IoU
+     thresholds 0.50:0.05:0.95, which is far stricter.
+
+   Read naively, the table suggests v3 (57.9) beats v8 (53.9). It does
+   not: v3's comparable COCO AP is 33.0. Whenever you see a detection
+   number quoted without its dataset *and* its IoU protocol, treat it as
+   meaningless.
+
+   Versions v6, v9, v12 and later releases are omitted for brevity; the
+   family continues to iterate and the accuracy leader changes
+   frequently. Check the current Ultralytics documentation rather than
+   this table when choosing a model.
 
 
 Architecture: Backbone-Neck-Head
@@ -419,9 +531,9 @@ YOLO vs. DETR Comparison
 
 .. tip::
 
-   In Assignment A2, you will fine-tune both YOLO and DETR on the same CARLA
-   dataset and compare their performance under different conditions (day/night,
-   rain, occlusion).
+   In **GP2: Perception**, you will fine-tune both YOLO and DETR on the same
+   CARLA dataset and compare their performance under different conditions
+   (day/night, rain, occlusion).
 
 
 Deploying a Detector as a ROS 2 Node
@@ -454,7 +566,11 @@ CARLA camera images and publishes detected objects.
                Detection2DArray, '/perception/detections', 10)
 
        def image_callback(self, msg):
-           cv_image = self.bridge.imgmsg_to_cv2(msg, 'rgb8')
+           # Ultralytics expects BGR for raw numpy input (it matches
+           # cv2.imread convention). Converting to 'rgb8' here would swap
+           # the red and blue channels and quietly degrade every
+           # detection -- no error, just worse results.
+           cv_image = self.bridge.imgmsg_to_cv2(msg, 'bgr8')
            results = self.model(cv_image, verbose=False)
 
            det_array = Detection2DArray()
@@ -519,14 +635,17 @@ Industry Case Studies
       **Philosophy:** Multi-sensor fusion, LiDAR-centric.
 
       - **Sensors:** 5 LiDARs, 29 cameras, 6 RADARs, high-precision
-        GNSS/IMU.
+        GNSS/IMU (5th-generation Driver; the 6th generation reduces
+        sensor count to lower cost).
       - **Approach:** LiDAR is the primary sensor for 3D detection and
         localization. Cameras add semantic richness (signs, lights, lane
         markings). RADAR for velocity and adverse weather.
       - **Architecture:** Modular pipeline (detection -> tracking ->
         prediction). PointPillars-style LiDAR detection + camera fusion.
         HD maps for localization priors.
-      - **Scale:** 20+ million real-world miles, 250K+ paid rides/week.
+      - **Scale:** Tens of millions of rider-only miles and 250K+ paid
+        rides/week, both growing quickly -- check Waymo's current
+        published figures rather than quoting these.
       - **Key trade-off:** Heavy sensor investment for maximum safety.
 
    .. tab-item:: Tesla
@@ -545,7 +664,7 @@ Industry Case Studies
       - **Key trade-off:** Cost and scalability vs. depth uncertainty and
         weather sensitivity.
 
-   .. tab-item:: Cruise
+   .. tab-item:: Cruise (cautionary case)
 
       **Philosophy:** Multi-sensor with HD maps, urban robotaxi.
 
@@ -553,10 +672,15 @@ Industry Case Studies
       - **Approach:** Camera + LiDAR + RADAR fusion. HD maps for
         localization and environmental priors. Continuous Learner system
         for model updates.
-      - **Status:** Fleet suspended in late 2023 after dragging incident.
-        Effectively out of the robotaxi race.
-      - **Key lesson:** Operational safety failures can end a program
-        regardless of technical capability.
+      - **Status:** **Defunct.** Operations were suspended in late 2023
+        after the pedestrian-dragging incident (see L1), California
+        revoked the testing permit, and GM wound the robotaxi programme
+        down in December 2024. Cruise appears here as a historical case
+        study, not a current competitor.
+      - **Key lesson:** Operational safety failures -- and the handling of
+        their disclosure -- can end a program regardless of technical
+        capability. Cruise's perception stack was competitive; that was
+        not enough.
 
    .. tab-item:: Aurora
 
@@ -808,11 +932,108 @@ landscape has evolved further:
      - Single backbone with multiple heads (detection + segmentation + lane
        detection). Example: Tesla HydraNet.
    * - **3D Object Detection**
-     - LiDAR-based (PointPillars, CenterPoint) and camera-based (FCOS3D)
-       methods for 3D bounding boxes.
+     - See the dedicated section below -- for an AV this is the detection
+       problem that actually matters.
    * - **End-to-End Perception**
      - UniAD, DriveTransformer unify perception-prediction-planning.
        *Covered in L12.*
+
+
+3D Object Detection from LiDAR
+--------------------------------
+
+Everything above operates on the image plane and returns 2-D boxes. A
+planner cannot use a 2-D box: it needs to know **where the object is in
+metric space**, how big it is, and which way it is facing. That means 3-D
+detection, and in practice that means LiDAR.
+
+The Representation Problem
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A point cloud is **unordered, sparse, and irregular** -- everything a
+convolution assumes it is not. The design space is essentially "how do we
+make this look enough like a grid to convolve over it?"
+
+.. list-table::
+   :widths: 18 40 42
+   :header-rows: 1
+   :class: compact-table
+
+   * - Approach
+     - Idea
+     - Trade-off
+   * - **Point-based**
+     - Operate on raw points with shared MLPs and symmetric pooling
+       (PointNet, PointNet++).
+     - Exact geometry, no quantization loss; slow and hard to scale to
+       full driving scenes.
+   * - **Voxel-based**
+     - Quantize into a 3-D grid, encode each voxel, then use 3-D sparse
+       convolution (VoxelNet, SECOND).
+     - Accurate; sparse convolution needed to stay tractable.
+   * - **Pillar-based**
+     - Voxelize in x-y **only** -- infinitely tall "pillars" -- giving a
+       2-D pseudo-image for a standard 2-D CNN (PointPillars).
+     - Very fast, the usual production choice; loses fine vertical
+       structure.
+
+Key Architectures
+~~~~~~~~~~~~~~~~~~
+
+.. tab-set::
+
+   .. tab-item:: PointPillars (2019)
+
+      The workhorse. Points are grouped into vertical pillars on a BEV
+      grid, each pillar is encoded to a feature vector by a small
+      PointNet, and the result is scattered into a 2-D pseudo-image.
+      From there it is an ordinary 2-D CNN backbone plus an SSD-style
+      detection head.
+
+      **Why it won:** it eliminated 3-D convolution entirely, hitting
+      real-time rates on automotive hardware with competitive accuracy.
+      Most production LiDAR detectors are descendants of this design.
+
+   .. tab-item:: CenterPoint (2021)
+
+      Anchor-free, and the natural 3-D analogue of the anchor-free shift
+      you saw in YOLOv8. Objects are represented as **centre points** on
+      a BEV heatmap; the network regresses size, orientation, and
+      velocity from the peak.
+
+      **Why it matters for us:** predicting per-object velocity directly
+      gives the tracker in **L6** a motion estimate for free, and
+      centre-based representation sidesteps the awkward problem of
+      defining 3-D anchor boxes for objects at arbitrary yaw.
+
+   .. tab-item:: Camera-only 3D
+
+      3-D boxes can also be regressed from images alone (FCOS3D,
+      monocular depth-based methods). Far cheaper, but depth is
+      *inferred* rather than measured, so range error grows quadratically
+      with distance. This is the gap that BEV methods in **L5** attack.
+
+Evaluation Differs from 2D
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+3-D detection is **not** scored with 2-D IoU:
+
+- **KITTI** uses 3-D (or BEV) IoU with class-dependent thresholds
+  (0.7 for cars, 0.5 for pedestrians and cyclists) and splits results by
+  difficulty (easy / moderate / hard) based on occlusion and truncation.
+- **nuScenes** abandons IoU altogether for matching, using a **centre
+  distance** threshold instead, and then reports the attribute errors
+  (translation, scale, orientation, velocity) separately. You will meet
+  its NDS metric in **L5**.
+
+.. admonition:: Where this lands in your project
+   :class: tip
+
+   GP2 asks for detection **and** tracking. 2-D detection from the camera
+   is where you start, but the tracker in L6 consumes 3-D state. Plan for
+   the transition: either lift 2-D detections into 3-D using LiDAR
+   (frustum association, covered in GP3), or run a LiDAR detector
+   directly.
 
 
 CARLA Hands-On: Object Detection Pipeline
@@ -963,10 +1184,10 @@ Task 3: Run DETR Inference on the Same Frames
    import os
    import glob
    import time
-   from ultralytics import YOLO
+   from ultralytics import RTDETR      # NOT YOLO -- RT-DETR has its own class
 
    # ── Load pretrained RT-DETR-L ──────────────────────────────────────
-   model = YOLO('rtdetr-l.pt')
+   model = RTDETR('rtdetr-l.pt')
 
    # ── Set up paths ───────────────────────────────────────────────────
    input_dir = 'carla_frames/<YOUR_TIMESTAMP>'   # Same directory as Task 2
@@ -1027,21 +1248,78 @@ Task 4: Compare YOLO vs DETR
       model, compute the average number of detections per frame and plot a
       histogram of confidence scores. Which model produces more high-confidence
       detections?
-   3. **Weather robustness experiment**: Re-run Task 1 frame collection under
-      three weather conditions and repeat Tasks 2--3 on each set:
+   3. **Export ground truth**: mAP cannot be computed from predictions
+      alone. Before the weather study, dump CARLA's ground-truth 2-D
+      boxes for each saved frame, using
+      ``world.get_level_bbs(carla.CityObjectLabel.Car)`` or by projecting
+      each vehicle actor's ``bounding_box`` into the image (remembering
+      the UE-to-optical axis permutation from L2). Save them in YOLO
+      label format alongside the images.
+
+      .. note::
+
+         Only export boxes that are actually **visible**: filter to
+         actors in front of the camera, within a sensible range (e.g.
+         50 m), and not fully occluded. Counting occluded vehicles as
+         ground truth will make every model look artificially bad on
+         recall.
+
+   4. **Weather robustness experiment**: Re-run Task 1 frame collection
+      (with ground-truth export) under three weather conditions and
+      repeat Tasks 2--3 on each set:
 
       - Clear day: ``world.set_weather(carla.WeatherParameters.ClearNoon)``
       - Heavy rain: ``world.set_weather(carla.WeatherParameters.HardRainNoon)``
-      - Night: ``world.set_weather(carla.WeatherParameters.ClearNight)``
+      - Night: use a preset with ``sun_altitude_angle`` below the horizon
+        (verify which night presets your CARLA build exposes).
 
-      Compare mAP degradation across weather conditions for both models.
-   4. **Identify failure cases**: Examine the annotated frames and find
+      Now compute and compare mAP@0.5 degradation across weather
+      conditions for both models.
+   5. **Identify failure cases**: Examine the annotated frames and find
       examples of missed detections and false positives for each model.
       Explain which architecture (CNN-based YOLO vs. transformer-based DETR)
       handles these failure cases better and why.
 
+Summary
+--------
+
+.. grid:: 1 2 2 2
+   :gutter: 3
+
+   .. grid-item-card:: Fundamentals and 2D Detection
+      :class-card: sd-border-primary
+
+      - **IoU** is the scale-invariant overlap measure behind both the
+        loss and the metrics; **NMS** removes duplicate boxes but deletes
+        genuinely overlapping objects; **mAP** needs ground-truth labels
+      - Always state the dataset *and* the IoU protocol with any number:
+        AP\ :sub:`50` on VOC and AP@[.5:.95] on COCO are not comparable
+      - **YOLO**: backbone-neck-head, anchor-free since v8, NMS-free
+        training in v10. Fast, mature, production-ready
+      - **DETR**: set prediction with object queries and bipartite
+        matching -- no anchors, no NMS. RT-DETR made it real-time
+
+   .. grid-item-card:: 3D Detection and Deployment
+      :class-card: sd-border-primary
+
+      - Point clouds are unordered and irregular; **PointPillars**
+        (pillars to a 2-D pseudo-image) is the fast production default
+      - **CenterPoint** is anchor-free in 3-D and regresses velocity
+        directly, feeding the tracker in L6 for free
+      - 3-D evaluation abandons 2-D IoU: KITTI uses 3-D IoU by difficulty,
+        nuScenes uses centre distance plus attribute errors
+      - Deployment is a real constraint: quantization, pruning,
+        distillation and TensorRT, profiled on the *target* SoC -- 50 FPS
+        on a workstation GPU can be 5 FPS on an automotive one
+
+.. important::
+
+   At 60 km/h a vehicle covers 1.67 m in 100 ms. Perception latency is a
+   safety requirement, not an optimization target -- which is why this
+   lecture spends as much time on deployment as on architecture.
+
 .. note::
 
-   This exercise provides the detection foundation for **GP2: Object
-   Detection & Tracking**, where you will train custom YOLO and DETR models
+   This exercise provides the detection foundation for **GP2:
+   Perception**, where you will train custom YOLO and DETR models
    on CARLA data and deploy them as ROS 2 perception nodes.

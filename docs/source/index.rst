@@ -100,13 +100,21 @@ navigation bar** to access the main sections:
       24.04 (Docker). Includes Python API reference, CLI options, and
       troubleshooting.
 
+   .. grid-item-card:: Pre-Read
+      :class-card: sd-border-secondary
+
+      Assumed-knowledge pages to read *before* the lecture they support:
+      development environment setup (before L1) and automotive
+      cybersecurity (before L14).
+
    .. grid-item-card:: Lectures
       :class-card: sd-border-secondary
 
-      13 lectures covering the full AV stack. Each lecture includes:
+      14 lectures covering the full AV stack. Each lecture includes:
 
       - **Lecture notes** -- Detailed content with code examples, diagrams,
         and tables.
+      - **Exercises** -- Hands-on CARLA tasks.
       - **Quiz** -- Practice questions (multiple choice, true/false, essay)
         with **hidden answers** you can reveal by clicking the dropdown.
       - **References** -- Papers, tools, and further reading.
@@ -121,8 +129,8 @@ navigation bar** to access the main sections:
    .. grid-item-card:: Glossary
       :class-card: sd-border-secondary
 
-      70+ AV-specific terms organized alphabetically. Use this as a quick
-      reference while studying or working on projects.
+      150+ AV-specific terms, searchable and filterable by lecture. Use
+      this as a quick reference while studying or working on projects.
 
 .. tip::
 
@@ -191,6 +199,7 @@ Late submissions incur a 10% deduction per day (maximum 3 days). Beyond
    changelog/changelog
    syllabus/index
    carla/carla
+   preread/index
    lectures/index
    assignments/index
    glossary/glossary

@@ -8,7 +8,7 @@ The Navigation Problem
 
 Navigation answers the question: **"Which sequence of roads and lanes
 should I take to reach my destination?"** This is fundamentally different
-from motion planning (L9), which asks *"How do I move safely along this
+from motion planning (L10), which asks *"How do I move safely along this
 road segment?"*
 
 .. list-table:: Navigation vs. Motion Planning
@@ -18,7 +18,7 @@ road segment?"*
 
    * - Property
      - Navigation (Route Planning)
-     - Motion Planning (L9)
+     - Motion Planning (L10)
    * - Scale
      - City-wide (km)
      - Local (10--50 m)
@@ -45,18 +45,17 @@ Position in the AV Stack
 .. code-block:: text
 
    ┌──────────────────────────────────────────────────────────┐
-   │  L7: Localization          → Where am I?                │
+   │  L7: Localization           → Where am I?                │
    ├──────────────────────────────────────────────────────────┤
-   │  L8: Navigation (this)     → Which roads do I take?     │
+   │  L8: Navigation (this)      → Which roads do I take?     │
    │      Output: ordered list of road segments / waypoints   │
    ├──────────────────────────────────────────────────────────┤
-   │  L11: Behavior Planning    → How do I interact with     │
-   │      (Prediction &           traffic on this segment?   │
-   │       Decision-Making)                                   │
+   │  L9: Prediction & Behavior  → What will others do, and   │
+   │                               which maneuver do I pick?  │
    ├──────────────────────────────────────────────────────────┤
-   │  L9: Motion Planning       → What collision-free path?  │
+   │  L10: Motion Planning       → What collision-free path?  │
    ├──────────────────────────────────────────────────────────┤
-   │  L10: Trajectory & Control → Execute the path smoothly  │
+   │  L11: Trajectory & Control  → Execute the path smoothly  │
    └──────────────────────────────────────────────────────────┘
 
 The route planner produces a **reference route** (sequence of waypoints
@@ -297,12 +296,14 @@ other nodes in a weighted graph with non-negative edge costs.
            goal_id: goal waypoint ID
 
        Returns:
-           path: list of waypoint IDs from start to goal
+           path: list of waypoint keys from start to goal
            total_cost: total path cost
+           expanded: number of nodes expanded (for comparison with A*)
        """
        dist = {start_id: 0.0}
        prev = {}
        pq = [(0.0, start_id)]
+       expanded = 0
 
        while pq:
            d, u = heapq.heappop(pq)
@@ -310,7 +311,8 @@ other nodes in a weighted graph with non-negative edge costs.
                break
            if d > dist.get(u, float('inf')):
                continue
-           for v, cost in graph[u]:
+           expanded += 1
+           for v, cost in graph.get(u, []):     # .get: u may be a dead end
                new_dist = d + cost
                if new_dist < dist.get(v, float('inf')):
                    dist[v] = new_dist
@@ -324,7 +326,7 @@ other nodes in a weighted graph with non-negative edge costs.
            path.append(node)
            node = prev[node]
        path.append(start_id)
-       return path[::-1], dist.get(goal_id, float('inf'))
+       return path[::-1], dist.get(goal_id, float('inf')), expanded
 
 **Complexity:** :math:`O((|V| + |E|) \log |V|)` with a binary heap.
 Road networks are sparse (:math:`|E| \approx 3|V|`), so this is
@@ -353,16 +355,27 @@ optimization:
 
    import numpy as np
 
-   def astar_road(graph, start_id, goal_id, positions, v_max=50.0):
-       """A* search on a road network graph."""
+   def astar_road(graph, start_id, goal_id, positions, v_max=None):
+       """A* search on a road network graph.
+
+       The heuristic MUST be in the same units as the edge costs, or it
+       is not admissible and A* loses its optimality guarantee:
+
+         * edge cost = distance (m)  ->  h = Euclidean distance (m)
+         * edge cost = time (s)      ->  h = distance / v_max (s)
+
+       Pass v_max (in m/s) for a time-weighted graph; leave it None for
+       a distance-weighted one.
+       """
 
        def heuristic(node_id):
-           return np.linalg.norm(
-               positions[node_id] - positions[goal_id]) / v_max
+           d = np.linalg.norm(positions[node_id] - positions[goal_id])
+           return d / v_max if v_max else d
 
        dist = {start_id: 0.0}
        prev = {}
        pq = [(heuristic(start_id), 0.0, start_id)]
+       expanded = 0
 
        while pq:
            _, g, u = heapq.heappop(pq)
@@ -370,7 +383,8 @@ optimization:
                break
            if g > dist.get(u, float('inf')):
                continue
-           for v, cost in graph[u]:
+           expanded += 1
+           for v, cost in graph.get(u, []):
                new_g = g + cost
                if new_g < dist.get(v, float('inf')):
                    dist[v] = new_g
@@ -384,7 +398,7 @@ optimization:
            path.append(node)
            node = prev[node]
        path.append(start_id)
-       return path[::-1], dist.get(goal_id, float('inf'))
+       return path[::-1], dist.get(goal_id, float('inf')), expanded
 
 .. note::
 
@@ -578,71 +592,83 @@ graph from CARLA's waypoint API:
 
 .. code-block:: python
 
-   def build_road_graph(carla_map, resolution=2.0):
+   S_QUANT = 1.0    # metres; must be <= resolution
+
+   def wp_key(wp):
+       """Stable, hashable identity for a CARLA waypoint.
+
+       CRITICAL: `wp.s` is a float, and generate_waypoints() and
+       wp.next() do NOT return bit-identical values for the same road
+       position. Keying on the raw float makes every
+       `next_key in waypoint_map` test fail, so the graph ends up with
+       zero edges -- a silent failure that later looks like
+       "no route found".
+
+       Quantizing `s` to a coarse grid makes both APIs agree.
+       """
+       return (wp.road_id, wp.section_id, wp.lane_id,
+               int(round(wp.s / S_QUANT)))
+
+   def build_road_graph(carla_map, resolution=2.0, lane_change_penalty=5.0):
        """
        Build a road network graph from CARLA waypoints.
 
        Returns:
-           graph: dict {wp_id: [(neighbor_id, cost), ...]}
-           waypoint_map: dict {wp_id: carla.Waypoint}
+           graph: dict {wp_key: [(neighbor_key, cost), ...]}
+           waypoint_map: dict {wp_key: carla.Waypoint}
        """
        waypoints = carla_map.generate_waypoints(resolution)
-       waypoint_map = {}
-       graph = {}
+       waypoint_map = {wp_key(wp): wp for wp in waypoints}
+       graph = {k: [] for k in waypoint_map}
 
-       # Index waypoints by ID
-       for wp in waypoints:
-           wp_id = (wp.road_id, wp.section_id, wp.lane_id, wp.s)
-           waypoint_map[wp_id] = wp
-           graph[wp_id] = []
-
-       # Build edges: lane follow + lane changes
-       for wp_id, wp in waypoint_map.items():
+       for key, wp in waypoint_map.items():
            # Lane follow: next waypoints along the lane
            for next_wp in wp.next(resolution):
-               next_id = (next_wp.road_id, next_wp.section_id,
-                          next_wp.lane_id, next_wp.s)
-               if next_id in waypoint_map:
+               nkey = wp_key(next_wp)
+               if nkey in waypoint_map:
                    dist = wp.transform.location.distance(
                        next_wp.transform.location)
-                   graph[wp_id].append((next_id, dist))
+                   graph[key].append((nkey, dist))
 
            # Lane changes (if permitted)
            left_wp = wp.get_left_lane()
            if (left_wp is not None and
-               left_wp.lane_type == carla.LaneType.Driving and
-               str(wp.lane_change) in ['Left', 'Both']):
-               left_id = (left_wp.road_id, left_wp.section_id,
-                          left_wp.lane_id, left_wp.s)
-               if left_id in waypoint_map:
+                   left_wp.lane_type == carla.LaneType.Driving and
+                   str(wp.lane_change) in ['Left', 'Both']):
+               lkey = wp_key(left_wp)
+               if lkey in waypoint_map:
                    # Lane change cost = distance + penalty
                    dist = wp.transform.location.distance(
                        left_wp.transform.location)
-                   graph[wp_id].append((left_id, dist + 5.0))
+                   graph[key].append((lkey, dist + lane_change_penalty))
 
            right_wp = wp.get_right_lane()
            if (right_wp is not None and
-               right_wp.lane_type == carla.LaneType.Driving and
-               str(wp.lane_change) in ['Right', 'Both']):
-               right_id = (right_wp.road_id, right_wp.section_id,
-                           right_wp.lane_id, right_wp.s)
-               if right_id in waypoint_map:
+                   right_wp.lane_type == carla.LaneType.Driving and
+                   str(wp.lane_change) in ['Right', 'Both']):
+               rkey = wp_key(right_wp)
+               if rkey in waypoint_map:
                    dist = wp.transform.location.distance(
                        right_wp.transform.location)
-                   graph[wp_id].append((right_id, dist + 5.0))
+                   graph[key].append((rkey, dist + lane_change_penalty))
 
        return graph, waypoint_map
 
    graph, wp_map = build_road_graph(carla_map, resolution=2.0)
-   print(f"Graph: {len(graph)} nodes, "
-         f"{sum(len(v) for v in graph.values())} edges")
+   n_edges = sum(len(v) for v in graph.values())
+   print(f"Graph: {len(graph)} nodes, {n_edges} edges")
+
+   # Fail loudly now rather than "finding no route" ten minutes later
+   assert n_edges > 0, (
+       "No edges built. Check that S_QUANT <= resolution and that "
+       "wp_key() quantizes `s` instead of using the raw float.")
 
 
 From Route to Reference Path
 ------------------------------
 
 The global route is a sequence of discrete waypoints. Before the motion
-planner (L9) can use it, the route must be converted into a smooth
+planner (L10) can use it, the route must be converted into a smooth
 **reference path** with associated metadata.
 
 
@@ -650,6 +676,8 @@ Waypoint-to-Path Conversion
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
+
+   DEFAULT_SPEED_KMH = 30.0
 
    def route_to_reference_path(route):
        """
@@ -664,13 +692,14 @@ Waypoint-to-Path Conversion
            rot = wp.transform.rotation
            yaw = np.radians(rot.yaw)
 
-           # Speed limit from the waypoint (CARLA stores in km/h)
-           speed_limit = wp.transform.location  # placeholder
-           # Get actual speed limit if available
-           try:
-               speed_limit = 30.0 / 3.6  # default 30 km/h in m/s
-           except Exception:
-               speed_limit = 30.0 / 3.6
+           # Speed limit, in m/s. CARLA exposes posted limits as
+           # landmarks attached to the road; fall back to a default when
+           # a segment has no sign.
+           speed_limit = DEFAULT_SPEED_KMH / 3.6
+           landmarks = wp.get_landmarks_of_type(
+               50.0, '274')          # OpenDRIVE type 274 = speed limit
+           if landmarks:
+               speed_limit = landmarks[0].value / 3.6
 
            # Estimate curvature from consecutive waypoints
            if 0 < i < len(route) - 1:
@@ -679,11 +708,15 @@ Waypoint-to-Path Conversion
                p1 = np.array([loc.x, loc.y])
                p2 = np.array([route[i+1][0].transform.location.x,
                               route[i+1][0].transform.location.y])
-               # Menger curvature from three points
+               # Menger curvature from three points.
+               # NOTE: np.cross on 2-D vectors is REMOVED in NumPy 2.0 --
+               # compute the scalar cross product explicitly.
+               v1, v2 = p1 - p0, p2 - p0
+               cross_z = v1[0] * v2[1] - v1[1] * v2[0]
                a = np.linalg.norm(p1 - p0)
                b = np.linalg.norm(p2 - p1)
                c = np.linalg.norm(p2 - p0)
-               area = abs(np.cross(p1 - p0, p2 - p0)) / 2.0
+               area = abs(cross_z) / 2.0
                curvature = 4.0 * area / max(a * b * c, 1e-6)
            else:
                curvature = 0.0
@@ -791,18 +824,42 @@ Task 2: Build a Road Graph and Compare Routes
    start_id = find_nearest_wp(wp_map, start)
    goal_id = find_nearest_wp(wp_map, goal)
 
-   # Compare Dijkstra (shortest distance) vs A* (fastest time)
-   path_dist, cost_dist = dijkstra(graph, start_id, goal_id)
-   print(f"Dijkstra: {len(path_dist)} waypoints, cost={cost_dist:.1f}")
+   # --- Dijkstra vs A* on the SAME distance-weighted graph ---
+   # Both are optimal, so they return the same-cost path. What differs
+   # is HOW MUCH OF THE GRAPH each had to explore. That is the point of
+   # the comparison -- not the route.
+   path_d, cost_d, expanded_d = dijkstra(graph, start_id, goal_id)
+   print(f"Dijkstra: {len(path_d)} wp, cost={cost_d:.1f}, "
+         f"expanded={expanded_d}")
 
-   # For A*, use positions array
-   positions = {wp_id: np.array([wp.transform.location.x,
-                                  wp.transform.location.y])
-                for wp_id, wp in wp_map.items()}
+   positions = {k: np.array([wp.transform.location.x,
+                             wp.transform.location.y])
+                for k, wp in wp_map.items()}
 
-   path_time, cost_time = astar_road(graph, start_id, goal_id,
-                                      positions, v_max=50.0)
-   print(f"A*: {len(path_time)} waypoints, cost={cost_time:.1f}")
+   path_a, cost_a, expanded_a = astar_road(graph, start_id, goal_id,
+                                           positions)
+   print(f"A*:       {len(path_a)} wp, cost={cost_a:.1f}, "
+         f"expanded={expanded_a}")
+   print(f"A* explored {100 * expanded_a / expanded_d:.0f}% "
+         f"as many nodes as Dijkstra")
+
+   # --- Now a genuinely different objective: fastest TIME ---
+   # To compare shortest-distance against fastest-time you must change
+   # the EDGE COSTS, not just the search algorithm. Rebuild the graph
+   # with cost = length / speed_limit and re-run.
+   def to_time_graph(graph, wp_map, default_kmh=30.0):
+       tgraph = {}
+       for key, edges in graph.items():
+           tgraph[key] = []
+           for nkey, dist in edges:
+               v = default_kmh / 3.6            # m/s; use posted limit
+               tgraph[key].append((nkey, dist / v))
+       return tgraph
+
+   time_graph = to_time_graph(graph, wp_map)
+   path_t, cost_t, _ = astar_road(time_graph, start_id, goal_id,
+                                  positions, v_max=50.0 / 3.6)
+   print(f"Fastest-time route: {len(path_t)} wp, {cost_t:.1f} s")
 
 
 Task 3: Route-Following Autonomous Agent
@@ -817,44 +874,60 @@ Task 3: Route-Following Autonomous Agent
    vehicle = world.spawn_actor(vehicle_bp, spawn_points[0])
 
    # Simple waypoint-following controller
-   def follow_route(vehicle, route, target_speed_kmh=30):
-       """Follow a route using basic waypoint steering."""
+   def follow_route(vehicle, route, target_speed_kmh=30,
+                    reach_radius=3.0, timeout_per_wp=15.0, dt=0.05):
+       """Follow a route using basic waypoint steering.
+
+       Control is recomputed EVERY tick, not once per waypoint. The
+       naive version -- apply a control, then busy-wait until the
+       waypoint is reached -- drives open-loop with a frozen steering
+       angle, and hangs forever if the vehicle never arrives.
+       """
        for i, (wp, option) in enumerate(route):
            target = wp.transform.location
+           elapsed = 0.0
 
-           # Compute steering toward target waypoint
-           v_transform = vehicle.get_transform()
-           v_loc = v_transform.location
-           v_fwd = v_transform.get_forward_vector()
+           while True:
+               tf = vehicle.get_transform()
+               v_loc = tf.location
 
-           # Vector to target
-           to_target = carla.Location(
-               x=target.x - v_loc.x,
-               y=target.y - v_loc.y)
-           dot = v_fwd.x * to_target.x + v_fwd.y * to_target.y
-           cross = v_fwd.x * to_target.y - v_fwd.y * to_target.x
+               if v_loc.distance(target) <= reach_radius:
+                   break                       # waypoint reached
 
-           # Proportional steering
-           steer = max(-1.0, min(1.0, cross / max(dot, 1.0) * 2.0))
+               if elapsed > timeout_per_wp:
+                   print(f"  [WARN] Waypoint {i} unreachable after "
+                         f"{timeout_per_wp:.0f}s -- skipping. The vehicle "
+                         f"is likely stuck or the route is infeasible.")
+                   break                       # give up, do not hang
 
-           # Speed control
-           velocity = vehicle.get_velocity()
-           speed = 3.6 * np.sqrt(velocity.x**2 + velocity.y**2)
-           throttle = 0.5 if speed < target_speed_kmh else 0.0
-           brake = 0.3 if speed > target_speed_kmh + 10 else 0.0
+               # --- Recompute steering toward the target every tick ---
+               v_fwd = tf.get_forward_vector()
+               dx = target.x - v_loc.x
+               dy = target.y - v_loc.y
+               dot = v_fwd.x * dx + v_fwd.y * dy
+               cross = v_fwd.x * dy - v_fwd.y * dx
 
-           vehicle.apply_control(carla.VehicleControl(
-               throttle=throttle, steer=steer, brake=brake))
+               # Angle to target is better behaved than cross/dot, which
+               # blows up when the target is beside or behind the car.
+               angle = np.arctan2(cross, dot)
+               steer = float(np.clip(angle / np.radians(45.0), -1.0, 1.0))
 
-           # Wait until close to waypoint
-           while v_loc.distance(target) > 3.0:
-               time.sleep(0.05)
-               v_loc = vehicle.get_transform().location
+               # --- Speed control ---
+               velocity = vehicle.get_velocity()
+               speed = 3.6 * np.sqrt(velocity.x**2 + velocity.y**2)
+               throttle = 0.5 if speed < target_speed_kmh else 0.0
+               brake = 0.3 if speed > target_speed_kmh + 10 else 0.0
+
+               vehicle.apply_control(carla.VehicleControl(
+                   throttle=throttle, steer=steer, brake=brake))
+
+               time.sleep(dt)
+               elapsed += dt
 
            if i % 20 == 0:
-               print(f"  Waypoint {i}/{len(route)}: "
-                     f"option={option.name}, "
-                     f"speed={speed:.1f} km/h")
+               print(f"  Waypoint {i}/{len(route)}: option={option.name}")
+
+       vehicle.apply_control(carla.VehicleControl(throttle=0.0, brake=1.0))
 
    print("Following route...")
    follow_route(vehicle, route, target_speed_kmh=30)
@@ -866,8 +939,12 @@ Task 3: Route-Following Autonomous Agent
    1. **Plan and visualize** a route through Town03 using the
       ``GlobalRoutePlanner``. Count the number of left turns, right turns,
       lane follows, and lane changes.
-   2. **Build a custom road graph** and run Dijkstra and A*. Compare the
-      routes: which is shorter in distance? Which is faster?
+   2. **Build a custom road graph** and run Dijkstra and A* on the
+      *same* distance-weighted graph. Both are optimal, so they return
+      the same-cost route -- compare the **number of nodes expanded**
+      instead. Then rebuild the graph with time-based edge costs and
+      confirm that the fastest-time route can differ from the
+      shortest-distance one.
    3. **Modify the cost function** to penalize left turns (add +10 to
       junction edges that involve left turns). How does the route change?
    4. **Implement the route-following controller** and drive the full route
@@ -881,9 +958,10 @@ Task 3: Route-Following Autonomous Agent
 .. note::
 
    The waypoint-following controller in Task 3 is intentionally simple.
-   In **L9: Motion Planning** and **L10: Trajectory Planning & Control**,
-   you will replace it with proper path planners and controllers (A*,
-   Pure Pursuit, Stanley, MPC) that handle obstacles and dynamics.
+   In **L10: Motion Planning** and **L11: Trajectory Generation &
+   Control**, you will replace it with proper path planners and
+   controllers (A*, Hybrid A*, Pure Pursuit, Stanley, MPC) that handle
+   obstacles and dynamics.
 
 
 Summary
@@ -916,6 +994,6 @@ Summary
 .. note::
 
    Navigation is the *strategic* layer of the planning stack. It tells
-   the vehicle where to go. The *tactical* (behavior) and *operational*
-   (motion/trajectory) layers -- covered in L9--L11 -- determine how to
-   get there safely and smoothly.
+   the vehicle where to go. The *tactical* (behavior, L9) and
+   *operational* (motion planning L10, trajectory and control L11)
+   layers determine how to get there safely and smoothly.

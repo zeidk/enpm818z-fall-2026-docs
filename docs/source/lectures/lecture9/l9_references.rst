@@ -2,14 +2,14 @@ References
 ==========
 
 
-.. dropdown:: Lecture 10
+.. dropdown:: Lecture 9
     :class-container: sd-border-secondary
     :open:
 
     .. card::
         :class-card: sd-border-secondary
 
-        **ENPM818Z -- L10: Prediction & Decision-Making**
+        **ENPM818Z -- L9: Prediction & Behavior Modeling**
 
         Covers why prediction is necessary for planning (horizon
         requirements), physics-based prediction (CV, CTRA),

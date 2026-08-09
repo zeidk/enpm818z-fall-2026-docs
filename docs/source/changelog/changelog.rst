@@ -9,7 +9,7 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
    :icon: tag
    :class-container: sd-border-success
 
-   Complete documentation for all 13 lectures of the ENPM818Z Fall 2026
+   Complete documentation for all 14 lectures of the ENPM818Z Fall 2026
    curriculum.
 
    .. rubric:: Lecture 4: Perception II -- BEV Perception & Occupancy Networks
@@ -80,7 +80,7 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
 
    - Removed all old ENPM605 content from lecture4/ through lecture8/.
    - Created new directories for lecture9/ through lecture13/.
-   - Updated lectures/index.rst toctree with all 13 lectures.
+   - Updated lectures/index.rst toctree with all 14 lectures.
    - Each lecture includes: index, lecture notes, quiz (10 MC + 5 T/F +
      3 essay with hidden answers), and categorized references.
 

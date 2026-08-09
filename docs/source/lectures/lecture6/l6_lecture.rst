@@ -132,7 +132,12 @@ Tracking Metrics
      - Overall tracking accuracy; penalizes FN, FP, and ID switches. Range: :math:`(-\infty, 1]`.
    * - **MOTP**
      - :math:`\frac{\sum_{i,t} d_t^i}{\sum_t c_t}`
-     - Average localization precision for matched pairs (IoU or distance). Higher = better.
+     - Average localization quality over matched pairs, where :math:`c_t`
+       is the number of matches at time :math:`t`. **Read the definition
+       of** :math:`d_t^i` **before interpreting it:** if it is a distance
+       error, lower is better; if it is IoU overlap (the MOTChallenge
+       convention), higher is better. The two conventions are both in
+       common use and are reported as the same metric name.
    * - **IDF1**
      - :math:`\frac{2 \cdot IDTP}{2 \cdot IDTP + IDFP + IDFN}`
      - F1 score for correct identity assignments. Emphasizes consistent ID maintenance.
@@ -230,8 +235,105 @@ The detector is completely independent of the tracker. This means improving
 either component independently improves overall tracking.
 
 
-Integration with the L4-L5 Pipeline
--------------------------------------
+End-to-End Transformer MOT
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tracking-by-detection treats association as a separate, hand-designed
+step. **Transformer MOT** dissolves that boundary the same way DETR
+dissolved NMS in L4: by making association an emergent property of
+attention rather than an algorithm bolted on afterwards.
+
+.. tab-set::
+
+   .. tab-item:: TrackFormer (2022)
+
+      Extends DETR with **track queries**. Alongside DETR's usual object
+      queries (which spawn new tracks), each existing track carries its
+      own query forward from the previous frame. That query attends to
+      the current frame's features and directly outputs the object's new
+      position -- keeping its identity implicitly, with no IoU matrix and
+      no Hungarian algorithm at inference.
+
+   .. tab-item:: MOTR (2022)
+
+      Similar track-query concept, with the focus on end-to-end temporal
+      modelling: queries are updated across a whole video clip during
+      training, so the network learns long-term association behaviour
+      rather than just frame-to-frame matching.
+
+   .. tab-item:: Why it has not taken over
+
+      Two practical obstacles keep tracking-by-detection dominant in
+      production. First, **detection dominates the metrics**: ByteTrack
+      with a strong detector still beats most end-to-end trackers on
+      MOTA, because a better detector helps immediately while an
+      end-to-end tracker must relearn everything. Second, **modularity
+      is worth a lot** -- a separable detector and tracker can be
+      validated, profiled, and swapped independently, which matters
+      enormously for the safety case in L14.
+
+.. admonition:: The recurring pattern
+   :class: tip
+
+   You have now seen the same architectural move three times: DETR
+   replaced NMS with learned set prediction (L4), BEVFormer replaced
+   geometric projection with learned attention (L5), and TrackFormer
+   replaces the Hungarian algorithm with learned queries. In each case a
+   hand-designed combinatorial step becomes a learned one -- and in each
+   case adoption depends on whether the learned version is worth giving
+   up the modularity.
+
+
+3D Multi-Object Tracking
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Everything above tracks boxes in the **image plane**. A planner cannot
+use that: it needs objects tracked in metric space, which is what L4's 3-D
+detectors and L5's BEV representation produce. Fortunately the algorithm
+barely changes -- the state vector does.
+
+.. list-table::
+   :widths: 22 39 39
+   :header-rows: 1
+   :class: compact-table
+
+   * - Aspect
+     - 2D image tracking
+     - 3D / BEV tracking
+   * - State
+     - :math:`[c_x, c_y, s, r, \dot{c}_x, \dot{c}_y, \dot{s}]`
+     - :math:`[x, y, z, \theta, l, w, h, \dot{x}, \dot{y}, \dot{z}]`
+   * - Association metric
+     - IoU between 2-D boxes
+     - 3-D/BEV IoU, or centre distance, or Mahalanobis
+   * - Motion model
+     - Constant velocity in pixels (breaks under ego motion)
+     - Constant velocity in **world** coordinates
+   * - Ego motion
+     - Confounds everything
+     - Compensated using the L7 pose estimate
+
+.. admonition:: Ego-motion compensation is the key difference
+   :class: important
+
+   In image space, a parked car "moves" whenever the ego vehicle does,
+   so the constant-velocity model is fitting the wrong thing entirely.
+   In 3-D you transform tracks into a **world or map frame** using the
+   ego pose from L7, and then a parked car has genuinely zero velocity.
+   The motion model finally matches reality, and tracking through
+   occlusion improves dramatically as a result.
+
+**AB3DMOT** (Weng et al., 2020) is the standard baseline and is
+deliberately minimal: a 3-D Kalman filter with a constant-velocity model
+plus greedy 3-D IoU association -- essentially SORT lifted into 3-D. Its
+lesson mirrors ByteTrack's: with good detections, a simple tracker is
+hard to beat. **CenterPoint** (L4) goes further and has the detector
+regress per-object velocity directly, so association becomes little more
+than matching predicted to detected centres.
+
+
+Integration with the Perception Pipeline
+------------------------------------------
 
 The full perception pipeline for autonomous driving:
 
@@ -317,8 +419,13 @@ BEVFusion (MIT) Example
    * - **Output**
      - Fused BEV features → detection/segmentation heads
 
-Performance on nuScenes: 70.2 NDS vs. 65.0 for LiDAR-only -- camera
-fusion adds semantic richness that improves small object detection.
+On the nuScenes detection benchmark, BEVFusion improves clearly over a
+LiDAR-only baseline of the same design -- camera features add semantic
+richness that particularly helps small and distant objects. Consult the
+paper for current figures and be careful to compare val against val: the
+reported numbers differ by several NDS points between the validation and
+test splits, and between the MIT and Peking University papers that share
+the name "BEVFusion."
 
 .. note::
 
@@ -346,8 +453,11 @@ Summary
    .. grid-item-card:: Temporal & Deep Fusion
       :class-card: sd-border-primary
 
-      - Temporal context: motion, occlusion, intent
-      - Tracking-by-detection vs end-to-end transformer MOT
+      - Temporal context: motion, occlusion, noise averaging
+      - Transformer MOT (TrackFormer, MOTR): track queries replace the
+        Hungarian step, but modularity keeps tracking-by-detection ahead
+      - 3D/BEV tracking: same filter, world-frame state, ego-motion
+        compensated (AB3DMOT, CenterPoint)
       - Cross-attention fusion of camera + LiDAR BEV features
       - BEVFusion: concatenate-then-conv vs. attention-based fusion
 
@@ -371,58 +481,130 @@ IoU-based Hungarian matching.
    from scipy.optimize import linear_sum_assignment
 
    class KalmanBoxTracker:
-       """Kalman filter tracker for a single bounding box."""
+       """Kalman filter tracker for a single bounding box.
+
+       This is a real KF, using the machinery from L3: a state vector
+       with an explicit covariance P, a process model (F, Q), and a
+       measurement model (H, R). The covariance is the whole point --
+       it is what lets the tracker express "I have not seen this object
+       for four frames, so I am no longer confident where it is," which
+       in turn is what makes gating and association work.
+
+       State (SORT's parameterization, Bewley et al. 2016):
+           x = [cx, cy, s, r, vx, vy, vs]^T
+       where s is box AREA and r is aspect ratio (assumed constant, so
+       it has no velocity term).
+       """
        _count = 0
 
-       def __init__(self, bbox):
-           """Initialize with bounding box [x1, y1, x2, y2]."""
+       def __init__(self, bbox, dt=1.0):
            self.id = KalmanBoxTracker._count
            KalmanBoxTracker._count += 1
 
-           # State: [cx, cy, area, aspect_ratio, vx, vy, va]
-           cx = (bbox[0] + bbox[2]) / 2
-           cy = (bbox[1] + bbox[3]) / 2
-           area = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1])
-           aspect = (bbox[2] - bbox[0]) / max(bbox[3] - bbox[1], 1)
+           # --- Process model: constant velocity in (cx, cy, s) ---
+           self.F = np.eye(7)
+           self.F[0, 4] = dt      # cx += vx * dt
+           self.F[1, 5] = dt      # cy += vy * dt
+           self.F[2, 6] = dt      # s  += vs * dt
 
-           self.state = np.array([cx, cy, area, aspect, 0, 0, 0],
-                                 dtype=np.float64)
+           # --- Measurement model: we observe (cx, cy, s, r) ---
+           self.H = np.zeros((4, 7))
+           self.H[:4, :4] = np.eye(4)
+
+           # --- Noise. These are the tuning knobs. ---
+           # R: detector noise. Area is measured far less reliably than
+           # the centre, so it gets a much larger variance.
+           self.R = np.diag([1.0, 1.0, 10.0, 0.01])
+           # Q: how much we distrust constant velocity. Velocities are
+           # unobserved at init, so give them large process noise.
+           self.Q = np.diag([1.0, 1.0, 1.0, 0.01, 0.01, 0.01, 0.0001])
+
+           # --- Initial state and covariance ---
+           z = self._bbox_to_z(bbox)
+           self.x = np.zeros(7)
+           self.x[:4] = z
+           self.P = np.diag([10., 10., 10., 10., 1000., 1000., 1000.])
+           # Huge variance on the velocity block: after ONE detection we
+           # genuinely have no idea how fast the object is moving, and
+           # saying so lets the second detection dominate the estimate.
+
            self.hits = 1
            self.age = 0
            self.time_since_update = 0
 
+       @staticmethod
+       def _bbox_to_z(bbox):
+           """[x1,y1,x2,y2] -> [cx, cy, area, aspect]."""
+           w = max(bbox[2] - bbox[0], 1e-6)
+           h = max(bbox[3] - bbox[1], 1e-6)
+           return np.array([bbox[0] + w / 2, bbox[1] + h / 2, w * h, w / h])
+
        def predict(self):
-           """Constant-velocity prediction."""
-           self.state[:3] += self.state[4:7]  # update position with velocity
+           """KF predict step."""
+           self.x = self.F @ self.x
+           self.P = self.F @ self.P @ self.F.T + self.Q
+           # Area must stay positive after prediction
+           if self.x[2] <= 0:
+               self.x[2] = 1e-6
            self.age += 1
            self.time_since_update += 1
-           return self._state_to_bbox()
+           return self.to_bbox()
 
        def update(self, bbox):
-           """Update state with matched detection."""
-           cx = (bbox[0] + bbox[2]) / 2
-           cy = (bbox[1] + bbox[3]) / 2
-           area = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1])
+           """KF update step with a matched detection."""
+           z = self._bbox_to_z(bbox)
+           y = z - self.H @ self.x                    # innovation
+           S = self.H @ self.P @ self.H.T + self.R    # innovation covariance
+           K = self.P @ self.H.T @ np.linalg.inv(S)   # Kalman gain
+           self.x = self.x + K @ y
 
-           # Simple exponential moving average (alpha = 0.7)
-           alpha = 0.7
-           old_cx, old_cy, old_area = self.state[:3]
-           self.state[4] = alpha * (cx - old_cx) + (1 - alpha) * self.state[4]
-           self.state[5] = alpha * (cy - old_cy) + (1 - alpha) * self.state[5]
-           self.state[6] = alpha * (area - old_area) + (1-alpha) * self.state[6]
-           self.state[0] = cx
-           self.state[1] = cy
-           self.state[2] = area
+           # Joseph form -- keeps P symmetric positive-definite (see L3)
+           I_KH = np.eye(7) - K @ self.H
+           self.P = I_KH @ self.P @ I_KH.T + K @ self.R @ K.T
+
            self.hits += 1
            self.time_since_update = 0
 
-       def _state_to_bbox(self):
-           """Convert state back to [x1, y1, x2, y2]."""
-           cx, cy, area, aspect = self.state[:4]
-           w = np.sqrt(max(area * aspect, 1))
-           h = max(area / w, 1)
-           return np.array([cx - w/2, cy - h/2, cx + w/2, cy + h/2])
+       def mahalanobis(self, bbox):
+           """Gating distance from L3 -- uses the covariance, unlike IoU."""
+           z = self._bbox_to_z(bbox)
+           y = z - self.H @ self.x
+           S = self.H @ self.P @ self.H.T + self.R
+           return float(np.sqrt(y.T @ np.linalg.inv(S) @ y))
 
+       def to_bbox(self):
+           """Convert state back to [x1, y1, x2, y2]."""
+           cx, cy, s, r = self.x[:4]
+           s = max(s, 1e-6)
+           r = max(r, 1e-6)
+           w = np.sqrt(s * r)
+           h = s / w
+           return np.array([cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2])
+
+.. admonition:: Why this must be a Kalman filter and not a moving average
+   :class: important
+
+   An exponential moving average can smooth a track, but it has no
+   notion of **uncertainty**. That costs you three things SORT depends
+   on:
+
+   1. **Occlusion handling.** During a gap, :math:`P` grows through the
+      predict step, so the tracker automatically becomes more willing to
+      accept a re-detection that has drifted. A moving average has a
+      fixed implicit trust level forever.
+   2. **Principled gating.** The Mahalanobis distance above scales the
+      residual by :math:`S`, so a confident track rejects distant
+      matches while an uncertain one accepts them. A fixed IoU threshold
+      cannot adapt.
+   3. **Correct initialization.** Setting velocity variance to 1000 at
+      birth means the second detection essentially defines the velocity.
+      A moving average with :math:`\alpha = 0.7` would instead spend
+      several frames crawling toward the truth.
+
+   This is exactly the L3 machinery -- same predict/update cycle, same
+   Joseph-form covariance update -- applied per track.
+
+.. code-block:: python
 
    def iou_batch(bb_det, bb_trk):
        """Compute IoU between all pairs of detection and track boxes."""
@@ -507,7 +689,7 @@ IoU-based Hungarian matching.
            results = []
            for trk in self.trackers:
                if trk.hits >= self.min_hits:
-                   bbox = trk._state_to_bbox()
+                   bbox = trk.to_bbox()
                    results.append([*bbox, trk.id])
            return np.array(results) if results else np.empty((0, 5))
 
@@ -515,58 +697,59 @@ IoU-based Hungarian matching.
 Task 2: Run the Tracker on CARLA Vehicles
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. important::
+
+   **Track real detections, not ground truth.** It is tempting to feed
+   the tracker CARLA's actor list, but that defeats the exercise: ground
+   truth never misses an object, never produces a false positive, never
+   occludes, and carries **no confidence score** -- so there would be
+   nothing for the tracker to fix and no way to attempt ByteTrack's
+   two-tier association in Task 4.
+
+   Use the YOLO detector from L4. Ground truth still has a role, but as
+   the *reference* against which you score MOTA and IDF1 in Task 5 --
+   not as the tracker's input.
+
 .. code-block:: python
 
-   def get_vehicle_bboxes_2d(world, camera_actor, K):
-       """Get 2D bounding boxes for all vehicles visible to a camera."""
-       vehicles = world.get_actors().filter('vehicle.*')
-       ego_id = vehicle.id
-       cam_transform = camera_actor.get_transform()
-       world_to_cam = np.array(cam_transform.get_inverse_matrix())
+   from ultralytics import YOLO
 
-       bboxes = []
-       for v in vehicles:
-           if v.id == ego_id:
+   detector = YOLO('yolov8s.pt')          # or your GP2 fine-tuned model
+   VEHICLE_CLASSES = {1, 2, 3, 5, 7}      # COCO: bicycle, car, motorcycle,
+                                          #       bus, truck
+
+   def detect_vehicles(frame_bgr, conf_threshold=0.1):
+       """Run YOLO and return boxes WITH confidence scores.
+
+       Note the low threshold: ByteTrack needs the low-confidence
+       detections that a conventional 0.5 cutoff would discard, so we
+       keep them and let the tracker decide.
+       """
+       results = detector(frame_bgr, verbose=False, conf=conf_threshold)[0]
+
+       dets = []
+       for box in results.boxes:
+           if int(box.cls[0]) not in VEHICLE_CLASSES:
                continue
+           x1, y1, x2, y2 = box.xyxy[0].tolist()
+           dets.append([x1, y1, x2, y2, float(box.conf[0])])
 
-           # Get vehicle center in world frame
-           v_loc = v.get_transform().location
-           v_world = np.array([v_loc.x, v_loc.y, v_loc.z, 1.0])
-
-           # Transform to camera frame
-           v_cam = world_to_cam @ v_world
-           if v_cam[2] < 1.0:  # behind camera
-               continue
-
-           # Project to pixel coordinates
-           px = K[0, 0] * v_cam[0] / v_cam[2] + K[0, 2]
-           py = K[1, 1] * v_cam[1] / v_cam[2] + K[1, 2]
-
-           # Approximate bounding box size based on distance
-           half_w = max(30, 2000 / v_cam[2])
-           half_h = max(20, 1500 / v_cam[2])
-
-           x1 = max(0, int(px - half_w))
-           y1 = max(0, int(py - half_h))
-           x2 = min(1280, int(px + half_w))
-           y2 = min(720, int(py + half_h))
-
-           if x2 > x1 and y2 > y1:
-               bboxes.append([x1, y1, x2, y2])
-
-       return np.array(bboxes) if bboxes else np.empty((0, 4))
+       return np.array(dets) if dets else np.empty((0, 5))
 
    # ── Main tracking loop ────────────────────────────────────────────
    tracker = SORTTracker(max_age=5, min_hits=3, iou_threshold=0.3)
-   # Assign unique colors per track ID
    track_colors = {}
 
    def tracking_callback(image):
        array = np.frombuffer(image.raw_data, dtype=np.uint8)
+       # CARLA delivers BGRA; slicing to 3 channels gives BGR, which is
+       # what both YOLO and cv2 expect. Do not convert to RGB here.
        frame = array.reshape((image.height, image.width, 4))[:, :, :3].copy()
 
-       detections = get_vehicle_bboxes_2d(world, cameras['front'], K)
-       tracks = tracker.update(detections)
+       dets = detect_vehicles(frame)              # (M, 5): box + score
+
+       # Basic SORT ignores the score column; ByteTrack (Task 4) uses it.
+       tracks = tracker.update(dets[:, :4] if len(dets) else dets)
 
        for trk in tracks:
            x1, y1, x2, y2, tid = trk.astype(int)
@@ -583,31 +766,48 @@ Task 2: Run the Tracker on CARLA Vehicles
 
    cameras['front'].listen(tracking_callback)
 
+.. note::
+
+   For **Task 5** you need ground-truth boxes as a reference. Project
+   each vehicle actor's ``bounding_box`` vertices into the image using
+   the UE-to-optical permutation from L2 (projecting only the actor
+   *centre*, and guessing a box size from range, gives boxes too
+   inaccurate to score against). Then match tracks to ground truth by
+   IoU per frame and count false negatives, false positives, and
+   identity switches to assemble MOTA.
+
 .. admonition:: Exercise Tasks
    :class: tip
 
-   1. **Visualize CARLA semantic segmentation** using the ground-truth camera.
-      Identify the driveable surface, lane markings, and vehicle pixels.
-   2. **Run the SORT tracker** on CARLA vehicle detections. Observe how track
+   1. **Run the SORT tracker** on live YOLO detections. Observe how track
       IDs are assigned and maintained as vehicles move through the scene.
+   2. **Inspect the covariance**: Print ``np.trace(trk.P)`` for one track
+      each frame. Watch it grow while the object is occluded and collapse
+      when a detection re-associates. This is the behaviour a moving
+      average cannot reproduce.
    3. **Stress-test with occlusion**: Drive through a busy intersection and
       observe ID switches when vehicles occlude each other. Count the number
       of ID switches over 100 frames.
-   4. **Implement ByteTrack's two-pass association**: Modify the
-      ``SORTTracker.update()`` method to split detections into high-confidence
-      and low-confidence sets, run two rounds of Hungarian matching, and
-      compare the ID switch count against basic SORT.
-   5. **Compute tracking metrics**: Using CARLA's ground-truth vehicle
-      positions as reference, compute MOTA and IDF1 for your tracker over
+   4. **Implement ByteTrack's two-pass association**: Modify
+      ``SORTTracker.update()`` to split detections at
+      :math:`\tau_{high} = 0.6`, match the high-confidence set to all
+      tracks first, then match the low-confidence set to whatever tracks
+      remain unmatched. Compare the ID-switch count against basic SORT.
+   5. **Swap IoU for Mahalanobis gating**: Use ``trk.mahalanobis(det)``
+      to reject implausible pairings before the Hungarian step (a
+      :math:`\chi^2` gate at 4 degrees of freedom, 95%, is about 9.49).
+      Does it help most where boxes are small and IoU is brittle?
+   6. **Compute tracking metrics**: Using CARLA's ground-truth vehicle
+      boxes as reference, compute MOTA and IDF1 for your tracker over
       a 30-second driving sequence.
 
-.. admonition:: Assignment Unlocked -- GP2: Perception -- YOLO vs DETR
+.. admonition:: Assignment Unlocked -- GP2: Perception
    :class: important
 
-   You now have the foundational knowledge from **L3--L5** to begin
-   **GP2: Perception -- YOLO vs DETR**. In GP2 you will collect a labeled
-   dataset from CARLA, fine-tune both YOLOv8 and RT-DETR, deploy each as a
-   ROS 2 perception node, and perform a rigorous comparison across weather
-   and lighting conditions.
+   You now have the foundational knowledge from **L4--L6** to begin
+   **GP2: Perception**. In GP2 you will collect a labeled dataset from
+   CARLA, fine-tune both YOLOv8 and RT-DETR, deploy each as a ROS 2
+   perception node, add the tracker from this lecture, and perform a
+   rigorous comparison across weather and lighting conditions.
 
    :doc:`Go to GP2 </assignments/gp2>`

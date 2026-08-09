@@ -281,14 +281,31 @@ Extrinsic calibration determines the **6-DOF rigid-body transformation**
 or between a sensor and the vehicle body frame. This is the critical step that
 enables multi-sensor fusion.
 
-**Mathematical formulation:**
+**Notation.** Frame conventions are the single most common source of
+sign and ordering errors in fusion code, so we fix one convention and use
+it for the rest of the course:
 
-The extrinsic transform between frame :math:`A` and frame :math:`B` is a
-4 x 4 homogeneous transformation matrix:
+.. admonition:: Convention used throughout ENPM818Z
+   :class: important
+
+   :math:`T_{A \leftarrow B}` denotes the transform that takes a point
+   **expressed in frame** :math:`B` and returns it **expressed in frame**
+   :math:`A`. Read the arrow right-to-left, as "A from B."
+
+   Composition then chains naturally, with the inner frames cancelling:
+
+   .. math::
+
+      T_{A \leftarrow C} = T_{A \leftarrow B} \; T_{B \leftarrow C}
+
+   and inversion flips the arrow:
+   :math:`T_{B \leftarrow A} = \left(T_{A \leftarrow B}\right)^{-1}`.
+
+The transform is a 4 x 4 homogeneous matrix:
 
 .. math::
 
-   T_B^A = \begin{bmatrix} R & t \\ 0 & 1 \end{bmatrix} \in SE(3)
+   T_{A \leftarrow B} = \begin{bmatrix} R & t \\ 0 & 1 \end{bmatrix} \in SE(3)
 
 where :math:`R \in SO(3)` is a 3 x 3 rotation matrix and
 :math:`t \in \mathbb{R}^3` is the translation vector. To transform a point
@@ -300,22 +317,37 @@ where :math:`R \in SO(3)` is a 3 x 3 rotation matrix and
 
 **Example -- LiDAR-to-camera projection:**
 
-To project a LiDAR point into a camera image, you chain the extrinsic and
-intrinsic transforms. Given vehicle-to-LiDAR (:math:`T_L^V`) and
-vehicle-to-camera (:math:`T_C^V`) extrinsics:
+To project a LiDAR point into a camera image, chain the extrinsic and
+intrinsic transforms. Calibration typically gives you each sensor's pose
+**in the vehicle frame**, i.e. :math:`T_{V \leftarrow L}` and
+:math:`T_{V \leftarrow C}`. The transform you need is:
 
 .. math::
 
-   T_C^L = T_C^V \cdot \left(T_L^V\right)^{-1}
+   T_{C \leftarrow L}
+     = T_{C \leftarrow V} \; T_{V \leftarrow L}
+     = \left(T_{V \leftarrow C}\right)^{-1} T_{V \leftarrow L}
 
-A 3-D LiDAR point :math:`\mathbf{p}_L` projects to pixel coordinates via:
+Note how the inner :math:`V` cancels -- if the frames in your chain do not
+cancel like this, the composition is wrong. A 3-D LiDAR point
+:math:`\mathbf{p}_L` then projects to pixel coordinates via:
 
 .. math::
 
-   \mathbf{u} = \pi\!\left(K \; T_C^L \; \mathbf{p}_L\right)
+   \mathbf{u} = \pi\!\left(K \; T_{C \leftarrow L} \; \mathbf{p}_L\right)
 
 where :math:`\pi` applies the perspective division and :math:`K` is the
 camera intrinsic matrix.
+
+.. warning::
+
+   :math:`K` assumes the **optical** convention: :math:`x` right,
+   :math:`y` down, :math:`z` **forward along the optical axis**. Many
+   robotics and game-engine frames (including CARLA's) instead use
+   :math:`x` forward, :math:`y` right, :math:`z` up. Applying :math:`K`
+   to a point in that frame silently produces garbage. See the CARLA
+   exercise at the end of this lecture for the required axis
+   permutation.
 
 **Calibration methods:**
 
@@ -482,12 +514,6 @@ Industry Sensor Configurations
      - 0
      - 0
      - Yes
-   * - **Cruise**
-     - Multi-sensor
-     - 21
-     - 5
-     - 5
-     - Yes
    * - **Aurora**
      - Long-range LiDAR
      - Yes
@@ -500,6 +526,22 @@ Industry Sensor Configurations
      - Optional
      - Optional
      - Yes
+   * - **Zoox**
+     - Purpose-built, symmetric
+     - Yes
+     - Yes (4 corners)
+     - Yes
+     - Yes
+
+.. note::
+
+   Sensor counts are **generation-specific and change often**. The Waymo
+   figures above describe the 5th-generation Driver; the 6th-generation
+   Driver deliberately reduced sensor count to cut cost. Tesla removed
+   radar in 2021--2022 but has since reintroduced a high-definition radar
+   on some HW4 vehicles. Treat every row here as a snapshot, and check
+   the manufacturer's current published specification before relying on
+   a number.
 
 .. tip::
 
@@ -510,17 +552,20 @@ Industry Sensor Configurations
 Sensor Fusion Preview
 ---------------------
 
-While the full mathematical treatment of sensor fusion is covered in
-**L6: Multi-Sensor Fusion**, this section introduces the key concepts you
-need to understand *why* we fuse sensor data and the fundamental approaches
-for doing so.
-
+The full treatment of sensor fusion -- fusion architectures, the Kalman
+filter family, and data association -- is the subject of
+**L3: Probabilistic State Estimation & Fusion**. This section establishes
+only the one idea you need in order to reason about *sensor placement*,
+which is what the rest of this lecture is about: **why** combining sensors
+helps at all.
 
 Sensor Relationships
 ~~~~~~~~~~~~~~~~~~~~
 
 The Complementarity Principle (Luo, 1989) classifies sensor relationships
-into three categories:
+into three categories. This taxonomy drives placement decisions: it tells
+you whether adding a sensor buys you *new information*, *fault tolerance*,
+or *a new measurement type*.
 
 .. tab-set::
 
@@ -531,6 +576,8 @@ into three categories:
 
       - **Example:** Camera (color, text, classification) + LiDAR (precise 3D
         shape and range). Neither alone is sufficient for robust perception.
+      - **Placement consequence:** their fields of view must *overlap* in
+        the regions where you need both properties at once.
 
    .. tab-item:: Competitive (Redundant)
 
@@ -540,6 +587,9 @@ into three categories:
       - **Example:** Two forward-facing cameras. If one is blinded by sun
         glare, the other may still function. Redundancy prevents single points
         of failure.
+      - **Placement consequence:** redundant sensors should fail
+        *independently* -- mounting two cameras side by side means one sun
+        angle blinds both.
 
    .. tab-item:: Cooperative
 
@@ -548,6 +598,8 @@ into three categories:
 
       - **Example:** Two cameras forming a stereo pair to compute geometric
         depth via triangulation.
+      - **Placement consequence:** the geometry *is* the measurement --
+        stereo depth resolution is set directly by the baseline.
 
 .. admonition:: Why Is Fusion Essential?
    :class: important
@@ -559,78 +611,14 @@ into three categories:
      (rain, night, tunnel).
    - **Complementary information** -- Each sensor provides unique data types.
 
+.. seealso::
 
-Fusion Architectures Overview
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A critical design decision is not just *how* to fuse data, but *when*. The
-three main strategies trade off performance against modularity:
-
-.. list-table::
-   :widths: 18 27 27 28
-   :header-rows: 1
-   :class: compact-table
-
-   * - Strategy
-     - Description
-     - Best For
-     - Trade-Off
-   * - **Early Fusion**
-     - Combine **raw data** first, then run a single perception pipeline.
-     - Maximum performance; research platforms.
-     - High compute; tightly coupled.
-   * - **Late Fusion**
-     - Each sensor runs its own perception. **Object lists** are merged at
-       the end.
-     - Modularity; production ADAS (AEB, ACC).
-     - Information loss before fusion.
-   * - **Hybrid Fusion**
-     - Early fusion for tightly-coupled sensors (Camera + LiDAR); late fusion
-       for the rest (+ RADAR).
-     - L4 robotaxis; practical balance.
-     - Manages complexity selectively.
-
-
-Weighted Averaging: A Simple Fusion Example
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Before introducing Kalman Filters (L6), we can fuse two sensor measurements
-using **inverse-variance weighting** -- the simplest principled fusion method.
-
-.. math::
-
-   x_{\text{fused}} = \frac{\sum_{i=1}^{n} w_i \, x_i}{\sum_{i=1}^{n} w_i}
-   \qquad\text{where}\qquad w_i = \frac{1}{\sigma_i^2}
-
-Measurements from more precise sensors (lower variance :math:`\sigma^2`)
-receive higher weight.
-
-.. admonition:: Worked Example
-   :class: note
-
-   **Scenario:** Fuse distance measurements from LiDAR and a monocular camera.
-
-   - **LiDAR:** :math:`x_1 = 10.0` m, :math:`\sigma_1^2 = 0.1` (high
-     confidence) :math:`\Rightarrow w_1 = 10.0`
-   - **Camera:** :math:`x_2 = 11.0` m, :math:`\sigma_2^2 = 2.0` (low
-     confidence) :math:`\Rightarrow w_2 = 0.5`
-
-   .. math::
-
-      x_{\text{fused}} = \frac{10.0 \times 10.0 + 0.5 \times 11.0}
-                               {10.0 + 0.5}
-                        = \frac{105.5}{10.5} \approx \mathbf{10.048\;m}
-
-   The result is pulled strongly toward the precise LiDAR measurement
-   (10.0 m) rather than the naive average (10.5 m). The algorithm correctly
-   trusts the better sensor.
-
-.. note::
-
-   Weighted averaging is *memoryless* -- it uses only the current
-   measurements. The Kalman Filter (L6) adds a **predict-update cycle**
-   that incorporates motion models and temporal history, making it far more
-   powerful for tracking moving objects.
+   **Deferred to L3, deliberately.** Fusion architectures (early /
+   intermediate / late), inverse-variance weighting, the Kalman filter,
+   EKF, UKF, particle filters, and data association are all developed
+   there, where they can be treated properly rather than previewed. Do
+   not expect to be able to fuse anything after this lecture -- expect to
+   be able to *place sensors so that fusion is possible*.
 
 
 Discussion: Design Trade-Offs
@@ -840,7 +828,13 @@ known sensor transforms to project 3D LiDAR points into the camera image.
 .. code-block:: python
 
    def lidar_to_camera_projection(lidar_data, camera_data, camera_actor):
-       """Project LiDAR points onto a camera image."""
+       """Project LiDAR points onto a camera image.
+
+       The one step that is easy to miss: CARLA's transform matrices use
+       the Unreal Engine convention (x FORWARD, y RIGHT, z UP), but the
+       intrinsic matrix K assumes the optical convention (x right,
+       y down, z forward). A permutation between the two is mandatory.
+       """
        # Parse LiDAR point cloud
        points = np.frombuffer(lidar_data.raw_data, dtype=np.float32)
        points = points.reshape(-1, 4)[:, :3]  # (N, 3) -- x, y, z
@@ -860,18 +854,28 @@ known sensor transforms to project 3D LiDAR points into the camera image.
            [0.0,    0.0,   1.0]
        ])
 
-       # Get the LiDAR-to-camera extrinsic transform
-       # (In CARLA, sensor transforms are relative to the vehicle)
-       lidar_tf = lidar_data.transform
-       cam_tf = camera_data.transform
-       world_to_cam = np.array(cam_tf.get_inverse_matrix())
-       lidar_to_world = np.array(lidar_tf.get_matrix())
+       # Build T_camera<-lidar by going through the WORLD frame.
+       # NOTE: SensorData.transform is the sensor pose in WORLD
+       # coordinates at capture time -- not relative to the vehicle.
+       lidar_to_world = np.array(lidar_data.transform.get_matrix())
+       world_to_cam = np.array(camera_data.transform.get_inverse_matrix())
        lidar_to_cam = world_to_cam @ lidar_to_world
 
-       # Project points: transform to camera frame, then apply intrinsics
-       cam_points = (lidar_to_cam @ points_h.T)[:3]  # (3, N)
+       # Points in the camera frame, still in UE axes (x fwd, y right, z up)
+       cam_points_ue = (lidar_to_cam @ points_h.T)[:3]   # (3, N)
 
-       # Keep only points in front of the camera (z > 0)
+       # --- The critical step: UE axes -> optical axes ---------------
+       #   optical x (right) =  UE y
+       #   optical y (down)  = -UE z
+       #   optical z (fwd)   =  UE x
+       cam_points = np.vstack([
+            cam_points_ue[1],
+           -cam_points_ue[2],
+            cam_points_ue[0],
+       ])
+       # --------------------------------------------------------------
+
+       # Keep only points in front of the camera (optical z > 0)
        mask = cam_points[2] > 0
        cam_points = cam_points[:, mask]
 
@@ -888,6 +892,23 @@ known sensor transforms to project 3D LiDAR points into the camera image.
 
        return u[valid], v[valid], depths[valid]
 
+.. admonition:: How to tell if you got the axes wrong
+   :class: warning
+
+   The symptom is rarely an exception -- it is a plausible-looking but
+   wrong overlay. Two quick checks:
+
+   - **Everything is filtered out.** If ``mask`` removes nearly all
+     points, you are almost certainly testing UE ``z`` (up) instead of
+     optical ``z`` (forward), so only points *above* the sensor survive.
+   - **The overlay is rotated 90 degrees.** Points from the road appear
+     along a vertical band instead of the lower half of the image --
+     that is the ``x``/``y`` swap.
+
+   Sanity-test with a single known point: a LiDAR return 10 m directly
+   ahead should land near the **principal point**
+   :math:`(c_x, c_y)` with depth ~10 m.
+
 .. admonition:: Exercise Tasks
    :class: tip
 
@@ -903,6 +924,43 @@ known sensor transforms to project 3D LiDAR points into the camera image.
    5. **Weather experiment**: Change weather to heavy rain
       (``world.set_weather(carla.WeatherParameters.HardRainNoon)``) and
       observe the impact on each sensor's data quality.
+
+Summary
+--------
+
+.. grid:: 1 2 2 2
+   :gutter: 3
+
+   .. grid-item-card:: Sensors
+      :class-card: sd-border-primary
+
+      - No single modality is sufficient; the **complementarity
+        principle** (complementary / competitive / cooperative) is what
+        justifies a sensor suite
+      - Camera: unmatched semantics, the only sensor that reads signs and
+        lights; poor depth, degrades in low light and glare
+      - LiDAR: direct, accurate 3-D geometry; degraded by fog, rain, and
+        low-reflectivity surfaces
+      - RADAR: direct Doppler velocity and all-weather robustness; poor
+        angular resolution, and stationary-object filtering is a real
+        safety risk
+      - IMU + GNSS: high-rate relative motion corrected by an absolute
+        but low-rate global fix -- the classic fusion pairing
+
+   .. grid-item-card:: Calibration
+      :class-card: sd-border-primary
+
+      - Intrinsics map 3-D rays to pixels; **extrinsics** are the 6-DOF
+        rigid transform between frames, and are what make fusion possible
+      - Use one notation and keep it: :math:`T_{A \leftarrow B}` maps
+        points from B into A, and inner frames must cancel when chaining
+      - Methods: target-based (accurate, controlled), targetless
+        (convenient, less accurate), motion-based (hand-eye, needs
+        excitation)
+      - Calibration **drifts** with vibration and temperature, so
+        production stacks monitor and re-estimate it online
+      - A 1-degree rotation error is 1.7 m of lateral error at 100 m --
+        poor calibration is a leading cause of fusion failure
 
 .. admonition:: Assignment Unlocked -- GP1: Sensor Suite & Data Pipeline
    :class: important

@@ -2,11 +2,6 @@
 Lecture
 ====================================================
 
-.. raw:: latex
-
-   \setcounter{figure}{0}
-
-
 Path vs. Trajectory
 ====================================================
 
@@ -45,31 +40,36 @@ at every point in time.
      - Steering only
      - Steering + throttle/brake
 
-.. dropdown:: Trajectory Requirements
+Trajectory Requirements
+-----------------------
 
-   A trajectory :math:`\tau(t) = (x(t), y(t), \theta(t), v(t))`
-   must satisfy:
+A trajectory :math:`\tau(t) = (x(t), y(t), \theta(t), v(t))`
+must satisfy:
 
-   - **Continuity:** Position :math:`C^0`, heading :math:`C^1`,
-     curvature :math:`C^1` (for passenger comfort).
-   - **Kinematic feasibility:** Curvature bounded by
-     :math:`|\kappa(t)| \leq \kappa_{\max}` everywhere.
-   - **Dynamic feasibility:** Longitudinal acceleration bounded by
-     :math:`|a(t)| \leq a_{\max}` and lateral acceleration by
-     :math:`|a_\perp(t)| \leq a_{\perp,\max}`.
-   - **Comfort:** Jerk (rate of change of acceleration) bounded
-     by :math:`|\dot{a}(t)| \leq j_{\max}`.
-   - **Safety:** No collision with obstacles for all
-     :math:`t \in [0, T]`.
+- **Continuity:** The position curve must be at least :math:`C^2`
+  -- that is, continuous position (:math:`C^0`), continuous heading
+  (the first derivative), and continuous curvature (the second
+  derivative). A curvature discontinuity forces an instantaneous
+  steering-wheel jump, which is both infeasible and uncomfortable.
+  Trajectories built from quintic polynomials satisfy this at
+  segment boundaries by construction.
+- **Kinematic feasibility:** Curvature bounded by
+  :math:`|\kappa(t)| \leq \kappa_{\max}` everywhere.
+- **Dynamic feasibility:** Longitudinal acceleration bounded by
+  :math:`|a(t)| \leq a_{\max}` and lateral acceleration by
+  :math:`|a_\perp(t)| \leq a_{\perp,\max}`.
+- **Comfort:** Jerk (rate of change of acceleration) bounded
+  by :math:`|\dot{a}(t)| \leq j_{\max}`.
+- **Safety:** No collision with obstacles for all
+  :math:`t \in [0, T]`.
 
-   .. admonition:: Comfort Metrics
-      :class: tip
+.. admonition:: Comfort Metrics
+   :class: tip
 
-      Autonomous vehicle comfort standards typically require
-      lateral acceleration :math:`\leq 2\text{ m/s}^2` and
-      longitudinal jerk :math:`\leq 2\text{ m/s}^3` for a
-      smooth passenger experience.
-
+   Autonomous vehicle comfort standards typically require
+   lateral acceleration :math:`\leq 2\text{ m/s}^2` and
+   longitudinal jerk :math:`\leq 2\text{ m/s}^3` for a
+   smooth passenger experience.
 
 Polynomial Trajectory Generation
 ====================================================
@@ -82,69 +82,70 @@ conditions.
 Quintic Polynomials
 -------------------
 
-.. dropdown:: Formulation
+Formulation
+~~~~~~~~~~~
 
-   A **quintic (5th-degree) polynomial** for a single coordinate
-   :math:`q(t)`:
+A **quintic (5th-degree) polynomial** for a single coordinate
+:math:`q(t)`:
 
-   .. math::
+.. math::
 
-      q(t) = a_0 + a_1 t + a_2 t^2 + a_3 t^3 + a_4 t^4 + a_5 t^5
+   q(t) = a_0 + a_1 t + a_2 t^2 + a_3 t^3 + a_4 t^4 + a_5 t^5
 
-   has 6 free coefficients. Given boundary conditions at
-   :math:`t=0` and :math:`t=T`:
+has 6 free coefficients. Given boundary conditions at
+:math:`t=0` and :math:`t=T`:
 
-   .. math::
+.. math::
 
-      q(0) &= q_0, \quad \dot{q}(0) = \dot{q}_0, \quad
-      \ddot{q}(0) = \ddot{q}_0 \\
-      q(T) &= q_f, \quad \dot{q}(T) = \dot{q}_f, \quad
-      \ddot{q}(T) = \ddot{q}_f
+   q(0) &= q_0, \quad \dot{q}(0) = \dot{q}_0, \quad
+   \ddot{q}(0) = \ddot{q}_0 \\
+   q(T) &= q_f, \quad \dot{q}(T) = \dot{q}_f, \quad
+   \ddot{q}(T) = \ddot{q}_f
 
-   these six conditions uniquely determine the six coefficients
-   by solving a linear system :math:`A\mathbf{a} = \mathbf{b}`:
+these six conditions uniquely determine the six coefficients
+by solving a linear system :math:`A\mathbf{a} = \mathbf{b}`:
 
-   .. math::
+.. math::
 
-      \begin{bmatrix}
-      1 & 0 & 0 & 0 & 0 & 0 \\
-      0 & 1 & 0 & 0 & 0 & 0 \\
-      0 & 0 & 2 & 0 & 0 & 0 \\
-      1 & T & T^2 & T^3 & T^4 & T^5 \\
-      0 & 1 & 2T & 3T^2 & 4T^3 & 5T^4 \\
-      0 & 0 & 2 & 6T & 12T^2 & 20T^3
-      \end{bmatrix}
-      \begin{bmatrix} a_0 \\ a_1 \\ a_2 \\ a_3 \\ a_4 \\ a_5 \end{bmatrix}
-      =
-      \begin{bmatrix} q_0 \\ \dot{q}_0 \\ \ddot{q}_0 \\
-      q_f \\ \dot{q}_f \\ \ddot{q}_f \end{bmatrix}
+   \begin{bmatrix}
+   1 & 0 & 0 & 0 & 0 & 0 \\
+   0 & 1 & 0 & 0 & 0 & 0 \\
+   0 & 0 & 2 & 0 & 0 & 0 \\
+   1 & T & T^2 & T^3 & T^4 & T^5 \\
+   0 & 1 & 2T & 3T^2 & 4T^3 & 5T^4 \\
+   0 & 0 & 2 & 6T & 12T^2 & 20T^3
+   \end{bmatrix}
+   \begin{bmatrix} a_0 \\ a_1 \\ a_2 \\ a_3 \\ a_4 \\ a_5 \end{bmatrix}
+   =
+   \begin{bmatrix} q_0 \\ \dot{q}_0 \\ \ddot{q}_0 \\
+   q_f \\ \dot{q}_f \\ \ddot{q}_f \end{bmatrix}
 
-   Quintic polynomials are the minimum degree that can match
-   position, velocity, **and** acceleration at both endpoints,
-   guaranteeing :math:`C^2` continuity between trajectory segments.
+Quintic polynomials are the minimum degree that can match
+position, velocity, **and** acceleration at both endpoints,
+guaranteeing :math:`C^2` continuity between trajectory segments.
 
-.. dropdown:: Frenet-Frame Polynomial Planning
+Frenet-Frame Polynomial Planning
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   In highway driving, trajectories are planned in the **Frenet
-   frame** :math:`(s, d)` where :math:`s` is longitudinal distance
-   along the road centerline and :math:`d` is lateral offset.
+In highway driving, trajectories are planned in the **Frenet
+frame** :math:`(s, d)` where :math:`s` is longitudinal distance
+along the road centerline and :math:`d` is lateral offset.
 
-   Separate quintic polynomials are fit for :math:`s(t)` and
-   :math:`d(t)`, then the Frenet trajectory is converted back to
-   Cartesian coordinates using the road geometry.
+Separate quintic polynomials are fit for :math:`s(t)` and
+:math:`d(t)`, then the Frenet trajectory is converted back to
+Cartesian coordinates using the road geometry.
 
-   **Candidate generation:** multiple trajectory candidates are
-   generated by varying the terminal conditions
-   :math:`(d_f, \dot{d}_f, T)` over a discrete grid. Each
-   candidate is evaluated by a cost function:
+**Candidate generation:** multiple trajectory candidates are
+generated by varying the terminal conditions
+:math:`(d_f, \dot{d}_f, T)` over a discrete grid. Each
+candidate is evaluated by a cost function:
 
-   .. math::
+.. math::
 
-      J = w_s J_{\text{safety}} + w_c J_{\text{comfort}}
-        + w_e J_{\text{efficiency}}
+   J = w_s J_{\text{safety}} + w_c J_{\text{comfort}}
+     + w_e J_{\text{efficiency}}
 
-   The lowest-cost collision-free candidate is selected.
-
+The lowest-cost collision-free candidate is selected.
 
 Spline-Based Trajectories
 ====================================================
@@ -156,56 +157,56 @@ interpolation through a sequence of waypoints.
 Cubic Splines
 -------------
 
-.. dropdown:: Natural Cubic Spline
+Natural Cubic Spline
+~~~~~~~~~~~~~~~~~~~~
 
-   A **cubic spline** through waypoints
-   :math:`(t_0, q_0), \ldots, (t_n, q_n)` consists of :math:`n`
-   cubic polynomials :math:`S_i(t)` on each interval
-   :math:`[t_i, t_{i+1}]`, subject to:
+A **cubic spline** through waypoints
+:math:`(t_0, q_0), \ldots, (t_n, q_n)` consists of :math:`n`
+cubic polynomials :math:`S_i(t)` on each interval
+:math:`[t_i, t_{i+1}]`, subject to:
 
-   - :math:`C^0`: :math:`S_i(t_{i+1}) = S_{i+1}(t_{i+1})`
-   - :math:`C^1`: :math:`S_i'(t_{i+1}) = S_{i+1}'(t_{i+1})`
-   - :math:`C^2`: :math:`S_i''(t_{i+1}) = S_{i+1}''(t_{i+1})`
+- :math:`C^0`: :math:`S_i(t_{i+1}) = S_{i+1}(t_{i+1})`
+- :math:`C^1`: :math:`S_i'(t_{i+1}) = S_{i+1}'(t_{i+1})`
+- :math:`C^2`: :math:`S_i''(t_{i+1}) = S_{i+1}''(t_{i+1})`
 
-   The resulting linear system is tridiagonal and solved in
-   :math:`O(n)` time. The **natural spline** additionally sets
-   :math:`S''(t_0) = S''(t_n) = 0`.
+The resulting linear system is tridiagonal and solved in
+:math:`O(n)` time. The **natural spline** additionally sets
+:math:`S''(t_0) = S''(t_n) = 0`.
 
-   Cubic splines minimize the bending energy:
+Cubic splines minimize the bending energy:
 
-   .. math::
+.. math::
 
-      \int_{t_0}^{t_n} \left[S''(t)\right]^2 dt
+   \int_{t_0}^{t_n} \left[S''(t)\right]^2 dt
 
-   making them the smoothest interpolant for a given set of
-   waypoints.
-
+making them the smoothest interpolant for a given set of
+waypoints.
 
 B-Splines
 ---------
 
-.. dropdown:: B-Spline Properties
+B-Spline Properties
+~~~~~~~~~~~~~~~~~~~
 
-   **B-splines** are piecewise polynomials defined by a knot
-   vector and control points. Unlike interpolating splines,
-   B-splines are **approximating**: the curve passes near (but
-   not necessarily through) the control points.
+**B-splines** are piecewise polynomials defined by a knot
+vector and control points. Unlike interpolating splines,
+B-splines are **approximating**: the curve passes near (but
+not necessarily through) the control points.
 
-   Key properties for trajectory planning:
+Key properties for trajectory planning:
 
-   - **Local support:** Moving one control point affects only
-     :math:`k+1` spans (where :math:`k` is the spline degree),
-     enabling efficient local editing.
-   - **Convex hull property:** The curve lies within the convex
-     hull of its control points -- useful for conservative
-     collision checking.
-   - **Continuity:** A degree-:math:`k` B-spline is
-     :math:`C^{k-1}` everywhere (and :math:`C^{k-p}` at a
-     knot of multiplicity :math:`p`).
+- **Local support:** Moving one control point affects only
+  :math:`k+1` spans (where :math:`k` is the spline degree),
+  enabling efficient local editing.
+- **Convex hull property:** The curve lies within the convex
+  hull of its control points -- useful for conservative
+  collision checking.
+- **Continuity:** A degree-:math:`k` B-spline is
+  :math:`C^{k-1}` everywhere (and :math:`C^{k-p}` at a
+  knot of multiplicity :math:`p`).
 
-   B-splines are widely used in AV systems for smooth lane
-   centerline representation and trajectory reference generation.
-
+B-splines are widely used in AV systems for smooth lane
+centerline representation and trajectory reference generation.
 
 Optimization-Based Trajectory Planning
 ====================================================
@@ -213,40 +214,41 @@ Optimization-Based Trajectory Planning
 Optimization-based planners formulate trajectory generation as a
 constrained optimization problem.
 
-.. dropdown:: Cost Function Design
+Cost Function Design
+--------------------
 
-   A general trajectory optimization cost:
+A general trajectory optimization cost:
 
-   .. math::
+.. math::
 
-      \min_{\tau} \; \int_0^T \left[
-        w_1 \|\dot{v}(t)\|^2
-        + w_2 \|\kappa(t)\|^2
-        + w_3 d_{\text{obs}}(\tau(t))^{-1}
-        + w_4 \|v(t) - v_{\text{ref}}(t)\|^2
-      \right] dt
+   \min_{\tau} \; \int_0^T \left[
+     w_1 \|\dot{v}(t)\|^2
+     + w_2 \|\kappa(t)\|^2
+     + w_3 d_{\text{obs}}(\tau(t))^{-1}
+     + w_4 \|v(t) - v_{\text{ref}}(t)\|^2
+   \right] dt
 
-   where the four terms penalize:
+where the four terms penalize:
 
-   1. Longitudinal jerk (comfort)
-   2. Curvature (path smoothness)
-   3. Proximity to obstacles (safety)
-   4. Speed deviation from reference (efficiency)
+1. Longitudinal jerk (comfort)
+2. Curvature (path smoothness)
+3. Proximity to obstacles (safety)
+4. Speed deviation from reference (efficiency)
 
-.. dropdown:: Constraints
+Constraints
+-----------
 
-   Hard constraints ensure physical feasibility:
+Hard constraints ensure physical feasibility:
 
-   - Kinematic: :math:`|\kappa(t)| \leq \kappa_{\max}`
-   - Speed: :math:`v_{\min} \leq v(t) \leq v_{\max}`
-   - Acceleration: :math:`|a(t)| \leq a_{\max}`
-   - Collision: :math:`d_{\text{obs}}(\tau(t)) \geq d_{\min}`
+- Kinematic: :math:`|\kappa(t)| \leq \kappa_{\max}`
+- Speed: :math:`v_{\min} \leq v(t) \leq v_{\max}`
+- Acceleration: :math:`|a(t)| \leq a_{\max}`
+- Collision: :math:`d_{\text{obs}}(\tau(t)) \geq d_{\min}`
 
-   The resulting problem is a **nonlinear program (NLP)** for
-   general cost functions, or a **quadratic program (QP)** when
-   the cost is quadratic and constraints are linearized --
-   the latter enables real-time solving.
-
+The resulting problem is a **nonlinear program (NLP)** for
+general cost functions, or a **quadratic program (QP)** when
+the cost is quadratic and constraints are linearized --
+the latter enables real-time solving.
 
 Model Predictive Control (MPC)
 ====================================================
@@ -255,90 +257,93 @@ MPC is the dominant trajectory-following framework in production
 autonomous vehicles, combining planning and control in a
 receding-horizon optimization loop.
 
-.. dropdown:: MPC Formulation
+MPC Formulation
+---------------
 
-   At time :math:`t_k`, MPC solves:
+At time :math:`t_k`, MPC solves:
 
-   .. math::
+.. math::
 
-      \min_{u_0, \ldots, u_{N-1}} \quad
-      \sum_{i=0}^{N-1} \ell(x_i, u_i) + V_f(x_N)
+   \min_{u_0, \ldots, u_{N-1}} \quad
+   \sum_{i=0}^{N-1} \ell(x_i, u_i) + V_f(x_N)
 
-   subject to:
+subject to:
 
-   .. math::
+.. math::
 
-      x_{i+1} &= f(x_i, u_i), \quad i = 0, \ldots, N-1 \\
-      x_0 &= x_{\text{current}} \\
-      x_i &\in \mathcal{X}, \quad u_i \in \mathcal{U}
+   x_{i+1} &= f(x_i, u_i), \quad i = 0, \ldots, N-1 \\
+   x_0 &= x_{\text{current}} \\
+   x_i &\in \mathcal{X}, \quad u_i \in \mathcal{U}
 
-   where:
+where:
 
-   - :math:`x_i = (x, y, \theta, v)_i` is the predicted state
-   - :math:`u_i = (\delta, a)_i` is the control input
-     (steering, acceleration)
-   - :math:`N` is the prediction horizon
-   - :math:`\ell` is the stage cost (tracking error + control effort)
-   - :math:`V_f` is the terminal cost
-   - :math:`f` is the discrete-time bicycle model
+- :math:`x_i = (x, y, \theta, v)_i` is the predicted state
+- :math:`u_i = (\delta, a)_i` is the control input
+  (steering, acceleration)
+- :math:`N` is the prediction horizon
+- :math:`\ell` is the stage cost (tracking error + control effort)
+- :math:`V_f` is the terminal cost
+- :math:`f` is the discrete-time bicycle model
 
-.. dropdown:: Receding Horizon Principle
+Receding Horizon Principle
+--------------------------
 
-   MPC applies only the **first control action** :math:`u_0^*`
-   from the optimal sequence, then resolves the optimization at
-   the next time step with updated state information.
+MPC applies only the **first control action** :math:`u_0^*`
+from the optimal sequence, then resolves the optimization at
+the next time step with updated state information.
 
-   .. admonition:: Why Receding Horizon?
-      :class: note
+.. admonition:: Why Receding Horizon?
+   :class: note
 
-      Applying the full pre-computed sequence open-loop ignores
-      disturbances and model errors. By re-solving at every step,
-      MPC becomes a **feedback** controller: errors are corrected
-      before they accumulate. The optimization produces a plan,
-      but execution is always closed-loop.
+   Applying the full pre-computed sequence open-loop ignores
+   disturbances and model errors. By re-solving at every step,
+   MPC becomes a **feedback** controller: errors are corrected
+   before they accumulate. The optimization produces a plan,
+   but execution is always closed-loop.
 
-.. dropdown:: Prediction Horizon and Tuning
+Prediction Horizon and Tuning
+-----------------------------
 
-   .. list-table:: MPC Tuning Parameters
-      :header-rows: 1
-      :widths: 25 20 20 35
+.. list-table:: MPC Tuning Parameters
+   :header-rows: 1
+   :widths: 25 20 20 35
 
-      * - Parameter
-        - Typical value
-        - Effect if increased
-        - Trade-off
-      * - Prediction horizon :math:`N`
-        - 10--50 steps
-        - Better foresight
-        - Larger QP, slower solve
-      * - Control horizon :math:`M \leq N`
-        - :math:`N/2`
-        - More control freedom
-        - Larger QP
-      * - :math:`Q` (state cost weight)
-        - Diagonal matrix
-        - Tighter tracking
-        - More aggressive control
-      * - :math:`R` (control cost weight)
-        - Diagonal matrix
-        - Smoother inputs
-        - Larger tracking error
+   * - Parameter
+     - Typical value
+     - Effect if increased
+     - Trade-off
+   * - Prediction horizon :math:`N`
+     - 10--50 steps
+     - Better foresight
+     - Larger QP, slower solve
+   * - Control horizon :math:`M \leq N`
+     - :math:`N/2`
+     - More control freedom
+     - Larger QP
+   * - :math:`Q` (state cost weight)
+     - Diagonal matrix
+     - Tighter tracking
+     - More aggressive control
+   * - :math:`R` (control cost weight)
+     - Diagonal matrix
+     - Smoother inputs
+     - Larger tracking error
 
-.. dropdown:: Real-Time Solving
+Real-Time Solving
+-----------------
 
-   For real-time AV control at 10--50 Hz:
+For real-time AV control at 10--50 Hz:
 
-   - **Linear MPC:** Linearize the bicycle model around the
-     reference trajectory. The resulting QP is solved in
-     milliseconds with active-set or interior-point solvers
-     (e.g., OSQP, qpOASES).
-   - **Nonlinear MPC (NMPC):** Use the full nonlinear model.
-     Requires sequential quadratic programming (SQP) or
-     interior-point methods. Feasible at ~10 Hz with warm starting.
-   - **Code generation:** Tools like ACADO, acados, or CasADi
-     generate C code for embedded MPC solvers running on
-     automotive ECUs.
-
+- **Linear MPC:** Linearize the bicycle model around the
+  reference trajectory. The resulting QP is solved in
+  milliseconds with active-set or interior-point solvers
+  (e.g., OSQP, qpOASES).
+- **Nonlinear MPC (NMPC):** Use the full nonlinear model.
+  Requires sequential quadratic programming (SQP) or
+  interior-point methods. Feasible at ~10 Hz with warm starting.
+- **Code generation:** Tools like ACADO, acados, or CasADi
+  generate C code for embedded MPC solvers running on
+  automotive ECUs.
 
 Pure Pursuit Controller
 ====================================================
@@ -346,56 +351,57 @@ Pure Pursuit Controller
 Pure Pursuit is a geometric path-following controller that steers
 the vehicle toward a **lookahead point** on the reference path.
 
-.. dropdown:: Algorithm
+Algorithm
+---------
 
-   1. Find the reference path point at lookahead distance :math:`L_d`
-      ahead of the rear axle.
-   2. Compute the curvature :math:`\kappa` required to arc from the
-      current rear-axle position to the lookahead point.
-   3. Command the steering angle that produces this curvature.
+1. Find the reference path point at lookahead distance :math:`L_d`
+   ahead of the rear axle.
+2. Compute the curvature :math:`\kappa` required to arc from the
+   current rear-axle position to the lookahead point.
+3. Command the steering angle that produces this curvature.
 
-   The required curvature is:
+The required curvature is:
 
-   .. math::
+.. math::
 
-      \kappa = \frac{2 \sin\alpha}{L_d}
+   \kappa = \frac{2 \sin\alpha}{L_d}
 
-   where :math:`\alpha` is the angle between the vehicle heading
-   and the line from the rear axle to the lookahead point.
+where :math:`\alpha` is the angle between the vehicle heading
+and the line from the rear axle to the lookahead point.
 
-   Converting to steering angle via the bicycle model:
+Converting to steering angle via the bicycle model:
 
-   .. math::
+.. math::
 
-      \delta = \arctan\!\left(\frac{2 L \sin\alpha}{L_d}\right)
+   \delta = \arctan\!\left(\frac{2 L \sin\alpha}{L_d}\right)
 
-.. dropdown:: Lookahead Distance
+Lookahead Distance
+------------------
 
-   The lookahead distance :math:`L_d` is the key tuning parameter:
+The lookahead distance :math:`L_d` is the key tuning parameter:
 
-   - **Too small:** The controller chases the path point aggressively,
-     causing oscillation.
-   - **Too large:** The controller cuts corners and tracks slowly.
+- **Too small:** The controller chases the path point aggressively,
+  causing oscillation.
+- **Too large:** The controller cuts corners and tracks slowly.
 
-   A common adaptive rule:
+A common adaptive rule:
 
-   .. math::
+.. math::
 
-      L_d = k_v \cdot v
+   L_d = k_v \cdot v
 
-   where :math:`k_v \approx 0.1`--:math:`0.3` s. This scales
-   the lookahead with speed, giving consistent behavior across
-   speed ranges.
+where :math:`k_v \approx 0.1`--:math:`0.3` s. This scales
+the lookahead with speed, giving consistent behavior across
+speed ranges.
 
-   .. admonition:: Steady-State Error
-      :class: warning
+.. admonition:: Steady-State Error
+   :class: warning
 
-      Pure Pursuit has a **lateral steady-state error** at high
-      speed or high curvature because the lookahead geometry
-      approximates a circle, not the true path. This error is
-      proportional to :math:`L_d^2 / R` where :math:`R` is the
-      path radius.
-
+   Pure Pursuit has a **lateral steady-state error** at high
+   speed or high curvature because the lookahead geometry
+   approximates a circle, not the true path. This error is
+   proportional to :math:`L_d^2 / R` where :math:`R` is the
+   path radius.
 
 Stanley Controller
 ====================================================
@@ -404,45 +410,59 @@ The Stanley controller, originally developed for the DARPA
 Grand Challenge (Stanford Racing Team), combines heading error
 and cross-track error.
 
-.. dropdown:: Formulation
+Formulation
+-----------
 
-   The steering command is:
+The steering command is:
 
-   .. math::
+.. math::
 
-      \delta(t) = \psi_e(t) + \arctan\!\left(
-      \frac{k \cdot e(t)}{v(t)}\right)
+   \delta(t) = \psi_e(t) + \arctan\!\left(
+   \frac{k \cdot e(t)}{v(t)}\right)
 
-   where:
+where:
 
-   - :math:`\psi_e` is the **heading error** (angle between
-     vehicle heading and path tangent at the nearest point)
-   - :math:`e` is the **cross-track error** (signed lateral
-     distance from the front axle to the nearest path point)
-   - :math:`k` is a gain constant
-   - :math:`v` is the vehicle speed
+- :math:`\psi_e` is the **heading error** (angle between
+  vehicle heading and path tangent at the nearest point)
+- :math:`e` is the **cross-track error** (signed lateral
+  distance from the front axle to the nearest path point)
+- :math:`k` is a gain constant
+- :math:`v` is the vehicle speed
 
-.. dropdown:: Interpretation
+Interpretation
+--------------
 
-   The two terms serve distinct roles:
+The two terms serve distinct roles:
 
-   - :math:`\psi_e`: aligns the vehicle with the path tangent --
-     zero heading error implies zero steady-state cross-track error
-     asymptotically.
-   - :math:`\arctan(k e / v)`: corrects the cross-track error
-     directly. The :math:`1/v` factor makes the correction
-     proportional to the time needed to travel a fixed distance,
-     providing speed-consistent response.
+- :math:`\psi_e`: aligns the vehicle with the path tangent --
+  zero heading error implies zero steady-state cross-track error
+  asymptotically.
+- :math:`\arctan(k e / v)`: corrects the cross-track error
+  directly. The :math:`1/v` factor makes the correction
+  proportional to the time needed to travel a fixed distance,
+  providing speed-consistent response.
 
-   .. admonition:: Stanley vs Pure Pursuit
-      :class: tip
+.. admonition:: Stanley vs Pure Pursuit
+   :class: tip
 
-      Stanley converges to zero cross-track error with zero
-      steady-state error (under constant curvature). Pure Pursuit
-      has a residual lateral error at high curvature. Stanley
-      performs better at high speed on curved roads; Pure Pursuit
-      is simpler to implement and more stable at low speed.
+   **Accuracy.** Stanley drives cross-track error to zero even
+   under constant curvature; Pure Pursuit retains a residual
+   lateral offset that grows with curvature and lookahead.
 
+   **Stability.** The trade-off runs the other way. Stanley's
+   :math:`1/v` term means the corrective gain *grows* as speed
+   rises, so an un-gain-scheduled Stanley controller tends to
+   oscillate at highway speed -- the original DARPA application was
+   moderate-speed desert driving. Pure Pursuit with a
+   speed-scheduled lookahead (:math:`L_d = k_v v`) is inherently
+   damped at speed and is the more common highway choice.
+
+   **Practical guidance.** Use Pure Pursuit when robustness and
+   simplicity matter (and accept the corner-cutting); use Stanley
+   when tracking accuracy matters at low-to-moderate speed, and
+   gain-schedule :math:`k` with speed if you run it fast. Both are
+   superseded by MPC when you can afford the compute, because MPC
+   handles actuator limits and preview explicitly.
 
 PID Longitudinal Control
 ====================================================
@@ -450,79 +470,80 @@ PID Longitudinal Control
 Longitudinal speed control is typically handled by a PID controller
 tracking the reference speed profile :math:`v_{\text{ref}}(t)`.
 
-.. dropdown:: PID Formulation
+PID Formulation
+---------------
 
-   The speed error is:
+The speed error is:
 
-   .. math::
+.. math::
 
-      e_v(t) = v_{\text{ref}}(t) - v(t)
+   e_v(t) = v_{\text{ref}}(t) - v(t)
 
-   The PID control output (throttle/brake command :math:`u`):
+The PID control output (throttle/brake command :math:`u`):
 
-   .. math::
+.. math::
 
-      u(t) = K_p e_v(t) + K_i \int_0^t e_v(\tau)\,d\tau
-           + K_d \dot{e}_v(t)
+   u(t) = K_p e_v(t) + K_i \int_0^t e_v(\tau)\,d\tau
+        + K_d \dot{e}_v(t)
 
-   In discrete time (sample period :math:`\Delta t`):
+In discrete time (sample period :math:`\Delta t`):
 
-   .. math::
+.. math::
 
-      u_k = K_p e_k + K_i \sum_{j=0}^{k} e_j \Delta t
-          + K_d \frac{e_k - e_{k-1}}{\Delta t}
+   u_k = K_p e_k + K_i \sum_{j=0}^{k} e_j \Delta t
+       + K_d \frac{e_k - e_{k-1}}{\Delta t}
 
-   **Gain tuning heuristics (Ziegler-Nichols):**
+**Gain tuning heuristics (Ziegler-Nichols):**
 
-   .. list-table::
-      :header-rows: 1
-      :widths: 20 20 20 20
+.. list-table::
+   :header-rows: 1
+   :widths: 20 20 20 20
 
-      * - Controller
-        - :math:`K_p`
-        - :math:`K_i`
-        - :math:`K_d`
-      * - P only
-        - :math:`0.5 K_u`
-        - 0
-        - 0
-      * - PD
-        - :math:`0.8 K_u`
-        - 0
-        - :math:`K_u T_u / 8`
-      * - PID
-        - :math:`0.6 K_u`
-        - :math:`2K_p / T_u`
-        - :math:`K_p T_u / 8`
+   * - Controller
+     - :math:`K_p`
+     - :math:`K_i`
+     - :math:`K_d`
+   * - P only
+     - :math:`0.5 K_u`
+     - 0
+     - 0
+   * - PD
+     - :math:`0.8 K_u`
+     - 0
+     - :math:`K_p T_u / 8`
+   * - PID
+     - :math:`0.6 K_u`
+     - :math:`2K_p / T_u`
+     - :math:`K_p T_u / 8`
 
-   where :math:`K_u` is the ultimate gain and :math:`T_u` the
-   ultimate period at the stability boundary.
+where :math:`K_u` is the ultimate gain and :math:`T_u` the
+ultimate period at the stability boundary.
 
-.. dropdown:: Anti-Windup
+Anti-Windup
+-----------
 
-   Integrator **windup** occurs when the vehicle is at max throttle
-   or max brake (actuator saturation) but the integrator continues
-   to accumulate error, leading to large overshoot when the
-   constraint is released.
+Integrator **windup** occurs when the vehicle is at max throttle
+or max brake (actuator saturation) but the integrator continues
+to accumulate error, leading to large overshoot when the
+constraint is released.
 
-   Anti-windup strategies:
+Anti-windup strategies:
 
-   - **Clamping:** Freeze the integrator when the output is
-     saturated.
-   - **Back-calculation:** Subtract a correction proportional to
-     the difference between the saturated and unsaturated output.
+- **Clamping:** Freeze the integrator when the output is
+  saturated.
+- **Back-calculation:** Subtract a correction proportional to
+  the difference between the saturated and unsaturated output.
 
-   .. code-block:: python
+.. code-block:: python
 
-      # Discrete PID with clamping anti-windup
-      def pid_step(e, e_prev, integral, dt, Kp, Ki, Kd,
-                   u_min=-1.0, u_max=1.0):
-          u_unsat = Kp * e + Ki * integral + Kd * (e - e_prev) / dt
-          u = max(u_min, min(u_max, u_unsat))
-          if u == u_unsat:  # not saturated: update integral
-              integral += e * dt
-          return u, integral
-
+   # Discrete PID with clamping anti-windup
+   def pid_step(e, e_prev, integral, dt, Kp, Ki, Kd,
+                u_min=-1.0, u_max=1.0):
+       u_unsat = Kp * e + Ki * integral + Kd * (e - e_prev) / dt
+       u = max(u_min, min(u_max, u_unsat))
+       if u == u_unsat:  # not saturated: update integral
+           integral += e * dt
+       return u, integral
 
 Controller Comparison
 ====================================================
@@ -540,15 +561,15 @@ Controller Comparison
    * - Pure Pursuit
      - Yes (curvature-dependent)
      - O(1)
-     - Moderate
+     - Good with speed-scheduled :math:`L_d`
      - Low (1 param)
-     - Low-speed, simple paths
+     - Highway, robust general-purpose tracking
    * - Stanley
      - No
      - O(1)
-     - Good
+     - Needs gain scheduling (:math:`1/v` term)
      - Low (1 gain)
-     - Highway, structured roads
+     - Low-to-moderate speed, accuracy-critical tracking
    * - Linear MPC
      - No
      - O(N³) per solve
@@ -566,36 +587,37 @@ Controller Comparison
 Emergency Maneuver Synthesis
 ====================================================
 
-.. dropdown:: Emergency Stopping
+Emergency Stopping
+------------------
 
-   When an obstacle is detected within the braking distance,
-   the planner must generate an emergency stop trajectory:
+When an obstacle is detected within the braking distance,
+the planner must generate an emergency stop trajectory:
 
-   .. math::
+.. math::
 
-      v(t) = v_0 - a_{\max} t, \quad
-      d_{\text{stop}} = \frac{v_0^2}{2 a_{\max}}
+   v(t) = v_0 - a_{\max} t, \quad
+   d_{\text{stop}} = \frac{v_0^2}{2 a_{\max}}
 
-   The stopping distance :math:`d_{\text{stop}}` must be less than
-   the clearance to the obstacle. Typical :math:`a_{\max} = 6\text{ m/s}^2`
-   for emergency braking.
+The stopping distance :math:`d_{\text{stop}}` must be less than
+the clearance to the obstacle. Typical :math:`a_{\max} = 6\text{ m/s}^2`
+for emergency braking.
 
-.. dropdown:: Emergency Lane Change
+Emergency Lane Change
+---------------------
 
-   An emergency lane change to avoid a stationary obstacle:
+An emergency lane change to avoid a stationary obstacle:
 
-   1. Generate candidate lateral trajectories to adjacent lanes
-      using quintic polynomials.
-   2. Check each candidate for kinematic feasibility and collision
-      clearance.
-   3. Select the feasible candidate with minimum lateral jerk.
+1. Generate candidate lateral trajectories to adjacent lanes
+   using quintic polynomials.
+2. Check each candidate for kinematic feasibility and collision
+   clearance.
+3. Select the feasible candidate with minimum lateral jerk.
 
-   The maneuver must complete before the obstacle is reached:
+The maneuver must complete before the obstacle is reached:
 
-   .. math::
+.. math::
 
-      T_{\text{maneuver}} \leq \frac{d_{\text{clearance}}}{v_{\text{ego}}}
-
+   T_{\text{maneuver}} \leq \frac{d_{\text{clearance}}}{v_{\text{ego}}}
 
 CARLA Implementation Exercise
 ====================================================
@@ -632,37 +654,136 @@ CARLA Implementation Exercise
 
    **Starter code:**
 
+   .. warning::
+
+      Two details break most first attempts at this controller:
+
+      1. **Stanley is defined at the front axle**, not the vehicle
+         origin. ``vehicle.get_transform().location`` is the vehicle
+         centre -- you must project forward by half the wheelbase.
+         Using the centre degrades the controller's convergence
+         guarantee and produces persistent corner-cutting.
+      2. **CARLA uses a left-handed frame** (x forward, y to the
+         *right*, yaw positive clockwise when viewed from above). The
+         cross-track sign convention that works in a textbook
+         right-handed frame is inverted here. The code below derives
+         the sign from an explicit cross product and includes an
+         assertion you can use to check it empirically.
+
    .. code-block:: python
 
       import carla
       import math
 
-      def stanley_control(vehicle, waypoints, k=0.5):
-          """Stanley lateral controller."""
-          transform = vehicle.get_transform()
+      def get_front_axle(vehicle):
+          """Front-axle position: vehicle origin projected forward by L/2."""
+          tf = vehicle.get_transform()
+          # Wheelbase from the physics model rather than a hard-coded guess
+          phys = vehicle.get_physics_control()
+          front = phys.wheels[0].position   # cm, world frame
+          rear = phys.wheels[2].position
+          L = front.distance(rear) / 100.0  # -> metres
+          fwd = tf.get_forward_vector()
+          return carla.Location(
+              x=tf.location.x + fwd.x * L / 2.0,
+              y=tf.location.y + fwd.y * L / 2.0,
+              z=tf.location.z), L
+
+      def max_steer_rad(vehicle):
+          """Read the real steering limit instead of assuming 70 deg."""
+          phys = vehicle.get_physics_control()
+          return math.radians(phys.wheels[0].max_steer_angle)
+
+      def stanley_control(vehicle, waypoints, k=0.5, k_soft=1.0):
+          """Stanley lateral controller (front-axle reference, CARLA frame)."""
+          tf = vehicle.get_transform()
           v = vehicle.get_velocity()
-          speed = math.sqrt(v.x**2 + v.y**2 + v.z**2)
+          speed = math.sqrt(v.x**2 + v.y**2)
 
-          # Find nearest waypoint (front axle reference)
-          ego_loc = transform.location
+          fx_loc, _ = get_front_axle(vehicle)
+
+          # Nearest path point TO THE FRONT AXLE (not the vehicle centre)
           nearest = min(waypoints,
-              key=lambda wp: ego_loc.distance(wp.transform.location))
+              key=lambda wp: fx_loc.distance(wp.transform.location))
 
-          # Cross-track error (signed lateral distance)
-          dx = nearest.transform.location.x - ego_loc.x
-          dy = nearest.transform.location.y - ego_loc.y
           path_yaw = math.radians(nearest.transform.rotation.yaw)
-          e = math.sin(path_yaw) * dx - math.cos(path_yaw) * dy
+          tx = math.cos(path_yaw)          # path tangent
+          ty = math.sin(path_yaw)
 
-          # Heading error
-          ego_yaw = math.radians(transform.rotation.yaw)
-          psi_e = path_yaw - ego_yaw
-          # Normalize to [-pi, pi]
-          psi_e = math.atan2(math.sin(psi_e), math.cos(psi_e))
+          # Vector from path point to front axle
+          dx = fx_loc.x - nearest.transform.location.x
+          dy = fx_loc.y - nearest.transform.location.y
 
-          # Stanley steering
-          delta = psi_e + math.atan2(k * e, max(speed, 1e-3))
-          return max(-1.0, min(1.0, delta / math.radians(70)))
+          # Signed cross-track error via 2-D cross product tangent x offset.
+          # In CARLA's left-handed frame this is positive when the vehicle
+          # is to the RIGHT of the path, so the steering correction below
+          # must push left -- hence the leading minus sign.
+          e = -(tx * dy - ty * dx)
+
+          # Heading error, wrapped to [-pi, pi]
+          ego_yaw = math.radians(tf.rotation.yaw)
+          psi_e = math.atan2(math.sin(path_yaw - ego_yaw),
+                             math.cos(path_yaw - ego_yaw))
+
+          # Stanley law; k_soft keeps the term finite at standstill
+          delta = psi_e + math.atan2(k * e, speed + k_soft)
+
+          return max(-1.0, min(1.0, delta / max_steer_rad(vehicle)))
+
+   .. admonition:: Verify the sign before you tune
+      :class: tip
+
+      Do not tune ``k`` until the sign is confirmed. Place the vehicle
+      deliberately about 1 m to the **right** of the lane centre,
+      stationary, and print ``e`` and ``delta``. You should see
+      ``e < 0`` and a **left** (negative) steer command driving the car
+      back to the centreline. If the car steers away from the path,
+      flip the sign on ``e`` -- do not compensate by negating ``k``,
+      which would also invert the heading term's interaction.
+
+Summary
+====================================================
+
+.. grid:: 1 2 2 2
+   :gutter: 3
+
+   .. grid-item-card:: Generation
+      :class-card: sd-border-primary
+
+      - Path (geometry, arc length :math:`s`) vs trajectory (adds time)
+      - Quintic polynomials: 6 coefficients match position, velocity and
+        acceleration at both ends, giving :math:`C^2` joins
+      - Planned in the Frenet :math:`(s, d)` frame from **L10**: fit
+        :math:`s(t)` and :math:`d(t)` separately, sample terminal
+        conditions, score, pick the cheapest collision-free candidate
+      - Splines: cubic (interpolating, minimum bending energy) vs
+        B-spline (approximating, local support, convex hull)
+
+   .. grid-item-card:: Control
+      :class-card: sd-border-primary
+
+      - Pure Pursuit: :math:`\delta = \arctan(2L\sin\alpha / L_d)`;
+        residual error, but damped at speed
+      - Stanley: :math:`\delta = \psi_e + \arctan(k e / v)`; zero
+        steady-state error, needs gain scheduling at speed
+      - PID longitudinal: always pair with anti-windup
+      - MPC: receding horizon, handles constraints and preview
+        explicitly; linear MPC solves a QP in milliseconds
+
+.. admonition:: Not covered here
+   :class: note
+
+   Two production concerns sit just beyond this lecture and matter as
+   soon as you leave simulation:
+
+   - **Actuator latency.** Real steering and brake actuators respond
+     with 100--300 ms of delay. Controllers compensate by predicting
+     the state forward by one dead time before computing the command;
+     MPC absorbs this naturally by shifting the reference.
+   - **Lateral dynamics.** Everything here is *kinematic* -- it assumes
+     no tire slip. Above roughly 0.4 g of lateral acceleration a
+     dynamic bicycle model with a linear tire model (cornering
+     stiffness, slip angles) is required.
 
 .. admonition:: Assignment Unlocked -- GP4: Planning & Control
    :class: important
