@@ -14,8 +14,8 @@ sense their environment and navigate with minimal or no human input.
 
    **Why Study Automated Vehicles?**
 
-   - **Safety impact** -- Road traffic accidents cause 1.35 million deaths globally per year (WHO). 94% of serious crashes are due to human error (NHTSA).
-   - **Economic significance** -- The AV market is projected to reach $2.1 trillion by 2030 (McKinsey).
+   - **Safety impact** -- Road traffic crashes cause approximately 1.19 million deaths globally per year (WHO *Global Status Report on Road Safety 2023*). NHTSA's crash-causation survey assigned the *critical reason* to the driver in 94% of crashes -- a figure NHTSA has since cautioned should **not** be read as "94% of crashes are caused by driver error," since the critical reason is only the last event in a causal chain.
+   - **Economic significance** -- Forecasts for the autonomous-mobility market vary by an order of magnitude depending on what is counted; treat any single headline number with skepticism.
    - **Technical challenge** -- Integration of perception, prediction, planning, and control in safety-critical real-time systems.
    - **Societal transformation** -- Potential to reshape transportation, urban planning, and mobility services.
 
@@ -148,7 +148,7 @@ Current Industry Landscape (2026)
 
       Widely deployed and marketed as advanced assistance:
 
-      - **Tesla Autopilot / FSD (Supervised)** -- Available to millions of vehicles; 8.3 billion supervised FSD miles as of early 2026. Launched unsupervised Robotaxi in Austin (Jan 2026).
+      - **Tesla FSD (Supervised)** -- Deployed across millions of vehicles, with cumulative supervised FSD mileage in the billions. Tesla began a geofenced robotaxi pilot in Austin in 2025 with in-vehicle safety monitors; verify the current supervision status and service area before citing it, as this changes frequently.
       - **GM Super Cruise** -- Hands-free highway driving on mapped roads.
       - **Ford BlueCruise** -- Hands-free highway driving.
       - **Mobileye SuperVision** -- Hands-off/eyes-on driving up to 130 km/h.
@@ -333,168 +333,30 @@ Assessment
    3 days, submissions receive zero credit.
 
 
-Operating System & Software
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Development Environment
+-----------------------
 
-.. list-table::
-   :widths: 30 70
-   :header-rows: 1
-   :class: compact-table
+The toolchain for this course -- Ubuntu, ROS 2, VS Code, Git, and the
+Linux shell -- is assumed knowledge from ENPM605 and is **not** covered
+in lecture.
 
-   * - Component
-     - Details
-   * - **OS**
-     - Ubuntu 22.04 LTS (Jammy) or Ubuntu 24.04 LTS (Noble)
-   * - **ROS 2**
-     - Humble Hawksbill (22.04) or Jazzy Jalisco (24.04)
-   * - **CARLA**
-     - 0.9.16 (native on 22.04; Docker on 24.04)
-   * - **IDE**
-     - Visual Studio Code
-   * - **Python**
-     - 3.10+ with ``numpy``, ``matplotlib``, ``opencv-python``, ``carla``
-   * - **Version Control**
-     - Git + GitHub
+.. admonition:: Set this up before the next class
+   :class: important
 
+   Everything you need is on the
+   :doc:`Pre-Read: Development Environment </preread/dev-environment>`
+   page: required OS and package versions, Git configuration and the
+   commands you will actually use, VS Code setup and extensions, the
+   coding guidelines your assignments are graded against, and shell
+   essentials.
 
-Development Environment Setup
-------------------------------
-
-Version Control (Git & GitHub)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Git is a version control system that tracks changes in your files over time.
-
-.. code-block:: bash
-
-   # Install Git
-   sudo apt update && sudo apt install git
-
-   # Configure
-   git config --global user.name "Your Full Name"
-   git config --global user.email "your.email@umd.edu"
-
-   # Verify
-   git config --list
-
-**Essential Git commands:**
-
-.. grid:: 1 2 2 2
-   :gutter: 2
-
-   .. grid-item-card:: Daily Commands
-
-      .. code-block:: bash
-
-         git status          # Check status
-         git add .           # Stage changes
-         git commit -m "msg" # Commit
-         git push            # Upload to GitHub
-         git pull            # Download updates
-
-   .. grid-item-card:: Branching Commands
-
-      .. code-block:: bash
-
-         git branch          # List branches
-         git checkout -b new # Create & switch
-         git merge branch    # Merge branch
-         git branch -d old   # Delete branch
-
-**GitHub** is a cloud-based platform that hosts Git repositories. Course
-materials are available at the course GitHub repository.
-
-
-Visual Studio Code
-~~~~~~~~~~~~~~~~~~
-
-VS Code is a free, open-source code editor available on all platforms. It is
-consistently ranked as the most popular code editor in developer surveys.
-
-**Installation:**
-
-.. code-block:: bash
-
-   # Download .deb from https://code.visualstudio.com/download
-   cd ~/Downloads
-   sudo apt install ./code_<version>_amd64.deb
-
-**Key features:**
-
-- Activity Bar (left side): File explorer, search, source control, extensions.
-- Editor: Where you write code.
-- Integrated Terminal: For running commands.
-- Command Palette: ``Ctrl+Shift+P`` for all VS Code actions.
-
-**Recommended extensions** for this course: Python, Pylance, ROS, YAML,
-GitLens, Docker (if using Jazzy setup).
-
-.. tip::
-
-   The ``.vscode`` folder in your project root stores workspace-specific
-   settings (``settings.json``, ``launch.json``, ``extensions.json``). These
-   override your global VS Code settings.
-
-
-Programming Guidelines
-~~~~~~~~~~~~~~~~~~~~~~
-
-In this course we follow:
-
-- `PEP 8 <https://peps.python.org/pep-0008/>`_ -- Python style guide.
-- `C++ Core Guidelines <https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines>`_ -- For any C++ code.
+   Then install CARLA using the :doc:`setup guide </carla/carla>`.
 
 .. warning::
 
-   One way to lose points on assignments is by failing to follow coding guidelines.
-
-
-Linux Shell Essentials
-~~~~~~~~~~~~~~~~~~~~~~
-
-A shell is a program that provides a command-line interface for interacting
-with the operating system.
-
-**Common shells:**
-
-- **Bash** (``~/.bashrc``) -- Default for most Linux distributions.
-- **Zsh** (``~/.zshrc``) -- Enhanced autocompletion and customization.
-
-**Useful concepts:**
-
-.. tab-set::
-
-   .. tab-item:: Aliases
-
-      Shortcuts that save you from typing long commands:
-
-      .. code-block:: bash
-
-         alias cdd='cd ~/Documents'
-         alias sr='source ~/.bashrc'   # or source ~/.zshrc
-
-   .. tab-item:: File Sourcing
-
-      Apply changes to your shell configuration without opening a new terminal:
-
-      .. code-block:: bash
-
-         source ~/.bashrc
-
-   .. tab-item:: Functions
-
-      Reusable blocks of commands:
-
-      .. code-block:: bash
-
-         my_function() {
-             echo "Hello from my_function"
-             cd ~/catkin_ws && colcon build
-         }
-
-.. tip::
-
-   Check your current shell with ``ps -p $$``.
+   One reliable way to lose points on assignments is failing to follow
+   the `PEP 8 <https://peps.python.org/pep-0008/>`_ style guide. It is
+   part of every rubric.
 
 
 CARLA Simulator
@@ -579,18 +441,22 @@ CARLA in This Course
    :header-rows: 1
    :class: compact-table
 
-   * - Week
+   * - Lecture
      - CARLA Usage
-   * - Week 2
-     - Sensor data collection and visualization
-   * - Week 4
-     - Multi-sensor fusion with LiDAR and camera data
-   * - Week 6--7
+   * - L2
+     - Sensor data collection, visualization, LiDAR-to-camera projection
+   * - L3
+     - Multi-sensor fusion with a Kalman filter (camera + LiDAR + RADAR)
+   * - L4--L6
+     - Detection, BEV construction, segmentation, and multi-object tracking
+   * - L7
      - Localization and SLAM testing in different towns
-   * - Week 8--9
-     - Motion planning with dynamic obstacles
-   * - Weeks 11--13
-     - Full ADS pipeline development and testing
+   * - L8
+     - Global route planning with the CARLA navigation API
+   * - L9--L11
+     - Prediction, motion planning, and trajectory control
+   * - L12--L14
+     - Full ADS pipeline integration and evaluation
 
 .. note::
 
@@ -813,9 +679,13 @@ Demo 3: Weather and Lighting Experiments
    3. **Traffic complexity**: Observe NPC vehicle behavior at intersections.
       What decisions must the ADS make?
    4. **Connection to the course**: This demo shows the raw inputs. Over the
-      next 13 weeks, you will build the full pipeline: sensors (L2) ->
-      perception (L3--L5) -> fusion (L6) -> localization (L7) -> planning
-      (L8--L9) -> control (L9) -> decision-making (L10).
+      rest of the semester you will build the full pipeline:
+      sensors (L2) -> state estimation & fusion (L3) ->
+      perception (L4--L6) -> localization & SLAM (L7) ->
+      navigation (L8) -> prediction & behavior (L9) ->
+      motion planning (L10) -> trajectory generation & control (L11) ->
+      end-to-end driving (L12) -> world models (L13) ->
+      system integration & safety (L14).
 
 .. code-block:: python
 
@@ -826,3 +696,41 @@ Demo 3: Weather and Lighting Experiments
        npc.destroy()
    vehicle.destroy()
    print("All actors destroyed.")
+
+
+Summary
+--------
+
+.. grid:: 1 2 2 2
+   :gutter: 3
+
+   .. grid-item-card:: Terminology and Landscape
+      :class-card: sd-border-primary
+
+      - **DDT** is the real-time driving task; **ODD** is the envelope
+        within which a system is designed to perform it
+      - The SAE J3016 dividing line is *who is responsible for the DDT*:
+        L0--L2 the human, L3--L5 the system
+      - L4 robotaxis are commercially deployed but geofenced; L5 does not
+        exist
+      - Safety standards: ISO 26262 (failures), ISO 21448/SOTIF (hazards
+        without failure), ISO/SAE 21434 (cybersecurity)
+
+   .. grid-item-card:: Lessons from Failure
+      :class-card: sd-border-primary
+
+      - **Uber ATG (2018)**: unstable classification broke track
+        persistence, and disabling factory AEB removed the fallback.
+        Redundancy is not optional
+      - **Cruise (2023)**: the Minimal Risk Condition itself caused harm,
+        and the disclosure failure ended the company. "Pull over and
+        stop" is not universally safe
+      - Both were *system* failures, not algorithm failures -- which is
+        the theme this course returns to in L14
+
+.. admonition:: Looking ahead
+   :class: tip
+
+   Every lecture from here adds one block to the pipeline you saw running
+   in the CARLA demo. Keep asking the question that closes this course:
+   **how does this component fail, and what happens when it does?**

@@ -1,6 +1,44 @@
 Syllabus
 ========
 
+.. note::
+
+   The authoritative, printable syllabus is the PDF distributed on
+   ELMS-Canvas. This page mirrors it. If the two ever disagree, the
+   Canvas PDF governs -- please report the discrepancy.
+
+Prerequisites
+-------------
+
+.. list-table::
+   :widths: 30 70
+   :class: compact-table
+
+   * - **ENPM605** (or equivalent)
+     - *Python Applications for Robotics.* Strong Python, object-oriented
+       design, and ROS 2 development. Every group project depends on this.
+   * - **ENPM673** (or equivalent)
+     - *Perception for Autonomous Robotics.* Camera models, image
+       processing, CNN fundamentals, and an introduction to state
+       estimation.
+   * - **Robotics fundamentals**
+     - Kinematics (differential drive, Ackermann steering), basic control
+       theory (PID, feedback), odometry and SLAM concepts.
+   * - **Mathematics**
+     - Linear algebra (matrix operations, eigendecomposition), probability
+       (Gaussians, Bayes' rule), and calculus.
+
+.. admonition:: If you are satisfying ENPM673 by "or equivalent"
+   :class: tip
+
+   Several lectures open with a "recap from ENPM673" note. The material
+   these notes refer to is developed from first principles anyway where
+   the course depends on it -- most importantly the Kalman filter, which
+   is built up in full in :doc:`L3 </lectures/lecture3/l3_index>`. You
+   will not be left without it. Do, however, review CNN fundamentals
+   before L4 and camera calibration before L2.
+
+
 Grade Breakdown
 ---------------
 

@@ -134,17 +134,67 @@ Fusion Architectures
 Kalman Filter for Sensor Fusion
 ---------------------------------
 
-.. admonition:: Recap from ENPM673
+.. admonition:: If you have seen this before
    :class: note
 
-   In ENPM673, you derived the Kalman Filter from first principles: the
-   linear-Gaussian state space model, the predict-update cycle, and the
-   Kalman Gain as a trust dial between prediction and measurement. Here
-   we focus on **applying** the KF framework to multi-sensor fusion in
-   autonomous driving.
+   ENPM673 introduces the Kalman Filter, so parts of this section may be
+   revision. It is developed here from the state-space model regardless,
+   because the entire second half of this course depends on it: tracking
+   (L6), localization and SLAM (L7), and GP3 all assume you can set up
+   and debug a filter, not merely recognize the equations. If ENPM673 is
+   being satisfied by an "or equivalent" prerequisite, this is the
+   canonical treatment.
 
-KF Equations -- Quick Reference
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The Model
+~~~~~~~~~~
+
+The Kalman Filter is the optimal estimator for a **linear system with
+Gaussian noise**. We assume the state evolves and is measured as:
+
+.. math::
+
+   \mathbf{x}_k &= F_k \mathbf{x}_{k-1} + B_k \mathbf{u}_k + \mathbf{w}_k,
+     \qquad \mathbf{w}_k \sim \mathcal{N}(0, Q_k) \\
+   \mathbf{z}_k &= H_k \mathbf{x}_k + \mathbf{v}_k,
+     \qquad\qquad\;\; \mathbf{v}_k \sim \mathcal{N}(0, R_k)
+
+Each symbol earns its place:
+
+.. list-table::
+   :widths: 12 88
+   :class: compact-table
+
+   * - :math:`\mathbf{x}`
+     - **State** -- what you want to know but cannot measure directly
+       (e.g. position *and* velocity of a tracked vehicle).
+   * - :math:`F`
+     - **State transition** -- your motion model. Encodes "where will it
+       be next tick if nothing surprising happens."
+   * - :math:`Q`
+     - **Process noise** -- how much you distrust :math:`F`. Large
+       :math:`Q` means "the target might manoeuvre unpredictably."
+   * - :math:`H`
+     - **Measurement model** -- maps state into what the sensor actually
+       reports. A LiDAR sees position but not velocity, so its :math:`H`
+       selects only the position rows.
+   * - :math:`R`
+     - **Measurement noise** -- how much you distrust the sensor. This is
+       the knob that weather degradation turns (see below).
+   * - :math:`P`
+     - **State covariance** -- your current uncertainty about
+       :math:`\mathbf{x}`. The filter propagates this alongside the mean.
+
+.. admonition:: The whole idea in one sentence
+   :class: tip
+
+   The filter keeps a Gaussian belief :math:`\mathcal{N}(\hat{\mathbf{x}},
+   P)`, **inflates** its uncertainty when predicting forward through
+   :math:`F` (you learn nothing by waiting), and **shrinks** it when a
+   measurement arrives -- with the amount of shrinkage set by how the
+   prior uncertainty :math:`P` compares to the sensor noise :math:`R`.
+
+KF Equations
+~~~~~~~~~~~~~
 
 .. admonition:: KF Predict-Update Summary
    :class: hint
@@ -172,9 +222,11 @@ Kalman Gain Intuition
    * - :math:`K_k \to 0` (small gain)
      - Measurement very noisy (:math:`R_k` large) OR prior very certain
        (:math:`P_{k|k-1}` small). Trust the prediction, barely update.
-   * - :math:`K_k \to H^{-1}` (large gain)
+   * - :math:`K_k` large
      - Measurement very accurate (:math:`R_k` small) OR prior very uncertain
        (:math:`P_{k|k-1}` large). Trust the measurement, update aggressively.
+       In the scalar case with :math:`H = 1` the gain approaches 1, meaning
+       the estimate jumps straight to the measurement.
 
 .. admonition:: Engineering Intuition
    :class: tip
@@ -233,9 +285,46 @@ that delivers a measurement:
 3. **Update with RADAR**: using the posterior from step 2 as the new prior, apply :math:`H^{R}`, :math:`R^{R}`, :math:`\mathbf{z}^{R}`.
 4. **Update with Camera**: again chain the posterior, applying :math:`H^{C}`, :math:`R^{C}`, :math:`\mathbf{z}^{C}`.
 
-The order of sensor updates does not affect the final result (the KF update
-is associative for independent measurements). Each update further reduces the
-covariance :math:`P`, fusing complementary information from all three modalities.
+Each update further reduces the covariance :math:`P`, fusing complementary
+information from all three modalities.
+
+.. admonition:: Does update order matter?
+   :class: note
+
+   No -- the sequential updates **commute**, so LiDAR-then-RADAR gives the
+   same posterior as RADAR-then-LiDAR. This follows from the fact that
+   applying the updates in sequence is algebraically equivalent to one
+   batch update with the stacked measurement
+   :math:`\mathbf{z} = [\mathbf{z}^L; \mathbf{z}^R; \mathbf{z}^C]` and
+   block-diagonal :math:`R`.
+
+   That equivalence rests on one assumption worth stating explicitly:
+   **the sensors' measurement noises must be mutually independent**, which
+   is what makes :math:`R` block-diagonal. If two sensors share an error
+   source -- a common time-sync bias, or a shared calibration error
+   against the vehicle frame -- the updates no longer commute and
+   sequential fusion will be overconfident.
+
+.. admonition:: Asynchronous and out-of-sequence measurements
+   :class: warning
+
+   The clean picture above assumes all three sensors report at the same
+   instant. Real sensors do not: LiDAR runs at 10--20 Hz, camera at
+   30--60 Hz, RADAR at 10--20 Hz, and each has a different processing
+   latency, so measurements arrive **interleaved and sometimes late**.
+
+   Two standard remedies:
+
+   - **Predict-to-measurement-time.** Keep the filter's timestamp, and
+     when a measurement arrives with time :math:`t_z`, predict forward to
+     :math:`t_z` before updating. This handles interleaving.
+   - **Buffering / retrodiction.** For a measurement that arrives *after*
+     the filter has already advanced past its timestamp (out-of-sequence),
+     either discard it, or roll the filter back to :math:`t_z`, apply it,
+     and re-run the intervening updates.
+
+   Ignoring timestamps and simply applying measurements in arrival order
+   is the most common source of quietly-degraded tracking performance.
 
 Sensor Noise and Environmental Conditions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -604,11 +693,26 @@ timestamps so that we can collect synchronized snapshots at 10 Hz.
    world = client.get_world()
    bp_lib = world.get_blueprint_library()
 
+   # ---------- Synchronous mode ----------
+   # world.tick() is ONLY valid in synchronous mode. In the default
+   # asynchronous mode the server runs freely and you must use
+   # world.wait_for_tick() instead. Synchronous mode is what makes
+   # sensor readings reproducible across runs, so we use it here.
+   settings = world.get_settings()
+   settings.synchronous_mode = True
+   settings.fixed_delta_seconds = 0.1        # 10 Hz -> matches KF dt
+   world.apply_settings(settings)
+
+   # The Traffic Manager must be told as well, or autopilot vehicles
+   # will stutter and desynchronize from the server tick.
+   traffic_manager = client.get_trafficmanager()
+   traffic_manager.set_synchronous_mode(True)
+
    # Spawn ego vehicle
    vehicle_bp = bp_lib.find('vehicle.tesla.model3')
    spawn_point = world.get_map().get_spawn_points()[0]
    ego = world.spawn_actor(vehicle_bp, spawn_point)
-   ego.set_autopilot(True)
+   ego.set_autopilot(True, traffic_manager.get_port())
 
    # ---------- Sensor blueprints ----------
    camera_bp = bp_lib.find('sensor.camera.rgb')
@@ -647,13 +751,23 @@ timestamps so that we can collect synchronized snapshots at 10 Hz.
    radar.listen(sm.make_callback('radar'))
 
    # ---------- Collect at 10 Hz ----------
+   # No time.sleep() here: in synchronous mode world.tick() blocks until
+   # the server has advanced exactly fixed_delta_seconds and every sensor
+   # callback has fired. Adding a sleep would only slow the loop down.
    snapshots = []
-   for _ in range(200):          # 20 seconds of data
-       world.tick()
-       snap = sm.get_snapshot()
-       if len(snap) == 3:        # all three sensors have data
-           snapshots.append(snap)
-       time.sleep(0.1)
+   try:
+       for _ in range(200):          # 20 s of data at 10 Hz
+           world.tick()
+           snap = sm.get_snapshot()
+           if len(snap) == 3:        # all three sensors have data
+               snapshots.append(snap)
+   finally:
+       # ALWAYS restore async mode -- leaving the server in synchronous
+       # mode makes it appear frozen to the next script you run.
+       settings.synchronous_mode = False
+       settings.fixed_delta_seconds = None
+       world.apply_settings(settings)
+       traffic_manager.set_synchronous_mode(False)
 
 
 Task 2: Implement a Linear Kalman Filter for Vehicle Tracking
@@ -707,16 +821,29 @@ a vehicle ahead. The constant-velocity model uses :math:`\Delta t = 0.1\,\text{s
            self.x = self.F @ self.x
            self.P = self.F @ self.P @ self.F.T + self.Q
 
-       def update(self, z, R=None):
-           """Update step: incorporate measurement z with noise R."""
+       def update(self, z, R=None, H=None):
+           """Update step: incorporate measurement z with noise R.
+
+           H defaults to position-only observation, but each sensor can
+           pass its own measurement model.
+           """
            if R is None:
                R = self.R
-           H = self.H
-           y = z - H @ self.x                       # innovation
+           if H is None:
+               H = self.H
+
+           y = z - H @ self.x                        # innovation
            S = H @ self.P @ H.T + R                  # innovation covariance
            K = self.P @ H.T @ np.linalg.inv(S)       # Kalman gain
            self.x = self.x + K @ y
-           self.P = (np.eye(4) - K @ H) @ self.P
+
+           # Joseph form: P = (I-KH) P (I-KH)^T + K R K^T
+           # Algebraically equal to the textbook (I-KH)P, but it stays
+           # symmetric and positive-definite under floating-point error.
+           # The short form can drift into a non-PSD covariance after a
+           # few thousand updates and take the filter down with it.
+           I_KH = np.eye(len(self.x)) - K @ H
+           self.P = I_KH @ self.P @ I_KH.T + K @ R @ K.T
 
 
 Task 3: Sequential Multi-Sensor Update
@@ -729,10 +856,16 @@ uncertainty decreases as sensors are fused.
 
 .. code-block:: python
 
-   # ---------- Measurement noise per sensor ----------
+   # ---------- Measurement models and noise per sensor ----------
+   # LiDAR and RADAR both give (x, y); the monocular camera gives a
+   # RANGE estimate only, so it observes x alone and needs its own H.
+   H_xy = np.array([[1, 0, 0, 0],
+                    [0, 1, 0, 0]])
+   H_x  = np.array([[1, 0, 0, 0]])
+
    R_lidar  = np.diag([0.1, 0.1])   # high precision
    R_radar  = np.diag([0.5, 0.5])   # moderate precision
-   R_camera = np.diag([2.0, 2.0])   # low precision
+   R_camera = np.diag([2.0])        # low precision, range only
 
    def lidar_measurement(lidar_data, ego_transform):
        """Nearest point cluster in the forward cone (+-15 deg, <80 m)."""
@@ -761,14 +894,23 @@ uncertainty decreases as sensors are fused.
        y = depth * np.sin(azimuth)
        return np.array([x, y])
 
-   def camera_measurement(image_data, known_vehicle_width=1.8, focal_px=640):
-       """Estimate distance from bounding-box width (pinhole model)."""
-       # Placeholder: assume bbox_width_px is obtained from a detector
-       bbox_width_px = 80  # example value
-       if bbox_width_px < 5:
+   def camera_measurement(bbox_width_px, known_vehicle_width=1.8,
+                          focal_px=640):
+       """Estimate RANGE ONLY from bounding-box width (pinhole model).
+
+       A monocular camera gives no independent lateral measurement here,
+       so this returns a 1-D measurement paired with H_x. Returning
+       [depth, 0.0] against a 2-D H would assert "y = 0" on every frame
+       and drag the lateral estimate to zero -- a fabricated measurement,
+       not a weak one.
+
+       bbox_width_px comes from your detector (L4). Until you have one,
+       take it from CARLA's ground-truth bounding boxes.
+       """
+       if bbox_width_px is None or bbox_width_px < 5:
            return None
        depth = (known_vehicle_width * focal_px) / bbox_width_px
-       return np.array([depth, 0.0])   # assume centered (x = depth, y ~ 0)
+       return np.array([depth])
 
    # ---------- Run sequential fusion loop ----------
    kf = KalmanFilter(dt=0.1)
@@ -777,25 +919,24 @@ uncertainty decreases as sensors are fused.
        kf.predict()
        print(f"After predict  -> cov trace: {np.trace(kf.P):.4f}")
 
-       # LiDAR update
+       # LiDAR update -- observes (x, y)
        _, lidar_data = snap['lidar']
        z_lidar = lidar_measurement(lidar_data, ego.get_transform())
        if z_lidar is not None:
-           kf.update(z_lidar, R=R_lidar)
+           kf.update(z_lidar, R=R_lidar, H=H_xy)
            print(f"  + LiDAR      -> cov trace: {np.trace(kf.P):.4f}")
 
-       # RADAR update
+       # RADAR update -- observes (x, y)
        _, radar_data = snap['radar']
        z_radar = radar_measurement(radar_data)
        if z_radar is not None:
-           kf.update(z_radar, R=R_radar)
+           kf.update(z_radar, R=R_radar, H=H_xy)
            print(f"  + RADAR      -> cov trace: {np.trace(kf.P):.4f}")
 
-       # Camera update
-       _, camera_data = snap['camera']
-       z_camera = camera_measurement(camera_data)
+       # Camera update -- observes range (x) only
+       z_camera = camera_measurement(get_bbox_width_px(snap['camera']))
        if z_camera is not None:
-           kf.update(z_camera, R=R_camera)
+           kf.update(z_camera, R=R_camera, H=H_x)
            print(f"  + Camera     -> cov trace: {np.trace(kf.P):.4f}")
 
        print(f"  Fused state: x={kf.x[0]:.2f}, y={kf.x[1]:.2f}, "
