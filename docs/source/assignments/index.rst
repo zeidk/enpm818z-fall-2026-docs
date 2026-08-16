@@ -21,7 +21,9 @@ the complete system on challenging, unseen scenarios.
 Project Weight
 --------------
 
-The final project accounts for **80% of your overall course grade**:
+The final project accounts for **80% of your overall course grade**,
+split between the four group projects (**85%**) and the Final Report
+(**15%**). The table below breaks down the group-project portion:
 
 .. list-table::
    :header-rows: 1
@@ -30,7 +32,7 @@ The final project accounts for **80% of your overall course grade**:
 
    * - Component
      - Points
-     - % of Project
+     - % of GP Grade
      - Duration
      - Lectures
    * - GP1: Sensor Suite & Data Pipeline
@@ -61,9 +63,12 @@ The final project accounts for **80% of your overall course grade**:
 
 .. note::
 
-   GP2 carries the highest weight (40%) because it is the **AI-focused
-   project** requiring deep learning model training, evaluation, and
-   comparison.
+   GP2 carries the highest weight (40% of the group-project portion)
+   because it is the **AI-focused project** requiring deep learning
+   model training, evaluation, and comparison.
+
+   The Final Report is weighted separately at **15% of the final
+   project grade** -- see :ref:`final-report` below.
 
 
 Pipeline Progression
@@ -132,8 +137,12 @@ Team Formation
    early.
 
 
+.. _final-report:
+
 Final Report (Weeks 14--15)
 ---------------------------
+
+**Weight:** 15% of the final project grade.
 
 After GP4 is complete, your team will evaluate the full pipeline on
 **instructor-provided scenarios** not seen during development and submit

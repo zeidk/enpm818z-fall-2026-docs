@@ -225,15 +225,18 @@ Teams consist of **4 students** (formed in Week 2).
      - Week 14
      - Week 15
      - 1 week
-     - (included above)
+     - 15%
      - Integration of GP1--GP4 + evaluation on unseen scenarios + report.
 
 .. note::
 
-   GP2 carries the highest weight (40%) because it is the AI-focused
-   project requiring deep learning model training, evaluation, and
-   comparison. The final evaluation is not separately weighted -- it
-   assesses the integration quality of GP1--GP4.
+   The Final Project grade is composed of the four group projects
+   (**85%**) and the Final Report (**15%**). The GP1--GP4 weights above
+   are shares of the group-project portion.
+
+   GP2 carries the highest weight (40% of the group-project portion)
+   because it is the AI-focused project requiring deep learning model
+   training, evaluation, and comparison.
 
    See the :doc:`Final Project </assignments/index>` page for full
    specifications, rubrics, evaluation scenarios, and suggested team roles.
