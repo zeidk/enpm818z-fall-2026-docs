@@ -43,10 +43,11 @@ then the probabilistic state-estimation backbone (Kalman, Extended Kalman,
 Unscented Kalman, and particle filters) that everything else depends on,
 then modern perception (object detection, Bird's-Eye-View representations,
 3D occupancy networks, segmentation, and multi-object tracking), then
-localization and SLAM, then prediction of surrounding agents, and finally
-motion planning, trajectory generation, and feedback control. Every concept
-is exercised hands-on in CARLA, where students grow a single ROS 2 pipeline
-across the semester from raw sensor input to closed-loop autonomous driving.
+localization and SLAM, then route planning over HD maps, then prediction
+of surrounding agents, and finally motion planning, trajectory generation,
+and feedback control. Every concept is exercised hands-on in CARLA, where
+students grow a single ROS 2 pipeline across the semester from raw sensor
+input to closed-loop autonomous driving.
 
 Beyond the classical modular stack, the course covers the algorithms and
 architectures driving the state of the art in 2026: transformer-based
@@ -132,9 +133,9 @@ After successfully completing this course, students will be able to:
 
 1. **Understand the Core AV Stack.** Explain how an on-road automated
    vehicle is built up from sensing, probabilistic state estimation,
-   perception, localization, prediction, motion planning, trajectory
-   generation, control, and end-to-end approaches, and articulate the
-   data dependencies between these layers.
+   perception, localization, route planning, prediction, motion
+   planning, trajectory generation, control, and end-to-end approaches,
+   and articulate the data dependencies between these layers.
 2. **Apply Probabilistic State Estimation and Multi-Sensor Fusion.**
    Derive and implement the Kalman, Extended Kalman, Unscented Kalman,
    and particle filters; design early, intermediate, and late fusion
@@ -324,11 +325,11 @@ and basic rules of etiquette.
 
 ### Grade Breakdown
 
-| Assignment                            | Percentage % |
-| ------------------------------------- | ------------ |
-| Final Project (GP1-GP4 + Final Report) | 80%          |
-| Quizzes (5 quizzes)                   | 20%          |
-| **Total**                             | **100%**     |
+| Assignment                                       | Percentage % |
+| ------------------------------------------------ | ------------ |
+| Final Project (GP1-GP4: 85% + Final Report: 15%)  | 80%          |
+| Quizzes (5 quizzes)                               | 20%          |
+| **Total**                                         | **100%**     |
 
 ### Course Assignments
 
@@ -343,8 +344,10 @@ package called `ads_pipeline`. Each team member is expected to
 contribute actively to the project, ensuring equitable participation
 and shared responsibility.
 
-The project is divided into four cumulative group projects (GP1
-through GP4), each building on the previous:
+The Final Project grade is composed of the four group projects
+(**85%**) and the Final Report (**15%**). The group projects are
+cumulative — GP1 through GP4 each build on the previous, and their
+percentages below are shares of the group-project portion:
 
 1. **GP1: Sensor Suite & Data Pipeline** (3 weeks, 15% of GP grade): Spawn a multi-sensor rig in CARLA (camera + LiDAR + GNSS + IMU),
    stream all data through a ROS 2 `sensor_manager` node, and record
@@ -361,6 +364,17 @@ through GP4), each building on the previous:
    `controller_node` (Pure Pursuit + PID), and a behavioral FSM. Run
    the full `ads_pipeline` end-to-end on two CARLA scenarios and
    evaluate using the provided metrics script. Lectures L8-L11.
+
+**Final Report: Integrated ADS Pipeline** (1 week, **15% of the Final
+Project grade**): After GP4 is complete, teams evaluate the full
+`ads_pipeline` on instructor-provided scenarios not seen during
+development (urban intersection, highway merging, pedestrian crossing,
+adverse weather, construction zone) and submit a written report
+documenting the system architecture, design decisions, quantitative
+results (mAP, APE, route completion, collisions), and failure analysis.
+Because it assesses the integrated system, it draws on Lectures L1-L14.
+Due December 17.
+
 #### Quizzes
 
 - Quizzes provide an effective means to assess your understanding of
