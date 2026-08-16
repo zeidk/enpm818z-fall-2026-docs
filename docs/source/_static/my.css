@@ -1,4 +1,61 @@
 /* ------------------------------------------------------------
+ * Dark-mode fix: activate Bootstrap's dark palette
+ *
+ * Bootstrap 5.3 switches its palette on [data-bs-theme="dark"], but
+ * pydata-sphinx-theme switches on [data-theme="dark"]. Nothing bridges
+ * the two, so Bootstrap's dark mode never activates and
+ * --bs-emphasis-color stays #000 even in dark mode.
+ *
+ * That single stale variable is what made striped table rows render
+ * black-on-dark: Bootstrap derives both the striped/hover TEXT colour
+ * and the striped/hover BACKGROUND tint from it.
+ *
+ *   .table { --bs-table-striped-color: var(--bs-emphasis-color);
+ *            --bs-table-striped-bg: rgba(var(--bs-emphasis-color-rgb), .05); }
+ *
+ * Bridging the flag fixes the text and flips the row tint from a black
+ * wash to a white one, which is what dark mode actually wants. It also
+ * corrects any other Bootstrap component deriving from the same
+ * variable, rather than patching tables alone.
+ * ------------------------------------------------------------ */
+html[data-theme="dark"] {
+  --bs-emphasis-color: #fff;
+  --bs-emphasis-color-rgb: 255, 255, 255;
+}
+
+/* Before the theme's JS stamps data-theme, honour the OS preference so
+   the tables are never briefly unreadable on first paint. */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) {
+    --bs-emphasis-color: #fff;
+    --bs-emphasis-color-rgb: 255, 255, 255;
+  }
+}
+
+/* ------------------------------------------------------------
+ * Table text follows the theme in every row state
+ *
+ * With the flag bridged, striped/hover rows would inherit pure #fff
+ * while ordinary rows use --pst-color-text-base (#ced6dd). Pin all row
+ * states to the theme colour so a striped table reads identically to an
+ * unstriped one. Applies to every table on the site, since the theme
+ * puts .table on all of them.
+ * ------------------------------------------------------------ */
+table.table {
+  --bs-table-color: var(--pst-color-text-base);
+  --bs-table-striped-color: var(--pst-color-text-base);
+  --bs-table-hover-color: var(--pst-color-text-base);
+  --bs-table-active-color: var(--pst-color-text-base);
+}
+
+/* Header cells are <th>, which Bootstrap leaves on the inherited
+   colour; pin them too so a striped header cannot go black either. */
+table.table th,
+table.table thead th {
+  color: var(--pst-color-text-base);
+}
+
+/* ------------------------------------------------------------
  * Compact Table Variant
  * Usage: .. list-table::
  *           :class: compact-table
