@@ -24,13 +24,13 @@ numbersections: false
 | **Credits**           | 3                                                |
 | **Course Dates**      | September 3, 2026 to December 10, 2026           |
 | **Course Times**      | Thursdays, 7:00 PM to 9:40 PM                    |
-| **Classroom**         | J.M. Patterson Building (JMP), Room 2116         |
+| **Classroom**         | J.M. Patterson Building (JMP), Room 2121         |
 
 **ELMS-Canvas:** <https://umd.instructure.com/courses/1409148>
 
 **Lecture notes:** <https://enpm818z-fall-2026-docs.readthedocs.io/en/latest/>
 
-**Lecture code:** <https://github.com/zeidk/enpm818z-fall-2026-code>
+**Lecture code:** <https://github.com/rubixcubic/enpm818z-fall-2026-code>
 
 \newpage
 

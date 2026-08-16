@@ -7,13 +7,13 @@
 **Email:** zeidk@umd.edu
 **Office Hours:** By Appointment
 **Credits:** 3
-**Course Dates:** From August 31, 2026 to December 11, 2026
-**Course Times:** 7:00 PM – 9:40 PM (Mondays)
-**Classroom:** J.M. Patterson Building (JMP), Room 2116
+**Course Dates:** From September 3, 2026 to December 10, 2026
+**Course Times:** 7:00 PM - 9:40 PM (Thursdays)
+**Classroom:** J.M. Patterson Building (JMP), Room 2121
 
 **Canvas / ELMS:** [Link to Canvas Course](https://umd.instructure.com/courses/1409148)
 **Lecture Notes:** <https://enpm818z-fall-2026-docs.readthedocs.io/en/latest/>
-**Lecture Code:** <https://github.com/zeidk/enpm818z-fall-2026-code>
+**Lecture Code:** <https://github.com/rubixcubic/enpm818z-fall-2026-code>
 
 ---
 
@@ -26,10 +26,11 @@ then the probabilistic state-estimation backbone (Kalman, Extended Kalman,
 Unscented Kalman, and particle filters) that everything else depends on,
 then modern perception (object detection, Bird's-Eye-View representations,
 3D occupancy networks, segmentation, and multi-object tracking), then
-localization and SLAM, then prediction of surrounding agents, and finally
-motion planning, trajectory generation, and feedback control. Every concept
-is exercised hands-on in CARLA, where students grow a single ROS 2 pipeline
-across the semester from raw sensor input to closed-loop autonomous driving.
+localization and SLAM, then route planning over HD maps, then prediction
+of surrounding agents, and finally motion planning, trajectory generation,
+and feedback control. Every concept is exercised hands-on in CARLA, where
+students grow a single ROS 2 pipeline across the semester from raw sensor
+input to closed-loop autonomous driving.
 
 Beyond the classical modular stack, the course covers the algorithms and
 architectures driving the state of the art in 2026: transformer-based
@@ -115,9 +116,9 @@ After successfully completing this course, students will be able to:
 
 1. **Understand the Core AV Stack.** Explain how an on-road automated
    vehicle is built up from sensing, probabilistic state estimation,
-   perception, localization, prediction, motion planning, trajectory
-   generation, control, and end-to-end approaches, and articulate the
-   data dependencies between these layers.
+   perception, localization, route planning, prediction, motion
+   planning, trajectory generation, control, and end-to-end approaches,
+   and articulate the data dependencies between these layers.
 2. **Apply Probabilistic State Estimation and Multi-Sensor Fusion.**
    Derive and implement the Kalman, Extended Kalman, Unscented Kalman,
    and particle filters; design early, intermediate, and late fusion
@@ -193,7 +194,7 @@ After successfully completing this course, students will be able to:
 
 This course includes both on-campus and online sections. To attend
 synchronously online, log into ELMS-Canvas at the time of the Section
-0101 class (Mondays @ 7:00 PM) and select **Video Conference** from
+0101 class (Thursdays @ 7:00 PM) and select **Video Conference** from
 the left side menu. This will open a Zoom link to the live classroom.
 
 For asynchronous online students, all lectures will be recorded and
@@ -307,13 +308,11 @@ and basic rules of etiquette.
 
 ### Grade Breakdown
 
-| Assignment                  | Percentage % |
-| --------------------------- | ------------ |
-| Group Projects (GP1–GP4)    | 70%          |
-| Quizzes (5 quizzes)         | 25%          |
-| Participation / Engagement  | 5%           |
-| **Total**                   | **100%**     |
-| *GP5 (Optional, VLA)*       | *Up to +10% bonus* |
+| Assignment                                       | Percentage % |
+| ------------------------------------------------ | ------------ |
+| Final Project (GP1-GP4: 85% + Final Report: 15%)  | 80%          |
+| Quizzes (5 quizzes)                               | 20%          |
+| **Total**                                         | **100%**     |
 
 ### Course Assignments
 
@@ -328,9 +327,10 @@ package called `ads_pipeline`. Each team member is expected to
 contribute actively to the project, ensuring equitable participation
 and shared responsibility.
 
-The project is divided into four cumulative group projects (GP1
-through GP4), each building on the previous, with an optional bonus
-project (GP5):
+The Final Project grade is composed of the four group projects
+(**85%**) and the Final Report (**15%**). The group projects are
+cumulative — GP1 through GP4 each build on the previous, and their
+percentages below are shares of the group-project portion:
 
 1. **GP1: Sensor Suite & Data Pipeline** (3 weeks, 15% of GP grade) —
    Spawn a multi-sensor rig in CARLA (camera + LiDAR + GNSS + IMU),
@@ -339,21 +339,26 @@ project (GP5):
 2. **GP2: Perception (YOLO vs DETR)** (3 weeks, 40% of GP grade) —
    Build a `detector_node` running YOLO and DETR on CARLA camera
    frames, compare them, and integrate BEV construction and
-   segmentation into the perception package. Lectures L4–L5.
+   segmentation into the perception package. Lectures L4-L6.
 3. **GP3: Fusion & Localization** (3 weeks, 25% of GP grade) — Add a
    `fusion_node` (Kalman / EKF tracker over multi-sensor inputs) and a
    `localization_node` (EKF-based pose estimate using GNSS + IMU +
-   wheel odometry, with map-based correction). Lectures L3, L6–L8.
+   wheel odometry, with map-based correction). Lectures L3, L7.
 4. **GP4: Planning & Control** (3 weeks, 20% of GP grade) — Add a
    `planner_node` (A\* on the CARLA waypoint graph + re-planning), a
    `controller_node` (Pure Pursuit + PID), and a behavioral FSM. Run
    the full `ads_pipeline` end-to-end on two CARLA scenarios and
-   evaluate using the provided metrics script. Lectures L9–L11.
-5. **GP5 (Optional Bonus): Vision-Language-Action Driving** — Build
-   a simplified VLA-style model that maps camera images and natural
-   language commands directly to driving actions, and compare it
-   against your GP4 modular system. Up to +10 points on the final
-   project score. Lectures L9, L11, L12.
+   evaluate using the provided metrics script. Lectures L8-L11.
+
+**Final Report: Integrated ADS Pipeline** (1 week, **15% of the Final
+Project grade**) — After GP4 is complete, teams evaluate the full
+`ads_pipeline` on instructor-provided scenarios not seen during
+development (urban intersection, highway merging, pedestrian crossing,
+adverse weather, construction zone) and submit a written report
+documenting the system architecture, design decisions, quantitative
+results (mAP, APE, route completion, collisions), and failure analysis.
+Because it assesses the integrated system, it draws on Lectures L1-L14.
+Due December 17.
 
 #### Quizzes
 
@@ -433,33 +438,29 @@ others.
 
 ## Course Schedule
 
-| Week #   | Date    | Topic                                                | Deliverable                       |
-| -------- | ------- | ---------------------------------------------------- | --------------------------------- |
-| 1        | 08/31   | L1 — Course Intro, AV Landscape, Safety, CARLA       | Team Formation                    |
-| (no class) | 09/07 | **LABOR DAY — no class**                             |                                   |
-| 2        | 09/14   | L2 — Sensor Technologies & Calibration               | GP1 Posted                        |
-| 3        | 09/21   | L3 — Probabilistic State Estimation & Fusion         | Quiz 1                            |
-| 4        | 09/28   | L4 — Perception I: Object Detection (YOLO → DETR)    | GP1 Due, GP2 Posted               |
-| 5        | 10/05   | L5 — Perception II: BEV, Occupancy & Segmentation    |                                   |
-| (no class) | 10/12 | **FALL BREAK — no class**                            |                                   |
-| 6        | 10/19   | L6 — Perception III: Tracking, Temporal & Deep Fusion| Quiz 2                            |
-| 7        | 10/26   | L7 — Localization & SLAM                             | GP2 Due, GP3 Posted               |
-| 8        | 11/02   | L8 — Navigation & Route Planning (HD Maps)           | Quiz 3                            |
-| 9        | 11/09   | L9 — Prediction & Behavior Modeling                  |                                   |
-| 10       | 11/16   | L10 — Motion Planning                                | GP3 Due, GP4 Posted, GP5 Posted   |
-| 11       | 11/23   | L11 — Trajectory Generation & Control                | Quiz 4                            |
-| 12       | 11/30   | L12 — End-to-End Driving, VLA & Imitation Learning   |                                   |
-| 13       | 12/07   | L13 — World Models & Simulation                      | Quiz 5, GP4 Due                   |
-| 14       | 12/11*  | L14 — System Integration, Safety & Industry Outlook  | GP5 Due (bonus, application + report) |
+| Week #     | Date  | Topic                                                 | Deliverable                     |
+| ---------- | ----- | ----------------------------------------------------- | ------------------------------- |
+| 1          | 09/03 | L1 - Course Intro, AV Landscape, Safety, CARLA        | Team Formation                  |
+| 2          | 09/10 | L2 - Sensor Technologies & Calibration                | GP1 Posted                      |
+| 3          | 09/17 | L3 - Probabilistic State Estimation & Fusion          | Quiz 1                          |
+| 4          | 09/24 | L4 - Perception I: Object Detection (YOLO to DETR)    |                                 |
+| 5          | 10/01 | L5 - Perception II: BEV, Occupancy & Segmentation     | GP1 Due, GP2 Posted             |
+| 6          | 10/08 | L6 - Perception III: Tracking, Temporal & Deep Fusion | Quiz 2                          |
+| 7          | 10/15 | L7 - Localization & SLAM                              |                                 |
+| 8          | 10/22 | L8 - Navigation & Route Planning                      | GP2 Due, GP3 Posted             |
+| 9          | 10/29 | L9 - Prediction & Behavior Modeling                   | Quiz 3                          |
+| 10         | 11/05 | L10 - Motion Planning                                 |                                 |
+| 11         | 11/12 | L11 - Trajectory Generation & Control                 | Quiz 4, GP3 Due, GP4 Posted     |
+| 12         | 11/19 | L12 - End-to-End Driving, VLA & Imitation Learning    |                                 |
+| (no class) | 11/26 | **THANKSGIVING RECESS - no class**                    |                                 |
+| 13         | 12/03 | L13 - World Models & Simulation                       |                                 |
+| 14         | 12/10 | L14 - System Integration, Safety & Industry Outlook   | Quiz 5, GP4 Due                 |
+| 15         | 12/17 | No class - final report submission window             | Final Report Due                |
 
-\* Dec 11, 2026 is the last day of classes (a Friday). Because there is
-no Monday class meeting between Dec 7 and the start of finals, the Week 14
-session is held on this date; exact time will be posted on ELMS-Canvas and
-the Canvas calendar. The Thanksgiving recess (Nov 25 to 29, Wednesday to
-Sunday) does not fall on a Monday, so no Monday class meeting is affected.
-The two campus no-class Mondays are Labor Day (Sep 7) and Fall Break
-(Oct 12); all 14 lectures fit the remaining 13 Monday meetings plus the
-Dec 11 session.
+Lectures meet on **Thursdays**, 7:00 PM - 9:40 PM. The only cancelled
+meeting is Thursday, November 26, which falls within the Thanksgiving
+recess (Nov 25 to 29). All 14 lectures fit the remaining Thursdays, with
+the final report due during the December 17 exam-period window.
 
 **Note:** This is a tentative schedule, and subject to change as
 necessary — monitor ELMS-Canvas for current deadlines. In the
@@ -618,7 +619,6 @@ regarding acceptable levels of collaboration.
 | --------------- | :--------: | :-------: | :----------: | :--------------------: | :---------: | :------------: |
 | Quizzes         | No         | Yes       | Yes          | No                     | No          | No             |
 | Group Projects  | Yes        | Yes       | Yes          | Yes                    | Yes         | Yes            |
-| GP5 (Bonus)     | Yes        | Yes       | Yes          | Yes                    | Yes         | Yes            |
 
 ### Course Evaluation
 

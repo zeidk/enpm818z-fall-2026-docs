@@ -1,0 +1,27 @@
+ENPM818Z: On-Road Automated Vehicles - Fall 2026
+Canvas Module Headers
+
+One header per week, matching the syllabus course schedule.
+Lectures meet Thursdays, 7:00 PM to 9:40 PM, JMP 2121.
+
+
+Week 1 (09/03) - Course Introduction & AV Landscape
+Week 2 (09/10) - Sensor Technologies & Calibration
+Week 3 (09/17) - Probabilistic State Estimation & Fusion
+Week 4 (09/24) - Perception I: Object Detection (YOLO to DETR)
+Week 5 (10/01) - Perception II: BEV, Occupancy & Segmentation
+Week 6 (10/08) - Perception III: Tracking, Temporal & Deep Fusion
+Week 7 (10/15) - Localization & SLAM
+Week 8 (10/22) - Navigation & Route Planning
+Week 9 (10/29) - Prediction & Behavior Modeling
+Week 10 (11/05) - Motion Planning
+Week 11 (11/12) - Trajectory Generation & Control
+Week 12 (11/19) - End-to-End Driving, VLA & Imitation Learning
+Week 13 (12/03) - World Models & Simulation
+Week 14 (12/10) - System Integration, Safety & Industry Outlook
+Week 15 (12/17) - Final Report Submission Window
+
+
+Optional - no class, include only if you want the gap marked in Canvas:
+
+Thanksgiving Recess (11/26) - No Class
