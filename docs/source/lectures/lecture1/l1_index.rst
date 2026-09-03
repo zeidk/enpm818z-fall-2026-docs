@@ -14,8 +14,10 @@ responsible**, not vehicles by capability.
 It then walks the seven-stage path an automated driving system takes from
 hazard analysis, through a safety case, to a deployment permit, and closes
 with two real-world incidents that you diagnose *before* the investigators'
-findings are revealed. The course structure and the CARLA simulator are
-covered alongside.
+findings are revealed. The course structure is covered alongside.
+
+**CARLA itself is introduced in L2**, not here -- but you must have it
+installed before that lecture, so start the download this week.
 
 .. important::
 
@@ -55,8 +57,6 @@ By the end of this lecture, you will be able to:
   be tested.
 - Diagnose which module of an ADS pipeline failed in a real-world incident,
   and argue whether fixing that module alone would have been sufficient.
-- Explain the CARLA simulator architecture, its role in this course, and the
-  limits of its fidelity.
 
 
 .. toctree::
@@ -85,6 +85,9 @@ Next Steps
     how each one lies.
   - Intrinsic and extrinsic calibration.
   - Sensor placement, coverage, and complementarity.
+  - **Introduction to CARLA**: client-server architecture, the course ROS 2
+    bridge, the limits of simulation fidelity, and your first sensor suite in
+    simulation.
 
 - **Install CARLA 0.9.16** following the :doc:`setup guide </carla/carla>`.
   **You will need it running next week**, so start now -- the download alone

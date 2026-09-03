@@ -13,7 +13,8 @@ Exercises
    first, then open it. Bring anything that does not resolve to office hours
    or to the start of L2.
 
-Six exercises: four conceptual, two hands-on in CARLA.
+Four exercises, all conceptual. The hands-on CARLA work begins in L2, once
+the simulator has been introduced.
 
 
 .. dropdown:: Exercise 1 -- Classify These Systems
@@ -225,112 +226,3 @@ Six exercises: four conceptual, two hands-on in CARLA.
       of false-positive hard braking untouched. This is the same shape of
       answer as both case studies in the lecture.
 
-
-.. dropdown:: Exercise 5 -- Explore CARLA Maps
-   :icon: gear
-   :class-container: sd-border-primary
-   :class-title: sd-font-weight-bold
-
-   **Goal**
-
-   Get comfortable with the CARLA Python client by querying the simulator for
-   map and waypoint information. **This also verifies that your Week 3 setup
-   milestone environment actually works.**
-
-   .. raw:: html
-
-      <hr>
-
-   **Specification**
-
-   Create the file ``explore_maps.py`` that performs the following:
-
-   1. Connect to a running CARLA server on ``localhost:2000``.
-   2. Print all **available maps** (``client.get_available_maps()``).
-   3. Load **Town03** and retrieve the map object.
-   4. Generate waypoints at **2.0 m** spacing and print the total count.
-   5. Count how many waypoints are at **junctions**
-      (``waypoint.is_junction``).
-   6. Print all **unique road IDs** present in the map.
-
-   **Expected output**
-
-   .. code-block:: text
-
-      Available maps: ['/Game/Carla/Maps/Town01', '/Game/Carla/Maps/Town03', ...]
-      Loaded: Town03
-      Total waypoints (2.0 m spacing): 5832
-      Junction waypoints: 743
-      Unique road IDs: {0, 1, 2, 5, 7, ...}
-
-   (Exact numbers will vary by CARLA version.)
-
-   **Verification**
-
-   .. code-block:: console
-
-      python3 explore_maps.py    # all 6 items printed without errors
-
-   .. dropdown:: If it fails
-      :icon: check-circle
-      :class-container: sd-border-success
-
-      The overwhelmingly common cause is a **client/server version
-      mismatch**, or connecting before the server has finished loading the
-      level. Check ``pip3 show carla`` against your server version, and wait
-      30--60 seconds after starting the server. **A timeout usually means the
-      server is not up yet, not that your code is wrong.**
-
-
-.. dropdown:: Exercise 6 -- Weather and Perception
-   :icon: gear
-   :class-container: sd-border-primary
-   :class-title: sd-font-weight-bold
-
-   **Goal**
-
-   Observe how weather affects camera image quality, and reason about what
-   that implies for a perception stack and for fusion.
-
-   .. raw:: html
-
-      <hr>
-
-   **Specification**
-
-   Create the file ``weather_experiment.py`` that performs the following:
-
-   1. Spawn an ego vehicle with an **RGB camera** (800 × 600, FOV 90°) in
-      Town03.
-   2. For each weather preset below, set the weather, wait 2 seconds for the
-      scene to stabilize, and **save one snapshot** to disk:
-
-      - ``carla.WeatherParameters.ClearNoon``
-      - ``carla.WeatherParameters.HardRainNoon``
-      - ``carla.WeatherParameters.ClearSunset``
-      - ``carla.WeatherParameters.SoftFogNoon``
-
-   3. Clean up all actors before exiting.
-
-   **Written analysis** (for yourself -- 3--4 sentences per condition):
-
-   - Can you clearly see lane markings?
-   - Are distant objects (> 50 m) visible?
-   - Are there reflections or glare that would affect a detector?
-   - Which condition is **most challenging** for a camera-only system, and
-     why?
-
-   .. dropdown:: What you should notice
-      :icon: check-circle
-      :class-container: sd-border-success
-
-      Glare at sunset is usually worse for a detector than heavy rain, and it
-      is the cleanest illustration of a **SOTIF** hazard you can produce in an
-      afternoon: the camera is not broken, the sun is simply in the wrong
-      place. Nothing about that failure is fixed by redundancy in the same
-      sensor.
-
-      If you add a LiDAR and repeat the experiment, watch the **return count**
-      in fog and rain. Then ask the question that GP3 will force you to answer
-      properly: **what should your fusion stage do when two sensors
-      disagree?**

@@ -7,7 +7,9 @@ This quiz covers the key concepts from Lecture 1: the Dynamic Driving Task
 Design Domain (ODD) and the OES, ADAS vs. ADS, the SAE J3016 levels, the
 industry landscape, the core technical challenges, safety standards
 (ISO 26262, ISO 21448/SOTIF, ISO/SAE 21434), the seven-stage path from concept
-to public roads, the two case studies, and the CARLA simulator architecture.
+to public roads, and the two case studies.
+
+CARLA is introduced in L2, so nothing here assumes it.
 
 .. important::
 
@@ -28,8 +30,8 @@ to public roads, the two case studies, and the CARLA simulator architecture.
 ----
 
 
-Multiple Choice (Questions 1-15)
-=================================
+Multiple Choice (Questions 1-14)
+================================
 
 .. admonition:: Question 1
    :class: hint
@@ -399,39 +401,13 @@ Multiple Choice (Questions 1-15)
    **Stage 6**.
 
 
-.. admonition:: Question 15
-   :class: hint
-
-   In CARLA's architecture, what is the role of the **CARLA Server**?
-
-   A. It runs your Python scripts and processes sensor data.
-
-   B. It manages the 3D world, physics, rendering, and sensor data
-      generation.
-
-   C. It publishes ROS 2 topics for visualization.
-
-   D. It connects to GitHub to download map updates.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **B** -- It manages the 3D world, physics, rendering, and sensor data
-   generation.
-
-   The server (``CarlaUE4.sh``) runs the simulation on Unreal Engine. Your
-   Python script is the client, connecting over TCP on port 2000. The server
-   is a game engine, and it will compete with your training job for the same
-   GPU.
-
-
 ----
 
 
-True or False (Questions 16-25)
-================================
+True or False (Questions 15-23)
+===============================
 
-.. admonition:: Question 16
+.. admonition:: Question 15
    :class: hint
 
    **True or False:** SAE Level 5 vehicles are commercially available and
@@ -448,7 +424,7 @@ True or False (Questions 16-25)
    Level 2 (supervised).
 
 
-.. admonition:: Question 17
+.. admonition:: Question 16
    :class: hint
 
    **True or False:** A higher SAE level always means a more capable, better
@@ -466,7 +442,7 @@ True or False (Questions 16-25)
    row, and not a worse company.
 
 
-.. admonition:: Question 18
+.. admonition:: Question 17
    :class: hint
 
    **True or False:** ISO 26262 and ISO 21448 (SOTIF) address the same types
@@ -483,7 +459,7 @@ True or False (Questions 16-25)
    attacker does on purpose.
 
 
-.. admonition:: Question 19
+.. admonition:: Question 18
    :class: hint
 
    **True or False:** At SAE Level 3, the human driver must continuously
@@ -504,7 +480,7 @@ True or False (Questions 16-25)
    ago -- and it is a large part of why Level 3 has gone backwards.
 
 
-.. admonition:: Question 20
+.. admonition:: Question 19
    :class: hint
 
    **True or False:** "Pull over and stop" is a safe minimal risk condition in
@@ -525,7 +501,7 @@ True or False (Questions 16-25)
    does what the list says.
 
 
-.. admonition:: Question 21
+.. admonition:: Question 20
    :class: hint
 
    **True or False:** A standard such as ISO 26262 or SAE J3016 is legally
@@ -543,7 +519,7 @@ True or False (Questions 16-25)
    Practice, not a regulation.
 
 
-.. admonition:: Question 22
+.. admonition:: Question 21
    :class: hint
 
    **True or False:** The United States has comprehensive federal legislation
@@ -561,7 +537,7 @@ True or False (Questions 16-25)
    before citing it.**
 
 
-.. admonition:: Question 23
+.. admonition:: Question 22
    :class: hint
 
    **True or False:** A folder containing all of a company's test results
@@ -579,7 +555,7 @@ True or False (Questions 16-25)
    judge whether the evidence is sufficient or even relevant.
 
 
-.. admonition:: Question 24
+.. admonition:: Question 23
    :class: hint
 
    **True or False:** In the Tempe 2018 collision, fixing the object
@@ -600,32 +576,13 @@ True or False (Questions 16-25)
    almost never yes.**
 
 
-.. admonition:: Question 25
-   :class: hint
-
-   **True or False:** A detector trained only on CARLA images can be deployed
-   on real driving footage without adaptation.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   CARLA models geometry, road networks, traffic rules, sensor placement and
-   timing well; material appearance, LiDAR in fog and RADAR multipath roughly;
-   and sensor dirt, calibration drift and hardware faults not at all.
-
-   **The skills transfer completely. The weights do not.** Your GP2 numbers
-   are a claim about CARLA, and your report must say so.
-
-
 ----
 
 
-Essay Questions (Questions 26-30)
-==================================
+Essay Questions (Questions 24-27)
+=================================
 
-.. admonition:: Question 26
+.. admonition:: Question 24
    :class: hint
 
    **Explain why "capability does not promote you, responsibility does."**
@@ -651,7 +608,7 @@ Essay Questions (Questions 26-30)
      asked of the person in the seat.
 
 
-.. admonition:: Question 27
+.. admonition:: Question 25
    :class: hint
 
    **Describe the difference between the DDT fallback and the minimal risk
@@ -678,7 +635,7 @@ Essay Questions (Questions 26-30)
      pullover-and-drag incident.
 
 
-.. admonition:: Question 28
+.. admonition:: Question 26
    :class: hint
 
    **Explain why both ISO 26262 and ISO 21448 (SOTIF) are needed.** Give an
@@ -704,7 +661,7 @@ Essay Questions (Questions 26-30)
      component actually malfunction.
 
 
-.. admonition:: Question 29
+.. admonition:: Question 27
    :class: hint
 
    **Walk through the seven stages from concept to public roads.** Identify
@@ -732,31 +689,3 @@ Essay Questions (Questions 26-30)
      Stage 5.
 
 
-.. admonition:: Question 30
-   :class: hint
-
-   **Describe CARLA's client-server architecture** and explain what simulation
-   does and does not model well. Why is simulation a necessity in this field
-   rather than a convenience?
-
-   *(2--4 sentences)*
-
-.. dropdown:: Answer Guidelines
-   :class-container: sd-border-success
-
-   *Key points to include:*
-
-   - The **server** runs the simulation on Unreal Engine -- world, physics,
-     rendering, sensor generation -- and the **client** is a Python script
-     connecting over TCP. A **ROS 2 bridge** publishes sensor data onto topics
-     and turns control messages back into actor commands.
-   - Modeled well: geometry, road networks, traffic rules, sensor placement
-     and extrinsics, timing. Modeled roughly: material appearance, LiDAR in
-     rain and fog, RADAR multipath, lens artifacts. Not modeled: sensor dirt,
-     calibration drift, hardware faults, the full range of human behavior.
-   - Demonstrating safety statistically would take hundreds of millions of
-     miles (Kalra & Paddock). **That is arithmetic, not an engineering gap** —
-     you cannot drive it before deploying, so simulation is the only half that
-     can reach the numbers.
-   - Simulation also supplies free ground-truth labels, which is what makes
-     GP2 possible at all.
