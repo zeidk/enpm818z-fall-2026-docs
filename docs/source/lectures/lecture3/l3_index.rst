@@ -44,15 +44,12 @@ By the end of this lecture, you will be able to:
   degraded-weather performance.
 
 
-.. toctree::
-   :hidden:
-   :maxdepth: 2
-   :titlesonly:
+.. admonition:: Materials in revision
+   :class: note
 
-   l3_lecture
-   l3_exercises
-   l3_quiz
-   l3_references
+   The lecture notes, exercises, quiz and references for this lecture are
+   being revised against the current slide deck and are not published yet.
+   This page will link to them once they are ready.
 
 
 Next Steps

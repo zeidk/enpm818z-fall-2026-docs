@@ -45,15 +45,12 @@ By the end of this lecture, you will be able to:
   in the AV industry.
 
 
-.. toctree::
-   :hidden:
-   :maxdepth: 2
-   :titlesonly:
+.. admonition:: Materials in revision
+   :class: note
 
-   l14_lecture
-   l14_exercises
-   l14_quiz
-   l14_references
+   The lecture notes, exercises, quiz and references for this lecture are
+   being revised against the current slide deck and are not published yet.
+   This page will link to them once they are ready.
 
 
 Next Steps

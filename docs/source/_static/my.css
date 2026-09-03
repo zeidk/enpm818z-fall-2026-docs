@@ -76,3 +76,17 @@ table.compact-table th p {
   margin-bottom: 0 !important;
   line-height: 1.25;
 }
+/* ------------------------------------------------------------
+ * Light-background Figure
+ * Usage: .. figure:: /_static/images/L1/foo.png
+ *           :class: white-figure
+ *
+ * The L1 pipeline diagrams are black line art on white. In dark
+ * mode they need their own light plate to stay legible.
+ * ------------------------------------------------------------ */
+figure.white-figure img,
+.white-figure img {
+  background-color: #ffffff;
+  padding: 0.75rem;
+  border-radius: 6px;
+}

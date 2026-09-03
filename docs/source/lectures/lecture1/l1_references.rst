@@ -67,13 +67,26 @@ References
 
          NIST research on measurement science for automated vehicles.
 
-      .. grid-item-card:: NIST OES
-         :link: https://doi.org/10.6028/NIST.IR.8407
+      .. grid-item-card:: NIST SP 1900-301 (OES)
+         :link: https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.1900-301.pdf
          :class-card: sd-border-secondary
 
          **Operating Envelope Specification**
 
-         A formal specification format for defining ADS capabilities and limits.
+         Griffor, Wollman & Greer (2021). *Automated Driving System Safety
+         Measurement Part I: Operating Envelope Specification.* A structured,
+         machine-readable description of the driving environment supporting
+         calculation-based reasoning about performance.
+
+      .. grid-item-card:: NIST IR 8527
+         :link: https://doi.org/10.6028/NIST.IR.8527
+         :class-card: sd-border-secondary
+
+         **Standards and Performance Metrics**
+
+         Schlenoff et al. (2024). A map of which standards apply where, and
+         which performance metrics go with them. **Free, and the best single
+         starting point for the standards landscape.**
 
       .. grid-item-card:: UNECE WP.29
          :link: https://unece.org/transport/vehicle-regulations/wp29/introduction
@@ -81,7 +94,10 @@ References
 
          **Vehicle Regulations**
 
-         World Forum for Harmonization of Vehicle Regulations.
+         World Forum for Harmonization of Vehicle Regulations. See also
+         `UN Regulation No. 157 (ALKS)
+         <https://unece.org/transport/documents/2021/03/standards/un-regulation-no-157-automated-lane-keeping-systems-alks>`_,
+         which enabled the first Level 3 highway deployments.
 
 
 .. dropdown:: Simulation and Tools
@@ -129,12 +145,41 @@ References
          ROS 2 Jazzy Jalisco documentation and tutorials.
 
 
+.. dropdown:: Incident Investigations
+   :class-container: sd-border-secondary
+   :open:
+
+   - **NTSB/HAR-19/03** -- `Collision Between Vehicle Controlled by
+     Developmental Automated Driving System and Pedestrian, Tempe, Arizona,
+     March 18, 2018 <https://www.ntsb.gov/investigations/accidentreports/reports/har1903.pdf>`_.
+     Highway Accident Report, adopted November 2019. Case ID HWY18MH010; the
+     full investigation docket, including the Vehicle Automation Report, is
+     `here <https://www.ntsb.gov/investigations/Pages/HWY18MH010.aspx>`_.
+   - **California DMV** -- `Autonomous vehicle collision and disengagement
+     reports <https://www.dmv.ca.gov/portal/vehicle-industry-services/autonomous-vehicles/>`_.
+     The source of the disengagement figures discussed in the lecture, and a
+     good way to see for yourself how loosely the term is defined.
+   - **California PUC** -- `Autonomous vehicle programs
+     <https://www.cpuc.ca.gov/regulatory-services/licensing/transportation-licensing-and-analysis-branch/autonomous-vehicle-programs>`_.
+     Permit suspensions and passenger-service authority, including the record
+     of the October 2023 post-collision pullover incident.
+
+
 .. dropdown:: Industry Reports and Data
    :class-container: sd-border-secondary
 
-   - `WHO Global Status Report on Road Safety <https://www.who.int/publications/i/item/9789241565684>`_
-   - `McKinsey: Autonomous Driving's Future <https://www.mckinsey.com/industries/automotive-and-assembly/our-insights/autonomous-drivings-future-convenient-and-connected>`_
+   - `WHO Global Status Report on Road Safety 2023 <https://www.who.int/publications/i/item/9789240086517>`_
+     -- source of the ~1.19 million annual road deaths figure.
    - `NHTSA Critical Reasons for Crashes <https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/812115>`_
+     -- DOT HS 812 115. **Read this one before you quote the 94% figure**:
+     it identifies the *last event in the causal chain*, not the cause of the
+     crash.
+
+   .. warning::
+
+      Market-size forecasts for this field differ by a factor of ten depending
+      on what gets counted, and ride counts and company statuses change
+      quarterly. Attach a date to any figure you cite.
 
 
 .. dropdown:: Textbooks and Surveys

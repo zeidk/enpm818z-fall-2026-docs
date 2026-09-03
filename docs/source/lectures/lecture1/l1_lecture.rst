@@ -2,380 +2,1084 @@
 Lecture
 ====================================================
 
+.. note::
+
+   These notes accompany the L1 slide deck (v1.0) and carry more detail than
+   the slides do. Where the two disagree, these notes are the authoritative
+   version.
+
+.. important::
+
+   Development environment setup (Ubuntu, ROS 2, VS Code, Git, shell basics)
+   is **pre-read material** and is not covered in lecture. Work through
+   :doc:`Pre-Read: Development Environment </preread/dev-environment>` before
+   this class, then install CARLA with the
+   :doc:`setup guide </carla/carla>`.
+
+
+How These Notes Work
+--------------------
+
+Four conventions that apply all semester:
+
+- **Every deck has a version number and a changelog.** If you printed an old
+  copy, check the version before you rely on it. The same applies to these
+  pages -- see the :doc:`course changelog </changelog/changelog>`.
+- **Every deck has a matching page here**, and the page carries more detail
+  than the slides.
+- **Claims that are not obvious are cited.** See :doc:`l1_references`.
+- **Never copy-paste code out of a PDF.** PDF copy-paste silently corrupts
+  whitespace, quotes and dashes. The code lives in the course repository and
+  in this documentation.
+
+.. warning::
+
+   Two practical checks before the semester starts. Can you connect to eduroam
+   from Linux? And do you have access to a machine with an NVIDIA GPU? If
+   either answer is no, email the instructor in **Week 1** -- not in October.
+
 
 Automated Vehicles
 ------------------
 
-Automated vehicles (AVs) are motor vehicles equipped with technology that can
-sense their environment and navigate with minimal or no human input.
+There is no standard definition of "automated vehicle". **SAE J3016**, the
+taxonomy this field runs on, classifies **driving automation features**, not
+vehicles, and it classifies them by **who is responsible for the driving
+task** -- not by how capable the technology is.
 
 .. card::
    :class-card: sd-border-primary sd-shadow-sm
 
-   **Why Study Automated Vehicles?**
+   **What follows from that**
 
-   - **Safety impact** -- Road traffic crashes cause approximately 1.19 million deaths globally per year (WHO *Global Status Report on Road Safety 2023*). NHTSA's crash-causation survey assigned the *critical reason* to the driver in 94% of crashes -- a figure NHTSA has since cautioned should **not** be read as "94% of crashes are caused by driver error," since the critical reason is only the last event in a causal chain.
-   - **Economic significance** -- Forecasts for the autonomous-mobility market vary by an order of magnitude depending on what is counted; treat any single headline number with skepticism.
-   - **Technical challenge** -- Integration of perception, prediction, planning, and control in safety-critical real-time systems.
-   - **Societal transformation** -- Potential to reshape transportation, urban planning, and mobility services.
+   - A single vehicle may offer several features operating at different
+     levels. The level that applies at any moment is whichever feature is
+     engaged.
+   - So "this is a Level 2 car" is a category error. The **feature** is
+     Level 2.
+   - What J3016 *does* define precisely: driving automation system, ADS, DDT,
+     DDT fallback, minimal risk condition, and ODD. Those are the words this
+     course will use.
+   - J3016 is a **Recommended Practice, not a regulation**. It carries no
+     legal force by itself, though regulators reference it.
 
-.. admonition:: Core Technologies
-   :class: note
+.. tip::
 
-   Sensors (cameras, LiDAR, radar), artificial intelligence, and control systems
-   work together to **perceive**, **decide**, and **act**.
+   NIST's usage is downstream of this: an automated vehicle is a vehicle
+   equipped with an **ADS**. Notice what that avoids -- the work is all in
+   defining the ADS and its operating limits, not in defining the vehicle.
+
+
+Why Study Automated Vehicles?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- **Safety impact** -- Road traffic crashes cause roughly **1.19 million
+  deaths per year** worldwide (WHO, *Global Status Report on Road Safety
+  2023*).
+- **The 94% figure, and why it is misused** -- NHTSA studied crashes and asked
+  what the *last* thing to go wrong was. In 94% of cases that last thing was
+  something the driver did. **That is not the same as saying drivers cause 94%
+  of crashes.** A worn tire, a badly designed intersection and a distracted
+  driver can all be part of one crash, and only the last one gets counted
+  here. NHTSA says this explicitly. It is quoted the wrong way constantly.
+- **Economic significance** -- Market forecasts differ by a **factor of ten**
+  depending on what gets counted. Treat any single headline number with
+  skepticism.
+- **Technical challenge** -- Perception, prediction, planning and control
+  integrated in a safety-critical real-time system.
+- **Societal transformation** -- Potential to reshape transportation, urban
+  planning and mobility services.
+
+.. admonition:: The habit this course asks of you
+   :class: important
+
+   Notice what just happened with the 94% figure. **The most-cited number in
+   this field is routinely misquoted**, including by people selling things.
+   That habit of checking is the first thing this course asks of you, and it
+   is why the claims on these pages carry citations.
 
 
 Key Terminology
-~~~~~~~~~~~~~~~
+---------------
 
 The Dynamic Driving Task (DDT)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The **Dynamic Driving Task (DDT)** encompasses all the real-time operational
-and tactical functions required to operate a vehicle in on-road traffic
-(SAE J3016).
+The **Dynamic Driving Task (DDT)** is all the real-time work of driving.
+J3016 splits it into six subtasks. **You will build five of them.**
 
 .. list-table::
-   :widths: 15 85
+   :widths: 20 55 25
+   :header-rows: 1
    :class: compact-table
 
-   * - **Includes**
-     - Steering, acceleration/deceleration, monitoring the driving environment,
-       object and event detection and response, maneuver execution.
-   * - **Excludes**
-     - Strategic functions such as trip scheduling, route selection, or
-       destination choice.
+   * - Subtask
+     - What it means
+     - Course
+   * - **Lateral control**
+     - Steering. Holding a lane, and turning.
+     - L11
+   * - **Longitudinal control**
+     - Acceleration and braking. Speed and gap keeping.
+     - L11
+   * - **OEDR: detection**
+     - *Object and event detection and response.* Monitoring the environment:
+       detecting and classifying objects and events, and deciding what to do.
+     - L4--L6
+   * - **OEDR: response**
+     - Actually carrying that response out.
+     - L10, L11
+   * - **Maneuver planning**
+     - Deciding what to do next: change lane, wait, turn, overtake.
+     - L8--L10
+   * - **Conspicuity**
+     - Making your intent visible: lights, indicators, horn, gestures.
+     - *not covered*
+
+**What the DDT excludes is strategic**: trip scheduling, choosing a
+destination, picking a route. Those stay with the human -- so a vehicle with a
+flawless route planner and nothing else is not automated at all.
+
+This term comes first because everything else in this lecture is defined in
+terms of it. Levels, operating limits, fallback and safe states are all
+answers to the question *who is doing which part of this*.
+
+.. note::
+
+   Conspicuity is a real gap in the field, not just in this course. A vehicle
+   that cannot signal its intent to a human is hard to share a road with, and
+   almost nobody works on it.
 
 
 ADAS vs. ADS
-^^^^^^^^^^^^^
+~~~~~~~~~~~~
+
+The same hardware can appear on both sides. What separates them is **who holds
+the DDT**.
 
 .. list-table::
-   :widths: 20 40 40
+   :widths: 18 41 41
    :header-rows: 1
    :class: compact-table
 
    * - Aspect
-     - ADAS (Advanced Driver Assistance Systems)
-     - ADS (Automated Driving Systems)
-   * - **Role**
-     - Supports the human driver in performing parts of the DDT
-     - Performs the **entire** DDT without human intervention (within ODD)
-   * - **Responsibility**
-     - Human is always in control and responsible for monitoring
-     - System is in control and monitors the environment
-   * - **SAE Levels**
-     - Levels 1--2
-     - Levels 3--5
+     - ADAS: driver support
+     - ADS: automated driving
+   * - **Scope**
+     - **Part** of the DDT
+     - **All** of the DDT, within its ODD
+   * - **Who monitors**
+     - The human, continuously
+     - The system
    * - **Examples**
-     - Lane Keeping Assist, Adaptive Cruise Control
-     - Waymo robotaxi, Tesla FSD (supervised)
+     - Adaptive cruise, lane keeping, hands-off highway
+     - Robotaxi, driverless shuttle, traffic-jam pilot
+   * - **Who is fallback**
+     - The human, always, immediately
+     - L3: the human, on request. L4--L5: the system itself
+   * - **Role of the ODD**
+     - May have limits, but the human covers everything outside them
+     - The ODD bounds the system's responsibility
+   * - **SAE levels**
+     - 1 and 2
+     - 3, 4 and 5
+
+.. admonition:: The point to land
+   :class: important
+
+   Cameras, radar and a good planner do not decide which column you are in.
+   **A very capable system that still requires an attentive driver is an
+   ADAS.** Capability does not promote you; responsibility does. Most things
+   sold with autonomy language live in the left column -- and you are building
+   the right one, which is why your package is called ``ads_pipeline``.
+
+
+The DDT Fallback
+~~~~~~~~~~~~~~~~
+
+The **DDT fallback** is what happens when the system can no longer do the
+driving task. Two things trigger it: a **system failure**, or the vehicle
+**reaching the edge of its ODD**.
+
+.. list-table::
+   :widths: 24 38 38
+   :header-rows: 1
+   :class: compact-table
+
+   * - Aspect
+     - Level 3
+     - Levels 4 and 5
+   * - **Who performs it**
+     - The human, called the *fallback-ready user*
+     - The system itself
+   * - **How it starts**
+     - A request to intervene, with a budget of seconds
+     - No request. The system just acts
+   * - **The human must be**
+     - Receptive to that request, and able to resume driving
+     - Nothing is required. There may be nobody aboard
+   * - **If nobody responds**
+     - The system does what it can, unaided
+     - Not applicable
+
+- **Only the first trigger is a fault.** Leaving the ODD is a planned,
+  foreseeable event with nothing broken at all, and it still demands a full
+  handover. **Most fallbacks in service are of the second kind.**
+- **Level 3 is the hard case**, and it is a human-factors problem rather than
+  a software one: you get seconds to rebuild situational awareness you stopped
+  maintaining minutes ago.
+
+.. warning::
+
+   Keep this in mind for the :ref:`Tempe case study <l1-case-tempe>`. A human
+   was the designated fallback and was not watching the road. That is the
+   failure mode row three of this table is describing.
+
+
+The Minimal Risk Condition (MRC)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The fallback says *who* takes over. The **MRC** says *where the vehicle ends
+up*. When a trip cannot be finished safely, the vehicle has to reach somewhere
+safe, and that somewhere is the MRC.
+
+.. list-table::
+   :widths: 30 70
+   :header-rows: 1
+   :class: compact-table
+
+   * - Candidate MRC
+     - What it quietly assumes
+   * - Stop where you are
+     - Traffic behind can see you and stop in time, and you are not on a
+       crossing or in a tunnel
+   * - Pull to the shoulder or curb
+     - A shoulder is reachable, and nothing is attached to, dragged by, or
+       trapped under the vehicle
+   * - Carry on to the next exit
+     - Whatever failed still leaves you able to drive that far
+   * - Park in a mapped safe area
+     - Somebody mapped such an area in advance, and you can still reach it
+
+**"Stop" is not automatically safe**, and neither is pulling over. Every row
+above is correct in some situations and dangerous in others, so choosing well
+means knowing what is around the vehicle.
+
+.. admonition:: An MRC is a designed artifact
+   :class: warning
+
+   Somebody decided in advance what *safe* means here, wrote it into the
+   software, and validated it against a list of situations they thought of.
+   **If the situation is not on the list, the vehicle still does what the list
+   says.** The :ref:`second case study <l1-case-mrc>` turns entirely on this.
 
 
 Operational Design Domain (ODD)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The **Operational Design Domain** describes the specific operating conditions
+The **Operational Design Domain** is the specific set of operating conditions
 under which an ADS is designed to function safely. If the vehicle is about to
-exit its ODD, it must ensure a safe transition of control.
+leave its ODD, it must perform the DDT fallback.
 
-- **Geographic** -- Limited to certain highways or a geofenced urban area.
-- **Environmental** -- May be restricted by weather (e.g., no heavy snow), lighting (daytime only).
+- **Geographic** -- Limited to certain highways, or a geofenced urban area.
+- **Environmental** -- Restricted by weather (no heavy snow), or lighting
+  (daytime only).
 - **Traffic** -- Designed for specific speed limits or traffic densities.
+- **Infrastructure** -- Mapped roads only, lane markings present, no active
+  construction.
 
 .. tip::
 
-   NIST has proposed the **Operating Envelope Specification (OES)** -- a formal,
-   machine-readable format to precisely define an ADS's ODD. Think of ODD as the
-   *idea* of operating limits and OES as the *document* that writes them down.
+   NIST proposed the **Operating Envelope Specification (OES)**: a structured,
+   machine-readable description of the driving environment that supports
+   calculation-based reasoning about performance, with testing and
+   certification applications.
+
+   The easy way to keep them apart: the **ODD is the idea** of the operating
+   limits; the **OES is the document** that states them, in machine-readable
+   form, together with the criteria for assessing performance inside them.
+   People conflate the two constantly.
 
 
 SAE Levels of Driving Automation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------
 
-The Society of Automotive Engineers (SAE) defines six levels of automation via
-the J3016 standard, which has become the industry classification system.
+SAE defines six levels of driving automation in J3016, jointly with
+ISO TC204/WG14. The standard splits them in half: **levels 0--2 are driver
+support features**, **levels 3--5 are automated driving features**.
+
+
+Levels 0--2: Driver Support Features
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In all three, **you are driving**, whatever the system is doing.
 
 .. list-table::
-   :widths: 10 25 35 30
+   :widths: 8 20 52 20
    :header-rows: 1
    :class: compact-table
 
    * - Level
      - Name
-     - Description
-     - Who Drives?
+     - Description and examples
+     - Who drives?
    * - **0**
-     - No Automation
-     - Human performs all driving tasks
+     - No automation
+     - Human does everything. Warnings and brief interventions do not change
+       that. *AEB, blind-spot warning, stability control.*
      - Human
    * - **1**
-     - Driver Assistance
-     - System assists with steering **or** acceleration/braking
-     - Human (with assistance)
+     - Driver assistance
+     - Steering **or** speed, never both. *Adaptive cruise control, or
+       lane-keeping assist, on most new cars.*
+     - Human, assisted
    * - **2**
-     - Partial Automation
-     - System controls steering **and** acceleration/braking; human must monitor
-     - Human (supervising)
-   * - **3**
-     - Conditional Automation
-     - System performs DDT within ODD; human must be ready to intervene
-     - System (human as fallback)
-   * - **4**
-     - High Automation
-     - System performs DDT within ODD; no human fallback needed in ODD
-     - System (within ODD)
-   * - **5**
-     - Full Automation
-     - System performs DDT in all conditions; no ODD restriction
-     - System (everywhere)
+     - Partial automation
+     - Steering **and** speed together; the human keeps watching. *Tesla
+       Autopilot and FSD (Supervised), GM Super Cruise, Ford BlueCruise,
+       Mercedes Drive Assist Pro.*
+     - Human, supervising
+
+- **Level 0 is the surprise.** Automatic emergency braking intervenes, it can
+  save your life, and it is still Level 0 -- because you never stopped
+  driving.
+- **Level 2 is where almost every consumer product sits**, including several
+  sold with language that suggests otherwise.
 
 .. important::
 
-   The key distinction is **who is responsible for the DDT**:
-
-   - **Levels 0--2 (ADAS)**: The human driver is ultimately responsible.
-   - **Levels 3--5 (ADS)**: The automated system performs the entire DDT within its ODD.
+   In all three rows the human performs or supervises the DDT. **Capability
+   varies enormously across this table and the level does not move.**
 
 
-Current Industry Landscape (2026)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Levels 3--5: Automated Driving Features
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+From here the **system** performs the entire DDT within its ODD. What
+separates the three rows is **who handles the fallback**.
+
+.. list-table::
+   :widths: 8 20 52 20
+   :header-rows: 1
+   :class: compact-table
+
+   * - Level
+     - Name
+     - Description and examples
+     - Who drives?
+   * - **3**
+     - Conditional automation
+     - The whole driving task inside its ODD; the human takes over when asked.
+       *Honda Sensing Elite (Japan). Mercedes Drive Pilot and BMW Personal
+       Pilot L3 withdrawn in 2026.*
+     - System, human as fallback
+   * - **4**
+     - High automation
+     - The driving task **and** the fallback, inside its ODD. *Waymo, Zoox,
+       Baidu Apollo Go, WeRide, Nuro.*
+     - System, within ODD
+   * - **5**
+     - Full automation
+     - Anywhere a human could drive, in any conditions. *No production system
+       exists.*
+     - System, everywhere
+
+- **Level 3 has gone backwards.** Two of the three products named above were
+  withdrawn in 2026, and Mercedes moved its effort to Level 4 instead. Asking
+  a person to be ready to take over within seconds, while doing something
+  else, is expensive to build and hard to rely on.
+- **Level 5 is not a product category.** It is a research goal, and nothing on
+  sale is close to it.
+
+.. note::
+
+   The examples in both tables are the most perishable content in this
+   lecture. They are current as of 2026 and should be re-checked before you
+   cite them.
+
+
+Three Things the Levels Are Not
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. grid:: 1 1 1 3
+   :gutter: 3
+
+   .. grid-item-card:: Not a quality ranking
+      :class-card: sd-border-warning
+
+      A Level 2 feature can be more capable, better engineered and safer than
+      a Level 3 feature. The level describes *who is responsible*, not how
+      good the engineering is.
+
+      Mercedes withdrew Drive Pilot during 2026, replaced it with a **Level 2**
+      system, and put its effort into Level 4 instead. A lower number is not a
+      worse company.
+
+   .. grid-item-card:: Not "what can it do"
+      :class-card: sd-border-warning
+
+      A shuttle doing one fixed loop at 15 km/h in fair weather is Level 4. So
+      is a robotaxi in a large city. Same number, almost nothing in common,
+      and the entire difference is in the **ODD**.
+
+      When somebody tells you they are Level 4 and stops there, ask *where*.
+
+   .. grid-item-card:: Not what the badge says
+      :class-card: sd-border-warning
+
+      Names are chosen to sell cars, not to describe levels. Autopilot, Full
+      Self-Driving and Super Cruise are all **Level 2**.
+
+      What sets the level is what the system actually does, and where it is
+      allowed to do it.
+
+.. admonition:: The most consequential jump is 2 to 3
+   :class: important
+
+   And it is **legal rather than technical**: responsibility for the driving
+   task moves from the person to the manufacturer. That is expensive, which is
+   why **Level 3 is the only level that has gone backwards**.
+
+
+Industry Landscape
+------------------
+
+Where Deployment Actually Stands
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. tab-set::
 
-   .. tab-item:: Level 2 (ADAS)
+   .. tab-item:: Level 2
 
-      Widely deployed and marketed as advanced assistance:
+      **Everywhere.** Hands-on and hands-off highway features ship on millions
+      of consumer vehicles across many manufacturers -- Tesla Autopilot and
+      FSD (Supervised), GM Super Cruise, Ford BlueCruise, Mobileye
+      SuperVision, Mercedes Drive Assist Pro.
 
-      - **Tesla FSD (Supervised)** -- Deployed across millions of vehicles, with cumulative supervised FSD mileage in the billions. Tesla began a geofenced robotaxi pilot in Austin in 2025 with in-vehicle safety monitors; verify the current supervision status and service area before citing it, as this changes frequently.
-      - **GM Super Cruise** -- Hands-free highway driving on mapped roads.
-      - **Ford BlueCruise** -- Hands-free highway driving.
-      - **Mobileye SuperVision** -- Hands-off/eyes-on driving up to 130 km/h.
+   .. tab-item:: Level 3
 
-   .. tab-item:: Level 3 (Conditional)
+      **Rare, and shrinking.** Certification, handover design and liability
+      have kept deployments to narrow highway ODDs at low speeds. UNECE R157
+      is the regulation that made the first of them possible.
 
-      Very limited deployment due to liability and handover challenges:
+      Mercedes Drive Pilot and BMW Personal Pilot were both withdrawn during
+      2026. Honda Sensing Elite remains on a very small leased fleet in Japan.
 
-      - **Mercedes-Benz DRIVE PILOT** -- First internationally certified L3 system; highway traffic jam assistant up to 60 km/h.
-      - **Huawei ADS 4.0** -- L3 highway capability; 1M+ vehicles equipped; 7.28B km accumulated.
+   .. tab-item:: Level 4
 
-   .. tab-item:: Level 4 (Robotaxis & Trucks)
-
-      Deployed in geofenced commercial services:
-
-      - **Waymo** -- Market leader: 250K+ paid rides/week across Phoenix, LA, SF, Austin. Expanding to Atlanta, Miami, DC.
-      - **Baidu Apollo Go** -- 250K+ weekly fully driverless rides (matching Waymo). Per-vehicle profitability achieved in Wuhan.
-      - **Pony.ai** -- Fully autonomous robotaxis in all four Chinese tier-1 cities. Expanding to Dubai in 2026.
-      - **Aurora** -- Focused on autonomous trucking and freight logistics.
-      - **Cruise** -- Suspended operations (2024). Effectively out of the robotaxi race.
+      **Real but geofenced.** Driverless commercial robotaxi service operates
+      in a limited set of metropolitan areas -- Waymo, Baidu Apollo Go, Zoox,
+      WeRide, Pony.ai -- alongside low-speed shuttles, yard and port
+      automation, and highway freight pilots.
 
    .. tab-item:: Level 5
 
-      True "all conditions" automation **is not yet commercially available** and remains a long-term research goal.
+      **Does not exist and is not close.** It remains a research goal, not a
+      product category.
 
-.. admonition:: Key Takeaway
-   :class: tip
+.. warning::
 
-   The industry is consolidating around well-capitalized first movers. China (Baidu, Pony.ai, Huawei) is now neck-and-neck with the US (Waymo, Tesla) in deployment scale.
+   Specific ride counts, service areas and company statuses change quarterly.
+   A page with last year's figures is worse than a page with none, so any
+   figure you quote in a report needs **a date attached to it**.
+
+
+Structural Features Worth Knowing
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- **Capital concentration.** The cost of validation has consolidated the field
+  around a small number of very well funded players, and several
+  once-prominent programs have shut down or been absorbed.
+- **Two centers of gravity.** The United States and China are both deploying
+  at scale, under quite different regulatory regimes.
+- **Two architectural bets.** Modular pipelines with interpretable interfaces,
+  versus increasingly end-to-end learned systems. **This course builds the
+  former and studies the latter in L12 and L13.**
+
+
+Why It Is Taking So Long: The Long Tail
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- The first 90% of driving is close to solved. The hard part is **rare
+  events**, which are individually rare but collectively constant. You meet
+  one every drive; you just never meet the same one twice.
+- A system can be excellent on average and still fail on a mattress in the
+  road, a police officer waving traffic through a red light, or a pedestrian
+  in an unusual posture.
+- **Proving safety statistically would take hundreds of millions of miles**,
+  in some cases billions (Kalra & Paddock, 2016). You cannot drive that before
+  deploying.
+
+.. admonition:: Why this course lives in CARLA
+   :class: important
+
+   That last point is **arithmetic, not an engineering gap**. It is why
+   simulation is a necessity here rather than a convenience.
+
+
+On Disengagement Rates
+~~~~~~~~~~~~~~~~~~~~~~
+
+A **disengagement** is any moment in testing when the system stops driving and
+a human takes over -- either because the system asked, or because the safety
+driver decided to. **Miles per disengagement** is test miles divided by how
+many times that happened.
+
+- It is the most quoted way to compare one company against another, and close
+  to useless for it.
+- **The definition is subjective.** California counts a takeover when safe
+  operation *requires* it, and the operator decides what that means. Two
+  fleets can drive identically and report very different numbers.
+- **Self-reported, and not normalized for difficulty.** Quiet suburban roads
+  in fair weather beat dense city traffic, while being far less capable.
+  Companies also stop reporting once the safety driver goes, **so the best
+  systems leave the table.**
+
+.. tip::
+
+   The habit to take away: **when somebody hands you a safety number, ask what
+   the denominator was.** You will need this in your final report, where you
+   argue that your own scenarios were hard enough to mean anything.
 
 
 Technical Challenges
-~~~~~~~~~~~~~~~~~~~~
+--------------------
 
-Achieving robust automation requires solving immense challenges across the
-entire AV stack:
+.. list-table::
+   :widths: 18 62 20
+   :header-rows: 1
+   :class: compact-table
 
-.. grid:: 1 2 2 3
-   :gutter: 3
+   * - Challenge
+     - The difficulty
+     - Course
+   * - **Perception**
+     - Seeing reliably in rain, fog, snow and glare, and recognizing events
+       that appear a handful of times in a dataset
+     - L2, L4--L6
+   * - **Prediction**
+     - Forecasting what unpredictable humans will do, when their behavior
+       depends on what your vehicle does
+     - L9
+   * - **Planning**
+     - Safe, efficient and human-legible decisions in interactive scenarios
+       where hesitation is itself a hazard
+     - L8, L10
+   * - **Control**
+     - Tracking a trajectory smoothly across varied surfaces and vehicle
+       dynamics
+     - L11
+   * - **Validation**
+     - Proving safety when the events you care about are the ones you have
+       never observed
+     - L13, L14
+   * - **Integration**
+     - Making the subsystems above work together with redundancy, timing
+       guarantees and cybersecurity
+     - L14
 
-   .. grid-item-card:: Perception
-      :class-card: sd-border-info
+.. admonition:: What this table really is
+   :class: note
 
-      Reliably seeing and understanding the world in all conditions (rain, fog,
-      snow, glare) and identifying rare edge-case events.
-
-   .. grid-item-card:: Prediction
-      :class-card: sd-border-info
-
-      Accurately forecasting the intentions and future actions of unpredictable
-      human drivers, pedestrians, and cyclists.
-
-   .. grid-item-card:: Planning
-      :class-card: sd-border-info
-
-      Making safe, efficient, and human-like driving decisions in complex,
-      interactive scenarios.
-
-   .. grid-item-card:: Control
-      :class-card: sd-border-info
-
-      Precisely controlling vehicle dynamics for a smooth, safe ride across
-      varied road surfaces and conditions.
-
-   .. grid-item-card:: Validation & Safety
-      :class-card: sd-border-info
-
-      Proving a system is safe requires billions of miles of simulated and
-      real-world testing to cover endless scenarios.
-
-   .. grid-item-card:: System Integration
-      :class-card: sd-border-info
-
-      Ensuring complex hardware and software subsystems work together
-      flawlessly with built-in redundancy and cybersecurity.
+   Every row is a lecture *and* a piece of your project. By December you will
+   have built something that fails at each of them, and the interesting part
+   of your final report is explaining **how** it failed.
 
 
 Safety and Regulation
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 Key Safety Standards
-^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~
 
-- **ISO 26262 (Functional Safety)** -- Manages safety risks in electrical/electronic systems. Defines Automotive Safety Integrity Levels (ASIL) to classify risk.
-- **ISO 21448 (SOTIF)** -- "Safety of the Intended Functionality." Addresses hazards that occur *without* a system failure (e.g., sensor blinded by sun glare). A critical complement to ISO 26262.
-- **ISO/SAE 21434** -- Automotive cybersecurity engineering standard.
+.. list-table::
+   :widths: 25 75
+   :header-rows: 1
+   :class: compact-table
+
+   * - Standard
+     - Scope
+   * - **ISO 26262**
+     - **Things that break.** A sensor fails, a chip flips a bit, code
+       crashes. Called *functional safety*. It ranks each hazard with an
+       Automotive Safety Integrity Level (**ASIL**) so the riskiest ones get
+       the most engineering.
+   * - **ISO 21448**
+     - **Things that work exactly as designed and still cause a crash.** The
+       camera is not broken; the sun is just directly behind the traffic
+       light. Called **SOTIF**.
+   * - **ISO/SAE 21434**
+     - **Things an attacker does on purpose.** Automotive cybersecurity, and
+       the subject of the
+       :doc:`cybersecurity pre-read </preread/cybersecurity>` before L14.
+
+Both kinds of hazard are real, and **finding them takes completely different
+work**.
+
+.. admonition:: SOTIF is the one to remember
+   :class: important
+
+   Your detector will not crash. It will confidently return the **wrong
+   answer**, and everything downstream will believe it. That is a SOTIF
+   hazard, and it is what the case studies below are about.
+
 
 Regulatory Landscape
-^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
    :widths: 20 80
    :class: compact-table
 
    * - **United States**
-     - Guided by NHTSA at the federal level; no federal AV legislation yet.
-       State-by-state approach continues.
+     - No comprehensive federal AV legislation; NHTSA guidance plus a
+       state-by-state patchwork.
    * - **European Union**
-     - "Type approval" framework. UNECE R157 for L3 highway systems.
+     - Type approval, with UNECE R157 covering Level 3 highway systems.
    * - **China**
-     - Rapidly developing its own regulatory framework enabling Baidu, Pony.ai,
-       and others to operate at scale.
-   * - **Global (2026)**
-     - The **UNECE Global Technical Regulation on ADS** was approved in Jan 2026 --
-       the first global safety framework for autonomous driving, using a
-       "safety case" approach. Final approval expected mid-2026.
+     - Its own rapidly developing framework, enabling deployment at scale.
+   * - **International**
+     - Work toward a harmonized, **safety-case-based** framework for ADS is
+       underway at UNECE. Check the current status before citing it.
 
-.. warning::
-
-   The regulatory environment is struggling to keep pace with rapid
-   technological advancements. The UNECE GTR represents the first major step
-   toward international harmonization.
+A survey of which standards apply where, and which performance metrics go with
+them, is in **NIST IR 8527** (free to download -- see :doc:`l1_references`).
 
 
-ADS Development Pipeline
-^^^^^^^^^^^^^^^^^^^^^^^^
+.. _l1-concept-to-road:
 
-The development, validation, and deployment of an ADS involves a complex
-pipeline:
+From Concept to Public Roads
+----------------------------
 
-1. **Design & Development** -- Define ODD, develop perception/planning/control modules.
-2. **Simulation Testing** -- Validate in simulation (CARLA, internal simulators) across millions of scenarios.
-3. **Closed-Course Testing** -- Physical testing on controlled tracks.
-4. **Public Road Testing** -- Real-world testing with safety drivers.
-5. **Regulatory Approval** -- Comply with ISO 26262, SOTIF, and regional regulations.
-6. **Commercial Deployment** -- Launch within approved ODD.
+Getting an ADS onto a public road is **not a release**. It is a negotiation
+between a developer, a set of standards bodies, and a regulator. Seven stages:
 
+1. **Framework** -- standards bodies publish; regulators adopt or reference
+   them.
+2. **Specify** -- define the ODD, formalize it as an OES, then run HARA, SOTIF
+   analysis and TARA.
+3. **Build** -- architecture, data collection, model training, unit and module
+   verification.
+4. **Validate** -- scenario-based simulation, then closed course, then
+   supervised on-road testing with a safety driver.
+5. **Argue** -- assemble a safety case (claims, arguments, evidence) and
+   submit it, often via an independent assessor.
+6. **Approve** -- the regulator reviews against the *claimed ODD* and grants,
+   conditions or denies.
+7. **Operate and monitor** -- field data, mandatory incident reporting, OTA
+   updates, and investigation when something goes wrong.
 
-Course Focus Areas
-^^^^^^^^^^^^^^^^^^
+.. admonition:: Two things to watch for
+   :class: important
 
-.. card::
-   :class-card: sd-border-success sd-shadow-sm
-
-   **Technologies We Will Explore**
-
-   - **Sensor Technologies** -- Cameras, LiDAR, RADAR, IMU, GNSS; calibration.
-   - **Perception** -- Object detection (YOLO, DETR), BEV perception, segmentation, tracking.
-   - **Multi-Sensor Fusion** -- Kalman filters, cross-attention fusion.
-   - **Localization & SLAM** -- GNSS/RTK, odometry, scan matching, pose graphs.
-   - **Motion Planning** -- A*, RRT, lattice planners, diffusion-based planning.
-   - **Trajectory Planning & Control** -- MPC, Pure Pursuit, polynomial trajectories.
-   - **Prediction & Decision-Making** -- Trajectory prediction, behavior planning, imitation learning.
-   - **End-to-End Driving & Foundation Models** -- UniAD, DriveTransformer, VLA models.
-   - **World Models & Simulation** -- GAIA-3, Cosmos, generative scenarios.
-   - **System Integration & Safety** -- ISO 26262, SOTIF, UNECE GTR.
+   **Stage 4 is where almost all the calendar time goes**, and the vehicle is
+   still operating at **Level 2** the whole way through it. And **every
+   software update in Stage 7 changes the system that the approval in Stage 6
+   was granted for.**
 
 
-Course Overview
----------------
+Stage 1 of 7 -- Framework
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Course Structure
-~~~~~~~~~~~~~~~~
+.. figure:: /_static/images/L1/concept_road1.png
+   :alt: Sequence diagram. Standards bodies send the J3016 taxonomy and the ISO safety and cybersecurity standards to the developer, and harmonized regulations to the regulator, which then adopts, references or ignores them.
+   :align: center
+   :width: 95%
+   :class: white-figure
 
-ENPM818Z combines lectures with intensive, hands-on programming sessions in
-CARLA. Each week builds on prior material -- progressing from single-sensor
-processing to full system integration. Students complete a sequence of
-assignments leading to a **final project** implementing a functional ADS
-pipeline.
+   Standards bodies publish, and nothing binds until a regulator adopts.
+
+- Standards bodies write the rulebooks. **Nobody has to follow them.**
+- A rulebook only becomes law when a government adopts it. Until then,
+  following it is a business decision, not a legal one.
+- That is why the same vehicle can be legal in one country and illegal in
+  another, with no change to the software.
+
+J3016 gives everyone the same **words**. ISO 26262, ISO 21448 and
+ISO/SAE 21434 give everyone the same **process**. None of them is a law.
 
 
-Assessment
-~~~~~~~~~~
+Stage 2 of 7 -- Specify
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L1/concept_road2.png
+   :alt: Sequence diagram with six participants, of which only the developer sends or receives anything. The developer defines the ODD, formalizes it as an OES, then performs hazard analysis and risk assessment, SOTIF analysis, and threat analysis and risk assessment.
+   :align: center
+   :width: 85%
+   :class: white-figure
+
+   The ODD and the hazard analyses, written with nobody outside the room.
+
+**Three analyses, and each one produces something the next stages have to
+build:**
 
 .. list-table::
-   :widths: 60 20
+   :widths: 20 80
    :header-rows: 1
    :class: compact-table
 
-   * - Component
-     - Weight
-   * - Final Project (GP1--GP4 + Final Report)
-     - 80%
-   * - Quizzes (5)
-     - 20%
-   * - **Total**
-     - **100%**
+   * - Analysis
+     - What it asks, and what it produces
+   * - **HARA** (ISO 26262)
+     - What happens if a part **breaks**? Produces safety goals carrying an
+       **ASIL** rating that decides how much redundancy and testing each
+       function gets.
+   * - **SOTIF** (ISO 21448)
+     - What happens when **nothing breaks**? Produces the list of
+       **triggering conditions** that becomes the test library in Stage 4.
+   * - **TARA** (ISO/SAE 21434)
+     - What could an **attacker** do? Produces security goals.
+
+So this is not paperwork. **Stage 3 builds to these requirements and Stage 4
+tests against these scenarios.** The ODD is written here too, and turned into
+an OES.
 
 .. warning::
 
-   Late submissions incur a 10% deduction per day (maximum 3 days). Beyond
-   3 days, submissions receive zero credit.
+   **Notice that five of the six lifelines are empty.** All of it happens
+   inside one company. If the ODD is too optimistic, nobody outside says so
+   until Stage 5 -- and by then it is expensive.
 
 
-Development Environment
------------------------
+Stage 3 of 7 -- Build
+~~~~~~~~~~~~~~~~~~~~~
 
-The toolchain for this course -- Ubuntu, ROS 2, VS Code, Git, and the
-Linux shell -- is assumed knowledge from ENPM605 and is **not** covered
-in lecture.
+.. figure:: /_static/images/L1/concept_road3.png
+   :alt: Sequence diagram. The developer designs the architecture, requests scenarios and synthetic data from simulation, receives labeled data, trains models, and performs unit and module verification.
+   :align: center
+   :width: 90%
+   :class: white-figure
 
-.. admonition:: Set this up before the next class
+   Building the system, with simulation as a data source rather than a test rig.
+
+- Simulation shows up here, and **not just as a place to run tests**. It is
+  where the **training data** comes from. Labels are free in simulation and
+  expensive everywhere else.
+- **This is the only stage your projects live in.** GP1--GP4 are architecture,
+  data, training and testing your own modules.
+- **Verification** asks whether you built the thing correctly.
+  **Validation** -- next stage -- asks whether it was the right thing to
+  build. You can pass one and fail the other.
+
+
+Stage 4 of 7 -- Validate
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L1/concept_road4.png
+   :alt: Sequence diagram. The developer sends a scenario library to simulation, which runs model, software and hardware in the loop testing with fault injection and returns coverage and failure reports, then closed course testing, then a supervised on-road testing loop with a safety driver, disengagement data and periodic reports to the regulator.
+   :align: center
+   :width: 95%
+   :class: white-figure
+
+   Simulation, then closed course, then years of supervised road testing at Level 2.
+
+- The test scenarios come **from the ODD**. So a vague ODD in Stage 2 gives
+  you a weak test set here, **and nobody notices**.
+- **Most of the years spent building one of these are spent in that box**, and
+  the whole time the vehicle is running at Level 2 with a person watching the
+  road.
+- You cannot prove safety by driving alone. So the simulation half is not a
+  shortcut -- it is the only half that can reach the numbers.
+- **Your final report is a small version of this stage**: scenarios you have
+  not seen, real numbers, and an honest account of what broke.
+
+
+Stage 5 of 7 -- Argue
+~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L1/concept_road5.png
+   :alt: Sequence diagram. The developer assembles a safety case of claims, arguments and evidence, submits it to an independent assessor, receives findings and required remediation, remediates, and then submits a petition, permit application or type approval to the regulator.
+   :align: center
+   :width: 90%
+   :class: white-figure
+
+   Assembling the safety case, and the first time anyone outside the company reads it.
+
+- A **safety case** is an argument, written down. Three parts: what you
+  promise the vehicle will not do, why you believe that, and the test results
+  that back up each reason.
+- **A folder full of test results is not a safety case.** It never says what
+  the results were supposed to prove.
+- The independent assessor is here **because Stage 2 happened behind closed
+  doors**. This is the first time anyone outside the company reads the ODD and
+  asks whether the argument holds up.
+
+.. note::
+
+   Keep this vocabulary. Both case studies below are best described as
+   failures of the **argument** rather than failures of the code. In neither
+   case did anything malfunction.
+
+
+Stage 6 of 7 -- Approve
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L1/concept_road6.png
+   :alt: Sequence diagram with an alternative block. The regulator reviews against the claimed ODD; if approved it issues a driverless testing permit and then a deployment permit and the vehicle operates on public roads, otherwise it issues a denial or conditions and the developer remediates and resubmits.
+   :align: center
+   :width: 95%
+   :class: white-figure
+
+   The regulator reviews against the ODD the developer claimed, and approves, conditions, or denies.
+
+- **The regulator checks the vehicle against the ODD the company claimed**,
+  not against driving in general. Claim a small ODD and approval is easy but
+  the product is nearly useless. Claim a big one and you have to prove much
+  more. **That trade-off drives a lot of behavior in this industry.**
+- Approval comes in steps: first a permit to drive with nobody in the vehicle,
+  then a separate permit to charge passengers.
+- In the US there is no single national law, just federal guidance plus fifty
+  state rules. The EU uses type approval, with UNECE R157 for Level 3 on
+  highways.
+
+
+Stage 7 of 7 -- Operate and Monitor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L1/concept_road7.png
+   :alt: Sequence diagram. Public roads return field data and incident reports to the developer, which files mandatory incident reports with the regulator and pushes over-the-air updates; on a serious incident the regulator investigates, issues findings, and may order a recall or suspend a permit, sending the developer back to the specification stage.
+   :align: center
+   :width: 95%
+   :class: white-figure
+
+   Operating, reporting, updating, and the loop back to the ODD when something goes wrong.
+
+- **Every software update changes the vehicle that was approved.** The permit
+  was granted for one version, running in one ODD. Nobody has a good answer
+  for this yet -- it is a live argument in the field, not a settled one.
+- Reporting crashes is required by law, and **how you report is part of the
+  law too**. One of the two crashes below ended with a company losing its
+  permits over what it left out of the report, **not over the crash**.
+- Look at the arrow at the bottom. A serious crash does not send you back to
+  fix a bug. **It sends you back to the ODD and the hazard list.**
+
+
+AV Case Studies: Learning from Real-World Incidents
+---------------------------------------------------
+
+Two incidents, both thoroughly investigated in public. In class you were given
+what the vehicle perceived and did, and asked to diagnose it *before* the
+investigators' conclusions were revealed.
+
+.. admonition:: The two questions, every time
    :class: important
 
-   Everything you need is on the
-   :doc:`Pre-Read: Development Environment </preread/dev-environment>`
-   page: required OS and package versions, Git configuration and the
-   commands you will actually use, VS Code setup and extensions, the
-   coding guidelines your assignments are graded against, and shell
-   essentials.
+   1. Which module failed: perception, tracking, prediction, planning,
+      control, or the system-level safety layer?
+   2. **Would fixing that module alone have prevented the outcome?**
 
-   Then install CARLA using the :doc:`setup guide </carla/carla>`.
+   Question 2 is the one that matters, and **the answer is almost never yes**.
 
-.. warning::
 
-   One reliable way to lose points on assignments is failing to follow
-   the `PEP 8 <https://peps.python.org/pep-0008/>`_ style guide. It is
-   part of every rubric.
+.. _l1-case-tempe:
+
+Uber ATG Fatality (Tempe, AZ -- March 2018)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**What happened, without the conclusions.** A developmental test vehicle in
+automated mode, at night, on a straight multi-lane road, traveling at about
+43 mph. A pedestrian is walking a bicycle across the road, outside a
+crosswalk. A vehicle operator occupies the driver's seat. Timings are from the
+NTSB investigation (NTSB/HAR-19/03).
+
+.. list-table::
+   :widths: 25 75
+   :header-rows: 1
+   :class: compact-table
+
+   * - Time to impact
+     - What the system did
+   * - **~5.6 to 6 s**
+     - Radar and LiDAR first register the pedestrian.
+   * - **6 to 1.3 s**
+     - The object is classified, then reclassified, several times: as an
+       unknown object, as a vehicle, then as a bicycle. The expected future
+       travel path changes with each reclassification.
+   * - **1.3 s**
+     - The system determines that an emergency braking maneuver is needed.
+   * - **1.3 to 0.3 s**
+     - Braking is **suppressed for one second by design**, to avoid erratic
+       behavior from false positives. The operator is expected to intervene.
+   * - **Impact**
+     - The vehicle has not braked. The operator has not intervened.
+
+.. admonition:: Before you read on
+   :class: tip
+
+   Which module(s) failed? What is the single change you would make? Would
+   that change alone have been enough?
+
+.. dropdown:: What the investigation found
+   :icon: search
+   :class-container: sd-border-primary
+   :class-title: sd-font-weight-bold
+
+   .. list-table::
+      :widths: 25 75
+      :header-rows: 1
+      :class: compact-table
+
+      * - Layer
+        - Finding
+      * - **Perception**
+        - The pedestrian was detected early but never stably classified.
+      * - **Tracking**
+        - Each reclassification reset the object's history, so no consistent
+          track and no stable predicted path was ever established. **This is
+          the technical heart of it.**
+      * - **Planning**
+        - One second of action suppression delayed braking past the point
+          where it could help.
+      * - **Human factors**
+        - The operator was not monitoring the road.
+      * - **System design**
+        - The vehicle's factory automatic emergency braking was disabled while
+          under computer control, and nothing replaced it.
+      * - **Organizational**
+        - Inadequate safety risk assessment procedures, ineffective oversight
+          of vehicle operators, and no adequate mechanism for addressing
+          automation complacency -- all consequences of an inadequate safety
+          culture.
+      * - **Road user**
+        - The NTSB also found that the pedestrian's drug impairment and her
+          crossing outside a crosswalk contributed.
+
+   **Answer to question 2: no.** Fix the classifier and action suppression
+   still delays the brake. Fix suppression and an unstable track still gives
+   the planner nothing to act on.
+
+   Note the last row: **the investigators did not assign this to the machine
+   alone**, which is what a genuinely multi-causal finding looks like.
+
+.. admonition:: You will build this exact failure
+   :class: warning
+
+   Track-level fusion in **GP3** must keep an object's identity *across*
+   changes of class label. If your tracker throws away an object's history
+   whenever the classifier changes its mind, **you have reproduced Tempe**.
+
+
+.. _l1-case-mrc:
+
+The Minimal Risk Condition (San Francisco -- October 2023)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Set-up.** A driverless robotaxi in a dense city at night. A pedestrian is
+struck by a *different*, human-driven vehicle and is thrown into the
+robotaxi's path. The robotaxi cannot avoid contact. It detects the collision
+and comes to a stop.
+
+**The question, before you hear what happened.** The vehicle has stopped in a
+live traffic lane after a collision. It must now reach a minimal risk
+condition.
+
+- What should the MRC be here? **Write your answer down before opening the box
+  below.**
+- What does your answer assume about the state of the world around the
+  vehicle?
+- What sensing would you need to verify that assumption?
+
+.. dropdown:: What happened
+   :icon: search
+   :class-container: sd-border-primary
+   :class-title: sd-font-weight-bold
+
+   The vehicle executed a **pullover maneuver** and dragged the pedestrian,
+   who was pinned underneath it, roughly twenty feet.
+
+   **Your three answers:**
+
+   - **What should the MRC be?** You may well have written "pull over". So did
+     the engineers -- and it was correct for every scenario anyone had
+     enumerated.
+   - **What did that assume?** That nothing was attached to, dragged by, or
+     trapped under the vehicle. *That assumption is literally a row in the
+     minimal risk condition table above.*
+   - **What sensing would verify it?** The deployed fix added **no sensor**:
+     the recall changed the minimal risk condition so the vehicle now stays
+     put after a collision instead of pulling over. **When you cannot sense an
+     assumption, delete the assumption.**
+   - **And afterwards.** The reports filed with regulators described the
+     collision but left out the pullover and the drag. The one-day and ten-day
+     filings both omitted it; it appeared a month later. State regulators
+     suspended the company's testing and deployment permits, the company later
+     resolved a federal charge of submitting a false report, and it ultimately
+     lost its robotaxi business. **The collision was survivable as a company.
+     The reporting was not.**
+
+.. admonition:: The lesson is not "do not pull over"
+   :class: important
+
+   It is that **the minimal risk condition is a design artifact**, validated
+   against a list of situations somebody thought of -- and this one was not on
+   the list. **Nothing failed**: every component did exactly what it was
+   designed to do. That is a **SOTIF** hazard.
+
+Both incidents were **system** failures rather than **algorithm** failures.
+That distinction is the sixth learning outcome of this course, and it is what
+the final report is graded against.
+
+
+The Semester Ahead
+------------------
+
+.. figure:: /_static/images/L1/pipeline.png
+   :alt: Block diagram of the ADS pipeline. Sensing (L2, GP1) feeds Perception (L4 to L6, GP2), which feeds Fusion and Localization (L3, L7, GP3), which feeds Prediction (L9), then Planning (L8, L10, GP4), then Control (L11, GP4), then Integration and Safety (L14, final report).
+   :align: center
+   :width: 100%
+   :class: white-figure
+
+   The ADS pipeline you will build, with the lecture that teaches each stage
+   and the project that implements it.
+
+**The pipeline you will build**
+
+- **Sensing** (L2) -- cameras, LiDAR, RADAR, IMU, GNSS, and the calibration
+  that makes them agree with each other.
+- **Perception** (L4--L6) -- detection, bird's-eye-view representations,
+  segmentation, multi-object tracking.
+- **State estimation** (L3, L7) -- Kalman filtering, sensor fusion,
+  localization and SLAM.
+- **Decision** (L8--L10) -- route planning, behavior prediction, motion
+  planning.
+- **Action** (L11) -- trajectory generation and control.
+- **Frontier and safety** (L12--L14) -- end-to-end driving, world models,
+  system integration and safety cases.
+
+**L12 and L13 sit alongside this rather than inside it**: end-to-end driving
+and world models are the alternative to the modular pipeline you are building,
+and you should be able to argue about the trade-off by December.
+
+.. note::
+
+   **One package, extended four times.** By the last week you will run it on
+   scenarios you have never seen, and write down honestly where it broke. See
+   the :doc:`syllabus </syllabus/index>` for the full grade breakdown, the
+   project schedule and the policies.
 
 
 CARLA Simulator
 ---------------
 
-CARLA (Car Learning to Act) is an open-source autonomous driving simulator
-built on Unreal Engine 4, designed for ADS development, training, and
-validation.
+CARLA (Car Learning to Act) is an open-source automated driving simulator
+built on Unreal Engine, developed at the Computer Vision Center of the
+Autonomous University of Barcelona.
 
-- Developed by the Computer Vision Center (CVC), Autonomous University of Barcelona.
-- Provides realistic urban and highway environments.
-- Supports multi-agent simulation with pedestrians, cyclists, and vehicles.
-- Includes weather conditions, day/night cycles, and various lighting scenarios.
-- Active open-source community.
+.. admonition:: Why a simulator is not a compromise here
+   :class: important
+
+   You just spent forty minutes on two incidents whose common feature was **a
+   scenario nobody had enumerated**. Simulation is how scenarios get
+   enumerated -- and how you accumulate the exposure that on-road driving
+   alone cannot reach. You can produce a pedestrian crossing at night in heavy
+   rain a thousand times, with ground truth, and nobody is harmed. **You get
+   perfect labels for free, which is what makes GP2 possible at all.**
 
 .. seealso::
 
    See the :doc:`CARLA setup guides </carla/carla>` for installation
-   instructions (native or Docker).
+   instructions (native on Ubuntu 22.04, or Docker on 24.04). **This course
+   uses CARLA 0.9.16.**
 
 
 Key Features
@@ -416,10 +1120,12 @@ Client-Server Architecture
 
    * - **CARLA Server**
      - Runs the simulation (``CarlaUE4.sh``). Manages the 3D world, physics,
-       rendering, and sensor data generation. Default port: 2000.
+       rendering, and sensor data generation. Default port: 2000. It is a game
+       engine, and it will compete with your training job for the same GPU.
    * - **CARLA Client**
      - Your Python scripts. Connects to the server via TCP. Controls vehicles,
-       sensors, and the environment.
+       sensors, and the environment. The server may run on another machine or
+       in a container.
    * - **ROS 2 Bridge**
      - Course-provided middleware that publishes CARLA sensor data to ROS 2
        topics and subscribes to control commands.
@@ -428,9 +1134,56 @@ Client-Server Architecture
 
 - `World <https://carla.readthedocs.io/en/latest/core_world/>`_ -- The simulated environment (towns, weather, actors).
 - `Actors <https://carla.readthedocs.io/en/latest/core_actors/>`_ -- Dynamic objects (vehicles, pedestrians, sensors).
-- `Blueprint Library <https://carla.readthedocs.io/en/latest/bp_library/>`_ -- Templates for creating actors with configurable attributes.
+- `Blueprint Library <https://carla.readthedocs.io/en/latest/bp_library/>`_ -- Templates for creating actors. **Nothing exists in the world until you spawn an actor from a blueprint.**
 - `Waypoints <https://carla.readthedocs.io/en/0.9.16/core_map/#waypoints>`_ -- Points on the road network for navigation.
 - `Traffic Manager <https://carla.readthedocs.io/en/0.9.16/adv_traffic_manager/>`_ -- Controls NPC vehicle behavior.
+
+.. warning::
+
+   **Client and server versions must be identical.** A mismatch fails
+   confusingly rather than clearly. And wait 30--60 seconds before connecting:
+   the server is loading a game level, and a client that connects too early
+   simply times out. That timeout is the message you will see most this
+   semester, and it usually means the server is not up yet.
+
+
+Where the Simulation Ends
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Everything you build this semester runs in CARLA. That is the right choice,
+and you should know precisely what it buys you and what it does not.
+
+.. list-table::
+   :widths: 22 78
+   :header-rows: 1
+   :class: compact-table
+
+   * - Fidelity
+     - What falls in this band
+   * - **Modeled well**
+     - Geometry, road networks, traffic rules, actor kinematics, sensor
+       placement and extrinsics, timing and message flow, gross weather
+       effects.
+   * - **Modeled roughly**
+     - Material appearance and reflectance, LiDAR returns in rain and fog,
+       RADAR multipath, camera artifacts such as bloom, rolling shutter and
+       lens flare.
+   * - **Not modeled**
+     - Sensor degradation and dirt, calibration drift, hardware faults, real
+       human behavior in its full variety, the appearance statistics a real
+       deployment would actually see.
+
+- A detector trained only on CARLA images **will not transfer** to real
+  driving footage without adaptation. Your GP2 numbers are valid *within
+  CARLA*, and you should say so.
+- **The skills transfer completely. The weights do not.**
+
+.. admonition:: This is a grading criterion, not just a caveat
+   :class: warning
+
+   "Our system achieves 0.83 mAP" is a claim about **CARLA**. Writing it as a
+   claim about *driving* is the same error as quoting the 94% figure without
+   its caveat, and it is marked the same way.
 
 
 CARLA in This Course
@@ -441,120 +1194,41 @@ CARLA in This Course
    :header-rows: 1
    :class: compact-table
 
-   * - Lecture
-     - CARLA Usage
-   * - L2
-     - Sensor data collection, visualization, LiDAR-to-camera projection
-   * - L3
-     - Multi-sensor fusion with a Kalman filter (camera + LiDAR + RADAR)
-   * - L4--L6
-     - Detection, BEV construction, segmentation, and multi-object tracking
-   * - L7
-     - Localization and SLAM testing in different towns
-   * - L8
-     - Global route planning with the CARLA navigation API
-   * - L9--L11
-     - Prediction, motion planning, and trajectory control
-   * - L12--L14
-     - Full ADS pipeline integration and evaluation
+   * - Week
+     - CARLA usage
+   * - Week 3
+     - Setup milestone: CARLA running, ROS 2 workspace built, sensors
+       publishing (individual, pass/fail)
+   * - Weeks 3--5
+     - GP1: sensor suite, data collection and visualization
+   * - Weeks 6--9
+     - GP2: dataset generation and detector training
+   * - Weeks 9--12
+     - GP3: multi-sensor fusion and localization
+   * - Weeks 12--14
+     - GP4: planning and control, then full-pipeline evaluation
 
 .. note::
 
-   Pre-configured CARLA scenarios will be provided for each assignment to
-   ensure consistent learning experiences across different hardware
-   configurations.
-
-
-AV Case Studies: Learning from Real-World Incidents
-----------------------------------------------------
-
-Understanding real-world failures is critical for building safe autonomous
-systems. These case studies illustrate how technical, organizational, and
-regulatory factors interact.
-
-
-Uber ATG Fatality (Tempe, AZ -- March 2018)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-In March 2018, an Uber ATG test vehicle operating in autonomous mode struck
-and killed a pedestrian crossing the road at night in Tempe, Arizona. The
-NTSB investigation revealed multiple contributing factors:
-
-.. list-table::
-   :widths: 25 75
-   :class: compact-table
-
-   * - **Perception failure**
-     - The system detected the pedestrian 6 seconds before impact but
-       repeatedly reclassified her as "vehicle," "other," and "bicycle,"
-       preventing a stable track.
-   * - **Planner design flaw**
-     - Each reclassification reset the prediction module. The system never
-       built enough confidence to initiate emergency braking.
-   * - **Safety driver distraction**
-     - The backup safety driver was watching a video on a phone and did not
-       intervene.
-   * - **Disabled emergency braking**
-     - Uber had disabled the Volvo XC90's factory AEB system to prevent
-       conflicts with the autonomy stack. No fallback existed.
-
-.. admonition:: Key Lesson
-   :class: warning
-
-   Redundancy and fail-safe design are non-negotiable. Disabling factory
-   safety systems without equivalent replacements creates an unacceptable
-   single point of failure. Object classification instability must be handled
-   by the planner -- track-level fusion should maintain object persistence
-   across classification changes.
-
-
-Cruise Dragging Incident (San Francisco -- October 2023)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-In October 2023, a Cruise robotaxi in San Francisco was involved in an
-incident where a pedestrian -- initially struck by a human-driven vehicle --
-was knocked into the path of the robotaxi. The Cruise vehicle:
-
-1. Detected the collision and stopped.
-2. Incorrectly determined the safest action was to **pull over** to the
-   curb (Minimal Risk Condition).
-3. Dragged the pedestrian approximately 20 feet while executing the pullover.
-
-.. list-table::
-   :widths: 25 75
-   :class: compact-table
-
-   * - **Perception gap**
-     - The system did not detect that the pedestrian was pinned under the
-       vehicle after the initial stop.
-   * - **MRC design flaw**
-     - The pullover maneuver was inappropriate for this scenario. The MRC
-       logic did not account for objects trapped beneath the vehicle.
-   * - **Organizational response**
-     - Cruise initially presented incomplete information to regulators,
-       leading to the California DMV revoking their autonomous testing
-       permit and eventual shutdown of operations.
-
-.. admonition:: Key Lesson
-   :class: warning
-
-   MRC (Minimal Risk Condition) maneuvers must be validated against a broad
-   range of edge cases. "Pull over and stop" is not universally safe.
-   Transparency with regulators is critical for maintaining public trust and
-   operational permits.
+   Pre-configured CARLA scenarios are provided for each project to ensure a
+   consistent experience across different hardware configurations.
 
 
 CARLA Live Walkthrough
------------------------
+----------------------
 
-This in-class demonstration introduces the CARLA simulation environment
-that you will use throughout the course. The goal is to become comfortable
-with the client-server architecture, the Python API, and basic vehicle
-and sensor control.
+This in-class demonstration introduces the CARLA simulation environment.
+
+.. admonition:: Watch, do not follow along
+   :class: important
+
+   This is a demonstration, not a lab. The install is the **Week 3 setup
+   milestone** and the guides are on this site. Your job during the demo is to
+   see what the pieces are.
 
 
 Demo 1: Launch CARLA and Explore the World
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
@@ -563,7 +1237,7 @@ Demo 1: Launch CARLA and Explore the World
 
    # ── Connect to the CARLA server ───────────────────────────────────
    client = carla.Client('localhost', 2000)
-   client.set_timeout(10.0)
+   client.set_timeout(20.0)
    world = client.get_world()
 
    # ── Explore available maps ────────────────────────────────────────
@@ -579,7 +1253,7 @@ Demo 1: Launch CARLA and Explore the World
    # ── Set weather ───────────────────────────────────────────────────
    weather = carla.WeatherParameters.ClearNoon
    world.set_weather(weather)
-   print(f"Weather set to ClearNoon")
+   print("Weather set to ClearNoon")
 
    # ── Explore the blueprint library ─────────────────────────────────
    bp_lib = world.get_blueprint_library()
@@ -593,19 +1267,29 @@ Demo 1: Launch CARLA and Explore the World
    for bp in sensors:
        print(f"  {bp.id}")
 
+.. tip::
+
+   **Watch how long** ``load_world`` **takes.** That is a full level load in a
+   game engine, and it is why the client timeout is generous.
+
 
 Demo 2: Spawn a Vehicle, Attach a Camera, and Drive
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
    import numpy as np
    import cv2
 
-   # ── Spawn the ego vehicle ─────────────────────────────────────────
+   # ── Spawn the ego vehicle at the first free spawn point ───────────
    vehicle_bp = bp_lib.find('vehicle.tesla.model3')
    spawn_points = world.get_map().get_spawn_points()
-   vehicle = world.spawn_actor(vehicle_bp, spawn_points[0])
+
+   vehicle = None
+   for sp in spawn_points:
+       vehicle = world.try_spawn_actor(vehicle_bp, sp)
+       if vehicle is not None:
+           break
    print(f"Spawned: {vehicle.type_id}")
 
    # ── Attach a front-facing RGB camera ──────────────────────────────
@@ -617,6 +1301,16 @@ Demo 2: Spawn a Vehicle, Attach a Camera, and Drive
    camera = world.spawn_actor(camera_bp, camera_transform,
                               attach_to=vehicle)
 
+   # ── Roof LiDAR ────────────────────────────────────────────────────
+   lidar_bp = bp_lib.find('sensor.lidar.ray_cast')
+   lidar_bp.set_attribute('channels', '32')
+   lidar_bp.set_attribute('range', '80')
+   lidar_bp.set_attribute('rotation_frequency', '20')
+   lidar = world.spawn_actor(
+       lidar_bp,
+       carla.Transform(carla.Location(z=2.5)),
+       attach_to=vehicle)
+
    # ── Display camera feed ───────────────────────────────────────────
    def camera_callback(image):
        array = np.frombuffer(image.raw_data, dtype=np.uint8)
@@ -625,112 +1319,79 @@ Demo 2: Spawn a Vehicle, Attach a Camera, and Drive
        cv2.waitKey(1)
 
    camera.listen(camera_callback)
-
-   # ── Enable autopilot and observe ──────────────────────────────────
    vehicle.set_autopilot(True)
-   print("Autopilot enabled. Watch the camera feed.")
 
-   # ── Spawn NPC traffic ─────────────────────────────────────────────
-   traffic_manager = client.get_trafficmanager(8000)
-   npc_bps = bp_lib.filter('vehicle.*')
+.. admonition:: Two things worth noticing
+   :class: note
 
-   npcs = []
-   for i, sp in enumerate(spawn_points[1:21]):  # spawn 20 NPCs
-       npc_bp = np.random.choice(list(npc_bps))
-       npc = world.try_spawn_actor(npc_bp, sp)
-       if npc is not None:
-           npc.set_autopilot(True, traffic_manager.get_port())
-           npcs.append(npc)
-
-   print(f"Spawned {len(npcs)} NPC vehicles.")
+   - ``try_spawn_actor`` returns ``None`` instead of raising when a spawn
+     point is occupied. **In a world with traffic, this matters.**
+   - Those ``Transform`` offsets are **extrinsic calibration**, hard-coded.
+     That is fine tonight and it will not be fine later -- **L2 is entirely
+     about why those six numbers are the hardest part of building a sensor
+     suite.**
 
 
-Demo 3: Weather and Lighting Experiments
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Demo 3: The Same Data, Now in ROS 2
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+With the bridge running, the sensors above become topics. **This is the
+interface your entire project is written against.**
+
+.. code-block:: console
+
+   ros2 topic list
+   ros2 topic hz   /carla/ego_vehicle/rgb_front/image
+   ros2 topic echo /carla/ego_vehicle/imu --once
+   rviz2
+
+- **Watch the publish rate.** It is not the rate that was configured, and it
+  will drop when the scene gets busy. **Timing is a first-class concern in
+  this course, not an afterthought.**
+- In RViz2: the point cloud and the camera image appear in the same frame of
+  reference, because someone specified the transforms correctly.
+
+
+Demo 4: Weather, and Why Perception Is Hard
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
    # ── Cycle through weather conditions ──────────────────────────────
    weather_presets = [
-       ("Clear Noon",    carla.WeatherParameters.ClearNoon),
-       ("Cloudy Noon",   carla.WeatherParameters.CloudyNoon),
-       ("Wet Noon",      carla.WeatherParameters.WetNoon),
-       ("Hard Rain",     carla.WeatherParameters.HardRainNoon),
+       ("Clear Noon",       carla.WeatherParameters.ClearNoon),
+       ("Wet Noon",         carla.WeatherParameters.WetNoon),
+       ("Hard Rain",        carla.WeatherParameters.HardRainNoon),
        ("Soft Rain Sunset", carla.WeatherParameters.SoftRainSunset),
-       ("Clear Night",   carla.WeatherParameters(
+       ("Clear Night",      carla.WeatherParameters(
            sun_altitude_angle=-30.0)),
-       ("Dense Fog",     carla.WeatherParameters(
+       ("Dense Fog",        carla.WeatherParameters(
            fog_density=80.0, fog_distance=10.0)),
    ]
 
    for name, preset in weather_presets:
        world.set_weather(preset)
        print(f"Weather: {name} -- observe the camera feed")
-       time.sleep(5)  # observe each condition for 5 seconds
+       time.sleep(5)
 
-.. admonition:: Discussion Points During Demo
+.. admonition:: Discussion points during the demo
    :class: tip
 
-   1. **Sensor visibility**: How does each weather condition affect what the
-      camera can see? What about at night?
-   2. **Town diversity**: Switch between Town01 (residential), Town03
-      (commercial), and Town04 (highway). How do the driving challenges
-      differ?
-   3. **Traffic complexity**: Observe NPC vehicle behavior at intersections.
-      What decisions must the ADS make?
-   4. **Connection to the course**: This demo shows the raw inputs. Over the
-      rest of the semester you will build the full pipeline:
-      sensors (L2) -> state estimation & fusion (L3) ->
-      perception (L4--L6) -> localization & SLAM (L7) ->
-      navigation (L8) -> prediction & behavior (L9) ->
-      motion planning (L10) -> trajectory generation & control (L11) ->
-      end-to-end driving (L12) -> world models (L13) ->
-      system integration & safety (L14).
+   1. **Watch the LiDAR return count in fog and rain**, not just the camera.
+      Which sensor would you trust in each condition, and what should your
+      fusion stage do when they disagree?
+   2. **Town diversity**: switch between Town01 (residential), Town03
+      (commercial) and Town04 (highway). How do the driving challenges differ?
+   3. **Traffic complexity**: observe NPC behavior at intersections. What
+      decisions must the ADS make?
+   4. **Connection to the course**: everything you just saw is **raw input and
+      ground truth**. Every lecture from here adds one block between them.
 
 .. code-block:: python
 
    # ── Cleanup ───────────────────────────────────────────────────────
    camera.stop()
    camera.destroy()
-   for npc in npcs:
-       npc.destroy()
+   lidar.destroy()
    vehicle.destroy()
    print("All actors destroyed.")
-
-
-Summary
---------
-
-.. grid:: 1 2 2 2
-   :gutter: 3
-
-   .. grid-item-card:: Terminology and Landscape
-      :class-card: sd-border-primary
-
-      - **DDT** is the real-time driving task; **ODD** is the envelope
-        within which a system is designed to perform it
-      - The SAE J3016 dividing line is *who is responsible for the DDT*:
-        L0--L2 the human, L3--L5 the system
-      - L4 robotaxis are commercially deployed but geofenced; L5 does not
-        exist
-      - Safety standards: ISO 26262 (failures), ISO 21448/SOTIF (hazards
-        without failure), ISO/SAE 21434 (cybersecurity)
-
-   .. grid-item-card:: Lessons from Failure
-      :class-card: sd-border-primary
-
-      - **Uber ATG (2018)**: unstable classification broke track
-        persistence, and disabling factory AEB removed the fallback.
-        Redundancy is not optional
-      - **Cruise (2023)**: the Minimal Risk Condition itself caused harm,
-        and the disclosure failure ended the company. "Pull over and
-        stop" is not universally safe
-      - Both were *system* failures, not algorithm failures -- which is
-        the theme this course returns to in L14
-
-.. admonition:: Looking ahead
-   :class: tip
-
-   Every lecture from here adds one block to the pipeline you saw running
-   in the CARLA demo. Keep asking the question that closes this course:
-   **how does this component fail, and what happens when it does?**
