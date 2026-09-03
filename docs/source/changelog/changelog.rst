@@ -5,6 +5,106 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
+.. dropdown:: v2.1.0 -- L1 Rewritten from Slide Deck v1.0 (2026-09-03)
+   :icon: tag
+   :class-container: sd-border-success
+   :open:
+
+   Lecture 1 was rewritten to match the **L1 slide deck v1.0**, and the
+   syllabus and glossary were brought in line with it. L2--L14 are now
+   index-only while their content is revised.
+
+   .. rubric:: Lecture 1: Course Introduction & AV Landscape
+
+   - **Corrected two widely misquoted figures.** Road deaths updated to
+     ~1.19 million per year (WHO 2023). The "94% of crashes are caused by
+     driver error" claim was replaced with what the NHTSA study actually
+     found -- the *critical reason*, the last event in the causal chain --
+     and an explanation of why the original phrasing is wrong. Removed the
+     single-point market-size forecast in favour of a note that such
+     forecasts differ by a factor of ten.
+   - **New terminology sections**: the six DDT subtasks with the lecture
+     that teaches each, the DDT fallback (both triggers, and why leaving the
+     ODD is not a fault), and the minimal risk condition as a *design
+     artifact* with a table of candidate MRCs and the assumption each hides.
+   - **Rewrote the SAE levels** as two tables split at the standard's own
+     dividing line, plus a new "Three Things the Levels Are Not" section
+     (not a quality ranking, not an answer to "what can it do", not what the
+     badge says).
+   - **New**: the long tail and why simulation is a necessity rather than a
+     convenience; disengagement rates and why miles-per-disengagement is
+     close to useless as a comparison.
+   - **New**: *From Concept to Public Roads* -- the seven-stage pipeline
+     (Framework, Specify, Build, Validate, Argue, Approve, Operate) with
+     seven sequence diagrams, HARA/SOTIF/TARA and what each produces, and
+     the safety case.
+   - **Rewrote both case studies** as diagnose-before-the-reveal exercises
+     with the findings behind dropdowns. Tempe now identifies *tracking* as
+     the technical heart and includes the full NTSB multi-causal finding;
+     the October 2023 pullover incident is framed around the MRC as a design
+     artifact and as a SOTIF hazard.
+   - **New**: *Where the Simulation Ends* -- what CARLA models well, roughly
+     and not at all, and why "0.83 mAP" is a claim about CARLA rather than
+     about driving.
+   - Updated the industry landscape: Level 3 has contracted (Mercedes Drive
+     Pilot and BMW Personal Pilot withdrawn during 2026), and per-company
+     ride counts were removed in favour of structural observations, since
+     those figures change quarterly.
+   - Added the ADS pipeline figure mapping each stage to its lecture and
+     group project.
+
+   .. rubric:: Exercises and Quiz
+
+   - **Both are now explicitly marked not submitted and not graded**, and
+     distinguished from the five graded in-class quizzes.
+   - Exercises: six instead of five. New -- classify five anonymized real
+     systems by SAE level; write an ODD then find three scenarios it lets
+     through that you did not intend; choose an MRC for four situations
+     (one of which has no safe answer); diagnose a shadow-braking failure as
+     26262 vs. SOTIF. Each now ends with a reasoning box.
+   - Quiz: 15 MC + 10 T/F + 5 essay, revised throughout. Removed questions
+     resting on perishable deployment figures; added the DDT subtasks,
+     fallback triggers, MRC assumptions, the levels-are-not framing, the
+     94% misquote, disengagement denominators, the safety case, and the fact
+     that a vehicle is still Level 2 throughout Stage 4.
+
+   .. rubric:: Glossary
+
+   - Added: AEB, Conspicuity, DDT Fallback, Disengagement, Driving Automation
+     Feature, Fallback-Ready User, Geofence, OEDR, Remote Assistance, Remote
+     Driving, Safety Case, TARA, Triggering Condition, UNECE R157 -- all
+     tagged to L1.
+   - **Corrected MRC**, which previously described it as a response to a
+     critical system failure only; leaving the ODD reaches it too, and the
+     entry now covers the design-artifact framing. Re-tagged L1 · L14.
+   - Expanded DDT to the six J3016 subtasks. Softened the UNECE GTR entry to
+     match the deck's more cautious wording.
+   - Lecture tags for L2--L14 now point at each lecture's **index** page
+     rather than its lecture page, so they keep resolving while that content
+     is held back. L1 tags still point at the lecture page.
+
+   .. rubric:: Syllabus
+
+   - Grade breakdown replaced with the six-component split (GP1 10.2%,
+     GP2 27.2%, GP3 17.0%, GP4 13.6%, Final Report 12.0%, Quizzes 20.0%).
+   - **New**: peer review at 40% of each individual project grade, the Week 3
+     team charter, letter-grade cutoffs, the regrade policy, and the
+     generative AI policy with its disclosure requirement.
+   - Schedule updated: teams form in **Week 3** (was Week 2) after an
+     individual pass/fail setup milestone, and quizzes move to weeks 4, 6, 9,
+     12 and 14.
+   - Hardware minimum raised to an NVIDIA GPU with 8 GB VRAM and 16 GB RAM,
+     with a note that a VM is not adequate.
+
+   .. rubric:: Lectures 2--14
+
+   - Each lecture now publishes **only its index page**. The lecture notes,
+     exercises, quiz and references are excluded from the build via
+     ``exclude_patterns`` in ``conf.py`` and carry a "materials in revision"
+     note. No source files were deleted -- removing a lecture's entry from
+     ``exclude_patterns`` republishes it.
+
+
 .. dropdown:: v2.0.0 -- Full Curriculum Released: L4--L13 (2026-04-01)
    :icon: tag
    :class-container: sd-border-success

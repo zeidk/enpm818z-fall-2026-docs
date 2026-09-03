@@ -33,15 +33,12 @@ By the end of this lecture, you will be able to:
 - Describe BEVFusion as a representative modern deep-learning fusion
   architecture and its trade-offs vs. classical fusion from L3.
 
-.. toctree::
-   :hidden:
-   :maxdepth: 2
-   :titlesonly:
+.. admonition:: Materials in revision
+   :class: note
 
-   l6_lecture
-   l6_exercises
-   l6_quiz
-   l6_references
+   The lecture notes, exercises, quiz and references for this lecture are
+   being revised against the current slide deck and are not published yet.
+   This page will link to them once they are ready.
 
 Next Steps
 ----------

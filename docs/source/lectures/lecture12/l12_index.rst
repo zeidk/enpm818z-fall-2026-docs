@@ -50,15 +50,12 @@ By the end of this lecture, you will be able to:
   reduces regret to :math:`O(\epsilon)`.
 
 
-.. toctree::
-   :hidden:
-   :maxdepth: 2
-   :titlesonly:
+.. admonition:: Materials in revision
+   :class: note
 
-   l12_lecture
-   l12_exercises
-   l12_quiz
-   l12_references
+   The lecture notes, exercises, quiz and references for this lecture are
+   being revised against the current slide deck and are not published yet.
+   This page will link to them once they are ready.
 
 
 Next Steps

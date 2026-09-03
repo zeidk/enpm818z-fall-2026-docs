@@ -41,7 +41,18 @@ proof_numbered = {
 todo_include_todos = True
 
 templates_path = ["_templates"]
-exclude_patterns = []
+# ---------------------------------------------------------------------------
+# Only L1 is published in full. For L2--L14 the index page is built and the
+# lecture / exercises / quiz / references pages are held back until they are
+# revised against the current slide decks. The source files stay on disk;
+# remove a lecture's entry here to publish it. Glossary lecture tags point at
+# the index pages, so they keep resolving while these are excluded.
+# ---------------------------------------------------------------------------
+exclude_patterns = [
+    f"lectures/lecture{n}/l{n}_{page}.rst"
+    for n in range(2, 15)
+    for page in ("lecture", "exercises", "quiz", "references")
+]
 
 # ---------------------------------------------------------------------------
 # PyData Sphinx Theme

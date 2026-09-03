@@ -33,15 +33,12 @@ By the end of this lecture, you will be able to:
 - Train and deploy an object detector on CARLA data as a ROS 2 node.
 
 
-.. toctree::
-   :hidden:
-   :maxdepth: 2
-   :titlesonly:
+.. admonition:: Materials in revision
+   :class: note
 
-   l4_lecture
-   l4_exercises
-   l4_quiz
-   l4_references
+   The lecture notes, exercises, quiz and references for this lecture are
+   being revised against the current slide deck and are not published yet.
+   This page will link to them once they are ready.
 
 
 Next Steps

@@ -2,21 +2,27 @@
 Quiz
 ====================================================
 
-This quiz covers the key concepts from Lecture 1: Course Introduction & AV
-Landscape. Topics include the Dynamic Driving Task (DDT), SAE J3016 levels
-of automation, ADAS vs. ADS, Operational Design Domain (ODD), the current
-industry landscape, core technical challenges, safety standards (ISO 26262,
-SOTIF), regulatory developments, and the CARLA simulator architecture.
+This quiz covers the key concepts from Lecture 1: the Dynamic Driving Task
+(DDT), the DDT fallback and the Minimal Risk Condition (MRC), the Operational
+Design Domain (ODD) and the OES, ADAS vs. ADS, the SAE J3016 levels, the
+industry landscape, the core technical challenges, safety standards
+(ISO 26262, ISO 21448/SOTIF, ISO/SAE 21434), the seven-stage path from concept
+to public roads, the two case studies, and the CARLA simulator architecture.
+
+.. important::
+
+   **This quiz is not submitted and it is not graded.** It is a self-check.
+   The graded quizzes are the **five in-class quizzes** listed in the
+   :doc:`syllabus </syllabus/index>`, starting with **Quiz 1 in Week 4**.
 
 .. note::
 
    **Instructions:**
 
-   - Answer all questions to the best of your ability.
+   - Answer each question before opening its answer box.
    - Multiple choice questions have exactly one correct answer.
    - True/False questions require you to determine if the statement is correct.
-   - Essay questions require short written responses (2-4 sentences).
-   - Click the dropdown after each question to reveal the answer.
+   - Essay questions require short written responses (2--4 sentences).
 
 
 ----
@@ -32,8 +38,8 @@ Multiple Choice (Questions 1-15)
 
    A. Trip scheduling, destination selection, and route planning.
 
-   B. Steering, acceleration/deceleration, monitoring the environment, and
-      object detection and response.
+   B. Lateral and longitudinal control, object and event detection and
+      response, maneuver planning, and conspicuity.
 
    C. Vehicle manufacturing, maintenance, and insurance.
 
@@ -42,48 +48,102 @@ Multiple Choice (Questions 1-15)
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Steering, acceleration/deceleration, monitoring the environment,
-   and object detection and response.
+   **B** -- Lateral and longitudinal control, OEDR, maneuver planning, and
+   conspicuity.
 
-   The DDT encompasses all real-time operational and tactical functions
-   required to operate a vehicle in on-road traffic. It explicitly excludes
-   strategic functions such as trip scheduling or destination selection.
+   J3016 splits the DDT into six subtasks: lateral control, longitudinal
+   control, OEDR detection, OEDR response, maneuver planning, and conspicuity
+   (making your intent visible). It explicitly **excludes** strategic
+   functions such as trip scheduling, destination choice or route selection.
+
+   A vehicle with a flawless route planner and nothing else is not automated
+   at all.
 
 
 .. admonition:: Question 2
    :class: hint
 
-   At which SAE level does the **automated system** first become responsible
-   for performing the entire Dynamic Driving Task within its ODD?
+   Which DDT subtask is **not covered** in this course, and is a genuine gap
+   in the field generally?
 
-   A. Level 1
+   A. Longitudinal control
 
-   B. Level 2
+   B. OEDR detection
 
-   C. Level 3
+   C. Conspicuity
 
-   D. Level 4
+   D. Maneuver planning
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- Level 3
+   **C** -- Conspicuity.
 
-   At Level 3 (Conditional Automation), the system performs the entire DDT
-   within its ODD for the first time. However, the human must remain ready
-   to intervene when requested. Levels 1--2 only assist the driver; the
-   human remains responsible for the DDT.
+   Conspicuity is the subtask of making the vehicle's intent visible to other
+   road users: lights, indicators, horn, gestures. A vehicle that cannot
+   signal its intent to a human is hard to share a road with, and almost
+   nobody works on it. You will build the other five subtasks.
 
 
 .. admonition:: Question 3
+   :class: hint
+
+   A car offers adaptive cruise control, lane-keeping assist, **and** a
+   hands-off highway feature. What is "the SAE level of this car"?
+
+   A. Level 1, because ACC alone is Level 1.
+
+   B. Level 2, because that is the highest feature it offers.
+
+   C. The question is malformed -- J3016 classifies features, not vehicles.
+
+   D. Level 3, because hands-off implies the system is driving.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **C** -- The question is malformed.
+
+   J3016 classifies **driving automation features**, not vehicles. A single
+   vehicle may offer several features at different levels, and the level that
+   applies at any moment is whichever feature is engaged. "This is a Level 2
+   car" is a category error -- the *feature* is Level 2.
+
+
+.. admonition:: Question 4
+   :class: hint
+
+   Automatic emergency braking takes over the brakes and stops the car. What
+   SAE level is it?
+
+   A. Level 0
+
+   B. Level 1
+
+   C. Level 2
+
+   D. Level 3
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **A** -- Level 0.
+
+   AEB intervenes, it can save your life, and it is still Level 0, because
+   **you never stopped driving**. Momentary interventions and warnings do not
+   constitute driving automation under J3016. This is the row of the table
+   that surprises people most.
+
+
+.. admonition:: Question 5
    :class: hint
 
    What is the key distinction between **ADAS** and **ADS**?
 
    A. ADAS uses cameras while ADS uses LiDAR.
 
-   B. ADAS supports the human driver; ADS performs the entire DDT without
-      human intervention (within its ODD).
+   B. ADAS performs part of the DDT with the human monitoring; ADS performs
+      the entire DDT within its ODD.
 
    C. ADAS is cheaper than ADS.
 
@@ -92,15 +152,39 @@ Multiple Choice (Questions 1-15)
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ADAS supports the human driver; ADS performs the entire DDT
-   without human intervention (within its ODD).
+   **B** -- ADAS performs part of the DDT with the human monitoring; ADS
+   performs the entire DDT within its ODD.
 
-   ADAS (Levels 1--2) assists the driver but the human remains ultimately
-   responsible. ADS (Levels 3--5) performs the entire DDT within its
-   Operational Design Domain, with the system taking full responsibility.
+   The same hardware can appear on both sides. **Capability does not promote
+   you; responsibility does.** A very capable system that still requires an
+   attentive driver is an ADAS.
 
 
-.. admonition:: Question 4
+.. admonition:: Question 6
+   :class: hint
+
+   Which of the following triggers a **DDT fallback**, and is **not** a fault?
+
+   A. A LiDAR unit stops returning data.
+
+   B. The compute stack reboots.
+
+   C. The vehicle reaches the edge of its ODD.
+
+   D. A wheel speed sensor fails.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **C** -- The vehicle reaches the edge of its ODD.
+
+   Two things trigger a fallback: a **system failure**, or **leaving the
+   ODD**. Only the first is a fault. Leaving the ODD is a planned, foreseeable
+   event with nothing broken at all -- and it still demands a complete
+   handover. **Most fallbacks in service are of this second kind.**
+
+
+.. admonition:: Question 7
    :class: hint
 
    A robotaxi operates only in downtown Phoenix during clear weather and
@@ -117,75 +201,135 @@ Multiple Choice (Questions 1-15)
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- The vehicle's Operational Design Domain (ODD).
+   **B** -- The Operational Design Domain (ODD).
 
-   The ODD describes the specific operating conditions under which an ADS
-   is designed to function safely, including geographic boundaries (downtown
-   Phoenix), environmental conditions (clear weather), and temporal
-   restrictions (daytime). If the vehicle is about to exit its ODD, it must
-   ensure a safe transition.
+   The ODD covers geographic, environmental, traffic and infrastructure
+   conditions. It is also what the regulator approves the system against in
+   Stage 6, and what the scenario library in Stage 4 is derived from.
 
 
-.. admonition:: Question 5
+.. admonition:: Question 8
    :class: hint
 
-   What is the purpose of the **Operating Envelope Specification (OES)**
-   proposed by NIST?
+   What is the difference between an **ODD** and an **OES**?
 
-   A. To define the maximum speed of an autonomous vehicle.
+   A. They are two names for the same thing.
 
-   B. To provide a formal, machine-readable format for precisely defining
-      an ADS's ODD.
+   B. The ODD is the idea of the operating limits; the OES is the structured,
+      machine-readable document that states them.
 
-   C. To certify vehicles for sale in the European Union.
+   C. The ODD is a US concept; the OES is a European one.
 
-   D. To classify the severity of vehicle crashes.
+   D. The OES defines the maximum speed of an automated vehicle.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- To provide a formal, machine-readable format for precisely
-   defining an ADS's ODD.
+   **B** -- The ODD is the *idea*; the OES is the *document*.
 
-   The OES is a structured language proposed by NIST to clearly and
-   unambiguously define an AV's capabilities and operational limits. Think
-   of the ODD as the general idea of operating limits and the OES as the
-   formal document that writes them down precisely.
+   NIST proposed the **Operating Envelope Specification** as a structured,
+   machine-readable description of the driving environment that supports
+   calculation-based reasoning about performance, with testing and
+   certification applications, together with the criteria for assessing
+   performance inside those limits. People conflate the two constantly.
 
 
-.. admonition:: Question 6
+.. admonition:: Question 9
    :class: hint
 
-   Which company had **suspended operations** and is effectively out of the
-   robotaxi race as of 2026?
+   A shuttle drives one fixed loop at 15 km/h in fair weather with nobody
+   aboard responsible for driving. A robotaxi drives anywhere in a large city
+   with nobody aboard responsible for driving. **Both are Level 4.** What
+   should you ask next?
 
-   A. Waymo
+   A. Which one has more sensors?
 
-   B. Baidu Apollo
+   B. What is the ODD?
 
-   C. Cruise
+   C. Which one is certified to ISO 26262?
 
-   D. Pony.ai
+   D. Which one uses an end-to-end architecture?
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- Cruise
+   **B** -- What is the ODD?
 
-   Cruise suspended operations in 2024 and is effectively out of the
-   robotaxi race. Meanwhile, Waymo leads in the US with 250K+ paid
-   rides/week, and Baidu Apollo Go matches that scale in China.
+   The level tells you **who is responsible for the DDT and its fallback** --
+   the system, in both cases. It tells you nothing about capability. The
+   entire difference between those two products lives in the ODD. When
+   somebody tells you they are Level 4 and stops there, ask *where*.
 
 
-.. admonition:: Question 7
+.. admonition:: Question 10
+   :class: hint
+
+   Someone quotes: *"94% of crashes are caused by driver error."* What is
+   wrong with that sentence?
+
+   A. Nothing -- it is the correct reading of the NHTSA study.
+
+   B. The real figure is 76%.
+
+   C. NHTSA identified the *last event in the causal chain*, not the cause of
+      the crash.
+
+   D. The study only looked at highway crashes.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **C** -- NHTSA identified the **critical reason**, the last event in the
+   causal chain.
+
+   A worn tire, a poorly designed intersection and a distracted driver can all
+   contribute to one crash, and only the last one is counted in that
+   statistic. NHTSA says so explicitly, and the number is still quoted the
+   wrong way constantly -- usually by someone selling something.
+
+   The correct phrasing: *"in 94% of crashes, the critical reason was assigned
+   to the driver."*
+
+
+.. admonition:: Question 11
+   :class: hint
+
+   Why is **miles per disengagement** a poor way to compare two companies?
+
+   A. The data is classified.
+
+   B. The definition is subjective, the data is self-reported and not
+      normalized for difficulty, and companies stop reporting once the safety
+      driver is removed.
+
+   C. It is measured in kilometres in some countries.
+
+   D. Only Level 4 systems report it.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **B** -- All three problems at once.
+
+   California counts a takeover when safe operation *requires* it, and the
+   party being measured decides what "requires" means. Nobody normalizes for
+   how hard the driving was -- quiet suburban roads in fair weather beat dense
+   city traffic while being far less capable. And **the moment a company
+   removes its safety driver it stops reporting, so the best systems leave the
+   table.**
+
+   The habit to take away: when somebody hands you a safety number, **ask what
+   the denominator was.**
+
+
+.. admonition:: Question 12
    :class: hint
 
    What does **ISO 21448 (SOTIF)** address that ISO 26262 does not?
 
    A. Cybersecurity vulnerabilities in vehicle networks.
 
-   B. Safety hazards that occur *without* a system failure (e.g., a sensor
-      blinded by sun glare).
+   B. Safety hazards that occur *without* any system failure.
 
    C. Manufacturing defects in electronic components.
 
@@ -194,41 +338,68 @@ Multiple Choice (Questions 1-15)
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Safety hazards that occur *without* a system failure (e.g., a
-   sensor blinded by sun glare).
+   **B** -- Hazards that occur without any system failure.
 
-   ISO 26262 covers functional safety -- managing risks from hardware and
-   software failures. SOTIF (Safety of the Intended Functionality) addresses
-   a different class of hazards: situations where the system works as
-   designed but still produces unsafe behavior due to limitations in
-   perception or decision-making. Both standards are needed together.
+   ISO 26262 is about **things that break**: a sensor fails, a chip flips a
+   bit, code crashes. SOTIF is about **things that work exactly as designed
+   and still cause a crash**: the camera is not broken, the sun is just
+   directly behind the traffic light. Both are real hazards, and finding them
+   takes completely different work.
+
+   Your detector will not crash. It will confidently return the wrong answer,
+   and everything downstream will believe it. **That is SOTIF.**
 
 
-.. admonition:: Question 8
+.. admonition:: Question 13
    :class: hint
 
-   What was the significance of the **UNECE Global Technical Regulation on
-   ADS** approved in January 2026?
+   What does **ASIL** stand for, and what is it for?
 
-   A. It banned all Level 4 vehicles from public roads.
+   A. Automated System Integration Level -- it rates module coupling.
 
-   B. It was the first global safety framework for autonomous driving.
+   B. Automotive Safety Integrity Level -- it classifies hazard risk and sets
+      how much rigor a function gets.
 
-   C. It standardized LiDAR sensor specifications across all manufacturers.
+   C. Advanced Sensor Integration Layer -- it defines the fusion stack.
 
-   D. It required all AVs to use CARLA for validation.
+   D. Autonomous System Intelligence Level -- it rates system capability.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- It was the first global safety framework for autonomous driving.
+   **B** -- Automotive Safety Integrity Level.
 
-   The UNECE GTR on ADS uses a "safety case" approach and represents the
-   first step toward international harmonization of AV safety regulations.
-   Prior to this, regulations were fragmented across countries and regions.
+   Defined by ISO 26262 and assigned by the **HARA** in Stage 2, it ranges
+   from ASIL A (lowest) to ASIL D (highest), plus QM. It determines how much
+   redundancy, rigor and testing each function receives.
 
 
-.. admonition:: Question 9
+.. admonition:: Question 14
+   :class: hint
+
+   Through which stage of the seven-stage concept-to-road pipeline does the
+   vehicle **still operate at Level 2 with a safety driver**?
+
+   A. Stage 2 (Specify)
+
+   B. Stage 4 (Validate)
+
+   C. Stage 6 (Approve)
+
+   D. Stage 7 (Operate and monitor)
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **B** -- Stage 4, and it is where most of the calendar time goes.
+
+   Supervised on-road testing runs with a safety driver holding the driving
+   task, which makes it **Level 2 operation**, often for years. The vehicle
+   does not stop being Level 2 until a regulator grants a driverless permit in
+   **Stage 6**.
+
+
+.. admonition:: Question 15
    :class: hint
 
    In CARLA's architecture, what is the role of the **CARLA Server**?
@@ -248,162 +419,10 @@ Multiple Choice (Questions 1-15)
    **B** -- It manages the 3D world, physics, rendering, and sensor data
    generation.
 
-   CARLA uses a client-server architecture. The server (``CarlaUE4.sh``)
-   runs the simulation using Unreal Engine 4, handling all physics,
-   rendering, and sensor simulation. The client is your Python script
-   that connects to the server via TCP to control vehicles, sensors, and
-   the environment.
-
-
-.. admonition:: Question 10
-   :class: hint
-
-   Why does this course use a **custom ROS 2 bridge** instead of CARLA's
-   native ROS 2 support?
-
-   A. CARLA does not have any ROS 2 support.
-
-   B. The native ROS 2 implementation has a bug that creates invalid topic
-      names with double slashes.
-
-   C. The custom bridge is faster than native ROS 2.
-
-   D. CARLA's native ROS 2 only supports ROS 2 Foxy.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **B** -- The native ROS 2 implementation has a bug that creates invalid
-   topic names with double slashes.
-
-   CARLA 0.9.16's native ROS 2 support generates topic names like
-   ``/carla//camera/image`` (double slash), which ROS 2 rejects as invalid.
-   The custom bridge bypasses this by using the Python API directly and
-   publishing to clean topic names.
-
-
-.. admonition:: Question 11
-   :class: hint
-
-   Which of the following is **NOT** one of the six core technical
-   challenges in autonomous driving discussed in this lecture?
-
-   A. Perception
-
-   B. Prediction
-
-   C. Entertainment
-
-   D. Validation & Safety
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **C** -- Entertainment
-
-   The six core technical challenges are: Perception, Prediction, Planning,
-   Control, Validation & Safety, and System Integration. Entertainment is
-   not a technical challenge of autonomous driving.
-
-
-.. admonition:: Question 12
-   :class: hint
-
-   What does **ASIL** stand for in the context of ISO 26262?
-
-   A. Automated System Integration Level
-
-   B. Automotive Safety Integrity Level
-
-   C. Advanced Sensor Integration Layer
-
-   D. Autonomous System Intelligence Level
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **B** -- Automotive Safety Integrity Level
-
-   ASIL is defined by ISO 26262 to classify the severity of safety risks
-   in electrical and electronic systems. It ranges from ASIL A (lowest)
-   to ASIL D (highest), determining the rigor of development and testing
-   required.
-
-
-.. admonition:: Question 13
-   :class: hint
-
-   A Level 2 vehicle with Adaptive Cruise Control and Lane Keeping Assist
-   is driving on a highway. Who is responsible for monitoring the driving
-   environment?
-
-   A. The automated system.
-
-   B. The human driver.
-
-   C. Both equally share responsibility.
-
-   D. No one -- the vehicle handles everything.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **B** -- The human driver.
-
-   At Level 2, the system can control both steering and acceleration/braking
-   simultaneously, but the human driver must continuously monitor the
-   driving environment and be ready to take over at any time. The human
-   remains ultimately responsible for the DDT.
-
-
-.. admonition:: Question 14
-   :class: hint
-
-   Which CARLA concept provides **templates for creating actors** with
-   configurable attributes like color and sensor parameters?
-
-   A. World
-
-   B. Traffic Manager
-
-   C. Blueprint Library
-
-   D. Waypoints
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **C** -- Blueprint Library
-
-   The Blueprint Library contains templates for creating actors (vehicles,
-   pedestrians, sensors). You can configure attributes like color,
-   ``role_name``, and sensor-specific parameters before spawning an actor
-   in the simulation.
-
-
-.. admonition:: Question 15
-   :class: hint
-
-   As of 2026, which two regions are **neck-and-neck** in autonomous vehicle
-   deployment scale?
-
-   A. Europe and Japan.
-
-   B. United States and China.
-
-   C. South Korea and India.
-
-   D. United Kingdom and Canada.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **B** -- United States and China.
-
-   Waymo leads in the US with 250K+ paid rides/week, while Baidu Apollo Go
-   matches that scale in China. Pony.ai and Huawei ADS further strengthen
-   China's position. The industry is consolidating around well-capitalized
-   first movers in both regions.
+   The server (``CarlaUE4.sh``) runs the simulation on Unreal Engine. Your
+   Python script is the client, connecting over TCP on port 2000. The server
+   is a game engine, and it will compete with your training job for the same
+   GPU.
 
 
 ----
@@ -415,52 +434,53 @@ True or False (Questions 16-25)
 .. admonition:: Question 16
    :class: hint
 
-   **True or False:** SAE Level 5 autonomous vehicles are commercially
-   available and deployed on public roads as of 2026.
+   **True or False:** SAE Level 5 vehicles are commercially available and
+   deployed on public roads as of 2026.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   Level 5 (full automation in all conditions with no ODD restrictions) is
-   not yet commercially available. It remains a long-term research goal.
-   Current commercial deployments are at Level 4 (geofenced) or Level 2
-   (supervised).
+   Level 5 -- driving anywhere a human could drive, in any conditions -- is
+   not a product category. It remains a research goal, and nothing on sale is
+   close to it. Current commercial deployments are Level 4 (geofenced) or
+   Level 2 (supervised).
 
 
 .. admonition:: Question 17
    :class: hint
 
-   **True or False:** The Operational Design Domain (ODD) can include
-   restrictions on geography, weather, lighting, and traffic density.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**
-
-   The ODD defines all operating conditions under which an ADS is designed
-   to function safely. This includes geographic boundaries, environmental
-   conditions (weather, lighting), and traffic parameters (speed limits,
-   density).
-
-
-.. admonition:: Question 18
-   :class: hint
-
-   **True or False:** ISO 26262 and ISO 21448 (SOTIF) address the exact
-   same types of safety risks.
+   **True or False:** A higher SAE level always means a more capable, better
+   engineered system.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   ISO 26262 addresses functional safety -- risks from hardware/software
-   malfunctions. SOTIF addresses hazards that arise even when the system
-   works as designed, such as a sensor being blinded by sun glare. They are
-   complementary standards.
+   The level describes **who is responsible**, not how good the engineering
+   is. A Level 2 feature can be more capable and safer than a Level 3 feature.
+   Mercedes withdrew Drive Pilot during 2026, replaced it with a *Level 2*
+   system, and put its effort into Level 4 instead -- a lower number on that
+   row, and not a worse company.
+
+
+.. admonition:: Question 18
+   :class: hint
+
+   **True or False:** ISO 26262 and ISO 21448 (SOTIF) address the same types
+   of safety risk.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False**
+
+   ISO 26262 covers malfunctions. SOTIF covers hazards that arise when nothing
+   malfunctions. They are complementary, and finding each kind takes
+   completely different work. ISO/SAE 21434 covers a third kind: what an
+   attacker does on purpose.
 
 
 .. admonition:: Question 19
@@ -474,113 +494,129 @@ True or False (Questions 16-25)
 
    **False**
 
-   At Level 3, the system performs the DDT and monitors the environment.
-   The human does not need to continuously monitor but must be ready to
-   intervene when the system requests a takeover (DDT fallback). This
-   handover challenge is one reason Level 3 deployment has been limited.
+   At Level 3 the system performs the DDT and monitors the environment. The
+   human is the **fallback-ready user**: not required to monitor, but required
+   to be receptive to a request to intervene and able to resume driving within
+   seconds.
+
+   That is a human-factors problem rather than a software one -- you get
+   seconds to rebuild situational awareness you stopped maintaining minutes
+   ago -- and it is a large part of why Level 3 has gone backwards.
 
 
 .. admonition:: Question 20
    :class: hint
 
-   **True or False:** CARLA uses a client-server architecture where the
-   server runs on Unreal Engine 4 and the client is a Python script.
+   **True or False:** "Pull over and stop" is a safe minimal risk condition in
+   essentially all situations.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **True**
+   **False**
 
-   The CARLA server (``CarlaUE4.sh``) runs the simulation using Unreal
-   Engine 4, handling physics, rendering, and sensor generation. Your
-   Python scripts act as clients, connecting via TCP on port 2000 to
-   control the simulation.
+   Pulling over assumes a shoulder is reachable **and that nothing is attached
+   to, dragged by, or trapped under the vehicle.** Stopping in place assumes
+   traffic behind can see you and stop, and that you are not on a crossing or
+   in a tunnel.
+
+   **An MRC is a design artifact**, validated against a list of situations
+   somebody thought of. If the situation is not on the list, the vehicle still
+   does what the list says.
 
 
 .. admonition:: Question 21
    :class: hint
 
-   **True or False:** The United States has comprehensive federal
-   legislation governing autonomous vehicle testing and deployment.
+   **True or False:** A standard such as ISO 26262 or SAE J3016 is legally
+   binding on manufacturers by virtue of being published.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   As of 2026, the US still lacks federal autonomous driving legislation.
-   Regulation follows a state-by-state approach, with NHTSA providing
-   guidance at the federal level. The UNECE GTR approved in January 2026
-   represents the first major step toward international harmonization.
+   Standards bodies write the rulebooks; nobody has to follow them. **A
+   rulebook only becomes law when a government adopts or references it.** That
+   is why the same vehicle can be legal in one country and illegal in another
+   with no change to the software. J3016 in particular is a Recommended
+   Practice, not a regulation.
 
 
 .. admonition:: Question 22
    :class: hint
 
-   **True or False:** The prediction challenge in autonomous driving refers
-   to forecasting the future actions of other road users such as
-   pedestrians and cyclists.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**
-
-   Prediction is one of the six core technical challenges. It involves
-   accurately forecasting the intentions and future trajectories of
-   unpredictable human drivers, pedestrians, and cyclists -- a critical
-   input for safe motion planning.
-
-
-.. admonition:: Question 23
-   :class: hint
-
-   **True or False:** CARLA's Traffic Manager allows you to control the
-   behavior of NPC (non-player character) vehicles in the simulation.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**
-
-   The Traffic Manager is a CARLA component that controls NPC vehicle
-   behavior, including speed, lane changes, and responses to traffic
-   signals. It enables realistic traffic scenarios for testing ADS
-   algorithms.
-
-
-.. admonition:: Question 24
-   :class: hint
-
-   **True or False:** Mercedes-Benz DRIVE PILOT is an example of a
-   Level 4 autonomous driving system.
+   **True or False:** The United States has comprehensive federal legislation
+   governing autonomous vehicle testing and deployment.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   Mercedes-Benz DRIVE PILOT is a Level 3 system -- the first
-   internationally certified L3 system. It operates as a highway traffic
-   jam assistant at speeds up to 60 km/h. Level 4 examples include Waymo
-   and Baidu Apollo Go robotaxis.
+   There is no comprehensive federal AV legislation: NHTSA guidance plus a
+   state-by-state patchwork. The EU uses type approval, with UNECE R157 for
+   Level 3 highway systems. Work toward a harmonized, safety-case-based
+   international framework is underway at UNECE -- **check its current status
+   before citing it.**
+
+
+.. admonition:: Question 23
+   :class: hint
+
+   **True or False:** A folder containing all of a company's test results
+   constitutes a safety case.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False**
+
+   A safety case has three parts: **claims** (what you promise the vehicle
+   will not do), **arguments** (why you believe that) and **evidence** (the
+   results backing each argument). A folder of results is only the third part
+   -- it never says what the results were supposed to prove, so no reader can
+   judge whether the evidence is sufficient or even relevant.
+
+
+.. admonition:: Question 24
+   :class: hint
+
+   **True or False:** In the Tempe 2018 collision, fixing the object
+   classifier alone would have prevented the crash.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False**
+
+   The deeper finding was at the **tracking** layer: each reclassification
+   reset the object's history, so no consistent track and no stable predicted
+   path was ever established. Even with a perfect classifier, one second of
+   action suppression still delayed the brake, the factory AEB was still
+   disabled, and the operator still was not watching the road.
+
+   **Would fixing that module alone have prevented the outcome? The answer is
+   almost never yes.**
 
 
 .. admonition:: Question 25
    :class: hint
 
-   **True or False:** In CARLA, Waypoints are points on the road network
-   that can be used for navigation and route planning.
+   **True or False:** A detector trained only on CARLA images can be deployed
+   on real driving footage without adaptation.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **True**
+   **False**
 
-   Waypoints in CARLA represent discrete points on the road network,
-   including lane information, speed limits, and connectivity to other
-   waypoints. They are essential for implementing path planning and
-   navigation algorithms.
+   CARLA models geometry, road networks, traffic rules, sensor placement and
+   timing well; material appearance, LiDAR in fog and RADAR multipath roughly;
+   and sensor dirt, calibration drift and hardware faults not at all.
+
+   **The skills transfer completely. The weights do not.** Your GP2 numbers
+   are a claim about CARLA, and your report must say so.
 
 
 ----
@@ -592,130 +628,135 @@ Essay Questions (Questions 26-30)
 .. admonition:: Question 26
    :class: hint
 
-   **Explain the difference between the modular ADS pipeline and the
-   end-to-end approach to autonomous driving.** What are the advantages
-   and disadvantages of each?
+   **Explain why "capability does not promote you, responsibility does."**
+   Give one example of a highly capable Level 2 system and one example of a
+   less capable Level 4 system.
 
-   *(2-4 sentences)*
+   *(2--4 sentences)*
 
 .. dropdown:: Answer Guidelines
    :class-container: sd-border-success
 
    *Key points to include:*
 
-   - The modular pipeline breaks the driving task into separate components
-     (perception, prediction, planning, control), each developed and tested
-     independently.
-   - The end-to-end approach uses a single neural network (or integrated
-     model) that maps raw sensor input directly to driving actions.
-   - Modular advantages: interpretable, debuggable, each component can be
-     validated independently. Disadvantages: information loss at module
-     boundaries, complex integration.
-   - End-to-end advantages: can learn representations the modular pipeline
-     misses, simpler architecture. Disadvantages: harder to debug,
-     requires massive training data, less interpretable.
+   - J3016 classifies by **who is responsible for the DDT and its fallback**,
+     not by how much the system can do.
+   - A Class 8 truck that steers, sets speed and changes lanes for an entire
+     highway route is **Level 2** if a safety driver must monitor and
+     intervene -- the human still holds the driving task.
+   - A campus shuttle doing one loop at 15 km/h with no one aboard responsible
+     for driving is **Level 4** -- the system holds the task and its own
+     fallback within a very small ODD.
+   - Same software can sit at two different levels depending only on what is
+     asked of the person in the seat.
 
 
 .. admonition:: Question 27
    :class: hint
 
-   **Describe three different types of ODD restrictions** and give a
-   concrete example for each. Explain why defining the ODD precisely
-   matters for ADS deployment.
+   **Describe the difference between the DDT fallback and the minimal risk
+   condition**, and explain why the MRC is best understood as a design
+   artifact rather than an obviously safe default.
 
-   *(2-4 sentences)*
+   *(2--4 sentences)*
 
 .. dropdown:: Answer Guidelines
    :class-container: sd-border-success
 
    *Key points to include:*
 
-   - Geographic: limited to specific roads or a geofenced area (e.g., only
-     downtown Phoenix).
-   - Environmental: restricted by weather or lighting (e.g., no operation
-     during heavy rain or at night).
-   - Traffic: designed for specific speeds or densities (e.g., highway
-     only at speeds below 60 km/h).
-   - Precise ODD definition matters because the ADS is only validated for
-     safety within its ODD. Operating outside the ODD is untested and
-     potentially dangerous. Regulators and consumers need clear
-     documentation of system limitations.
+   - The **fallback** answers *who takes over* when the system can no longer
+     drive; the **MRC** answers *where the vehicle ends up*.
+   - Two triggers for the fallback: a system failure, or leaving the ODD --
+     and only the first is a fault.
+   - Every candidate MRC hides an assumption: stopping in place assumes
+     traffic behind can react; pulling over assumes a shoulder exists and that
+     nothing is trapped underneath.
+   - Somebody wrote that logic in advance and validated it against situations
+     they could imagine. If reality is not on the list, the vehicle still
+     follows the list -- which is exactly what happened in the October 2023
+     pullover-and-drag incident.
 
 
 .. admonition:: Question 28
    :class: hint
 
-   **Explain why both ISO 26262 and ISO 21448 (SOTIF) are needed** for
-   autonomous vehicle safety. Provide an example scenario that each
-   standard would address.
+   **Explain why both ISO 26262 and ISO 21448 (SOTIF) are needed.** Give an
+   example scenario for each, and say what testing each one implies.
 
-   *(2-4 sentences)*
+   *(2--4 sentences)*
 
 .. dropdown:: Answer Guidelines
    :class-container: sd-border-success
 
    *Key points to include:*
 
-   - ISO 26262 addresses risks from system malfunctions (hardware/software
-     failures). Example: a faulty radar sensor that stops reporting
-     obstacles.
-   - SOTIF addresses risks when the system works as designed but still
-     produces unsafe behavior. Example: a camera-based perception system
-     that fails to detect a pedestrian because of sun glare -- the camera
-     is functioning correctly, but the intended functionality is
-     insufficient.
-   - Together, they cover both failure modes (26262) and insufficiency
-     modes (SOTIF), providing comprehensive safety coverage.
+   - **ISO 26262** covers malfunctions. Example: a radar that stops reporting
+     obstacles. Addressed with redundancy, fault detection, and ASIL-driven
+     development rigor.
+   - **SOTIF** covers insufficiency with no malfunction. Example: a camera
+     that misses a pedestrian because of sun glare -- the camera is working
+     correctly, the intended functionality is insufficient.
+   - Redundancy does **not** address a SOTIF hazard. What does is enumerating
+     **triggering conditions** in Stage 2 and testing against a scenario
+     library derived from the ODD in Stage 4.
+   - Both were present in the two case studies, and in neither case did a
+     component actually malfunction.
 
 
 .. admonition:: Question 29
    :class: hint
 
-   **Compare the deployment status of Waymo and Baidu Apollo Go** as of
-   2026. What does their parallel growth suggest about the future of the
-   AV industry?
+   **Walk through the seven stages from concept to public roads.** Identify
+   which stage consumes the most calendar time and which stage your group
+   projects occupy, and explain why an under-specified ODD in Stage 2 is
+   expensive.
 
-   *(2-4 sentences)*
+   *(2--4 sentences)*
 
 .. dropdown:: Answer Guidelines
    :class-container: sd-border-success
 
    *Key points to include:*
 
-   - Waymo leads in the US with 250K+ paid rides/week across multiple
-     cities (Phoenix, LA, SF, Austin), expanding to Atlanta, Miami, DC.
-   - Baidu Apollo Go matches that scale in China with 250K+ weekly fully
-     driverless rides and has achieved per-vehicle profitability in Wuhan.
-   - Their parallel growth suggests the AV industry is consolidating
-     around well-capitalized first movers, with the US and China emerging
-     as the two dominant markets.
-   - The regulatory environments in both countries have been enabling
-     factors, while Europe lags in deployment despite leading in
-     regulation.
+   - Framework → Specify → Build → Validate → Argue → Approve → Operate and
+     monitor.
+   - **Stage 4 (Validate)** consumes most of the calendar time, and the
+     vehicle runs at Level 2 with a safety driver throughout it.
+   - **Stage 3 (Build)** is the only stage GP1--GP4 occupy: architecture,
+     data, training, and module verification.
+   - Stage 2 happens entirely inside one company -- five of six lifelines in
+     the diagram are empty. The scenario library in Stage 4 is derived from
+     the ODD written in Stage 2, so a vague ODD produces a weak test set and
+     nobody outside says so until the independent assessor reads it in
+     Stage 5.
 
 
 .. admonition:: Question 30
    :class: hint
 
-   **Describe CARLA's client-server architecture** and explain the role of
-   the custom ROS 2 bridge used in this course. Why don't we use CARLA's
-   native ROS 2 support?
+   **Describe CARLA's client-server architecture** and explain what simulation
+   does and does not model well. Why is simulation a necessity in this field
+   rather than a convenience?
 
-   *(2-4 sentences)*
+   *(2--4 sentences)*
 
 .. dropdown:: Answer Guidelines
    :class-container: sd-border-success
 
    *Key points to include:*
 
-   - The CARLA server runs the 3D simulation (world, physics, rendering,
-     sensors) on Unreal Engine 4. The client is a Python script that
-     connects via TCP to control vehicles, sensors, and the environment.
-   - The ROS 2 bridge is a middleware layer that publishes CARLA sensor
-     data to ROS 2 topics and subscribes to control commands, enabling
-     integration with the ROS 2 ecosystem (rviz2, rosbag2, custom nodes).
-   - We use a custom bridge because CARLA 0.9.16's native ROS 2 support
-     has a bug that generates invalid topic names with double slashes
-     (e.g., ``/carla//camera/image``), which ROS 2 rejects.
-   - The custom bridge bypasses this by using the Python API directly and
-     publishing to properly formatted topic names.
+   - The **server** runs the simulation on Unreal Engine -- world, physics,
+     rendering, sensor generation -- and the **client** is a Python script
+     connecting over TCP. A **ROS 2 bridge** publishes sensor data onto topics
+     and turns control messages back into actor commands.
+   - Modeled well: geometry, road networks, traffic rules, sensor placement
+     and extrinsics, timing. Modeled roughly: material appearance, LiDAR in
+     rain and fog, RADAR multipath, lens artifacts. Not modeled: sensor dirt,
+     calibration drift, hardware faults, the full range of human behavior.
+   - Demonstrating safety statistically would take hundreds of millions of
+     miles (Kalra & Paddock). **That is arithmetic, not an engineering gap** —
+     you cannot drive it before deploying, so simulation is the only half that
+     can reach the numbers.
+   - Simulation also supplies free ground-truth labels, which is what makes
+     GP2 possible at all.

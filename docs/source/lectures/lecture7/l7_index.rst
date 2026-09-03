@@ -38,15 +38,12 @@ By the end of this lecture, you will be able to:
 - Describe modern LiDAR SLAM systems (LOAM, LeGO-LOAM) and their design
   choices.
 
-.. toctree::
-   :hidden:
-   :maxdepth: 2
-   :titlesonly:
+.. admonition:: Materials in revision
+   :class: note
 
-   l7_lecture
-   l7_exercises
-   l7_quiz
-   l7_references
+   The lecture notes, exercises, quiz and references for this lecture are
+   being revised against the current slide deck and are not published yet.
+   This page will link to them once they are ready.
 
 Next Steps
 ----------
