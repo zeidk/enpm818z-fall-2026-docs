@@ -77,12 +77,15 @@ By the end of this lecture, you will be able to:
   spring-arm attachment breaks the fixed extrinsic that calibration assumes.
 
 
-.. admonition:: Materials in revision
-   :class: note
+.. toctree::
+   :hidden:
+   :maxdepth: 2
+   :titlesonly:
 
-   The lecture notes, exercises, quiz and references for this lecture are
-   being revised against the current slide deck and are not published yet.
-   This page will link to them once they are ready.
+   l2_lecture
+   l2_exercises
+   l2_quiz
+   l2_references
 
 
 Next Steps
