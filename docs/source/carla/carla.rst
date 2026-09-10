@@ -331,14 +331,19 @@ Common Launch Configurations
    .. grid-item-card:: Headless Server
       :class-header: bg-dark text-white
 
-      **No GPU required**
-      
+      **No window. Still uses the GPU.**
+
       .. code-block:: bash
 
          ./CarlaUE4.sh \
            -RenderOffScreen \
+           -vulkan \
            -nosound \
            -carla-rpc-port=2000
+
+      Required on a laptop with switchable
+      graphics, where a windowed server
+      renders on the wrong GPU and crashes.
 
 CARLA Python API
 ----------------
@@ -877,16 +882,29 @@ Troubleshooting
             sudo usermod -aG docker $USER
             newgrp docker
 
-         **No Display**
-         
+         **No Window Appears**
+
+         Expected. Run the server with ``-RenderOffScreen`` and it opens no
+         window at all. Use a viewer client to watch the simulation; see the
+         :doc:`Ubuntu 24.04 setup guide <ubuntu24>`.
+
+         **Container Exits 139 While Loading a Map**
+
+         A segmentation fault, almost always caused by giving the container a
+         ``DISPLAY``. On a laptop with switchable graphics the X server runs on
+         the integrated GPU, so Unreal renders through Mesa instead of on the
+         NVIDIA card and dies partway through the level load. Confirm it in the
+         server's own output:
+
          .. code-block:: bash
 
-            # Allow X11 forwarding
-            xhost +local:root
-            
-            # Include in docker run
-            -e DISPLAY=$DISPLAY \
-            -v /tmp/.X11-unix:/tmp/.X11-unix:rw
+            docker ps -a          # look for Exited (139)
+            docker logs carla     # look for a MESA warning and Signal 11
+
+         The fix is to drop ``-e DISPLAY`` and the X11 mount and add
+         ``-RenderOffScreen``. Note the client only reports a **timeout**,
+         which points at the wrong thing: the server did not run slowly, it
+         crashed.
 
          **NVIDIA GPU Not Available**
          

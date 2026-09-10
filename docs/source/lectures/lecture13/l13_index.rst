@@ -71,7 +71,7 @@ By the end of this lecture, you will be able to:
 - Compute and interpret the CARLA :term:`Driving Score`, and explain what
   :term:`Route Completion` alone conceals.
 - Given a proposed metric, describe the cheapest agent that scores well on it.
-- Explain what a world model is, what action-conditioning buys, and why
+- Explain what a world model is, what action-conditioning adds, and why
   physics-based simulators remain necessary for ground truth and
   repeatability.
 - Describe the "world on rails" limitation and name an interaction it cannot

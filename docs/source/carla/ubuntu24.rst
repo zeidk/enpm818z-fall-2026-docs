@@ -266,14 +266,14 @@ Clone the Repository
 .. code-block:: bash
 
    # Create workspace
-   mkdir -p ~/carla_ws/src
-   cd ~/carla_ws/src
+   mkdir -p ~/enpm818z_ws/src
+   cd ~/enpm818z_ws/src
 
-   # Clone the repository
-   git clone -b ubuntu24 https://github.com/zeidk/enpm818z-fall-2026-carla.git carla_ros2_bridge
+   # Clone the ROS 2 package repository
+   git clone https://github.com/rubixcubic/enpm818z-fall-2026-carla-ros.git
 
    # Return to workspace root
-   cd ~/carla_ws
+   cd ~/enpm818z_ws
 
 Build the Package
 ~~~~~~~~~~~~~~~~~
@@ -293,20 +293,28 @@ Verify the build:
 
 .. code-block:: bash
 
-   # Check if package is available
-   ros2 pkg list | grep carla_ros2_bridge
+   # Check that the package is available
+   ros2 pkg list | grep l2_carla_demo
 
-   # Check executables
-   ros2 pkg executables carla_ros2_bridge
+   # Check its executables
+   ros2 pkg executables l2_carla_demo
 
 Expected output:
 
 .. code-block:: text
 
-   carla_ros2_bridge carla_bridge
-   carla_ros2_bridge carla_camera_publisher
-   carla_ros2_bridge carla_camera_publisher_with_display
-   carla_ros2_bridge carla_image_subscriber
+   l2_carla_demo carla_bridge
+   l2_carla_demo rate_report
+
+.. note::
+   The repository is ``enpm818z-fall-2026-carla-ros``; the ROS 2 **package**
+   inside it is ``l2_carla_demo``. Those are different names and both are
+   used: you clone the first and you build, run and launch the second.
+
+   The plain Python demos live in a separate repository,
+   `enpm818z-fall-2026-carla-python
+   <https://github.com/rubixcubic/enpm818z-fall-2026-carla-python>`_. Those
+   are CARLA clients and need no workspace and no build.
 
 ---------------------------------------------------------
 Step 4: Setup Environment Configuration
@@ -314,6 +322,24 @@ Step 4: Setup Environment Configuration
 
 Create Setup Script
 ~~~~~~~~~~~~~~~~~~~
+
+The setup function does two jobs: it configures the ROS 2 environment, and it
+defines the commands you will use to run the server.
+
+.. list-table::
+   :widths: 32 68
+   :header-rows: 1
+   :class: table-hover
+
+   * - **Command**
+     - **What it does**
+   * - ``carla_basic [quality]``
+     - Starts the server and blocks until it actually accepts connections.
+       Quality defaults to ``Epic``; pass ``Low`` on a weaker GPU.
+   * - ``carla_log``
+     - Follows the server's output. This is where a crash explains itself.
+   * - ``carla_stop`` / ``carla_kill``
+     - Stops the server and removes every CARLA container.
 
 Add the following function to your ``~/.bashrc``:
 
@@ -323,71 +349,100 @@ Add the following function to your ``~/.bashrc``:
 
    # Add this function at the end:
    carla_setup() {
-       # Configuration
-       CARLA_WS="/home/$USER/carla_ws"
+       CARLA_WS="$HOME/enpm818z_ws"
+       ROS_SETUP="/opt/ros/jazzy/setup.bash"
 
-       echo "Setting up CARLA ROS 2 environment..."
+       # ---- start the server ------------------------------------------
+       carla_basic() {
+           docker rm -f carla >/dev/null 2>&1
+           docker run -d --name carla \
+               --runtime=nvidia \
+               --gpus all \
+               --net=host \
+               -v /dev/shm:/dev/shm \
+               -e NVIDIA_VISIBLE_DEVICES=all \
+               -e NVIDIA_DRIVER_CAPABILITIES=all \
+               carlasim/carla:0.9.16 \
+               /bin/bash -c "./CarlaUE4.sh -RenderOffScreen -vulkan -nosound -quality-level=${1:-Epic}" >/dev/null || return 1
 
-       # Setup environment variables
+           # The container can die during startup. Say so, and show why,
+           # instead of waiting for a port that will never open.
+           printf 'starting CARLA'
+           while ! ss -ltn 2>/dev/null | grep -q ':2000 '; do
+               if [ -z "$(docker ps -q -f name=carla)" ]; then
+                   printf '\nthe server died before it accepted connections. Its output:\n'
+                   docker logs carla 2>&1 | tail -20
+                   return 1
+               fi
+               printf '.'
+               sleep 2
+           done
+
+           # The RPC port opens before the level has finished loading, so a
+           # client that connects the moment it sees the port can sit there
+           # waiting. Wait for a call that needs the level to be up.
+           printf ' level'
+           while ! python3 -c 'import carla, sys
+   c = carla.Client("localhost", 2000); c.set_timeout(5.0)
+   try:
+       c.get_world().get_map()
+   except Exception:
+       sys.exit(1)' >/dev/null 2>&1; do
+               printf '.'
+               sleep 2
+           done
+           printf '\nready on localhost:2000\n'
+       }
+
+       # ---- stop it and clean up --------------------------------------
+       carla_stop() {
+           local ids
+           ids=$(docker ps -a --format '{{.ID}} {{.Image}}' | awk '$2 ~ /carla/ {print $1}')
+           if [ -n "$ids" ]; then
+               echo "$ids" | xargs docker rm -f >/dev/null 2>&1
+               echo "removed $(echo "$ids" | wc -l) CARLA container(s)"
+           else
+               echo "no CARLA containers"
+           fi
+           return 0
+       }
+
+       alias carla_kill='carla_stop'
+       alias carla_log='docker logs -f carla'
+
+       # ---- ROS 2 environment -----------------------------------------
        export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
-       export ROS_DOMAIN_ID=0
+       export ROS_DOMAIN_ID=42
        unset ROS_LOCALHOST_ONLY
-       unset FASTRTPS_DEFAULT_PROFILES_FILE
 
-       # Source ROS 2
-       if [ -f "/opt/ros/jazzy/setup.bash" ]; then
-           source /opt/ros/jazzy/setup.bash
+       # Only force a Fast DDS profile if one is actually present. Pointing
+       # FASTRTPS_DEFAULT_PROFILES_FILE at a file that does not exist gives
+       # you default behaviour and a false sense of having configured it.
+       if [ -f "$CARLA_WS/src/fastdds_udp.xml" ]; then
+           export FASTRTPS_DEFAULT_PROFILES_FILE="$CARLA_WS/src/fastdds_udp.xml"
+           export RMW_FASTRTPS_USE_QOS_FROM_XML=1
        else
-           echo "Error: ROS 2 not found at /opt/ros/jazzy"
+           unset FASTRTPS_DEFAULT_PROFILES_FILE
+           unset RMW_FASTRTPS_USE_QOS_FROM_XML
+       fi
+
+       if [ -f "$ROS_SETUP" ]; then
+           source "$ROS_SETUP"
+       else
+           echo "Error: ROS 2 not found at $ROS_SETUP"
            return 1
        fi
 
-       # Source CARLA workspace
-       if [ -d "$CARLA_WS" ]; then
-           if [ -f "$CARLA_WS/install/setup.bash" ]; then
-               source "$CARLA_WS/install/setup.bash"
-               echo "Sourced CARLA workspace"
-           else
-               echo "Warning: CARLA workspace not built"
-               echo "   Run: cd $CARLA_WS && colcon build"
-           fi
+       if [ -f "$CARLA_WS/install/setup.bash" ]; then
+           source "$CARLA_WS/install/setup.bash"
+       else
+           echo "Warning: CARLA workspace not built. Run: cd $CARLA_WS && colcon build"
        fi
 
-       # Reset ROS 2 daemon
-       echo "Restarting ROS 2 daemon..."
-       ros2 daemon stop > /dev/null 2>&1
-       sleep 1
-       ros2 daemon start > /dev/null 2>&1
+       ros2 daemon stop >/dev/null 2>&1
+       ros2 daemon start >/dev/null 2>&1
 
-       # Create CARLA Docker alias
-       alias carla='xhost +local:root && docker run \
-           --rm \
-           --privileged \
-           --runtime=nvidia \
-           --gpus all \
-           --net=host \
-           --ipc=host \
-           -v /dev/shm:/dev/shm \
-           -e DISPLAY=$DISPLAY \
-           -e XDG_RUNTIME_DIR=/tmp/runtime-carla \
-           -e NVIDIA_VISIBLE_DEVICES=all \
-           -e NVIDIA_DRIVER_CAPABILITIES=all \
-           -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
-           carlasim/carla:0.9.16 \
-           /bin/bash -c "./CarlaUE4.sh -nosound -quality-level=Low -vulkan"'
-
-       echo "CARLA Setup Complete!"
-       echo ""
-       echo "Usage:"
-       echo "   1. Start CARLA:  carla"
-       echo "   2. Run ROS 2 bridge:"
-       echo "      ros2 run carla_ros2_bridge carla_camera_publisher"
-       echo ""
-       echo "Environment:"
-       echo "   ROS_DOMAIN_ID=$ROS_DOMAIN_ID"
-       echo "   RMW_IMPLEMENTATION=$RMW_IMPLEMENTATION"
-
-       cd "$CARLA_WS"
+       echo "CARLA environment ready:  carla_basic | carla_log | carla_stop"
    }
 
    # Auto-run setup when starting new terminal
@@ -398,6 +453,121 @@ Save and reload:
 .. code-block:: bash
 
    source ~/.bashrc
+
+Typical session:
+
+.. code-block:: text
+
+   $ carla_basic
+   starting CARLA.. level.
+   ready on localhost:2000
+
+   $ python3 demo1_connect.py --town Town03
+   ...
+
+   $ carla_stop
+   removed 1 CARLA container(s)
+
+.. note::
+   ``ROS_DOMAIN_ID`` must be the same on every machine that needs to see your
+   topics, and different from your neighbour's if you do not want to see
+   theirs. Pick one number and use it everywhere.
+
+Why the Server Runs Headless
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The launch command contains ``-RenderOffScreen`` and passes **no** ``DISPLAY``
+and **no** X11 socket. That is deliberate, and it is the difference between a
+server that works and one that crashes.
+
+.. danger::
+   **Symptom.** The client connects, ``get_available_maps()`` succeeds, and
+   then ``load_world()`` times out. The container is gone, and
+   ``docker ps -a`` shows it **Exited (139)**, which is a segmentation fault.
+
+   **Cause.** ``docker logs`` shows the real reason:
+
+   .. code-block:: text
+
+      MESA: warning: Driver does not support the 0xa788 PCI ID.
+      Signal 11 caught.
+      CommonUnixCrashHandler: Signal=11
+
+   That PCI ID is an **Intel integrated GPU**. On a laptop with switchable
+   graphics, the X server usually runs on the integrated chip, so giving the
+   container a ``DISPLAY`` sends Unreal down the Mesa software path instead of
+   onto the NVIDIA GPU, and it segfaults partway through loading a map.
+
+   **Fix.** ``-RenderOffScreen`` skips X entirely and renders directly on the
+   NVIDIA device. Note that the client-side error, a timeout, points at the
+   wrong thing completely: the server did not run slowly, it died.
+
+.. tip::
+   Forcing NVIDIA offload (``__NV_PRIME_RENDER_OFFLOAD=1``,
+   ``__VK_LAYER_NV_optimus=NVIDIA_only``) does remove the Mesa warning, but the
+   windowed server still segfaults on the map load. Headless is not a
+   workaround here, it is the configuration that works.
+
+.. _seeing-the-simulation-ubuntu24:
+
+Seeing the Simulation Without a Window
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A headless server opens no window, so nothing appears when ``carla_basic``
+finishes. To watch the simulation, run a **viewer client** instead. It renders
+on your desktop's normal graphics path and never touches Unreal's:
+
+.. code-block:: bash
+
+   python3 spectator_view.py
+
+Keys: ``TAB`` weather, ``C`` camera position, ``R`` autopilot, ``ESC`` quit.
+The viewer is a passive observer, so it can be left open while a demo script
+runs.
+
+Why It Waits Twice
+~~~~~~~~~~~~~~~~~~
+
+``carla_basic`` prints ``starting CARLA..`` and then ``level.`` because those
+are two different conditions:
+
+.. list-table::
+   :widths: 30 70
+   :header-rows: 1
+
+   * - **Wait**
+     - **What it means**
+   * - port 2000 listening
+     - The RPC server is up. It is **not** yet able to answer questions about
+       the world.
+   * - ``get_world().get_map()`` succeeds
+     - The level has finished loading. Only now is a client guaranteed a
+       prompt answer.
+
+A client that connects on the first condition alone can appear to hang for a
+long time with nothing to explain it.
+
+Why the Container Is Not Removed Automatically
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There is no ``--rm`` in the ``docker run`` command, on purpose. When the server
+crashes, its output is the only thing that says why, and ``--rm`` deletes the
+container and its logs the instant it dies. Instead, ``carla_basic`` removes any
+previous container by name before starting a new one, so nothing accumulates,
+and ``carla_log`` or ``docker logs carla`` still works after a crash.
+
+``carla_stop`` removes every container built from a CARLA image, not just the
+one named ``carla``. A crashed container stays in the list in the exited state
+while still holding its name, and containers started by an older alias sit there
+under generated names such as ``modest_montalcini``.
+
+Why ``--ros2`` Is Not Used
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+CARLA 0.9.16 can publish ROS 2 topics itself with a ``--ros2`` flag, and the
+launch command above does not use it. See
+:ref:`Understanding the CARLA 0.9.16 ROS 2 Bug <known-issue-ubuntu24>` below for
+why. The course uses its own bridge package instead.
 
 .. _known-issue-ubuntu24:
 
@@ -440,7 +610,7 @@ The **custom ROS 2 bridge package** you installed:
 
 1. **Bypasses CARLA's native ROS 2** -- does not use ``enable_for_ros()``
 2. **Uses the Python API directly** -- gets data via ``camera.listen()`` callbacks
-3. **Publishes to clean topics** -- ``/carla/camera/image`` (no double slash)
+3. **Publishes to clean topics** -- ``/carla/ego_vehicle/rgb_front/image`` (no double slash)
 4. **Works with all ROS 2 tools** -- full compatibility
 
 This is why we do not use the ``--ros2`` flag with CARLA.
@@ -459,197 +629,193 @@ Running CARLA with ROS 2
 Basic Workflow
 ~~~~~~~~~~~~~~
 
-**Terminal 1: Start CARLA Server**
+**Terminal 1: start the CARLA server**
 
 .. code-block:: bash
 
-   carla
+   carla_basic
 
-Wait for the CARLA window to open and the world to load (~30 seconds).
+It prints ``ready on localhost:2000`` when the level has finished loading.
 
-**Terminal 2: Run ROS 2 Bridge**
+.. important::
+   **No window appears, and that is correct.** The server runs with
+   ``-RenderOffScreen``. To watch the simulation, use the viewer client
+   described under :ref:`seeing-the-simulation-ubuntu24`.
+
+**Terminal 2: run the bridge**
 
 .. code-block:: bash
 
-   source ~/.bashrc
-   ros2 run carla_ros2_bridge carla_camera_publisher
+   source ~/enpm818z_ws/install/setup.bash
+   ros2 launch l2_carla_demo demo.launch.py
+
+That single launch file starts three things: the bridge node, RViz2 with a
+prepared configuration, and a rate reporter. Running the bridge on its own is
+also fine:
+
+.. code-block:: bash
+
+   ros2 run l2_carla_demo carla_bridge
 
 You should see:
 
 .. code-block:: text
 
-   ============================================================
-   CARLA Camera Publisher Node
-   ============================================================
-   Connecting to CARLA at localhost:2000...
-   Connected to CARLA 0.9.16
-   Spawned vehicle at Location(x=..., y=..., z=...)
-   Autopilot enabled
-   Camera spawned and attached
-   Camera listening
-   ============================================================
-   Publishing to:
-     /carla/camera/image
-     /carla/camera/camera_info
-     /carla/vehicle/odometry
-   ============================================================
+   [INFO] [carla_bridge]: spawned 6 actors
+   [INFO] [carla_bridge]: ticking at 20 Hz on Carla/Maps/Town10HD_Opt
 
-**Terminal 3: Verify Topics**
+**Terminal 3: verify the topics**
 
 .. code-block:: bash
 
-   # List topics
    ros2 topic list | grep carla
+   ros2 topic hz /carla/ego_vehicle/rgb_front/image
+   ros2 topic echo /carla/ego_vehicle/imu --once
 
-   # Check image topic rate
-   ros2 topic hz /carla/camera/image
-
-   # Echo camera info
-   ros2 topic echo /carla/camera/camera_info --once
-
-**Terminal 4: Run Test Subscriber**
-
-.. code-block:: bash
-
-   ros2 run carla_ros2_bridge carla_image_subscriber
-
-You should see:
+The topic list:
 
 .. code-block:: text
 
-   [INFO] [carla_image_subscriber]: Received first image!
-   [INFO] [carla_image_subscriber]:   Size: 800x600
-   [INFO] [carla_image_subscriber]:   Encoding: rgb8
-   [INFO] [carla_image_subscriber]: Frame 30: ~20.0 Hz
+   /carla/ego_vehicle/gnss
+   /carla/ego_vehicle/imu
+   /carla/ego_vehicle/lidar
+   /carla/ego_vehicle/radar_front
+   /carla/ego_vehicle/rgb_front/camera_info
+   /carla/ego_vehicle/rgb_front/image
+
+.. note::
+   ``ros2 topic hz`` will report something like **14.7 Hz, then 18.7 Hz**
+   against a configured 20 Hz. That gap is real and it is worth looking at:
+   the rate you set on a blueprint is a request, not a guarantee, and it falls
+   as the scene gets busier. Timing is a first-class concern in this course.
+
 
 ---------------------------------------------------------
 Package Overview
 ---------------------------------------------------------
 
-The ``carla_ros2_bridge`` package contains the following nodes:
+The ``l2_carla_demo`` package contains two nodes and one launch file.
 
-carla_camera_publisher
-~~~~~~~~~~~~~~~~~~~~~~
+carla_bridge
+~~~~~~~~~~~~
 
-**Purpose:** Main bridge node that connects to CARLA, spawns a vehicle with camera, and publishes sensor data.
+Spawns an ego vehicle with a full sensor suite and publishes every stream onto
+ROS 2 topics. It also owns the simulation clock: it puts the server into
+synchronous mode and calls ``world.tick()`` from a timer, so **do not run a
+second client that also ticks**.
 
-**Subscriptions:** None
-
-**Publications:**
-
-.. list-table::
-   :widths: 35 25 40
+.. list-table:: Published topics
+   :widths: 42 30 28
    :header-rows: 1
-   :class: compact-table
+   :class: table-striped
 
    * - **Topic**
      - **Type**
-     - **Description**
-   * - ``/carla/camera/image``
-     - sensor_msgs/Image
-     - RGB camera images at ~20 Hz
-   * - ``/carla/camera/camera_info``
-     - sensor_msgs/CameraInfo
-     - Camera calibration parameters
-   * - ``/carla/vehicle/odometry``
-     - nav_msgs/Odometry
-     - Vehicle pose and velocity at 20 Hz
+     - **Notes**
+   * - ``/carla/ego_vehicle/rgb_front/image``
+     - ``sensor_msgs/Image``
+     - ``bgra8``, as CARLA delivers it
+   * - ``/carla/ego_vehicle/rgb_front/camera_info``
+     - ``sensor_msgs/CameraInfo``
+     - latched; intrinsics never change
+   * - ``/carla/ego_vehicle/lidar``
+     - ``sensor_msgs/PointCloud2``
+     - fields ``x y z intensity``
+   * - ``/carla/ego_vehicle/radar_front``
+     - ``sensor_msgs/PointCloud2``
+     - fields ``x y z velocity``
+   * - ``/carla/ego_vehicle/imu``
+     - ``sensor_msgs/Imu``
+     -
+   * - ``/carla/ego_vehicle/gnss``
+     - ``sensor_msgs/NavSatFix``
+     -
+   * - ``/tf``, ``/tf_static``
+     - ``tf2_msgs/TFMessage``
+     - the sensor extrinsics, as transforms
 
-**Parameters:**
+Sensor data is published **best effort**, so a dropped frame is preferred to a
+stalled pipeline. ``camera_info`` is latched instead, so a subscriber that
+starts late still receives the intrinsics.
+
+Parameters come from ``config/sensors.yaml``. The useful ones:
 
 .. list-table::
-   :widths: 25 15 15 45
+   :widths: 32 20 48
    :header-rows: 1
-   :class: compact-table
 
    * - **Parameter**
-     - **Type**
      - **Default**
-     - **Description**
-   * - ``carla_host``
-     - string
-     - localhost
-     - CARLA server hostname
-   * - ``carla_port``
-     - int
-     - 2000
-     - CARLA server port
-   * - ``image_width``
-     - int
-     - 800
-     - Camera image width (pixels)
-   * - ``image_height``
-     - int
-     - 600
-     - Camera image height (pixels)
+     - **Meaning**
+   * - ``town``
+     - ``""``
+     - map to load; empty keeps whatever is loaded
+   * - ``delta``
+     - ``0.05``
+     - simulation step, so 20 Hz
+   * - ``vehicle``
+     - ``vehicle.tesla.model3``
+     - ego blueprint
+   * - ``image_width`` / ``image_height``
+     - ``1280`` / ``720``
+     - camera resolution
    * - ``camera_fov``
-     - float
-     - 110.0
-     - Camera field of view (degrees)
-   * - ``camera_x``
-     - float
-     - 1.6
-     - Camera X position relative to vehicle (forward)
-   * - ``camera_z``
-     - float
-     - 1.2
-     - Camera Z position relative to vehicle (up)
-   * - ``spawn_vehicle``
-     - bool
-     - true
-     - Automatically spawn vehicle
-   * - ``autopilot``
-     - bool
-     - true
-     - Enable autopilot
+     - ``90.0``
+     - degrees
+   * - ``lidar_channels``
+     - ``32``
+     - beams
 
-**Example with custom parameters:**
+For example, at a lower resolution:
 
 .. code-block:: bash
 
-   ros2 run carla_ros2_bridge carla_camera_publisher \
-       --ros-args \
-       -p image_width:=1280 \
-       -p image_height:=720 \
-       -p camera_fov:=90.0 \
-       -p autopilot:=false
+   ros2 run l2_carla_demo carla_bridge --ros-args \
+       -p image_width:=640 -p image_height:=360
 
-carla_image_subscriber
-~~~~~~~~~~~~~~~~~~~~~~
+.. important::
+   **Sensor mounting positions are not parameters.** The node derives them from
+   the ego vehicle's own bounding box, because every blueprint is a different
+   size and copied numbers put sensors inside bodywork. Note that
+   ``bounding_box.extent`` is a **half**-size in metres.
 
-**Purpose:** Example subscriber node for testing. Displays image statistics.
+rate_report
+~~~~~~~~~~~
 
-**Subscriptions:**
+Subscribes to all five sensor topics and prints their delivered rates side by
+side, plus the spread between the newest and oldest timestamp in the set. That
+spread is the number to look at before fusing anything: two measurements you
+combine should describe the same instant, and these do not.
 
-.. list-table::
-   :widths: 35 25 40
-   :header-rows: 1
-   :class: compact-table
+.. code-block:: bash
 
-   * - **Topic**
-     - **Type**
-     - **Description**
-   * - ``/carla/camera/image``
-     - sensor_msgs/Image
-     - Camera images
+   ros2 run l2_carla_demo rate_report
 
-**Publications:** None
+demo.launch.py
+~~~~~~~~~~~~~~
 
-**Parameters:**
+Starts the bridge, RViz2 and the rate report together.
 
-.. list-table::
-   :widths: 25 15 15 45
-   :header-rows: 1
-   :class: compact-table
+.. code-block:: bash
 
-   * - **Parameter**
-     - **Type**
-     - **Default**
-     - **Description**
-   * - ``topic``
-     - string
-     - /carla/camera/image
-     - Topic to subscribe to
+   ros2 launch l2_carla_demo demo.launch.py
+   ros2 launch l2_carla_demo demo.launch.py town:=Town03 rviz:=false
+
+Coordinate Frames
+~~~~~~~~~~~~~~~~~
+
+CARLA uses **x forward, y right, z up** (left-handed). ROS REP-103 uses
+**x forward, y left, z up** (right-handed). Every ``y`` changes sign on the way
+out, and so does every rotation about ``x`` and ``z``. The package does this in
+one place, ``conversions.py``. Get it wrong and RViz shows a scene that looks
+fine until you notice the traffic is driving on the wrong side of the road.
+
+The camera has two frames. ``ego_vehicle/rgb_front`` follows the ROS body
+convention. Its child ``ego_vehicle/rgb_front_optical`` is **x right, y down,
+z along the optical axis**, which is what the intrinsic matrix ``K`` expects.
+That child transform is the axis permutation from the lecture, written as a
+``tf`` instead of a matrix.
+
 
 ---------------------------------------------------------
 Advanced Usage
@@ -660,20 +826,27 @@ Visualizing in RViz2
 
 .. code-block:: bash
 
-   rviz2
+   ros2 launch l2_carla_demo demo.launch.py
 
-In RViz2: click **Add** then **By topic**, select ``/carla/camera/image`` and choose **Image**, then set Fixed Frame to ``camera_link``.
+The launch file already starts RViz2 with a prepared configuration showing the
+LiDAR cloud, the RADAR detections coloured by range rate, the camera image and
+the transform tree, with the fixed frame set to ``ego_vehicle``.
+
+To open RViz2 by hand instead, run ``rviz2``, click **Add** then **By topic**,
+and pick the topics you want. Set **Fixed Frame** to ``ego_vehicle``. For the
+sensor topics you must also set **Reliability Policy** to **Best Effort**, or
+the display will stay empty with no error.
 
 Recording Data
 ~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
-   # Record camera and odometry
-   ros2 bag record /carla/camera/image /carla/vehicle/odometry
+   # Record the camera and the LiDAR
+   ros2 bag record /carla/ego_vehicle/rgb_front/image /carla/ego_vehicle/lidar
 
-   # Record all CARLA topics
-   ros2 bag record -r "/carla/.*"
+   # Record every CARLA topic, and the transforms, which you will need
+   ros2 bag record -r "/carla/.*" /tf /tf_static
 
    # Play back recorded data
    ros2 bag play <bag_file>
@@ -683,17 +856,13 @@ Custom Resolution
 
 .. code-block:: bash
 
-   # High resolution
-   ros2 run carla_ros2_bridge carla_camera_publisher \
-       --ros-args \
-       -p image_width:=1920 \
-       -p image_height:=1080
+   # Higher resolution
+   ros2 run l2_carla_demo carla_bridge \
+       --ros-args -p image_width:=1920 -p image_height:=1080
 
-   # Lower resolution for better performance
-   ros2 run carla_ros2_bridge carla_camera_publisher \
-       --ros-args \
-       -p image_width:=640 \
-       -p image_height:=480
+   # Lower resolution, for a machine that is struggling
+   ros2 run l2_carla_demo carla_bridge \
+       --ros-args -p image_width:=640 -p image_height:=360
 
 ---------------------------------------------------------
 Troubleshooting
@@ -822,7 +991,7 @@ Cannot Connect to CARLA
 No Topics Visible
 ~~~~~~~~~~~~~~~~~
 
-**Symptom:** ``ros2 topic list`` does not show ``/carla/camera/image``
+**Symptom:** ``ros2 topic list`` does not show ``/carla/ego_vehicle/rgb_front/image``
 
 **Solutions:**
 
@@ -858,7 +1027,7 @@ Build Errors
 
    .. code-block:: bash
 
-      cd ~/carla_ws
+      cd ~/enpm818z_ws
       rm -rf build install log
       colcon build --symlink-install
 
@@ -884,10 +1053,14 @@ For Better Performance
 .. code-block:: bash
 
    # Reduce camera resolution
-   ros2 run carla_ros2_bridge carla_camera_publisher \
-       --ros-args -p image_width:=640 -p image_height:=480
+   ros2 run l2_carla_demo carla_bridge \
+       --ros-args -p image_width:=640 -p image_height:=360
 
-To adjust CARLA graphics quality, edit the ``carla`` alias in ``~/.bashrc`` and change ``-quality-level=Low`` to the desired level, then run ``source ~/.bashrc``.
+   # Fewer LiDAR beams
+   ros2 run l2_carla_demo carla_bridge --ros-args -p lidar_channels:=16
+
+``carla_basic`` takes the graphics quality as an argument, so no editing is
+needed: ``carla_basic Low``.
 
 For Better Quality
 ~~~~~~~~~~~~~~~~~~
@@ -895,10 +1068,10 @@ For Better Quality
 .. code-block:: bash
 
    # Higher resolution
-   ros2 run carla_ros2_bridge carla_camera_publisher \
+   ros2 run l2_carla_demo carla_bridge \
        --ros-args -p image_width:=1920 -p image_height:=1080
 
-To use ``-quality-level=Epic``, edit the ``carla`` alias in ``~/.bashrc`` accordingly.
+``Epic`` is already the default for ``carla_basic``.
 
 ---------------------------------------------------------
 Comparison with Ubuntu 22.04 Setup
