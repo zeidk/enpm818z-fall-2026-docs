@@ -48,8 +48,11 @@ By the end of this lecture, you will be able to:
 Next Steps
 ----------
 
-- The next lecture covers **Motion Planning**: classical planners (A*, RRT,
-  lattice planners), trajectory optimization, and diffusion-based planning.
+- The next lecture covers **L8: Navigation & Route Planning**: road networks
+  as directed graphs with lane-level topology (OpenDRIVE, Lanelet2), Dijkstra
+  and A* on those graphs, CARLA's ``GlobalRoutePlanner`` API, and how HD maps
+  encode the semantic road information that routing consumes. Motion planning
+  itself follows in L10.
 - Install and explore the ``open3d`` Python library for point cloud processing:
   `http://www.open3d.org <http://www.open3d.org>`_.
 - Review the LOAM paper: Zhang & Singh (2014) for the foundational LiDAR

@@ -60,8 +60,8 @@ Schedule
      - End-to-End Driving, VLA & Imitation Learning
      - UniAD, DriveTransformer, Vision-Language-Action (VLA) models, DriveVLM, modular vs. end-to-end debate, behavior cloning, distribution shift, DAgger
    * - L13
-     - World Models & Simulation
-     - Learned simulators, video prediction transformers, GAIA-3, NVIDIA Cosmos, Vista, generative scenario generation, data augmentation
+     - Simulation, Scenario-Based Testing & World Models
+     - Scenario-based testing, functional/logical/concrete scenarios, OpenSCENARIO, ISO 34500 series, test pyramid (MIL/SIL/HIL/VIL), open vs. closed loop, re-simulation, CARLA driving score, world models (GAIA-1 to GAIA-4, Cosmos, Vista)
    * - L14
      - System Integration, Safety & Industry Outlook
      - AV system architecture, middleware, ISO 26262, SOTIF, UNECE GTR on ADS, V2X, industry trends, course wrap-up

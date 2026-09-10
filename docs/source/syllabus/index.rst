@@ -425,7 +425,7 @@ all other Thursdays meet as scheduled. Dates below are given as MM/DD.
      -
    * - 12/03
      - 13
-     - World Models & Simulation
+     - Simulation, Scenario-Based Testing & World Models
      - L13
      -
    * - 12/10

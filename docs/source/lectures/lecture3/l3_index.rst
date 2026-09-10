@@ -24,9 +24,10 @@ Learning Objectives
 By the end of this lecture, you will be able to:
 
 - Explain why sensor fusion is essential for accuracy, reliability, and
-  coverage in autonomous driving.
-- Distinguish complementary, competitive (redundant), and cooperative
-  sensor relationships.
+  coverage in autonomous driving. (The complementary / competitive /
+  cooperative taxonomy behind this is established in
+  :doc:`L2 <../lecture2/l2_index>`, where it is tied to sensor placement;
+  it is assumed here, not re-derived.)
 - Compare early (raw data), intermediate (feature-level), and late
   (decision-level) fusion architectures.
 - Derive and apply the Kalman Filter prediction and update equations,
