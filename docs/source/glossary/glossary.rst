@@ -335,6 +335,12 @@ C
       loss used in YOLO that penalizes overlap, center distance, and
       aspect ratio simultaneously. :doc:`L4 </lectures/lecture4/l4_index>`
 
+   Closed-Loop Evaluation
+      Evaluating a system in a setting where its own decisions change what
+      happens next, so errors compound as they do on a road. The only way to
+      observe recovery, or a small error growing into a large one. Contrast
+      :term:`Open-Loop Evaluation`. :doc:`L13 </lectures/lecture13/l13_index>`
+
    CNN
       Convolutional Neural Network. A class of deep neural networks that
       use convolutional layers to extract spatial features from images.
@@ -350,6 +356,12 @@ C
       The observation (Luo, 1989) that different sensor technologies have
       unique strengths and weaknesses that balance each other out, making
       multi-sensor fusion essential for robust perception. :doc:`L2 </lectures/lecture2/l2_index>` · :doc:`L3 </lectures/lecture3/l3_index>`
+
+   Concrete Scenario
+      A :term:`Logical Scenario` with every parameter fixed to a value, and
+      therefore the only scenario layer that can actually be executed. One
+      logical scenario yields thousands of concrete ones, which is why test
+      selection is a sampling problem. :doc:`L13 </lectures/lecture13/l13_index>`
 
    Configuration Space
       The space of all possible vehicle configurations, typically
@@ -517,6 +529,13 @@ D
       whichever feature is engaged. "This is a Level 2 car" is therefore a
       category error. :doc:`L1 </lectures/lecture1/l1_lecture>`
 
+   Driving Score
+      The CARLA leaderboard's headline metric: :term:`Route Completion`
+      multiplied by an infraction penalty
+      :math:`P = 1/(1 + \sum_j c_j n_j)`. Coefficients range from 1.00 for a
+      collision with a pedestrian down to 0.25 for running a stop sign.
+      Used to score GP4. :doc:`L13 </lectures/lecture13/l13_index>`
+
    DSRC
       Dedicated Short-Range Communications (IEEE 802.11p). The original
       V2X communication technology operating in the 5.9 GHz band.
@@ -553,6 +572,11 @@ F
 =
 
 .. glossary::
+
+   Failure Boundary
+      The conditions at which a system stops working, stated explicitly. A
+      system with a known and reported boundary is more useful to a safety
+      case than one with a high pass rate and no known limit. :doc:`L13 </lectures/lecture13/l13_index>`
 
    Fallback-Ready User
       The human occupant of a Level 3 vehicle who is not driving but must
@@ -595,6 +619,11 @@ F
       transition rules. Simple, interpretable, but brittle for complex
       scenarios. :doc:`L9 </lectures/lecture9/l9_index>`
 
+   Functional Scenario
+      A scenario written in plain language so that humans can agree on it
+      ("a vehicle cuts into my lane from the right"). The most abstract of
+      the three scenario layers; refined into a :term:`Logical Scenario`. :doc:`L13 </lectures/lecture13/l13_index>`
+
    Fusion Architecture
       The strategy for combining data from multiple sensors. Three main
       types: early fusion (raw data), intermediate/mid-level fusion
@@ -612,6 +641,13 @@ G
       Wayve's 15-billion-parameter generative driving world model
       (December 2025) that predicts realistic future driving video
       conditioned on actions and text prompts. :doc:`L13 </lectures/lecture13/l13_index>`
+
+   GAIA-4
+      Wayve's world model announced August 2026, which added **closed-loop**
+      simulation: the AI Driver's decisions change the generated future,
+      rather than the scene replaying regardless. Uses a "world on rails"
+      approach in which other road users keep their recorded trajectories,
+      so it cannot evaluate negotiation. :doc:`L13 </lectures/lecture13/l13_index>`
 
    Geofence
       A boundary in the physical world, encoded in software, outside which a
@@ -641,6 +677,11 @@ H
       Hazard Analysis and Risk Assessment. An ISO 26262 process for
       systematically identifying potential hazards, assessing their
       severity, exposure, and controllability, and assigning ASIL levels. :doc:`L14 </lectures/lecture14/l14_index>`
+
+   Hardware-in-the-Loop (HIL)
+      A test level in which real ECUs run the software with real timing while
+      the world remains simulated. Catches latency, scheduling and resource
+      limits that :term:`Software-in-the-Loop (SIL)` cannot. :doc:`L13 </lectures/lecture13/l13_index>`
 
    HD Map
       High-Definition map with centimeter-accurate road geometry, lane
@@ -707,6 +748,12 @@ I
       occur without a system failure (e.g., sensor limitations). A
       critical complement to ISO 26262. :doc:`L1 </lectures/lecture1/l1_lecture>` · :doc:`L14 </lectures/lecture14/l14_index>`
 
+
+   ISO 34502
+      *Road vehicles — Test scenarios for automated driving systems —
+      Scenario based safety evaluation framework* (2022). Part of the ISO
+      34500 series: 34501 vocabulary, 34502 evaluation framework, 34503 ODD
+      taxonomy, 34504 scenario categorization, 34505 test case generation. :doc:`L13 </lectures/lecture13/l13_index>`
 
 .. _glossary-j:
 
@@ -779,6 +826,11 @@ L
       LiDAR Odometry and Mapping. A foundational LiDAR SLAM system that
       separates high-frequency odometry (edge and planar feature matching)
       from low-frequency mapping for real-time operation. :doc:`L7 </lectures/lecture7/l7_index>`
+
+   Logical Scenario
+      A :term:`Functional Scenario` with its parameters named and given
+      *ranges* (gap 5–30 m, closing speed 0–15 m/s). Still not runnable;
+      fixing the values produces a :term:`Concrete Scenario`. :doc:`L13 </lectures/lecture13/l13_index>`
 
    Long-Tail Scenarios
       Rare but safety-critical driving events (e.g., a mattress on the
@@ -936,6 +988,12 @@ O
       beyond what bounding boxes can represent. Key methods: MonoScene,
       TPVFormer, Occ3D. :doc:`L5 </lectures/lecture5/l5_index>`
 
+   ODD Coverage
+      The fraction of the claimed :term:`ODD` that a test campaign actually
+      exercised. The coverage figure a safety case wants, and only ever as
+      good as the ODD it is measured against. Not mileage, and not a pass
+      rate. :doc:`L13 </lectures/lecture13/l13_index>`
+
    OEDR
       Object and Event Detection and Response. The :term:`DDT` subtask of
       monitoring the driving environment -- detecting and classifying objects
@@ -946,12 +1004,25 @@ O
       Operating Envelope Specification. A formal, machine-readable format
       proposed by NIST for precisely defining an ADS's ODD. :doc:`L1 </lectures/lecture1/l1_lecture>`
 
+   Open-Loop Evaluation
+      Replaying a fixed recording past a system, so its decisions cannot
+      change what happens next. Correct for perception regression testing,
+      and unable to evaluate driving: brake in a replay and the recorded
+      world carries on regardless. Contrast
+      :term:`Closed-Loop Evaluation`. :doc:`L13 </lectures/lecture13/l13_index>`
+
    OpenDRIVE
       An ASAM open standard for describing road networks (geometry,
       lanes, signals, junctions) in XML. Widely used as an interchange
       format between map providers, simulators (including CARLA), and
       planning stacks. :doc:`L8 </lectures/lecture8/l8_index>`
 
+
+   OpenSCENARIO
+      An ASAM interchange format describing *what happens* on a road network
+      — actors, manoeuvres and triggers — as a companion to
+      :term:`OpenDRIVE`, which describes the road itself. Makes a scenario
+      portable between simulators. :doc:`L13 </lectures/lecture13/l13_index>`
 
 .. _glossary-p:
 
@@ -1045,6 +1116,12 @@ R
       effect. Operates in all weather conditions. Standard automotive
       frequency: 77 GHz. :doc:`L2 </lectures/lecture2/l2_index>`
 
+   Re-simulation
+      Replaying recorded drives against a new software build, also called log
+      replay. The regression test of AV development: it proves you have not
+      broken what previously worked. Being :term:`Open-Loop Evaluation`, it
+      is not by itself a validation of driving ability. :doc:`L13 </lectures/lecture13/l13_index>`
+
    Recall
       The fraction of real objects that the detector successfully found:
       TP / (TP + FN). High recall means few missed detections. :doc:`L4 </lectures/lecture4/l4_index>`
@@ -1086,6 +1163,12 @@ R
       building robotic systems, built on DDS for real-time communication.
       Industry standard for AV development. Used throughout ENPM818Z for
       the ``ads_pipeline`` package. :doc:`L1 </lectures/lecture1/l1_lecture>` · :doc:`L14 </lectures/lecture14/l14_index>`
+
+   Route Completion
+      The percentage of a route's distance an agent covered. One of the two
+      factors in the :term:`Driving Score`; driving off-road reduces it
+      rather than incurring a separate penalty. GP4 requires at least
+      70%. :doc:`L13 </lectures/lecture13/l13_index>`
 
    RRT
       Rapidly-Exploring Random Tree. A sampling-based motion planning
@@ -1130,6 +1213,13 @@ S
       Stage 5 of the concept-to-road pipeline and read there, for the first
       time, by someone outside the developer. :doc:`L1 </lectures/lecture1/l1_lecture>`
 
+   Scenario-Based Testing
+      Validating an ADS against a deliberately enumerated set of situations
+      rather than against distance driven, which is infeasible: demonstrating
+      human-equivalent safety statistically would take hundreds of millions
+      of miles. Trades an impossible sampling problem for a hard
+      completeness argument. :doc:`L13 </lectures/lecture13/l13_index>`
+
    Semantic Segmentation
       A perception task that assigns a class label to every pixel in an
       image (e.g., road, sidewalk, vehicle) without distinguishing
@@ -1147,6 +1237,12 @@ S
       agent's pose within it. Comprises a frontend (scan matching,
       feature extraction) and backend (pose graph optimization, loop
       closure). :doc:`L7 </lectures/lecture7/l7_index>`
+
+   Software-in-the-Loop (SIL)
+      A test level in which the real software runs against simulated sensors
+      and vehicle dynamics. This is CARLA, and the level every project in
+      this course occupies. Misses timing, hardware faults and real sensor
+      noise. :doc:`L13 </lectures/lecture13/l13_index>`
 
    SORT
       Simple Online and Realtime Tracking (Bewley et al., 2016). A
@@ -1180,6 +1276,12 @@ T
       asks what an attacker could do and produces security goals. Performed
       in Stage 2 of the concept-to-road pipeline, alongside :term:`HARA` and
       the SOTIF analysis. :doc:`L1 </lectures/lecture1/l1_lecture>`
+
+   Test Pyramid
+      The progression MIL → SIL → HIL → VIL → proving ground → public road.
+      Cost per scenario rises by orders of magnitude down the levels and
+      realism rises with it, so millions of scenarios run at the top and
+      dozens at the bottom. :doc:`L13 </lectures/lecture13/l13_index>`
 
    Time-of-Flight (ToF)
       The operating principle of LiDAR. Measures the round-trip time of a
@@ -1269,6 +1371,11 @@ V
       vehicle), V2I (vehicle-to-infrastructure), and V2P (vehicle-to-
       pedestrian). Enables cooperative perception and situational
       awareness. :doc:`L14 </lectures/lecture14/l14_index>`
+
+   Vehicle-in-the-Loop (VIL)
+      A test level in which a real vehicle on a rig or test pad is fed
+      synthetic objects, combining real dynamics and actuation with injected
+      traffic that cannot cause harm. :doc:`L13 </lectures/lecture13/l13_index>`
 
    Vista
       A generalizable driving world model (NeurIPS 2024) that learns to

@@ -61,13 +61,18 @@ By the end of this lecture, you will be able to:
 Next Steps
 ----------
 
-- In the next lecture, we will cover **World Models & Simulation**:
+- In the next lecture, we will cover **Simulation, Scenario-Based Testing & World Models**:
 
-  - What is a world model? Learning a simulator from data.
-  - Wayve GAIA-3 (15B parameters) and NVIDIA Cosmos.
-  - Vista (NeurIPS 2024): generalizable driving world models.
-  - Applications in data augmentation, long-tail scenario generation, and
-    policy evaluation.
+  - Why distance-based testing cannot support a safety claim, and what
+    replaced it.
+  - Functional, logical and concrete scenarios; where scenarios come from;
+    OpenSCENARIO and the ISO 34500 series.
+  - The test pyramid, and open-loop vs. closed-loop evaluation -- **the
+    open-loop critique from this lecture, stated as an engineering property**.
+  - Reading the CARLA driving score, and what happens to a metric that can be
+    gamed.
+  - World models (GAIA-1 to GAIA-4, NVIDIA Cosmos, Vista) as the newest
+    answer to the same validation problem.
 
 - Review the UniAD paper: *Planning-Oriented Autonomous Driving* (Hu et al.,
   CVPR 2023).

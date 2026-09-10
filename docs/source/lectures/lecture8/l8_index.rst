@@ -46,3 +46,18 @@ By the end of this lecture, you will be able to:
    The lecture notes, exercises, quiz and references for this lecture are
    being revised against the current slide deck and are not published yet.
    This page will link to them once they are ready.
+
+
+Next Steps
+----------
+
+- The next lecture covers **L9: Prediction & Behavior Modeling**: physics-,
+  maneuver- and interaction-based trajectory prediction, Transformer-based
+  scene encoding, multi-modal prediction, and finite state machine behavior
+  planning. The route this lecture produces is the constraint every
+  downstream planner works inside.
+- Read the `CARLA map and navigation documentation
+  <https://carla.readthedocs.io/en/0.9.16/core_map/>`_, in particular the
+  waypoint API and the OpenDRIVE discussion.
+- Review the `Lanelet2 <https://github.com/fzi-forschungszentrum-informatik/Lanelet2>`_
+  map format to see how lane-level topology is represented in production.
