@@ -292,9 +292,10 @@ All four demos use the same two repositories:
 
 .. important::
 
-   The server runs **headless**, so no window appears when it starts. To
-   watch the simulation, run the viewer client ``spectator_view.py``. See the
-   :doc:`Ubuntu 24.04 setup guide </carla/ubuntu24>` for why.
+   On the Docker setup the server runs **headless**, so no window appears when
+   it starts. See :ref:`why-headless` for why. To watch the simulation, run the
+   viewer client ``spectator_view.py`` -- see
+   :doc:`Using CARLA from Python </carla/carla-python>`.
 
 
 Demo 1: Connect and Inspect

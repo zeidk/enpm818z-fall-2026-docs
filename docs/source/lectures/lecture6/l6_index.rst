@@ -49,8 +49,13 @@ Next Steps
   SLAM backend (pose graphs, loop closure).
 - Review the ByteTrack paper: Zhang et al. (2022) for an efficient,
   highly accurate modern tracker used in production systems.
-- Explore the MOTChallenge benchmark at `https://motchallenge.net
-  <https://motchallenge.net>`_ to understand evaluation protocols.
+- Explore the MOTChallenge benchmark to understand evaluation protocols.
+  The site's homepage and evaluation server are **offline**, but the datasets
+  and leaderboards remain published as a static archive: see
+  `MOT17 <https://motchallenge.net/data/MOT17/>`_ and
+  `MOT20 <https://motchallenge.net/data/MOT20/>`_, with results frozen as of
+  16 April 2026 at `MOT17 results <https://motchallenge.net/results/MOT17/>`_.
+  New submissions are no longer accepted.
 - (Follow-up content) The current Temporal Reasoning section can be
   extended with transformer-based MOT (MOTR, TrackFormer) and video
   transformer methods; this is on the v2 polish list.

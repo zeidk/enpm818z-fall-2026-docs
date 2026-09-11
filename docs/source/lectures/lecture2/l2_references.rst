@@ -9,9 +9,9 @@ References
 
    - Luo, R. C. & Kay, M. G. (1989). *Multisensor Integration and Fusion in Intelligent Systems.* IEEE Transactions on Systems, Man, and Cybernetics, 19(5).
    - `CARLA Sensor Reference (0.9.16) <https://carla.readthedocs.io/en/0.9.16/ref_sensors/>`_
-   - `Velodyne LiDAR <https://velodynelidar.com/>`_
-   - `Luminar Technologies <https://www.luminartech.com/>`_
-   - `Continental ARS540 Imaging Radar <https://www.continental-automotive.com/>`_
+   - `Velodyne LiDAR (now part of Ouster) <https://ouster.com/>`_
+   - `Luminar Technologies (assets now at MicroVision) <https://microvision.com/>`_
+   - `Continental ARS540 Imaging Radar (division now Aumovio) <https://www.aumovio.com/en.html>`_
 
 
 .. dropdown:: Calibration
@@ -19,7 +19,7 @@ References
 
    - `OpenCV Camera Calibration Tutorial <https://docs.opencv.org/4.x/dc/dbb/tutorial_py_calibration.html>`_
    - `Kalibr: Visual-Inertial Calibration <https://github.com/ethz-asl/kalibr>`_
-   - `Autoware Calibration Tools <https://autowarefoundation.github.io/autoware-documentation/main/>`_
+   - `Autoware Calibration Tools <https://docs.autoware.org/main/>`_
    - Zhang, Z. (2000). *A Flexible New Technique for Camera Calibration.* IEEE TPAMI, 22(11).
 
 
@@ -35,7 +35,7 @@ References
    :class-container: sd-border-secondary
 
    - `Waymo Safety Report <https://waymo.com/safety/>`_
-   - `Tesla Autopilot & FSD <https://www.tesla.com/autopilot>`_
+   - `Tesla Autopilot & FSD <https://www.tesla.com/fsd>`_
    - `Mobileye Technology <https://www.mobileye.com/>`_
    - `Aurora Innovation <https://aurora.tech/>`_
 

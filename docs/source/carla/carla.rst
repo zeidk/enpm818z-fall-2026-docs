@@ -28,9 +28,22 @@ CARLA (CAR Learning to Act) is an open-source autonomous driving simulator desig
 
 .. toctree::
    :hidden:
+   :caption: Ubuntu 22.04 (Native)
 
-   ubuntu22
-   ubuntu24
+   Setup <ubuntu22>
+
+.. toctree::
+   :hidden:
+   :caption: Ubuntu 24.04 (Docker)
+
+   Setup <ubuntu24>
+
+.. toctree::
+   :hidden:
+   :caption: Using CARLA (either platform)
+
+   Python Client <carla-python>
+   ROS 2 Bridge <carla-ros2>
 
 Course Configuration
 --------------------

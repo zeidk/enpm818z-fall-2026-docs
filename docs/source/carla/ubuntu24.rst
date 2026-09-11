@@ -18,21 +18,47 @@ CARLA Setup Guide - Ubuntu 24.04 (Docker)
    * - Installation Method
      - Docker
 
+
 ---------------------------------------------------------
 Overview
 ---------------------------------------------------------
 
-This guide walks you through setting up CARLA 0.9.16 on Ubuntu 24.04 using Docker. You will use a **custom ROS 2 bridge package** that bypasses CARLA's native ROS 2 implementation due to a known bug (see :ref:`known-issue-ubuntu24`).
 
-**What You Will Install:**
+This guide gets a CARLA 0.9.16 server running on Ubuntu 24.04 using Docker. When
+you finish it you will have a working server and a Python client that can talk
+to it. **It does not cover ROS 2**; that is a separate page.
 
-- Docker runtime with NVIDIA GPU support
-- CARLA 0.9.16 Docker image
-- CARLA Python client (via pip)
-- Custom ROS 2 bridge package
+The CARLA documentation for this course is split into three parts. Read them in
+order:
+
+.. list-table::
+   :widths: 34 66
+   :header-rows: 1
+   :class: table-hover
+
+   * - **Page**
+     - **What it covers**
+   * - **This page** -- Setup
+     - Docker, the NVIDIA Container Toolkit, the CARLA image, maps, and starting
+       and stopping the server.
+   * - :doc:`Using CARLA from Python <carla-python>`
+     - Talking to the server from a plain Python script, and watching the
+       simulation in a viewer window.
+   * - :doc:`ROS 2 Bridge <carla-ros2>`
+     - The custom ROS 2 bridge package: building it, running it, and the topics
+       it publishes.
+
+**What you will install on this page:**
+
+- Docker Engine and the NVIDIA Container Toolkit
+- The CARLA 0.9.16 Docker image
+- The CARLA Python client (via pip)
 
 .. note::
-   **Why Docker?** CARLA 0.9.16 does not have native support for Ubuntu 24.04. Running CARLA inside a Docker container is the supported workaround -- the containerized CARLA server interfaces directly with the ROS 2 environment running on the host system.
+   **Why Docker?** CARLA 0.9.16 does not have native support for Ubuntu 24.04.
+   Running CARLA inside a Docker container is the supported workaround -- the
+   containerized CARLA server interfaces directly with the Python and ROS 2
+   environment running on the host system.
 
 ---------------------------------------------------------
 Terminology
@@ -65,11 +91,11 @@ System Requirements
    * - ROS 2 Distribution
      - Already installed
    * - GPU
-     - NVIDIA GPU (recommended for performance)
+     - NVIDIA GPU with the proprietary driver (**required** -- the container renders on the NVIDIA device)
    * - RAM
      - Minimum 8 GB, Recommended 16 GB
    * - Disk Space
-     - ~15 GB for Docker image and dependencies
+     - ~40 GB free (the CARLA image alone unpacks to ~29 GB)
    * - Python
      - 3.12 (comes with Ubuntu 24.04)
 
@@ -81,6 +107,92 @@ Verify Your Ubuntu Version
    lsb_release -a
 
 You should see ``Ubuntu 24.04`` in the output.
+
+---------------------------------------------------------
+Step 0: Install Docker and the NVIDIA Container Toolkit
+---------------------------------------------------------
+
+CARLA runs inside a container that renders on your NVIDIA GPU. That requires two
+pieces of host software: **Docker Engine**, and the **NVIDIA Container Toolkit**
+that lets a container reach the GPU. A stock Ubuntu 24.04 install has neither.
+
+.. important::
+   Skipping this step is the most common way to get stuck. Without the toolkit,
+   every ``--gpus all`` command fails with:
+
+   .. code-block:: text
+
+      docker: Error response from daemon: failed to discover GPU vendor from CDI:
+      no known GPU vendor found
+
+   Having the NVIDIA *driver* installed is not sufficient. ``nvidia-smi`` can
+   work perfectly on the host while Docker still has no way to pass the GPU
+   through to a container.
+
+Install Docker Engine
+~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: bash
+
+   sudo apt-get update
+   sudo apt-get install -y docker.io
+   sudo systemctl enable --now docker
+
+Add yourself to the ``docker`` group so you do not need ``sudo`` for every
+command, then **log out and back in** for the new group to take effect:
+
+.. code-block:: bash
+
+   sudo usermod -aG docker $USER
+
+Verify the NVIDIA Driver
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: bash
+
+   nvidia-smi
+
+You should see your GPU, the driver version, and the CUDA version. If the
+command is not found, install the proprietary driver first with
+``sudo ubuntu-drivers install`` and reboot.
+
+Install the NVIDIA Container Toolkit
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Add NVIDIA's package repository, install the toolkit, register it as a Docker
+runtime, and restart the Docker daemon:
+
+.. code-block:: bash
+
+   curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey \
+     | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+
+   curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \
+     | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' \
+     | sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+
+   sudo apt-get update
+   sudo apt-get install -y nvidia-container-toolkit
+   sudo nvidia-ctk runtime configure --runtime=docker
+   sudo systemctl restart docker
+
+.. note::
+   ``sudo systemctl restart docker`` does not delete your containers or images.
+
+Verify GPU Passthrough
+~~~~~~~~~~~~~~~~~~~~~~
+
+Docker should now list ``nvidia`` among its runtimes:
+
+.. code-block:: bash
+
+   docker info | grep -i runtimes
+
+.. code-block:: text
+
+    Runtimes: io.containerd.runc.v2 nvidia runc
+
+Do not continue until ``nvidia`` appears in that list.
 
 ---------------------------------------------------------
 Step 1: Pull CARLA Docker Image
@@ -100,7 +212,21 @@ Expected output:
 
 .. code-block:: text
 
-   carlasim/carla:0.9.16             98d224668ad0       20.7GB             0B
+   REPOSITORY              TAG       IMAGE ID       CREATED         SIZE
+   carlasim/carla          0.9.16    aaf1df227027   11 months ago   29.4GB
+
+The ``IMAGE ID`` will differ if CARLA republishes the tag; the ``SIZE`` should be
+close to 29 GB. A much smaller size means the pull was interrupted -- rerun it.
+
+Confirm the container can actually reach the GPU:
+
+.. code-block:: bash
+
+   docker run --rm --gpus all carlasim/carla:0.9.16 nvidia-smi
+
+This must print your GPU. If it instead reports ``failed to discover GPU vendor
+from CDI``, the NVIDIA Container Toolkit from Step 0 is not installed or the
+Docker daemon was not restarted.
 
 ---------------------------------------------------------
 Step 2: Install Additional Dependencies
@@ -129,91 +255,129 @@ Step 2: Install Additional Dependencies
 - ``python3 -c "import numpy; import pygame; import carla; print('All dependencies OK')"`` — Runs a one-line Python script that attempts to import all three packages. If any package is missing or improperly installed, Python will raise an ``ImportError`` and you will know which dependency needs to be reinstalled. If all imports succeed, it prints ``All dependencies OK``.
 
 ---------------------------------------------------------
-Step 2.5: Download Additional Maps (Town04)
+Step 3: Maps and the Server
 ---------------------------------------------------------
 
-CARLA's base installation includes limited maps. For highway scenarios (e.g., behavioral planning assignments), you need **Town04** which has a dedicated multi-lane highway loop.
+Highway assignments (for example, behavioral planning) use **Town04**, which has
+a dedicated multi-lane highway loop. **Town04 already ships inside the**
+``carlasim/carla:0.9.16`` **image. You do not need to download anything.**
 
-Download Additional Maps
-~~~~~~~~~~~~~~~~~~~~~~~~
+The image contains these maps:
 
-Download the additional maps package on your **host machine**:
+.. code-block:: text
 
-.. code-block:: bash
+   Town01   Town01_Opt   Town02     Town02_Opt
+   Town03   Town03_Opt   Town04     Town04_Opt
+   Town05   Town05_Opt   Town10HD   Town10HD_Opt
 
-   cd ~/Downloads
-   wget https://carla-releases.s3.us-east-005.backblazeb2.com/Linux/AdditionalMaps_0.9.16.tar.gz
+The ``_Opt`` variants are *layered* maps whose scenery (parked cars, foliage, street props) can be toggled at runtime.
 
-Install Maps into Docker Container
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. warning::
+   Do **not** download ``AdditionalMaps_0.9.16.tar.gz`` to obtain Town04. That
+   archive is a **14.8 GB download** that expands to roughly the same again
+   inside the container, and it does not contain Town04 -- you already have it.
+   Only follow :ref:`additional-maps-optional` if an assignment specifically
+   names Town06, Town07, or Town11--Town15.
 
-.. code-block:: bash
+Start the Server
+~~~~~~~~~~~~~~~~
 
-   # 1. Start CARLA container with a name
-   docker run --privileged --gpus all --net=host \
-     -e DISPLAY=$DISPLAY \
-     -e XDG_RUNTIME_DIR=/tmp/runtime-carla \
-     -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
-     --name carla-server \
-     -it carlasim/carla:0.9.16
+Start CARLA **headless**. The server renders directly on the NVIDIA GPU and
+needs no X display.
 
-   # 1b. In a NEW terminal, verify the container is running
-   docker ps --filter "name=carla-server"
+.. important::
+   ``docker run`` **creates** a container and works only once. Every time after
+   that it fails with ``Conflict. The container name "/carla-server" is already
+   in use``. Once the container exists, you start it with ``docker start``.
 
-   # 2. In the same NEW terminal, copy the maps to the container
-   docker cp ~/Downloads/AdditionalMaps_0.9.16.tar.gz carla-server:/workspace/
-
-   # 3. Enter the container as root to extract
-   docker exec -it --user root carla-server bash
-
-   # 4. Inside the container, extract and import the maps
-   cd /workspace
-   tar -xzf AdditionalMaps_0.9.16.tar.gz
-   ./ImportAssets.sh
-   rm AdditionalMaps_0.9.16.tar.gz
-
-   # 5. Exit the container
-   exit
-
-   # 6. Restart CARLA to load the new maps
-   docker stop carla-server
-   docker start -ai carla-server
-
-.. note::
-
-   ``./ImportAssets.sh`` produces **no output on success**. It silently moves files from
-   ``/workspace/Import/`` into ``CarlaUE4/Content/``. You can verify the maps were installed by
-   checking that the ``Import/`` directory is now empty and that the map files exist:
+   Use this command every time and you never have to remember which case you are
+   in -- it starts the existing container, or creates one if there is none:
 
    .. code-block:: bash
 
-      ls Import/                              # Should be empty
-      ls CarlaUE4/Content/Carla/Maps/ | grep Town04  # Should show Town04 files
+      docker start carla-server 2>/dev/null || \
+      docker run -d --name carla-server \
+        --privileged \
+        --gpus all \
+        --net=host \
+        carlasim/carla:0.9.16 \
+        /bin/bash CarlaUE4.sh -RenderOffScreen -nosound
 
-   
-
-
-Verify Maps Installation
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-After installing the maps, make sure the CARLA server is running before verifying. In one terminal,
-start (or restart) the container so it loads the newly imported maps:
+The two halves separately, if you prefer to know which one you are running.
+**First time only**, to create the container:
 
 .. code-block:: bash
 
-   # Remove the old container if it still exists
-   docker rm carla-server 2>/dev/null
+   docker run -d --name carla-server \
+     --privileged \
+     --gpus all \
+     --net=host \
+     carlasim/carla:0.9.16 \
+     /bin/bash CarlaUE4.sh -RenderOffScreen -nosound
 
-   # Start CARLA
-   docker run --privileged --gpus all --net=host \
-     -e DISPLAY=$DISPLAY \
-     -e XDG_RUNTIME_DIR=/tmp/runtime-carla \
-     -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
-     --name carla-server \
-     -it carlasim/carla:0.9.16
+**Every subsequent session**, to start the container you already have:
 
-Wait 30-60 seconds for CARLA to fully initialize. Then, in a **second terminal**, run the
-following Python script to query the available maps:
+.. code-block:: bash
+
+   docker start carla-server
+
+.. important::
+   Passing ``-e DISPLAY=$DISPLAY`` and mounting ``/tmp/.X11-unix`` is **not**
+   the right way to start this container, even though it looks like the obvious
+   one. It fails in two distinct ways on a typical laptop:
+
+   - If your session is on ``:1`` rather than ``:0``, or on Wayland, the
+     container gets a display that does not exist and exits immediately with
+     status 1, logging nothing past ``Disabling core dumps.``
+   - Even with the right display number, X rejects the container unless your
+     host UID happens to be 1000 (the container's ``carla`` user). The log then
+     reads ``Authorization required, but no authorization protocol specified``.
+
+   ``-RenderOffScreen`` avoids both. See :ref:`why-headless` for why a windowed
+   server also segfaults partway through loading a map.
+
+Give the server 30--60 seconds to initialize. Confirm it is up:
+
+.. code-block:: bash
+
+   docker ps --filter "name=carla-server"
+
+The ``STATUS`` column must read ``Up``. If the container is missing, it exited
+-- run ``docker ps -a`` for the exit code and ``docker logs carla-server`` for
+the reason.
+
+If the container is missing from ``docker ps`` but **is** listed by
+``docker ps -a``, it exited rather than never starting. Two common exit codes:
+
+.. list-table::
+   :widths: 20 80
+   :header-rows: 1
+
+   * - **Exit code**
+     - **Meaning**
+   * - ``Exited (1)``
+     - CARLA failed at startup. Almost always a display problem -- see the
+       ``important`` box above. Check ``docker logs carla-server``.
+   * - ``Exited (137)``
+     - The process was killed (SIGKILL). **This is normal after a clean
+       stop**: CARLA does not handle ``SIGTERM``, so ``docker stop`` waits its
+       grace period and then kills it. You also get 137 if you attached with
+       ``docker start -ai`` and interrupted it. Either way, just start it
+       again.
+
+.. warning::
+   Do not start the server with ``docker start -ai``. That attaches your
+   terminal to the server process, so closing the terminal or pressing Ctrl-C
+   kills CARLA. Start it detached and read its output separately:
+
+   .. code-block:: bash
+
+      docker logs -f carla-server    # Ctrl-C stops following, not the server
+
+Confirm the Maps
+~~~~~~~~~~~~~~~~
+
+In a second terminal, ask the server what it has:
 
 .. code-block:: bash
 
@@ -221,110 +385,156 @@ following Python script to query the available maps:
    import carla
    client = carla.Client('localhost', 2000)
    client.set_timeout(10.0)
-   maps = client.get_available_maps()
-   print('Available maps:')
-   for m in sorted(maps):
-       print(f'  - {m.split(\"/\")[-1]}')
+   for m in sorted(client.get_available_maps()):
+       print('  -', m.split('/')[-1])
    "
-
-Expected output should include:
-
-.. code-block:: text
-
-   Available maps:
-     - Town01
-     - Town02
-     - Town03
-     - Town04
-     - Town04_Opt
-     - Town05
-     - ...
-
-Load Town04
-~~~~~~~~~~~
-
-To load Town04 for highway scenarios:
-
-.. code-block:: python
-
-   import carla
-
-   client = carla.Client('localhost', 2000)
-   client.set_timeout(10.0)
-
-   # Load Town04 (highway map)
-   world = client.load_world('Town04')
-   print("Town04 loaded successfully!")
-
----------------------------------------------------------
-Step 3: Clone and Build the ROS 2 Bridge Package
----------------------------------------------------------
-
-Clone the Repository
-~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: bash
-
-   # Create workspace
-   mkdir -p ~/enpm818z_ws/src
-   cd ~/enpm818z_ws/src
-
-   # Clone the ROS 2 package repository
-   git clone https://github.com/rubixcubic/enpm818z-fall-2026-carla-ros.git
-
-   # Return to workspace root
-   cd ~/enpm818z_ws
-
-Build the Package
-~~~~~~~~~~~~~~~~~
-
-.. code-block:: bash
-
-   # Source ROS 2
-   source /opt/ros/jazzy/setup.bash
-
-   # Build
-   colcon build --symlink-install
-
-   # Source the workspace
-   source install/setup.bash
-
-Verify the build:
-
-.. code-block:: bash
-
-   # Check that the package is available
-   ros2 pkg list | grep l2_carla_demo
-
-   # Check its executables
-   ros2 pkg executables l2_carla_demo
 
 Expected output:
 
 .. code-block:: text
 
-   l2_carla_demo carla_bridge
-   l2_carla_demo rate_report
+     - Town01
+     - Town01_Opt
+     - Town02
+     - Town02_Opt
+     - Town03
+     - Town03_Opt
+     - Town04
+     - Town04_Opt
+     - Town05
+     - Town05_Opt
+     - Town10HD
+     - Town10HD_Opt
+
+
+.. seealso::
+   To **load** a specific map from a script, see
+   :doc:`Using CARLA from Python <carla-python>`.
+
+
+.. _additional-maps-optional:
+
+Optional: Additional Maps (Town06, Town07, Town11--Town15)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. warning::
+   **This costs about 30 GB of disk.** The archive is 14.8 GB on the host and
+   expands to roughly the same again inside the container's writable layer,
+   which the container then carries permanently. Skip this section unless you
+   actually need one of these maps.
+
+**Terminal 1 (host)** -- download the archive:
+
+.. code-block:: bash
+
+   cd ~/Downloads
+   wget https://carla-releases.s3.us-east-005.backblazeb2.com/Linux/AdditionalMaps_0.9.16.tar.gz
+
+**Terminal 1 (host)** -- copy it into the container. The container does *not*
+need to be running; ``docker cp`` works on a stopped container too:
+
+.. code-block:: bash
+
+   docker cp ~/Downloads/AdditionalMaps_0.9.16.tar.gz carla-server:/workspace/
+
+**Terminal 1 (host)** -- start the container and open a root shell inside it:
+
+.. code-block:: bash
+
+   docker start carla-server
+   docker exec -it --user root carla-server bash
+
+**Inside the container** -- extract the archive at ``/workspace``:
+
+.. code-block:: bash
+
+   cd /workspace
+   tar -xzf AdditionalMaps_0.9.16.tar.gz
+   rm AdditionalMaps_0.9.16.tar.gz
+   exit
 
 .. note::
-   The repository is ``enpm818z-fall-2026-carla-ros``; the ROS 2 **package**
-   inside it is ``l2_carla_demo``. Those are different names and both are
-   used: you clone the first and you build, run and launch the second.
+   **Do not run** ``./ImportAssets.sh``. That script cooks raw assets dropped
+   into ``/workspace/Import/``, and this archive is not packaged that way -- its
+   top-level directory is ``CarlaUE4/Content/``, so ``tar`` already places the
+   maps exactly where the server reads them. ``Import/`` is empty both before
+   and after, so ``ImportAssets.sh`` would simply do nothing.
 
-   The plain Python demos live in a separate repository,
-   `enpm818z-fall-2026-carla-python
-   <https://github.com/rubixcubic/enpm818z-fall-2026-carla-python>`_. Those
-   are CARLA clients and need no workspace and no build.
+**Terminal 1 (host)** -- restart the server so it rescans its content:
+
+.. code-block:: bash
+
+   docker restart carla-server
+
+.. danger::
+   **Never** ``docker rm carla-server`` after importing maps. The imported maps
+   live only in that container's writable layer -- they are not part of the
+   image. Removing the container and running ``docker run`` again gives you a
+   fresh container from the base image and silently discards the whole ~15 GB
+   import, with no error to tell you it happened. Use ``docker start`` or
+   ``docker restart`` to bring an existing container back.
+
+Query the server again to confirm the import worked:
+
+.. code-block:: bash
+
+   python3 -c "
+   import carla
+   client = carla.Client('localhost', 2000)
+   client.set_timeout(10.0)
+   for m in sorted(client.get_available_maps()):
+       print('  -', m.split('/')[-1])
+   "
+
+The list should now also include ``Town06``, ``Town07``, ``Town11``, ``Town12``,
+``Town13`` and ``Town15``, alongside the maps that shipped with the image. If it
+looks unchanged, the server was not restarted after the extraction -- run
+``docker restart carla-server`` and query again.
+
+Stop the Server
+~~~~~~~~~~~~~~~
+
+Steps 3 and 4 do not need CARLA running, so shut it down before moving on:
+
+.. code-block:: bash
+
+   docker stop carla-server
+
+Confirm it stopped:
+
+.. code-block:: bash
+
+   docker ps --filter "name=carla-server"
+
+The listing should now be empty. That is expected -- ``docker ps`` shows only
+*running* containers. Your container still exists; ``docker ps -a`` will show it
+in the ``Exited`` state, ready to start again.
+
+.. important::
+   ``docker stop`` is not ``docker rm``.
+
+   - ``docker stop carla-server`` halts the server and **keeps** the container,
+     including any maps you imported into it. This is what you want between
+     work sessions.
+   - ``docker rm carla-server`` **deletes** the container and everything in its
+     writable layer. Only do this when you are finished with CARLA -- see
+     :ref:`removing-carla`.
+
+Restart it whenever you need it again:
+
+.. code-block:: bash
+
+   docker start carla-server
 
 ---------------------------------------------------------
-Step 4: Setup Environment Configuration
+Step 4: Shell Helpers for the Server
 ---------------------------------------------------------
 
-Create Setup Script
-~~~~~~~~~~~~~~~~~~~
 
-The setup function does two jobs: it configures the ROS 2 environment, and it
-defines the commands you will use to run the server.
+Typing the full ``docker`` commands every session gets old quickly. These shell
+functions wrap them. They deal **only** with the server, and need no ROS 2 --
+the ROS 2 environment is configured separately, on the
+:doc:`ROS 2 Bridge <carla-ros2>` page.
 
 .. list-table::
    :widths: 32 68
@@ -335,27 +545,58 @@ defines the commands you will use to run the server.
      - **What it does**
    * - ``carla_basic [quality]``
      - Starts the server and blocks until it actually accepts connections.
-       Quality defaults to ``Epic``; pass ``Low`` on a weaker GPU.
+       Reuses the existing container, so imported maps survive. Quality applies
+       only when the container is first created; defaults to ``Epic``, pass
+       ``Low`` on a weaker GPU.
+   * - ``carla_basic -f [quality]``
+     - Recreates the container from scratch first. Use this to change the
+       quality level. **Discards imported additional maps.**
    * - ``carla_log``
      - Follows the server's output. This is where a crash explains itself.
    * - ``carla_stop`` / ``carla_kill``
-     - Stops the server and removes every CARLA container.
+     - Stops the server, keeping the container and anything imported into it.
+   * - ``carla_rm``
+     - Deletes the container. See :ref:`removing-carla`.
 
-Add the following function to your ``~/.bashrc``:
+.. note::
+   These instructions assume **bash**. If your terminal runs **zsh** (check with
+   ``echo $SHELL``), use ``~/.zshrc`` everywhere ``~/.bashrc`` appears below,
+   and reload with ``source ~/.zshrc``. The functions work unchanged in both
+   shells. Editing the wrong file is a quiet failure: nothing errors, the
+   ``carla_*`` commands simply never appear.
+
+Open your ``~/.bashrc`` in an editor:
 
 .. code-block:: bash
 
    nano ~/.bashrc
 
-   # Add this function at the end:
-   carla_setup() {
-       CARLA_WS="$HOME/enpm818z_ws"
-       ROS_SETUP="/opt/ros/jazzy/setup.bash"
+Add the following at the **end** of that file:
 
-       # ---- start the server ------------------------------------------
-       carla_basic() {
-           docker rm -f carla >/dev/null 2>&1
-           docker run -d --name carla \
+.. code-block:: bash
+
+   # ---------------------------------------------------------------------------
+   # CARLA server helpers (ENPM818Z) -- no ROS 2 required
+   #
+   #   carla_basic [quality]     start the server, wait until it is ready
+   #   carla_basic -f [quality]  recreate the container first
+   #   carla_log                 follow the server's output
+   #   carla_stop / carla_kill   stop the server, keep the container
+   #   carla_rm                  delete the container
+   # ---------------------------------------------------------------------------
+   carla_basic() {
+       # -f recreates the container, which is the only way to change the
+       # quality level. It also discards any additional maps imported into it.
+       if [ "$1" = "-f" ]; then
+           docker rm -f carla-server >/dev/null 2>&1
+           shift
+       fi
+
+       if [ -n "$(docker ps -aq -f name='^carla-server$')" ]; then
+           # Reuse the existing container so imported maps survive.
+           docker start carla-server >/dev/null || return 1
+       else
+           docker run -d --name carla-server \
                --runtime=nvidia \
                --gpus all \
                --net=host \
@@ -364,89 +605,49 @@ Add the following function to your ``~/.bashrc``:
                -e NVIDIA_DRIVER_CAPABILITIES=all \
                carlasim/carla:0.9.16 \
                /bin/bash -c "./CarlaUE4.sh -RenderOffScreen -vulkan -nosound -quality-level=${1:-Epic}" >/dev/null || return 1
+       fi
 
-           # The container can die during startup. Say so, and show why,
-           # instead of waiting for a port that will never open.
-           printf 'starting CARLA'
-           while ! ss -ltn 2>/dev/null | grep -q ':2000 '; do
-               if [ -z "$(docker ps -q -f name=carla)" ]; then
-                   printf '\nthe server died before it accepted connections. Its output:\n'
-                   docker logs carla 2>&1 | tail -20
-                   return 1
-               fi
-               printf '.'
-               sleep 2
-           done
-
-           # The RPC port opens before the level has finished loading, so a
-           # client that connects the moment it sees the port can sit there
-           # waiting. Wait for a call that needs the level to be up.
-           printf ' level'
-           while ! python3 -c 'import carla, sys
-   c = carla.Client("localhost", 2000); c.set_timeout(5.0)
-   try:
-       c.get_world().get_map()
-   except Exception:
-       sys.exit(1)' >/dev/null 2>&1; do
-               printf '.'
-               sleep 2
-           done
-           printf '\nready on localhost:2000\n'
-       }
-
-       # ---- stop it and clean up --------------------------------------
-       carla_stop() {
-           local ids
-           ids=$(docker ps -a --format '{{.ID}} {{.Image}}' | awk '$2 ~ /carla/ {print $1}')
-           if [ -n "$ids" ]; then
-               echo "$ids" | xargs docker rm -f >/dev/null 2>&1
-               echo "removed $(echo "$ids" | wc -l) CARLA container(s)"
-           else
-               echo "no CARLA containers"
+       # The container can die during startup. Say so, and show why,
+       # instead of waiting for a port that will never open.
+       printf 'starting CARLA'
+       while ! ss -ltn 2>/dev/null | grep -q ':2000 '; do
+           if [ -z "$(docker ps -q -f name=carla-server)" ]; then
+               printf '\nthe server died before it accepted connections. Its output:\n'
+               docker logs carla-server 2>&1 | tail -20
+               return 1
            fi
-           return 0
-       }
+           printf '.'
+           sleep 2
+       done
 
-       alias carla_kill='carla_stop'
-       alias carla_log='docker logs -f carla'
-
-       # ---- ROS 2 environment -----------------------------------------
-       export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
-       export ROS_DOMAIN_ID=42
-       unset ROS_LOCALHOST_ONLY
-
-       # Only force a Fast DDS profile if one is actually present. Pointing
-       # FASTRTPS_DEFAULT_PROFILES_FILE at a file that does not exist gives
-       # you default behaviour and a false sense of having configured it.
-       if [ -f "$CARLA_WS/src/fastdds_udp.xml" ]; then
-           export FASTRTPS_DEFAULT_PROFILES_FILE="$CARLA_WS/src/fastdds_udp.xml"
-           export RMW_FASTRTPS_USE_QOS_FROM_XML=1
-       else
-           unset FASTRTPS_DEFAULT_PROFILES_FILE
-           unset RMW_FASTRTPS_USE_QOS_FROM_XML
-       fi
-
-       if [ -f "$ROS_SETUP" ]; then
-           source "$ROS_SETUP"
-       else
-           echo "Error: ROS 2 not found at $ROS_SETUP"
-           return 1
-       fi
-
-       if [ -f "$CARLA_WS/install/setup.bash" ]; then
-           source "$CARLA_WS/install/setup.bash"
-       else
-           echo "Warning: CARLA workspace not built. Run: cd $CARLA_WS && colcon build"
-       fi
-
-       ros2 daemon stop >/dev/null 2>&1
-       ros2 daemon start >/dev/null 2>&1
-
-       echo "CARLA environment ready:  carla_basic | carla_log | carla_stop"
+       # The RPC port opens before the level has finished loading, so a
+       # client that connects the moment it sees the port can sit there
+       # waiting. Wait for a call that needs the level to be up.
+       printf ' level'
+       while ! python3 -c "import carla; c=carla.Client('localhost',2000); c.set_timeout(5.0); c.get_world().get_map()" >/dev/null 2>&1; do
+           printf '.'
+           sleep 2
+       done
+       printf '\nready on localhost:2000\n'
    }
 
-   # Auto-run setup when starting new terminal
-   carla_setup
+   carla_stop() {
+       if [ -n "$(docker ps -q -f name=carla-server)" ]; then
+           docker stop carla-server >/dev/null && echo "CARLA stopped (container kept)"
+       else
+           echo "CARLA is not running"
+       fi
+       return 0
+   }
+
+   carla_rm() {
+       docker rm -f carla-server >/dev/null 2>&1 && echo "carla-server removed" \
+           || echo "no carla-server container"
+       return 0
+   }
+
+   alias carla_kill='carla_stop'
+   alias carla_log='docker logs -f carla-server'
 
 Save and reload:
 
@@ -462,68 +663,22 @@ Typical session:
    starting CARLA.. level.
    ready on localhost:2000
 
-   $ python3 demo1_connect.py --town Town03
-   ...
+   # No window appears. The server is headless -- this is expected.
+
+   $ python3 load_town04.py
+   Loading Town04. This can take up to a minute.
+   Map:          Carla/Maps/Town04
+   Spawn points: 372
 
    $ carla_stop
-   removed 1 CARLA container(s)
+   CARLA stopped (container kept)
 
-.. note::
-   ``ROS_DOMAIN_ID`` must be the same on every machine that needs to see your
-   topics, and different from your neighbour's if you do not want to see
-   theirs. Pick one number and use it everywhere.
+.. important::
+   **Nothing appears on screen when** ``carla_basic`` **finishes, and nothing is
+   wrong.** The server runs with ``-RenderOffScreen`` and never opens a window
+   of its own -- see :ref:`why-headless`. To watch the simulation, run a viewer
+   client; see :ref:`seeing-the-simulation-ubuntu24`.
 
-Why the Server Runs Headless
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The launch command contains ``-RenderOffScreen`` and passes **no** ``DISPLAY``
-and **no** X11 socket. That is deliberate, and it is the difference between a
-server that works and one that crashes.
-
-.. danger::
-   **Symptom.** The client connects, ``get_available_maps()`` succeeds, and
-   then ``load_world()`` times out. The container is gone, and
-   ``docker ps -a`` shows it **Exited (139)**, which is a segmentation fault.
-
-   **Cause.** ``docker logs`` shows the real reason:
-
-   .. code-block:: text
-
-      MESA: warning: Driver does not support the 0xa788 PCI ID.
-      Signal 11 caught.
-      CommonUnixCrashHandler: Signal=11
-
-   That PCI ID is an **Intel integrated GPU**. On a laptop with switchable
-   graphics, the X server usually runs on the integrated chip, so giving the
-   container a ``DISPLAY`` sends Unreal down the Mesa software path instead of
-   onto the NVIDIA GPU, and it segfaults partway through loading a map.
-
-   **Fix.** ``-RenderOffScreen`` skips X entirely and renders directly on the
-   NVIDIA device. Note that the client-side error, a timeout, points at the
-   wrong thing completely: the server did not run slowly, it died.
-
-.. tip::
-   Forcing NVIDIA offload (``__NV_PRIME_RENDER_OFFLOAD=1``,
-   ``__VK_LAYER_NV_optimus=NVIDIA_only``) does remove the Mesa warning, but the
-   windowed server still segfaults on the map load. Headless is not a
-   workaround here, it is the configuration that works.
-
-.. _seeing-the-simulation-ubuntu24:
-
-Seeing the Simulation Without a Window
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A headless server opens no window, so nothing appears when ``carla_basic``
-finishes. To watch the simulation, run a **viewer client** instead. It renders
-on your desktop's normal graphics path and never touches Unreal's:
-
-.. code-block:: bash
-
-   python3 spectator_view.py
-
-Keys: ``TAB`` weather, ``C`` camera position, ``R`` autopilot, ``ESC`` quit.
-The viewer is a passive observer, so it can be left open while a demo script
-runs.
 
 Why It Waits Twice
 ~~~~~~~~~~~~~~~~~~
@@ -561,312 +716,51 @@ one named ``carla``. A crashed container stays in the list in the exited state
 while still holding its name, and containers started by an older alias sit there
 under generated names such as ``modest_montalcini``.
 
-Why ``--ros2`` Is Not Used
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. _why-headless:
 
-CARLA 0.9.16 can publish ROS 2 topics itself with a ``--ros2`` flag, and the
-launch command above does not use it. See
-:ref:`Understanding the CARLA 0.9.16 ROS 2 Bug <known-issue-ubuntu24>` below for
-why. The course uses its own bridge package instead.
+Why the Server Runs Headless
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. _known-issue-ubuntu24:
+The launch command contains ``-RenderOffScreen`` and passes **no** ``DISPLAY``
+and **no** X11 socket. That is deliberate, and it is the difference between a
+server that works and one that crashes.
 
----------------------------------------------------------
-Understanding the CARLA 0.9.16 ROS 2 Bug
----------------------------------------------------------
+.. danger::
+   **Symptom.** The client connects, ``get_available_maps()`` succeeds, and
+   then ``load_world()`` times out. The container is gone, and
+   ``docker ps -a`` shows it **Exited (139)**, which is a segmentation fault.
 
-Issue Description
-~~~~~~~~~~~~~~~~~
+   **Cause.** ``docker logs`` shows the real reason:
 
-CARLA 0.9.16 introduced **native ROS 2 support** via the ``--ros2`` flag and ``enable_for_ros()`` API. However, there is a **critical bug** in the topic name generation.
+   .. code-block:: text
 
-**The Bug:**
+      MESA: warning: Driver does not support the 0xa788 PCI ID.
+      Signal 11 caught.
+      CommonUnixCrashHandler: Signal=11
 
-CARLA creates topic names with double slashes: ``/carla//camera/image``
+   That PCI ID is an **Intel integrated GPU**. On a laptop with switchable
+   graphics, the X server usually runs on the integrated chip, so giving the
+   container a ``DISPLAY`` sends Unreal down the Mesa software path instead of
+   onto the NVIDIA GPU, and it segfaults partway through loading a map.
 
-**Why This Matters:**
+   **Fix.** ``-RenderOffScreen`` skips X entirely and renders directly on the
+   NVIDIA device. Note that the client-side error, a timeout, points at the
+   wrong thing completely: the server did not run slowly, it died.
 
-ROS 2 strictly validates topic names and rejects topics with consecutive slashes as invalid. This means:
-
-- ``ros2 topic echo`` does not work
-- ``ros2 topic hz`` does not work
-- ``rviz2`` cannot subscribe to topics
-- Custom nodes fail to receive data
-
-**Example:**
-
-.. code-block:: bash
-
-   # CARLA publishes (broken):
-   /carla//front_camera/image  # Double slash
-
-   # ROS 2 rejects this with:
-   Invalid topic name: topic name must not contain repeated '/'
-
-Our Solution
-~~~~~~~~~~~~
-
-The **custom ROS 2 bridge package** you installed:
-
-1. **Bypasses CARLA's native ROS 2** -- does not use ``enable_for_ros()``
-2. **Uses the Python API directly** -- gets data via ``camera.listen()`` callbacks
-3. **Publishes to clean topics** -- ``/carla/ego_vehicle/rgb_front/image`` (no double slash)
-4. **Works with all ROS 2 tools** -- full compatibility
-
-This is why we do not use the ``--ros2`` flag with CARLA.
-
-GitHub Issue Reference
-~~~~~~~~~~~~~~~~~~~~~~
-
-This is a known issue tracked here: https://github.com/carla-simulator/carla/issues/9278
-
-Expected to be fixed in future CARLA releases, but for now our bridge is the correct solution.
-
----------------------------------------------------------
-Running CARLA with ROS 2
----------------------------------------------------------
-
-Basic Workflow
-~~~~~~~~~~~~~~
-
-**Terminal 1: start the CARLA server**
-
-.. code-block:: bash
-
-   carla_basic
-
-It prints ``ready on localhost:2000`` when the level has finished loading.
-
-.. important::
-   **No window appears, and that is correct.** The server runs with
-   ``-RenderOffScreen``. To watch the simulation, use the viewer client
-   described under :ref:`seeing-the-simulation-ubuntu24`.
-
-**Terminal 2: run the bridge**
-
-.. code-block:: bash
-
-   source ~/enpm818z_ws/install/setup.bash
-   ros2 launch l2_carla_demo demo.launch.py
-
-That single launch file starts three things: the bridge node, RViz2 with a
-prepared configuration, and a rate reporter. Running the bridge on its own is
-also fine:
-
-.. code-block:: bash
-
-   ros2 run l2_carla_demo carla_bridge
-
-You should see:
-
-.. code-block:: text
-
-   [INFO] [carla_bridge]: spawned 6 actors
-   [INFO] [carla_bridge]: ticking at 20 Hz on Carla/Maps/Town10HD_Opt
-
-**Terminal 3: verify the topics**
-
-.. code-block:: bash
-
-   ros2 topic list | grep carla
-   ros2 topic hz /carla/ego_vehicle/rgb_front/image
-   ros2 topic echo /carla/ego_vehicle/imu --once
-
-The topic list:
-
-.. code-block:: text
-
-   /carla/ego_vehicle/gnss
-   /carla/ego_vehicle/imu
-   /carla/ego_vehicle/lidar
-   /carla/ego_vehicle/radar_front
-   /carla/ego_vehicle/rgb_front/camera_info
-   /carla/ego_vehicle/rgb_front/image
-
-.. note::
-   ``ros2 topic hz`` will report something like **14.7 Hz, then 18.7 Hz**
-   against a configured 20 Hz. That gap is real and it is worth looking at:
-   the rate you set on a blueprint is a request, not a guarantee, and it falls
-   as the scene gets busier. Timing is a first-class concern in this course.
-
-
----------------------------------------------------------
-Package Overview
----------------------------------------------------------
-
-The ``l2_carla_demo`` package contains two nodes and one launch file.
-
-carla_bridge
-~~~~~~~~~~~~
-
-Spawns an ego vehicle with a full sensor suite and publishes every stream onto
-ROS 2 topics. It also owns the simulation clock: it puts the server into
-synchronous mode and calls ``world.tick()`` from a timer, so **do not run a
-second client that also ticks**.
-
-.. list-table:: Published topics
-   :widths: 42 30 28
-   :header-rows: 1
-   :class: table-striped
-
-   * - **Topic**
-     - **Type**
-     - **Notes**
-   * - ``/carla/ego_vehicle/rgb_front/image``
-     - ``sensor_msgs/Image``
-     - ``bgra8``, as CARLA delivers it
-   * - ``/carla/ego_vehicle/rgb_front/camera_info``
-     - ``sensor_msgs/CameraInfo``
-     - latched; intrinsics never change
-   * - ``/carla/ego_vehicle/lidar``
-     - ``sensor_msgs/PointCloud2``
-     - fields ``x y z intensity``
-   * - ``/carla/ego_vehicle/radar_front``
-     - ``sensor_msgs/PointCloud2``
-     - fields ``x y z velocity``
-   * - ``/carla/ego_vehicle/imu``
-     - ``sensor_msgs/Imu``
-     -
-   * - ``/carla/ego_vehicle/gnss``
-     - ``sensor_msgs/NavSatFix``
-     -
-   * - ``/tf``, ``/tf_static``
-     - ``tf2_msgs/TFMessage``
-     - the sensor extrinsics, as transforms
-
-Sensor data is published **best effort**, so a dropped frame is preferred to a
-stalled pipeline. ``camera_info`` is latched instead, so a subscriber that
-starts late still receives the intrinsics.
-
-Parameters come from ``config/sensors.yaml``. The useful ones:
-
-.. list-table::
-   :widths: 32 20 48
-   :header-rows: 1
-
-   * - **Parameter**
-     - **Default**
-     - **Meaning**
-   * - ``town``
-     - ``""``
-     - map to load; empty keeps whatever is loaded
-   * - ``delta``
-     - ``0.05``
-     - simulation step, so 20 Hz
-   * - ``vehicle``
-     - ``vehicle.tesla.model3``
-     - ego blueprint
-   * - ``image_width`` / ``image_height``
-     - ``1280`` / ``720``
-     - camera resolution
-   * - ``camera_fov``
-     - ``90.0``
-     - degrees
-   * - ``lidar_channels``
-     - ``32``
-     - beams
-
-For example, at a lower resolution:
-
-.. code-block:: bash
-
-   ros2 run l2_carla_demo carla_bridge --ros-args \
-       -p image_width:=640 -p image_height:=360
-
-.. important::
-   **Sensor mounting positions are not parameters.** The node derives them from
-   the ego vehicle's own bounding box, because every blueprint is a different
-   size and copied numbers put sensors inside bodywork. Note that
-   ``bounding_box.extent`` is a **half**-size in metres.
-
-rate_report
-~~~~~~~~~~~
-
-Subscribes to all five sensor topics and prints their delivered rates side by
-side, plus the spread between the newest and oldest timestamp in the set. That
-spread is the number to look at before fusing anything: two measurements you
-combine should describe the same instant, and these do not.
-
-.. code-block:: bash
-
-   ros2 run l2_carla_demo rate_report
-
-demo.launch.py
-~~~~~~~~~~~~~~
-
-Starts the bridge, RViz2 and the rate report together.
-
-.. code-block:: bash
-
-   ros2 launch l2_carla_demo demo.launch.py
-   ros2 launch l2_carla_demo demo.launch.py town:=Town03 rviz:=false
-
-Coordinate Frames
-~~~~~~~~~~~~~~~~~
-
-CARLA uses **x forward, y right, z up** (left-handed). ROS REP-103 uses
-**x forward, y left, z up** (right-handed). Every ``y`` changes sign on the way
-out, and so does every rotation about ``x`` and ``z``. The package does this in
-one place, ``conversions.py``. Get it wrong and RViz shows a scene that looks
-fine until you notice the traffic is driving on the wrong side of the road.
-
-The camera has two frames. ``ego_vehicle/rgb_front`` follows the ROS body
-convention. Its child ``ego_vehicle/rgb_front_optical`` is **x right, y down,
-z along the optical axis**, which is what the intrinsic matrix ``K`` expects.
-That child transform is the axis permutation from the lecture, written as a
-``tf`` instead of a matrix.
-
-
----------------------------------------------------------
-Advanced Usage
----------------------------------------------------------
-
-Visualizing in RViz2
-~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: bash
-
-   ros2 launch l2_carla_demo demo.launch.py
-
-The launch file already starts RViz2 with a prepared configuration showing the
-LiDAR cloud, the RADAR detections coloured by range rate, the camera image and
-the transform tree, with the fixed frame set to ``ego_vehicle``.
-
-To open RViz2 by hand instead, run ``rviz2``, click **Add** then **By topic**,
-and pick the topics you want. Set **Fixed Frame** to ``ego_vehicle``. For the
-sensor topics you must also set **Reliability Policy** to **Best Effort**, or
-the display will stay empty with no error.
-
-Recording Data
-~~~~~~~~~~~~~~
-
-.. code-block:: bash
-
-   # Record the camera and the LiDAR
-   ros2 bag record /carla/ego_vehicle/rgb_front/image /carla/ego_vehicle/lidar
-
-   # Record every CARLA topic, and the transforms, which you will need
-   ros2 bag record -r "/carla/.*" /tf /tf_static
-
-   # Play back recorded data
-   ros2 bag play <bag_file>
-
-Custom Resolution
-~~~~~~~~~~~~~~~~~
-
-.. code-block:: bash
-
-   # Higher resolution
-   ros2 run l2_carla_demo carla_bridge \
-       --ros-args -p image_width:=1920 -p image_height:=1080
-
-   # Lower resolution, for a machine that is struggling
-   ros2 run l2_carla_demo carla_bridge \
-       --ros-args -p image_width:=640 -p image_height:=360
+.. tip::
+   Forcing NVIDIA offload (``__NV_PRIME_RENDER_OFFLOAD=1``,
+   ``__VK_LAYER_NV_optimus=NVIDIA_only``) does remove the Mesa warning, but the
+   windowed server still segfaults on the map load. Headless is not a
+   workaround here, it is the configuration that works.
 
 ---------------------------------------------------------
 Troubleshooting
 ---------------------------------------------------------
+
+
+This page covers problems with Docker and the server itself. For client
+problems see :doc:`carla-python`; for ROS 2 see :doc:`carla-ros2`.
+
 
 CARLA Won't Start
 ~~~~~~~~~~~~~~~~~
@@ -882,17 +776,23 @@ CARLA Won't Start
       sudo systemctl status docker
       sudo systemctl start docker
 
-2. Check GPU access:
+2. Check GPU access from inside a container:
 
    .. code-block:: bash
 
-      docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi
+      docker run --rm --gpus all carlasim/carla:0.9.16 nvidia-smi
 
-3. Allow X11 forwarding:
+   If this reports ``failed to discover GPU vendor from CDI: no known GPU vendor
+   found``, the NVIDIA Container Toolkit is missing. Go back to Step 0.
+
+3. Confirm Docker registered the ``nvidia`` runtime:
 
    .. code-block:: bash
 
-      xhost +local:root
+      docker info | grep -i runtimes
+
+   ``nvidia`` must appear in the list. If you just installed the toolkit and it
+   does not, you likely skipped ``sudo systemctl restart docker``.
 
 XDG_RUNTIME_DIR Errors on Startup
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -908,140 +808,25 @@ directory (typically ``/run/user/<UID>``) used by display servers and Wayland/X1
 store runtime sockets. When Docker runs the CARLA process inside the container, this variable is
 not set by default, so libraries that look for it (e.g., Vulkan, SDL, PulseAudio) emit these warnings.
 
-**These errors are usually harmless** — CARLA will still run and render correctly as long as GPU
-access and X11 forwarding are configured properly. However, if you want to suppress them or if
-CARLA fails to render, try the following:
+**These errors are harmless** — CARLA still runs and renders correctly. The headless
+launch command in Step 2.5 does not set ``XDG_RUNTIME_DIR`` at all, and does not need to. If you
+want to silence the warning, set it to a writable path inside the container:
 
-1. Set the variable explicitly when launching the container:
+.. code-block:: bash
 
-   .. code-block:: bash
+   docker run -d --name carla-server \
+     --privileged \
+     --gpus all \
+     --net=host \
+     -e XDG_RUNTIME_DIR=/tmp/runtime-carla \
+     carlasim/carla:0.9.16 \
+     /bin/bash CarlaUE4.sh -RenderOffScreen -nosound
 
-      docker run --privileged --gpus all --net=host \
-        -e XDG_RUNTIME_DIR=/tmp/runtime-carla \
-        -e DISPLAY=$DISPLAY \
-        -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
-        --name carla-server \
-        -it carlasim/carla:0.9.16
-
-2. Ensure X11 forwarding is allowed on the host before starting the container:
-
-   .. code-block:: bash
-
-      xhost +local:root
-
-3. If you are on a **Wayland** session (default on Ubuntu 24.04), you may also need to set
-   ``WAYLAND_DISPLAY`` or switch to an X11 session at the login screen.
-
-Cannot Connect to CARLA
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-**Symptom:** ``Failed to connect to CARLA: timeout``
-
-**Solutions:**
-
-1. Wait for CARLA to fully load (30-60 seconds after window appears)
-
-2. Check CARLA container is running:
-
-   .. code-block:: bash
-
-      docker ps
-
-   You should see output similar to:
-
-   .. code-block:: text
-
-      CONTAINER ID   IMAGE                      STATUS          NAMES
-      a1b2c3d4e5f6   carlasim/carla:0.9.16      Up 2 minutes    carla-server
-
-   - If the ``STATUS`` column says ``Up``, the container is running.
-   - If the container is not listed, it may have exited. Run ``docker ps -a`` to see all containers
-     (including stopped ones). The ``STATUS`` column will show the exit code
-     (e.g., ``Exited (1) 30 seconds ago``), which can help diagnose why it stopped.
-   - To restart a stopped container: ``docker start -ai carla-server``
-
-3. Verify CARLA is listening on its default port (2000):
-
-   .. code-block:: bash
-
-      netstat -tuln | grep 2000
-
-   Expected output:
-
-   .. code-block:: text
-
-      tcp   0   0   0.0.0.0:2000   0.0.0.0:*   LISTEN
-
-   If there is no output, CARLA has not finished starting yet or crashed during initialization.
-   Check the container logs for errors:
-
-   .. code-block:: bash
-
-      docker logs carla-server
-
-4. Verify the CARLA Python client can connect:
-
-   .. code-block:: bash
-
-      python3 -c "import carla; c = carla.Client('localhost', 2000); c.set_timeout(2.0); print(c.get_server_version())"
-
-   This should print the server version (e.g., ``0.9.16``). If it raises a timeout error, CARLA
-   is either still loading or the ``--net=host`` flag was not used when starting the container.
-
-No Topics Visible
-~~~~~~~~~~~~~~~~~
-
-**Symptom:** ``ros2 topic list`` does not show ``/carla/ego_vehicle/rgb_front/image``
-
-**Solutions:**
-
-1. Verify bridge node is running:
-
-   .. code-block:: bash
-
-      ros2 node list
-
-2. Check for errors in bridge terminal output
-
-3. Restart ROS 2 daemon:
-
-   .. code-block:: bash
-
-      ros2 daemon stop
-      ros2 daemon start
-
-4. Re-source workspace:
-
-   .. code-block:: bash
-
-      source ~/.bashrc
-
-Build Errors
-~~~~~~~~~~~~
-
-**Symptom:** ``colcon build`` fails
-
-**Solutions:**
-
-1. Clean workspace:
-
-   .. code-block:: bash
-
-      cd ~/enpm818z_ws
-      rm -rf build install log
-      colcon build --symlink-install
-
-2. Verify dependencies:
-
-   .. code-block:: bash
-
-      rosdep install --from-paths src --ignore-src -r -y
-
-3. Check ROS 2 is sourced:
-
-   .. code-block:: bash
-
-      echo $ROS_DISTRO
+.. warning::
+   Do not "fix" this by adding ``-e DISPLAY=$DISPLAY`` and an X11 socket mount.
+   On a Wayland session (the default on Ubuntu 24.04), on a display other than
+   ``:0``, or with a host UID other than 1000, that turns a harmless warning into
+   a container that exits immediately. See :ref:`why-headless`.
 
 ---------------------------------------------------------
 Performance Optimization
@@ -1072,6 +857,104 @@ For Better Quality
        --ros-args -p image_width:=1920 -p image_height:=1080
 
 ``Epic`` is already the default for ``carla_basic``.
+
+.. _removing-carla:
+
+---------------------------------------------------------
+Removing CARLA and Reclaiming Disk Space
+---------------------------------------------------------
+
+The CARLA image is about 29 GB, and a container that has actually been run adds
+a writable layer of its own -- often another 15--19 GB once Unreal has written
+its shader caches and the NVIDIA libraries have been injected into it. Check
+what Docker is currently holding:
+
+.. code-block:: bash
+
+   docker system df
+
+.. code-block:: text
+
+   TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+   Images          2         2         29.45GB   0B (0%)
+   Containers      2         1         18.93GB   4.096kB (0%)
+   Local Volumes   0         0         0B        0B
+   Build Cache     0         0         0B        0B
+
+.. important::
+   **Order matters.** Docker refuses to delete an image while any container
+   still references it, even a stopped one. Remove the container first, then the
+   image. The other way round fails with a ``conflict: unable to remove
+   repository reference`` error naming the container that still holds it.
+
+Step 1: Remove the Container
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: bash
+
+   docker stop carla-server
+   docker rm carla-server
+
+.. danger::
+   If you installed the optional additional maps
+   (:ref:`additional-maps-optional`), this deletes them. They live in the
+   container's writable layer, **not** in the image, so you would have to
+   redownload and reimport roughly 30 GB to get them back. Docker gives no
+   warning when you do this.
+
+Earlier failed attempts often leave extra containers behind. List every
+container built from the CARLA image:
+
+.. code-block:: bash
+
+   docker ps -a --filter ancestor=carlasim/carla:0.9.16
+
+If that lists anything you still want gone, remove them all at once:
+
+.. code-block:: bash
+
+   docker ps -aq --filter ancestor=carlasim/carla:0.9.16 | xargs -r docker rm -f
+
+.. note::
+   The ``-r`` matters. Without it, ``xargs`` still runs ``docker rm -f`` when
+   the list is empty and you get ``docker: 'docker rm' requires at least 1
+   argument``. That message means there was nothing left to remove -- the
+   cleanup already succeeded -- but it reads like a failure. The older
+   ``docker rm -f $(...)`` form has the same problem and should be avoided.
+
+Step 2: Remove the Image
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: bash
+
+   docker rmi carlasim/carla:0.9.16
+
+Confirm it is gone -- this should print nothing:
+
+.. code-block:: bash
+
+   docker images | grep carla
+
+.. note::
+   Redownloading the image later takes 10--15 minutes on a fast connection. If
+   you are only short of space temporarily, removing the **container** (Step 1)
+   frees most of the space while keeping the image, so you can pick up again
+   with a single ``docker run``.
+
+Step 3: Optional Host Cleanup
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The Python client and the maps archive live on the host, outside Docker:
+
+.. code-block:: bash
+
+   pip3 uninstall carla
+   rm -f ~/Downloads/AdditionalMaps_0.9.16.tar.gz
+
+.. warning::
+   You may see ``docker system prune -a`` suggested online. It removes **every**
+   unused image and stopped container on the machine, not just CARLA's. Prefer
+   the targeted commands above unless you genuinely want to clear everything.
 
 ---------------------------------------------------------
 Comparison with Ubuntu 22.04 Setup
@@ -1107,12 +990,27 @@ Comparison with Ubuntu 22.04 Setup
 Both setups use the same ROS 2 package and provide identical functionality.
 
 ---------------------------------------------------------
+Next Steps
+---------------------------------------------------------
+
+
+With the server running, continue to:
+
+- :doc:`Using CARLA from Python <carla-python>` -- write scripts that connect to
+  the server, load maps, and watch the simulation.
+- :doc:`CARLA ROS 2 Bridge <carla-ros2>` -- build and run the course's ROS 2
+  bridge package.
+
+Both pages cover this platform and the native Ubuntu 22.04 install, with the
+differences shown in tabs.
+
+
+---------------------------------------------------------
 References
 ---------------------------------------------------------
 
+
 - CARLA Documentation: https://carla.readthedocs.io/en/0.9.16/
 - CARLA Downloads: https://github.com/carla-simulator/carla/releases/tag/0.9.16
-- Python API Reference: https://carla.readthedocs.io/en/0.9.16/python_api/
 - Docker Documentation: https://docs.docker.com/
 - NVIDIA Container Toolkit: https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/
-- GitHub Issue (Double Slash Bug): https://github.com/carla-simulator/carla/issues/9278
