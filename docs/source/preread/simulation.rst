@@ -194,7 +194,7 @@ The Open-Source Landscape
      - Unreal Engine; the course simulator. Python API, ROS 2, OpenDRIVE
        maps. `CoRL 2017 paper
        <https://proceedings.mlr.press/v78/dosovitskiy17a.html>`__.
-   * - `AWSIM <https://github.com/tier4/AWSIM>`__
+   * - `AWSIM <https://github.com/autowarefoundation/AWSIM>`__
      - Active
      - Autoware development specifically.
      - Unity-based, from TIER IV. Needs no extra middleware layer to talk to
@@ -303,12 +303,12 @@ Others you will encounter:
      - Coverage-driven verification: describe scenarios abstractly, generate
        many concrete variants, and measure coverage rather than count runs.
        Closely tied to OpenSCENARIO 2.0.
-   * - `IPG CarMaker <https://ipg-automotive.com/en/products-solutions/software/carmaker/>`__
+   * - `IPG CarMaker <https://www.ipg-automotive.com/en/products-solutions/software/carmaker>`__
      - Vehicle dynamics and HIL, long established in automotive engineering.
-   * - `dSPACE <https://www.dspace.com/>`__
+   * - `dSPACE <https://www.dspace.com/en/pub/home.cfm>`__
      - HIL rigs and simulation models; the classic supplier for testing real
        ECUs against a simulated vehicle.
-   * - `rFpro <https://www.rfpro.com/>`__
+   * - `rFpro <https://rfpro.com/>`__
      - Physically accurate rendering for sensor simulation, from a motorsport
        simulation background.
    * - `Cognata <https://www.cognata.com/>`__

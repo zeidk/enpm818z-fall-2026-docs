@@ -11,7 +11,7 @@ References
       :gutter: 2
 
       .. grid-item-card:: SAE J3016
-         :link: https://www.sae.org/standards/content/j3016_202104/
+         :link: https://www.sae.org/standards/j3016_202104-taxonomy-definitions-terms-related-driving-automation-systems-road-motor-vehicles/
          :class-card: sd-border-secondary
 
          **Levels of Driving Automation**

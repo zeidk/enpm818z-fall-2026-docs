@@ -98,7 +98,7 @@ Next Steps
 - **Due in Week 3**: the **setup milestone** -- CARLA running, ROS 2 workspace
   built, sensors publishing. Individual, pass/fail. Teams are formed the same
   evening, GP1 is posted, and each team writes its charter.
-- **Reading**: `SAE J3016 <https://www.sae.org/standards/content/j3016_202104/>`_
+- **Reading**: `SAE J3016 <https://www.sae.org/standards/j3016_202104-taxonomy-definitions-terms-related-driving-automation-systems-road-motor-vehicles/>`_
   (at least the level definitions and the ODD discussion) and
   `NIST IR 8527 <https://doi.org/10.6028/NIST.IR.8527>`_ as a map of the
   standards landscape -- free to download.
