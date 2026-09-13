@@ -35,8 +35,8 @@ which track, and the place where the Tempe crash went wrong.
 .. important::
 
    **This lecture is the other half of L2.** L2 was about placing and
-   calibrating sensors so that combining them is possible at all. L3 is the
-   how the combining is actually done. Everything you calibrated last week is
+   calibrating sensors so that combining them is possible at all. L3 is how
+   the combining is actually done. Everything you calibrated last week is
    what the filter combines here.
 
 .. note::
