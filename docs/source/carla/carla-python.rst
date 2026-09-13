@@ -57,7 +57,7 @@ Check the client library is installed:
 
       .. code-block:: bash
 
-         python3 -c "import carla; print(carla.__version__)"
+         python3 -c "import carla; print('carla client OK')"
 
       It comes from the wheel in ``PythonAPI/carla/dist`` (Step 2 of the
       native guide).
@@ -67,12 +67,19 @@ Check the client library is installed:
 
       .. code-block:: bash
 
-         python3 -c "import carla; print(carla.__version__)"
+         python3 -c "import carla; print('carla client OK')"
 
       It comes from ``pip3 install carla==0.9.16`` on the **host**, not from
       inside the container.
 
-Either way it should print ``0.9.16``.
+Either way it should print ``carla client OK``.
+
+.. note::
+
+   **Do not test with** ``carla.__version__``. The 0.9.16 wheel does not
+   define that attribute, so it raises ``AttributeError`` even when the
+   client is installed correctly. To check versions, ask a running server
+   with ``client.get_client_version()`` and ``client.get_server_version()``.
 
 
 ---------------------------------------------------------

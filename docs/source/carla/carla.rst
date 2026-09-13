@@ -13,6 +13,11 @@ CARLA (CAR Learning to Act) is an open-source autonomous driving simulator desig
    that platform and you must use the **Docker image** instead -- see
    the :doc:`Ubuntu 24.04 setup guide <ubuntu24>`.
 
+   If you have **no suitable NVIDIA GPU of your own**, you can run CARLA on
+   the UMIACS **Nexus** cluster instead -- see the
+   :doc:`UMIACS Nexus setup guide <umiacs>`. Nexus does not permit Docker, so
+   that guide uses **Apptainer**. It requires a UMIACS class account.
+
 .. important::
    **Why CARLA 0.9.16?**
    
@@ -40,7 +45,13 @@ CARLA (CAR Learning to Act) is an open-source autonomous driving simulator desig
 
 .. toctree::
    :hidden:
-   :caption: Using CARLA (either platform)
+   :caption: UMIACS Nexus (Apptainer)
+
+   Setup <umiacs>
+
+.. toctree::
+   :hidden:
+   :caption: Using CARLA (any platform)
 
    Python Client <carla-python>
    ROS 2 Bridge <carla-ros2>
