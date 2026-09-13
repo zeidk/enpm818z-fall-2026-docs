@@ -6,7 +6,7 @@ Exercises
 
    **These exercises are not submitted and they are not graded.** Nothing on
    this page goes to ELMS-Canvas. They exist so you can check your own
-   understanding before **Quiz 1 (Week 4)** and before the **Week 3 setup
+   understanding before **Quiz 1 (Week 3)** and before the **Week 3 setup
    milestone**, which *is* graded.
 
    Each exercise ends with a box giving the reasoning. Work the exercise

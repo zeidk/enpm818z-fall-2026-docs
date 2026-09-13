@@ -121,3 +121,51 @@ div.admonition.plain-english {
   --pst-color-info-bg:           var(--enpm-fuchsia-bg);
   --pst-icon-admonition-default: "\f0eb";   /* lightbulb */
 }
+
+/* ------------------------------------------------------------
+ * Wider content column
+ *
+ * pydata-sphinx-theme constrains the reading area in three
+ * independent places, and all three have to move or nothing
+ * visibly changes:
+ *
+ *   .bd-sidebar-primary   width 25%      the left nav
+ *   .bd-page-width        max 88rem      the whole layout
+ *   .bd-article-container max 60em       the article itself
+ *
+ * The last one is the real limiter: shrinking the sidebar alone
+ * does nothing, because the article refuses to grow past 60em.
+ *
+ * Tune ONE number: --enpm-article-width. Everything else follows.
+ * Larger is roomier for tables and code, worse for long prose,
+ * since text past roughly 90 characters a line gets hard to track.
+ * ------------------------------------------------------------ */
+:root {
+  --enpm-article-width: 72em;   /* was 60em */
+  --enpm-sidebar-width: 17rem;  /* was 25% of the page */
+}
+
+/* 1. narrower left navigation, and a fixed width so it does not
+      grow on large monitors the way a percentage does */
+.bd-sidebar-primary {
+  width: var(--enpm-sidebar-width);
+  flex: 0 0 var(--enpm-sidebar-width);
+  padding-right: 0.5rem;
+}
+
+/* 2. let the overall layout use more of a wide screen */
+@media (min-width: 960px) {
+  .bd-page-width {
+    max-width: 100rem;
+  }
+}
+
+/* 3. and let the article actually fill the space freed up */
+.bd-article-container {
+  max-width: var(--enpm-article-width);
+}
+
+/* trim the gap between the nav and the text */
+.bd-article {
+  padding-left: 1rem;
+}

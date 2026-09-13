@@ -157,69 +157,19 @@ grade). All four tasks are required. There is no bonus task in GP4
 
       def astar_waypoints(start_wp, goal_location, world, resolution=2.0,
                           max_nodes=500):
-                              """A* over the CARLA waypoint graph.
+          """A* over the CARLA waypoint graph.
 
-                              YOU WRITE THIS. The algorithm is standard; the decisions that are
-                              yours are the cost, the heuristic, and how you expand a waypoint
-                              into its neighbours.
+          YOU WRITE THIS, including the heuristic. The algorithm is
+          standard; what is yours is the cost, the heuristic, and how a
+          waypoint expands into its neighbours.
 
-                              Your heuristic must be admissible, meaning it never overestimates
-                              the remaining cost. State in the report which heuristic you chose
-                              and why it cannot overestimate. A heuristic that does overestimate
-                              still returns a path, just not the shortest one, and nothing
-                              reports the difference.
-                              """
-                              raise NotImplementedError("GP4: A* search.")
-
+          Your heuristic must be admissible, meaning it never overestimates
+          the remaining cost. State in the report which one you chose and
+          why it cannot overestimate. An inadmissible heuristic still
+          returns a path, just not the shortest, and nothing reports the
+          difference.
           """
-          A* search on CARLA waypoint graph.
-
-          Parameters
-          ----------
-          start_wp      : carla.Waypoint  -- starting waypoint
-          goal_location : carla.Location  -- goal position
-          world         : carla.World
-          resolution    : float           -- waypoint step size (metres)
-          max_nodes     : int             -- expansion limit (fail-safe)
-
-          Returns
-          -------
-          list[carla.Waypoint] -- ordered waypoints from start to goal,
-                                  or empty list if no path found.
-          """
-          def heuristic(wp):
-              loc = wp.transform.location
-              return np.sqrt((loc.x - goal_location.x)**2 +
-                             (loc.y - goal_location.y)**2)
-
-          open_set = []
-          heapq.heappush(open_set, (heuristic(start_wp), 0, start_wp))
-          came_from = {}
-          g_score = {start_wp.id: 0.0}
-          expanded = 0
-
-          while open_set and expanded < max_nodes:
-              _, g, current = heapq.heappop(open_set)
-              expanded += 1
-
-              if heuristic(current) < resolution:
-                  # Reconstruct path
-                  path = []
-                  while current.id in came_from:
-                      path.append(current)
-                      current = came_from[current.id]
-                  path.append(start_wp)
-                  return list(reversed(path))
-
-              for neighbor in get_next_waypoint(current, resolution):
-                  tent_g = g + resolution
-                  if neighbor.id not in g_score or tent_g < g_score[neighbor.id]:
-                      g_score[neighbor.id] = tent_g
-                      f = tent_g + heuristic(neighbor)
-                      heapq.heappush(open_set, (f, tent_g, neighbor))
-                      came_from[neighbor.id] = current
-
-          return []  # No path found
+          raise NotImplementedError("GP4: astar_waypoints")
 
    **Re-Planning Triggers:**
 
@@ -290,67 +240,17 @@ grade). All four tasks are required. There is no bonus task in GP4
 
       def pure_pursuit_steer(vehicle_pose, path_poses, lookahead_dist,
                              wheelbase=2.875):
-                                 """Steering angle, in radians, from Pure Pursuit.
+          """Steering angle in radians, from Pure Pursuit.
 
-                                 YOU WRITE THIS. Find the goal point one lookahead distance along
-                                 the path, express it in the vehicle frame, and turn the resulting
-                                 geometry into a steering angle using the wheelbase.
+          YOU WRITE THIS. Find the goal point one lookahead distance along
+          the path, express it in the vehicle frame, and turn that geometry
+          into a steering angle using the wheelbase.
 
-                                 The lookahead distance is the whole character of the controller:
-                                 too short and it oscillates, too long and it cuts corners. Report
-                                 what you used and whether you scaled it with speed.
-                                 """
-                                 raise NotImplementedError("GP4: pure pursuit.")
-
+          The lookahead distance is the whole character of the controller:
+          too short and it oscillates, too long and it cuts corners. Report
+          what you used and whether you scaled it with speed.
           """
-          Compute steering angle (radians) using Pure Pursuit.
-
-          Parameters
-          ----------
-          vehicle_pose  : geometry_msgs/Pose  -- current vehicle pose
-          path_poses    : list[geometry_msgs/Pose]  -- planned path
-          lookahead_dist: float  -- lookahead distance L_d (metres)
-          wheelbase     : float  -- vehicle wheelbase L (metres)
-
-          Returns
-          -------
-          float -- steering angle in radians (positive = left)
-          """
-          vx = vehicle_pose.position.x
-          vy = vehicle_pose.position.y
-
-          # Extract heading from quaternion
-          q = vehicle_pose.orientation
-          heading = 2.0 * np.arctan2(q.z, q.w)
-
-          # Find lookahead point: first path pose at distance >= L_d
-          lookahead_pt = None
-          for pose in path_poses:
-              dx = pose.position.x - vx
-              dy = pose.position.y - vy
-              dist = np.sqrt(dx**2 + dy**2)
-              if dist >= lookahead_dist:
-                  lookahead_pt = (pose.position.x, pose.position.y)
-                  break
-
-          if lookahead_pt is None:
-              # At or past goal -- use last point
-              last = path_poses[-1].position
-              lookahead_pt = (last.x, last.y)
-
-          # Angle to lookahead point in vehicle frame
-          dx = lookahead_pt[0] - vx
-          dy = lookahead_pt[1] - vy
-          angle_to_pt = np.arctan2(dy, dx)
-          alpha = angle_to_pt - heading
-
-          # Normalize alpha to [-pi, pi]
-          alpha = (alpha + np.pi) % (2 * np.pi) - np.pi
-
-          # Pure Pursuit steering formula
-          Ld = np.sqrt(dx**2 + dy**2)  # actual distance to lookahead pt
-          delta = np.arctan2(2.0 * wheelbase * np.sin(alpha), Ld)
-          return delta
+          raise NotImplementedError("GP4: pure_pursuit_steer")
 
    **PID -- Longitudinal Control:**
 
@@ -370,20 +270,12 @@ grade). All four tasks are required. There is no bonus task in GP4
               self._prev_error = 0.0
 
           def compute(self, setpoint, measurement, dt):
+              """One PID step. Returns the control output.
+
+              YOU WRITE THIS. Three terms and an anti-windup guard. State in
+              the report how you tuned the gains and what you clamped.
               """
-              Returns throttle in [0, 1] or brake in [0, 1].
-              Positive output -> throttle, negative -> brake.
-              """
-              error = setpoint - measurement
-              self._integral += error * dt
-              # Anti-windup: clamp integrator
-              self._integral = np.clip(
-                  self._integral, -self.windup_limit, self.windup_limit)
-              derivative = (error - self._prev_error) / max(dt, 1e-6)
-              self._prev_error = error
-              output = self.kp * error + self.ki * self._integral \
-                       + self.kd * derivative
-              return output
+              raise NotImplementedError("GP4: compute")
 
    **Parameters (configurable via** ``controller_config.yaml`` **):**
 

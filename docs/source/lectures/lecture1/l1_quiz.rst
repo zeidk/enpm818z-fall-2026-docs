@@ -15,7 +15,7 @@ CARLA is introduced in L2, so nothing here assumes it.
 
    **This quiz is not submitted and it is not graded.** It is a self-check.
    The graded quizzes are the **five in-class quizzes** listed in the
-   :doc:`syllabus </syllabus/index>`, starting with **Quiz 1 in Week 4**.
+   :doc:`syllabus </syllabus/index>`, starting with **Quiz 1 in Week 3**.
 
 .. note::
 

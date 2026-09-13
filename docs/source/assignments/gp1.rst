@@ -26,26 +26,126 @@ GP1: Sensor Suite & Data Pipeline
 Overview
 --------
 
-GP1 establishes the **foundation of your team's ADS pipeline**. You will create
-the ``ads_pipeline`` ROS 2 package that all subsequent group projects (GP2
-through GP4) will extend and build upon. A well-structured, maintainable package
-here pays dividends for the entire semester.
+GP1 builds the ``ads_pipeline`` ROS 2 package that GP2, GP3 and GP4 all
+extend. Everything you write here you will still be using in December, so
+the structure matters as much as the behaviour.
 
-By the end of GP1, your team will have:
+But the package is the vehicle, not the destination. The point of GP1 is one
+specific capability, and the other four tasks exist to make it possible.
 
-- A properly structured ROS 2 Python package connected to CARLA.
-- An ego vehicle spawned with a **full sensor suite** (camera, LiDAR, RADAR,
-  GNSS, IMU) and all parameters configurable via YAML.
-- Sensor data recorded to a ``ros2 bag`` file and verified through playback.
-- An RViz2 visualization showing all sensor streams simultaneously.
-- A working **LiDAR-to-camera projection** demonstrating cross-sensor
-  calibration.
+Why the Projection Is the Point
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+L2 put it like this. **A LiDAR reports metres from itself. A camera reports
+rows and columns of pixels. Nothing in either measurement says whether the
+two are looking at the same object.**
+
+Picture what each sensor actually gives you.
+
+.. list-table::
+   :widths: 20 44 36
+   :header-rows: 1
+   :class: table-hover
+
+   * - **Sensor**
+     - **What it knows**
+     - **What it cannot tell you**
+   * - LiDAR
+     - Something is 23 m ahead and 1.8 m wide, measured to the centimetre.
+     - What that something is. A pedestrian and a bollard are both just
+       returns.
+   * - Camera
+     - That is a pedestrian, and they are facing away from you.
+     - How far away they are, to any useful accuracy.
+
+Each one holds exactly the half the other is missing, and a planner needs
+both halves at once. It cannot brake for "an object at 23 m" without knowing
+whether it is a person or a postbox, and it cannot brake for "a pedestrian"
+without knowing where they are.
+
+The trouble is that those two statements live in **different coordinate
+systems**, so there is no way even to ask whether they describe the same
+thing. Projecting the LiDAR points into the camera image is what makes that
+question askable. Once every LiDAR return has a pixel, a detection box can
+acquire a distance and a distance can acquire a label.
+
+.. important::
+
+   **This is the step every later project is built on.**
+
+   - **GP2** produces detections as boxes in the image. A box on its own is
+     not a thing in the world. The projection is what turns it into one.
+   - **GP3** fuses and tracks those objects over time, which requires them
+     to be in one frame to begin with.
+   - **GP4** plans around them, which requires knowing both where they are
+     and what they are.
+
+   If the projection is wrong in GP1, everything downstream inherits the
+   error, and nothing downstream will tell you.
+
+.. warning::
+
+   **The failure mode is quiet, which is why this is worth doing carefully
+   now.**
+
+   Get the extrinsic wrong and the points still land somewhere. They look
+   plausible. What actually happens is that a label attaches to the wrong
+   object, so a pedestrian's identity ends up on the parked car beside them,
+   or one real object becomes two tracked objects.
+
+   Nothing raises an error, and the error grows with range. L2 measured it:
+   one degree of rotation error is 1.75 m of lateral error at 100 m, about
+   the width of a car. On a bench at 5 m the same error is 9 cm and looks
+   like noise.
+
+.. note::
+
+   **Projection is not fusion, and GP1 does not ask for fusion.**
+
+   The projection tells you which pixel a LiDAR point lands on. It does not
+   tell you whether the thing at that pixel and the thing the laser hit are
+   the same object. Deciding that is **data association**, and combining the
+   two into one estimate is **fusion**. Both are L3, and both are GP3.
+
+What the Other Four Tasks Are For
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Read in that light, GP1 stops being five unrelated chores.
+
+.. list-table::
+   :widths: 26 74
+   :header-rows: 1
+   :class: compact-table
+
+   * - **Task**
+     - **Why the projection needs it**
+   * - 1. Package setup
+     - Somewhere for all of it to live, structured so GP2 to GP4 can extend
+       it rather than rewrite it.
+   * - 2. Sensor suite
+     - You cannot project one sensor into another until both are running,
+       mounted at known positions, and publishing.
+   * - 3. Recording
+     - The projection needs a camera frame and a LiDAR sweep **from the same
+       instant**. Getting that is a timing problem, which is what Task 3
+       makes you look at directly.
+   * - 4. RViz2
+     - The fastest way to see that your frames and transforms are right
+       before you start debugging arithmetic.
+   * - 5. Projection
+     - The capability itself.
+
+By the end of GP1 your team will have a ROS 2 package connected to CARLA, an
+ego vehicle carrying the full sensor suite with every parameter in YAML, the
+streams recorded to a rosbag and verified on playback, an RViz2 view of all
+of them at once, and LiDAR points landing where they belong in the camera
+image.
 
 .. important::
 
    This package is the ``ads_pipeline`` skeleton. Every file you create here
-   will be inherited by GP2, GP3, and GP4. Follow the provided folder structure
-   exactly -- future GPs assume it.
+   is inherited by GP2, GP3 and GP4. Follow the required folder structure
+   exactly, because the later projects assume it.
 
 
 Learning Objectives
@@ -61,44 +161,92 @@ After completing GP1, you will be able to:
   ``nav_msgs``).
 - Record and replay sensor streams using ``ros2 bag``.
 - Visualize heterogeneous sensor modalities in RViz2.
-- Apply extrinsic calibration to project LiDAR points onto a camera image.
+- Apply extrinsic calibration to project LiDAR points onto a camera image,
+  and explain what that makes possible that neither sensor could do alone.
 
+
+.. _gp1-provided-resources:
 
 Provided Resources
 ------------------
 
-The following files are distributed on Canvas and the course GitHub. Download
-them **before** starting each task:
+Everything you need is in one repository:
+
+.. code-block:: bash
+
+   cd ~/enpm818z_ws/src
+   git clone https://github.com/zeidk/enpm818z-fall-2026-gp1-starter.git GP1_TeamX
+   cd GP1_TeamX
+
+Rename the directory to your own team letter as you clone it, as above. That
+name is what the folder structure and the submission checklist expect.
+
+.. important::
+
+   **Do not fork into a public repository.** Your work is coursework, and a
+   public fork is visible to every other team. Either clone and push to a
+   private team repository, or use the private fork GitHub Classroom hands
+   you if your section is using it.
+
+What the starter contains
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The message-format plumbing is done for you. Everything GP1 actually grades
+is not.
 
 .. list-table::
-   :widths: 35 65
+   :widths: 34 20 46
    :header-rows: 1
    :class: compact-table
 
-   * - File
-     - Description
-   * - ``package.xml`` (template)
-     - Pre-filled with required dependencies; add your node entry points.
-   * - ``setup.py`` (template)
-     - Entry points section for you to fill in for each node.
-   * - ``carla_config.yaml``
-     - Default sensor parameters (resolution, FOV, channels, range). Edit to
-       experiment with configurations.
-   * - ``sensors_launch.py``
-     - Example launch file demonstrating how to pass YAML parameters to a node.
-   * - ``ads_pipeline.rviz``
-     - Pre-configured RViz2 layout with display types already added; you only
-       need to connect the correct topic names.
-   * - :download:`carla_conversions.py <scripts/carla_conversions.py>`
-     - **Message-format plumbing.** Converts every CARLA measurement into the
-       matching ROS 2 message, including the PointCloud2 packing and the
-       RADAR MarkerArray, and builds the static TF tree. Import it rather
-       than rewriting it. The docstrings say what it does not do for you.
+   * - **File**
+     - **State**
+     - **What you do with it**
+   * - ``ads_pipeline/carla_conversions.py``
+     - Complete
+     - Every CARLA measurement to its ROS 2 message, including the
+       PointCloud2 packing, the RADAR MarkerArray and the static TF helper.
+       Import it rather than rewriting it.
+   * - ``ads_pipeline/sensor_manager.py``
+     - Skeleton, 9 TODOs
+     - **Task 2.** Spawning, YAML parameters, TF, clean shutdown. The RGB
+       camera is wired as a worked example; the other six sensors follow the
+       same shape.
+   * - ``ads_pipeline/lidar_projection.py``
+     - One function missing
+     - **Task 5.** The intrinsics, the projection maths, the depth colouring
+       and the overlay are all given. ``build_extrinsic()`` is yours, and it
+       is about six lines.
+   * - ``launch/sensors_launch.py``
+     - Complete
+     - Loads the YAML and starts the node. Copy its shape for Task 3.
+   * - ``launch/record_launch.py``
+     - Stub
+     - **Task 3.** Record every topic to a bag.
+   * - ``config/carla_config.yaml``
+     - Placeholders
+     - Replace with **your team's rig** from :ref:`gp1-team-config` before
+       you run anything.
+   * - ``rviz/ads_pipeline.rviz``
+     - Displays laid out
+     - **Task 4.** Connect the topics; the display types are already there.
+   * - ``package.xml``, ``setup.py``
+     - Dependencies declared
+     - **Task 1.** Add your entry points and team details.
+
+.. tip::
+
+   ``lidar_projection.run_three_cases()`` produces all three overlays Task 5
+   asks for and prints the point counts, as soon as ``build_extrinsic``
+   works. It derives the two broken variants from your own transform, so the
+   comparison is honest: same scene, one thing changed at a time.
 
 .. note::
 
-   Provided scripts are starting points. You are expected to extend them
-   significantly. Simply submitting unmodified templates receives no credit.
+   **Nothing in the starter is a solution.** Every function that raises
+   ``NotImplementedError`` is deliberate, and a submission that still raises
+   one has not completed that task. Submitting the skeleton unchanged
+   receives no credit.
 
 
 .. _gp1-team-config:
@@ -120,6 +268,29 @@ Your Team's Sensor Configuration
    Graders recompute the expected matrix from your assigned row. If your
    reported matrix does not match your row, the work is not yours, whatever
    the image looks like.
+
+.. admonition:: What the "Spawn" column means, and which map to load
+   :class: note
+
+   CARLA ships every map with a fixed list of valid starting positions,
+   already on the road and correctly oriented. ``get_spawn_points()``
+   returns that list, and the number in the table is an index into it.
+   **Spawn 58 means** ``get_spawn_points()[58]``.
+
+   .. code-block:: python
+
+      world = client.load_world('Town01')          # always, for GP1
+      spawn = world.get_map().get_spawn_points()[58]
+      vehicle = world.try_spawn_actor(blueprint, spawn)
+
+   **All of GP1 uses Town01.** That matters, because the list is different
+   on every map: Town01 has 255 spawn points, Town02 has 101, Town03 has
+   265. The same index is a different street on a different map, so a spawn
+   index means nothing until the map is pinned.
+
+   Load the map explicitly rather than using whatever the server happens to
+   have loaded. Another team's session, or your own earlier run, would
+   otherwise decide where your vehicle starts.
 
 .. GP1-TEAM-CONFIG-BEGIN (generated by tools/make_team_configs.py)
 
@@ -232,21 +403,36 @@ Tasks
 
    **Steps:**
 
-   1. Create the package scaffold:
+   The starter already has this structure, so most of Task 1 is
+   understanding it rather than typing it. Do not run ``ros2 pkg create``.
 
-      .. code-block:: bash
+   1. Clone the starter as your team directory, as in
+      :ref:`gp1-provided-resources`, and look at what is there. You should
+      be able to say what each of ``package.xml``, ``setup.py``,
+      ``resource/ads_pipeline`` and the ``share/`` entries in ``data_files``
+      is for before you change anything.
 
-         cd ~/ros2_ws/src
-         ros2 pkg create --build-type ament_python ads_pipeline \
-             --dependencies rclpy sensor_msgs nav_msgs cv_bridge std_msgs
+   2. Fill in your team's details in both ``package.xml`` (the
+      ``<maintainer>`` tag) and ``setup.py`` (``maintainer`` and
+      ``maintainer_email``).
 
-   2. Replace the generated ``package.xml`` and ``setup.py`` with the provided
-      templates, then fill in your team's details and entry points.
-   3. Create the ``config/``, ``launch/``, and ``rviz/`` directories inside
-      the package.
-   4. Copy ``carla_config.yaml`` and ``ads_pipeline.rviz`` into their
-      respective directories.
-   5. Declare the data directories in ``setup.py`` so they are installed:
+   3. Add a ``console_scripts`` entry point for every node your team
+      creates. ``sensor_manager`` is already listed as the pattern:
+
+      .. code-block:: python
+
+         entry_points={
+             'console_scripts': [
+                 'sensor_manager = ads_pipeline.sensor_manager:main',
+                 # one line per additional node
+             ],
+         }
+
+      A node with no entry point cannot be launched by ``ros2 run`` or by a
+      launch file, and this is the most common reason a grader cannot start
+      your code.
+
+   4. Note how the non-Python files reach the install space:
 
       .. code-block:: python
 
@@ -254,13 +440,21 @@ Tasks
              ('share/ament_index/resource_index/packages',
                  ['resource/' + package_name]),
              ('share/' + package_name, ['package.xml']),
-             ('share/' + package_name + '/launch',
-                 glob('launch/*.py')),
-             ('share/' + package_name + '/config',
+             (os.path.join('share', package_name, 'config'),
                  glob('config/*.yaml')),
-             ('share/' + package_name + '/rviz',
+             (os.path.join('share', package_name, 'launch'),
+                 glob('launch/*.py')),
+             (os.path.join('share', package_name, 'rviz'),
                  glob('rviz/*.rviz')),
          ],
+
+      Anything not listed here is not installed, so your launch file will
+      not find it. If you add a new config or rviz file, it is covered by
+      the existing globs; if you add a new *directory*, it is not.
+
+   5. Replace the placeholder rig in ``config/carla_config.yaml`` with your
+      team's row from :ref:`gp1-team-config`. Do this before you run
+      anything, because every later task depends on it.
 
    6. Build and source:
 
@@ -471,6 +665,29 @@ Tasks
           finally:
               node.destroy()
               rclpy.shutdown()
+
+   .. admonition:: What you should see
+      :class: note
+
+      With the camera and LiDAR publishing, the two streams look like this.
+      Both were captured from a single CARLA tick, which is what synchronous
+      mode buys you.
+
+   .. figure:: /_static/images/GP1/gp1_rgb_camera.png
+      :alt: A CARLA street scene from the ego vehicle's forward camera, showing a road, a kerb with planters, a lamp post, a wall on the left and a glass building on the right.
+      :align: center
+      :width: 92%
+
+      The RGB camera, 1280x720 at 90 degrees FOV.
+
+   .. figure:: /_static/images/GP1/gp1_lidar_topdown.png
+      :alt: A top-down scatter plot of the same LiDAR sweep, coloured by height, showing the road surface, the kerb line and the building walls either side.
+      :align: center
+      :width: 78%
+
+      The same sweep from above, coloured by height. The two walls and the
+      kerb line are clearly separable, and the empty wedge behind the
+      vehicle is the sensor's own blind spot.
 
    .. tip::
 
@@ -702,6 +919,66 @@ Tasks
 
    where :math:`K` is the :math:`3 \times 3` camera intrinsic matrix.
 
+   **What you actually write**
+
+   The projection maths, the depth colouring and the overlay are given. Two
+   things are not, and the second is the larger job.
+
+   .. list-table::
+      :widths: 30 18 52
+      :header-rows: 1
+      :class: compact-table
+
+      * - **Piece**
+        - **Rough size**
+        - **What makes it work**
+      * - ``build_extrinsic()``
+        - About 8 lines
+        - The axis relabelling, your rig's camera pitch, and the
+          translation direction, composed in the right order. Short, and
+          the entire concept.
+      * - A driver script
+        - 40 to 60 lines
+        - Connect, spawn, capture **one camera frame and one LiDAR sweep
+          from the same tick**, build :math:`K` from your own config, then
+          call ``run_three_cases``.
+
+   .. important::
+
+      **Getting a matched pair is the part people underestimate.**
+
+      ``run_three_cases(points_xyz, image_bgr, K, T_correct)`` needs a
+      camera frame and a LiDAR sweep that describe the same instant. In
+      synchronous mode each sensor produces exactly one measurement per
+      tick, so the standard approach is a ``queue.Queue`` per sensor and one
+      ``get()`` per ``world.tick()``. Free-running callbacks let a loaded
+      machine hand you a frame from one tick and a sweep from another, and
+      the overlay will then be wrong in a way that looks like a calibration
+      error.
+
+   .. danger::
+
+      **Do not feed the ROS PointCloud2 into the projection.**
+
+      ``l2_carla_demo.conversions.lidar_to_msg`` negates the y axis, because
+      ROS is right-handed and CARLA is not:
+
+      .. code-block:: python
+
+         points[:, 1] *= -1.0      # CARLA y is right, ROS y is left
+
+      That flip is correct for RViz2 and wrong for Task 5, because your
+      extrinsic converts from the **raw CARLA sensor frame**. Take the
+      points straight off the measurement:
+
+      .. code-block:: python
+
+         raw = np.frombuffer(sweep.raw_data, dtype=np.float32)
+         points_xyz = raw.reshape(-1, 4)[:, :3].copy()   # no flip
+
+      Apply the flip twice and your points land somewhere plausible and
+      wrong, which is the failure this whole task is about.
+
    **Implementation:**
 
    .. code-block:: python
@@ -867,6 +1144,54 @@ Tasks
       consumer of your data would see, not in terms of the picture.
 
    All three images must come from a real CARLA run, not mocked data.
+
+   .. admonition:: What each of the three should look like
+      :class: note
+
+      These were produced by the reference solution on a single CARLA tick,
+      so they are what a correct implementation gives you, not an artist's
+      impression.
+
+   .. figure:: /_static/images/GP1/gp1_projection_correct.png
+      :alt: The camera image with LiDAR points overlaid and coloured by depth. Points follow the wall on the left, outline the lamp post, cover the building facade on the right, and carpet the road surface, grading from blue nearby to red far away.
+      :align: center
+      :width: 92%
+
+      **Correct.** Points land on the things that produced them. The lamp
+      post is outlined, the kerb and planters are picked out, and the depth
+      colouring grades smoothly from blue nearby to red at range. This is
+      what "geometrically correct" in the rubric means.
+
+   .. figure:: /_static/images/GP1/gp1_projection_no_rotation.png
+      :alt: The same camera image with no LiDAR points drawn on it at all.
+      :align: center
+      :width: 92%
+
+      **Rotation left as identity.** Nothing at all. Every point fails the
+      in-front test, because with the axes unrelabelled that test is
+      applied to the vertical axis rather than the optical one.
+
+   .. figure:: /_static/images/GP1/gp1_projection_wrong_sign.png
+      :alt: The same camera image with LiDAR points overlaid, but the scene is inverted: the road surface is painted across the sky and the building points sit below the horizon.
+      :align: center
+      :width: 92%
+
+      **One sign flipped.** This is the one worth studying. It has
+      essentially the same number of points as the correct version, 6354
+      against 6343, the shape is recognisable, and at a glance it looks like
+      a working result. The road is painted across the sky.
+
+   .. danger::
+
+      **Compare the point counts in those three captions.**
+
+      The blank image announces itself. The inverted one does not: same
+      count, plausible structure, wrong answer. If you were checking
+      "did my projection produce output" rather than "did it produce the
+      right output", you would ship it.
+
+      That is the whole reason the deliverable asks which failure is more
+      dangerous.
 
    .. tip::
 

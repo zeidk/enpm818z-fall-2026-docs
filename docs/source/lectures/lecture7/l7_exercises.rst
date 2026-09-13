@@ -2,6 +2,15 @@
 Exercises
 ====================================================
 
+.. important::
+
+   **These exercises are not submitted and they are not graded.** Nothing on
+   this page goes to ELMS-Canvas.
+
+   They exist so you can check your own understanding before the graded
+   work, which is the five in-class quizzes and the four group projects
+   listed in the :doc:`syllabus </syllabus/index>`.
+
 This page contains five take-home exercises that reinforce the concepts
 from Lecture 7. Exercises cover coordinate transforms, odometry drift,
 ICP registration, and SLAM evaluation.
