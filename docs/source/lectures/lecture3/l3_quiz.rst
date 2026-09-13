@@ -2,508 +2,865 @@
 Quiz
 ====================================================
 
-This quiz covers the key concepts from Lecture 3: Probabilistic State
-Estimation & Fusion. Topics include the motivation for sensor fusion,
-fusion architectures (early, intermediate, late), Kalman filter
-predict/update equations, Kalman gain, EKF, UKF, particle filter,
-filter comparison, data association, and inverse-variance weighting.
+This quiz covers Lecture 3: variance and confidence, weighting by certainty,
+fusion architectures, the Kalman filter and its relatives, filter
+consistency, and data association. Every question can be answered from the
+lecture notes.
 
 .. note::
 
    **Instructions:**
 
-   - Answer all questions to the best of your ability.
    - Multiple choice questions have exactly one correct answer.
-   - True/False questions require you to determine if the statement is correct.
-   - Essay questions require short written responses (2-4 sentences).
+   - True or false questions ask whether the statement holds as stated in
+     the lecture.
+   - Short answer questions want two to four sentences.
    - Click the dropdown after each question to reveal the answer.
 
 
 ----
 
 
-Multiple Choice (Questions 1-10)
-=================================
+Multiple Choice (Questions 1-19)
+================================
 
 .. admonition:: Question 1
    :class: hint
 
-   A camera detects traffic light color while LiDAR measures precise distance
-   to the traffic light pole. This sensor combination exemplifies which type
-   of sensor relationship?
+   Why does the definition of variance square the distances from the mean,
+   instead of just averaging them?
 
-   A. Competitive (redundant)
+   A. Because squaring makes the arithmetic easier
 
-   B. Cooperative
+   B. **Because it removes the sign, and makes large errors count much more
+      than small ones**
 
-   C. Complementary
+   C. Because the result then has the same units as the measurement
 
-   D. Adversarial
+   D. Because it guarantees the result is less than one
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- Complementary
+   **B**.
 
-   Complementary sensors measure different physical phenomena, and their
-   combination provides information that neither can provide alone. Here,
-   the camera provides color/semantic information (which light is active)
-   while LiDAR provides precise range -- a combination that enables both
-   detection and accurate localization of the traffic light.
+   Squaring does two jobs. It stops a reading that is 2 m too high from
+   cancelling a reading that is 2 m too low, which would wrongly suggest
+   there was no spread at all. It also means a reading 10 m off contributes
+   one hundred times as much as one 1 m off, not ten times, which is
+   deliberate. **C is exactly backwards**: squaring gives you metres
+   squared, and that is why we take the square root to get the standard
+   deviation.
 
 
 .. admonition:: Question 2
    :class: hint
 
-   Which fusion architecture processes sensor data from each modality
-   independently through its own feature extractor and then combines the
-   extracted features in a shared representation space?
+   A GNSS receiver is tested against a surveyed point. Every single reading
+   is 5.0 m too far north, with almost no scatter. What does this show?
 
-   A. Early fusion (raw data level)
+   A. High variance and no bias
 
-   B. Intermediate fusion (feature-level)
+   B. **Low variance and large bias**
 
-   C. Late fusion (decision level)
+   C. High variance and large bias
 
-   D. Cascade fusion
+   D. Low variance and no bias
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Intermediate fusion (feature-level)
+   **B** low variance, large bias.
 
-   In intermediate (feature-level) fusion, each sensor modality processes
-   its raw data through its own backbone network to extract features. The
-   extracted features are then fused in a shared space (e.g., a BEV grid
-   where both camera and LiDAR BEV features are concatenated or combined
-   via attention). This balances information richness with computational
-   efficiency.
+   Variance describes **spread**, not correctness. Every reading here is
+   close to every other reading, and all of them are wrong by the same 5 m.
+   A Kalman filter handles variance through :math:`R`, but it does **not**
+   handle bias, because bias breaks the zero mean assumption. You either
+   estimate it as part of the state or calibrate it out first.
 
 
 .. admonition:: Question 3
    :class: hint
 
-   In the Kalman Filter **predict** step, what happens to the uncertainty
-   (covariance matrix P) when no new measurement is received?
+   A statistician tells you a 95% confidence interval for a measurement is
+   from 4.2 to 4.8. What does the 95% actually mean?
 
-   A. P decreases because the filter becomes more confident about the state.
+   A. There is a 95% chance the true value lies between 4.2 and 4.8
 
-   B. P stays constant because no new information has been added.
+   B. 95% of future measurements will land between 4.2 and 4.8
 
-   C. P increases because the process noise (Q) is added, reflecting growing
-      uncertainty about the state over time.
+   C. **If the whole procedure were repeated many times, about 95% of the
+      intervals produced would contain the true value**
 
-   D. P is reset to zero because the previous estimate is discarded.
+   D. The measurement is 95% accurate
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- P increases because the process noise (Q) is added, reflecting
-   growing uncertainty about the state over time.
+   **C**, and **A is the classic mistake**.
 
-   The predict step propagates uncertainty: :math:`P_{k|k-1} = F P_{k-1} F^T + Q`.
-   The process noise covariance Q is always added, representing uncertainty
-   from unmodeled dynamics, actuator noise, and disturbances. Without
-   measurements, the filter's state estimate becomes progressively less
-   certain.
+   The 95% describes **the method**, not the one interval in front of you.
+   Your particular interval either contains the true value or it does not,
+   and you have no way to tell which. Because this is so easy to get wrong,
+   the measurement standards GUM (JCGM 100:2008) and VIM (JCGM 200:2012)
+   avoid the word entirely and use **coverage interval** and **coverage
+   probability** instead.
 
 
 .. admonition:: Question 4
    :class: hint
 
-   The **Kalman Gain** :math:`K_k` approaches zero when:
+   What does the covariance reported by a Kalman filter actually claim?
 
-   A. The measurement noise covariance R is very small (accurate sensor).
+   A. A frequentist confidence interval
 
-   B. The prior covariance P is very large (uncertain prediction).
+   B. **A credible region, valid only if the filter's model is correct**
 
-   C. The measurement noise covariance R is very large (noisy sensor) OR the
-      prior covariance P is very small (confident prediction).
+   C. The true error of the estimate
 
-   D. The state transition matrix F is the identity matrix.
+   D. Nothing; it is only a tuning parameter
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- The measurement noise covariance R is very large (noisy sensor)
-   OR the prior covariance P is very small (confident prediction).
+   **B**.
 
-   K ≈ P / (P + R). When R >> P, K → 0: the measurement is too noisy to
-   be useful, so the filter trusts the prediction. When P << R, K → 0 for
-   the same reason: the prediction is already very accurate. Conversely,
-   when R << P (accurate sensor, uncertain prediction), K is large and the
-   update aggressively corrects the prediction.
+   Under a Bayesian reading you may say "given my model, there is about a
+   95% probability that the true state lies inside this ellipse." That is a
+   stronger and more useful statement than a confidence interval. But the
+   first three words carry all the weight: **given my model**. If the motion
+   model, the noise sizes or the independence assumption is wrong, the
+   ellipse is still drawn, still looks reasonable, and means nothing.
 
 
 .. admonition:: Question 5
    :class: hint
 
-   What is the key innovation of the **Extended Kalman Filter (EKF)** compared
-   to the standard Kalman Filter?
+   Two independent estimates of the same coordinate on a straight road:
+   103.0 m with :math:`\sigma = 1.0` m, and 100.0 m with
+   :math:`\sigma = 2.0` m. What do you report?
 
-   A. It uses sigma points to propagate uncertainty through nonlinear functions.
+   A. 101.5 m, the average
 
-   B. It represents the posterior as a set of weighted particles.
+   B. 103.0 m, just use the better sensor
 
-   C. It linearizes nonlinear process and measurement functions using their
-      Jacobian matrices at the current state estimate.
+   C. **102.4 m**
 
-   D. It eliminates the need for a process model by using only measurements.
+   D. 100.0 m, the more cautious reading
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- It linearizes nonlinear process and measurement functions using
-   their Jacobian matrices at the current state estimate.
+   **C** 102.4 m.
 
-   The EKF replaces F and H in the standard KF with the Jacobians
-   ∂f/∂x and ∂h/∂x evaluated at the current estimate. The state
-   propagation itself uses the full nonlinear function f(x), but the
-   covariance propagation uses the linearized Jacobian. This is the
-   first-order approximation to the true nonlinear transform.
+   Weights go as :math:`1/\sigma^2`, so they are 0.8 and 0.2, giving
+   :math:`0.8(103.0) + 0.2(100.0) = 102.4`. Answer **A** assumes the sensors
+   are equally trustworthy, which they are not. Answer **B** throws away
+   real information from the second sensor.
 
 
 .. admonition:: Question 6
    :class: hint
 
-   The **Unscented Kalman Filter (UKF)** propagates uncertainty through
-   nonlinear functions by:
+   A sensor's :math:`\sigma` is cut in half. What happens to its weight in
+   the combined estimate?
 
-   A. Computing the Jacobian and applying first-order Taylor expansion.
+   A. It doubles
 
-   B. Drawing random Monte Carlo samples from the prior distribution.
+   B. **It becomes four times larger**
 
-   C. Selecting 2n+1 deterministic sigma points that capture the prior mean
-      and covariance, propagating them through the nonlinear function, and
-      computing the posterior as a weighted mean of the results.
+   C. It stays the same
 
-   D. Using a lookup table of precomputed linearizations.
+   D. It halves
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- Selecting 2n+1 deterministic sigma points that capture the prior
-   mean and covariance, propagating them through the nonlinear function, and
-   computing the posterior as a weighted mean of the results.
+   **B** four times larger.
 
-   The UKF uses the "unscented transform" to exactly compute the mean and
-   covariance of a nonlinear function applied to a Gaussian distribution,
-   accurate to second-order. Unlike the EKF, no Jacobian is required -- only
-   function evaluations at the sigma points.
+   Weight goes as :math:`1/\sigma^2`, not :math:`1/\sigma`. **A sensor that
+   is twice as good is four times as important.** This relationship is worth
+   memorising.
 
 
 .. admonition:: Question 7
    :class: hint
 
-   A **Particle Filter** is most appropriate when:
+   You combine two independent estimates with :math:`\sigma_1 = 1.0` m and
+   :math:`\sigma_2 = 2.0` m. The combined :math:`\sigma` is:
 
-   A. The system has linear dynamics and Gaussian noise.
+   A. Between 1.0 and 2.0 m
 
-   B. The posterior distribution is multi-modal (e.g., multiple possible
-      positions) and/or the noise is non-Gaussian.
+   B. Exactly 1.5 m
 
-   C. Low compute budget requires a fast, closed-form filter.
+   C. **Less than 1.0 m**
 
-   D. The state dimension is very high (hundreds of variables).
+   D. Greater than 2.0 m
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- The posterior distribution is multi-modal (e.g., multiple possible
-   positions) and/or the noise is non-Gaussian.
+   **C** 0.894 m, smaller than either input.
 
-   Particle filters approximate the posterior as a weighted set of samples,
-   which can represent any distribution including multi-modal ones. Classic
-   use case: robot localization when the robot is initially uncertain about
-   which room it is in -- the particle filter maintains hypotheses across
-   multiple rooms until sensor evidence resolves the ambiguity.
+   Precisions add: :math:`1/\sigma_f^2 = 1/1 + 1/4 = 1.25`, so
+   :math:`\sigma_f = 0.894`. Two independent measurements of the same
+   quantity contain more information than either one alone, so the combined
+   result is sharper than both. Most students pick **A**, reasoning that a
+   worse sensor must dilute a better one. It does not.
 
 
 .. admonition:: Question 8
    :class: hint
 
-   In the **data association problem**, the **Mahalanobis distance** is
-   preferred over Euclidean distance because it:
+   In inverse-variance weighting, which quantity adds up?
 
-   A. Is faster to compute than Euclidean distance.
+   A. The standard deviations
 
-   B. Accounts for the uncertainty (covariance) of the predicted track
-      position, so that a measurement far in a poorly-constrained direction
-      is not over-penalized.
+   B. The variances
 
-   C. Is always smaller than the Euclidean distance.
+   C. **The precisions,** :math:`1/\sigma^2`
 
-   D. Does not require knowledge of the measurement noise covariance R.
+   D. The estimates
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Accounts for the uncertainty (covariance) of the predicted track
-   position, so that a measurement far in a poorly-constrained direction
-   is not over-penalized.
+   **C** precisions add.
 
-   Mahalanobis distance: d_M = sqrt((z - z_pred)^T S^-1 (z - z_pred))
-   where S is the innovation covariance (= HPH^T + R). It scales the
-   distance by the inverse of the prediction uncertainty -- a measurement
-   that is 3 m away in a direction where the prediction variance is 9 m^2
-   is treated very differently from one that is 3 m away in a direction
-   with variance 0.01 m^2.
+   :math:`1/\sigma_f^2 = 1/\sigma_1^2 + 1/\sigma_2^2`. This is exactly why
+   the combined uncertainty is always smaller than either input. You cannot
+   add a positive precision and come out less certain than you started.
 
 
 .. admonition:: Question 9
    :class: hint
 
-   Two independent range sensors measure the distance to an obstacle:
-   Sensor A gives 10.0 m with variance 0.25 m², Sensor B gives 10.4 m with
-   variance 1.0 m². What is the **inverse-variance weighted** fused estimate?
+   Inverse-variance weighting requires the two error sources to be:
 
-   A. 10.20 m (simple average)
+   A. Gaussian
 
-   B. 10.10 m
+   B. Zero mean
 
-   C. 10.32 m
+   C. **Independent**
 
-   D. 10.08 m
+   D. The same size
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **D** -- 10.08 m
+   **C** independent.
 
-   Weights: w_A = 1/0.25 = 4, w_B = 1/1.0 = 1.
-   Fused = (4 * 10.0 + 1 * 10.4) / (4 + 1) = (40.0 + 10.4) / 5 = 50.4 / 5
-   = **10.08 m**.
-
-   The fused estimate is pulled strongly toward Sensor A (lower variance =
-   higher weight = 80% contribution).
+   If two estimates share a bias, such as the same mounting calibration
+   error, the same clock, or the same patch of fog, the formula counts the
+   same evidence twice and reports a confidence it has not earned. **Two
+   identical forward cameras do not give you** :math:`\sigma/\sqrt{2}`. They
+   give you :math:`\sigma` plus false confidence. This is L2's redundancy
+   versus complementarity point written as mathematics.
 
 
 .. admonition:: Question 10
    :class: hint
 
-   A vehicle is making a sharp turn at an intersection. Which motion model is
-   most appropriate for the Kalman-filter-based state estimator tracking it?
+   Which fusion architecture keeps the most information, and what does it
+   demand in return?
 
-   A. Constant Velocity (CV) -- it assumes straight-line motion and stays
-      linear, so a standard Kalman filter suffices.
+   A. Late fusion, and it demands more bandwidth
 
-   B. Constant Turn Rate and Velocity (CTRV) -- it models the yaw rate, but
-      because it is nonlinear it requires an EKF or UKF.
+   B. **Early fusion, and it demands near perfect mounting calibration and
+      very tight timing**
 
-   C. Random walk -- no motion model is needed for turning vehicles.
+   C. Intermediate fusion, and it demands no calibration
 
-   D. Constant Acceleration (CA) in a straight line -- acceleration fully
-      captures turning behavior.
+   D. Late fusion, and it demands training data
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Constant Turn Rate and Velocity (CTRV) -- it models the yaw rate,
-   but because it is nonlinear it requires an EKF or UKF.
+   **B**.
 
-   A CV model assumes the object moves in a straight line, so it lags and
-   overshoots during turns. CTRV augments the state with a yaw rate and
-   propagates position through sin/cos of the heading, which is nonlinear.
-   That nonlinearity is exactly why turning-vehicle trackers use an EKF
-   (Jacobian linearization) or a UKF (sigma points) rather than the plain
-   linear Kalman filter.
+   Early fusion combines raw measurements before anything is discarded, so
+   nothing is thrown away. But every raw stream has to be expressed in one
+   frame at one instant, which is exactly the calibration and timing problem
+   from L2. It also moves enormous amounts of data and lets one bad sensor
+   spoil everything.
 
-
-----
-
-
-True or False (Questions 11-15)
-================================
 
 .. admonition:: Question 11
    :class: hint
 
-   **True or False:** RADAR is robust to rain and fog conditions that
-   significantly degrade camera and LiDAR performance, making it an
-   essential complementary sensor for adverse weather driving.
+   Which Kalman filter step **always increases** the covariance?
+
+   A. The update
+
+   B. **The prediction**
+
+   C. Both of them
+
+   D. Neither; it depends on the gain
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **True**
+   **B** the prediction.
 
-   RADAR operates at millimeter wavelengths (~77 GHz) that pass through rain,
-   fog, and snow with minimal attenuation. Camera performance degrades sharply
-   in heavy rain (water droplets on lens, reduced visibility) and LiDAR
-   degrades due to laser backscatter from water droplets. RADAR also provides
-   direct Doppler velocity measurements unavailable from LiDAR or cameras.
+   :math:`P^- = FPF^\top + Q`, and :math:`Q` is always positive. Time
+   passed, you learned nothing, so you are less sure than before. The update
+   does the opposite, because evidence arrived.
 
 
 .. admonition:: Question 12
    :class: hint
 
-   **True or False:** The Extended Kalman Filter (EKF) provides an exact
-   (optimal) solution for nonlinear state estimation under Gaussian noise.
+   The measurement noise :math:`R` is very large compared with the
+   prediction covariance :math:`P`. What does the Kalman gain do?
+
+   A. :math:`K \to 1`, and the filter jumps to the measurement
+
+   B. **:math:`K \to 0`, and the measurement is effectively ignored**
+
+   C. :math:`K = 0.5`, and the filter splits the difference
+
+   D. :math:`K` goes negative
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **B**.
 
-   The EKF is only a first-order approximation. It linearizes the nonlinear
-   functions at the current state estimate via Jacobians, which introduces
-   linearization error. For highly nonlinear functions or far from the
-   operating point, this approximation can be poor, causing the EKF to be
-   overconfident (underestimate covariance) or even diverge. The Unscented
-   KF provides a second-order accurate approximation without linearization.
+   :math:`K = P/(P+R)`, so a large :math:`R` pushes :math:`K` toward zero.
+   The sensor is telling you nothing you did not already know better, and
+   the filter correctly declines to act on it.
 
 
 .. admonition:: Question 13
    :class: hint
 
-   **True or False:** A Particle Filter with a very small number of particles
-   (e.g., N=10) will always converge to the true state given enough time.
+   In one dimension the Kalman gain is :math:`K = P/(P+R)`. What earlier
+   result is that identical to?
+
+   A. The Mahalanobis distance
+
+   B. **The inverse-variance weight, with the prediction acting as the
+      second sensor**
+
+   C. The NIS
+
+   D. Nothing; the gain is a separate idea
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **B**.
 
-   With too few particles, particle filters suffer from "particle collapse"
-   (degeneracy) -- over time, after repeated resampling, all weight
-   concentrates on just one or a few particles, losing diversity. The filter
-   then cannot recover if the true state is far from that particle's location.
-   Practical particle filters for AV localization (like Monte Carlo
-   Localization / AMCL) typically use 1,000-10,000+ particles for reliability.
+   **The Kalman filter is the weighted average you already did, with a
+   prediction step added in front.** The prediction is just another estimate
+   with a variance, and the gain is its relative weight. Everything else,
+   the matrices and the transposes, is that same idea carried into more
+   dimensions.
 
 
 .. admonition:: Question 14
    :class: hint
 
-   **True or False:** In late (decision-level) fusion, if the camera detector
-   misses an object but the LiDAR detector correctly detects it, the fused
-   output will still include that object.
+   No sensor measures velocity, yet velocity sits in the state and changes
+   during the update. How is that possible?
+
+   A. The filter differentiates the position estimates
+
+   B. **Position and velocity are linked inside** :math:`P`, **so a surprise
+      in position is evidence about velocity**
+
+   C. The measurement matrix :math:`H` has a velocity row
+
+   D. It is not possible, and would be a bug
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **True**
+   **B**.
 
-   Late fusion combines independent detection outputs from each sensor.
-   If LiDAR detects an object with sufficient confidence, it will appear
-   in the LiDAR detection list. The late fusion module (e.g., via NMS or
-   track-level fusion) will include it even if the camera missed it. This
-   is one of the key reliability benefits of multi-sensor fusion.
+   The prediction step advances position **using** velocity, which links
+   them together. The off-diagonal entries of :math:`P^-` become non-zero
+   even when :math:`P` was diagonal. So the gain has a non-zero velocity
+   row, and a position measurement updates velocity. **This is the whole
+   reason for putting unmeasured quantities in the state.**
 
 
 .. admonition:: Question 15
    :class: hint
 
-   **True or False:** In the Kalman Filter update step, the posterior
-   covariance P_{k|k} is always smaller than or equal to the prior
-   covariance P_{k|k-1}.
+   What is the **innovation**, :math:`\boldsymbol{\nu}`?
+
+   A. The difference between the estimate and the ground truth
+
+   B. **The difference between what the sensor reported and what the filter
+      expected it to report**
+
+   C. How much the state changed between two steps
+
+   D. The trace of the covariance matrix
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **True**
+   **B**, that is :math:`\boldsymbol{\nu} = \mathbf{z} - H\hat{\mathbf{x}}^-`.
 
-   The update equation P_{k|k} = (I - K H) P_{k|k-1} always reduces
-   uncertainty. The measurement provides new information, and the Kalman
-   filter is the optimal linear estimator that minimally reduces uncertainty
-   consistent with that information. Mathematically, K is chosen to minimize
-   the trace of P_{k|k}, guaranteeing it is less than or equal to P_{k|k-1}.
+   Notice that **A** needs ground truth, which a real vehicle never has. The
+   innovation uses only quantities the filter has already computed, which is
+   why it can be watched at run time forever. It is the only genuinely new
+   information in each cycle.
 
-
-----
-
-
-Essay Questions (Questions 16-18)
-===================================
 
 .. admonition:: Question 16
    :class: hint
 
-   **Describe the Kalman Filter predict and update cycle** using an example
-   from autonomous driving (e.g., tracking a vehicle). Explain what the
-   Kalman Gain represents and how its value changes based on sensor noise
-   vs. prediction uncertainty.
+   Of the four assumptions behind Kalman optimality, which one can you
+   essentially never satisfy honestly?
 
-   *(2-4 sentences)*
+   A. Linear models
 
-.. dropdown:: Answer Guidelines
+   B. Gaussian noise
+
+   C. **Knowing** :math:`Q`
+
+   D. Knowing :math:`R`
+
+.. dropdown:: Answer
    :class-container: sd-border-success
 
-   *Key points to include:*
+   **C** knowing :math:`Q`.
 
-   - Example: tracking a vehicle's position and velocity. State x = [px, py,
-     vx, vy]. Predict step: use constant-velocity model to propagate x and
-     increase P (uncertainty grows). Update step: receive a LiDAR measurement
-     z = [px_lidar, py_lidar] and correct the estimate.
-   - Innovation = z - H*x_pred: the discrepancy between predicted and actual
-     measurement. The posterior estimate = prior + K * innovation.
-   - Kalman Gain K = P_prior * H^T * (H*P_prior*H^T + R)^-1. When R is small
-     (accurate LiDAR), K is large and the correction is aggressive. When R
-     is large (noisy sensor) or P_prior is small (confident prediction), K
-     is small and the prediction changes little.
-   - Physical interpretation: K is a "trust dial" between prediction and
-     measurement. At startup (high P), trust the measurement heavily. After
-     converging (low P), trust the model more.
+   You can often measure :math:`R` by pointing the sensor at a known target
+   and looking at the spread. :math:`Q` describes **how wrong your model of
+   the world is**, and if you knew that you would have used a better model.
+   You tune it, which means the optimality proof does not apply to any
+   filter you have ever shipped. :math:`Q` is the parameter you are most
+   likely to get wrong, and getting it wrong is what makes a filter
+   overconfident.
 
 
 .. admonition:: Question 17
    :class: hint
 
-   **Compare the EKF and UKF** for tracking a vehicle with nonlinear motion
-   (e.g., turning with constant angular rate -- the CTRV model). When would
-   you prefer the UKF over the EKF?
+   Why is EKF divergence a **feedback loop** rather than a single mistake?
 
-   *(2-4 sentences)*
+   A. Measurement noise builds up over time
 
-.. dropdown:: Answer Guidelines
+   B. **A bad estimate gives a bad linearisation, which gives a worse
+      estimate, while** :math:`P` **keeps shrinking anyway**
+
+   C. The Jacobian grows without limit
+
+   D. The particles degenerate
+
+.. dropdown:: Answer
    :class-container: sd-border-success
 
-   *Key points to include:*
+   **B**.
 
-   - The CTRV (Constant Turn Rate and Velocity) model has process function
-     f(x) involving sin/cos of the heading angle -- a nonlinear function.
-     EKF computes the Jacobian of f(x), which involves partial derivatives
-     of sin(psi) -- analytically complex and prone to numerical errors.
-   - UKF selects 2n+1 sigma points around the current state, propagates
-     each through f(x) directly (evaluating sin/cos at specific angles), and
-     recovers the posterior mean and covariance. No Jacobian required.
-   - Prefer UKF when: (1) the Jacobian is difficult to derive analytically
-     (complex models), (2) the motion is highly nonlinear (sharp turns,
-     large timesteps), (3) higher accuracy is needed (UKF is second-order
-     accurate vs. EKF's first-order). EKF may be preferred when compute
-     budget is very tight and the model is mildly nonlinear.
-   - In practice, UKF is the standard for IMU + GPS fusion in AV systems
-     (PointOne Nav, SBG Systems) due to its superior accuracy in nonlinear
-     attitude estimation.
+   Each step makes the next one worse. Critically, the update equation
+   shrinks :math:`P` whether or not the update was any good. So the filter
+   becomes **more confident as it becomes more wrong**. A small :math:`P`
+   gives a small :math:`K`, a small :math:`K` means new measurements barely
+   move anything, so the filter effectively ignores its inputs.
 
 
 .. admonition:: Question 18
    :class: hint
 
-   **Explain the data association problem** in multi-sensor, multi-object
-   tracking. Describe two approaches to solving it and the trade-offs of each.
+   Which property decides that you need a **particle filter** instead of a
+   UKF?
 
-   *(2-4 sentences)*
+   A. The model is strongly nonlinear
 
-.. dropdown:: Answer Guidelines
+   B. The state has many dimensions
+
+   C. **The belief has several separate peaks**
+
+   D. The measurement rate is high
+
+.. dropdown:: Answer
    :class-container: sd-border-success
 
-   *Key points to include:*
+   **C**.
 
-   - The data association problem: given a set of measurements z_1,...,z_m
-     and a set of tracks T_1,...,T_n at each timestep, determine which
-     measurement was produced by which track (or background clutter).
-     Incorrect association causes Kalman filter divergence and track confusion.
-   - Approach 1 -- Global Nearest Neighbor (GNN) / Hungarian algorithm:
-     compute a cost matrix (e.g., Mahalanobis distance for each
-     measurement-track pair), solve for optimal global assignment. Pros:
-     optimal for a single timestep, O(n^3) compute. Cons: makes hard
-     assignments that cannot be undone; fails in high clutter.
-   - Approach 2 -- Joint Probabilistic Data Association (JPDA): instead of
-     hard assignment, computes probabilities over all possible assignments
-     and updates each track as a weighted mixture. Pros: robust in cluttered
-     environments (multiple nearby objects). Cons: higher compute, tracks
-     can "merge" in high-density scenes.
-   - For AV systems at moderate object densities: GNN (via Hungarian) is
-     standard. JPDA is used when clutter is high (dense urban intersections,
-     parking lots with many closely-spaced vehicles).
+   The deciding question is the **shape of the belief**, not how nonlinear
+   the model is. A strongly nonlinear system with one peak is a UKF problem.
+   Four aisles in a car park that match a LiDAR scan equally well cannot be
+   one blob, and a filter forced to try puts its centre somewhere the car
+   definitely is not. **B is an argument against** particle filters, since
+   the number of particles needed grows brutally with dimension.
+
+
+.. admonition:: Question 19
+   :class: hint
+
+   Why is Mahalanobis distance the right measure for data association rather
+   than ordinary straight line distance?
+
+   A. It is cheaper to compute
+
+   B. It is always smaller
+
+   C. **It measures disagreement in units of expected disagreement**
+
+   D. It works in three dimensions
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **C**.
+
+   A detection 2 m away from a track pinned down to 0.1 m is a terrible
+   match. The same 2 m from a brand new track with 3 m of uncertainty is an
+   excellent one. Ordinary distance reports 2 m in both cases and cannot
+   tell them apart. Mahalanobis distance divides by the expected spread, so
+   the same gap gets scored against what the track claims to know.
+
+
+----
+
+
+True or False (Questions 20-30)
+===============================
+
+.. admonition:: Question 20
+   :class: hint
+
+   A sensor with very low variance is therefore very accurate.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False.**
+
+   Variance measures **spread**, not correctness. A sensor whose every
+   reading is 5 m too far north has almost zero variance and is useless.
+   That steady offset is **bias**, it is a different problem, and the filter
+   does not handle it.
+
+
+.. admonition:: Question 21
+   :class: hint
+
+   Combining two estimates always gives a smaller uncertainty than either
+   input.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False**, and the exception is the dangerous part.
+
+   It holds only when the errors are **independent**. If the two share a
+   bias, the formula still reports a smaller :math:`\sigma`, and that number
+   is a lie. Averaging two copies of the same mistake does not shrink it.
+
+
+.. admonition:: Question 22
+   :class: hint
+
+   The Kalman update step can increase the covariance if the measurement is
+   bad enough.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False.**
+
+   :math:`P = (I-KH)P^-` shrinks the covariance regardless of whether the
+   measurement was any good. **That is precisely why divergence is
+   possible.** A filter fed nonsense still becomes more confident with every
+   update.
+
+
+.. admonition:: Question 23
+   :class: hint
+
+   :math:`Q` can be measured experimentally in the same way :math:`R` can.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False.**
+
+   :math:`R` is a property of the sensor, so you can measure it against a
+   known target. :math:`Q` describes how wrong your motion model is, and if
+   you could measure that you would fix the model instead. :math:`Q` gets
+   tuned, and it is the usual culprit when a filter is overconfident.
+
+
+.. admonition:: Question 24
+   :class: hint
+
+   A Kalman filter that is provably optimal is therefore producing correct
+   estimates.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False.**
+
+   Optimality is a claim **about the model you supplied**, not about the
+   road. A filter can be provably optimal with respect to assumptions that
+   are all wrong, and it will report a small covariance the entire time.
+
+
+.. admonition:: Question 25
+   :class: hint
+
+   Chi-square gating can cause a filter to reject exactly the measurements
+   that would have corrected it.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **True**, and it is the same problem as L2's zero-Doppler filter.
+
+   A gate rejects whatever disagrees with the current estimate. Once the
+   estimate has drifted, the **good** measurements are the ones that
+   disagree, so the gate defends the error. Gating protects a **healthy**
+   filter from bad data. It cannot repair a sick one, which is why
+   rejections must be counted and escalated instead of quietly piling up.
+
+
+.. admonition:: Question 26
+   :class: hint
+
+   A tracked object's identity should be reset whenever its label changes.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False**, and this is the Tempe lesson.
+
+   Killing the track every time the label changes means the track never
+   builds up history, so it never has a velocity estimate, so there is no
+   time to collision and nothing ever triggers braking. **Track the object,
+   and label it separately.** A thing moving toward you matters whether or
+   not you know what to call it.
+
+
+.. admonition:: Question 27
+   :class: hint
+
+   Nearest neighbour association can give different answers depending on the
+   order in which tracks are processed.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **True.**
+
+   Nearest neighbour is greedy. Whichever track is processed first claims
+   its best detection, and later tracks take what is left. The same code on
+   the same data gives different answers depending on track order, which
+   also makes the resulting bug very hard to reproduce. GNN removes this by
+   solving the whole frame at once.
+
+
+.. admonition:: Question 28
+   :class: hint
+
+   Particle filters are a sensible default for high dimensional state
+   estimation.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False.**
+
+   The number of particles you need grows brutally with dimension. A
+   particle filter with too few particles collapses onto one peak and
+   quietly stops representing the others, which destroys the exact property
+   you chose it for. Use it when the belief has several peaks **and** the
+   state is small.
+
+
+.. admonition:: Question 29
+   :class: hint
+
+   Running your filter under CARLA's rain and fog presets produces a valid
+   degraded weather result.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False**, and L2 measured this directly.
+
+   LiDAR returns hold near 11,500 per sweep across all six weather presets,
+   because CARLA's ray casting does not model attenuation at all. Inflating
+   :math:`R` by hand to represent a degraded sensor is a perfectly good
+   exercise, but **you** produced the degradation, in a constant. The
+   simulator did not, and your write up has to say so.
+
+
+.. admonition:: Question 30
+   :class: hint
+
+   A filter that detects its own inconsistency should automatically increase
+   :math:`Q` until the NIS returns to its range.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False.**
+
+   That hides the fault. Quietly retuning until the diagnostic looks healthy
+   turns a problem you could have detected into one you cannot, which is the
+   same argument L2 made about auto-correcting a large calibration
+   deviation. A filter that has lost confidence in itself should say so, and
+   the vehicle should slow down or stop.
+
+
+----
+
+
+Short Answer (Questions 31-36)
+==============================
+
+.. admonition:: Question 31
+   :class: hint
+
+   Define variance in your own words, explain why the distances are squared,
+   and say why we usually quote a standard deviation instead.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   Variance measures how spread out a set of readings is. Take each reading,
+   find how far it sits from the average, square that distance, then average
+   the squares. Formally,
+   :math:`\operatorname{Var}(X) = \mathbb{E}[(X-\mu)^2]`.
+
+   Squaring does two jobs. It removes the sign, so a reading 2 m too high
+   and one 2 m too low do not cancel out and wrongly suggest zero spread. It
+   also makes large misses count far more than small ones, which is
+   deliberate, because in a vehicle one big error matters more than many
+   tiny ones.
+
+   Squaring leaves the answer in squared units, such as metres squared,
+   which is hard to picture. Taking the square root gives the standard
+   deviation :math:`\sigma`, back in metres, so it can be compared directly
+   against the quantity being measured.
+
+
+.. admonition:: Question 32
+   :class: hint
+
+   Explain why combining two independent estimates gives an uncertainty
+   smaller than either one, and state exactly what that result depends on.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   Two independent measurements of the same quantity contain more
+   information than either one alone.
+   Formally, precisions add:
+   :math:`1/\sigma_f^2 = 1/\sigma_1^2 + 1/\sigma_2^2`, so the combined
+   precision is larger than either one and the combined variance is smaller
+   than both. Any other answer would mean you had thrown information away.
+
+   It depends entirely on **independence**. If the two errors are linked, by
+   a shared calibration, a shared clock or a shared mounting bracket, then
+   the same evidence gets counted twice and the reported :math:`\sigma` is
+   unearned. The estimate barely moves. The confidence is what breaks, and
+   a wrong number claiming precision is far worse downstream than a wrong
+   number that admits it is uncertain.
+
+
+.. admonition:: Question 33
+   :class: hint
+
+   Describe the Kalman gain as a trust dial. Give its behaviour in both
+   extremes and say what each one means physically.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   :math:`K = P/(P+R)` is the fraction of the surprise the filter acts on.
+
+   When :math:`R \ll P` the sensor is far better than the prediction, so
+   :math:`K` goes to 1 and the filter jumps essentially to the measurement,
+   dropping what it believed before. When :math:`R \gg P` the sensor adds
+   nothing, so :math:`K` goes to 0 and the measurement is ignored. At
+   :math:`R = P` the gain is 0.5 and the plain average is finally right.
+
+   Physically, the gain is the filter continuously re-deciding which of its
+   two information sources is currently more reliable: its own model of the
+   world, or this sensor. It is the same inverse-variance weight from the
+   one dimensional case, with the prediction acting as the second estimate.
+
+
+.. admonition:: Question 34
+   :class: hint
+
+   Explain filter divergence as a sequence of steps, and say why it is an
+   example of the kind of failure this course keeps returning to.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   1. The update shrinks :math:`P`, because that is what
+      :math:`(I-KH)P^-` does, whether or not the update was any good.
+   2. A small :math:`P` produces a small :math:`K`.
+   3. A small :math:`K` means incoming measurements barely move the
+      estimate.
+   4. The filter effectively ignores its inputs. The true error grows
+      without limit while
+      the reported covariance keeps getting smaller.
+
+   The output is a confident, precise, completely wrong position, and
+   **nothing raises an alarm**. L2 made the same point about hardware: a
+   dirty sensor does not report an error, it reports data. Nothing
+   downstream can detect the problem, which is why the covariance has to be
+   tested rather than trusted.
+
+
+.. admonition:: Question 35
+   :class: hint
+
+   You cannot use ground truth on a real vehicle. Explain how NIS lets you
+   check a running filter anyway, and what the two out of range cases mean.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   The filter computes the innovation :math:`\boldsymbol{\nu}` and its expected
+   covariance :math:`S` every cycle, so it has already **predicted how big
+   its own surprises should be**. The NIS
+   :math:`\varepsilon = \boldsymbol{\nu}^\top S^{-1}\boldsymbol{\nu}` compares the
+   surprises it actually got against that prediction, and should follow a
+   chi-square distribution if the filter is honest. No outside reference is
+   needed, so it runs on the vehicle forever.
+
+   Landing repeatedly **above** the range means overconfidence. The real
+   surprises are bigger than predicted, so :math:`P` or :math:`R` is too
+   small, and usually it is :math:`Q`. Landing repeatedly **below** means
+   underconfidence: the filter is wasting good information and converging
+   slowly, which is inefficient but safe. Only inside the range does the
+   reported uncertainty mean anything at all.
+
+
+.. admonition:: Question 36
+   :class: hint
+
+   A tracker swaps the identities of two vehicles that cross. Explain why
+   that is worse than losing both tracks completely.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   If both tracks are **lost**, the system knows it. The objects drop back
+   to tentative, the planner is told that nothing is confirmed, and a
+   sensible stack becomes cautious. The failure announces itself.
+
+   If the identities are **swapped**, every track stays confirmed and
+   confident, but each one now carries the other one's history. The system
+   reports two vehicles travelling in directions neither of them is going,
+   with full confidence and no fault raised. The planner then avoids
+   collisions that will never happen and ignores one that will.
+
+   The general rule applies here as elsewhere in this course: a failure that
+   reports confidence is worse than a failure that reports nothing. The same
+   pattern appears in a blocked lens, a zero-Doppler discard, a multipath
+   GNSS fix, and a diverging filter.

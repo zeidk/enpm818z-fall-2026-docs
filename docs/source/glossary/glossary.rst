@@ -2,7 +2,7 @@
 Glossary
 ====================================================
 
-:ref:`A <glossary-a>` · :ref:`B <glossary-b>` · :ref:`C <glossary-c>` · :ref:`D <glossary-d>` · :ref:`E <glossary-e>` · :ref:`F <glossary-f>` · :ref:`G <glossary-g>` · :ref:`H <glossary-h>` · :ref:`I <glossary-i>` · :ref:`J <glossary-j>` · :ref:`K <glossary-k>` · :ref:`L <glossary-l>` · :ref:`M <glossary-m>` · :ref:`N <glossary-n>` · :ref:`O <glossary-o>` · :ref:`P <glossary-p>` · :ref:`Q <glossary-q>` · :ref:`R <glossary-r>` · :ref:`S <glossary-s>` · :ref:`T <glossary-t>` · :ref:`U <glossary-u>` · :ref:`V <glossary-v>` · :ref:`W <glossary-w>` · :ref:`Y <glossary-y>`
+:ref:`A <glossary-a>` · :ref:`B <glossary-b>` · :ref:`C <glossary-c>` · :ref:`D <glossary-d>` · :ref:`E <glossary-e>` · :ref:`F <glossary-f>` · :ref:`G <glossary-g>` · :ref:`H <glossary-h>` · :ref:`I <glossary-i>` · :ref:`J <glossary-j>` · :ref:`K <glossary-k>` · :ref:`L <glossary-l>` · :ref:`M <glossary-m>` · :ref:`N <glossary-n>` · :ref:`O <glossary-o>` · :ref:`P <glossary-p>` · :ref:`Q <glossary-q>` · :ref:`R <glossary-r>` · :ref:`S <glossary-s>` · :ref:`T <glossary-t>` · :ref:`U <glossary-u>` · :ref:`V <glossary-v>` · :ref:`W <glossary-w>` · :ref:`Y <glossary-y>` · :ref:`Z <glossary-z>`
 
 .. only:: html
 
@@ -195,6 +195,13 @@ A
 
 .. glossary::
 
+   Accuracy
+      How close a measurement is to the true value. Distinct from
+      precision, which describes repeatability. A sensor with a steady
+      offset can be highly precise and still inaccurate. See Bias.
+      :doc:`L2 </lectures/lecture2/l2_index>` · :doc:`L3
+      </lectures/lecture3/l3_index>`
+
    ADAS
       Advanced Driver Assistance Systems. Systems that support the human
       driver in performing parts of the Dynamic Driving Task. Corresponds
@@ -225,6 +232,12 @@ A
       admissible heuristic. Used for global route planning on the road
       graph and for grid/lattice-based motion planning. :doc:`L8 </lectures/lecture8/l8_index>` · :doc:`L10 </lectures/lecture10/l10_index>`
 
+   Angular Resolution
+      The smallest angular separation at which two returns can still be
+      told apart. Because it is an angle, the width it covers grows with
+      range: 2 degrees spans 3.5 m at 100 m, which is a car and the
+      motorcycle beside it. :doc:`L2 </lectures/lecture2/l2_index>`
+
    ASIL
       Automotive Safety Integrity Level. Defined by ISO 26262 to classify
       the severity of safety risks. Ranges from ASIL A (lowest) to ASIL D
@@ -250,6 +263,12 @@ B
       In YOLO, this is typically CSPDarknet or similar CNN that extracts
       hierarchical features from the input image. :doc:`L4 </lectures/lecture4/l4_index>`
 
+   Baseline
+      The distance between the two optical centres of a stereo pair,
+      written B. Depth error grows as z squared over Bf, so the baseline
+      is the only term a designer controls, and it is bounded by the
+      width of the vehicle. :doc:`L2 </lectures/lecture2/l2_index>`
+
    Bayer Pattern
       The colour filter array placed over a monochrome camera sensor
       (typically RGGB) so that each pixel records only one colour channel.
@@ -267,6 +286,12 @@ B
       (lane follow, lane change, yield, stop) based on the current driving
       context. Often implemented as a finite state machine (FSM). :doc:`L9 </lectures/lecture9/l9_index>`
 
+   Belief
+      Everything a filter currently knows about the state, expressed as
+      a mean and a covariance. A Kalman filter's belief always has a
+      single peak. A particle filter's belief can have several. :doc:`L3
+      </lectures/lecture3/l3_index>`
+
    BEV
       Bird's-Eye View. A top-down representation of the driving scene that
       projects sensor data into an ego-centric 2D plane. The dominant
@@ -281,6 +306,14 @@ B
       A multi-sensor BEV fusion framework that unifies camera and LiDAR
       features in a shared BEV space using learned attention-weighted
       aggregation. :doc:`L6 </lectures/lecture6/l6_index>`
+
+   Bias
+      A systematic error that shifts every reading the same way. Unlike
+      noise it does not average away, and a Kalman filter does not
+      remove it, because it breaks the zero-mean assumption. Two sensors
+      can have identical variance and very different bias. :doc:`L2
+      </lectures/lecture2/l2_index>` · :doc:`L3
+      </lectures/lecture3/l3_index>`
 
    Bicycle Model
       A simplified kinematic vehicle model that merges the two front wheels
@@ -330,6 +363,13 @@ C
       built on Unreal Engine 4, providing realistic urban/highway
       environments, sensor simulation, and a Python API. :doc:`L1 </lectures/lecture1/l1_lecture>`
 
+   Chi-Square Gate
+      A test that rejects a measurement whose normalised squared
+      innovation exceeds a threshold taken from the chi-square
+      distribution. For a two-dimensional position fix at 99 percent the
+      threshold is 9.21. See Gating. :doc:`L3
+      </lectures/lecture3/l3_index>`
+
    CIoU Loss
       Complete Intersection over Union loss. A bounding box regression
       loss used in YOLO that penalizes overlap, center distance, and
@@ -352,6 +392,13 @@ C
       bounding boxes, OBBs, or Minkowski sums). Run at every node
       expansion during sampling- and graph-based planning. :doc:`L10 </lectures/lecture10/l10_index>`
 
+   Complementarity
+      The principle that different sensing modalities have strengths and
+      weaknesses that offset one another, so a combination is more
+      robust than any one alone. Distinct from redundancy, which
+      duplicates a capability without covering its failure modes.
+      :doc:`L2 </lectures/lecture2/l2_index>`
+
    Complementarity Principle
       The observation (Luo, 1989) that different sensor technologies have
       unique strengths and weaknesses that balance each other out, making
@@ -362,6 +409,20 @@ C
       therefore the only scenario layer that can actually be executed. One
       logical scenario yields thousands of concrete ones, which is why test
       selection is a sampling problem. :doc:`L13 </lectures/lecture13/l13_index>`
+
+   Confidence Interval
+      A range built from data by a stated procedure. A 95 percent
+      confidence level means that about 95 percent of intervals built
+      that way would contain the true value. It does **not** mean there
+      is a 95 percent probability that the true value lies inside the
+      one interval you are holding. :doc:`L3
+      </lectures/lecture3/l3_index>`
+
+   Confidence Level
+      The proportion of intervals produced by a repeated procedure that
+      would contain the true value. A statement about the procedure, not
+      about any single interval. See Confidence Interval. :doc:`L3
+      </lectures/lecture3/l3_index>`
 
    Configuration Space
       The space of all possible vehicle configurations, typically
@@ -378,6 +439,31 @@ C
       Multiple vehicles or roadside units sharing sensor data via V2X
       communication to build a collective, extended understanding of the
       driving scene beyond any single vehicle's sensor range. :doc:`L14 </lectures/lecture14/l14_index>`
+
+   Covariance
+      A measure of how much the errors in two quantities move together.
+      Zero when the two are independent. :doc:`L3
+      </lectures/lecture3/l3_index>`
+
+   Covariance Matrix
+      A square matrix holding variances on the diagonal and covariances
+      off it. In a Kalman filter, P is the covariance of the state
+      estimate. Off-diagonal terms appear on their own during
+      prediction, because advancing position using velocity links the
+      two. :doc:`L3 </lectures/lecture3/l3_index>`
+
+   Coverage Interval
+      The term the GUM and the VIM use in place of confidence interval,
+      paired with coverage probability in place of confidence level.
+      Metrology prefers these because they avoid the common misreading
+      of the word confidence. :doc:`L3 </lectures/lecture3/l3_index>`
+
+   Credible Region
+      A Bayesian region that contains the true value with a stated
+      probability, given the model. A Kalman filter's covariance ellipse
+      is a credible region rather than a confidence interval. In two
+      dimensions the 95 percent ellipse sits at 2.45 sigma, not 2 sigma.
+      :doc:`L3 </lectures/lecture3/l3_index>`
 
    Cross-Attention Fusion
       A deep learning fusion approach that uses transformer cross-attention
@@ -459,6 +545,12 @@ D
       Extends SORT with a deep appearance descriptor (128-D embedding)
       for re-identification after occlusion. :doc:`L6 </lectures/lecture6/l6_index>`
 
+   Degrees of Freedom
+      How many numbers a sensor reports at once, written m. A GNSS fix
+      giving x and y has m equal to 2. It selects which chi-square
+      distribution the NIS should follow. :doc:`L3
+      </lectures/lecture3/l3_index>`
+
    DETR
       DEtection TRansformer. A transformer-based object detector that
       frames detection as a set prediction problem. Uses object queries
@@ -500,6 +592,14 @@ D
       The mismatch between the state distribution seen during training and
       the distribution encountered during deployment. A key failure mode
       of behavior cloning where small errors compound over time. :doc:`L12 </lectures/lecture12/l12_index>`
+
+   Divergence
+      The failure in which a filter's reported covariance keeps
+      shrinking while its true error grows. The update step shrinks P
+      whether or not the update was correct, so the gain falls, new
+      measurements stop affecting the estimate, and the filter reports
+      high confidence in a wrong answer. :doc:`L3
+      </lectures/lecture3/l3_index>`
 
    Domain Randomization
       Varying simulation parameters (lighting, textures, weather, sensor
@@ -554,6 +654,12 @@ E
 
 .. glossary::
 
+   Early Fusion
+      Combining raw measurements before anything interprets them.
+      Preserves the most information, but demands accurate calibration
+      and tight timing, moves large amounts of data, and lets one bad
+      sensor affect everything. :doc:`L3 </lectures/lecture3/l3_index>`
+
    End-to-End Driving
       An approach where a single neural network maps raw sensor input
       directly to driving actions, bypassing the traditional modular
@@ -565,6 +671,24 @@ E
       step. The standard fusion filter for IMU + GNSS + wheel odometry in
       AV localization. :doc:`L3 </lectures/lecture3/l3_index>` · :doc:`L7 </lectures/lecture7/l7_index>`
 
+   Expectation
+      The average of a quantity taken over all possible outcomes rather
+      than over a finite sample. Written with E and square brackets.
+      :doc:`L3 </lectures/lecture3/l3_index>`
+
+   Extended Kalman Filter
+      EKF. A Kalman filter for nonlinear models, which approximates them
+      with straight lines at the current estimate using Jacobians. The
+      standard choice for vehicle state estimation. Its failure mode is
+      a feedback loop: a poor estimate gives a poor approximation, which
+      gives a worse estimate. :doc:`L3 </lectures/lecture3/l3_index>`
+
+   Extrinsic Calibration
+      The rigid transform describing where one sensor sits relative to
+      another, or relative to the vehicle. Six numbers. It belongs to
+      the installation rather than to the sensor, and it drifts with
+      vibration, temperature and knocks. :doc:`L2
+      </lectures/lecture2/l2_index>`
 
 .. _glossary-f:
 
@@ -584,6 +708,19 @@ F
       :term:`DDT` within seconds. The role exists only at Level 3, and the
       few-seconds reacquisition of situational awareness it demands is a
       human-factors problem rather than a software one. :doc:`L1 </lectures/lecture1/l1_lecture>`
+
+   Filter Consistency
+      Whether a filter's reported covariance matches the errors it
+      actually makes. Tested with the NIS, using only quantities the
+      filter already computes, so the check can run continuously on a
+      vehicle without ground truth. :doc:`L3
+      </lectures/lecture3/l3_index>`
+
+   FMCW
+      Frequency-Modulated Continuous Wave. The radar modulation that
+      sweeps a frequency chirp and compares the returning echo against
+      the outgoing sweep, which yields range and Doppler velocity
+      together. :doc:`L2 </lectures/lecture2/l2_index>`
 
    FMEA
       Failure Mode and Effects Analysis. A systematic method for
@@ -649,10 +786,24 @@ G
       approach in which other road users keep their recorded trajectories,
       so it cannot evaluate negotiation. :doc:`L13 </lectures/lecture13/l13_index>`
 
+   Gating
+      Rejecting a measurement that disagrees with the current estimate
+      by more than a threshold. It is the answer to the GNSS multipath
+      problem raised in L2. Its own failure mode: once an estimate has
+      drifted, the gate rejects the correct measurements that would have
+      corrected it. :doc:`L3 </lectures/lecture3/l3_index>`
+
    Geofence
       A boundary in the physical world, encoded in software, outside which a
       :term:`Driving Automation Feature` will not operate. One common way of
       expressing the geographic component of an :term:`ODD`. :doc:`L1 </lectures/lecture1/l1_lecture>`
+
+   Global Nearest Neighbor
+      GNN. Data association that solves a whole frame at once, choosing
+      the set of pairings with the lowest total cost, usually with the
+      Hungarian algorithm. Removes the order dependence that makes plain
+      nearest-neighbour association unreliable. :doc:`L3
+      </lectures/lecture3/l3_index>`
 
    GNN
       Graph Neural Network. A neural network operating on graph-structured
@@ -665,6 +816,18 @@ G
       (latitude, longitude, altitude). Includes GPS (US), GLONASS
       (Russia), Galileo (EU), BeiDou (China). :doc:`L2 </lectures/lecture2/l2_index>` · :doc:`L7 </lectures/lecture7/l7_index>`
 
+   Ground Truth
+      The true value of a quantity. Available in simulation and never
+      available on a real vehicle. Used to check whether a filter's
+      reported uncertainty matches the error it is actually making.
+      :doc:`L2 </lectures/lecture2/l2_index>` · :doc:`L3
+      </lectures/lecture3/l3_index>`
+
+   GUM
+      Guide to the Expression of Uncertainty in Measurement, JCGM
+      100:2008. With the VIM, it supplies the formal definitions of
+      coverage interval and coverage probability used in this course.
+      :doc:`L3 </lectures/lecture3/l3_index>`
 
 .. _glossary-h:
 
@@ -728,10 +891,41 @@ I
       (accelerometers) and angular velocity (gyroscopes) at high
       frequency (>100 Hz). Suffers from drift over time. :doc:`L2 </lectures/lecture2/l2_index>` · :doc:`L7 </lectures/lecture7/l7_index>`
 
+   Innovation
+      The measurement minus the measurement the filter predicted,
+      written with the Greek letter nu. The only genuinely new
+      information in a filter cycle, and the quantity that consistency
+      checks monitor. Many textbooks write it as y. :doc:`L3
+      </lectures/lecture3/l3_index>`
+
+   Innovation Covariance
+      How large the filter expected the innovation to be, written S.
+      Used by the Kalman gain, the NIS and the Mahalanobis distance.
+      :doc:`L3 </lectures/lecture3/l3_index>`
+
    Instance Segmentation
       A perception task that assigns each object a unique ID and
       pixel-level mask, distinguishing individual instances of the same
       class (e.g., car #1 vs. car #2). :doc:`L5 </lectures/lecture5/l5_index>`
+
+   Intermediate Fusion
+      Combining learned features from each sensor. The network can learn
+      which sensor to trust in which conditions, at the cost of needing
+      training data with every modality present, and of being hard to
+      interpret or certify. :doc:`L3 </lectures/lecture3/l3_index>`
+
+   Intrinsic Calibration
+      The parameters describing how a camera turns an incoming ray of
+      light into a pixel: focal lengths, principal point and distortion
+      coefficients. They belong to the camera and lens, so they travel
+      with it and are far more stable than extrinsics. :doc:`L2
+      </lectures/lecture2/l2_index>`
+
+   Inverse-Variance Weighting
+      Combining independent estimates with weights proportional to one
+      over the variance. The precisions add, so the combined uncertainty
+      is smaller than either input. Halving a sensor's sigma multiplies
+      its weight by four. :doc:`L3 </lectures/lecture3/l3_index>`
 
    IoU
       Intersection over Union. The ratio of the overlap area to the
@@ -799,6 +993,13 @@ L
       An open lane-graph map format (Poggenhans et al., 2018) widely used
       by Autoware and many research stacks. Represents drivable lanes as
       typed line strings with explicit topological connectivity. :doc:`L8 </lectures/lecture8/l8_index>`
+
+   Late Fusion
+      Combining finished per-sensor results such as tracks, object lists
+      or pose estimates. Modular, testable and robust to a failed
+      sensor, but information is discarded before the combination
+      happens. This is what GP3 uses. :doc:`L3
+      </lectures/lecture3/l3_index>`
 
    Lattice Planner
       A motion planning approach that performs graph search on a
@@ -872,10 +1073,31 @@ M
       samples. AMCL (Adaptive MCL) dynamically adjusts particle count.
       Standard localization algorithm in ROS. :doc:`L7 </lectures/lecture7/l7_index>`
 
+   Mean
+      The average of a set of readings, written with the Greek letter
+      mu. :doc:`L3 </lectures/lecture3/l3_index>`
+
+   Measurement Noise
+      The random error in a sensor reading, with covariance R. Usually
+      measurable, by pointing the sensor at a known target and examining
+      the spread. :doc:`L3 </lectures/lecture3/l3_index>`
+
    MHT
       Multiple Hypothesis Tracking. A data association method that
       maintains a tree of hypotheses for measurement-to-track assignments,
       deferring hard decisions to resolve ambiguity over time. :doc:`L3 </lectures/lecture3/l3_index>` · :doc:`L6 </lectures/lecture6/l6_index>`
+
+   Modality
+      A kind of sensing rather than a piece of hardware. Two cameras are
+      one modality; a camera and a radar are two. Complementarity is a
+      claim about modalities, never about counts. :doc:`L2
+      </lectures/lecture2/l2_index>`
+
+   M-of-N
+      The rule that promotes a tentative track to confirmed, requiring M
+      detections within N frames. It stops clutter from being reported
+      as a real object, at the cost of a short delay before a genuine
+      object is confirmed. :doc:`L3 </lectures/lecture3/l3_index>`
 
    MOTA
       Multi-Object Tracking Accuracy. A tracking metric computed as
@@ -918,6 +1140,13 @@ M
       across consecutive frames. Methods: SORT, DeepSORT, ByteTrack,
       transformer-based MOT. :doc:`L6 </lectures/lecture6/l6_index>`
 
+   Multipath
+      A GNSS error in which the signal arrives by a reflected path
+      rather than directly, so the receiver places the vehicle several
+      metres from its true position. The fix arrives on time and looks
+      entirely normal, which makes it more dangerous than a lost fix.
+      :doc:`L2 </lectures/lecture2/l2_index>` · :doc:`L3
+      </lectures/lecture3/l3_index>`
 
 .. _glossary-n:
 
@@ -942,10 +1171,23 @@ N
       Used in Autoware for LiDAR-based localization. Faster than ICP
       for large-scale matching. :doc:`L7 </lectures/lecture7/l7_index>`
 
+   NIS
+      Normalised Innovation Squared. The innovation weighted by the
+      inverse of its expected covariance. It should follow a chi-square
+      distribution if the filter is consistent. Persistently above the
+      expected range means the filter is overconfident. :doc:`L3
+      </lectures/lecture3/l3_index>`
+
    NMS
       Non-Maximum Suppression. A post-processing step that removes
       duplicate detections by suppressing overlapping bounding boxes
       with lower confidence. Not needed in DETR. :doc:`L4 </lectures/lecture4/l4_index>`
+
+   Noise
+      Random error that scatters readings around a centre and averages
+      away as more readings are taken. Described by variance. Contrast
+      with bias, which does not average away. :doc:`L3
+      </lectures/lecture3/l3_index>`
 
    Nonholonomic Constraint
       A motion constraint that limits achievable velocities but not the
@@ -1063,6 +1305,12 @@ P
       :math:`K = \begin{bmatrix} f_x & 0 & c_x \\ 0 & f_y & c_y \\ 0 & 0 & 1 \end{bmatrix}`.
       Underlies intrinsic calibration and stereo geometry. :doc:`L2 </lectures/lecture2/l2_index>`
 
+   Point Cloud
+      The output of a LiDAR: an unordered set of x, y and z returns,
+      each with an intensity, and with no connectivity between them.
+      Nothing in the data says which points belong to the same object.
+      :doc:`L2 </lectures/lecture2/l2_index>`
+
    Pose Graph Optimization
       The SLAM backend formulation that represents the robot trajectory
       as a graph of poses (nodes) and relative constraints (edges), then
@@ -1076,6 +1324,13 @@ P
       Probabilistic Road Map. A multi-query sampling-based planner that
       pre-computes a graph of collision-free configurations connected by
       feasible paths, then searches this graph for start-to-goal queries. :doc:`L10 </lectures/lecture10/l10_index>`
+
+   Process Noise
+      How wrong the motion model is, with covariance Q. It cannot be
+      measured the way measurement noise can, because it describes the
+      inadequacy of your own model. It is tuned, and it is the usual
+      cause of an overconfident filter. :doc:`L3
+      </lectures/lecture3/l3_index>`
 
    Pure Pursuit
       A geometric path-following controller that steers the vehicle toward
@@ -1115,6 +1370,12 @@ R
       measure distance, and directly measure velocity via the Doppler
       effect. Operates in all weather conditions. Standard automotive
       frequency: 77 GHz. :doc:`L2 </lectures/lecture2/l2_index>`
+
+   Redundancy
+      Duplicating a capability. It protects against a component failing
+      but not against a shared environmental failure. Two identical
+      forward cameras are redundant, and are blinded by the same sun
+      glare at the same instant. :doc:`L2 </lectures/lecture2/l2_index>`
 
    Re-simulation
       Replaying recorded drives against a new software build, also called log
@@ -1198,6 +1459,13 @@ S
       of driving automation (Level 0--5), the industry-standard
       classification system. :doc:`L1 </lectures/lecture1/l1_lecture>`
 
+   Scale Ambiguity
+      A single image cannot determine absolute size or distance, because
+      a small near object and a large far one project onto identical
+      pixels. Scale has to come from elsewhere: camera height, known
+      object sizes, ego-motion, or another sensor. :doc:`L2
+      </lectures/lecture2/l2_index>`
+
    Scan Matching
       Aligning a new LiDAR scan to a previous scan or map by finding the
       rigid transformation that minimizes inter-point distance. Algorithms
@@ -1224,6 +1492,18 @@ S
       A perception task that assigns a class label to every pixel in an
       image (e.g., road, sidewalk, vehicle) without distinguishing
       individual instances. :doc:`L5 </lectures/lecture5/l5_index>`
+
+   Sensor Fusion
+      Combining measurements from several sensors into a single estimate
+      that is better than any one sensor could provide alone. :doc:`L2
+      </lectures/lecture2/l2_index>` · :doc:`L3
+      </lectures/lecture3/l3_index>`
+
+   Sigma Points
+      The set of sample points a UKF chooses so that they reproduce the
+      current mean and covariance exactly. They are pushed through the
+      true nonlinear function, which avoids computing any Jacobian.
+      :doc:`L3 </lectures/lecture3/l3_index>`
 
    Sim-to-Real Gap
       The distributional mismatch between simulation-generated data and
@@ -1253,16 +1533,30 @@ S
    SOTIF
       See :term:`ISO 21448 (SOTIF)`. :doc:`L1 </lectures/lecture1/l1_lecture>` · :doc:`L14 </lectures/lecture14/l14_index>`
 
+   Standard Deviation
+      The square root of the variance, written with the Greek letter
+      sigma, expressed in the same units as the measurement. The usual
+      way to quote an uncertainty. :doc:`L3
+      </lectures/lecture3/l3_index>`
+
    Stanley Controller
       A lateral path-following controller (developed for the DARPA Grand
       Challenge) that computes steering based on both heading error and
       cross-track error measured at the front axle. More aggressive
       correction than Pure Pursuit at high cross-track errors. :doc:`L11 </lectures/lecture11/l11_index>`
 
+   State Vector
+      The list of quantities a filter estimates, written in bold. It
+      includes quantities no sensor reports directly, such as velocity,
+      because the motion model needs them and the filter can infer them.
+      :doc:`L3 </lectures/lecture3/l3_index>`
+
    Stereo Vision
       Depth estimation using two cameras separated by a known baseline.
       Computes depth from the disparity between left and right images. :doc:`L2 </lectures/lecture2/l2_index>`
 
+   Systematic Error
+      See Bias. :doc:`L3 </lectures/lecture3/l3_index>`
 
 .. _glossary-t:
 
@@ -1283,9 +1577,21 @@ T
       realism rises with it, so millions of scenarios run at the top and
       dozens at the bottom. :doc:`L13 </lectures/lecture13/l13_index>`
 
+   Time of Flight
+      Measuring distance by timing how long a pulse takes to travel out
+      and back. For LiDAR the range is c times t divided by 2, so 2 cm
+      of range accuracy requires about 133 picoseconds of timing
+      precision. :doc:`L2 </lectures/lecture2/l2_index>`
+
    Time-of-Flight (ToF)
       The operating principle of LiDAR. Measures the round-trip time of a
       laser pulse to compute distance: ``distance = (c x dt) / 2``. :doc:`L2 </lectures/lecture2/l2_index>`
+
+   Track Lifecycle
+      The states a track passes through: tentative, confirmed, coasting
+      and deleted. Track identity must not depend on classification,
+      which is the architectural lesson of the Tempe crash. :doc:`L3
+      </lectures/lecture3/l3_index>`
 
    Tracking-by-Detection
       The dominant MOT paradigm: at each frame, run an object detector,
@@ -1330,6 +1636,14 @@ U
       deterministic "sigma points" passed through the true non-linear
       function, avoiding the need for Jacobian matrices. :doc:`L3 </lectures/lecture3/l3_index>`
 
+   Uncertainty
+      A number attached to an estimate saying how far the truth could
+      plausibly be from it. Formally, VIM clause 2.26 defines
+      measurement uncertainty as a non-negative parameter characterising
+      the spread of values that could reasonably be attributed to the
+      quantity being measured. Usually expressed as a standard
+      deviation. :doc:`L3 </lectures/lecture3/l3_index>`
+
    U-Net
       An encoder-decoder segmentation architecture (Ronneberger et al.,
       2015) with skip connections that concatenate encoder features with
@@ -1353,6 +1667,18 @@ U
       and planning through a unified transformer framework with
       planning-oriented task design. :doc:`L12 </lectures/lecture12/l12_index>`
 
+   Unscented Kalman Filter
+      UKF. A filter for nonlinear models that propagates sigma points
+      through the true function instead of linearising it. It needs no
+      Jacobians, which removes a class of silent bugs, and it is more
+      accurate than the EKF when the covariance is wide. :doc:`L3
+      </lectures/lecture3/l3_index>`
+
+   Urban Canyon
+      A street lined with tall buildings, where GNSS suffers both
+      blockage, which is the honest failure, and multipath, which is
+      not. :doc:`L2 </lectures/lecture2/l2_index>` · :doc:`L3
+      </lectures/lecture3/l3_index>`
 
 .. _glossary-v:
 
@@ -1360,6 +1686,19 @@ V
 =
 
 .. glossary::
+
+   Variance
+      How spread out a set of measurements is: the average of the
+      squared distances from the mean. Squaring removes the sign and
+      weights large errors more heavily. The result is in squared units,
+      so the square root is usually quoted instead. :doc:`L3
+      </lectures/lecture3/l3_index>`
+
+   VIM
+      International Vocabulary of Metrology, JCGM 200:2012. The source
+      of this course's formal definitions of calibration and of
+      measurement uncertainty. :doc:`L2 </lectures/lecture2/l2_index>` ·
+      :doc:`L3 </lectures/lecture3/l3_index>`
 
    V-Model
       The ISO 26262 development lifecycle where each design stage (left
@@ -1424,6 +1763,12 @@ W
       information, speed limits, and connectivity to other waypoints.
       Used for path planning and navigation. :doc:`L1 </lectures/lecture1/l1_lecture>` · :doc:`L8 </lectures/lecture8/l8_index>`
 
+   White Noise
+      Noise whose errors are unrelated from one moment to the next, with
+      no drift or slow wander. Assumed by the Kalman filter. A sensor
+      whose error wanders slowly breaks the assumption, and the filter
+      will trust it too much. :doc:`L3 </lectures/lecture3/l3_index>`
+
    World Model
       A learned model that predicts future scene states (typically video
       frames) conditioned on actions and current observations. Acts as
@@ -1442,3 +1787,25 @@ Y
       You Only Look Once. A family of single-stage object detectors that
       predict all bounding boxes and class probabilities in a single
       forward pass. Evolution: v1 (2015) to v11 (2024). :doc:`L4 </lectures/lecture4/l4_index>`
+
+
+.. _glossary-z:
+
+Z
+=
+
+.. glossary::
+
+   Zero-Doppler Filtering
+      Discarding radar returns whose Doppler shift matches the
+      stationary world, so that the vehicle does not brake for manhole
+      covers and sign gantries. A stopped vehicle in your lane fails
+      exactly the same test, which is implicated in real crashes.
+      :doc:`L2 </lectures/lecture2/l2_index>` · :doc:`L3
+      </lectures/lecture3/l3_index>`
+
+   Zhang's Method
+      The standard technique for camera intrinsic calibration:
+      photograph a planar checkerboard from many angles, detect the
+      corners, and solve for the intrinsic matrix and the distortion
+      coefficients. :doc:`L2 </lectures/lecture2/l2_index>`

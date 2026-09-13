@@ -5,10 +5,92 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.1.0 -- L1 Rewritten from Slide Deck v1.0 (2026-09-03)
+.. dropdown:: v2.2.0 -- L3 Released (2026-09-12)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   Lecture 3 is now published. It was previously index only, with its
+   notes, exercises, quiz and references held back while they were written.
+
+   .. rubric:: Lecture 3: Probabilistic State Estimation & Fusion
+
+   - **New Terminology section.** Variance, standard deviation, uncertainty,
+     noise, bias and confidence are each defined before they are used, with
+     worked numbers rather than formulas alone. Six GNSS readings of a car
+     at a surveyed point run through the whole section, so the same data
+     produces the mean, the variance, the sigma bands and the confidence
+     interval.
+   - **Formal definitions are now cited**: ISO 3534-1:2006 for variance and
+     confidence interval, JCGM 100:2008 (GUM) and JCGM 200:2012 (VIM) for
+     measurement uncertainty and coverage interval, and Gelman for credible
+     regions. VIM is the same document L2 quotes for calibration.
+   - **New Notation section** with three symbol tables covering statistics,
+     the state and the two models, and the update. It also flags the two
+     symbols that do double duty.
+   - **The innovation is now written** :math:`\nu` **rather than**
+     :math:`y`, because :math:`y` is the across-road coordinate in this
+     lecture and the two collided in the NIS and Mahalanobis formulas. Most
+     textbooks use :math:`y`, and the notes say so.
+   - **New: What a Filter Is.** The word was previously used before it was
+     defined. There is now a definition, four reasons a vehicle cannot just
+     use the newest reading, and a note on where the name comes from.
+   - **New: where uncertainty actually comes from.** :math:`R` is measured,
+     reported by the sensor, quoted on a datasheet, or set by you in
+     simulation. :math:`Q` is none of those and is always tuned. The notes
+     also admit that the worked examples simply hand you a sigma.
+   - **New: the lecture contains almost no AI, and says so.** A table dates
+     each technique from 1936 to 1999, explains why classical estimation
+     still decides where the vehicle thinks it is, and points at L4, L5, L6,
+     L9 and L12 for the learned parts of the stack.
+   - **Three new figures**: two Gaussians combining into a sharper third,
+     the Kalman gain against the noise ratio, and a three step covariance
+     ellipse sequence showing prediction growing the ellipse and the update
+     shrinking it.
+   - **Reordered.** Fusion architectures now comes before combining two
+     estimates, so late fusion motivates the question instead of
+     interrupting the path from the weighting formula to the Kalman filter.
+   - **New roadmap** pairing every section with the question it answers, and
+     a transition block between each pair of sections.
+   - **Corrected a contradiction with L2.** An earlier draft had students
+     run the tracker under CARLA weather presets. L2 measured that CARLA
+     does not model LiDAR attenuation, so the exercise now says plainly that
+     any degradation comes from a constant you inserted yourself.
+   - Tempe is recalled in full, with the NTSB/HAR-19/03 timings, and is
+     placed as the third question the other two depend on.
+
+   .. rubric:: Exercises, Quiz and References
+
+   - **Six exercises.** Exercise 5, the divergence hunt, is the centrepiece:
+     a filter that reports 0.115 m of uncertainty while sitting 29.7 m from
+     the truth, with a mean NIS of 475 against a band topping out at 5.02.
+     Every figure in the exercises was computed and checked, not estimated.
+   - Exercise 6 works a data association cost matrix by hand, including one
+     detection that the gate rejects for one track and accepts for another.
+   - **Quiz expanded to 36 questions** (19 multiple choice, 11 true or
+     false, 6 short answer), covering variance, the meaning of a confidence
+     level, filter consistency and track lifecycle.
+   - **References**: new groups for filter consistency and divergence
+     (Bar-Shalom, Fitzgerald, Mehra, Blackman and Popoli) and for the
+     formal definitions above.
+
+   .. rubric:: Site-wide
+
+   - **Glossary: 57 new terms**, taking it from 189 to 246. L3 coverage goes
+     from 12 tagged entries to 57, and L2 from 17 to 37. A **Z** section was
+     added for Zero-Doppler Filtering and Zhang's Method, and the A to Z
+     navigation line now includes it.
+   - ``conf.py`` no longer excludes the L3 pages. L4 to L14 remain index
+     only.
+   - Fixed a verification step in :doc:`Using CARLA from Python
+     </carla/carla-python>` that told students to check their install with
+     ``carla.__version__``, which the 0.9.16 wheel does not define and which
+     therefore always raised ``AttributeError``.
+
+
+.. dropdown:: v2.1.0 -- L1 Rewritten from Slide Deck v1.0 (2026-09-03)
+   :icon: tag
+   :class-container: sd-border-success
 
    Lecture 1 was rewritten to match the **L1 slide deck v1.0**, and the
    syllabus and glossary were brought in line with it. L2--L14 are now
