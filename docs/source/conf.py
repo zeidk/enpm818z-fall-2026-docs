@@ -50,7 +50,7 @@ templates_path = ["_templates"]
 # ---------------------------------------------------------------------------
 exclude_patterns = [
     f"lectures/lecture{n}/l{n}_{page}.rst"
-    for n in range(3, 15)
+    for n in range(4, 15)
     for page in ("lecture", "exercises", "quiz", "references")
 ]
 

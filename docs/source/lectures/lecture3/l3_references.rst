@@ -3,6 +3,69 @@ References
 ====================================================
 
 
+.. dropdown:: Formal Definitions: Variance and Confidence
+   :class-container: sd-border-secondary
+   :open:
+
+   These are the sources behind the definitions in the **Words We Need
+   First** section of the lecture. The first two are standards documents
+   rather than textbooks, so they are the ones to quote if anyone asks you
+   what a term officially means.
+
+   .. grid:: 1 1 2 2
+      :gutter: 2
+
+      .. grid-item-card:: Statistics vocabulary
+         :link: https://www.iso.org/standard/40145.html
+         :class-card: sd-border-secondary
+
+         **ISO 3534-1:2006**
+
+         *Statistics. Vocabulary and symbols. Part 1: General statistical
+         terms and terms used in probability.*
+
+         The standards body definitions of **variance**, **standard
+         deviation**, **confidence interval** and **confidence level**.
+
+      .. grid-item-card:: Measurement uncertainty
+         :link: https://www.bipm.org/en/committees/jc/jcgm/publications
+         :class-card: sd-border-secondary
+
+         **JCGM 100:2008 (GUM)** and **JCGM 200:2012 (VIM)**
+
+         *Guide to the Expression of Uncertainty in Measurement*, and the
+         *International Vocabulary of Metrology*.
+
+         VIM is the same document L2 quoted for the definition of
+         calibration. Both deliberately avoid the word "confidence" and use
+         **coverage interval** and **coverage probability** instead.
+
+         +++
+
+         Free to download from the BIPM.
+
+      .. grid-item-card:: Probability and statistics
+         :class-card: sd-border-secondary
+
+         **Casella, G. and Berger, R. L. (2002)**
+
+         *Statistical Inference*, 2nd edition. Duxbury.
+
+         The standard graduate treatment of variance, estimators and
+         confidence intervals.
+
+      .. grid-item-card:: Credible intervals
+         :class-card: sd-border-secondary
+
+         **Gelman, A. et al. (2013)**
+
+         *Bayesian Data Analysis*, 3rd edition. CRC Press.
+
+         Credible regions, which is what a Kalman filter's covariance
+         ellipse actually is. Chapter 1 covers the distinction from
+         confidence intervals directly.
+
+
 .. dropdown:: Kalman Filter Theory
    :class-container: sd-border-secondary
    :open:
@@ -17,7 +80,7 @@ References
          **Kalman, R.E. (1960)**
 
          "A New Approach to Linear Filtering and Prediction Problems."
-         Transactions of the ASME -- Journal of Basic Engineering.
+         Transactions of the ASME, Journal of Basic Engineering.
 
       .. grid-item-card:: EKF and UKF Overview
          :link: https://groups.seas.harvard.edu/courses/cs281/papers/unscented.pdf
@@ -155,6 +218,58 @@ References
 
          "A Tutorial on Particle Filters for Online Nonlinear/Non-Gaussian
          Bayesian Tracking." IEEE Transactions on Signal Processing.
+
+
+.. dropdown:: Filter Consistency and Divergence
+   :class-container: sd-border-secondary
+
+   .. grid:: 1 1 2 2
+      :gutter: 2
+
+      .. grid-item-card:: The standard reference
+         :class-card: sd-border-secondary
+
+         **Bar-Shalom, Y., Li, X.-R., & Kirubarajan, T. (2001)**
+
+         *Estimation with Applications to Tracking and Navigation.* Wiley.
+
+         The definitive treatment of filter **consistency**: NIS, NEES,
+         and the chi-square tests used in this lecture. If you read one
+         thing beyond the notes, read the consistency chapter.
+
+      .. grid-item-card:: Divergence
+         :link: https://ieeexplore.ieee.org/document/1099836
+         :class-card: sd-border-secondary
+
+         **Fitzgerald, R.J. (1971)**
+
+         *Divergence of the Kalman Filter.* IEEE Transactions on Automatic
+         Control, 16(6).
+
+         The classic analysis of why a filter becomes confidently wrong,
+         and why shrinking :math:`P` is the mechanism.
+
+      .. grid-item-card:: Tuning Q and R
+         :link: https://ieeexplore.ieee.org/document/1099422
+         :class-card: sd-border-secondary
+
+         **Mehra, R.K. (1970)**
+
+         *On the Identification of Variances and Adaptive Kalman
+         Filtering.* IEEE Transactions on Automatic Control, 15(2).
+
+         The origin of adaptive noise-covariance estimation. Useful
+         background on why :math:`Q` resists measurement.
+
+      .. grid-item-card:: Gating in practice
+         :class-card: sd-border-secondary
+
+         **Blackman, S. & Popoli, R. (1999)**
+
+         *Design and Analysis of Modern Tracking Systems.* Artech House.
+
+         Practical treatment of validation gates, track lifecycle and
+         M-of-N confirmation logic as actually deployed.
 
 
 .. dropdown:: Survey Papers

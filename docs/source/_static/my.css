@@ -90,3 +90,34 @@ figure.white-figure img,
   padding: 0.75rem;
   border-radius: 6px;
 }
+
+/* ------------------------------------------------------------
+ * "In plain English" admonition
+ * Usage: .. admonition:: In plain English
+ *           :class: plain-english
+ *
+ * Unpacks a formula in words: what each part does, and why the
+ * expression has the shape it has. Fuchsia, so it reads as a
+ * different kind of content from note / warning / danger.
+ *
+ * The theme builds every admonition from three variables, so we
+ * override those rather than fighting its selectors. Border,
+ * title background and icon then all follow automatically, in
+ * both light and dark mode.
+ * ------------------------------------------------------------ */
+:root {
+  --enpm-fuchsia:    #b5157d;
+  --enpm-fuchsia-bg: #fbe6f2;
+}
+
+html[data-theme="dark"] {
+  --enpm-fuchsia:    #f06fb8;
+  --enpm-fuchsia-bg: #3b1029;
+}
+
+.admonition.plain-english,
+div.admonition.plain-english {
+  --pst-color-info:              var(--enpm-fuchsia);
+  --pst-color-info-bg:           var(--enpm-fuchsia-bg);
+  --pst-icon-admonition-default: "\f0eb";   /* lightbulb */
+}
