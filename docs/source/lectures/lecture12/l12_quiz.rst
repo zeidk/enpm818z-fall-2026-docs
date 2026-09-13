@@ -2,6 +2,17 @@
 Quiz
 ====================================================
 
+.. important::
+
+   **This quiz is not submitted and it is not graded.** It is a self-check,
+   and the answers are published so you can use it that way.
+
+   The graded quizzes are the **five in-class quizzes** listed in the
+   :doc:`syllabus </syllabus/index>`. Those are closed-notes, given at the
+   start of class, and they **use different questions from these**. Working
+   through this page is good preparation for one. Memorising the answers
+   below is not.
+
 This quiz covers the key concepts from Lecture 12: End-to-End Driving,
 VLA & Imitation Learning. Topics include the modular vs. end-to-end
 debate, UniAD (CVPR 2023), DriveTransformer (ICLR 2025),

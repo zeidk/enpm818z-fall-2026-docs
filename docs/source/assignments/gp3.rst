@@ -156,45 +156,14 @@ Complete all four tasks. The bonus task (Task 4) can push your score above
 
       def associate_lidar_to_detection(detection, cloud_array, K, T_cl,
                                        min_range=1.0, max_range=50.0):
-                                           """Decide which LiDAR cluster belongs to which camera detection.
+          """Decide which LiDAR cluster belongs to which camera detection.
 
-                                           YOU WRITE THIS. L3 gives you everything needed: gate first with a
-                                           chi-square threshold, score with Mahalanobis distance rather than
-                                           Euclidean, then solve the frame as a whole rather than greedily.
-
-                                           State which method you used and why, in the report.
-                                           """
-                                           raise NotImplementedError("GP3: data association.")
-
+          YOU WRITE THIS. L3 gives you the pieces: gate first with a
+          chi-square threshold, score with Mahalanobis distance rather than
+          Euclidean, and solve the frame as a whole rather than greedily.
+          Say in the report which method you used and why.
           """
-          Returns the 3D centroid (x, y, z) in LiDAR frame for a single
-          Detection2D, or None if no points are found in the frustum.
-
-          Parameters
-          ----------
-          detection   : vision_msgs/Detection2D
-          cloud_array : np.ndarray, shape (N, 3), LiDAR points in LiDAR frame
-          K           : np.ndarray, shape (3, 3), camera intrinsic matrix
-          T_cl        : np.ndarray, shape (4, 4), camera-to-LiDAR extrinsic
-          min_range   : float, minimum LiDAR range to consider (metres)
-          max_range   : float, maximum LiDAR range to consider (metres)
-          """
-          bbox = detection.bbox
-          u_min = bbox.center.position.x - bbox.size_x / 2.0
-          u_max = bbox.center.position.x + bbox.size_x / 2.0
-          v_min = bbox.center.position.y - bbox.size_y / 2.0
-          v_max = bbox.center.position.y + bbox.size_y / 2.0
-
-          frustum_pts = get_frustum_points(
-              cloud_array, K, T_cl,
-              u_min, u_max, v_min, v_max,
-              min_range, max_range
-          )
-
-          if frustum_pts.shape[0] == 0:
-              return None
-
-          return compute_centroid(frustum_pts)
+          raise NotImplementedError("GP3: associate_lidar_to_detection")
 
    **Node skeleton:**
 
@@ -350,48 +319,40 @@ Complete all four tasks. The bonus task (Task 4) can push your score above
           def f(self, x, u, dt):
               """Non-linear process model. u = [omega], the IMU yaw rate.
 
-              YOU WRITE THIS. The state is [x, y, theta, v]. Advance it by one
-              step of dt under a bicycle model, assuming velocity is constant
-              across the step.
-
-              Returns: (4,) array, the predicted state.
+              YOU WRITE THIS. State is [x, y, theta, v]. Advance it one step of
+              dt under a bicycle model, taking velocity as constant across the
+              step. Returns a (4,) array.
               """
-              raise NotImplementedError("GP3: bicycle process model.")
-
+              raise NotImplementedError("GP3: f")
           def F_jacobian(self, x, u, dt):
               """Jacobian of f with respect to the state.
 
-              YOU WRITE THIS, and derive it on paper before you code it. Four
-              of the sixteen entries sit off the diagonal. They are the ones
-              that carry heading and speed error into position error, which is
-              the same coupling L3 gave as the reason velocity belongs in the
-              state at all.
+              YOU WRITE THIS, and derive it on paper first. Four of the sixteen
+              entries sit off the diagonal: the ones carrying heading and speed
+              error into position error, which is the coupling L3 gave as the
+              reason velocity belongs in the state.
 
-              Check it numerically rather than trusting your algebra: perturb
+              Verify it numerically rather than trusting the algebra. Perturb
               each state element by 1e-6, re-run f, and compare the finite
               difference against your matrix. An EKF with a wrong Jacobian does
-              not crash. It converges, confidently, on nonsense.
+              not crash; it converges, confidently, on nonsense.
 
-              Returns: (4, 4) array.
+              Returns a (4, 4) array.
               """
-              raise NotImplementedError("GP3: process Jacobian.")
-
+              raise NotImplementedError("GP3: F_jacobian")
           def h(self, x):
-              """Measurement model: what GNSS observes, given the state.
+              """Measurement model: what GNSS observes given the state.
 
-              YOU WRITE THIS. Returns: (2,) array.
+              YOU WRITE THIS. Returns a (2,) array.
               """
-              raise NotImplementedError("GP3: measurement model.")
-
+              raise NotImplementedError("GP3: h")
           def H_jacobian(self, x):
               """Jacobian of h with respect to the state.
 
-              YOU WRITE THIS. Small and easy, but get the shape right: it maps
-              a 4-element state onto a 2-element measurement.
-
-              Returns: (2, 4) array.
+              YOU WRITE THIS. Small, but get the shape right: it maps a
+              4-element state onto a 2-element measurement. Returns (2, 4).
               """
-              raise NotImplementedError("GP3: measurement Jacobian.")
+              raise NotImplementedError("GP3: H_jacobian")
 
    .. warning::
 
@@ -491,32 +452,23 @@ Complete all four tasks. The bonus task (Task 4) can push your score above
       import open3d as o3d
 
       def icp_scan_match(source_pts, target_pts, threshold=0.5):
-          """
-          Estimate rigid transform T aligning source -> target using ICP.
-          Returns 4x4 transform matrix.
-          """
-          src = o3d.geometry.PointCloud()
-          src.points = o3d.utility.Vector3dVector(source_pts)
-          tgt = o3d.geometry.PointCloud()
-          tgt.points = o3d.utility.Vector3dVector(target_pts)
+          """Align a live scan to the map and return the 4x4 transform.
 
-          result = o3d.pipelines.registration.registration_icp(
-              src, tgt, threshold,
-              np.eye(4),
-              o3d.pipelines.registration.TransformationEstimationPointToPoint()
-          )
-          return result.transformation
+          YOU WRITE THIS. You may call a library for the inner registration
+          step, but you choose the initial guess, the correspondence
+          threshold and the convergence test, and those decide whether it
+          works.
+
+          Report what you do when it fails to converge. Returning an
+          unchecked transform is how a localisation node silently teleports.
+          """
+          raise NotImplementedError("GP3: icp_scan_match")
 
    .. note::
 
-    """Align a live scan to the map and return the corrected pose.
-
-    YOU WRITE THIS. Iterate: find correspondences, solve for the
-    transform that best explains them, apply it, repeat until the
-    change falls below a tolerance. Report how many iterations you
-    allow and what you do when it fails to converge.
-    """
-    raise NotImplementedError("GP3: scan matching.")
+      ICP scan matching can be slow on dense point clouds. Downsample to
+      a voxel grid (e.g., 0.2 m) before running ICP to keep the update
+      rate above 5 Hz.
 
 .. dropdown:: Task 5: Report (15 pts)
    :icon: gear
