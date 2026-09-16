@@ -63,14 +63,25 @@ means before it starts turning up in questions.
 .. important::
 
    A **filter** is a piece of software that keeps a running estimate of
-   something you cannot measure directly. It updates that estimate every
+   something no sensor gives you exactly. It updates that estimate every
    time a new measurement arrives, and it reports how uncertain the estimate
    currently is.
 
    It holds two things at all times: **the estimate**, and **how much to
    trust it**.
 
-Four reasons a car cannot just use the newest reading instead.
+**No sensor gives you exactly** covers three separate situations, and a real
+vehicle has all three at once.
+
+- **Nothing reports it.** No sensor on the car measures your velocity, but
+  the planner needs it. The motion model links it to position, so the filter
+  infers it from how position changes.
+- **No single sensor sees all of it.** A GNSS fix pins down position but not
+  velocity. An IMU measures acceleration but not where you are.
+- **What does arrive is corrupted.** Every reading is the quantity you wanted
+  *plus noise*, so even the parts you do observe come in wrong.
+
+Five reasons a car cannot just use the newest reading instead.
 
 .. list-table::
    :widths: 32 68
@@ -94,6 +105,10 @@ Four reasons a car cannot just use the newest reading instead.
    * - Some quantities are never measured
      - No sensor reports your velocity directly, but the planner needs it.
        The filter works it out from how the position keeps changing.
+   * - A sensor can fail or be rejected
+     - A fix can be missing, or thrown out as bad. The filter runs on
+       prediction alone for that cycle, and says how much less certain that
+       makes it.
 
 .. note::
 
@@ -903,7 +918,7 @@ frame, with covariance
 
    The filter is claiming: given the model, there is a 95% probability that
    the vehicle is inside an ellipse centred on (12.4, 3.1) with semi-axes of
-   **1.22 m across and 1.96 m along**.
+   **1.22 m along and 1.96 m across**.
 
    The first three words carry the weight. **Given the model.**
 
@@ -1362,9 +1377,9 @@ number. The result is the Kalman filter.
 What You Are Estimating
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-The **state**, written :math:`\mathbf{x}`, is the list of quantities you
-want to know but cannot read directly off a sensor. For a vehicle moving in
-a plane:
+The **state**, written :math:`\mathbf{x}`, is the list of quantities the
+filter tracks: everything you need to know, whether or not a sensor reports
+it. For a vehicle moving in a plane:
 
 .. math::
 
@@ -1564,7 +1579,7 @@ In one dimension the gain reduces to something already derived:
 .. important::
 
    The Kalman filter is the weighted average from
-   :ref:`l3-independence` with a prediction step added in front.
+   :ref:`l3-weighting` with a prediction step added in front.
    :math:`K = P/(P+R)` is the same weight computed earlier. The only new
    idea is that one of the two estimates being combined is the filter's own
    prediction.
@@ -1719,7 +1734,7 @@ linear estimator. No other algorithm achieves a lower mean squared error.
    target and examining the spread, as in :ref:`l3-variance`. :math:`Q`
    cannot be measured, because it describes how wrong your model of the
    world is, and if you knew that you would have used a better model.
-   **:math:`Q` is the parameter you are most likely to get wrong, and
+   :math:`Q` **is the parameter you are most likely to get wrong, and
    getting it wrong is what makes a filter overconfident.**
 
 
