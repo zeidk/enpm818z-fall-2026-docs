@@ -54,6 +54,10 @@ exclude_patterns = [
     for page in ("lecture", "exercises", "quiz", "references")
 ]
 
+# GP2--GP4 are held back until they are posted. Remove an entry here (and
+# restore its toctree line in assignments/index.rst) to publish it.
+exclude_patterns += [f"assignments/gp{n}.rst" for n in range(2, 5)]
+
 # ---------------------------------------------------------------------------
 # PyData Sphinx Theme
 # ---------------------------------------------------------------------------
