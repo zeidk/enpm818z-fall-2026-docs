@@ -189,7 +189,8 @@ Academic Integrity
    Violations will be treated as academic dishonesty.
 
 **Peer Reviews**: Required for every GP. Your individual grade is
-**60% project grade + 40% peer review score**.
+**60% project grade + 40% peer review score**. The form, how to email it,
+and how the score is computed are in :ref:`peer-evaluation`.
 
 
 Support Resources

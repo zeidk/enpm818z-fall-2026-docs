@@ -1055,7 +1055,7 @@ Submission Checklist
    - [ ] Commit tagged ``gp2-final`` and pushed.
    - [ ] GP1 files (``sensor_manager.py``, ``lidar_projection.py``) still
          present and unmodified.
-   - [ ] Peer evaluation submitted on Canvas within 48 hours.
+   - [ ] Peer evaluation emailed within 48 hours (see :ref:`peer-evaluation`).
 
 
 Grading Rubric

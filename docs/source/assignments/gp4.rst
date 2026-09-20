@@ -642,7 +642,7 @@ Submission Checklist
    - [ ] ``colcon build`` succeeds with no errors or warnings
    - [ ] Folder is named ``GP4_TeamX/`` (correct team number)
    - [ ] Archive is named ``GP4_TeamX.zip``
-   - [ ] Peer evaluation form submitted on Canvas separately
+   - [ ] Peer evaluation emailed within 48 hours (see :ref:`peer-evaluation`).
    - [ ] If bags are on Google Drive, Drive link is in README
 
 
