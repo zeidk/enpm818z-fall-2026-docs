@@ -588,7 +588,7 @@ Submission Checklist
    - [ ] ``colcon build`` succeeds with no errors
    - [ ] Folder is named ``GP3_TeamX/`` (correct team number)
    - [ ] Archive is named ``GP3_TeamX.zip``
-   - [ ] Peer evaluation form submitted on Canvas separately
+   - [ ] Peer evaluation emailed within 48 hours (see :ref:`peer-evaluation`).
 
 
 Grading Rubric

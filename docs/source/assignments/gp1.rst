@@ -1556,7 +1556,7 @@ Submission Checklist
    - [ ] ``rubixcubic`` added as a collaborator on the private repository.
    - [ ] ``report.pdf`` submitted on Canvas.
    - [ ] Commit tagged ``gp1-final`` and pushed.
-   - [ ] Peer evaluation submitted on Canvas (individual grade component).
+   - [ ] Peer evaluation emailed within 48 hours (see :ref:`peer-evaluation`).
 
 
 Grading Rubric
@@ -1600,7 +1600,9 @@ Total: **100 points** (scaled to 15% of the group-project grade, which is
 .. note::
 
    **Individual grade** = 60% project grade + 40% peer review score.
-   Submit peer evaluations on Canvas within 48 hours of the project deadline.
+   Email your peer evaluation within 48 hours of the project deadline, in
+   the format given in :ref:`peer-evaluation`, which also shows how the
+   score is computed with a worked example.
 
 
 Common Mistakes
