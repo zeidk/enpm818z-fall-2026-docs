@@ -1497,13 +1497,16 @@ belongs in ``ads_pipeline``.
 
    1. Push your complete ``GP1_Team{X}/`` directory to your team's GitHub
       repository under the ``gp1`` branch.
-   2. Submit the GitHub repository link AND a ``report.pdf`` on Canvas by
+   2. Add the instructor, GitHub user ``rubixcubic``, as a collaborator on
+      the repository (Settings > Collaborators). The repository is private,
+      so without this the grader cannot see it.
+   3. Submit the GitHub repository link AND a ``report.pdf`` on Canvas by
       the deadline.
-   3. ``report.pdf`` must include: team member names and contributions,
+   4. ``report.pdf`` must include: team member names and contributions,
       a description of any deviations from the required folder structure,
       the timestamp synchronization analysis (Task 3), and the RViz2
       screenshot (Task 4) embedded in the document.
-   4. Tag your submission commit: ``git tag gp1-final && git push --tags``
+   5. Tag your submission commit: ``git tag gp1-final && git push --tags``
 
 
 Submission Checklist
@@ -1550,6 +1553,7 @@ Submission Checklist
    **Repository**
 
    - [ ] Folder structure matches the required layout exactly.
+   - [ ] ``rubixcubic`` added as a collaborator on the private repository.
    - [ ] ``report.pdf`` submitted on Canvas.
    - [ ] Commit tagged ``gp1-final`` and pushed.
    - [ ] Peer evaluation submitted on Canvas (individual grade component).
