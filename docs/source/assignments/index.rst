@@ -12,18 +12,24 @@ build a system that perceives its environment, localizes itself, plans a
 path, and controls a vehicle -- progressing from raw sensor data to
 autonomous driving.
 
-The project spans **12 weeks** through four progressive group projects
-(GP1 through GP4), each building on the previous one. By GP4, your team
-will have a working ADS. The final deliverable integrates and evaluates
-the complete system on challenging, unseen scenarios.
+The project spans **12 weeks** through a sequence of progressive group
+projects, each building on the previous one. By the last group project,
+your team will have a working ADS. The final deliverable integrates and
+evaluates the complete system on challenging, unseen scenarios.
+
+.. note::
+
+   Group projects are posted one at a time as the semester progresses.
+   **GP1 is currently posted.** Later projects will appear here when
+   they open. See the syllabus for the full schedule and weights.
 
 
 Project Weight
 --------------
 
 The final project accounts for **80% of your overall course grade**,
-split between the four group projects (**85%**) and the Final Report
-(**15%**). The table below breaks down the group-project portion:
+split between the group projects (**85%**) and the Final Report
+(**15%**). The table below lists the group projects posted so far:
 
 .. list-table::
    :header-rows: 1
@@ -40,32 +46,8 @@ split between the four group projects (**85%**) and the Final Report
      - 15%
      - 3 weeks
      - L1--L2
-   * - GP2: Perception (YOLO vs DETR)
-     - 40
-     - 40%
-     - 3 weeks
-     - L4--L6
-   * - GP3: Fusion & Localization
-     - 25
-     - 25%
-     - 3 weeks
-     - L3, L7
-   * - GP4: Planning & Control
-     - 20
-     - 20%
-     - 3 weeks
-     - L8--L11
-   * - **Total**
-     - **100**
-     - **100%**
-     - **12 weeks**
-     -
 
 .. note::
-
-   GP2 carries the highest weight (40% of the group-project portion)
-   because it is the **AI-focused project** requiring deep learning
-   model training, evaluation, and comparison.
 
    The Final Report is weighted separately at **15% of the final
    project grade** -- see :ref:`final-report` below.
@@ -80,19 +62,19 @@ Each group project extends the ROS 2 package from the previous one:
 
    GP1: Sensors & Data         ->  CARLA sensor suite + ROS 2 package foundation
        |
-   GP2: Perception (AI)        ->  YOLO + DETR detection nodes + evaluation
+   Perception                  ->  Object detection nodes + evaluation
        |
-   GP3: Fusion & Localization  ->  Multi-sensor fusion + EKF vehicle pose
+   Fusion & Localization       ->  Multi-sensor fusion + vehicle pose estimation
        |
-   GP4: Planning & Control     ->  Path planner + controller + behavior FSM
+   Planning & Control          ->  Path planner + controller + behavior logic
        |
    Final Report                ->  Evaluate on unseen scenarios + written report
 
 .. important::
 
-   Starting from GP2, every project builds on your previous submission.
-   You will extend -- not replace -- the ``ads_pipeline`` ROS 2 package
-   your team created in GP1.
+   After GP1, every project builds on your previous submission. You will
+   extend -- not replace -- the ``ads_pipeline`` ROS 2 package your team
+   creates in GP1.
 
 
 Learning Objectives
@@ -144,9 +126,10 @@ Final Report (Weeks 14--15)
 
 **Weight:** 15% of the final project grade.
 
-After GP4 is complete, your team will evaluate the full pipeline on
-**instructor-provided scenarios** not seen during development and submit
-a final report. There are no classes during Weeks 14--15.
+After the last group project is complete, your team will evaluate the
+full pipeline on **instructor-provided scenarios** not seen during
+development and submit a final report. There are no classes during
+Weeks 14--15.
 
 .. list-table::
    :widths: 30 70
@@ -168,13 +151,13 @@ a final report. There are no classes during Weeks 14--15.
 
 **Final Deliverables:**
 
-1. **Integrated ADS pipeline** -- All GP1--GP4 nodes running end-to-end.
+1. **Integrated ADS pipeline** -- All group-project nodes running end-to-end.
 2. **Evaluation results** -- Quantitative metrics on all 5 scenarios.
 3. **Written report (8--10 pages)** -- Architecture, design decisions,
    results, failure analysis, lessons learned.
 4. **Peer evaluation** -- Individual contribution assessment.
 
-Integrate and refine the modular pipeline from GP1--GP4. Add
+Integrate and refine the modular pipeline from the group projects. Add
 improvements: enhanced behavioral planner (intersections, yielding),
 robustness across 3+ towns and weather conditions, and performance
 optimization.
@@ -226,6 +209,8 @@ Support Resources
    :titlesonly:
 
    gp1
-   gp2
-   gp3
-   gp4
+
+.. GP2--GP4 are hidden (see exclude_patterns in conf.py). Re-add here to publish:
+..    gp2
+..    gp3
+..    gp4

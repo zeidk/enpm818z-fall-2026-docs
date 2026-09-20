@@ -275,6 +275,8 @@ one page and posts it to ELMS:
    that nobody wrote down in September.
 
 
+.. _ai-disclosure:
+
 Academic Integrity and Generative AI
 ------------------------------------
 
