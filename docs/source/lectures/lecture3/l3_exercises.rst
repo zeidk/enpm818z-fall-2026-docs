@@ -11,100 +11,111 @@ Exercises
    work, which is the five in-class quizzes and the four group projects
    listed in the :doc:`syllabus </syllabus/index>`.
 
-Six take-home exercises built on the Lecture 3 notes. Exercises 1 to 3 are
-paper and arithmetic. Exercises 4 and 5 need CARLA running. Exercise 6 is an
-analysis argument.
+Six take-home exercises built on the Lecture 3 slides shown in class, and on
+the same running examples: the six GNSS readings of the parked AV, the
+50 m / 53 m blend in the tunnel, the landmark at :math:`x = 20` m, and the
+two hands-on scripts. Exercises 1 to 4 are paper and arithmetic (one predict
+step and one update in the tunnel). Exercise 5 mixes paper (the EKF with the
+landmark and the Jacobians) with ``ekf_curve.py``. Exercise 6 uses both
+scripts, ``kf_tunnel.py`` and ``ekf_curve.py``, to test whether a filter's
+reported uncertainty is honest.
 
 .. important::
 
-   **Exercise 5 is the one that matters.** It is the debugging skill GP3
-   assumes you already have, and it is the only exercise here that teaches
-   you to detect a filter whose reported uncertainty is wrong, rather than
-   one that fails visibly. Set aside real time for it.
+   **Exercise 6 is the one that matters.** It is the skill GP3 assumes you
+   already have: catching a filter whose reported uncertainty is wrong. Such a
+   filter does not crash. It reports a small :math:`\sigma` and keeps running,
+   and nothing in the system raises an alarm. Turn :math:`Q` down until the
+   filter fails, and watch the share of time inside :math:`1\sigma`, and the
+   NIS, catch it. Set aside real time for it.
 
 .. note::
 
-   Exercises 1 to 3 can be done with a calculator, but you will learn more
-   by writing ten lines of NumPy and checking your arithmetic against it.
-   Show both if you do.
+   Exercises 1 to 5 can be done with a calculator, but you will learn more by
+   writing ten lines of NumPy and checking your arithmetic against it. Show
+   both if you do. The hands-on scripts are in the course code repository,
+   folder ``lecture3/``: ``tunnel_kf/kf_tunnel.py`` and
+   ``curved_tunnel/ekf_curve.py``. They need Python 3 with ``numpy`` and
+   ``matplotlib`` (on Ubuntu 24.04:
+   ``sudo apt install python3-numpy python3-matplotlib python3-tk``). Each
+   script prints its score in the terminal before it opens the live window.
 
 
-.. dropdown:: Exercise 1. Variance, and Weighting by Certainty
+.. dropdown:: Exercise 1. Variance, Standard Deviation and Covariance
    :icon: number
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Compute a variance from raw readings, then convince yourself that
-   inverse-variance weighting follows directly from the uncertainties you
-   were given.
+   Compute the three numbers that describe a cloud of readings, from the
+   class's six GNSS readings, and see what each one can and cannot tell you.
 
    .. raw:: html
 
       <hr>
 
-   **Part A. Where the numbers come from**
+   **Part A. The six readings**
 
-   A car is parked on a straight road, with a survey marker at the
-   roadside. Distance along the road from that marker is the coordinate
-   :math:`x`, as defined in the lecture. The car has been surveyed at
-   exactly :math:`x = 50.0` m. A GNSS receiver reports these five estimates
-   of :math:`x`, in metres:
+   The AV is parked on a surveyed spot, so its true position is known:
+   :math:`(100.0,\ 2.5)` m in the road frame (:math:`x` along the road,
+   :math:`y` across it, from the survey marker). Without moving, it asks the
+   GNSS receiver for its position six times:
 
    .. code-block:: text
 
-      51.2   48.7   50.4   49.1   50.6
+      (102.1, 1.4)   (98.6, 4.3)   (100.9, 3.1)   (99.2, 1.2)   (101.4, 3.4)   (97.8, 1.6)
 
-   1. Compute the **mean** of the five readings.
-   2. Compute the **variance**, using the definition from the notes: find
-      how far each reading sits from the mean, square those distances, and
-      average the squares.
-   3. Compute the **standard deviation**, and state its units.
-   4. The true coordinate is 50.0 m and your mean is not 50.0 m. Is that
-      difference **noise** or **bias**? Explain how five readings are not
-      really enough to tell, and say what you would do to find out.
+   We chose a receiver with no bias: its readings average to the truth.
+
+   1. Compute the **mean** on each axis, :math:`\mu_x` and :math:`\mu_y`.
+   2. For each reading, compute its distance from the mean on each axis.
+      Add the six distances along the road. What do you get, and why does
+      that make the plain average of the distances useless as a measure of
+      spread?
+   3. Compute the **variance** on each axis: square each distance, add the
+      squares, divide by 6. State the units.
+   4. Compute the **standard deviation** on each axis, and compare the
+      sideways one with a 3.6 m lane. What can the AV say about where it is
+      in its lane from one reading?
+   5. The slide divides by 6, not 5. Explain why, and compute what dividing
+      by :math:`n - 1 = 5` would give along the road, and when you would
+      use it.
 
    .. raw:: html
 
       <hr>
 
-   **Part B. Combining three sources**
+   **Part B. The lean**
 
-   Three independent systems estimate the same coordinate :math:`x` on a
-   straight road, measured from the same marker:
+   6. Compute the **covariance** :math:`\mathrm{Cov}(x, y)`: multiply each
+      reading's :math:`x` distance by its own :math:`y` distance, add the six
+      products, divide by 6.
+   7. Write the covariance matrix :math:`P`. What does the sign of the
+      off-diagonal entry say about the cloud? Can six readings prove the
+      receiver has no lean?
 
-   .. list-table::
-      :widths: 40 30 30
-      :header-rows: 1
+   .. raw:: html
 
-      * - **Source**
-        - **Estimate of** :math:`x` **(m)**
-        - :math:`\sigma` **(m)**
-      * - LiDAR map matching
-        - 100.0
-        - 0.5
-      * - Wheel odometry
-        - 101.0
-        - 1.5
-      * - GNSS
-        - 106.0
-        - 3.0
+      <hr>
 
-   5. Compute each source's **precision**, then the **weights**, then the
-      **combined estimate** and the **combined** :math:`\sigma`. Show that
-      the weights add up to one.
-   6. Compare your combined estimate against the plain average of the three.
-      Which source moved the answer least, and how many times smaller is its
-      influence than the LiDAR's?
-   7. The GNSS reading is 6 m away from the LiDAR's. Did the formula treat
-      it as an outlier? Explain what the formula actually did with it, and
-      why that is **not** the same thing as rejecting it.
-   8. Now suppose the wheel odometry estimate is actually derived from the
-      same LiDAR scan match as row one, so their errors rise and fall
-      together. Without redoing any arithmetic, say whether your combined
-      :math:`\sigma` is now too small, too large, or unchanged, and explain
-      why that matters more than the error in the estimate itself.
+   **Part C. Same sigma, not equally good**
+
+   A second receiver, B, is bolted next to A. We do not know yet whether B
+   has bias. Its six readings along the road, with the AV still parked at
+   :math:`x = 100.0` m, are:
+
+   .. code-block:: text
+
+      105.3   101.8   104.1   102.4   104.6   101.0
+
+   8. Compute B's mean and standard deviation without redoing the full
+      table. (Hint: compare each reading with A's.)
+   9. B's mean is off by 3.2 m. Could noise alone explain that? Use the fact
+      that the average of :math:`n` readings wanders by about
+      :math:`\sigma / \sqrt{n}`.
+   10. What did you need, besides the readings, to find B's bias? Could
+       :math:`\sigma` alone have told you?
 
    .. raw:: html
 
@@ -112,68 +123,77 @@ analysis argument.
 
    **Deliverable**
 
-   Your working for Part A, a short table of precisions and weights for
-   Part B, and three or four sentences each on questions 4, 7 and 8.
+   The deviation table with its squared and product columns, :math:`P`, and
+   a sentence each for questions 2, 4, 9 and 10.
 
    .. dropdown:: Guidance
       :color: success
 
-      Part A: the mean is 50.0 m. The squared distances are 1.44, 1.69,
-      0.16, 0.81 and 0.36, adding to 4.46. Dividing by 5 gives a variance of
-      0.892 m squared, so :math:`\sigma` is about 0.944 m. Note the units
-      carefully. Variance is in metres squared, which is why we quote
-      :math:`\sigma` instead.
+      Question 1: :math:`\mu_x = 100.0` m and :math:`\mu_y = 2.5` m, the
+      surveyed spot, because we chose a receiver with no bias.
 
-      **If you used NumPy you may have got 1.115 instead.** Dividing by
-      :math:`n` gives the variance of the numbers you actually have.
-      Dividing by :math:`n-1` estimates the variance of the larger
-      population those numbers came from, and that is what
-      ``numpy.var(x, ddof=1)`` and most calculators do by default. The
-      lecture definition divides by :math:`n`, so use ``ddof=0``. With five
-      readings the two answers differ by 25%. With five hundred they differ
-      by 0.2%, which is why nobody argues about it in practice. Just say
-      which one you used.
+      Question 2: the distances along the road are +2.1, -1.4, +0.9, -0.8,
+      +1.4 and -2.2. They add to **0.0**: pluses and minuses cancel, and
+      they always do around the mean, so their average says nothing about
+      the spread. Squaring makes every term positive.
 
-      Question 4: with only five readings you cannot separate the two. A
-      mean that happens to land on 50.0 m does not prove there is no bias,
-      and a mean that misses by 0.3 m does not prove there is one. To find
-      out, take hundreds of readings and check whether the mean **settles**
-      on the truth or settles somewhere else. Noise averages away. Bias does
-      not.
+      Question 3: the squares along the road are 4.41, 1.96, 0.81, 0.64, 1.96
+      and 4.84, adding to 14.62, so :math:`\mathrm{Var}(x) = 14.62/6 = 2.437`
+      **m²**. Across the road: 1.21, 3.24, 0.36, 1.69, 0.81 and 0.81, adding
+      to 8.12, so :math:`\mathrm{Var}(y) = 8.12/6 = 1.353` m². Square meters
+      are hard to picture, which is why the next step takes the square root.
 
-      Question 5: precisions are 4.000, 0.444 and 0.111, adding to 4.556.
-      Weights are 0.878, 0.098 and 0.024. The combined estimate is
-      **100.24 m** with :math:`\sigma` of **0.469 m**. Notice it is smaller
-      than the best input.
+      Question 4: :math:`\sigma_x = \sqrt{2.437} = 1.56` m and
+      :math:`\sigma_y = \sqrt{1.353} = 1.16` m. A typical sideways miss of
+      1.16 m is a third of a 3.6 m lane: from one reading, the AV cannot tell
+      where in its lane it is.
 
-      Question 6: the plain average is 102.33 m, nearly two metres away,
-      dragged there by the worst sensor. The GNSS influence is **36 times**
-      smaller than the LiDAR's, which is the square of the 6 to 1 ratio of
-      their sigmas.
+      Question 5: the mean here is the surveyed truth, known from outside,
+      so we divide by 6. A mean worked out from the readings themselves sits
+      a little closer to them than the truth does, so you divide by
+      :math:`n - 1` to make up for it: :math:`14.62/5 = 2.924` m², and
+      :math:`\sigma_x = 1.71` m. NumPy's ``np.var`` divides by :math:`n`
+      unless you pass ``ddof=1``. Say which one you used.
 
-      Question 7: the formula rejected nothing. It gave the GNSS a weight of
-      2.4%, which happens to produce a similar outcome for this one sample
-      but is a completely different mechanism. A real outlier test is
-      :math:`\chi^2` gating. A sensor that is **biased** rather than
-      **noisy** will still poison a weighted average no matter how small its
-      weight. Weighting handles noise. Gating handles outliers.
+      Question 6: the products are -2.31, -2.52, +0.54, +1.04, +1.26 and
+      +1.98, adding to **-0.01**, so :math:`\mathrm{Cov}(x, y) = -0.01/6 =
+      -0.002` m².
 
-      Question 8: **too small, and dangerously so.** The formula assumes the
-      errors are independent, so it counts the same evidence twice and
-      reports a confidence it has not earned. The estimate barely moves. The
-      confidence is what breaks. A wrong number that admits it is uncertain
-      can be handled downstream. A wrong number claiming precision cannot.
+      Question 7:
+
+      .. math::
+
+         P = \begin{bmatrix} 2.437 & -0.002 \\ -0.002 & 1.353 \end{bmatrix}
+           \approx \begin{bmatrix} 2.437 & 0 \\ 0 & 1.353 \end{bmatrix} \text{ m}^2
+
+      Positive would mean "too far ahead usually comes with too far left", a
+      leaning cloud; negative, "too far ahead usually comes with too far
+      right". Near zero, as here, means no lean: an upright cloud. Six
+      readings cannot prove it. We chose a receiver with no lean.
+
+      Question 8: every B reading is A's plus 3.2 m, so B's mean is
+      **103.2 m** and its :math:`\sigma_x` is **1.561 m**, exactly A's.
+      Shifting every reading by the same amount does not change any distance
+      from the mean.
+
+      Question 9: no. Noise alone moves the average of six readings by only
+      about :math:`1.561/\sqrt{6} = 1.561/2.45 \approx 0.64` m. An offset of
+      3.2 m is five times that, so it is **bias**.
+
+      Question 10: the truth from outside, here the surveyed spot.
+      :math:`\sigma` needs only the readings, so it cannot tell a centered
+      receiver from a biased one: both have :math:`\sigma = 1.561` m.
 
 
-.. dropdown:: Exercise 2. One Kalman Cycle, By Hand
+.. dropdown:: Exercise 2. The Kalman Gain in the Tunnel
    :icon: number
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Run the five update equations once, with numbers small enough that you
-   can see what each one did.
+   Blend a prediction and a sign match by hand, and see that only the two
+   :math:`\sigma` values decide how far the estimate moves.
 
    .. raw:: html
 
@@ -181,35 +201,252 @@ analysis argument.
 
    **Specification**
 
-   A vehicle moves along one axis. The state is :math:`[p, v]` and the
-   timestep is :math:`\Delta t = 1` s.
+   The AV is in the tunnel, GNSS is lost. The wheels and the IMU predict
+   that it is at **50.0 m** along the tunnel, with :math:`\sigma = 2` m.
+   The camera matches an exit sign against the HD map, which places the AV
+   at **53.0 m**, with :math:`\sigma = 1` m. (These are numbers we chose for
+   the example.)
+
+   1. Compute the **surprise**, measured minus predicted.
+   2. Compute the gain
+      :math:`K = \sigma_\text{pred}^2 / (\sigma_\text{pred}^2 + \sigma_\text{meas}^2)`,
+      the new estimate :math:`\hat{x} = \hat{x}^- + K (z - \hat{x}^-)`, and
+      the new :math:`\sigma` from
+      :math:`\sigma^2 = (1 - K)\,\sigma_\text{pred}^2`.
+   3. Check the new :math:`\sigma^2` with the long form,
+      :math:`(1 - K)^2 \sigma_\text{pred}^2 + K^2 \sigma_\text{meas}^2`.
+      Which source contributes more of the remaining uncertainty?
+   4. Repeat questions 2 and 3 with a sign match of :math:`\sigma = 2` m,
+      then :math:`\sigma = 4` m (same readings). Describe how :math:`K` moves
+      and what that does to the estimate.
+   5. In all three cases, compare the new :math:`\sigma` with both inputs.
+      What do you notice?
+   6. Now suppose the HD map puts every exit sign 2 m too far along. The
+      prediction counted from the last sign, and the sign match uses the
+      same map, so both answers are 2 m too far. How much of that 2 m
+      survives the blend with :math:`K = 0.8`? What does the filter report?
+      Can the surprise reveal the error?
+
+   .. raw:: html
+
+      <hr>
+
+   **Deliverable**
+
+   A three-row table (sign match :math:`\sigma` of 1, 2 and 4 m) with
+   :math:`K`, the new estimate and the new :math:`\sigma`, and three
+   sentences on question 6.
+
+   .. dropdown:: Guidance
+      :color: success
+
+      Question 1: :math:`53 - 50 = 3` m.
+
+      Question 2: :math:`K = 4/(4 + 1) = 0.8`, so
+      :math:`\hat{x} = 50 + 0.8 \times 3 = 52.4` m, and
+      :math:`\sigma^2 = 0.2 \times 4 = 0.8` m², :math:`\sigma = 0.89` m.
+
+      Question 3: :math:`0.2^2 \times 2^2 + 0.8^2 \times 1^2 = 0.16 + 0.64 =
+      0.8` m², the same answer. The sign match contributes most (0.64 of
+      0.8), because the estimate leans on it with weight 0.8.
+
+      Question 4:
+
+      .. list-table::
+         :class: compact-table
+         :widths: 28 18 27 27
+         :header-rows: 1
+
+         * - **Sign match** :math:`\sigma`
+           - :math:`K`
+           - **New estimate**
+           - **New** :math:`\sigma`
+         * - 1 m
+           - 0.8
+           - 52.4 m
+           - 0.89 m
+         * - 2 m
+           - 0.5
+           - 51.5 m
+           - 1.41 m
+         * - 4 m
+           - 0.2
+           - 50.6 m
+           - 1.79 m
+
+      A worse sign match means a smaller :math:`K`: the estimate stays
+      closer to the prediction. Equal :math:`\sigma` values split the
+      difference. :math:`K` is computed at every sign match, never picked.
+
+      Question 5: the new :math:`\sigma` is smaller than **both** inputs
+      every time (0.89 against 2 and 1; 1.41 against 2 and 2; 1.79 against 2
+      and 4). Combining two independent sources beats either one alone.
+
+      Question 6: all of it. The blend is
+      :math:`0.2 \times 2 + 0.8 \times 2 = 2` m of error, yet the filter
+      still reports :math:`\pm 0.89` m. The surprise cannot tell:
+      :math:`53 - 50` and :math:`51 - 48` are both 3 m. Combining helps only
+      because the two errors are independent and partly cancel. A shared
+      error does not cancel; it needs a source without the map (GNSS at the
+      tunnel exit).
+
+
+.. dropdown:: Exercise 3. One Predict Step, and Twenty-Two
+   :icon: number
+   :class-container: sd-border-primary
+   :class-title: sd-font-weight-bold
+
+   **Goal**
+
+   Run predict by hand and find out where the growth of :math:`P` comes
+   from: mostly through :math:`F P F^\top`, not through :math:`Q`.
+
+   .. raw:: html
+
+      <hr>
+
+   **Part A. The predicted state**
+
+   The state is :math:`\mathbf{x} = [p_x\ p_y\ v_x\ v_y]^\top`, with
+   :math:`\Delta t = 0.1` s and the constant velocity rule. Our example
+   (numbers we chose): the last estimate is
+   :math:`\hat{\mathbf{x}} = [100,\ 20,\ 10,\ 0]^\top` (m and m/s), and the
+   IMU reads a brake of 1 m/s², so :math:`\mathbf{u} = [-1,\ 0]^\top`.
+
+   1. Write :math:`F` (4 by 4) and :math:`B` (4 by 2).
+   2. Compute :math:`\hat{\mathbf{x}}^- = F \hat{\mathbf{x}} + B \mathbf{u}`.
+   3. The true motion has a term :math:`\mathbf{w}` that the prediction
+      sets to 0. Why 0, and where does :math:`\mathbf{w}` go instead?
+
+   .. raw:: html
+
+      <hr>
+
+   **Part B. The predicted uncertainty, along the tunnel**
+
+   Keep only the two numbers along the tunnel, position :math:`p_x` and
+   speed :math:`v_x`. In the hands-on at :math:`t = 7.1` s, just after a
+   sign match, the filter reports :math:`\sigma_p = 0.81` m,
+   :math:`\sigma_v = 0.30` m/s, and a correlation of +0.63 between them.
+
+   4. Build the 2 by 2 :math:`P` from those three numbers (the off-diagonal
+      entry is correlation times both :math:`\sigma` values).
+   5. With :math:`F = \begin{bmatrix} 1 & 0.1 \\ 0 & 1 \end{bmatrix}`,
+      compute :math:`F P F^\top` once. What is the new :math:`\sigma_p`?
+      Which term of the product added the most?
+   6. The filter's :math:`Q` comes from the acceleration the IMU gets
+      wrong: we chose :math:`\sigma_a = 0.5` m/s², pushed through the
+      position and speed rows of :math:`B`. Compute the position and speed
+      entries of :math:`Q` for one step. Which one matters?
+   7. In the hands-on, 22 predict steps with no sign match take
+      :math:`\sigma_p` from 0.81 to **1.35 m**. Without :math:`Q` it would
+      still reach **1.32 m**. Explain, using questions 5 and 6, why
+      :math:`Q` matters so little to position directly and yet matters a
+      lot over many steps. (Optional: loop 22 times in NumPy and confirm.)
+
+   .. raw:: html
+
+      <hr>
+
+   **Deliverable**
+
+   :math:`\hat{\mathbf{x}}^-`, the 2 by 2 :math:`P` before and after one
+   step, the two :math:`Q` entries, and a paragraph for question 7.
+
+   .. dropdown:: Guidance
+      :color: success
+
+      Question 1:
+
+      .. math::
+
+         F = \begin{bmatrix} 1 & 0 & 0.1 & 0 \\ 0 & 1 & 0 & 0.1 \\
+                             0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1 \end{bmatrix}, \quad
+         B = \begin{bmatrix} 0.005 & 0 \\ 0 & 0.005 \\ 0.1 & 0 \\ 0 & 0.1 \end{bmatrix}
+
+      :math:`B` adds :math:`\tfrac{1}{2}\Delta t^2 a` to the position and
+      :math:`\Delta t\, a` to the speed.
+
+      Question 2: :math:`F \hat{\mathbf{x}} = [101,\ 20,\ 10,\ 0]^\top` and
+      :math:`B\mathbf{u} = [-0.005,\ 0,\ -0.1,\ 0]^\top`, so
+      :math:`\hat{\mathbf{x}}^- = [100.995,\ 20,\ 9.9,\ 0]^\top`.
+
+      Question 3: :math:`\mathbf{w}` is drawn from a bell curve centered on
+      0, as likely to push the AV ahead as back, so the best single guess is
+      its center. It is not dropped: its size, :math:`Q`, goes into the
+      predicted uncertainty, :math:`P^- = F P F^\top + Q`.
+
+      Question 4: the off-diagonal entry is
+      :math:`0.63 \times 0.81 \times 0.30 = 0.153`, so
+
+      .. math::
+
+         P = \begin{bmatrix} 0.656 & 0.153 \\ 0.153 & 0.090 \end{bmatrix}
+
+      Question 5: the new position variance is
+      :math:`P_{pp} + 2\,\Delta t\, P_{pv} + \Delta t^2 P_{vv}
+      = 0.656 + 0.031 + 0.001 = 0.688` m², so :math:`\sigma_p \approx 0.83`
+      m after one step. The largest addition is :math:`2\,\Delta t\,P_{pv}`:
+      the speed error, through the tilt, leaks into position. The
+      off-diagonal entry grows too (to about 0.162), so position and speed
+      become more linked at every step.
+
+      Question 6: :math:`Q_{pp} = \sigma_a^2 (0.005)^2 = 0.25 \times
+      0.000025 \approx 0.000006` m², which is nothing. :math:`Q_{vv} =
+      \sigma_a^2 (0.1)^2 = 0.0025` (m/s)². :math:`Q` mostly feeds the
+      **speed** error.
+
+      Question 7: each step adds only a few millionths of a square meter to
+      position directly, so 22 steps of :math:`F P F^\top` alone already take
+      :math:`\sigma_p` to 1.32 m. But the 0.0025 added to the speed variance
+      each step is leaked into position by :math:`F P F^\top` at the next
+      steps, which brings it to 1.35 m. Over a long gap, or with a large
+      :math:`\sigma_a`, that leak dominates. In the hands-on the same 22
+      steps take :math:`\sigma_v` from 0.30 to 0.38 m/s and the correlation
+      from +0.63 to +0.79. With no sign match, :math:`P` only grows.
+
+
+.. dropdown:: Exercise 4. One Update, and the Tilt That Corrects Speed
+   :icon: number
+   :class-container: sd-border-primary
+   :class-title: sd-font-weight-bold
+
+   **Goal**
+
+   Run the update by hand at the hands-on's :math:`t = 9.3` s sign match,
+   and see a position-only reading correct the speed.
+
+   .. raw:: html
+
+      <hr>
+
+   **Specification**
+
+   Along the tunnel only. After the 22 predict steps of Exercise 3 the
+   prediction is :math:`p_x = 110.41` m, :math:`v_x = 10.90` m/s, with
 
    .. math::
 
-      F = \begin{bmatrix} 1 & 1 \\ 0 & 1 \end{bmatrix}, \quad
-      Q = \begin{bmatrix} 0.25 & 0 \\ 0 & 0.25 \end{bmatrix}, \quad
-      H = \begin{bmatrix} 1 & 0 \end{bmatrix}, \quad R = 4
+      P^- = \begin{bmatrix} 1.84 & 0.40 \\ 0.40 & 0.142 \end{bmatrix},
+      \quad H = \begin{bmatrix} 1 & 0 \end{bmatrix}, \quad R = 1 \text{ m}^2
 
-   The filter starts believing :math:`\hat{\mathbf{x}} = [0,\ 10]^\top` with
-   :math:`P = \mathrm{diag}(4,\ 1)`. A position measurement arrives:
-   :math:`z = 12.0`.
+   (:math:`0.40 = 0.79 \times 1.35 \times 0.38`, the tilt.) The sign match
+   reads **111.15 m**; :math:`R` is :math:`\sigma = 1` m squared, which we
+   chose.
 
-   1. **Predict.** Compute :math:`\hat{\mathbf{x}}^-` and :math:`P^-`.
-      Report :math:`\sigma_p` before and after the prediction and confirm
-      that it grew.
-   2. :math:`P^-` **has non-zero off-diagonal entries and** :math:`P`
-      **did not.** Where did that come from, and what does it mean
-      physically?
-   3. **Update.** Compute :math:`\boldsymbol{\nu}`, :math:`S`, :math:`K`,
-      :math:`\hat{\mathbf{x}}` and :math:`P`.
-   4. The measurement said 12.0 and you predicted 10.0. Your updated
-      position is **not** 12.0. Use :math:`K` to explain why not, and say
-      what value of :math:`R` would have put it exactly at 12.0.
-   5. **Velocity was never measured, yet it changed.** Explain how in one
-      sentence, and name the matrix entry responsible.
-   6. Compute the **NIS** for this update and compare it against the 95%
-      range for :math:`m = 1`, which is 0.001 to 5.024. Is this filter
-      consistent on this sample?
+   1. Compute the surprise :math:`\nu = z - H\hat{\mathbf{x}}^-` and its
+      expected size :math:`S = H P^- H^\top + R`.
+   2. Compute :math:`K = P^- H^\top S^{-1}`. You get two numbers. Which one
+      matches the one-number rule :math:`P^-/(P^- + R)`?
+   3. Compute the new estimate :math:`\hat{\mathbf{x}} = \hat{\mathbf{x}}^-
+      + K\nu`. By how much did the position move, as a share of the
+      surprise? By how much did the speed move?
+   4. The sign match never measures speed. Name the entry of :math:`P^-`
+      that made the speed move, and say what would happen if it were 0.
+   5. Compute :math:`P = (I - KH) P^-`. Report the new :math:`\sigma_p`,
+      :math:`\sigma_v` and their correlation.
+   6. Look for :math:`\nu` in the line of question 5. What does its absence
+      mean if the sign match had been 25 m wrong?
 
    .. raw:: html
 
@@ -217,165 +454,137 @@ analysis argument.
 
    **Deliverable**
 
-   All the intermediate matrices, and a sentence each for questions 2, 4, 5
-   and 6.
+   :math:`\nu`, :math:`S`, :math:`K`, the new estimate and the new
+   :math:`P`, with a sentence each for questions 4 and 6.
 
    .. dropdown:: Guidance
       :color: success
 
-      Question 1: :math:`\hat{\mathbf{x}}^- = [10,\ 10]^\top` and
-      :math:`P^- = \begin{bmatrix} 5.25 & 1 \\ 1 & 1.25\end{bmatrix}`.
-      :math:`\sigma_p` grows from 2.000 to **2.291**.
+      Question 1: :math:`\nu = 111.15 - 110.41 = 0.74` m, and
+      :math:`S = 1.84 + 1 = 2.84` m².
 
-      Question 2: it comes from :math:`FPF^\top`. Position was advanced
-      **using** velocity, so an error in velocity is now also an error in
-      position. They are no longer independent. In plain terms: if you are
-      going faster than you think, then you are also further ahead than you
-      think.
+      Question 2: :math:`K = [1.84,\ 0.40]^\top / 2.84 = [0.65,\ 0.14]^\top`.
+      The top entry is the one-number rule, :math:`1.84/(1.84 + 1) = 0.65`:
+      the prediction (:math:`\sigma \approx 1.35` m) is less certain than
+      the sign match (1 m), so the estimate acts on 65% of the surprise.
 
-      Question 3: :math:`\nu = 2.0`, :math:`S = 9.25`,
-      :math:`K = [0.568,\ 0.108]^\top`,
-      :math:`\hat{\mathbf{x}} = [11.135,\ 10.216]^\top` and
-      :math:`P = \begin{bmatrix} 2.270 & 0.432 \\ 0.432 & 1.142\end{bmatrix}`.
-      :math:`\sigma_p` falls to **1.507**.
+      Question 3: the position moves :math:`0.65 \times 0.74 = 0.48` m, to
+      **110.89 m**. The speed moves :math:`0.14 \times 0.74 = 0.10` m/s, to
+      **11.01 m/s** (the script, unrounded: 10.901 + 0.104).
 
-      Question 4: :math:`K = 0.568`, so you travel 56.8% of the way from 10
-      to 12 and land at 11.135. Getting to exactly 12.0 needs
-      :math:`K = 1`, which needs :math:`R = 0`, meaning a sensor that claims
-      zero noise. That should feel wrong, and it is. It throws the prior
-      away completely and turns the filter into a passthrough.
+      Question 4: the off-diagonal entry, 0.40, the tilt. Predict tied speed
+      to position (correlation +0.79): "too far along" usually comes with
+      "too fast". With that entry at 0, the speed row of :math:`K` would be 0
+      and the speed would not move.
 
-      Question 5: through the off-diagonal entry of :math:`P^-` you found in
-      question 2. Because position and velocity are linked, a surprise in
-      position is evidence about velocity. The entry responsible is
-      :math:`P^-_{12} = 1`, which produces :math:`K_v = 1/9.25 = 0.108`.
-      **This is the entire reason velocity is in the state.**
+      Question 5: :math:`P_{pp} = 0.35 \times 1.84 = 0.65` m², so
+      :math:`\sigma_p` goes from 1.35 to **0.80 m**.
+      :math:`P_{vv} = 0.142 - 0.14 \times 0.40 \approx 0.086`, so
+      :math:`\sigma_v \approx 0.29` m/s. :math:`P_{pv} = 0.35 \times 0.40 =
+      0.14`, so the correlation drops from +0.79 to about **+0.60**.
 
-      Question 6: NIS :math:`= \nu^2/S = 4/9.25 = 0.432`, comfortably inside
-      the range. Consistent on this sample, although one sample proves very
-      little, which is what Exercise 5 is about.
+      Question 6: :math:`\nu` is not in it. :math:`P` shrinks by the same
+      amount whether the reading was good or bad. The filter does not check:
+      a 25 m wrong sign match would still shrink :math:`P` and pull the
+      estimate. That is what the NIS test and gating in Exercise 6 are for.
+      (Across the tunnel, the same update uses :math:`R = 0.2^2 = 0.04` m²,
+      which we chose because the sign is on the wall right beside the AV,
+      and gives :math:`K = 0.83` and 0.29.)
 
 
-.. dropdown:: Exercise 3. Pick the Filter
-   :icon: law
+.. dropdown:: Exercise 5. The EKF: a Tangent, and Its Jacobians
+   :icon: number
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Choose between KF, EKF, UKF and PF using the property that actually
-   decides it, rather than using how nonlinear the problem sounds.
+   Linearize a range measurement by hand at a good and a poor estimate,
+   compute the EKF's Jacobians with real numbers, check them numerically,
+   and then let the hands-on script do the same check.
 
    .. raw:: html
 
       <hr>
 
-   **Specification**
+   **Part A. The range to one landmark**
 
-   For each scene, name the filter, give the **one property** that decides
-   it, and say what you would lose by choosing the next option up in cost.
+   The AV drives along a straight road toward a landmark 10 m off the road,
+   beside :math:`x = 20` m. The camera reports the range,
+   :math:`h(x) = \sqrt{(20 - x)^2 + 10^2}`. The AV is really at
+   :math:`x = 16` m. Treat the reading as perfect and fully trusted (one
+   idea at a time).
 
-   .. list-table::
-      :widths: 6 94
-      :header-rows: 1
-
-      * -
-        - **Scene**
-      * - A
-        - Tracking a vehicle ahead on a motorway using RADAR range and range
-          rate. It stays in its lane, and your uncertainty is a few tens of
-          centimetres.
-      * - B
-        - Estimating your own pose from GNSS, IMU and wheel odometry while
-          driving round a roundabout.
-      * - C
-        - You have just switched on in a multi-storey car park with no GNSS.
-          The LiDAR scan matches four different floors equally well.
-      * - D
-        - Combining a camera bearing measurement with LiDAR range, where the
-          measurement function involves a projection and your team cannot
-          agree on the sign of one Jacobian term.
-      * - E
-        - Tracking sixty objects at 20 Hz on an embedded computer with a
-          fixed compute budget.
+   1. What does the camera read?
+   2. **Run 1, a good estimate**, :math:`\hat{x} = 15.5` m. Compute the
+      expected reading :math:`h(\hat{x})`, the surprise, the slope of the
+      tangent :math:`-(20 - \hat{x})/h(\hat{x})`, and the move (surprise
+      divided by slope). Where does the new estimate land?
+   3. **Run 2, a poor estimate**, :math:`\hat{x} = 10` m. Same four steps.
+      How far short of 16 m does it land?
+   4. Between 10 and 16 m the real curve drops by how much per meter? Compare
+      with the slope at 10 m and explain why the correction fell short.
+   5. **Run 3** (extension), :math:`\hat{x} = 4` m. Where does it land? What
+      happens to the shortfall as the estimate gets worse, and why is that
+      the start of the EKF's feedback loop?
 
    .. raw:: html
 
       <hr>
 
-   **Deliverable**
+   **Part B. The Jacobians with real numbers**
 
-   A five-row table: scene, filter, deciding property, and the cost of going
-   one step further.
+   The EKF's motion model for an AV that turns, with state
+   :math:`\mathbf{x} = [x,\ y,\ \theta]` and control
+   :math:`\mathbf{u} = [v,\ \omega]`, is
 
-   .. dropdown:: Guidance
-      :color: success
+   .. math::
 
-      **A. KF, or an EKF you barely notice.** Nearly straight over a narrow
-      uncertainty. The deciding property is that the covariance is small
-      compared with how much the model curves.
+      f(\mathbf{x}, \mathbf{u}) =
+      \begin{bmatrix} x + v\,\Delta t \cos\theta \\ y + v\,\Delta t \sin\theta \\
+                      \theta + \omega\,\Delta t \end{bmatrix}
 
-      **B. EKF.** Nonlinear, but it has clean derivatives, and the belief
-      has a single peak. This is the default for vehicle pose and what GP3
-      uses. A UKF would work and would buy you very little here.
+   6. Derive :math:`F_k = \partial f / \partial \mathbf{x}` and evaluate it
+      at :math:`v = 10` m/s, :math:`\Delta t = 0.1` s,
+      :math:`\hat{\theta} = 30^\circ`. What does row 1, column 3 mean in
+      words?
+   7. **Check it numerically.** Nudge :math:`\theta` by
+      :math:`\pm 0.01` rad, compute how much :math:`x + v\,\Delta t \cos\theta`
+      changes, and divide by 0.02. Does it match row 1, column 3? What
+      would you see if that entry had the wrong sign?
+   8. The camera reports range and bearing to a sign. The sign is 24 m east
+      and 18 m north of the predicted position (we chose it). Evaluate
 
-      **C. Particle filter.** The deciding property is that the belief has
-      **four separate peaks**, not that the model is nonlinear. Four
-      plausible answers cannot be one blob, and an EKF would place its
-      centre somewhere the car definitely is not. This is Monte Carlo
-      Localization, and it is L7.
+      .. math::
 
-      **D. UKF.** The deciding property here is not accuracy. It is that
-      **no Jacobian is needed at all.** A hand-derived Jacobian with a sign
-      error is a silent and expensive bug, and the UKF removes the
-      opportunity to make it.
+         H_k = \begin{bmatrix} -\Delta x / r & -\Delta y / r & 0 \\
+                               \Delta y / r^2 & -\Delta x / r^2 & -1 \end{bmatrix}
 
-      **E. KF or EKF, and the real answer is that the filter is not your
-      problem.** Sixty objects at 20 Hz makes **data association** both the
-      bottleneck and the risk. Spend the budget on gating and GNN, not on a
-      fancier filter for each track.
-
-
-.. dropdown:: Exercise 4. GNSS and IMU in CARLA
-   :icon: gear
-   :class-container: sd-border-primary
-   :class-title: sd-font-weight-bold
-
-   **Goal**
-
-   Get real noisy data out of the simulator, and see what your filter is
-   actually being asked to cope with.
+      and check row 1, column 1 by moving the AV 0.1 m east and recomputing
+      the range.
 
    .. raw:: html
 
       <hr>
 
-   **Setup**
+   **Part C. The script does the check**
 
-   A CARLA server running in synchronous mode, as in L2.
+   .. code-block:: bash
 
-   .. raw:: html
+      cd enpm818z-fall-2026-carla-python/lecture3/curved_tunnel
+      python3 ekf_curve.py --make-csv        # the data: 21 s through a 120 degree bend
+      python3 ekf_curve.py --check-jacobian  # test F_k and H_k first
+      python3 ekf_curve.py                   # the live window
 
-      <hr>
-
-   **Specification**
-
-   1. Spawn an ego vehicle with a **GNSS** and an **IMU** sensor, put it in
-      autopilot, and log for 60 seconds: the GNSS output, the IMU output,
-      and the **ground truth** transform from ``vehicle.get_transform()``.
-   2. **CARLA's GNSS reports latitude, longitude and altitude, not metres.**
-      Convert to a local flat frame before you do anything else. State the
-      conversion you used and what it assumes.
-   3. Measure the GNSS noise for yourself. Subtract the ground truth and
-      report the mean and the standard deviation of the error on each axis.
-      Compare against the ``noise_lat_stddev`` and ``noise_lon_stddev``
-      values you set on the blueprint.
-   4. Do the same for the IMU accelerometer. Report the **mean** separately
-      from the **standard deviation**, and say which of the two a Kalman
-      filter handles gracefully and which it does not.
-   5. Integrate the IMU acceleration twice, with no GNSS at all, and plot
-      the position error against time for 60 s. Fit the growth. Does it
-      match the :math:`t^2` behaviour L2 predicted?
+   9. Run ``--check-jacobian`` and report the largest difference it prints.
+      Then open ``check_jacobian()`` and say which of your by-hand checks it
+      repeats, and how many random points it tries.
+   10. Open ``run_ekf()`` and find the three places where angles are wrapped,
+       and the line where :math:`F_k` and :math:`Q_k` are built before the
+       estimate moves. Why must they be built there?
+   11. In the live window, tick **wrong sign in the Jacobian** (or run
+       ``python3 ekf_curve.py --wrong-sign``). Does the filter crash? What
+       happens to the heading error against its :math:`\pm 1\sigma` band?
 
    .. raw:: html
 
@@ -383,75 +592,236 @@ analysis argument.
 
    **Deliverable**
 
-   Your logging script, the two noise tables, and the dead reckoning error
-   plot with a sentence about its shape.
+   The three runs of Part A in a table, :math:`F_k` and :math:`H_k` with
+   your numerical checks, and the output of the two script runs with a
+   sentence each for questions 10 and 11.
 
    .. dropdown:: Guidance
       :color: success
 
-      Question 2 is where most of your time will go, and that is
-      deliberate. This is L3's version of L2's axis trap. Nothing raises an
-      error, the numbers look plausible, and your filter quietly estimates
-      position in a unit that is not metres. Check your work by driving in a
-      straight line and confirming that a 10 m ground truth displacement
-      really does come out as 10 m after conversion.
+      Question 1: :math:`\sqrt{4^2 + 10^2} = 10.77` m.
 
-      Question 4: **standard deviation is noise, and the filter handles it
-      through** :math:`R`. A mean that is not zero is **bias**, and the
-      filter does **not** handle it. Bias breaks the zero-mean assumption,
-      and the filter will happily integrate it forever. You either put it in
-      the state and estimate it, or you calibrate it out beforehand.
+      Questions 2, 3 and 5:
 
-      Question 5: expect growth close to quadratic, because a constant
-      acceleration error gets integrated twice into
-      :math:`\tfrac{1}{2}at^2`. Noise on its own grows more slowly. If your
-      curve looks close to quadratic, you are looking at bias, which is
-      question 4 arriving in a different form.
+      .. list-table::
+         :class: compact-table
+         :widths: 16 16 16 16 16 20
+         :header-rows: 1
+
+         * - :math:`\hat{x}`
+           - **Expected**
+           - **Surprise**
+           - **Slope**
+           - **Move**
+           - **New estimate**
+         * - 15.5 m
+           - 10.97 m
+           - -0.20 m
+           - -0.41
+           - +0.48 m
+           - 15.98 m, almost 16
+         * - 10 m
+           - 14.14 m
+           - -3.37 m
+           - -0.71
+           - +4.77 m
+           - 14.77 m, 1.23 m short
+         * - 4 m
+           - 18.87 m
+           - -8.10 m
+           - -0.85
+           - +9.55 m
+           - 13.55 m, 2.45 m short
+
+      A negative surprise means less range than expected, so the AV is closer
+      to the landmark: farther ahead than :math:`\hat{x}`.
+
+      Question 4: :math:`(14.14 - 10.77)/6 = 0.56` m of range per meter,
+      but the tangent at 10 m says 0.71. The tangent is too steep, so the
+      correction is too small. That slope is what the EKF calls the Jacobian
+      :math:`H`: a poor estimate gives a wrong :math:`H`.
+
+      Question 5: the worse the estimate, the larger the shortfall (0.02,
+      1.23, 2.45 m). The EKF draws the tangent at its own estimate, so a
+      wrong estimate puts it in the wrong place, and once the error is large
+      enough the next estimate gets worse while :math:`P` still shrinks.
+      Run 2 and run 3 still improved; that loop (divergence) starts only when
+      the error is large enough to make the next estimate worse.
+
+      Question 6:
+
+      .. math::
+
+         F_k = \begin{bmatrix} 1 & 0 & -v\,\Delta t \sin\hat{\theta} \\
+                               0 & 1 & v\,\Delta t \cos\hat{\theta} \\
+                               0 & 0 & 1 \end{bmatrix}
+             = \begin{bmatrix} 1 & 0 & -0.500 \\ 0 & 1 & 0.866 \\ 0 & 0 & 1 \end{bmatrix}
+
+      Row 1, column 3: nudge the heading, and :math:`x` moves by -0.5 m per
+      radian of nudge. :math:`F_k` depends on :math:`\hat{\theta}`, so it is
+      recomputed every step.
+
+      Question 7: :math:`\cos(0.5336) - \cos(0.5136) = -0.0100`, divided by
+      0.02 gives **-0.500**, a match. With the wrong sign you would compute
+      +0.500 and the check would differ by 1.0. The filter would still run.
+
+      Question 8: :math:`r = \sqrt{24^2 + 18^2} = 30` m, so
+
+      .. math::
+
+         H_k = \begin{bmatrix} -0.80 & -0.60 & 0 \\ 0.020 & -0.027 & -1 \end{bmatrix}
+
+      Moving 0.1 m east gives :math:`\Delta x = 23.9` and
+      :math:`r = 29.920` m: the range drops 0.080 m per 0.1 m, which is
+      -0.80. Row 2, column 3 says: turn the nose 1 rad left, and the sign
+      moves 1 rad right of it.
+
+      Question 9: it prints
+      ``Jacobian check (F_k and H_k): largest difference 2.64e-09  ->  OK``.
+      ``check_jacobian()`` does your questions 7 and 8 for every entry at
+      once: it nudges each input by :math:`\pm 10^{-6}`, at 20 random states,
+      controls and sign positions, and compares with ``jacobian_f`` and
+      ``jacobian_h``.
+
+      Question 10: wrapped inside :math:`f` (the heading), in the surprise
+      :math:`\nu` (the bearing), and in :math:`\hat{\mathbf{x}}` after the
+      update. :math:`F_k` and :math:`Q_k` are built at the last estimate,
+      before ``x = f(x, u)`` moves it, because that is where the tangent is
+      drawn. :math:`H_k` is built after, at the prediction.
+
+      Question 11: it does not crash, and it raises no error. The printed
+      line reads
+      ``position RMSE 1.23 m, heading RMSE 4.0 deg, heading inside 1-sigma 30%``,
+      against 0.69 m, 1.4 degrees and 65% with the right sign. The heading
+      error leaves the band. A wrong sign still runs and converges, which is
+      why you test the Jacobians before you trust the filter.
 
 
-.. dropdown:: Exercise 5. The Divergence Hunt
-   :icon: alert
+.. dropdown:: Exercise 6. Is the Filter Honest? Sliders and the NIS
+   :icon: number
    :class-container: sd-border-warning
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Detect a filter whose reported uncertainty is wrong. **This is the core
-   exercise of L3.**
+   Detect a filter whose reported uncertainty is wrong, twice: with the
+   share of time the truth falls inside :math:`\pm 1\sigma` (needs ground
+   truth), and with the NIS (needs none). **This is the core exercise of
+   L3.**
 
    .. raw:: html
 
       <hr>
 
-   **Specification**
+   **Part A. The NIS by hand**
 
-   Implement the one dimensional constant velocity filter from the lecture,
-   and use it to track a CARLA vehicle that **accelerates**. Your motion
-   model is therefore deliberately wrong, exactly as every motion model
-   always is.
+   The normalized innovation squared compares the actual surprise with the
+   expected one:
 
-   Use :math:`\Delta t = 0.1` s, one position measurement per step with
-   :math:`\sigma = 1.0` m, and run for 30 seconds.
+   .. math::
 
-   1. Run it with a **very small** process noise, :math:`q = 10^{-6}`. At
-      the end, record three numbers: the :math:`\sigma_p` the filter
-      reports, the **actual** absolute error against ground truth, and the
-      mean NIS over the last 100 steps.
-   2. Run it again with :math:`q = 1.0` and record the same three numbers.
-   3. Plot both runs on the same axes, showing the reported
-      :math:`\pm\sigma_p` as a band and the true error as a line. Describe
-      what the first run's plot shows that its three final numbers do not.
-   4. Plot NIS against step for both runs, with the 95% range for
-      :math:`m=1` drawn on. At roughly which step does the bad run leave the
-      range? Compare that against the step where the **position error**
-      first becomes obviously unacceptable.
-   5. Add :math:`\chi^2` **gating** at the 99% threshold, which is 6.635 for
-      :math:`m=1`, to the bad run. Does gating rescue it? Explain the
-      result, because it is not the one most students expect.
-   6. In one paragraph: your filter reported a small covariance while being
-      badly wrong, and raised nothing. Name the single logged quantity that
-      would have caught it, and say what the vehicle should do when that
-      quantity leaves its range.
+      \varepsilon = \frac{\nu^2}{S} \quad\text{(one number)}, \qquad
+      \varepsilon = \boldsymbol{\nu}^\top S^{-1} \boldsymbol{\nu}
+      \quad\text{(}x\text{ and }y\text{ together)}
+
+   If the filter is honest, :math:`\varepsilon` averages about 1 per number
+   the sensor reports.
+
+   1. Compute :math:`\varepsilon` along the tunnel for the :math:`t = 9.3` s
+      sign match of Exercise 4. Is one value enough to judge the filter?
+   2. Over all 19 sign matches in the hands-on, with :math:`x` and :math:`y`
+      together, the average is **1.39 per match**. What is the expected
+      average? By chance alone the average of 19 matches lands anywhere from
+      **1.2 to 3.0**. Is the filter honest?
+   3. For a single match giving :math:`x` and :math:`y`, an honest filter
+      keeps :math:`\varepsilon` between about **0.05 and 7.4**, 95% of the
+      time. What does it mean if :math:`\varepsilon` keeps landing above the
+      band? Below it? Which of the two is dangerous?
+   4. **Gating** throws a reading away when :math:`\varepsilon > 9.21`, the
+      99% line for a sign match reporting :math:`x` and :math:`y`. Name a
+      reading it catches, and explain what goes wrong if the filter is
+      already wrong when it gates.
+
+   .. raw:: html
+
+      <hr>
+
+   **Part B. The Kalman filter's sliders**
+
+   .. code-block:: bash
+
+      cd enpm818z-fall-2026-carla-python/lecture3/tunnel_kf
+      python3 kf_tunnel.py --make-csv                       # the data: 45 s, 451 rows, 19 sign matches
+      python3 kf_tunnel.py tunnel_drive.csv                 # the live window
+      python3 kf_tunnel.py tunnel_drive.csv --html kf.html  # no desktop? a web page
+
+   The window has two sliders, **Q: sigma_a (m/s^2)** (0.01 to 3) and
+   **R: sigma_sign (m)** (0.1 to 6). The same settings run without a window
+   from the command line, ``--sigma-a`` and ``--sigma-sign``, and the
+   terminal prints the error and the share inside :math:`1\sigma`.
+
+   5. **Guess first, then move the slider.** For each row below, predict
+      whether the error goes up or down and whether the share inside
+      :math:`1\sigma` goes above or below 68%. Then run it and fill in the
+      table.
+
+      .. list-table::
+         :class: compact-table
+         :widths: 40 20 20 20
+         :header-rows: 1
+
+         * - **Setting**
+           - **RMS error**
+           - **Inside** :math:`1\sigma`
+           - **What it shows**
+         * - default: :math:`\sigma_a = 0.5`, :math:`\sigma_\text{sign} = 1`
+           -
+           -
+           -
+         * - :math:`Q` too small: :math:`\sigma_a = 0.01`
+           -
+           -
+           -
+         * - :math:`Q` too big: :math:`\sigma_a = 3`
+           -
+           -
+           -
+         * - :math:`R` too small: :math:`\sigma_\text{sign} = 0.1`
+           -
+           -
+           -
+         * - :math:`R` too big: :math:`\sigma_\text{sign} = 6`
+           -
+           -
+           -
+
+   6. With :math:`Q` too small, watch the sawtooth and the error panel. What
+      does the filter report about itself, and what does the true error do?
+      Why is this the dangerous row?
+   7. (Extension) Add a few lines to ``run_kf()`` that compute
+      :math:`\varepsilon` at every sign match (from the prediction, before
+      the update) and print the average. Compare the default against
+      :math:`Q` too small and :math:`Q` too big, against the 1.2 to 3.0
+      band. Which of the two checks, inside :math:`1\sigma` or NIS, could
+      the AV run on the road?
+
+   .. raw:: html
+
+      <hr>
+
+   **Part C. The EKF's sliders**
+
+   In ``ekf_curve.py`` the sliders are **Q: gyro noise (deg/s)** and
+   **R: sign range noise (m)** (command line: ``--gyro-noise``,
+   ``--range-noise``). The honesty check is on the heading.
+
+   8. Run the default (gyro 2 deg/s, range 1 m), then :math:`Q` too small
+      (gyro 0.1 deg/s), then :math:`Q` too big (gyro 8 deg/s). Report the
+      position error, the heading error and the share inside :math:`1\sigma`
+      for each.
+   9. The real gyro noise in the data is 1.1 deg/s, yet the default assumes
+      2 deg/s. Why is it right to set :math:`Q` larger than the sensor's
+      noise?
 
    .. raw:: html
 
@@ -459,192 +829,113 @@ analysis argument.
 
    **Deliverable**
 
-   The two plots, a three-row results table, and the paragraph from
-   question 6.
+   The two NIS answers, the filled table of question 5, the three EKF rows,
+   and one paragraph: your filter reported a small :math:`\sigma` while
+   being badly wrong, and raised nothing. Which logged quantity would have
+   caught it, and what should the AV do when it leaves its band?
 
    .. dropdown:: What to expect
       :color: warning
 
-      With a constant acceleration of about 0.4 m/s squared you should see
-      something close to this:
+      Question 1: :math:`\varepsilon = 0.74^2/2.84 = 0.19`. One reading
+      tells you little: an honest filter produces values from about 0 to
+      several.
+
+      Question 2: expected 2, one per number reported. 1.39 lies inside the
+      1.2 to 3.0 band, so the filter is **honest**: its :math:`\sigma` means
+      something.
+
+      Question 3: above the band, the filter is **overconfident**:
+      :math:`Q` or :math:`R` is too small. That is the dangerous case. Below
+      it, the filter is underconfident: wasteful, but safe.
+
+      Question 4: a wrong sign match, when the camera misreads a sign's
+      number: on time, normal-looking, and 25 m wrong. The trap: a filter
+      that has already drifted finds the **good** readings far from its
+      estimate and rejects them, so the gate keeps it wrong. Count
+      rejections in a row, and raise an alarm past a limit.
+
+      Question 5, from the shipped CSV:
 
       .. list-table::
-         :widths: 28 24 24 24
+         :class: compact-table
+         :widths: 40 20 20 20
          :header-rows: 1
 
-         * - **Run**
-           - **Reported** :math:`\sigma_p`
-           - **True error**
-           - **Mean NIS**
-         * - :math:`q = 10^{-6}`
-           - **0.115 m**
-           - **29.7 m**
-           - **475**
-         * - :math:`q = 1.0`
-           - 0.363 m
-           - 0.044 m
-           - 1.04
+         * - **Setting**
+           - **RMS error**
+           - **Inside** :math:`1\sigma`
+           - **What it shows**
+         * - default: :math:`\sigma_a = 0.5`, :math:`\sigma_\text{sign} = 1`
+           - 1.06 m
+           - 65%
+           - honest
+         * - :math:`Q` too small: :math:`\sigma_a = 0.01`
+           - **5.46 m**
+           - **25%**
+           - overconfident
+         * - :math:`Q` too big: :math:`\sigma_a = 3`
+           - 1.28 m
+           - 84%
+           - underconfident
+         * - :math:`R` too small: :math:`\sigma_\text{sign} = 0.1`
+           - 1.46 m
+           - 21%
+           - trusts every sign, overconfident
+         * - :math:`R` too big: :math:`\sigma_\text{sign} = 6`
+           - 2.95 m
+           - 77%
+           - ignores the signs, drifts
 
-      Compare the two middle columns of the first row. The filter reports
-      about 12 cm of uncertainty while sitting 30 m from the truth, so its
-      reported uncertainty is wrong by more than two orders of magnitude.
-      No error is raised, and the trajectory looks smooth.
+      Question 6: with :math:`Q` too small the sawtooth flattens: the filter
+      reports a thin band (its final :math:`\sigma` is 0.45 m, against 1.21
+      m at the default) while the error is five times larger than the
+      default's. The band is thin, the filter sounds confident, and nothing
+      raises an alarm. The share inside :math:`1\sigma` catches it: 25%
+      instead of about 68%.
 
-      Question 4 is the useful part. The NIS leaves its range well before the
-      position error becomes visibly wrong, and that interval is the warning
-      margin you get for one line of logging.
+      Question 7: computed from ``run_kf()`` with the shipped CSV, the
+      average :math:`\varepsilon` per match is about **1.39** at the
+      default (honest), about **35** with :math:`Q` too small (11 of the 19
+      matches are above 7.4: overconfident), and about **0.84** with
+      :math:`Q` too big (below 1.2: underconfident). The share inside
+      :math:`1\sigma` needs the true position, which the AV never has on
+      the road. The NIS needs only the surprise and :math:`S`, which the
+      filter computes anyway, so it is the check the AV can log and act on.
 
-      Question 5 is the one most students get wrong. Gating does not rescue
-      the bad run, and it makes the result worse. Once the estimate has
-      drifted, the correct measurements are the ones that disagree with it,
-      so the gate discards exactly the data that would have corrected it.
-      This is the same problem as L2's zero-Doppler filter: a mechanism that
-      discards inconvenient returns ends up preserving the error. Gating
-      protects an accurate filter from bad measurements, but it cannot
-      repair an inaccurate one, which is why rejections have to be counted
-      and escalated.
-
-
-.. dropdown:: Exercise 6. Association, and What Went Wrong at Tempe
-   :icon: eye
-   :class-container: sd-border-primary
-   :class-title: sd-font-weight-bold
-
-   **Goal**
-
-   Work through the yes-or-no decision that sits inside the smooth
-   estimator, then use it to explain a real crash precisely.
-
-   .. raw:: html
-
-      <hr>
-
-   **Part A. By hand**
-
-   Two confirmed tracks, predicted to:
-
-   .. list-table::
-      :widths: 20 30 50
-      :header-rows: 1
-
-      * - **Track**
-        - **Predicted position**
-        - **Innovation covariance** :math:`S`
-      * - T1
-        - (10.0, 2.0)
-        - :math:`\mathrm{diag}(1.0,\ 1.0)`, a well pinned track
-      * - T2
-        - (11.0, 2.0)
-        - :math:`\mathrm{diag}(4.0,\ 4.0)`, a looser track
-
-   Three detections arrive: :math:`D_1` at (10.6, 2.0), :math:`D_2` at
-   (9.2, 2.0) and :math:`D_3` at (13.5, 2.0).
-
-   1. Compute the **squared Mahalanobis distance** from every track to every
-      detection. Present the result as a 2 by 3 cost matrix.
-   2. Apply a 99% gate, which is :math:`\chi^2_{2} = 9.21`. **One track and
-      detection pairing gets rejected, and the other track accepts that same
-      detection.** Find it, and explain how one detection can be
-      implausible for one track and completely unremarkable for another.
-   3. Run **nearest neighbour**, taking T1 first, then run it again taking
-      T2 first. Report both assignments and both total costs. Do you get the
-      same answer?
-   4. Run **GNN**, meaning find the assignment with the lowest total cost.
-      Which nearest neighbour result does it match, and what happens to the
-      leftover detection?
-   5. A fourth detection :math:`D_4` arrives at (10.5, 2.0), which is
-      **exactly 0.5 m from each track** in ordinary distance. Which track
-      does it prefer, by what factor, and why? This is the point of the
-      whole exercise.
-
-   .. raw:: html
-
-      <hr>
-
-   **Part B. The analysis**
-
-   In no more than one page, explain the Tempe collision as a data
-   association failure. You must:
-
-   6. State why "the object was detected" and "the object was tracked" are
-      two different claims, and say which one failed.
-   7. Explain how an unstable **label** destroyed **track** continuity, and
-      why that removed the ability to brake.
-   8. Propose **one** change to the architecture, in a single sentence, that
-      would have prevented this specific failure. Then name something your
-      change would make worse.
-
-   .. raw:: html
-
-      <hr>
-
-   **Deliverable**
-
-   The cost matrix and assignments for Part A, and at most one page for
-   Part B.
-
-   .. dropdown:: Guidance
-      :color: success
-
-      Question 1: with a diagonal :math:`S`,
-      :math:`d^2 = \frac{\Delta x^2}{S_{xx}} + \frac{\Delta y^2}{S_{yy}}`.
+      Question 8:
 
       .. list-table::
-         :widths: 25 25 25 25
+         :class: compact-table
+         :widths: 34 18 18 15 15
          :header-rows: 1
 
-         * -
-           - :math:`D_1`
-           - :math:`D_2`
-           - :math:`D_3`
-         * - **T1**
-           - 0.36
-           - 0.64
-           - **12.25**, rejected
-         * - **T2**
-           - 0.04
-           - 0.81
-           - 1.5625
+         * - **Setting**
+           - **Position error**
+           - **Heading error**
+           - **Inside** :math:`1\sigma`
+           - **What it shows**
+         * - default: gyro 2 deg/s, range 1 m
+           - 0.69 m
+           - 1.4 deg
+           - 65%
+           - honest
+         * - :math:`Q` too small: gyro 0.1 deg/s
+           - 1.18 m
+           - 2.1 deg
+           - 23%
+           - overconfident
+         * - :math:`Q` too big: gyro 8 deg/s
+           - 0.75 m
+           - 1.8 deg
+           - 92%
+           - underconfident
 
-      Question 2: :math:`D_3` fails the gate for **T1**, since 12.25 is
-      above 9.21, but sits comfortably inside it for **T2** at 1.56. The
-      detection did not change. The **expectation** changed. T1 claims to
-      know where its object is to within a metre, so a 3.5 m disagreement is
-      extraordinary. T2 only claims two metres, so the same detection is
-      1.25 sigma away and completely ordinary. **A gate tests agreement
-      relative to claimed certainty**, which is also exactly why an
-      overconfident filter gates away good data.
+      Question 9: :math:`Q` must cover everything the motion model gets
+      wrong, not only the gyro's random noise. Here that includes the gyro's
+      bias, which no filter averages away, so we widen :math:`Q` to cover it.
 
-      Question 3: **no, and that is the objection to nearest neighbour.**
-      Taking T1 first gives T1 to :math:`D_1` and T2 to :math:`D_2`, with a
-      total of **1.17**. Taking T2 first gives T2 to :math:`D_1` and T1 to
-      :math:`D_2`, with a total of **0.68**. Same code, same data, different
-      answer, decided purely by the order of the track list.
-
-      Question 4: GNN finds T1 to :math:`D_2` and T2 to :math:`D_1`, total
-      **0.68**. That matches the second ordering, but it found it
-      deterministically rather than by luck. :math:`D_3` is left over, so it
-      becomes a **tentative track**, and the M of N test decides over the
-      next few frames whether it was a new object or junk.
-
-      Question 5: :math:`D_4` is 0.5 m from each track, but :math:`d^2` is
-      0.25 for T1 and 0.0625 for T2. It prefers **T2 by a factor of four**,
-      meaning it prefers the **less** certain track. Mahalanobis distance
-      measures disagreement in units of expected disagreement, so the same
-      half metre is half a sigma for T1 and a quarter of a sigma for T2.
-      Ordinary distance cannot express this, which is why it is the wrong
-      tool for association.
-
-      Question 7: a track that gets destroyed and recreated has **no
-      history**, so it has no velocity estimate. With no velocity there is
-      no time to collision, and with no time to collision nothing ever
-      triggers braking. The filter was working correctly the whole time, on
-      a track that was one frame old.
-
-      Question 8: the change most people propose is **separating track
-      identity from the label**. Track the object, label it separately, and
-      never reset a track just because the label changed. What it makes
-      worse: you now keep tracks for things that may turn out to be junk, so
-      your false track rate goes up and something downstream has to cope
-      with that. A good answer names the cost honestly instead of claiming a
-      free win.
+      The paragraph: the NIS, logged at every sign match. When its running
+      average stays above the band, the filter's :math:`\sigma` can no longer
+      be trusted: raise an alarm, so that nothing downstream plans with a
+      :math:`\sigma` the filter has not earned.

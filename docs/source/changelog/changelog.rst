@@ -5,10 +5,27 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.2.0 -- L3 Released (2026-09-12)
+.. dropdown:: v2.3.0 -- L3 Updated to Slide Deck v3.0 (2026-10-04)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lecture 3: Probabilistic State Estimation & Sensor Fusion
+
+   - **Lecture notes rewritten to follow the v3.0 deck**: the tunnel example
+     with sign matches, the Kalman filter step by step, what breaks its
+     assumptions, the EKF, and the NIS test. All figures now come from the
+     deck.
+   - **New page: Going Further**, the deck's appendix (worked models, the
+     UKF and the particle filter in detail, notation).
+   - **Quiz and exercises rebuilt** on the class material only; nothing
+     from the appendix is tested.
+   - **Glossary**: 23 new L3 terms; data association and fusion
+     architectures moved to L6.
+
+.. dropdown:: v2.2.0 -- L3 Released (2026-09-12)
+   :icon: tag
+   :class-container: sd-border-success
 
    Lecture 3 is now published. It was previously index only, with its
    notes, exercises, quiz and references held back while they were written.

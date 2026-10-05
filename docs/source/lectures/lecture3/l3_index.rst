@@ -1,5 +1,5 @@
 ====================================================
-L3: Probabilistic State Estimation & Fusion
+L3: Probabilistic State Estimation & Sensor Fusion
 ====================================================
 
 Overview
@@ -8,53 +8,74 @@ Overview
 **L2 gave you sensors that disagree. This lecture decides what to do
 about it.**
 
-Every sensor on the vehicle reports a different number for the same world,
-and none of them is exactly right. The question is not which one to trust.
-It is how much to trust each one, and that turns out to have an exact answer
-whenever you know how uncertain each sensor is.
+Every sensor on the AV reports a different number for the same world, and
+none of them is exactly right. The question is not which one to trust. It is
+how much to trust each one, and that has an exact answer once you know how
+uncertain each sensor is and that its errors have no bias. A **filter** does
+this job: it keeps a running estimate of something no sensor gives you
+exactly, updates it whenever a measurement arrives, and reports how uncertain
+that estimate is right now. A good filter has two jobs: **combine** the
+sensors into one answer, and report an uncertainty that can be **trusted**.
 
-The lecture starts by defining the two words the rest of it depends on,
-**variance** and **confidence**, because both have a loose everyday meaning
-and a strict technical meaning, and the strict ones are used here.
+The lecture starts with the words the rest of it depends on, worked on six
+GNSS readings from an AV parked on a surveyed spot: the road frame and the
+**base link**, **uncertainty**, **noise** and **bias**, **variance**,
+**standard deviation**, **covariance** and the covariance matrix
+:math:`P`. Two receivers with the same :math:`\sigma` show that
+:math:`\sigma` cannot see bias.
 
-From there it builds upward from one dimension. Two estimates and their
-variances give you **inverse-variance weighting**, which is the Kalman
-update in one dimension and is the part worth understanding before the
-matrix version. Adding a prediction step and more dimensions gives the
-**Kalman filter**. Then we relax its assumptions one at a time. Nonlinear
-motion gives the **EKF** and the **UKF**, and a belief with several separate
-peaks gives the **particle filter**.
+The **Kalman filter** is then built on one running example: an AV in a
+tunnel with no GNSS, predicting from the IMU and updating from a camera that
+matches exit signs against the HD map (a **sign match**). A prediction of
+50 m with :math:`\sigma = 2` m and a sign match of 53 m with
+:math:`\sigma = 1` m blend into 52.4 m with :math:`\sigma = 0.89` m, smaller
+than either input. The same idea, written with matrices, gives the state,
+the motion model, the measurement model, predict, update and the **Kalman
+gain**, with every number taken from the hands-on script.
 
-The last third is the part most courses skip. A filter that is wrong does
+Next come the **four assumptions** the Kalman filter makes, and what happens
+when each one breaks: a model that is not a straight line, a model that
+curves too much or exists only as code, and a belief with more than one
+peak. Each has an alternative filter. The **extended Kalman filter (EKF)**,
+which GP3 uses, is built step by step: the tangent trick, the Jacobians,
+:math:`Q_k`, and the catch, **divergence**. The **UKF** and the **particle
+filter** are named as the other alternatives in class and worked out in the
+appendix.
+
+The last section is the part most courses skip. A filter that is wrong does
 not crash. It reports a small covariance and keeps running. So the lecture
-covers how to test whether a filter's reported uncertainty is correct,
-using innovations, consistency checks, divergence and gating. It closes on
-**data association**, the step that decides which measurement belongs to
-which track, and the place where the Tempe crash went wrong.
+ends with a test of the filter's own uncertainty: the **normalized
+innovation squared (NIS)**, which compares each surprise with the size the
+filter predicted for it, and a **chi-square gate** that throws away a
+reading that is wildly off.
 
 .. important::
 
-   **This lecture is the other half of L2.** L2 was about placing and
-   calibrating sensors so that combining them is possible at all. L3 is how
-   the combining is actually done. Everything you calibrated last week is
-   what the filter combines here.
+   **This lecture is the other half of L2.** L2 mounted and calibrated the
+   sensors so that combining them is possible at all. L3 does the combining,
+   with everything you calibrated last week.
+
+.. important::
+
+   **This lecture is for GP3**, whose EKF fuses GNSS fixes with IMU and
+   wheel-speed data to estimate the AV's pose.
 
 .. note::
 
-   **Deep learning fusion is not in this lecture.** Cross-attention,
-   BEVFusion and learned feature level fusion are covered in
-   :doc:`L6 <../lecture6/l6_index>`, alongside perception and tracking.
-   Monte Carlo Localization, which is the particle filter applied to the
-   localization problem, is :doc:`L7 <../lecture7/l7_index>`.
+   **Not in this lecture.** Detection is :doc:`L4 <../lecture4/l4_index>`.
+   Fusion architectures, learned fusion, data association (deciding which
+   measurement belongs to which object) and the Tempe crash (Uber, 2018) are
+   :doc:`L6 <../lecture6/l6_index>`. Monte Carlo Localization, which is the
+   particle filter applied to localization, is
+   :doc:`L7 <../lecture7/l7_index>`.
 
-.. admonition:: This week, before the lecture
+.. admonition:: This week
    :class: warning
 
-   - **Quiz 1** is given at the **start** of class and covers **L1 and L2**.
-     Closed notes, about 15 minutes.
-   - The **setup milestone** is due. CARLA running, ROS 2 workspace built,
-     sensors publishing. Individual, and graded pass or fail.
-   - **Teams form**, and **GP1 is posted** after the lecture.
+   - **CARLA cluster accounts** are set up this week.
+   - **Teams form** this week.
+   - **GP1 is posted** after class. It uses L2's calibration work, not this
+     lecture's filter.
 
 
 Learning Objectives
@@ -62,40 +83,17 @@ Learning Objectives
 
 By the end of this lecture, you will be able to:
 
-- Define **variance** and **standard deviation**, explain why the distances
-  are squared, and say what a standard deviation tells you about where
-  readings land.
-- Explain the difference between the loose engineering meaning of
-  **confidence** and the strict statistical one, and state what a Kalman
-  filter's covariance actually claims.
-- Explain why the plain average of two estimates is the wrong answer, and
-  compute the **inverse-variance weighted** estimate instead.
-- Show that combining two independent estimates gives an uncertainty
-  **smaller than either input**, and say which assumption that result
-  depends on.
-- Compare **early**, **intermediate** and **late** fusion, and say which one
-  a given constraint forces on you.
-- Write down the Kalman filter's predict and update steps, and say which
-  step always grows the covariance and which always shrinks it.
-- Explain what the **Kalman gain** does, and predict how it behaves when
-  :math:`R \gg P` and when :math:`R \ll P`.
-- Name the **four assumptions** that make the Kalman filter optimal, and
-  work out which one a given situation breaks.
-- Explain how the **EKF** handles a nonlinear model, and describe the
-  failure that this introduces.
-- Explain how the **UKF** uses sigma points to avoid Jacobians, and say when
-  that is worth the extra cost.
-- Say when a **particle filter** is the right choice, in terms of the shape
-  of the belief rather than how nonlinear the model is.
-- Use the **innovation** and a **NIS** check to decide whether a running
-  filter can be trusted, and recognise **divergence** when you see it.
-- Apply a **chi-square gate** to reject a bad measurement, and explain why
-  this answers the GNSS multipath problem left open in L2.
-- Set up the **data association** problem and choose between NN, GNN, JPDA
-  and MHT for a given scene.
-- Describe a **track lifecycle**, meaning birth, confirmation, coasting and
-  deletion, and explain why Tempe was a failure of this stage rather than of
-  detection.
+- Define **variance**, **standard deviation** and the **covariance
+  matrix** :math:`P`.
+- Say why the **Kalman gain** leans toward the more precise source, why the
+  result beats **either input**, and on what assumption.
+- Write down **predict** and **update**, and say what each term means.
+- Name the **four assumptions**, and what the **EKF**, **UKF** and
+  **particle filter** each replace.
+- Build an **EKF**: :math:`f`, :math:`h`, their Jacobians, and
+  :math:`Q_k`.
+- Use the **innovation**, **NIS** and a **chi-square gate** to judge a
+  running filter, and spot **divergence**.
 
 
 .. toctree::
@@ -104,6 +102,7 @@ By the end of this lecture, you will be able to:
    :titlesonly:
 
    l3_lecture
+   l3_appendix
    l3_exercises
    l3_quiz
    l3_references
@@ -112,18 +111,27 @@ By the end of this lecture, you will be able to:
 Next Steps
 ----------
 
-- In the next lecture we cover **L4: Perception I, Object Detection from
-  YOLO to DETR**:
+- In the next lecture we cover **L4: Perception I, Detecting Objects**:
 
-  - CNN fundamentals and the YOLO family.
-  - DETR and detection as set prediction.
-  - What convolutional and transformer detectors each cost you.
-  - Running a detector as a ROS 2 node.
+  - From pixels to features: what a CNN computes.
+  - Grading a detector: IoU, precision, recall, mAP.
+  - One-stage detectors (YOLO) and transformers (DETR, RT-DETR).
+  - Two detectors side by side on a CARLA frame.
 
-- This lecture assumed measurements simply arrive. L4 covers where they
-  come from: the detector that turns pixels into the boxes this filter
-  tracks.
-- Complete the L3 exercises. **Exercise 5, the divergence hunt, is the one
-  that matters**, and it is the debugging skill GP3 will demand.
-- **GP1 is posted this week.** It builds on L2's calibration work, not on
-  this lecture's filter.
+- **Before next class:**
+
+  - Run the four hands-on scripts (KF, EKF, UKF, PF) and move every slider.
+    **Most important: turn** :math:`Q` **down in** ``kf_tunnel.py`` **until
+    the filter fails, and watch the share of time inside** :math:`1\sigma`
+    **catch it.**
+  - **Read the appendix**: the worked numbers, the UKF and particle filter
+    details, and each filter's code.
+  - Work through the L3 exercises.
+  - **GP1 is posted.** It builds on L2's calibration work rather than on this
+    lecture's filter.
+
+- **How the lectures connect.** L1 gave the vocabulary and the failure
+  cases. L2 gave the sensors and the geometry connecting them. L3 gave the
+  filter that combines them, and the test that shows whether to trust it.
+  L4 gives the detector that produces the measurements this filter has been
+  assuming.

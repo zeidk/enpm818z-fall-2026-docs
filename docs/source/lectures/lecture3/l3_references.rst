@@ -2,226 +2,123 @@
 References
 ====================================================
 
+These are the sources the L3 slides cite, in the order the slides cite
+them, grouped by topic. A last dropdown lists further reading from the
+lecture's bibliography that no slide cites.
 
-.. dropdown:: Formal Definitions: Variance and Confidence
+
+.. dropdown:: Formal Definitions: Uncertainty, Noise and Bias
    :class-container: sd-border-secondary
    :open:
 
-   These are the sources behind the definitions in the **Words We Need
-   First** section of the lecture. The first two are standards documents
-   rather than textbooks, so they are the ones to quote if anyone asks you
-   what a term officially means.
+   These are the sources behind the definitions in the **Terminology**
+   section and its appendix. All three are standards documents rather than
+   textbooks, so they are the ones to quote if anyone asks you what a term
+   officially means.
 
    .. grid:: 1 1 2 2
       :gutter: 2
 
-      .. grid-item-card:: Statistics vocabulary
-         :link: https://www.iso.org/standard/40145.html
-         :class-card: sd-border-secondary
-
-         **ISO 3534-1:2006**
-
-         *Statistics. Vocabulary and symbols. Part 1: General statistical
-         terms and terms used in probability.*
-
-         The standards body definitions of **variance**, **standard
-         deviation**, **confidence interval** and **confidence level**.
-
-      .. grid-item-card:: Measurement uncertainty
+      .. grid-item-card:: Metrology vocabulary
          :link: https://www.bipm.org/en/committees/jc/jcgm/publications
          :class-card: sd-border-secondary
 
-         **JCGM 100:2008 (GUM)** and **JCGM 200:2012 (VIM)**
+         **JCGM 200:2012 (VIM)**
 
-         *Guide to the Expression of Uncertainty in Measurement*, and the
-         *International Vocabulary of Metrology*.
+         *International Vocabulary of Metrology: Basic and General
+         Concepts and Associated Terms.* BIPM, 2012.
 
-         VIM is the same document L2 quoted for the definition of
-         calibration. Both deliberately avoid the word "confidence" and use
-         **coverage interval** and **coverage probability** instead.
+         The definition of **measurement uncertainty** (clause 2.26) on the
+         Uncertainty slide, and of **precision** (2.15, the word for noise)
+         and **trueness** (2.14, the word for bias). The same document L2
+         quoted for the definition of calibration.
 
          +++
 
          Free to download from the BIPM.
 
-      .. grid-item-card:: Probability and statistics
+      .. grid-item-card:: Measurement uncertainty
+         :link: https://www.bipm.org/en/committees/jc/jcgm/publications
          :class-card: sd-border-secondary
 
-         **Casella, G. and Berger, R. L. (2002)**
+         **JCGM 100:2008 (GUM)**
 
-         *Statistical Inference*, 2nd edition. Duxbury.
+         *Evaluation of Measurement Data: Guide to the Expression of
+         Uncertainty in Measurement.* BIPM, 2008.
 
-         The standard graduate treatment of variance, estimators and
-         confidence intervals.
+         With the VIM, it avoids the word "confidence" and says
+         **coverage interval** and **coverage probability** instead (the
+         confidence-interval slides in the appendix).
 
-      .. grid-item-card:: Credible intervals
+         +++
+
+         Free to download from the BIPM.
+
+      .. grid-item-card:: Accuracy, trueness and precision
          :class-card: sd-border-secondary
 
-         **Gelman, A. et al. (2013)**
+         **ISO 5725-1:2023**
 
-         *Bayesian Data Analysis*, 3rd edition. CRC Press.
+         *Accuracy (Trueness and Precision) of Measurement Methods and
+         Results. Part 1: General Principles and Definitions.* ISO, 2023.
 
-         Credible regions, which is what a Kalman filter's covariance
-         ellipse actually is. Chapter 1 covers the distinction from
-         confidence intervals directly.
+         Uses **accuracy** as the umbrella term: a reading is accurate only
+         if the bias is small **and** the noise is small.
 
 
-.. dropdown:: Kalman Filter Theory
+.. dropdown:: Filters
    :class-container: sd-border-secondary
    :open:
 
    .. grid:: 1 1 2 2
       :gutter: 2
 
-      .. grid-item-card:: Original Kalman Filter Paper
-         :link: https://www.cs.unc.edu/~welch/kalman/media/pdf/Kalman1960.pdf
+      .. grid-item-card:: The Kalman filter
+         :link: https://doi.org/10.1115/1.3662552
          :class-card: sd-border-secondary
 
-         **Kalman, R.E. (1960)**
+         **Kalman, R. E. (1960)**
 
          "A New Approach to Linear Filtering and Prediction Problems."
-         Transactions of the ASME, Journal of Basic Engineering.
+         *Journal of Basic Engineering*, 82(1), 35 to 45.
 
-      .. grid-item-card:: EKF and UKF Overview
-         :link: https://groups.seas.harvard.edu/courses/cs281/papers/unscented.pdf
+         The paper behind the Kalman filter definition: a recursive
+         estimator that predicts and updates, and has the smallest
+         expected squared error when the models are linear and the noise
+         is Gaussian.
+
+      .. grid-item-card:: The unscented transform and the UKF
+         :link: https://doi.org/10.1117/12.280797
          :class-card: sd-border-secondary
 
-         **Julier & Uhlmann (1997)**
+         **Julier, S. J. and Uhlmann, J. K. (1997)**
 
          "A New Extension of the Kalman Filter to Nonlinear Systems."
-         The paper introducing the Unscented Transform and UKF.
+         *Proceedings of SPIE 3068, Signal Processing, Sensor Fusion, and
+         Target Recognition VI*, 182 to 193.
 
-      .. grid-item-card:: Probabilistic Robotics
-         :link: https://probabilistic-robotics.org/
-         :class-card: sd-border-secondary
-
-         **Thrun, Burgard & Fox (2005)**
-
-         The definitive textbook on probabilistic robotics. Chapters 3-4
-         cover Kalman filters, EKF, UKF, and particle filters in depth.
-
-      .. grid-item-card:: filterpy Python Library
-         :link: https://filterpy.readthedocs.io/
-         :class-card: sd-border-secondary
-
-         **Roger Labbe**
-
-         Python library implementing KF, EKF, UKF, and particle filters.
-         Companion to the "Kalman and Bayesian Filters in Python" textbook.
-
-         +++
-
-         - `GitHub <https://github.com/rlabbe/filterpy>`_
-         - `Jupyter Book <https://github.com/rlabbe/Kalman-and-Bayesian-Filters-in-Python>`_
-
-
-.. dropdown:: Multi-Sensor Fusion Architectures
-   :class-container: sd-border-secondary
-
-   .. grid:: 1 1 2 2
-      :gutter: 2
-
-      .. grid-item-card:: BEVFusion (MIT)
-         :link: https://arxiv.org/abs/2205.13542
-         :class-card: sd-border-secondary
-
-         **Liu et al., ICRA 2023**
-
-         Efficient LiDAR-camera BEV fusion using shared BEV space with
-         cross-attention feature fusion. 70.2 NDS on nuScenes.
-
-      .. grid-item-card:: BEVFusion (Nanjing)
-         :link: https://arxiv.org/abs/2205.13790
-         :class-card: sd-border-secondary
-
-         **Liang et al., NeurIPS 2022**
-
-         Multi-task multi-sensor fusion for detection, map segmentation,
-         and motion prediction in unified BEV space.
-
-      .. grid-item-card:: DeepFusion
-         :link: https://arxiv.org/abs/2203.08195
-         :class-card: sd-border-secondary
-
-         **Li et al., CVPR 2022**
-
-         LiDAR-camera fusion using point-to-voxel cross-attention for
-         3D object detection.
-
-      .. grid-item-card:: CenterFusion
-         :link: https://arxiv.org/abs/2011.04841
-         :class-card: sd-border-secondary
-
-         **Nabati & Qi, WACV 2021**
-
-         Camera-RADAR fusion for 3D object detection using pillar-based
-         radar point cloud association.
-
-
-.. dropdown:: Data Association
-   :class-container: sd-border-secondary
-
-   .. grid:: 1 1 2 2
-      :gutter: 2
-
-      .. grid-item-card:: Hungarian Algorithm
-         :link: https://en.wikipedia.org/wiki/Hungarian_algorithm
-         :class-card: sd-border-secondary
-
-         **Kuhn-Munkres Algorithm**
-
-         Optimal bipartite graph matching in O(n^3). Standard for global
-         nearest neighbor data association.
-
-         +++
-
-         - `scipy.optimize.linear_sum_assignment <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linear_sum_assignment.html>`_
-
-      .. grid-item-card:: JPDA Survey
-         :link: https://ieeexplore.ieee.org/document/989947
-         :class-card: sd-border-secondary
-
-         **Fortmann, Bar-Shalom & Scheffe (1983)**
-
-         Original Joint Probabilistic Data Association paper for tracking
-         in cluttered environments.
-
-      .. grid-item-card:: Bar-Shalom et al.
-         :class-card: sd-border-secondary
-
-         **Bar-Shalom, Y., Willett, P.K., & Tian, X. (2011)**
-
-         *Tracking and Data Fusion: A Handbook of Algorithms.*
-         YBS Publishing. Comprehensive reference for all association methods.
-
-
-.. dropdown:: Particle Filters
-   :class-container: sd-border-secondary
-
-   .. grid:: 1 1 2 2
-      :gutter: 2
+         The source of the **sigma points**: :math:`2n+1` points whose
+         weighted average is the mean and whose weighted spread is the
+         covariance (UKF appendix).
 
       .. grid-item-card:: Monte Carlo Localization
-         :link: https://people.eecs.berkeley.edu/~pabbeel/cs287-fa12/slides/mcl.pdf
+         :link: https://doi.org/10.1109/ROBOT.1999.772544
          :class-card: sd-border-secondary
 
-         **Dellaert et al. (1999)**
+         **Dellaert, F., Fox, D., Burgard, W. and Thrun, S. (1999)**
 
-         Original MCL paper: particle filter for robot localization.
-         Foundation of AMCL used in ROS.
+         "Monte Carlo Localization for Mobile Robots." *Proceedings of the
+         IEEE International Conference on Robotics and Automation (ICRA)*,
+         1322 to 1328.
 
-      .. grid-item-card:: Particle Filters Tutorial
-         :link: https://www.irisa.fr/aspi/legland/ref/arulampalam02a.pdf
-         :class-card: sd-border-secondary
-
-         **Arulampalam et al. (2002)**
-
-         "A Tutorial on Particle Filters for Online Nonlinear/Non-Gaussian
-         Bayesian Tracking." IEEE Transactions on Signal Processing.
+         The particle filter applied to robot localization (particle filter
+         appendix). Monte Carlo Localization itself is
+         :doc:`L7 <../lecture7/l7_index>`.
 
 
-.. dropdown:: Filter Consistency and Divergence
+.. dropdown:: Checking the Covariance
    :class-container: sd-border-secondary
+   :open:
 
    .. grid:: 1 1 2 2
       :gutter: 2
@@ -229,55 +126,81 @@ References
       .. grid-item-card:: The standard reference
          :class-card: sd-border-secondary
 
-         **Bar-Shalom, Y., Li, X.-R., & Kirubarajan, T. (2001)**
+         **Bar-Shalom, Y., Li, X.-R. and Kirubarajan, T. (2001)**
 
-         *Estimation with Applications to Tracking and Navigation.* Wiley.
+         *Estimation with Applications to Tracking and Navigation: Theory,
+         Algorithms and Software.* Wiley, New York.
 
-         The definitive treatment of filter **consistency**: NIS, NEES,
-         and the chi-square tests used in this lecture. If you read one
-         thing beyond the notes, read the consistency chapter.
-
-      .. grid-item-card:: Divergence
-         :link: https://ieeexplore.ieee.org/document/1099836
-         :class-card: sd-border-secondary
-
-         **Fitzgerald, R.J. (1971)**
-
-         *Divergence of the Kalman Filter.* IEEE Transactions on Automatic
-         Control, 16(6).
-
-         The classic analysis of why a filter becomes confidently wrong,
-         and why shrinking :math:`P` is the mechanism.
-
-      .. grid-item-card:: Tuning Q and R
-         :link: https://ieeexplore.ieee.org/document/1099422
-         :class-card: sd-border-secondary
-
-         **Mehra, R.K. (1970)**
-
-         *On the Identification of Variances and Adaptive Kalman
-         Filtering.* IEEE Transactions on Automatic Control, 15(2).
-
-         The origin of adaptive noise-covariance estimation. Useful
-         background on why :math:`Q` resists measurement.
-
-      .. grid-item-card:: Gating in practice
-         :class-card: sd-border-secondary
-
-         **Blackman, S. & Popoli, R. (1999)**
-
-         *Design and Analysis of Modern Tracking Systems.* Artech House.
-
-         Practical treatment of validation gates, track lifecycle and
-         M-of-N confirmation logic as actually deployed.
+         The source of the **NIS** consistency test and the chi-square band
+         used in the last section of the lecture, and of the notation
+         :math:`\nu` for the innovation (other textbooks write
+         :math:`\mathbf{y}`).
 
 
-.. dropdown:: Survey Papers
+.. dropdown:: Further Reading
    :class-container: sd-border-secondary
 
-   - Faion, F. et al. (2021). *A Survey on Data Fusion Techniques for
-     Autonomous Driving.* IEEE Intelligent Transportation Systems Magazine.
-   - Yeong, D.J. et al. (2021). *Sensor and Sensor Fusion Technology in
-     Autonomous Vehicles: A Review.* Sensors, 21(6), 2140.
-   - Liang, M. et al. (2022). *BEVFusion: A Simple and Robust LiDAR-Camera
-     Fusion Framework.* arXiv:2205.13790.
+   These are in the lecture's bibliography file but are not cited on a
+   slide.
+
+   .. grid:: 1 1 2 2
+      :gutter: 2
+
+      .. grid-item-card:: Probabilistic Robotics
+         :link: https://probabilistic-robotics.org/
+         :class-card: sd-border-secondary
+
+         **Thrun, S., Burgard, W. and Fox, D. (2005)**
+
+         *Probabilistic Robotics.* MIT Press, Cambridge, MA.
+
+         Chapters 3 and 4 cover the Kalman filter, EKF, UKF and particle
+         filter in depth.
+
+      .. grid-item-card:: Statistics vocabulary
+         :link: https://www.iso.org/standard/40145.html
+         :class-card: sd-border-secondary
+
+         **ISO 3534-1:2006**
+
+         *Statistics: Vocabulary and Symbols. Part 1: General Statistical
+         Terms and Terms Used in Probability.* ISO, 2006.
+
+         The standards body definitions of **variance**, **standard
+         deviation**, **confidence interval** and **confidence level**.
+
+      .. grid-item-card:: Probability and statistics
+         :class-card: sd-border-secondary
+
+         **Casella, G. and Berger, R. L. (2002)**
+
+         *Statistical Inference*, 2nd edition. Duxbury, Pacific Grove, CA.
+
+         The standard graduate treatment of variance, estimators and
+         confidence intervals.
+
+      .. grid-item-card:: Credible intervals
+         :class-card: sd-border-secondary
+
+         **Gelman, A., Carlin, J. B., Stern, H. S., Dunson, D. B., Vehtari,
+         A. and Rubin, D. B. (2013)**
+
+         *Bayesian Data Analysis*, 3rd edition. CRC Press, Boca Raton, FL.
+
+         Credible regions, and how they differ from confidence intervals.
+
+      .. grid-item-card:: CARLA
+         :link: https://proceedings.mlr.press/v78/dosovitskiy17a.html
+         :class-card: sd-border-secondary
+
+         **Dosovitskiy, A., Ros, G., Codevilla, F., López, A. and
+         Koltun, V. (2017)**
+
+         "CARLA: An Open Urban Driving Simulator." *Proceedings of the 1st
+         Annual Conference on Robot Learning (CoRL)*, PMLR 78, 1 to 16.
+
+         The simulator set up in L2.
+
+   The bibliography file also holds the sources for Mahalanobis distance,
+   the Hungarian algorithm, JPDA, MHT and the Tempe crash report. Those
+   topics are taught in :doc:`L6 <../lecture6/l6_index>`.

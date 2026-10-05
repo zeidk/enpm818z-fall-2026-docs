@@ -196,11 +196,12 @@ A
 .. glossary::
 
    Accuracy
-      How close a measurement is to the true value. Distinct from
-      precision, which describes repeatability. A sensor with a steady
-      offset can be highly precise and still inaccurate. See Bias.
-      :doc:`L2 </lectures/lecture2/l2_index>` · :doc:`L3
-      </lectures/lecture3/l3_index>`
+      How close a measurement is to the true value. Strictly (ISO
+      5725-1), accuracy means both at once: small bias (good trueness)
+      and small noise (good precision). A sensor with a steady offset
+      can be highly precise and still inaccurate. See Bias, Trueness and
+      Precision (Measurement). :doc:`L2 </lectures/lecture2/l2_index>` ·
+      :doc:`L3 </lectures/lecture3/l3_index>`
 
    ADAS
       Advanced Driver Assistance Systems. Systems that support the human
@@ -263,6 +264,14 @@ B
       In YOLO, this is typically CSPDarknet or similar CNN that extracts
       hierarchical features from the input image. :doc:`L4 </lectures/lecture4/l4_index>`
 
+   Base Link
+      The one agreed point on the AV that its position refers to: the
+      middle of the rear axle, as in Autoware. The rear wheels do not
+      steer, so this point always moves along the heading, never
+      sideways. In the L3 road frame, the AV at (103.0, 2.5) means its
+      base link is 103.0 m along the road and 2.5 m across from the
+      survey marker. :doc:`L3 </lectures/lecture3/l3_index>`
+
    Baseline
       The distance between the two optical centres of a stereo pair,
       written B. Depth error grows as z squared over Bf, so the baseline
@@ -287,10 +296,13 @@ B
       context. Often implemented as a finite state machine (FSM). :doc:`L9 </lectures/lecture9/l9_index>`
 
    Belief
-      Everything a filter currently knows about the state, expressed as
-      a mean and a covariance. A Kalman filter's belief always has a
-      single peak. A particle filter's belief can have several. :doc:`L3
-      </lectures/lecture3/l3_index>`
+      The probability of every possible state, given everything measured
+      so far: for every position the AV could be at, how likely it is to
+      really be there. A Kalman filter keeps it as one bell curve (the
+      estimate sets the peak, the covariance :math:`P` sets the width),
+      so it has a single peak. A particle filter keeps it as weighted
+      particles, so it can have several, such as two identical ceiling
+      lights 25 m apart. :doc:`L3 </lectures/lecture3/l3_index>`
 
    BEV
       Bird's-Eye View. A top-down representation of the driving scene that
@@ -309,11 +321,15 @@ B
 
    Bias
       A systematic error that shifts every reading the same way. Unlike
-      noise it does not average away, and a Kalman filter does not
-      remove it, because it breaks the zero-mean assumption. Two sensors
-      can have identical variance and very different bias. :doc:`L2
-      </lectures/lecture2/l2_index>` · :doc:`L3
-      </lectures/lecture3/l3_index>`
+      noise it does not average away, however many readings you take,
+      and a Kalman filter does not remove it, because it breaks the
+      no-bias assumption; in L3 we widen :math:`Q` to cover it. Two
+      sensors can have identical variance and very different bias:
+      receivers A and B both scatter by 1.561 m, but B's average sits
+      3.2 m ahead, far more than the 0.64 m (:math:`\sigma/\sqrt{6}`)
+      that noise alone would explain. Finding bias needs the truth from
+      outside. :doc:`L2 </lectures/lecture2/l2_index>` ·
+      :doc:`L3 </lectures/lecture3/l3_index>`
 
    Bicycle Model
       A simplified kinematic vehicle model that merges the two front wheels
@@ -364,11 +380,10 @@ C
       environments, sensor simulation, and a Python API. :doc:`L1 </lectures/lecture1/l1_lecture>`
 
    Chi-Square Gate
-      A test that rejects a measurement whose normalised squared
-      innovation exceeds a threshold taken from the chi-square
-      distribution. For a two-dimensional position fix at 99 percent the
-      threshold is 9.21. See Gating. :doc:`L3
-      </lectures/lecture3/l3_index>`
+      A test that throws away a reading whose NIS exceeds a threshold
+      taken from the chi-square distribution. For a sign match reporting
+      :math:`x` and :math:`y` (2 degrees of freedom), the 99 percent
+      line is 9.21. See Gating. :doc:`L3 </lectures/lecture3/l3_index>`
 
    CIoU Loss
       Complete Intersection over Union loss. A bounding box regression
@@ -400,9 +415,10 @@ C
       :doc:`L2 </lectures/lecture2/l2_index>`
 
    Complementarity Principle
-      The observation (Luo, 1989) that different sensor technologies have
-      unique strengths and weaknesses that balance each other out, making
-      multi-sensor fusion essential for robust perception. :doc:`L2 </lectures/lecture2/l2_index>` · :doc:`L3 </lectures/lecture3/l3_index>`
+      The observation (Luo, 1989) that different sensor technologies
+      have unique strengths and weaknesses that balance each other out,
+      making multi-sensor fusion essential for robust perception.
+      :doc:`L2 </lectures/lecture2/l2_index>`
 
    Concrete Scenario
       A :term:`Logical Scenario` with every parameter fixed to a value, and
@@ -435,15 +451,27 @@ C
       the field -- a vehicle that cannot signal its intent to a human is hard
       to share a road with -- and not covered in this course. :doc:`L1 </lectures/lecture1/l1_lecture>`
 
+   Control Input
+      What the AV knows it did during one step, written
+      :math:`\mathbf{u}`, fed into the motion model through :math:`B` in
+      the Kalman filter or :math:`f` in the EKF. In the L3 tunnel it is
+      the IMU's acceleration; in the EKF it is the wheel speed and the
+      gyro's turn rate, :math:`[v, \omega]`, whose noise builds
+      :math:`Q_k`. :doc:`L3 </lectures/lecture3/l3_index>`
+
    Cooperative Perception
       Multiple vehicles or roadside units sharing sensor data via V2X
       communication to build a collective, extended understanding of the
       driving scene beyond any single vehicle's sensor range. :doc:`L14 </lectures/lecture14/l14_index>`
 
    Covariance
-      A measure of how much the errors in two quantities move together.
-      Zero when the two are independent. :doc:`L3
-      </lectures/lecture3/l3_index>`
+      How much the errors in two quantities move together: the same
+      recipe as variance, but multiply each :math:`x` distance from its
+      mean by the :math:`y` distance, then average. Positive: too far
+      ahead usually comes with too far left. Zero when the two are
+      unrelated. Two variances give the width and height of a cloud of
+      readings; the covariance gives its lean.
+      :doc:`L3 </lectures/lecture3/l3_index>`
 
    Covariance Matrix
       A square matrix holding variances on the diagonal and covariances
@@ -504,9 +532,10 @@ D
 
    Data Association
       The problem of deciding which incoming measurement corresponds to
-      which existing track (or that it is a new object / clutter). Solved
-      by nearest-neighbour, Hungarian/GNN, JPDA, or MHT depending on the
-      ambiguity tolerated. :doc:`L3 </lectures/lecture3/l3_index>` · :doc:`L6 </lectures/lecture6/l6_index>`
+      which existing track (or that it is a new object or clutter).
+      Solved by nearest neighbor, Hungarian/GNN, JPDA, or MHT depending
+      on the ambiguity tolerated.
+      :doc:`L6 </lectures/lecture6/l6_index>`
 
    DDS
       Data Distribution Service. An OASIS/OMG standard for real-time
@@ -546,10 +575,10 @@ D
       for re-identification after occlusion. :doc:`L6 </lectures/lecture6/l6_index>`
 
    Degrees of Freedom
-      How many numbers a sensor reports at once, written m. A GNSS fix
-      giving x and y has m equal to 2. It selects which chi-square
-      distribution the NIS should follow. :doc:`L3
-      </lectures/lecture3/l3_index>`
+      How many numbers a sensor reports at once, written :math:`m`. A
+      sign match giving :math:`x` and :math:`y` has :math:`m = 2`. It
+      selects which chi-square distribution the NIS should follow.
+      :doc:`L3 </lectures/lecture3/l3_index>`
 
    DETR
       DEtection TRansformer. A transformer-based object detector that
@@ -594,12 +623,13 @@ D
       of behavior cloning where small errors compound over time. :doc:`L12 </lectures/lecture12/l12_index>`
 
    Divergence
-      The failure in which a filter's reported covariance keeps
-      shrinking while its true error grows. The update step shrinks P
-      whether or not the update was correct, so the gain falls, new
-      measurements stop affecting the estimate, and the filter reports
-      high confidence in a wrong answer. :doc:`L3
-      </lectures/lecture3/l3_index>`
+      The failure in which a filter becomes more confident as it becomes
+      less accurate: its reported covariance keeps shrinking while its
+      true error grows. The update shrinks :math:`P` whether or not the
+      reading was good, because the surprise does not appear in
+      :math:`P = (I - KH)P^-`. In the EKF it is a feedback loop: a poor
+      estimate puts the tangent in the wrong place, which gives a worse
+      estimate. :doc:`L3 </lectures/lecture3/l3_index>`
 
    Domain Randomization
       Varying simulation parameters (lighting, textures, weather, sensor
@@ -658,7 +688,14 @@ E
       Combining raw measurements before anything interprets them.
       Preserves the most information, but demands accurate calibration
       and tight timing, moves large amounts of data, and lets one bad
-      sensor affect everything. :doc:`L3 </lectures/lecture3/l3_index>`
+      sensor affect everything. :doc:`L6 </lectures/lecture6/l6_index>`
+
+   Effective Number of Particles
+      :math:`N_\text{eff} = 1/\sum_i (w^{(i)})^2`: how many particles
+      still carry real weight. It is :math:`N` when all weigh the same
+      and 1 when one particle holds all the weight. The L3 particle
+      filter resamples when it falls below :math:`N/2`.
+      :doc:`L3 </lectures/lecture3/l3_index>`
 
    End-to-End Driving
       An approach where a single neural network maps raw sensor input
@@ -666,10 +703,13 @@ E
       pipeline (perception -> planning -> control). :doc:`L12 </lectures/lecture12/l12_index>`
 
    EKF
-      Extended Kalman Filter. A non-linear extension of the Kalman Filter
-      that uses Jacobian matrices to linearize the system at each time
-      step. The standard fusion filter for IMU + GNSS + wheel odometry in
-      AV localization. :doc:`L3 </lectures/lecture3/l3_index>` · :doc:`L7 </lectures/lecture7/l7_index>`
+      Extended Kalman Filter. The alternative to the Kalman filter when
+      the motion or measurement model is not linear: at every step it
+      replaces each curve by its tangent (the Jacobians) at the
+      estimate. The standard filter for fusing IMU, GNSS and wheel
+      odometry in AV localization, and the filter GP3 uses. See Extended
+      Kalman Filter. :doc:`L3 </lectures/lecture3/l3_index>` ·
+      :doc:`L7 </lectures/lecture7/l7_index>`
 
    Expectation
       The average of a quantity taken over all possible outcomes rather
@@ -677,11 +717,14 @@ E
       :doc:`L3 </lectures/lecture3/l3_index>`
 
    Extended Kalman Filter
-      EKF. A Kalman filter for nonlinear models, which approximates them
-      with straight lines at the current estimate using Jacobians. The
-      standard choice for vehicle state estimation. Its failure mode is
-      a feedback loop: a poor estimate gives a poor approximation, which
-      gives a worse estimate. :doc:`L3 </lectures/lecture3/l3_index>`
+      EKF. A Kalman filter for models that are curves, not straight
+      lines. At every step it replaces each curve by its tangent at the
+      estimate, then runs the ordinary Kalman equations: the estimate
+      goes through the real :math:`f` and :math:`h`, and :math:`P` goes
+      through the Jacobians :math:`F_k` and :math:`H_k`. Its failure
+      mode is a feedback loop: a poor estimate gives a wrong tangent,
+      which gives a worse estimate (divergence).
+      :doc:`L3 </lectures/lecture3/l3_index>`
 
    Extrinsic Calibration
       The rigid transform describing where one sensor sits relative to
@@ -711,10 +754,12 @@ F
 
    Filter Consistency
       Whether a filter's reported covariance matches the errors it
-      actually makes. Tested with the NIS, using only quantities the
+      actually makes: an honest filter is neither overconfident nor
+      underconfident. With ground truth (the hands-on), check that the
+      true error stays inside :math:`\pm 1\sigma` about 68 percent of
+      the time. Without it, use the NIS, built only from quantities the
       filter already computes, so the check can run continuously on a
-      vehicle without ground truth. :doc:`L3
-      </lectures/lecture3/l3_index>`
+      vehicle. :doc:`L3 </lectures/lecture3/l3_index>`
 
    FMCW
       Frequency-Modulated Continuous Wave. The radar modulation that
@@ -764,7 +809,7 @@ F
    Fusion Architecture
       The strategy for combining data from multiple sensors. Three main
       types: early fusion (raw data), intermediate/mid-level fusion
-      (features), and late fusion (detection outputs). :doc:`L3 </lectures/lecture3/l3_index>`
+      (features), and late fusion (detection outputs). :doc:`L6 </lectures/lecture6/l6_index>`
 
 
 .. _glossary-g:
@@ -787,11 +832,14 @@ G
       so it cannot evaluate negotiation. :doc:`L13 </lectures/lecture13/l13_index>`
 
    Gating
-      Rejecting a measurement that disagrees with the current estimate
-      by more than a threshold. It is the answer to the GNSS multipath
-      problem raised in L2. Its own failure mode: once an estimate has
-      drifted, the gate rejects the correct measurements that would have
-      corrected it. :doc:`L3 </lectures/lecture3/l3_index>`
+      Throwing away a reading that disagrees with the prediction by more
+      than a threshold: in L3, a NIS above 9.21 for a sign match
+      reporting :math:`x` and :math:`y`. It catches a wrong sign match,
+      where the camera misreads a sign's number and the match is on
+      time, normal-looking, and 25 m wrong. Its own failure mode: a
+      filter that is already wrong rejects the good readings that would
+      correct it, so count rejections in a row and raise an alarm past a
+      limit. :doc:`L3 </lectures/lecture3/l3_index>`
 
    Geofence
       A boundary in the physical world, encoded in software, outside which a
@@ -802,8 +850,8 @@ G
       GNN. Data association that solves a whole frame at once, choosing
       the set of pairings with the lowest total cost, usually with the
       Hungarian algorithm. Removes the order dependence that makes plain
-      nearest-neighbour association unreliable. :doc:`L3
-      </lectures/lecture3/l3_index>`
+      nearest-neighbor association unreliable.
+      :doc:`L6 </lectures/lecture6/l6_index>`
 
    GNN
       Graph Neural Network. A neural network operating on graph-structured
@@ -848,8 +896,12 @@ H
 
    HD Map
       High-Definition map with centimeter-accurate road geometry, lane
-      markings, traffic signs, and semantic annotations. Used for precise
-      localization by matching live sensor data against the map. :doc:`L7 </lectures/lecture7/l7_index>` · :doc:`L8 </lectures/lecture8/l8_index>`
+      markings, traffic signs, and semantic annotations. Used for
+      precise localization by matching live sensor data against the map.
+      In the L3 tunnel, it is what turns "I see an exit sign" into "I am
+      here" (the sign match). :doc:`L3 </lectures/lecture3/l3_index>` ·
+      :doc:`L7 </lectures/lecture7/l7_index>` ·
+      :doc:`L8 </lectures/lecture8/l8_index>`
 
    Head (Detection)
       The final component of an object detection architecture that
@@ -865,7 +917,9 @@ H
       An optimization algorithm that finds the minimum-cost one-to-one
       assignment between two sets. Used by DETR for bipartite matching
       between predictions and ground truth, and by SORT/DeepSORT for
-      association between predicted tracks and new detections. :doc:`L3 </lectures/lecture3/l3_index>` · :doc:`L4 </lectures/lecture4/l4_index>` · :doc:`L6 </lectures/lecture6/l6_index>`
+      association between predicted tracks and new detections.
+      :doc:`L4 </lectures/lecture4/l4_index>` ·
+      :doc:`L6 </lectures/lecture6/l6_index>`
 
 
 .. _glossary-i:
@@ -892,15 +946,20 @@ I
       frequency (>100 Hz). Suffers from drift over time. :doc:`L2 </lectures/lecture2/l2_index>` · :doc:`L7 </lectures/lecture7/l7_index>`
 
    Innovation
-      The measurement minus the measurement the filter predicted,
-      written with the Greek letter nu. The only genuinely new
-      information in a filter cycle, and the quantity that consistency
-      checks monitor. Many textbooks write it as y. :doc:`L3
-      </lectures/lecture3/l3_index>`
+      The surprise: the reading the filter got minus the reading it
+      expected, :math:`\nu = \mathbf{z} - H\hat{\mathbf{x}}^-` (in the
+      EKF, :math:`\mathbf{z} - h(\hat{\mathbf{x}}^-)`). With a
+      prediction of 50 m and a sign match of 53 m, it is 3 m. The only
+      new information in a filter cycle, and the quantity the NIS
+      checks. Many textbooks write it as :math:`\mathbf{y}`; L3 uses
+      :math:`\nu` because :math:`y` is the across-road coordinate.
+      :doc:`L3 </lectures/lecture3/l3_index>`
 
    Innovation Covariance
-      How large the filter expected the innovation to be, written S.
-      Used by the Kalman gain, the NIS and the Mahalanobis distance.
+      How large the filter expected the surprise to be, written
+      :math:`S = H P^- H^\top + R`. With one number it is
+      :math:`\sigma_\text{pred}^2 + \sigma_\text{meas}^2`, the bottom of
+      the Kalman gain. Used by the Kalman gain, the NIS and the gate.
       :doc:`L3 </lectures/lecture3/l3_index>`
 
    Instance Segmentation
@@ -912,7 +971,7 @@ I
       Combining learned features from each sensor. The network can learn
       which sensor to trust in which conditions, at the cost of needing
       training data with every modality present, and of being hard to
-      interpret or certify. :doc:`L3 </lectures/lecture3/l3_index>`
+      interpret or certify. :doc:`L6 </lectures/lecture6/l6_index>`
 
    Intrinsic Calibration
       The parameters describing how a camera turns an incoming ray of
@@ -924,8 +983,11 @@ I
    Inverse-Variance Weighting
       Combining independent estimates with weights proportional to one
       over the variance. The precisions add, so the combined uncertainty
-      is smaller than either input. Halving a sensor's sigma multiplies
-      its weight by four. :doc:`L3 </lectures/lecture3/l3_index>`
+      is smaller than either input. The one-number Kalman update is
+      exactly this: a prediction of 50 m (:math:`\sigma = 2` m) and a
+      sign match of 53 m (:math:`\sigma = 1` m) give 52.4 m with
+      :math:`\sigma = 0.89` m. Halving a sensor's sigma multiplies its
+      weight by four. :doc:`L3 </lectures/lecture3/l3_index>`
 
    IoU
       Intersection over Union. The ratio of the overlap area to the
@@ -956,11 +1018,21 @@ J
 
 .. glossary::
 
+   Jacobian
+      The table of slopes of a function with several inputs and outputs:
+      nudge input :math:`j` a little, and output :math:`i` moves this
+      much. The EKF uses :math:`F_k = \partial f/\partial \mathbf{x}` at
+      the last estimate, :math:`H_k = \partial h/\partial \mathbf{x}` at
+      the prediction, and :math:`G = \partial f/\partial \mathbf{u}` to
+      build :math:`Q_k`, all rebuilt every step. A wrong sign still runs
+      and converges, so test each Jacobian by nudging its inputs.
+      :doc:`L3 </lectures/lecture3/l3_index>`
+
    JPDA
       Joint Probabilistic Data Association. A probabilistic data
       association method for multi-target tracking in clutter that
       considers all possible measurement-to-track assignments weighted
-      by their probabilities. :doc:`L3 </lectures/lecture3/l3_index>` · :doc:`L6 </lectures/lecture6/l6_index>`
+      by their probabilities. :doc:`L6 </lectures/lecture6/l6_index>`
 
 
 .. _glossary-k:
@@ -971,15 +1043,26 @@ K
 .. glossary::
 
    Kalman Filter
-      An optimal recursive estimator for linear systems with Gaussian
-      noise. Uses a predict-update cycle to fuse noisy sensor measurements
-      over time. Foundation of IMU+GNSS fusion and the state-update step
-      inside SORT and DeepSORT. :doc:`L3 </lectures/lecture3/l3_index>` · :doc:`L6 </lectures/lecture6/l6_index>` · :doc:`L7 </lectures/lecture7/l7_index>`
+      A recursive estimator: it keeps only an estimate and its
+      covariance :math:`P`, and repeats two steps. Predict with a motion
+      model (:math:`P` grows), then update with a measurement (:math:`P`
+      shrinks). When the models are linear and the noise is Gaussian, no
+      other estimator has a smaller expected squared error (Kalman,
+      1960). Foundation of IMU and GNSS fusion and the state-update step
+      inside SORT and DeepSORT. :doc:`L3 </lectures/lecture3/l3_index>`
+      · :doc:`L6 </lectures/lecture6/l6_index>` ·
+      :doc:`L7 </lectures/lecture7/l7_index>`
 
    Kalman Gain
-      The blending factor in the Kalman Filter that determines how much
-      weight to give to the new measurement vs. the prediction. High
-      trust in sensor = high gain; high trust in prediction = low gain. :doc:`L3 </lectures/lecture3/l3_index>`
+      :math:`K`, the fraction of the surprise the filter acts on: the
+      update moves the estimate by :math:`K` times the surprise. It is
+      computed from the two uncertainties, not chosen: with one number,
+      :math:`K =
+      \sigma_\text{pred}^2 / (\sigma_\text{pred}^2 + \sigma_\text{meas}^2)`.
+      A prediction with :math:`\sigma = 2` m and a sign match with
+      :math:`\sigma = 1` m give :math:`K = 0.8`: follow the sign match.
+      A precise measurement pushes :math:`K` toward 1, an imprecise one
+      toward 0. :doc:`L3 </lectures/lecture3/l3_index>`
 
 
 .. _glossary-l:
@@ -998,8 +1081,7 @@ L
       Combining finished per-sensor results such as tracks, object lists
       or pose estimates. Modular, testable and robust to a failed
       sensor, but information is discarded before the combination
-      happens. This is what GP3 uses. :doc:`L3
-      </lectures/lecture3/l3_index>`
+      happens. This is what GP3 uses. :doc:`L6 </lectures/lecture6/l6_index>`
 
    Lattice Planner
       A motion planning approach that performs graph search on a
@@ -1022,6 +1104,24 @@ L
       NeurIPS 2020) that predicts per-pixel depth distributions (Lift),
       projects features into a voxel grid (Splat), and collapses to BEV
       (Shoot). Fully differentiable end-to-end. :doc:`L5 </lectures/lecture5/l5_index>`
+
+   Likelihood
+      :math:`p(\mathbf{z} \mid \mathbf{x})`: how likely the reading
+      :math:`\mathbf{z}` is, if the AV were at :math:`\mathbf{x}`. The
+      particle filter weighs each particle by it. For one sign match
+      with noise :math:`\sigma`, it is
+      :math:`\exp(-(\mathbf{z} - h(\mathbf{x}))^2 / 2\sigma^2)`.
+      :doc:`L3 </lectures/lecture3/l3_index>`
+
+   Linearization
+      Replacing a curved model by a straight line, its tangent at the
+      current estimate, so that the Kalman equations apply. The EKF
+      linearizes :math:`f` and :math:`h` at every step through their
+      Jacobians. It is accurate only near the point of contact: in L3's
+      range-to-a-landmark example, a poor estimate (:math:`\hat{x} = 10`
+      m, AV at 16 m) gives a tangent that is too steep, and the
+      correction lands at 14.77 m, 1.23 m short.
+      :doc:`L3 </lectures/lecture3/l3_index>`
 
    LOAM
       LiDAR Odometry and Mapping. A foundational LiDAR SLAM system that
@@ -1055,7 +1155,8 @@ M
    Mahalanobis Distance
       A distance metric that accounts for the covariance (uncertainty)
       of a distribution. Used in data association to determine whether a
-      measurement is statistically consistent with a predicted track state. :doc:`L3 </lectures/lecture3/l3_index>`
+      measurement is statistically consistent with a predicted track
+      state. :doc:`L6 </lectures/lecture6/l6_index>`
 
    mAP
       Mean Average Precision. The primary metric for evaluating object
@@ -1077,15 +1178,29 @@ M
       The average of a set of readings, written with the Greek letter
       mu. :doc:`L3 </lectures/lecture3/l3_index>`
 
+   Measurement Model
+      The rule that predicts what a sensor should read, given the state
+      at the same instant: :math:`\mathbf{z} = H\mathbf{x} + \mathbf{v}`
+      in the Kalman filter,
+      :math:`\mathbf{z} = h(\mathbf{x}) + \mathbf{v}` in the EKF. In the
+      L3 tunnel, :math:`H` keeps the position and drops the velocity,
+      which the sign match cannot see. No sensor is exact, so it comes
+      with an error :math:`\mathbf{v}`.
+      :doc:`L3 </lectures/lecture3/l3_index>`
+
    Measurement Noise
-      The random error in a sensor reading, with covariance R. Usually
-      measurable, by pointing the sensor at a known target and examining
-      the spread. :doc:`L3 </lectures/lecture3/l3_index>`
+      The random error :math:`\mathbf{v}` in a sensor reading, with
+      covariance :math:`R`. Measured (by pointing the sensor at a known
+      target and examining the spread), taken from the datasheet, or
+      set, never guessed. For the L3 sign match we chose
+      :math:`\sigma = 1` m, so :math:`R = 1` m².
+      :doc:`L3 </lectures/lecture3/l3_index>`
 
    MHT
       Multiple Hypothesis Tracking. A data association method that
-      maintains a tree of hypotheses for measurement-to-track assignments,
-      deferring hard decisions to resolve ambiguity over time. :doc:`L3 </lectures/lecture3/l3_index>` · :doc:`L6 </lectures/lecture6/l6_index>`
+      maintains a tree of hypotheses for measurement-to-track
+      assignments, deferring hard decisions to resolve ambiguity over
+      time. :doc:`L6 </lectures/lecture6/l6_index>`
 
    Modality
       A kind of sensing rather than a piece of hardware. Two cameras are
@@ -1097,12 +1212,21 @@ M
       The rule that promotes a tentative track to confirmed, requiring M
       detections within N frames. It stops clutter from being reported
       as a real object, at the cost of a short delay before a genuine
-      object is confirmed. :doc:`L3 </lectures/lecture3/l3_index>`
+      object is confirmed. :doc:`L6 </lectures/lecture6/l6_index>`
 
    MOTA
       Multi-Object Tracking Accuracy. A tracking metric computed as
       :math:`1 - (FN + FP + IDSW) / GT`, penalizing false negatives,
       false positives, and identity switches. Range: :math:`(-\infty, 1]`. :doc:`L6 </lectures/lecture6/l6_index>`
+
+   Motion Model
+      The rule that predicts the next state from the current one, using
+      only how the AV moves: :math:`\mathbf{x}_k = F\mathbf{x}_{k-1} +
+      B\mathbf{u}_k + \mathbf{w}` in the Kalman filter,
+      :math:`f(\mathbf{x}_{k-1}, \mathbf{u}) + \mathbf{w}` in the EKF.
+      It does not look at the world (no camera, no sign match). No rule
+      is perfect, so it comes with an error :math:`\mathbf{w}`, whose
+      size is :math:`Q`. :doc:`L3 </lectures/lecture3/l3_index>`
 
    MOTP
       Multi-Object Tracking Precision. The average overlap (IoU) between
@@ -1143,10 +1267,9 @@ M
    Multipath
       A GNSS error in which the signal arrives by a reflected path
       rather than directly, so the receiver places the vehicle several
-      metres from its true position. The fix arrives on time and looks
+      meters from its true position. The fix arrives on time and looks
       entirely normal, which makes it more dangerous than a lost fix.
-      :doc:`L2 </lectures/lecture2/l2_index>` · :doc:`L3
-      </lectures/lecture3/l3_index>`
+      :doc:`L2 </lectures/lecture2/l2_index>`
 
 .. _glossary-n:
 
@@ -1172,11 +1295,17 @@ N
       for large-scale matching. :doc:`L7 </lectures/lecture7/l7_index>`
 
    NIS
-      Normalised Innovation Squared. The innovation weighted by the
-      inverse of its expected covariance. It should follow a chi-square
-      distribution if the filter is consistent. Persistently above the
-      expected range means the filter is overconfident. :doc:`L3
-      </lectures/lecture3/l3_index>`
+      Normalized innovation squared,
+      :math:`\varepsilon = \nu^\top S^{-1} \nu`: the actual surprise
+      over the size the filter expected. If the filter is honest, it
+      averages about 1 per number the sensor reports and follows a
+      chi-square distribution with :math:`m` degrees of freedom. In the
+      L3 tunnel, 19 sign matches average 1.39 per match against an
+      expected 2; by chance the average of 19 lands anywhere from 1.2 to
+      3.0, so the filter is honest. Persistently above the band means
+      overconfident (:math:`Q` or :math:`R` too small); below means
+      underconfident. No ground truth needed.
+      :doc:`L3 </lectures/lecture3/l3_index>`
 
    NMS
       Non-Maximum Suppression. A post-processing step that removes
@@ -1184,10 +1313,11 @@ N
       with lower confidence. Not needed in DETR. :doc:`L4 </lectures/lecture4/l4_index>`
 
    Noise
-      Random error that scatters readings around a centre and averages
-      away as more readings are taken. Described by variance. Contrast
-      with bias, which does not average away. :doc:`L3
-      </lectures/lecture3/l3_index>`
+      Random error that scatters readings around a center and averages
+      away as more readings are taken: the average of :math:`n` readings
+      wanders by about :math:`\sigma/\sqrt{n}`. Described by variance.
+      Contrast with bias, which does not average away.
+      :doc:`L3 </lectures/lecture3/l3_index>`
 
    Nonholonomic Constraint
       A motion constraint that limits achievable velocities but not the
@@ -1266,6 +1396,16 @@ O
       :term:`OpenDRIVE`, which describes the road itself. Makes a scenario
       portable between simulators. :doc:`L13 </lectures/lecture13/l13_index>`
 
+   Overconfident
+      Said of a filter whose reported uncertainty is smaller than the
+      errors it actually makes. In the L3 tunnel hands-on, :math:`Q` far
+      too small (:math:`\sigma_a = 0.01`, against the 0.5 m/s² we chose)
+      keeps the true error inside the :math:`\pm 1\sigma` band only 25
+      percent of the time instead of about 68, with an RMS error of 5.46
+      m instead of 1.06 m. Dangerous, because nothing in the system
+      detects it. See Underconfident.
+      :doc:`L3 </lectures/lecture3/l3_index>`
+
 .. _glossary-p:
 
 P
@@ -1283,10 +1423,20 @@ P
       "stuff" like road, sky) with instance segmentation (identifying
       individual "things" like cars, pedestrians). :doc:`L5 </lectures/lecture5/l5_index>`
 
+   Particle
+      One guess at the state, with a weight. Thousands of them together
+      are the particle filter's belief.
+      :doc:`L3 </lectures/lecture3/l3_index>`
+
    Particle Filter
-      A non-parametric filter that approximates probability distributions
-      using a set of weighted random samples (particles). Can handle
-      arbitrary non-linear and non-Gaussian systems. :doc:`L3 </lectures/lecture3/l3_index>` · :doc:`L7 </lectures/lecture7/l7_index>`
+      An alternative to the Kalman filter that stores the belief as a
+      crowd of weighted guesses (particles) instead of one bell curve,
+      so the belief can be in several places at once. Each cycle:
+      predict (move every particle with :math:`f` and its own noise),
+      weigh (by the likelihood), and resample. Use it when the belief
+      has several peaks and the state is small; it scales badly as the
+      state grows. :doc:`L3 </lectures/lecture3/l3_index>` ·
+      :doc:`L7 </lectures/lecture7/l7_index>`
 
    Perception
       The process by which an autonomous system transforms unstructured
@@ -1320,17 +1470,35 @@ P
       The fraction of detections that are correct: TP / (TP + FP).
       High precision means few false positives. :doc:`L4 </lectures/lecture4/l4_index>`
 
+   Precision (Measurement)
+      How closely repeated readings agree (VIM 2.15): the word for
+      noise. Not the detection metric of L4. See Trueness and Accuracy.
+      :doc:`L3 </lectures/lecture3/l3_index>`
+
+   Predict Step
+      The first half of every filter cycle: move the estimate forward
+      one step with the motion model,
+      :math:`\hat{\mathbf{x}}^- = F\hat{\mathbf{x}} + B\mathbf{u}` and
+      :math:`P^- = FPF^\top + Q`, before any measurement arrives.
+      :math:`P` always grows here. In the L3 tunnel, 22 predict steps
+      with no sign match take the position :math:`\sigma` along the
+      tunnel from 0.81 to 1.35 m, mostly through :math:`FPF^\top`.
+      :doc:`L3 </lectures/lecture3/l3_index>`
+
    PRM
       Probabilistic Road Map. A multi-query sampling-based planner that
       pre-computes a graph of collision-free configurations connected by
       feasible paths, then searches this graph for start-to-goal queries. :doc:`L10 </lectures/lecture10/l10_index>`
 
    Process Noise
-      How wrong the motion model is, with covariance Q. It cannot be
+      How wrong the motion model's prediction can be: the covariance
+      :math:`Q` of the process error :math:`\mathbf{w}`. It cannot be
       measured the way measurement noise can, because it describes the
-      inadequacy of your own model. It is tuned, and it is the usual
-      cause of an overconfident filter. :doc:`L3
-      </lectures/lecture3/l3_index>`
+      inadequacy of your own model: it is chosen, then tuned. In the L3
+      tunnel it is built from :math:`\sigma_a = 0.5` m/s² (we chose it),
+      the acceleration the IMU gets wrong. Too small a :math:`Q` is the
+      usual cause of an overconfident filter.
+      :doc:`L3 </lectures/lecture3/l3_index>`
 
    Pure Pursuit
       A geometric path-following controller that steers the vehicle toward
@@ -1407,6 +1575,14 @@ R
       The distance (in pixels) between a known 3D point projected onto
       the image using calibrated parameters and its actual observed
       position. Used to validate calibration quality; should be < 2 px. :doc:`L2 </lectures/lecture2/l2_index>`
+
+   Resampling
+      The particle filter's last step in each cycle: draw :math:`N` new
+      particles, each old particle :math:`i` with probability
+      :math:`w^{(i)}`, and reset every weight to :math:`1/N`. Heavy
+      particles are copied and light ones die out. The L3 script
+      resamples only when the effective number of particles falls below
+      :math:`N/2`. :doc:`L3 </lectures/lecture3/l3_index>`
 
    ResNet
       Residual Network. A CNN architecture (He et al., 2016) that
@@ -1500,10 +1676,21 @@ S
       </lectures/lecture3/l3_index>`
 
    Sigma Points
-      The set of sample points a UKF chooses so that they reproduce the
-      current mean and covariance exactly. They are pushed through the
-      true nonlinear function, which avoids computing any Jacobian.
+      :math:`2n+1` points (:math:`n` is the size of the state) whose
+      weighted average is the mean and whose weighted spread is the
+      covariance (Julier and Uhlmann, 1997). The UKF pushes each through
+      the real nonlinear function and rebuilds the mean and covariance
+      from where they land, so it needs no Jacobian. For the state
+      :math:`[x, y, \theta]` that is 7 runs of the model per step.
       :doc:`L3 </lectures/lecture3/l3_index>`
+
+   Sign Match
+      The measurement in L3's tunnel, where GNSS is lost: the camera
+      matches an exit sign against the HD map, and the map turns "I see
+      an exit sign" into a position for the AV. Each exit sign carries
+      its own number, so a match says which sign. In the Kalman filter
+      it reports position (:math:`x` and :math:`y`); in the EKF, range
+      and bearing to the sign. :doc:`L3 </lectures/lecture3/l3_index>`
 
    Sim-to-Real Gap
       The distributional mismatch between simulation-generated data and
@@ -1535,9 +1722,10 @@ S
 
    Standard Deviation
       The square root of the variance, written with the Greek letter
-      sigma, expressed in the same units as the measurement. The usual
-      way to quote an uncertainty. :doc:`L3
-      </lectures/lecture3/l3_index>`
+      sigma: how far a typical reading sits from the mean, in the same
+      units as the measurement. The usual way to quote an uncertainty.
+      For L3's six GNSS readings, :math:`\sigma_x = \sqrt{2.437} = 1.56`
+      m along the road. :doc:`L3 </lectures/lecture3/l3_index>`
 
    Stanley Controller
       A lateral path-following controller (developed for the DARPA Grand
@@ -1546,14 +1734,22 @@ S
       correction than Pure Pursuit at high cross-track errors. :doc:`L11 </lectures/lecture11/l11_index>`
 
    State Vector
-      The list of quantities a filter estimates, written in bold. It
-      includes quantities no sensor reports directly, such as velocity,
-      because the motion model needs them and the filter can infer them.
-      :doc:`L3 </lectures/lecture3/l3_index>`
+      The state: the list of numbers that describes the AV at one
+      moment, written in bold, such as :math:`[p_x\ p_y\ v_x\ v_y]^\top`
+      in the L3 tunnel or :math:`[x, y, \theta]` in the EKF. It must
+      hold everything the motion model needs, including quantities no
+      sensor reports directly, such as velocity, which the filter
+      infers. :doc:`L3 </lectures/lecture3/l3_index>`
 
    Stereo Vision
       Depth estimation using two cameras separated by a known baseline.
       Computes depth from the disparity between left and right images. :doc:`L2 </lectures/lecture2/l2_index>`
+
+   Surprise
+      L3's plain name for the innovation :math:`\nu`: the reading we got
+      minus the reading we expected. The Kalman gain sets what fraction
+      of it the update acts on. See Innovation.
+      :doc:`L3 </lectures/lecture3/l3_index>`
 
    Systematic Error
       See Bias. :doc:`L3 </lectures/lecture3/l3_index>`
@@ -1590,8 +1786,7 @@ T
    Track Lifecycle
       The states a track passes through: tentative, confirmed, coasting
       and deleted. Track identity must not depend on classification,
-      which is the architectural lesson of the Tempe crash. :doc:`L3
-      </lectures/lecture3/l3_index>`
+      which is the architectural lesson of the Tempe crash. :doc:`L6 </lectures/lecture6/l6_index>`
 
    Tracking-by-Detection
       The dominant MOT paradigm: at each frame, run an object detector,
@@ -1623,6 +1818,12 @@ T
       positions in a sequence simultaneously. Used in DETR, BEVFormer,
       and modern AV perception. :doc:`L4 </lectures/lecture4/l4_index>` · :doc:`L5 </lectures/lecture5/l5_index>`
 
+   Trueness
+      How close the average of repeated readings sits to the truth (VIM
+      2.14): the word for bias. In L3, receivers A and B scatter by the
+      same 1.561 m, but B's average sits 3.2 m ahead: same precision,
+      worse trueness. :doc:`L3 </lectures/lecture3/l3_index>`
+
 
 .. _glossary-u:
 
@@ -1632,17 +1833,26 @@ U
 .. glossary::
 
    UKF
-      Unscented Kalman Filter. A non-linear filter that uses
-      deterministic "sigma points" passed through the true non-linear
-      function, avoiding the need for Jacobian matrices. :doc:`L3 </lectures/lecture3/l3_index>`
+      Unscented Kalman Filter. An alternative to the EKF that uses
+      deterministic sigma points passed through the true nonlinear
+      function, avoiding the need for Jacobian matrices. See Unscented
+      Kalman Filter. :doc:`L3 </lectures/lecture3/l3_index>`
 
    Uncertainty
       A number attached to an estimate saying how far the truth could
       plausibly be from it. Formally, VIM clause 2.26 defines
-      measurement uncertainty as a non-negative parameter characterising
+      measurement uncertainty as a non-negative parameter characterizing
       the spread of values that could reasonably be attributed to the
       quantity being measured. Usually expressed as a standard
       deviation. :doc:`L3 </lectures/lecture3/l3_index>`
+
+   Underconfident
+      Said of a filter whose reported uncertainty is larger than the
+      errors it actually makes. In the L3 tunnel hands-on, :math:`Q` too
+      big (:math:`\sigma_a = 3`) keeps the true error inside the
+      :math:`\pm 1\sigma` band 84 percent of the time instead of the
+      honest 68 percent. Wasteful, but safe. See Overconfident.
+      :doc:`L3 </lectures/lecture3/l3_index>`
 
    U-Net
       An encoder-decoder segmentation architecture (Ronneberger et al.,
@@ -1668,17 +1878,18 @@ U
       planning-oriented task design. :doc:`L12 </lectures/lecture12/l12_index>`
 
    Unscented Kalman Filter
-      UKF. A filter for nonlinear models that propagates sigma points
-      through the true function instead of linearising it. It needs no
-      Jacobians, which removes a class of silent bugs, and it is more
-      accurate than the EKF when the covariance is wide. :doc:`L3
-      </lectures/lecture3/l3_index>`
+      UKF. A Kalman filter for curved models that needs no tangents: it
+      pushes :math:`2n+1` sigma points through the real function and
+      rebuilds the mean and covariance from where they land. The
+      alternative to the EKF when the model curves hard across the
+      uncertainty, or exists only as code with no Jacobian. It needs no
+      Jacobians, which removes a class of silent bugs.
+      :doc:`L3 </lectures/lecture3/l3_index>`
 
    Urban Canyon
       A street lined with tall buildings, where GNSS suffers both
       blockage, which is the honest failure, and multipath, which is
-      not. :doc:`L2 </lectures/lecture2/l2_index>` · :doc:`L3
-      </lectures/lecture3/l3_index>`
+      not. :doc:`L2 </lectures/lecture2/l2_index>`
 
 .. _glossary-v:
 
@@ -1688,11 +1899,12 @@ V
 .. glossary::
 
    Variance
-      How spread out a set of measurements is: the average of the
-      squared distances from the mean. Squaring removes the sign and
-      weights large errors more heavily. The result is in squared units,
-      so the square root is usually quoted instead. :doc:`L3
-      </lectures/lecture3/l3_index>`
+      How spread out a set of readings is: the average of the squared
+      distances from the mean. Squaring removes the sign (the plain
+      distances add up to zero) and weights large errors more heavily.
+      The result is in squared units (L3's six GNSS readings give 2.437
+      m² along the road), so its square root, the standard deviation, is
+      usually quoted instead. :doc:`L3 </lectures/lecture3/l3_index>`
 
    VIM
       International Vocabulary of Metrology, JCGM 200:2012. The source
@@ -1801,8 +2013,7 @@ Z
       stationary world, so that the vehicle does not brake for manhole
       covers and sign gantries. A stopped vehicle in your lane fails
       exactly the same test, which is implicated in real crashes.
-      :doc:`L2 </lectures/lecture2/l2_index>` · :doc:`L3
-      </lectures/lecture3/l3_index>`
+      :doc:`L2 </lectures/lecture2/l2_index>`
 
    Zhang's Method
       The standard technique for camera intrinsic calibration:
