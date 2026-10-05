@@ -2120,6 +2120,10 @@ in every row.
    first match: the EKF's tangent misses, and the UKF's points do not. This is
    the rule from the EKF-or-UKF table, now with numbers.
 
+   The exact belief is itself 4,000 simulated AVs, so its own mean wanders by a
+   few centimeters: read the UKF column as "within a few hundredths, at most
+   0.1 m".
+
 
 Particle Filter in Detail
 -------------------------
@@ -2559,7 +2563,7 @@ explains the whole sequence.
 .. admonition:: What to look for
    :class: tip
 
-   - **The crowd:** 23 clusters, one per light; 17 as the first lights rule
+   - **The crowd:** 23 clusters, one per light; 18 as the first lights rule
      places out; 4 after the first niche; one by 21 s.
    - **The orange average** sits in empty tunnel between clusters until the
      crowd is in one place.
