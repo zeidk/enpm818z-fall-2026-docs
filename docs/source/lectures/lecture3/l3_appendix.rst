@@ -2190,6 +2190,56 @@ lights".
    to thousands, and together they *are* the belief: dense where the filter
    thinks the AV is, empty where it does not. No ellipse anywhere.
 
+The Particle Filter Fits No Bell Curve at All
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The same curve again, 20 m driven with heading :math:`30 \pm 12°`, done by the
+UKF and by a particle filter.
+
+.. figure:: /_static/images/L3/bell_4_ukf.png
+   :alt: The UKF panel: three green sigma points on the input bell, at 9.2, 30 and 50.8 degrees, pushed through the curve 20 cos theta, and a green bell fitted to their landing spots, centered on 16.94 m, over the gray lopsided histogram of the true output.
+   :width: 60%
+   :align: center
+
+   **UKF:** a few **chosen** points go through the real curve, then a bell
+   curve is fitted to where they land. The mean came out right, but the
+   output is still forced into a bell curve.
+
+.. figure:: /_static/images/L3/bell_5_pf.png
+   :alt: The particle filter panel: 200 blue dots drawn at random from the input bell, pushed through the same curve, landing in the gray lopsided histogram of the true output, piled up just under 20 m with a tail below. No bell is fitted. Mean 16.82 m, true 16.95 m.
+   :width: 60%
+   :align: center
+
+   **Particle filter:** 200 **random** points from the input belief go through
+   the same real curve. They fill the lopsided shape, piled up just under 20 m
+   with a tail below. No bell curve is fitted: the dots **are** the belief.
+
+The particles' mean is 16.82 m; the true value is 16.95 m. Two hundred random
+points give a slightly noisy answer, and more points give less noise. That is
+the price of random points. The gain: the crowd can take any shape, even two
+separate clumps.
+
+When the Answer Is One of Two Places
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Recall: a **belief** is which states are possible, and how likely each one
+is. A Kalman filter, an EKF and a UKF all store it as one bell curve, with one
+peak. But a belief can have two peaks, or three, or twenty.
+
+**Back in the tunnel:** the lights are identical, one every 25 m. The camera
+matches a light against the HD map, and **the match fits every light**
+equally well. If the AV has no idea where it is, that one match gives a peak
+under every light in the tunnel.
+
+.. important::
+
+   One bell curve has one center, so it puts the AV **between two lights**:
+   the one place the camera says it is not. It even reports a
+   reasonable-looking covariance, because nothing in the equations knows
+   anything went wrong.
+
+So we drop the bell curve and let the crowd be in two places at once.
+
 One Cycle: Predict, Weigh, Resample
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -2242,56 +2292,6 @@ the same job with a thousandth of the work.
 
    Monte Carlo Localization (Dellaert et al., 1999), this filter used on a
    real map, is :doc:`L7 <../lecture7/l7_index>`.
-
-The Particle Filter Fits No Bell Curve at All
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The same curve again, 20 m driven with heading :math:`30 \pm 12°`, done by the
-UKF and by a particle filter.
-
-.. figure:: /_static/images/L3/bell_4_ukf.png
-   :alt: The UKF panel: three green sigma points on the input bell, at 9.2, 30 and 50.8 degrees, pushed through the curve 20 cos theta, and a green bell fitted to their landing spots, centered on 16.94 m, over the gray lopsided histogram of the true output.
-   :width: 60%
-   :align: center
-
-   **UKF:** a few **chosen** points go through the real curve, then a bell
-   curve is fitted to where they land. The mean came out right, but the
-   output is still forced into a bell curve.
-
-.. figure:: /_static/images/L3/bell_5_pf.png
-   :alt: The particle filter panel: 200 blue dots drawn at random from the input bell, pushed through the same curve, landing in the gray lopsided histogram of the true output, piled up just under 20 m with a tail below. No bell is fitted. Mean 16.82 m, true 16.95 m.
-   :width: 60%
-   :align: center
-
-   **Particle filter:** 200 **random** points from the input belief go through
-   the same real curve. They fill the lopsided shape, piled up just under 20 m
-   with a tail below. No bell curve is fitted: the dots **are** the belief.
-
-The particles' mean is 16.82 m; the true value is 16.95 m. Two hundred random
-points give a slightly noisy answer, and more points give less noise. That is
-the price of random points. The gain: the crowd can take any shape, even two
-separate clumps.
-
-When the Answer Is One of Two Places
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Recall: a **belief** is which states are possible, and how likely each one
-is. A Kalman filter, an EKF and a UKF all store it as one bell curve, with one
-peak. But a belief can have two peaks, or three, or twenty.
-
-**Back in the tunnel:** the lights are identical, one every 25 m. The camera
-matches a light against the HD map, and **the match fits every light**
-equally well. If the AV has no idea where it is, that one match gives a peak
-under every light in the tunnel.
-
-.. important::
-
-   One bell curve has one center, so it puts the AV **between two lights**:
-   the one place the camera says it is not. It even reports a
-   reasonable-looking covariance, because nothing in the equations knows
-   anything went wrong.
-
-So we drop the bell curve and let the crowd be in two places at once.
 
 The Three Steps as Equations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
