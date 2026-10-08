@@ -2,11 +2,12 @@
 Code
 ====================================================
 
-The L5 hands-on is three ROS 2 packages in
+The L5 hands-on is four ROS 2 packages in
 `enpm818z-fall-2026-carla-ros
 <https://github.com/rubixcubic/enpm818z-fall-2026-carla-ros>`_:
 ``l5_bev_demo`` for the BEV and Occupancy section, ``l5_box_demo`` for the 3D
-Detection section (:ref:`below <l5-box-demo>`), and ``l5_tracking_demo`` for
+Detection section (:ref:`below <l5-box-demo>`), ``l5_seg_demo`` for the
+Segmentation section (:ref:`below <l5-seg-demo>`), and ``l5_tracking_demo`` for
 the Tracking section (:ref:`below <l5-tracking-demo>`).
 
 ``l5_bev_demo`` builds
@@ -285,6 +286,157 @@ not change in a consistent way (72, 83, 78 against 75, 80, 65).
 The package README has five tasks: car B by hand, the closeness score against
 :math:`\theta`, the heading ambiguity, split clusters with a larger
 ``cell_size``, and tracking the boxes.
+
+
+.. _l5-seg-demo:
+
+Segmentation: ``l5_seg_demo``
+-----------------------------
+
+Semantic segmentation gives a class to every pixel: road, sidewalk, car, sky.
+On an AV a trained network computes the classes from the camera image, every
+frame; in CARLA a semantic segmentation camera writes the true class of every
+pixel. ``l5_seg_demo`` does both on the L2 bridge's front camera
+(1280 :math:`\times` 720) and compares them pixel by pixel.
+
+.. figure:: /_static/images/L5/l5_seg_snapshot.png
+   :alt: Four panels of one moment in CARLA, seen from the AV's front camera on a street lined with palm trees. Panel 1, the camera image: a black car close on the left in the next lane, a curving road with a double yellow center line, a sidewalk and bus shelter on the right, buildings on the left and far ahead, a pale sky. Panel 2, the network's classes: the road purple, the black car dark blue, the sidewalk pink, trees olive, buildings dark gray, the sky blue; the palm trees are thick blobs, and a building-colored patch covers part of the sky on the right. Panel 3, CARLA's true classes: the same scene with sharp outlines, the lane markings in bright green, every palm frond and lamp pole drawn, the bus shelter and small props in teal. Panel 4, where panels 2 and 3 agree: mostly green; red along the outlines of the palm trees, the poles and the car's edges, a large red patch in the sky at the top right, a red strip along the curb; light gray where the pixel is not graded, on the bus shelter, signs and props. A legend at the bottom names each class color and agree, differ and not graded.
+   :align: center
+   :width: 100%
+
+   One moment, saved by the package's ``snapshot`` tool (CARLA 0.9.16,
+   Town10HD). On this frame the network agrees with CARLA on 89.75 percent of
+   the graded pixels, mIoU 0.392; the close car has an IoU of 0.925. It misses
+   the thin objects (poles, palm fronds), calls part of the sky building, and
+   paints the lane markings road: its training labels have no lane-marking
+   class.
+
+.. code-block:: bash
+
+   python3 -m pip install --user --break-system-packages transformers   # once
+
+   cd ~/enpm818z_ws
+   colcon build --symlink-install \
+     --packages-select l2_carla_demo l5_tracking_demo l5_seg_demo
+   source install/setup.bash
+
+   ros2 launch l2_carla_demo demo.launch.py rviz:=false      # terminal 1
+   ros2 run l5_tracking_demo spawn_traffic                    # terminal 2: 40 vehicles
+   ros2 launch l5_seg_demo seg.launch.py evaluate:=true       # terminal 3
+   ros2 run l5_seg_demo snapshot --ros-args -p out:=seg.png -p skip:=20
+
+   # also YOLOv8s-seg's instance masks, as on the reading slides
+   ros2 launch l5_seg_demo seg.launch.py instances:=true
+
+**The network.** SegFormer-B0 trained on Cityscapes (Hugging Face model
+``nvidia/segformer-b0-finetuned-cityscapes-1024-1024``; E. Xie et al.,
+"SegFormer: Simple and Efficient Design for Semantic Segmentation with
+Transformers", NeurIPS 2021): a Transformer encoder, attention between image
+patches as in L4's ViT, then a small decoder that gives 19 scores per pixel,
+one per class. Its weights were set by training, on photos of German streets,
+not on CARLA. The first run downloads them (15 MB) into
+``~/.cache/enpm818z-weights/huggingface``. They are licensed for research or
+evaluation only (NVIDIA Source Code License for SegFormer, section 3.3).
+
+**The answer key.** The bridge has no semantic camera, so ``seg_truth``
+attaches one to the AV at the same place as the bridge's front camera, with the
+same size and field of view; it logs the check (0.00 mm apart in every run).
+Both cameras fire on the same tick, so their images carry the same time stamp,
+and ``seg_eval`` grades only pairs from the same tick.
+
+**The grade.** For each class :math:`c`, summed over every graded pixel of
+every paired frame: TP (true positive), truth :math:`c` and network :math:`c`;
+FP (false positive), network :math:`c` but truth not; FN (false negative),
+truth :math:`c` but network not. Then
+
+.. math::
+
+   \mathrm{IoU}(c) = \frac{TP}{TP + FP + FN},
+
+the pixels both call :math:`c` divided by the pixels either calls :math:`c`.
+mIoU is the mean over the classes CARLA showed during the run.
+
+**Two class lists.** CARLA 0.9.16's tags 1 to 19 are the 19 Cityscapes classes
+in the same order and colors, so the network's class :math:`t` is CARLA's tag
+:math:`t + 1`. CARLA's lane markings (tag 24) are graded as road: Cityscapes'
+road includes "the markings on the road", so **this network cannot find lane
+lines**. In every run it called 99.6 to 99.9 percent of CARLA's lane-marking
+pixels road. CARLA's other tags (static, dynamic, other, water, ground,
+bridge, rail track, guard rail, unlabeled) are not graded.
+
+Segmentation results
+~~~~~~~~~~~~~~~~~~~~
+
+Course laptop (RTX 4060 laptop GPU), CARLA 0.9.16 on the same GPU, Town10HD,
+39 or 40 vehicles, no pedestrians, three runs of about 120 s. One 1280
+:math:`\times` 720 image takes 19.6 ms in float16 on an idle GPU (34.2 ms in
+float32) and 29 to 34 ms in the node with CARLA rendering. The node grades 3
+to 11 frames per second: most of the bridge's 3.7 MB images, sent with
+best-effort delivery, never arrive (43 to 46 of 160 in an 8 s test).
+
+.. list-table::
+   :widths: 40 20 20 20
+   :header-rows: 1
+   :class: compact-table
+
+   * - **IoU, summed over the run**
+     - **run 1**
+     - **run 2**
+     - **run 3**
+   * - frames graded
+     - 795
+     - 875
+     - 504
+   * - **mIoU**
+     - **0.408**
+     - **0.339**
+     - **0.390**
+   * - road (with lane markings)
+     - 0.988
+     - 0.962
+     - 0.989
+   * - building
+     - 0.885
+     - 0.876
+     - 0.886
+   * - sky
+     - 0.847
+     - 0.858
+     - 0.847
+   * - vegetation
+     - 0.778
+     - 0.696
+     - 0.778
+   * - sidewalk
+     - 0.547
+     - 0.600
+     - 0.563
+   * - car
+     - 0.506
+     - 0.395
+     - 0.396
+   * - pole
+     - 0.130
+     - 0.259
+     - 0.128
+   * - traffic light
+     - 0.048
+     - 0.122
+     - 0.049
+
+Runs 1 and 3 drove the same route. Big, flat classes score above 0.7. The
+network finds cars (92 percent of the true car pixels in run 3) but draws them
+too big, so the car IoU stays near 0.4 to 0.5. Thin objects fail: in run 3 it
+called 62 percent of the pole pixels and 80 percent of the traffic-light
+pixels building. The network was trained on real streets and tested on a
+rendered town; this gap is why AV teams test on their own data.
+
+``l5_bev_demo`` can splat this network's classes instead of CARLA's:
+``ros2 launch l5_bev_demo bev.launch.py labels:=network``. The lane lines then
+disappear from the grid seen from above.
+
+The package README has six tasks: the class map, IoU by hand, summed against
+averaged IoU, thin objects, float16, and the network's classes from above.
 
 
 .. _l5-tracking-demo:
