@@ -185,8 +185,20 @@ talks to CARLA, and it never ticks: the bridge owns the clock.
    cd ~/enpm818z_ws
    colcon build --symlink-install --packages-select l2_carla_demo l3_ekf_demo
    source install/setup.bash
-   ros2 launch l2_carla_demo demo.launch.py rviz:=false     # terminal 1
+   ros2 launch l2_carla_demo demo.launch.py rviz:=false gnss_noise_m:=1.5  # terminal 1
    ros2 launch l3_ekf_demo ekf.launch.py                    # terminal 2
+
+**Launch the bridge with** ``gnss_noise_m:=1.5`` **for this hands-on.** CARLA's
+GNSS noise settings are all 0 by default: over a 90 s drive, the fixes minus
+the truth had a standard deviation of 1.1 cm in x and 1.2 cm in y. The
+filter's R assumes 1.5 m, so with the default bridge the NIS averaged 0.01 and
+the check could only say "underconfident". ``gnss_noise_m:=1.5`` makes the
+bridge's receiver add 1.5 m of noise per axis, the value of R. Over another
+90 s drive the standard deviation was then 1.48 m in x and 1.49 m in y, the
+NIS averaged 1.93, 95 percent of it fell inside the band, and the verdict was
+consistent. The bridge converts meters to degrees with
+CARLA's own map geolocation (1.5 m is 1.348e-5 degrees on Town10HD). Leave the
+argument out for the other lectures: its default, 0, keeps the bridge as it was.
 
 **Launch arguments:** ``log_csv`` (``l3_log.csv``), ``rviz`` (true),
 ``role_name`` (``ego``, the name the L2 bridge gives its vehicle). The launch
@@ -215,13 +227,17 @@ and the estimate in blue with its covariance ellipse.
        IMU's heading, drives predict; GNSS drives update. CARLA's GNSS is
        mirrored (latitude grows with CARLA's :math:`+y`, which is south), so
        the node flips north before the update. Publishes
-       ``/l3/ekf/odometry`` (with the covariance) and ``/l3/ekf/nis``. Every 10 s it reports the percent of NIS values inside
-       the 95 percent band; after 10 rejected fixes in a row it reports the
-       filter unhealthy.
+       ``/l3/ekf/odometry`` (with the covariance) and ``/l3/ekf/nis``. Every 10 s it reports the mean NIS
+       and the percent of NIS values inside the 95 percent band, and a
+       verdict: consistent when at least 85 percent are inside; otherwise
+       overconfident when the mean is above its expected value, 2 (the
+       ``nis_dof``), and underconfident when it is below. After 10 rejected
+       fixes in a row it reports the filter unhealthy.
    * - ``plot_nis``
      - Not a node: Task 3's plot of the NIS against its band.
 
-**The parameters** (``config/ekf.yaml``): ``gnss_sigma_m`` 1.5 (R),
+**The parameters** (``config/ekf.yaml``): ``gnss_sigma_m`` 1.5 (R, to
+match the bridge's ``gnss_noise_m:=1.5``),
 ``accel_process_sigma`` 1.5 m/s² (Q, "the knob"), ``nis_dof`` 2, the band
 ``nis_lo_chi2`` 0.051 to ``nis_hi_chi2`` 7.378, ``nis_gate_chi2`` 9.21,
 ``gate_enabled`` false (Exercise 5 turns it on), ``max_consecutive_rejects``
