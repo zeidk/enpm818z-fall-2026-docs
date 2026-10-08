@@ -472,6 +472,20 @@ detections in 5 frames, coasting, deleted after 1.0 s with no detection). It
 runs live on the L2 bridge, and an evaluator grades it against CARLA's ground
 truth, which a real AV never has.
 
+**How the gate is computed.** The threshold, 9.21, is fixed: the 99 percent
+value of a chi-square with 2 degrees of freedom (``gate`` in
+``config/tracker.yaml``; the 99 percent is our choice). Every frame, the
+tracker predicts each track (:math:`P \leftarrow F P F^\top + Q`), then computes
+:math:`\varepsilon` for every track and detection pair, with
+:math:`S = H P H^\top + R`, and lets a pair match only if
+:math:`\varepsilon < 9.21`. It never builds the gate as a region in meters. A
+coasting track gets no update, so :math:`P` and :math:`S` grow, the same miss
+gives a smaller :math:`\varepsilon`, and the region where
+:math:`\varepsilon < 9.21` grows. Only ``snapshot`` draws the gate, for the
+picture: the dashed ellipse where :math:`\varepsilon = 9.21`. RViz draws each
+track's 1-sigma position ellipse from :math:`P` alone, which grows the same way
+while the track coasts.
+
 .. figure:: /_static/images/L5/l5_tracking_snapshot.png
    :alt: A top view in the AV's frame, x forward to the right from minus 20 to 35 m and y, left, up from minus 20 to 20 m. The AV is a black box at the origin, moving at 3.0 m/s. Gray outlines are CARLA's vehicles: one just ahead in the AV's lane, one ahead and to the right, a turning car farther ahead on the right, a car behind and parked cars on the left. Green dots are confirmed tracks, each with an ID, a dashed gate ellipse and a velocity arrow: track 16 sits on the rear face of the car ahead, tracks 425 and 426 on the car ahead and to the right, track 158 on the front face of the car behind. Orange coasting tracks sit on the car ahead and to the right and just behind the turning car. A row of green confirmed tracks along y equal to minus 14 m and a few along y equal to 17 m match no CARLA vehicle. Gray tentative tracks have large gates. Blue crosses mark this frame's detections. The title reads 23 detections; tracks 6 tentative, 23 confirmed, 13 coasting.
    :align: center
