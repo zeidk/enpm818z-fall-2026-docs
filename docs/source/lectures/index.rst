@@ -31,16 +31,13 @@ Schedule
      - Camera, LiDAR, RADAR, IMU, GNSS; intrinsic/extrinsic calibration; sensor placement and complementarity
    * - L3
      - Probabilistic State Estimation & Fusion
-     - Kalman Filter, EKF, UKF, particle filters; fusion architectures (early/intermediate/late); data association; weighted averaging / inverse-variance weighting
+     - Two weeks. Uncertainty, variance and covariance; the Kalman filter (predict, update, gain); EKF, UKF and particle filters; covariance consistency (NIS, gating)
    * - L4
-     - Perception I: Object Detection (YOLO to DETR)
-     - CNN fundamentals, YOLO architecture, transformer attention mechanism, DETR (encoder-decoder, object queries, bipartite matching), YOLO vs. DETR comparison, industrial perception architectures, deployment
+     - Perception I: Detecting Objects
+     - IoU, NMS, precision, recall and mAP; one-stage detectors (YOLO); attention and transformers (query, key, value, ViT); DETR and RT-DETR (object queries, bipartite matching); confidence cut, domain gap and latency budget
    * - L5
-     - Perception II: BEV, Occupancy & Segmentation
-     - Bird's-Eye View representation, BEVFormer, camera-to-BEV projection (LSS), 3D occupancy networks, semantic / instance / panoptic segmentation (DeepLabv3+, Mask R-CNN, PQ), driveable surface & lane detection
-   * - L6
-     - Perception III: Tracking, Temporal & Deep Fusion
-     - Multi-object tracking (SORT, DeepSORT, ByteTrack), tracking metrics (MOTA, IDF1, HOTA), temporal reasoning, cross-attention / BEVFusion deep-learning fusion
+     - Perception II: 3D Detection, BEV, Fusion & Tracking
+     - Situational awareness (Endsley's three levels); 3D detection (PointPillars, CenterPoint, nuScenes NDS); semantic segmentation of the road; Bird's-Eye View (IPM, Lift-Splat-Shoot, BEVFormer, temporal BEV); 3D occupancy; fusion architectures, camera-LiDAR frustum association and BEVFusion; cooperative situational awareness and V2X; multi-object tracking with the L3 Kalman filter, data association, track lifecycle and the Tempe case; how each is used in industry
    * - L7
      - Localization & SLAM
      - GNSS/RTK, dead reckoning, visual/LiDAR odometry, probabilistic localization (EKF from L3), SLAM frontend (ICP, feature extraction), SLAM backend (pose graphs, loop closure)

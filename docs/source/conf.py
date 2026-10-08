@@ -42,15 +42,16 @@ todo_include_todos = True
 
 templates_path = ["_templates"]
 # ---------------------------------------------------------------------------
-# Only L1 is published in full. For L2--L14 the index page is built and the
-# lecture / exercises / quiz / references pages are held back until they are
-# revised against the current slide decks. The source files stay on disk;
-# remove a lecture's entry here to publish it. Glossary lecture tags point at
-# the index pages, so they keep resolving while these are excluded.
+# L1 to L4 are published in full. For L5 to L14 the index page is built and
+# the lecture, exercises, quiz and references pages are held back until they
+# are revised against the current slide decks. The source files stay on disk;
+# raise the start of the range below to publish the next lecture. Glossary
+# lecture tags point at the index pages, so they keep resolving while these
+# are excluded.
 # ---------------------------------------------------------------------------
 exclude_patterns = [
     f"lectures/lecture{n}/l{n}_{page}.rst"
-    for n in range(4, 15)
+    for n in range(5, 15)
     for page in ("lecture", "exercises", "quiz", "references")
 ]
 

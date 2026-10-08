@@ -10,698 +10,991 @@ Quiz
    The graded quizzes are the **five in-class quizzes** listed in the
    :doc:`syllabus </syllabus/index>`. Those are closed-notes, given at the
    start of class, and they **use different questions from these**. Working
-   through this page is good preparation for one. Memorising the answers
+   through this page is good preparation for one. Memorizing the answers
    below is not.
 
-This quiz covers the key concepts from Lecture 4: Perception I -- Object
-Detection (YOLO to DETR). Topics include the role of perception in the AV
-stack, perception taxonomy, the deep learning revolution, YOLO architecture
-and evolution, DETR and transformer-based detection, and the comparison
-between CNN-based and transformer-based approaches.
+This quiz covers Lecture 4: what perception and object detection are, from
+pixels to features, grading a detector (IoU, precision, recall, AP and mAP),
+one-stage detectors and NMS, attention and the transformer's encoder and
+decoder, DETR and RT-DETR, and detection on the road. Every question can be
+answered from the slides shown in class.
 
 .. note::
 
    **Instructions:**
 
-   - Answer all questions to the best of your ability.
    - Multiple choice questions have exactly one correct answer.
-   - True/False questions require you to determine if the statement is correct.
-   - Essay questions require short written responses (2-4 sentences).
+   - True or false questions ask whether the statement holds as stated in
+     the lecture.
+   - Short answer questions want two to four sentences.
    - Click the dropdown after each question to reveal the answer.
 
 
 ----
 
 
-Multiple Choice (Questions 1-15)
-=================================
+Multiple Choice (Questions 1 to 22)
+===================================
 
 .. admonition:: Question 1
    :class: hint
 
-   What is the primary role of perception in the AV stack?
+   What does perception do for the AV?
 
-   A. To control the vehicle's steering and throttle.
+   A. It steers the AV and controls its speed.
 
-   B. To transform raw sensor data into a structured, semantic understanding
-      of the environment.
+   B. **It turns raw sensor data into a description of the world that the
+      rest of the AV can act on: which objects are around, where they are,
+      and where the AV may drive.**
 
-   C. To plan the vehicle's trajectory through an intersection.
+   C. It plans the AV's path through an intersection.
 
-   D. To calibrate sensors before each drive.
+   D. It calibrates the sensors before each drive.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- To transform raw sensor data into a structured, semantic
-   understanding of the environment.
+   **B**.
 
-   Perception bridges sensing (raw data acquisition) and planning (decision-
-   making). It converts unstructured sensor data into structured outputs
-   like detected objects, lane geometry, and free space.
+   Perception sits between the sensors (L2) and prediction and planning. It
+   hands four outputs to the rest of the AV: objects, the drivable area,
+   lanes and markings, and lights and signs. Objects go to prediction first,
+   because the planner needs to know where they will be. The drivable area,
+   the lanes and the lights go straight to planning: nothing predicts a red
+   light. This lecture covers objects.
 
 
 .. admonition:: Question 2
    :class: hint
 
-   Which perception task assigns a **unique ID and pixel mask** to each
-   individual object in the scene?
+   Which statement describes the output of an object detector, as the
+   lecture defines it?
 
-   A. Semantic segmentation
+   A. One class label for the whole image, with a score for each class.
 
-   B. Object detection
+   B. One box around the most important object, with no class.
 
-   C. Instance segmentation
+   C. **A set of detections, each a class, a confidence from 0 to 1 and a
+      box given by its top-left and bottom-right corners in pixels. The
+      number of detections changes from image to image.**
 
-   D. Panoptic segmentation
+   D. A fixed list of 80 detections, one per COCO class, in a set order.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- Instance segmentation
+   **C**.
 
-   Instance segmentation gives each object a unique ID and pixel-level mask.
-   Semantic segmentation labels all pixels by class (but doesn't distinguish
-   individual objects). Panoptic segmentation combines both.
+   Each detection is :math:`(c_i, s_i, b_i)`: class, confidence and box
+   :math:`(x_0, y_0, x_1, y_1)`. It is a set, so the order means nothing, and
+   :math:`N` changes: our image has five objects, an empty road has none.
+   **A** is classification and **B** is localization. Detection is both, for
+   every object in the image.
 
 
 .. admonition:: Question 3
    :class: hint
 
-   What was the key innovation of YOLO v1 (2015) compared to two-stage
-   detectors like Faster R-CNN?
+   A classifier trained on ImageNet's 1000 classes labels our image "police
+   van" with a score of 0.616. The image shows a city bus. What does the
+   0.616 tell you?
 
-   A. It used a transformer encoder.
+   A. That the label is right 61.6 percent of the time
 
-   B. It framed detection as a single regression problem -- one forward
-      pass predicts all bounding boxes and classes.
+   B. **The share of the total score that went to "police van": its
+      confidence, which is not the chance of being right**
 
-   C. It used anchor-free detection.
+   C. That the image is 61.6 percent covered by the van
 
-   D. It eliminated the need for training data.
+   D. That 616 of the 1000 classes agree on "police van"
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- It framed detection as a single regression problem -- one
-   forward pass predicts all bounding boxes and classes.
+   **B**.
 
-   Two-stage detectors (Faster R-CNN) first propose regions, then classify
-   them. YOLO processes the entire image in a single pass, making it
-   dramatically faster and enabling real-time detection.
+   The model outputs 1000 scores that add up to 1, and the label is the
+   class with the highest one. That score is the confidence. Here the answer
+   is wrong: ImageNet has no plain bus class, only minibus, school bus and
+   trolleybus. The runners-up are minibus 0.374 and ambulance 0.004, and the
+   other 997 share :math:`1 - 0.994 = 0.006`. And the classifier says nothing
+   about the four people, or about where anything is.
 
 
 .. admonition:: Question 4
    :class: hint
 
-   In YOLO's backbone-neck-head architecture, what is the role of the
-   **neck** (e.g., FPN + PAN)?
+   A :math:`3 \times 3` window of gray levels sits on the edge of a white
+   letter on the bus. Its left column adds to 271.3, its middle column to
+   147.4 and its right column to 686.0. The filter has weights :math:`-1` on
+   the left, 0 in the middle and :math:`+1` on the right. What is its
+   response?
 
-   A. Extract features from the raw image.
+   A. 1104.7
 
-   B. Fuse features across multiple scales to detect objects of different
-      sizes.
+   B. 271.3
 
-   C. Produce the final bounding box predictions.
+   C. **414.7**
 
-   D. Apply non-maximum suppression.
+   D. :math:`-414.7`
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Fuse features across multiple scales to detect objects of
-   different sizes.
+   **C**.
 
-   The neck combines high-resolution features (good for small objects) with
-   semantically rich features (good for large objects) through FPN (top-down)
-   and PAN (bottom-up) pathways. Output scales: 80x80, 40x40, 20x20.
+   The response is the sum of the nine products: the right column counts
+   with :math:`+1`, the left with :math:`-1`, the middle not at all. So
+   :math:`686.0 - 271.3 = 414.7`: the right column is much brighter, a
+   vertical edge. On the flat roof the same filter gives :math:`-9.0`, close
+   to zero. **A** is the sum of all nine pixels, and **D** would be an edge
+   that faces the other way.
 
 
 .. admonition:: Question 5
    :class: hint
 
-   Starting from YOLOv8, what major architectural change was introduced?
+   YOLOv8s scales our :math:`810 \times 1080` image to
+   :math:`480 \times 640`. Its first layer slides 32 filters of
+   :math:`3 \times 3` over 3 colors, with a stride of 2 and a 1-pixel border
+   of zeros. What comes out?
 
-   A. Switching from CNN to transformer backbone.
+   A. One map of :math:`480 \times 640`
 
-   B. Anchor-free detection with a decoupled head.
+   B. **32 maps, each** :math:`240 \times 320` **features**
 
-   C. Removing the neck entirely.
+   C. 32 maps, each :math:`478 \times 638`
 
-   D. Using only a single detection scale.
+   D. 27 maps, each :math:`240 \times 320`
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Anchor-free detection with a decoupled head.
+   **B**.
 
-   YOLOv8 eliminated predefined anchor boxes, instead directly predicting
-   (x,y,w,h) with separate (decoupled) branches for classification and
-   localization. This simplifies the architecture and improves flexibility.
+   Each filter gives one feature map, also called a channel, so 32 filters
+   give 32 maps. The stride of 2 moves the filter 2 pixels per step:
+   :math:`480/2 = 240` places across and :math:`640/2 = 320` down. The zero
+   border lets the window fit on the edge pixels, so nothing is lost there.
+   27 is the number of weights in one filter, :math:`3 \times 3 \times 3`.
 
 
 .. admonition:: Question 6
    :class: hint
 
-   What does DETR use instead of anchor boxes and NMS?
+   In a detector's backbone, neck and head, what does the **neck** do?
 
-   A. Region proposals and selective search.
+   A. It turns the image into feature maps.
 
-   B. Learned object queries and bipartite matching via the Hungarian
-      algorithm.
+   B. **It mixes the feature maps of different sizes: a coarse map's cells
+      respond to whole objects like the bus, a fine map's cells mark exactly
+      where its edges are.**
 
-   C. Grid cells with fixed aspect ratios.
+   C. It produces the classes and boxes.
 
-   D. K-means clustering of bounding boxes.
+   D. It removes duplicate boxes.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Learned object queries and bipartite matching via the Hungarian
-   algorithm.
+   **B**.
 
-   DETR uses N learned object queries (e.g., 100) that attend to image
-   features via cross-attention. During training, the Hungarian algorithm
-   finds the optimal one-to-one assignment between predictions and ground
-   truth, eliminating duplicate detections without NMS.
+   In YOLOv8s, the backbone, a CNN, hands three maps to the neck, at strides
+   8, 16 and 32, with 128, 256 and 512 channels. The neck combines them. The
+   head turns features into the answer, at every cell: 144 numbers, decoded
+   to 84, a box and 80 class scores. Removing duplicates (**D**) is NMS,
+   which runs after the network.
 
 
 .. admonition:: Question 7
    :class: hint
 
-   What is the key advantage of DETR's transformer encoder over a CNN?
+   A ground-truth box runs from :math:`x = 2` to 8 and :math:`y = 2` to 10.
+   A detection runs from :math:`x = 3` to 9 and :math:`y = 3` to 11. What is
+   their IoU?
 
-   A. It processes images faster than any CNN.
+   A. 0.729
 
-   B. It captures **global context** -- every position attends to all other
-      positions via self-attention.
+   B. **0.574**
 
-   C. It uses less GPU memory.
+   C. 0.365
 
-   D. It does not require any training data.
+   D. 1.0, because the boxes are the same size
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- It captures global context -- every position attends to all
-   other positions via self-attention.
+   **B**.
 
-   CNNs have a limited receptive field determined by kernel size and depth.
-   Transformers use self-attention to model relationships between all spatial
-   positions simultaneously, enabling global reasoning from the first layer.
+   Each box is :math:`6 \times 8 = 48`. The overlap is
+   :math:`5 \times 7 = 35`. The union, the area covered by either box, is
+   :math:`48 + 48 - 35 = 61`, so IoU :math:`= 35/61 = 0.574`. **A** is
+   :math:`35/48`, which forgets the area of the other box. **C** is
+   :math:`35/(48 + 48)`, which counts the overlap twice.
 
 
 .. admonition:: Question 8
    :class: hint
 
-   What problem does **Deformable DETR** solve compared to the original
-   DETR?
+   Three people are really in an image. A detector gives 5 person boxes;
+   3 match a person and 2 match nothing. You accept all 5. What are the
+   precision and the recall?
 
-   A. It adds anchor boxes back to the architecture.
+   A. Precision 1.00, recall 0.60
 
-   B. It uses deformable attention to attend to sparse key positions,
-      achieving 10x faster convergence and better small object detection.
+   B. **Precision 0.60, recall 1.00**
 
-   C. It replaces the transformer with a CNN.
+   C. Precision 0.67, recall 0.67
 
-   D. It removes the bipartite matching loss.
+   D. Precision 0.60, recall 0.60
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- It uses deformable attention to attend to sparse key positions,
-   achieving 10x faster convergence and better small object detection.
+   **B**.
 
-   Original DETR attends to all positions (quadratic cost) and converges
-   slowly (500 epochs). Deformable DETR samples a small set of key
-   positions around a reference point, dramatically reducing computation
-   and improving performance on small objects.
+   Precision :math:`= TP/(TP + FP) = 3/(3 + 2) = 0.60`: six in ten boxes are
+   real people. Recall :math:`= TP/(TP + FN) = 3/(3 + 0) = 1.00`: every
+   person is found. Accept only the top 2 (both right) and it flips:
+   precision :math:`2/2 = 1.00`, recall :math:`2/3 = 0.67`.
 
 
 .. admonition:: Question 9
    :class: hint
 
-   What is **mAP@0.5:0.95** and why is it a stricter metric than
-   mAP@0.5?
+   One class, person, with 3 people in the ground truth. Five detections,
+   sorted by confidence: 0.95 TP, 0.90 TP, 0.80 FP, 0.60 TP, 0.40 FP. What
+   is the AP?
 
-   A. It measures speed at different batch sizes.
+   A. 0.600
 
-   B. It averages precision across IoU thresholds from 0.5 to 0.95,
-      requiring tighter bounding box alignment.
+   B. 0.750
 
-   C. It counts only detections with confidence above 0.95.
+   C. **0.917**
 
-   D. It measures recall at 50% to 95% thresholds.
+   D. 1.000
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- It averages precision across IoU thresholds from 0.5 to 0.95,
-   requiring tighter bounding box alignment.
+   **C**.
 
-   mAP@0.5 only requires 50% overlap between predicted and ground truth
-   boxes. mAP@0.5:0.95 averages across thresholds (0.5, 0.55, ..., 0.95),
-   penalizing imprecise localization. It is the primary COCO benchmark.
+   Each person found adds :math:`1/3` of recall, so the area under the step
+   line is three strips :math:`1/3` wide. Their heights are the best
+   precision at that recall or beyond: 1 (the first box), 1 (the second) and
+   0.75 (the fourth, :math:`3/4`). AP :math:`= 0.333 + 0.333 + 0.250 =
+   0.917`. **D** would need no false box before the last person is found.
+   **A** is the precision of the whole list, 3/5.
 
 
 .. admonition:: Question 10
    :class: hint
 
-   Which YOLO loss component penalizes the overlap, center distance, and
-   aspect ratio between predicted and ground truth boxes simultaneously?
+   YOLOv8s scores mAP@0.5:0.95 = 44.9 on COCO. Which description is right?
 
-   A. Binary cross-entropy loss.
+   A. 44.9 percent of the boxes are right at IoU 0.5.
 
-   B. Mean squared error loss.
+   B. **The AP of each of COCO's 80 classes, averaged, at each of 10 IoU
+      thresholds from 0.50 to 0.95 in steps of 0.05, averaged again: the
+      area under the line is 0.449 on average.**
 
-   C. CIoU (Complete Intersection over Union) loss.
+   C. The model finds 44.9 percent of the objects with confidence above
+      0.95.
 
-   D. Focal loss.
+   D. The precision at a confidence cut of 0.25, averaged over 80 classes.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- CIoU (Complete Intersection over Union) loss.
+   **B**.
 
-   CIoU combines IoU with penalties for center point distance and aspect
-   ratio difference, providing a more informative gradient signal than
-   simple IoU or L1/L2 losses for bounding box regression.
+   mAP@0.5:0.95 is stricter than mAP@0.5. A box with IoU 0.574, like the one
+   on the IoU slide, counts as right only at 0.50 and 0.55: 2 of the 10
+   thresholds. Papers write this number simply as "AP". It is computed at a
+   confidence cut of 0.001, the Ultralytics validation default, because it
+   scores the whole ranked list. Evaluate at 0.25 and your mAP comes out
+   lower.
 
 
 .. admonition:: Question 11
    :class: hint
 
-   Why did traditional CV methods (HOG + SVM, SIFT) fail for robust AV
-   perception?
+   What makes YOLO a **one-stage** detector?
 
-   A. They were too computationally expensive.
+   A. It uses a transformer encoder.
 
-   B. They required manual feature engineering, were fragile to appearance
-      variation, and could not generalize across diverse conditions.
+   B. **It predicts classes and boxes in one pass, from every cell of its
+      feature maps, with no step that first proposes regions.**
 
-   C. They only worked with LiDAR data.
+   C. It looks at only one object per image.
 
-   D. They achieved higher accuracy than deep learning.
+   D. It needs no clean-up step after the network.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- They required manual feature engineering, were fragile to
-   appearance variation, and could not generalize across diverse conditions.
+   **B**.
 
-   Hand-crafted features like HOG work in controlled settings but fail under
-   varying lighting, weather, viewpoints, and object appearance. Deep
-   learning learns features automatically from data, enabling much better
-   generalization.
+   A two-stage detector, such as Faster R-CNN, first proposes regions that
+   may hold an object, then classifies each one. A one-stage detector skips
+   the proposals and predicts straight from the grid; "you only look once"
+   is named for that. **D** is false for YOLOv8s: it finds each object about
+   ten times and needs NMS.
 
 
 .. admonition:: Question 12
    :class: hint
 
-   What event is widely considered the start of the deep learning
-   revolution in computer vision?
+   On the stride-32 grid, one cell is 54 image pixels on a side. The cell
+   in column 2, row 12 (counting from zero) has its center at (135, 675) in
+   image pixels, with :math:`y` down. It predicts the distances 85.0 to the
+   left, 275.7 up, 111.4 to the right and 227.4 down. What is its box?
 
-   A. The release of OpenCV in 2000.
+   A. (50.0, 902.4) to (246.4, 399.3)
 
-   B. AlexNet winning the ImageNet competition in 2012.
+   B. **(50.0, 399.3) to (246.4, 902.4)**
 
-   C. The invention of the Kalman Filter in 1960.
+   C. (220.0, 950.7) to (23.6, 447.6)
 
-   D. The first self-driving car demo by DARPA in 2005.
+   D. (85.0, 275.7) to (111.4, 227.4)
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- AlexNet winning the ImageNet competition in 2012.
+   **B**.
 
-   AlexNet was the first GPU-trained CNN to win ImageNet by a large margin,
-   reducing top-5 error from 26% to 16%. This demonstrated that deep
-   convolutional networks could dramatically outperform hand-crafted
-   features.
+   Each distance gives one edge. Left: :math:`135 - 85.0 = 50.0`. Top:
+   :math:`675 - 275.7 = 399.3`; :math:`y` grows downward, so up means
+   subtract. Right: :math:`135 + 111.4 = 246.4`. Bottom:
+   :math:`675 + 227.4 = 902.4`. The four distances come from one run of the
+   network, with no search: YOLOv8 predicts boxes with no preset shapes,
+   which is why it is called anchor-free.
 
 
 .. admonition:: Question 13
    :class: hint
 
-   In the YOLO dataset format, what do the five values per line represent?
+   YOLOv8s predicts at :math:`4800 + 1200 + 300 = 6300` cells on our image.
+   Above the 0.25 cut, 49 boxes are left for 5 objects. Why about ten per
+   object?
 
-   A. ``<image_id> <x_min> <y_min> <x_max> <y_max>``
+   A. Because the image has ten people.
 
-   B. ``<class_id> <x_center> <y_center> <width> <height>`` (normalized)
+   B. Because each of the three grids predicts every object three times.
 
-   C. ``<class_name> <confidence> <x> <y> <area>``
+   C. **Because training teaches the 10 cells that fit each object best to
+      predict it** (``tal_topk=10``), **so on a new image each object comes
+      out about ten times.**
 
-   D. ``<class_id> <top_left_x> <top_left_y> <bottom_right_x> <bottom_right_y>``
+   D. Because NMS has already run once.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ``<class_id> <x_center> <y_center> <width> <height>`` (normalized)
+   **C**.
 
-   YOLO format uses center coordinates and dimensions, all normalized to
-   [0, 1] relative to image dimensions. One line per object, one label
-   file per image.
+   The count is 10 boxes on the bus and 9, 9, 11 and 10 on the four people,
+   49 in all. The cells come from three grids on the :math:`480 \times 640`
+   input: stride 8 gives :math:`60 \times 80 = 4800`, stride 16
+   :math:`30 \times 40 = 1200`, stride 32 :math:`15 \times 20 = 300`.
+   Something has to keep one box per object, and that is NMS: 49 in, 5 out.
 
 
 .. admonition:: Question 14
    :class: hint
 
-   What does **RT-DETR** achieve that the original DETR could not?
+   NMS deletes a box when its IoU with a kept box is above 0.7. Why does it
+   compare only boxes **of the same class**?
 
-   A. Higher accuracy than any other detector.
+   A. To make NMS faster.
 
-   B. Real-time inference speed competitive with YOLO, while maintaining
-      the NMS-free transformer architecture.
+   B. **Because a pedestrian stepping out from behind a parked car overlaps
+      the car's box, and the car's box, often the more confident one, would
+      delete the pedestrian.**
 
-   C. Training without any labeled data.
+   C. Because boxes of different classes never overlap.
 
-   D. Detection of 3D bounding boxes from monocular images.
+   D. Because the IoU of boxes of different classes cannot be computed.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Real-time inference speed competitive with YOLO, while
-   maintaining the NMS-free transformer architecture.
+   **B**.
 
-   The original DETR was slow and required 500 epochs to converge. RT-DETR
-   uses an efficient hybrid encoder to achieve real-time speed while keeping
-   the clean end-to-end design (no anchors, no NMS).
+   On an AV, deleting a pedestrian is the worst possible mistake, so NMS
+   runs per class. Its weak spot is within one class: two people standing
+   close really do overlap. Lower the threshold and one real person is
+   deleted; raise it and duplicates survive.
 
 
 .. admonition:: Question 15
    :class: hint
 
-   At 60 mph (27 m/s), how far does a vehicle travel during 100 ms of
-   perception latency?
+   To fine-tune YOLO on your own images, each image gets a label file. The
+   man's box is centered at (147.2, 651.8) and is :math:`194.6 \times 500.0`
+   pixels, in an :math:`810 \times 1080` image. Person is class 0 in COCO's
+   list. Which line describes him?
 
-   A. 0.27 m
+   A. ``0 49.9 401.8 244.5 901.8``
 
-   B. 2.7 m
+   B. ``person 0.1817 0.6035 0.2402 0.4630``
 
-   C. 27 m
+   C. **Class 0, then 0.1817 0.6035 0.2402 0.4630**
 
-   D. 100 m
+   D. ``0 0.0616 0.3720 0.3019 0.8350``
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- 2.7 m
+   **C**.
 
-   At 27 m/s, the vehicle travels 27 x 0.1 = 2.7 meters during 100 ms.
-   This illustrates why perception latency is safety-critical -- every
-   millisecond matters for reaction distance.
+   One line per object: the class number, then the box center and size,
+   each divided by the image's width or height, so every number lies
+   between 0 and 1. :math:`147.2/810 = 0.1817`, :math:`651.8/1080 = 0.6035`,
+   :math:`194.6/810 = 0.2402`, :math:`500.0/1080 = 0.4630`. **A** gives the
+   corners in pixels, **B** the class name instead of its number, and **D**
+   the corners divided by the image size.
 
-
-----
-
-
-True or False (Questions 16-25)
-================================
 
 .. admonition:: Question 16
    :class: hint
 
-   **True or False:** YOLO is a two-stage detector that first proposes
-   regions, then classifies them.
+   Three tokens, a wheel, a bus window and the sky, have keys (1, 0),
+   (0.6, 0.8) and (-0.5, 0.2), with :math:`d = 2`. The wheel's query is
+   (1, 0.5). What attention weights does the wheel give the three tokens?
+
+   A. 0.333, 0.333, 0.333
+
+   B. 0.625, 0.625, -0.25
+
+   C. **0.422, 0.422, 0.157**
+
+   D. 0.5, 0.5, 0
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **C**.
 
-   YOLO is a single-stage detector. It predicts all bounding boxes and
-   class probabilities in a single forward pass, without a separate region
-   proposal step. Two-stage detectors like Faster R-CNN use the region
-   proposal approach.
+   1. Scores :math:`q \cdot k`: :math:`1 \times 1 + 0.5 \times 0 = 1.0`,
+      :math:`1 \times 0.6 + 0.5 \times 0.8 = 1.0` and
+      :math:`1 \times (-0.5) + 0.5 \times 0.2 = -0.4`.
+   2. Divide by :math:`\sqrt{2} = 1.414`: 0.707, 0.707 and :math:`-0.283`.
+   3. Raise :math:`e` to each: 2.028, 2.028 and 0.754, sum 4.810.
+   4. Divide by the sum: 0.422, 0.422 and 0.157.
+
+   **B** divides the raw scores by their sum, 1.6, and gives the sky a weight
+   below zero. Softmax keeps every weight positive and never exactly zero,
+   which rules out **D**.
 
 
 .. admonition:: Question 17
    :class: hint
 
-   **True or False:** DETR requires Non-Maximum Suppression (NMS) as a
-   post-processing step.
+   In :math:`\text{softmax}(QK^\top/\sqrt{d})\,V`, what is each part for?
+
+   A. :math:`Q` holds what each token passes on, :math:`V` what it looks
+      for.
+
+   B. **Each row of** :math:`QK^\top` **scores one token's query against
+      every key; dividing by** :math:`\sqrt{d}` **keeps the scores from
+      growing with the vector length; softmax turns them into positive
+      weights that add to 1; the weights then average the values.**
+
+   C. :math:`\sqrt{d}` is the number of tokens, so the result is an average
+      over tokens.
+
+   D. Softmax picks the single best key and drops all the others.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **B**.
 
-   DETR eliminates NMS by using bipartite matching (Hungarian algorithm)
-   during training, which ensures each prediction corresponds to at most
-   one ground truth object. This produces non-duplicate predictions by
-   design.
+   The query is what a token is looking for, the key what a token can offer,
+   and the value what it passes on if chosen. In "The boat reached the
+   bank", the query of "bank" asks "water or money?", the key of "boat" says
+   "water", and the value of "boat" flows into "bank". All three come from
+   matrices set by training. **D** is wrong: softmax gives every token some
+   weight.
 
 
 .. admonition:: Question 18
    :class: hint
 
-   **True or False:** Transfer learning means training a model from scratch
-   on your target dataset.
+   Why does ViT add a learned **position embedding** to every token?
+
+   A. To make the tokens longer.
+
+   B. To mark which token is the class token.
+
+   C. **Because the encoder layers treat the tokens as a set: shuffle them
+      and every output is the same, only shuffled. Without position, a patch
+      would mean the same at the top of the image as at the bottom.**
+
+   D. To scale the pixel values to 0 to 1.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **C**.
 
-   Transfer learning means starting with a model pre-trained on a large
-   dataset (e.g., COCO, ImageNet) and fine-tuning it on your target
-   dataset. This leverages learned features and typically requires less
-   data and training time than training from scratch.
+   ViT-Base learns 197 position vectors, one per token, the class token
+   included. In the sentence, "the bank reached the boat" has the same words
+   as "the boat reached the bank", and means something else: the position
+   embedding is the word order.
 
 
 .. admonition:: Question 19
    :class: hint
 
-   **True or False:** Semantic segmentation distinguishes between
-   individual instances of the same class (e.g., car #1 vs. car #2).
+   In training, DETR pairs each object with one query. Costs, chosen for
+   the slide: query 1 costs 0.2 for the person and 0.3 for the bus; query 2
+   costs 0.3 and 0.9; query 3 costs 0.8 and 0.8; query 4 costs 0.9 and 0.7.
+   Which pairing does the Hungarian algorithm choose?
+
+   A. Query 1 for the person and query 4 for the bus, total 0.9
+
+   B. **Query 2 for the person and query 1 for the bus, total 0.6**
+
+   C. Query 1 for both, total 0.5
+
+   D. Query 3 for both objects, because its costs are equal
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **B**.
 
-   Semantic segmentation assigns a class label to every pixel but does
-   not distinguish individual instances. All car pixels get the same
-   "car" label. Instance segmentation is needed to separate individual
-   objects of the same class.
+   **A** is the greedy pairing: take the cheapest pair first (query 1 and
+   the person, 0.2), and the bus is left with query 4 (0.7), total 0.9. That
+   used up query 1, which the bus needed. The Hungarian algorithm always
+   finds the best total, :math:`0.3 + 0.3 = 0.6`; in Python it is SciPy's
+   ``linear_sum_assignment``. **C** and **D** give one query two objects,
+   which the pairing forbids. Queries 3 and 4 get no object and learn to
+   answer "no object".
 
 
 .. admonition:: Question 20
    :class: hint
 
-   **True or False:** ResNet's key innovation was residual connections
-   (skip connections) that enabled training of much deeper networks.
+   The original DETR (2020) scored 42.0 mAP on COCO, the same as Faster
+   R-CNN with the same backbone, but needed 500 training epochs. What did
+   **RT-DETR** change to run in real time?
+
+   A. It added NMS back after the decoder.
+
+   B. It replaced the transformer with a CNN.
+
+   C. **Its encoder runs attention only inside the coarsest map (stride 32),
+      and convolutions mix the three map sizes.**
+
+   D. It cut the number of queries to 10.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **True**
+   **C**.
 
-   Residual connections allow gradients to flow directly through skip
-   paths, solving the vanishing gradient problem in very deep networks.
-   This enabled training of 50--152+ layer networks without degradation,
-   a breakthrough that underpins most modern CNN architectures.
+   Attention scores every token against every token, :math:`N^2` pairs, and
+   the coarsest map has the fewest cells. RT-DETR-L scores 53.0 mAP at 114
+   frames per second on an NVIDIA T4 with TensorRT, :math:`1000/114 = 8.8`
+   ms per image. Before it, Deformable DETR let each query attend to a few
+   sampling points instead of every cell, and needed 10 times fewer epochs
+   than DETR. RT-DETR's decoder has 300 queries and needs no NMS.
 
 
 .. admonition:: Question 21
    :class: hint
 
-   **True or False:** In DETR, object queries are learned parameters that
-   each specialize in detecting one object in the scene.
+   The GP1 camera runs at 20 Hz. On the lecture's laptop GPU, plugged in,
+   RT-DETR-L takes 29.9 ms per image. What share of the time per frame does
+   it use?
+
+   A. 15 percent
+
+   B. 30 percent
+
+   C. **60 percent**
+
+   D. 167 percent: it does not fit
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **True**
+   **C**.
 
-   DETR uses N learned object queries (typically 100) as inputs to the
-   transformer decoder. Each query attends to the encoder output via
-   cross-attention and specializes in detecting one object (or predicting
-   "no object"). They are learned during training.
+   20 Hz is a new frame every :math:`1000/20 = 50` ms, and
+   :math:`29.9/50 = 0.60`. YOLOv8s, at 9.1 ms, uses 18 percent. Both fit,
+   but the detector shares the 50 ms with tracking, prediction and
+   planning. With six cameras on one GPU, each frame gets
+   :math:`50/6 \approx 8` ms, and neither model fits as measured.
 
 
 .. admonition:: Question 22
    :class: hint
 
-   **True or False:** YOLO's FPN (Feature Pyramid Network) neck enables
-   detection of objects at multiple scales by fusing features from
-   different backbone layers.
+   On our image, at a confidence cut of 0.75, YOLOv8s reports 4 objects and
+   RT-DETR-L reports 5. At 0.25, YOLOv8s reports 5 and RT-DETR-L reports 9.
+   The image holds 5 real objects. What should you conclude?
+
+   A. RT-DETR-L is better at every cut.
+
+   B. Use 0.75 for both models, because it removes the wrong boxes.
+
+   C. **The same cut means different things for different models: choose it
+      per model, on validation data, and for an AV lean low, because a
+      missed person costs more than a phantom object.**
+
+   D. The cut does not matter, because mAP is computed at 0.001.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **True**
+   **C**.
 
-   FPN creates a top-down pathway that combines semantically rich
-   low-resolution features with high-resolution features via lateral
-   connections. This allows the network to detect both large objects
-   (at coarse scales) and small objects (at fine scales).
-
-
-.. admonition:: Question 23
-   :class: hint
-
-   **True or False:** Transformers are more data-efficient than CNNs,
-   requiring less training data to achieve good performance.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   Transformers are generally more data-hungry than CNNs because they lack
-   the built-in inductive biases of convolutions (locality, translation
-   equivariance). They need larger datasets to learn spatial relationships
-   that CNNs capture by design.
-
-
-.. admonition:: Question 24
-   :class: hint
-
-   **True or False:** Precision measures the fraction of real objects that
-   the detector successfully found.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   Precision measures the fraction of detections that are correct:
-   TP / (TP + FP). The metric described (fraction of real objects found)
-   is **recall**: TP / (TP + FN).
-
-
-.. admonition:: Question 25
-   :class: hint
-
-   **True or False:** The same ROS 2 node pattern (subscribe to image,
-   run inference, publish detections) works for both YOLO and DETR.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**
-
-   The ROS 2 integration pattern is model-agnostic. The node subscribes to
-   ``/carla/camera/image``, converts the image, runs inference (regardless
-   of whether the model is YOLO or DETR), and publishes a
-   ``Detection2DArray`` message.
+   At 0.75, YOLOv8s misses the person cut off at the left edge, who scored
+   0.61. At 0.25, RT-DETR-L adds four wrong objects: a hydrant, a traffic
+   light and two ties. At 0.5 both report exactly the five. Validation data
+   means labeled images kept out of training; one image does not choose a
+   cut. **D** confuses grading with use: on the AV, the cut decides which
+   boxes the rest of the software sees.
 
 
 ----
 
 
-Essay Questions (Questions 26-30)
+True or False (Questions 23 to 33)
 ==================================
+
+.. admonition:: Question 23
+   :class: hint
+
+   YOLO is a two-stage detector that first proposes regions, then
+   classifies them.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False.**
+
+   YOLO is one-stage: it predicts classes and boxes in one pass, from every
+   cell of its grids. Faster R-CNN is the two-stage example in the lecture:
+   it proposes regions first, then classifies each.
+
+
+.. admonition:: Question 24
+   :class: hint
+
+   DETR needs NMS after its decoder to remove duplicate boxes.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False.**
+
+   In training, the Hungarian matching gives each object to exactly one
+   query, so a second query on the same object is paired with nothing and
+   learns to answer "no object". The queries also attend to each other in
+   the decoder. RT-DETR-L keeps 9 of its 300 rows above 0.25 on our image,
+   with no NMS.
+
+
+.. admonition:: Question 25
+   :class: hint
+
+   A confidence of 0.5 from YOLOv8s means the same as a confidence of 0.5
+   from RT-DETR-L.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False.**
+
+   A confidence is a raw class score squeezed into 0 to 1 by a sigmoid,
+   :math:`1/(1 + e^{-x})`. It is not the probability of being right, and it
+   is not comparable between models: RT-DETR-L gives the same people
+   higher numbers than YOLOv8s (the cut-off person: 0.86 against 0.61).
+
 
 .. admonition:: Question 26
    :class: hint
 
-   **Compare YOLO and DETR** across at least four dimensions. In what
-   scenarios would you choose one over the other for an AV application?
+   Fine-tuning means training a detector from scratch on your own images.
 
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
+.. dropdown:: Answer
    :class-container: sd-border-success
 
-   *Key points to include:*
+   **False.**
 
-   - YOLO: CNN-based, local context, fast (1-5 ms), requires NMS (except
-     v10), mature and production-ready.
-   - DETR: Transformer-based, global context, cleaner design (no anchors,
-     no NMS), needs more training data, slower (improving with RT-DETR).
-   - Choose YOLO for real-time production systems where latency is critical.
-   - Choose DETR when global reasoning matters (e.g., detecting heavily
-     occluded objects, complex scenes) and compute budget allows it.
+   Fine-tuning starts from a network pretrained on a large, general image
+   collection and trains it a little more on your own data. Edges and simple
+   shapes look much the same in CARLA and in real images, so the early
+   layers need little change. It takes far less data and time than training
+   from zero. Both of the lecture's detectors start from weights pretrained
+   on COCO.
 
 
 .. admonition:: Question 27
    :class: hint
 
-   **Explain how bipartite matching in DETR eliminates the need for NMS.**
-   What problem does NMS solve in YOLO, and why doesn't DETR have this
-   problem?
+   Precision is the share of the real objects that the detector found.
 
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
+.. dropdown:: Answer
    :class-container: sd-border-success
 
-   *Key points to include:*
+   **False.**
 
-   - YOLO produces many overlapping predictions for the same object. NMS
-     removes duplicates by suppressing lower-confidence boxes that overlap
-     with a higher-confidence box.
-   - DETR uses the Hungarian algorithm during training to enforce a
-     one-to-one assignment between predictions and ground truth objects.
-   - Each object query learns to detect at most one object, so duplicate
-     predictions do not arise by design.
+   That is recall, :math:`TP/(TP + FN)`. Precision is the share of the boxes
+   drawn that are real objects, :math:`TP/(TP + FP)`. Low recall is a missed
+   pedestrian; low precision is a phantom one.
 
 
 .. admonition:: Question 28
    :class: hint
 
-   **Explain the YOLO backbone-neck-head architecture.** What does each
-   component do, and why is multi-scale feature fusion important for AV
-   perception?
+   In one :math:`3 \times 3` convolution layer on the stride-32 grid, the
+   man's cell reads every cell of the image, the far end of the bus
+   included.
 
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
+.. dropdown:: Answer
    :class-container: sd-border-success
 
-   *Key points to include:*
+   **False.**
 
-   - Backbone: Extracts hierarchical features from the image (edges ->
-     textures -> object parts -> objects).
-   - Neck (FPN + PAN): Fuses features across scales so the detector can
-     handle objects of different sizes.
-   - Head: Produces final bounding box and class predictions.
-   - Multi-scale fusion is critical for AV perception because the scene
-     contains both large nearby vehicles and small distant pedestrians.
+   One :math:`3 \times 3` convolution reads the cell and its 8 neighbors,
+   nothing else. Each further layer reaches one cell further on every side:
+   2 layers read :math:`5 \times 5` cells, 3 layers :math:`7 \times 7`. One
+   attention layer, by contrast, brings all 300 cells of that grid into the
+   man's cell.
 
 
 .. admonition:: Question 29
    :class: hint
 
-   **Why did deep learning replace traditional CV methods** (HOG, SIFT,
-   etc.) for AV perception? What were the key enablers of this transition?
+   ViT-Base's encoder takes in 197 tokens of 768 numbers and gives back 197
+   tokens of 768 numbers, in the same order.
 
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
+.. dropdown:: Answer
    :class-container: sd-border-success
 
-   *Key points to include:*
+   **True.**
 
-   - Traditional methods required hand-crafted features that were fragile
-     and couldn't generalize across diverse conditions.
-   - Deep learning learns features automatically from data, adapting to
-     variation in lighting, weather, viewpoints, and object appearance.
-   - Key enablers: large-scale datasets (ImageNet, COCO), GPU acceleration,
-     improved training techniques (batch norm, residual connections), and
-     transfer learning.
+   196 patch tokens plus the class token go in, and the same 197 come out
+   after 12 layers. The encoder changes what each token holds, not how many
+   there are: a patch's token comes out also describing what surrounds it,
+   and the class token comes out holding a summary of the image, from which
+   the head reads "minibus".
 
 
 .. admonition:: Question 30
    :class: hint
 
-   **Describe how you would deploy a YOLO-based perception node** in a
-   ROS 2 system connected to CARLA. What topics would it subscribe to
-   and publish?
+   In each encoder layer, a block's input is added back to its output, so
+   the block only has to learn a correction to what it received.
 
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
+.. dropdown:: Answer
    :class-container: sd-border-success
 
-   *Key points to include:*
+   **True.**
 
-   - The node subscribes to ``/carla/camera/image`` (``sensor_msgs/Image``).
-   - In the callback, it converts the ROS image to OpenCV format using
-     ``cv_bridge``, runs YOLO inference, and constructs a
-     ``Detection2DArray`` message with bounding boxes and class labels.
-   - It publishes detections on a topic like ``/perception/detections``.
-   - This same pattern works for any detector (YOLO, DETR, etc.) since the
-     ROS 2 interface is model-agnostic.
+   ViT applies a norm before every block and adds the input back after every
+   block. Learning only a correction is what lets deep stacks train, the same
+   idea as ResNet. The two blocks are multi-head attention, where tokens
+   exchange information, and the MLP, which works on each token on its own
+   (768 to 3072 to 768).
+
+
+.. admonition:: Question 31
+   :class: hint
+
+   RT-DETR's 300 queries are learned vectors, the same for every image, as
+   in the original DETR.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False.**
+
+   RT-DETR starts its 300 queries at the 300 cells of the encoder output
+   that score highest as objects, so they depend on the image. The original
+   DETR used 100 learned vectors.
+
+
+.. admonition:: Question 32
+   :class: hint
+
+   A transformer detector needs less training data than a CNN-only
+   detector.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False.**
+
+   The lecture names more training data as part of the price of a
+   transformer, along with time: 29.9 ms for RT-DETR-L against 9.1 ms for
+   YOLOv8s on our image. What it buys is context: in one layer, every part
+   of the image can change every other part.
+
+
+.. admonition:: Question 33
+   :class: hint
+
+   The same detector on the same laptop takes the same time per image
+   whether the laptop is plugged in or on battery.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False.**
+
+   Plugged in, the whole call took 9.1 ms (YOLOv8s) and 29.9 ms
+   (RT-DETR-L). On battery it took 13.3 ms and 42.0 ms:
+   :math:`13.3/9.1 = 1.46` and :math:`42.0/29.9 = 1.40`, so 46 and 40
+   percent slower. An AV's computer has the same issue with heat and power,
+   so measure latency in the conditions you will drive in.
+
+
+----
+
+
+Short Answer (Questions 34 to 39)
+=================================
+
+.. admonition:: Question 34
+   :class: hint
+
+   Compare YOLOv8s and RT-DETR-L on our image and on COCO. Why can you not
+   conclude from these numbers alone that "transformers are more accurate
+   and slower"?
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   On our image, YOLOv8s reports 5 objects and RT-DETR-L 9: the same five
+   real objects, all more confident (lowest person 0.86 against 0.61), plus
+   four wrong ones just above the 0.25 cut. YOLOv8s takes 9.1 ms and
+   RT-DETR-L 29.9 ms on the laptop GPU. On COCO, RT-DETR-L scores 53.0 mAP
+   against 44.9.
+
+   But the two models are not the same size: 33.0 million weights against
+   11.2 million. Part of both gaps is size. YOLOv8l, with 43.7 million
+   weights, scores 52.9, almost level with RT-DETR-L. When you compare two
+   detectors, say whether their sizes match.
+
+
+.. admonition:: Question 35
+   :class: hint
+
+   Explain why YOLO needs NMS and DETR does not. Where does each one's weak
+   spot with crowds come from?
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   YOLO's training teaches about 10 cells to predict each object, so on a
+   new image each object comes out about ten times (49 boxes for 5 objects).
+   NMS keeps the most confident box and deletes same-class boxes whose IoU
+   with it is above 0.7. Two real people standing close also overlap, so the
+   threshold can delete a real person or keep a duplicate.
+
+   DETR's training pairs each object with exactly one query (the Hungarian
+   algorithm), and every other query learns to answer "no object". Its
+   queries also attend to each other in the decoder. Duplicates are trained
+   away instead of cleaned up, so there is no threshold to get wrong.
+
+
+.. admonition:: Question 36
+   :class: hint
+
+   Describe the backbone, the neck and the head with YOLOv8s's numbers on
+   our image, and say how RT-DETR-L's three parts differ.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   The image is scaled to :math:`480 \times 640`. The **backbone**, a CNN,
+   turns it into three feature maps at strides 8, 16 and 32, with 128, 256
+   and 512 channels; it is often pretrained on a large image collection. The
+   **neck** mixes the map sizes, so the coarse map's sense of a whole bus
+   meets the fine map's exact edges. The **head** runs a few small
+   convolutions at every cell and outputs 144 numbers per cell, decoded to
+   84: a box and 80 class scores, at all 6300 cells.
+
+   RT-DETR-L has the same three parts with a CNN backbone, but its neck adds
+   a transformer layer and its head is a transformer decoder with 300
+   queries.
+
+
+.. admonition:: Question 37
+   :class: hint
+
+   Both COCO-trained models run on the GP1 CARLA camera frame. YOLOv8s finds
+   2 cars at 0.50 and 0.51 and 2 potted plants; RT-DETR-L finds 1 car at
+   0.38 and 10 potted plants. Explain this with the domain gap, and say how
+   you would shrink the gap.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   The domain gap is the difference between the images a model was trained
+   on and the images it sees in use. COCO is everyday images, where potted
+   plants are common, and CARLA's rendered cars look different from real
+   ones: the gap here is both simulation to real and everyday images to
+   roads. So the cars come out at low confidence and the flower planters look
+   like potted plants.
+
+   You see the gap when mAP on your own data falls below the published mAP.
+   You shrink it by fine-tuning on data from where you drive. The classes may
+   not match either: COCO has no cyclist, only a person and a bicycle.
+
+
+.. admonition:: Question 38
+   :class: hint
+
+   An AV waits at a crosswalk. Its camera sees a bus facing it, two
+   pedestrians crossing (the second partly hidden behind the first) and a
+   third pedestrian far away. For each of the three, how does a one-stage
+   CNN like YOLO handle it, and how does a transformer like RT-DETR?
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **The bus (large):** in a CNN each cell reads its neighbors, so the far
+   end of the bus arrives only after many layers. A transformer links the
+   whole image in one layer. When DETR's authors removed its encoder layers,
+   it lost 6.0 AP on large objects.
+
+   **The two pedestrians:** YOLO finds each about ten times, and NMS can
+   delete the hidden person if the two boxes overlap enough. A transformer
+   gives one box per object, with no NMS.
+
+   **The far pedestrian (small):** YOLO has its fine stride-8 grid. The
+   original DETR was weaker on small objects; RT-DETR adds feature maps at
+   several scales. The price of the transformer is time (29.9 ms against
+   9.1 ms on our image) and more training data.
+
+
+.. admonition:: Question 39
+   :class: hint
+
+   Attention is "a weighted average of all the tokens". Explain where the
+   weights come from, why they are not fixed like a filter's weights, and
+   what the result did for the wheel token in the lecture's example.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   Each token's vector is multiplied by three matrices, set by training, to
+   make a query, a key and a value. A token's query is scored against every
+   key (the dot product, divided by :math:`\sqrt{d}`), and softmax turns the
+   scores into positive weights that add to 1. The matrices are fixed after
+   training, but the weights are computed from the tokens themselves, so
+   they change with every image. A filter's weights are the same on every
+   image.
+
+   In the example, the wheel gave weights 0.422 to itself, 0.422 to the
+   window and 0.157 to the sky. Its value went from (1, 0), "wheel", to
+   (0.42, 0.42), "wheel, and part of something with windows": that is how a
+   network learns that this wheel belongs to a bus.

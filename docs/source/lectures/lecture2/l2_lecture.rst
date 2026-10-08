@@ -277,7 +277,8 @@ Where the Simulation Ends
 Live Demonstration
 ~~~~~~~~~~~~~~~~~~
 
-All four demos use the same two repositories:
+All four demos use the same two repositories. Every script, argument and topic
+is listed on the :doc:`l2_code` page.
 
 .. list-table::
    :widths: 40 60

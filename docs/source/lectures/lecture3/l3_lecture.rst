@@ -1996,7 +1996,8 @@ Now watch the filter run on a simulated tunnel drive. Everything is in the
 course repository,
 `github.com/rubixcubic/enpm818z-fall-2026-carla-python
 <https://github.com/rubixcubic/enpm818z-fall-2026-carla-python>`_, folder
-``lecture3/tunnel_kf/``. It holds three files:
+``lecture3/tunnel_kf/``. (Every L3 script and the ROS 2 package are listed on
+the :doc:`l3_code` page.) It holds three files:
 
 - ``kf_tunnel.py``: **the one script**. It makes the data, runs the Kalman
   filter, and draws the live window.
@@ -3390,3 +3391,9 @@ Next Class
 
    Report the covariance, and then test it. An uncertainty you have not
    checked tells you nothing useful.
+
+
+.. rubric:: Image credits
+
+The vehicle icons in the figures on this page were created by Stone from the
+`Noun Project <https://thenounproject.com>`_.

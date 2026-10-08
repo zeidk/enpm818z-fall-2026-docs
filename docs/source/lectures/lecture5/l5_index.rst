@@ -51,6 +51,16 @@ By the end of this lecture, you will be able to:
    being revised against the current slide deck and are not published yet.
    This page will link to them once they are ready.
 
+The **code** for this lecture is published: :doc:`l5_code`.
+
+.. toctree::
+   :hidden:
+   :maxdepth: 2
+   :titlesonly:
+
+   l5_code
+
+
 Next Steps
 ----------
 

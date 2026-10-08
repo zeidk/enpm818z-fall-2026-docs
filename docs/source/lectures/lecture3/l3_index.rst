@@ -103,6 +103,7 @@ By the end of this lecture, you will be able to:
 
    l3_lecture
    l3_appendix
+   l3_code
    l3_exercises
    l3_quiz
    l3_references

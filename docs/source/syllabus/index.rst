@@ -651,18 +651,18 @@ all other Thursdays meet as scheduled. Dates below are given as MM/DD.
      - Setup due, teams formed, GP1 posted
    * - 09/24
      - 4
-     - Perception I: Object Detection (YOLO to DETR)
-     - L4
+     - Probabilistic State Estimation & Fusion (continued)
+     - L3
      - Quiz 1
    * - 10/01
      - 5
-     - Perception II: BEV, Occupancy & Segmentation
-     - L5
+     - Perception I: Detecting Objects
+     - L4
      -
    * - 10/08
      - 6
-     - Perception III: Tracking, Temporal & Deep Fusion
-     - L6
+     - Perception II: 3D Detection, BEV, Fusion & Tracking
+     - L5
      - Quiz 2, GP1 due, GP2 posted
    * - 10/15
      - 7
@@ -719,6 +719,10 @@ all other Thursdays meet as scheduled. Dates below are given as MM/DD.
 
    This is a tentative schedule, subject to change as necessary.
    Monitor ELMS-Canvas for current deadlines.
+
+   L3 runs over two weeks (weeks 3 and 4), and perception is taught in two
+   lectures, L4 and L5, instead of three. The lecture numbers after L5 are
+   unchanged, so there is no L6.
 
 
 Final Project: Building an ADS Pipeline
