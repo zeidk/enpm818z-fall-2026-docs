@@ -13,7 +13,8 @@ Exercises
 
 This page contains take-home exercises that reinforce the concepts from
 Lecture 5. Exercises cover BEV representation, the Lift-Splat-Shoot
-pipeline, occupancy networks, and semantic segmentation.
+pipeline, occupancy networks, semantic segmentation, and multi-object
+tracking.
 
 
 .. dropdown:: Exercise 1 -- Perspective vs. BEV Representation
@@ -478,3 +479,96 @@ Change the constants at the top of a script to try your own cases.
    **Deliverable**
 
    Written answers, and the calculation for question 5.
+
+
+.. dropdown:: Exercise 11. Two Tracks, Three Detections
+   :icon: number
+   :class-container: sd-border-primary
+   :class-title: sd-font-weight-bold
+
+   **Goal**
+
+   Pair detections with tracks by hand, with nearest neighbor (NN) and global
+   nearest neighbor (GNN), and see what each gets wrong.
+
+   .. raw:: html
+
+      <hr>
+
+   **Specification**
+
+   Car B cuts in just behind car D, which is ahead in the AV's lane. The
+   tracker predicted both cars (the crosses); this frame, the detector reports
+   three boxes (the red dots).
+
+   .. figure:: /_static/images/L5/assoc_scene.png
+      :alt: A top view, x forward to the right. The AV at the left, facing right, in its lane between two dashed lines; car B's lane to the right. Two crosses are the predicted positions: track B, blue, in the right part of the AV's lane, and track D, orange, ahead in the AV's lane. Each sits in a dashed circle of the same color, its gate. Three red dots are the boxes: 1 inside track B's gate only, behind and right of the blue cross; 2 between the crosses, inside both gates; 3 at the edge of track D's gate, ahead and right of the orange cross.
+      :width: 60%
+      :align: center
+
+   Both tracks have :math:`\sigma = 1.2` m (chosen), so each gate is a circle
+   of radius :math:`\sqrt{9.21} \times 1.2 = 3.64` m. The table gives
+   :math:`\varepsilon = d^2/1.2^2` for every track and box, where :math:`d`
+   is the distance between them in the drawing (positions chosen). A smaller
+   :math:`\varepsilon` means closer; above 9.21 is outside the gate.
+
+   .. list-table::
+      :widths: 25 25 25 25
+      :header-rows: 1
+      :class: compact-table
+
+      * - :math:`\varepsilon`
+        - **box 1**
+        - **box 2**
+        - **box 3**
+      * - **track B**
+        - 5.4
+        - 4.5
+        - 47.3
+      * - **track D**
+        - 47.0
+        - 5.9
+        - 8.5
+
+   1. Run **NN** with track B first, then with track D first. Same answer?
+   2. What does **GNN** choose? Give its total.
+   3. One box is left over. Name two things it could be, and how the
+      **lifecycle** tells them apart.
+   4. If the tracker **swaps** B and D, what does the planner believe? Why is
+      that worse than losing both tracks?
+
+   **Deliverable**
+
+   Written answers, with the pairs and totals for questions 1 and 2.
+
+   .. dropdown:: Answer
+      :color: success
+
+      Question 1. **B first:** B takes box 2, its nearest (4.5). D is left
+      with box 1 (47.0, outside the gate) and box 3 (8.5): D takes 3. Total
+      :math:`4.5 + 8.5 = 13.0`. **D first:** D takes box 2 (5.9). B takes box
+      1 (5.4). Total :math:`5.9 + 5.4 = 11.3`. The order changed the answer:
+      same code, same data, a different result depending on list order.
+
+      Question 2. GNN tries every pairing inside the gates: B with 1 and D
+      with 2 is :math:`5.4 + 5.9 = 11.3`; B with 2 and D with 3 is
+      :math:`4.5 + 8.5 = 13.0`; B with 1 and D with 3 is
+      :math:`5.4 + 8.5 = 13.9`. It picks **11.3**, B with 1 and D with 2,
+      whatever the order.
+
+      .. figure:: /_static/images/L5/assoc_graph_gnn.png
+         :alt: A graph with tracks B and D on the left and boxes 1, 2 and 3 on the right, each line labeled with epsilon. B to 1 (5.4) and D to 2 (5.9) are thick green lines, GNN's choice; B to 2 (4.5) and D to 3 (8.5) are faint; B to 3 (47.3) and D to 1 (47.0) are dashed, outside the gate. Caption: GNN, total 5.4 + 5.9 = 11.3.
+         :width: 45%
+         :align: center
+
+      Question 3. Box 3 is left over: a new object, or clutter (a false
+      detection from noise or a reflection). It starts a **tentative** track.
+      A real object keeps being detected and passes M of N in the next frames;
+      clutter does not, and its track is deleted. The tracker does not have to
+      be right this frame, only within a few frames.
+
+      Question 4. **A swap is worse than a loss.** Lost tracks coast, then are
+      deleted; if the cars are seen again, they restart as tentative tracks.
+      The system knows it has less information, and the planner can slow down.
+      Swapped tracks stay **confirmed**, each with the other car's history:
+      the planner believes two confident velocities, both wrong.

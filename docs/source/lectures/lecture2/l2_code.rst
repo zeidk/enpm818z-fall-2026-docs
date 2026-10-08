@@ -214,7 +214,8 @@ Give the server 30 to 60 s to load its level first, or the client times out.
 
 **Launch arguments:** ``host`` (localhost), ``port`` (2000), ``town`` (empty:
 keep the loaded map; ``Town03`` is the one used in class), ``rviz`` (true),
-``rate_report`` (true).
+``rate_report`` (true), ``gnss_noise_m`` (0.0: CARLA's default, no GNSS noise;
+the L3 EKF hands-on uses 1.5, the standard deviation per axis in meters).
 
 
 Node ``carla_bridge``
@@ -287,9 +288,16 @@ server back in its original mode.
    * - ``/carla/ego_vehicle/gnss``
      - ``NavSatFix``
      - ``ego_vehicle/gnss``
+   * - ``/carla/ego_vehicle/marker``
+     - ``Marker`` (latched)
+     - ``ego_vehicle``
 
 Sensor topics are best effort; the camera intrinsics are latched, so a late
-subscriber still gets them. **TF:** ``map -> ego_vehicle`` at every tick, and
+subscriber still gets them. In RViz, an Image display must be set to **Best
+Effort**: its default, Reliable, does not connect to a best-effort topic and
+shows nothing. The marker is the AV's body for RViz, its bounding box from
+CARLA (4.79 x 2.16 x 1.49 m for the Tesla Model 3), sent once and drawn with the
+``ego_vehicle`` frame. **TF:** ``map -> ego_vehicle`` at every tick, and
 static transforms from ``ego_vehicle`` to each sensor, plus
 ``ego_vehicle/rgb_front -> ego_vehicle/rgb_front_optical``, the axis
 permutation from the calibration slides. Every stamp is the simulation time.

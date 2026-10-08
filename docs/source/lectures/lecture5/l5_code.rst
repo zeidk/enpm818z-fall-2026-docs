@@ -69,8 +69,8 @@ The CARLA server must be running, and the L2 bridge must own the clock:
    # save one moment as PNG files
    ros2 run l5_bev_demo snapshot --ros-args -p out:=bev_snapshot
 
-RViz opens with the occupancy grid and the point cloud under the AV, and the
-three BEV images in their own panels. ``bev.launch.py rviz:=false`` runs
+RViz opens with the occupancy grid and the point cloud under the AV, the AV's
+body, and the three BEV images and the front camera in their own panels. ``bev.launch.py rviz:=false`` runs
 without it. ``snapshot`` writes ``lidar_height.png``, ``occupancy.png``,
 ``ipm.png``, ``semantic.png`` and ``all_four.png``, then exits.
 
@@ -202,6 +202,9 @@ slides mean by "real stacks fit a box to the cluster".
 
    # track the boxes instead of the centroids
    ros2 launch l5_tracking_demo tracking.launch.py source:=boxes
+
+RViz shows the LiDAR, the boxes with their size and heading, the AV's body, and
+the front camera in its own panel, so you can see what each box is.
 
 **The fit.** For each direction :math:`\theta` from 0 to 89 degrees, in steps of
 1 degree, the points are projected on :math:`e_1 = (\cos\theta, \sin\theta)`
@@ -341,6 +344,19 @@ one per class. Its weights were set by training, on photos of German streets,
 not on CARLA. The first run downloads them (15 MB) into
 ``~/.cache/enpm818z-weights/huggingface``. They are licensed for research or
 evaluation only (NVIDIA Source Code License for SegFormer, section 3.3).
+
+**The LiDAR, painted.** ``seg_lidar`` projects every LiDAR point into the
+camera image, with the bridge's extrinsics (tf) and intrinsics (camera info),
+and gives the point the network's class at that pixel. It publishes the result
+on ``/l5/seg/lidar_classes``, and RViz's 3D view shows it around the AV's body.
+Points the camera does not see stay gray: in a measured run, the camera saw 14
+to 15 percent of each sweep. This is the projection step of the Fusion section,
+and the idea of PointPainting (S. Vora, A. H. Lang, B. Helou and O. Beijbom,
+"PointPainting: Sequential Fusion for 3D Object Detection", CVPR 2020), which
+appends the network's class scores to each point; ``seg_lidar`` keeps only the
+winning class. The LiDAR sits on the roof and the camera at the windshield, so a
+point hidden from the camera behind a car still lands on the car's pixels and
+turns "car".
 
 **The answer key.** The bridge has no semantic camera, so ``seg_truth``
 attaches one to the AV at the same place as the bridge's front camera, with the
@@ -516,7 +532,8 @@ Tracker nodes
      - The tracker. Publishes the confirmed and coasting tracks
        (``/l5/tracks``), every track as JSON (``/l5/tracks/json``) and RViz
        markers: gray tentative, green confirmed, orange coasting, with the
-       1-sigma ellipse and a velocity arrow of 1 s of travel.
+       1-sigma ellipse and a velocity arrow of 1 s of travel. RViz also shows
+       the AV's body and the front camera.
    * - ``evaluate``
      - Compares detections and tracks with CARLA's vehicles within 30 m, at
        the same simulation time; a match is within 3 m. Reports the detection

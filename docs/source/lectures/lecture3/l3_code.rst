@@ -203,7 +203,8 @@ argument out for the other lectures: its default, 0, keeps the bridge as it was.
 **Launch arguments:** ``log_csv`` (``l3_log.csv``), ``rviz`` (true),
 ``role_name`` (``ego``, the name the L2 bridge gives its vehicle). The launch
 starts ``truth``, ``logger``, ``ekf`` and RViz, which shows the truth in green
-and the estimate in blue with its covariance ellipse.
+and the estimate in blue with its covariance ellipse, the AV's body and the
+front camera.
 
 .. list-table::
    :widths: 18 82
