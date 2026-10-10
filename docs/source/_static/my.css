@@ -169,3 +169,169 @@ div.admonition.plain-english {
 .bd-article {
   padding-left: 1rem;
 }
+
+/* ============================================================
+ * Light mode: warm sand palette
+ *
+ * Same palette as the ENPM702 site (the "sand" theme of the
+ * course task tracker):
+ * paper #F4EFE6 (page), sheet #FFFDF8 (header, admonitions,
+ * dropdowns), ink #2B2620, muted #6F665A, rule #DDD3C2,
+ * rust accent #9A4F1D, gold #8F6A00.
+ *
+ * Three values are not in that palette and were chosen here:
+ * the surface tone #EBE3D5 (code and blockquote background,
+ * between paper and rule), the darker rust #6E3814 for
+ * hover/highlight states, and its use as the link-hover color.
+ * Sand gold measures 4.34:1 against #F4EFE6, under the 4.5:1
+ * text minimum, so it is kept off link text and used only for
+ * focus outlines and the secondary color.
+ *
+ * Dark mode is unchanged.
+ * ============================================================ */
+
+html[data-theme="light"] {
+  --pst-color-background: #F4EFE6;
+  --pst-color-on-background: #FFFDF8;
+  --pst-color-surface: #EBE3D5;
+  --pst-color-on-surface: #2B2620;
+
+  --pst-color-text-base: #2B2620;
+  --pst-color-text-muted: #6F665A;
+  --pst-color-border: #DDD3C2;
+  --pst-color-border-muted: rgba(43, 38, 32, 0.2);
+  --pst-color-table-inner-border: #DDD3C2;
+  --pst-color-shadow: rgba(43, 38, 32, 0.1);
+  --pst-color-blockquote-notch: #6F665A;
+
+  --pst-color-primary: #9A4F1D;
+  --pst-color-primary-bg: #F3E3D3;
+  --pst-color-primary-highlight: #6E3814;
+  --pst-color-primary-text: #FFFDF8;
+  --pst-color-secondary: #8F6A00;
+  --pst-color-secondary-bg: #F6EBC8;
+  --pst-color-accent: #8F6A00;
+  --pst-color-accent-bg: #F6EBC8;
+
+  --pst-color-link: #9A4F1D;
+  --pst-color-link-hover: #6E3814;
+  --pst-color-inline-code: #2B2620;
+  --pst-color-inline-code-links: #9A4F1D;
+  --pst-color-target: #F6EBC8;
+  --pst-color-table-row-hover-bg: #F3E3D3;
+
+  --pst-color-info: #2A5F9E;
+  --pst-color-info-bg: #DDE8F5;
+  --pst-color-success: #2E7D32;
+  --pst-color-success-bg: #DDEFD6;
+  --pst-color-warning: #8F6A00;
+  --pst-color-warning-bg: #F6EBC8;
+  --pst-color-danger: #A3322B;
+}
+
+/* Pygments' igor style paints code blocks pure white; use the sheet
+   color so they sit on the page like the other cards. */
+html[data-theme="light"] .highlight,
+html[data-theme="light"] .highlight pre {
+  background: #FFFDF8;
+}
+
+/* Reading-material entries in the course schedule (distinct color + italic). */
+.reading {
+  color: #1a7f37;
+  font-style: italic;
+}
+html[data-theme="dark"] .reading {
+  color: #4ade80;
+}
+@media (prefers-color-scheme: dark) {
+  html[data-theme="auto"] .reading {
+    color: #4ade80;
+  }
+}
+
+/* Quiz entries in the course schedule (distinct color + bold). */
+.quiz {
+  color: #8250df;
+  font-weight: bold;
+}
+html[data-theme="dark"] .quiz {
+  color: #d2a8ff;
+}
+@media (prefers-color-scheme: dark) {
+  html[data-theme="auto"] .quiz {
+    color: #d2a8ff;
+  }
+}
+
+/* Assignment (setup and GP) posted and due entries in the course schedule
+   (distinct color + bold). */
+.assignment {
+  color: #bc4c00;
+  font-weight: bold;
+}
+html[data-theme="dark"] .assignment {
+  color: #ffa657;
+}
+@media (prefers-color-scheme: dark) {
+  html[data-theme="auto"] .assignment {
+    color: #ffa657;
+  }
+}
+
+/* Weeks with no class (Thanksgiving recess) in the course schedule. The cell text
+   uses the `no-class` role; `tr:has()` tints the whole row, and the span
+   carries the same tint so the color key shows it. Light uses the sand
+   palette's gold-soft, dark the task tracker's dark gold-soft. */
+.no-class {
+  font-weight: bold;
+  background-color: var(--no-class-bg);
+  padding: 0 0.25em;
+  border-radius: 0.2em;
+}
+table.schedule-table tr:has(.no-class) > td {
+  background-color: var(--no-class-bg);
+}
+table.schedule-table .no-class {
+  padding: 0;
+}
+html[data-theme="light"] {
+  --no-class-bg: #F6EBC8;
+}
+html[data-theme="dark"] {
+  --no-class-bg: #3B3117;
+}
+
+/* ============================================================
+ * Read the Docs version menu (the "flyout", bottom right)
+ *
+ * The menu lives in a shadow DOM. Its colors and font come from the
+ * --readthedocs-flyout-* custom properties below (list from
+ * readthedocs/addons src/flyout.css); its own defaults sit in
+ * `@layer defaults`, so these unlayered rules win. Pointing them at
+ * the theme's --pst-color-* variables makes the menu follow the light
+ * and dark themes, and switch with the theme toggle.
+ *
+ * Shape (rounded corners, border, shadow) and the logo color cannot be
+ * set from here: _static/flyout-style.js adds them inside the shadow DOM.
+ * ============================================================ */
+
+html {
+  --readthedocs-flyout-font-family: var(--pst-font-family-base);
+  --readthedocs-flyout-background-color: var(--pst-color-on-background);
+  --readthedocs-flyout-color: var(--pst-color-text-base);
+  --readthedocs-flyout-section-heading-color: var(--pst-color-text-muted);
+  --readthedocs-flyout-item-link-color: var(--pst-color-link);
+  --readthedocs-flyout-current-version-color: var(--pst-color-primary);
+  --readthedocs-flyout-link-color: var(--pst-color-link);
+  --readthedocs-flyout-divider-color: var(--pst-color-border);
+}
+
+/* The menu's Read the Docs logo is white, made for a dark menu.
+   flyout-style.js reads this filter: dark logo on the light card. */
+html[data-theme="light"] {
+  --enpm-flyout-logo-filter: brightness(0) opacity(0.75);
+}
+html[data-theme="dark"] {
+  --enpm-flyout-logo-filter: none;
+}

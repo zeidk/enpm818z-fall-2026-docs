@@ -203,17 +203,30 @@ A
       Precision (Measurement). :doc:`L2 </lectures/lecture2/l2_index>` ·
       :doc:`L3 </lectures/lecture3/l3_index>`
 
+   Activation Function
+      The function a neuron applies to its weighted sum, written
+      :math:`\sigma` (here not the standard deviation). Without one, depth
+      adds nothing: a weighted sum of weighted sums is still one weighted
+      sum, so a hundred stacked layers act like one. ReLU and SiLU are
+      two examples, and YOLOv8 uses SiLU. See Neuron.
+      :doc:`L4 </lectures/lecture4/l4_index>`
+
    ADAS
-      Advanced Driver Assistance Systems. Systems that support the human
-      driver in performing parts of the Dynamic Driving Task. Corresponds
-      to SAE Levels 1--2. Examples: Adaptive Cruise Control, Lane Keeping
-      Assist. :doc:`L1 </lectures/lecture1/l1_lecture>`
+      Advanced Driver Assistance Systems. Systems that do part of the
+      DDT while the human monitors continuously and stays the fallback,
+      always and immediately. SAE Levels 1 and 2. Examples: adaptive
+      cruise, lane keeping, hands-off highway. Capability does not
+      decide it: a very capable system that still needs an attentive
+      driver is an ADAS. :doc:`L1 </lectures/lecture1/l1_lecture>`
 
    ADS
-      Automated Driving Systems. Systems that perform the entire Dynamic
-      Driving Task without human intervention within a specified ODD.
-      Corresponds to SAE Levels 3--5. Not to be confused with UMD's
-      Accessibility and Disability Service, which shares the abbreviation. :doc:`L1 </lectures/lecture1/l1_lecture>`
+      Automated Driving System. A system that performs all of the DDT
+      within its ODD. The system, not the human, monitors the road. It
+      covers SAE Levels 3, 4 and 5. The levels differ in who handles
+      the fallback: at Level 3 the human, on request; at Levels 4 and 5
+      the system itself. Not to be confused with UMD's Accessibility
+      and Disability Service, which shares the abbreviation.
+      :doc:`L1 </lectures/lecture1/l1_lecture>`
 
    AEB
       Automatic Emergency Braking. A momentary intervention that applies the
@@ -222,9 +235,10 @@ A
       stops performing the DDT. :doc:`L1 </lectures/lecture1/l1_lecture>`
 
    Anchor Box
-      A predefined bounding box shape (width, height) used by object
-      detectors like YOLO v3--v7 as a reference for predicting object
-      locations. Anchor-free detectors (YOLOv8+, DETR) eliminate these. :doc:`L4 </lectures/lecture4/l4_index>`
+      A preset box shape that a detector adjusts to fit each object.
+      L4's YOLOv8 uses none: each grid cell predicts four distances
+      from its center to the box edges, so YOLOv8 is called
+      anchor-free. :doc:`L4 </lectures/lecture4/l4_index>`
 
    A* Search
       A heuristic graph-search algorithm that finds the shortest path from
@@ -233,11 +247,28 @@ A
       admissible heuristic. Used for global route planning on the road
       graph and for grid/lattice-based motion planning. :doc:`L8 </lectures/lecture8/l8_index>` · :doc:`L10 </lectures/lecture10/l10_index>`
 
+   Angle Wrapping
+      Bringing every angle back into the range -180° to 180°, with
+      ``np.arctan2(np.sin(a), np.cos(a))``. 179° and -179° are 2° apart,
+      not 358°. Subtract them the naive way and the filter sees a huge
+      surprise and swings the AV almost all the way around. An EKF wraps
+      in three places: inside :math:`f`, in the surprise
+      :math:`\boldsymbol{\nu}`, and in :math:`\hat{\mathbf{x}}` after the
+      update. :doc:`L3 </lectures/lecture3/l3_index>`
+
    Angular Resolution
       The smallest angular separation at which two returns can still be
       told apart. Because it is an angle, the width it covers grows with
       range: 2 degrees spans 3.5 m at 100 m, which is a car and the
       motorcycle beside it. :doc:`L2 </lectures/lecture2/l2_index>`
+
+   AP (Average Precision)
+      The area under the precision-recall line for one class. At each
+      recall, the line keeps the best precision at that recall or
+      beyond. In L4's example (3 people, 5 detections ranked by
+      confidence), AP = 0.333 + 0.333 + 0.250 = 0.917. The average of
+      AP over all classes is mAP. Papers often write mAP@0.5:0.95
+      simply as "AP". :doc:`L4 </lectures/lecture4/l4_index>`
 
    ASIL
       Automotive Safety Integrity Level. Defined by ISO 26262 to classify
@@ -251,6 +282,35 @@ A
       concatenates the outputs -- capturing objects at varying scales in
       a single forward pass. :doc:`L5 </lectures/lecture5/l5_index>`
 
+   Attention
+      A step that gives each token a new vector: a weighted average of
+      all the tokens, where each weight says how much that token
+      matters to it. The weights are computed from the tokens for each
+      image, and add up to 1:
+      :math:`\text{softmax}(QK^\top/\sqrt{d})\,V`. One attention layer
+      reads every cell of the image, where one :math:`3 \times 3`
+      convolution reads only the 8 neighbors. :math:`N` tokens make
+      :math:`N^2` pairs. :doc:`L4 </lectures/lecture4/l4_index>`
+
+   Automated Driving Feature
+      SAE J3016's name for Levels 3 to 5. The system performs the
+      entire DDT within its ODD. The three levels differ in who handles
+      the DDT fallback: the human on request at Level 3, the system
+      itself at Levels 4 and 5. Contrast Driver Support Feature.
+      :doc:`L1 </lectures/lecture1/l1_index>`
+
+   Axis Trap
+      The mismatch between two names for the same three directions. The
+      intrinsic matrix :math:`K` assumes the optical convention: *x*
+      right, *y* down, *z* forward along the optical axis. CARLA, like
+      most robotics and game engines, uses *x* forward, *y* right, *z*
+      up. A permutation matrix :math:`P` relabels the axes before
+      :math:`K` sees them. Leave :math:`P` out and you get no error and
+      a garbage image: every point lands off the image. Get one sign
+      wrong and the scene comes out upside down. Derive :math:`P` from
+      your own convention rather than copying it.
+      :doc:`L2 </lectures/lecture2/l2_index>`
+
 
 .. _glossary-b:
 
@@ -260,17 +320,27 @@ B
 .. glossary::
 
    Backbone
-      The feature extraction component of an object detection architecture.
-      In YOLO, this is typically CSPDarknet or similar CNN that extracts
-      hierarchical features from the input image. :doc:`L4 </lectures/lecture4/l4_index>`
+      The first part of a detector: a CNN, or a ViT, that turns the
+      image into feature maps. YOLOv8s's backbone turns a
+      :math:`480 \times 640` image into three maps, at strides 8, 16 and
+      32, with 128, 256 and 512 channels. A backbone is often
+      pretrained on a large image collection, then reused. See Neck and
+      Head (Detection). :doc:`L4 </lectures/lecture4/l4_index>`
+
+   Backpropagation
+      The algorithm that computes the gradients of the loss for all the
+      weights at once, working backward from the output. Gradient descent
+      then uses those gradients to move the weights.
+      :doc:`L4 </lectures/lecture4/l4_index>`
 
    Base Link
       The one agreed point on the AV that its position refers to: the
       middle of the rear axle, as in Autoware. The rear wheels do not
-      steer, so this point always moves along the heading, never
-      sideways. In the L3 road frame, the AV at (103.0, 2.5) means its
-      base link is 103.0 m along the road and 2.5 m across from the
-      survey marker. :doc:`L3 </lectures/lecture3/l3_index>`
+      steer, so if the tires do not slip, this point always moves along
+      the heading, never sideways. In the L3 road frame, the AV at
+      (103.0, 2.5) means its base link is 103.0 m along the road and
+      2.5 m across from the survey marker.
+      :doc:`L3 </lectures/lecture3/l3_index>`
 
    Baseline
       The distance between the two optical centres of a stereo pair,
@@ -283,6 +353,16 @@ B
       (typically RGGB) so that each pixel records only one colour channel.
       Demosaicing reconstructs full RGB images. Determines per-channel
       resolution and low-light noise behaviour. :doc:`L2 </lectures/lecture2/l2_index>`
+
+   Bearing
+      The angle between the AV's nose and a target, written
+      :math:`\beta`, positive to the left. For a sign at
+      :math:`(x_s, y_s)` it is
+      :math:`\operatorname{atan2}(\Delta y, \Delta x) - \theta`: the
+      direction to the sign measured from east, minus the heading. With
+      the range :math:`r`, it is what the camera reports in L3's EKF.
+      It is an angle, so its surprise must be wrapped.
+      :doc:`L3 </lectures/lecture3/l3_index>`
 
    Behavior Cloning
       An imitation learning approach where a policy is trained by supervised
@@ -307,7 +387,7 @@ B
    BEV
       Bird's-Eye View. A top-down representation of the driving scene that
       projects sensor data into an ego-centric 2D plane. The dominant
-      perception paradigm in modern AV systems. See also: BEVFormer. :doc:`L5 </lectures/lecture5/l5_index>`
+      perception paradigm in modern AV systems. See also: BEVFormer. :doc:`L4 </lectures/lecture4/l4_index>` · :doc:`L5 </lectures/lecture5/l5_index>`
 
    BEVFormer
       A transformer-based BEV construction method (Li et al., ECCV 2022)
@@ -331,6 +411,13 @@ B
       outside. :doc:`L2 </lectures/lecture2/l2_index>` ·
       :doc:`L3 </lectures/lecture3/l3_index>`
 
+   Bias (Neuron)
+      The one extra number :math:`b` that a neuron adds to its weighted
+      sum before the activation:
+      :math:`y = \sigma(w_1 x_1 + w_2 x_2 + \dots + b)`. Training sets it
+      together with the weights. Not the measurement bias of L2 and L3:
+      see Bias. :doc:`L4 </lectures/lecture4/l4_index>`
+
    Bicycle Model
       A simplified kinematic vehicle model that merges the two front wheels
       and two rear wheels into single virtual wheels. Used as the foundation
@@ -342,9 +429,11 @@ B
       Eliminates the need for NMS. :doc:`L4 </lectures/lecture4/l4_index>`
 
    Blueprint Library
-      In CARLA, a collection of templates for creating actors (vehicles,
-      pedestrians, sensors) with configurable attributes like color and
-      sensor parameters. :doc:`L1 </lectures/lecture1/l1_lecture>`
+      In CARLA, the collection of blueprints. A blueprint is a
+      template for creating an actor (a vehicle, pedestrian or
+      sensor), with attributes such as color or a sensor's settings.
+      Nothing exists in the world until you spawn an actor from one.
+      :doc:`L2 </lectures/lecture2/l2_index>`
 
    B-Spline
       A piecewise polynomial curve with local control point support, used
@@ -364,6 +453,17 @@ C
 
 .. glossary::
 
+   Calibration
+      Comparing a sensor against something you already trust, and
+      keeping the numbers that turn its raw readings into real-world
+      quantities. The VIM (2012) gives the formal definition. The
+      numbers are not in the data: you measure them once, then keep
+      checking them. For a LiDAR and a camera it takes two pieces: the
+      camera's intrinsics and the extrinsic between the two sensors.
+      Calibration is not fusion. It tells you which pixel a LiDAR point
+      lands on, not whether both sensors see the same object.
+      :doc:`L2 </lectures/lecture2/l2_index>`
+
    Calibration (Extrinsic)
       The process of determining the 6-DOF transformation (rotation +
       translation) between sensors or between a sensor and the vehicle
@@ -376,14 +476,38 @@ C
 
    CARLA
       CAR Learning to Act. An open-source autonomous driving simulator
-      built on Unreal Engine 4, providing realistic urban/highway
-      environments, sensor simulation, and a Python API. :doc:`L1 </lectures/lecture1/l1_lecture>`
+      built on Unreal Engine, providing realistic urban/highway
+      environments, sensor simulation, and a Python API.
+      :doc:`L2 </lectures/lecture2/l2_index>`
+
+   Channel
+      One feature map in a layer's output. A layer outputs one channel
+      per filter: 32 for YOLOv8s's first layer, 512 at the end of its
+      backbone. Deeper layers have smaller grids and more channels.
+      :doc:`L4 </lectures/lecture4/l4_index>`
 
    Chi-Square Gate
       A test that throws away a reading whose NIS exceeds a threshold
       taken from the chi-square distribution. For a sign match reporting
       :math:`x` and :math:`y` (2 degrees of freedom), the 99 percent
-      line is 9.21. See Gating. :doc:`L3 </lectures/lecture3/l3_index>`
+      line is 9.21. See Gating. :doc:`L3 </lectures/lecture3/l3_index>` ·
+      :doc:`L5 </lectures/lecture5/l5_index>`
+
+   Class Token
+      One extra token put in front of the patch tokens (Dosovitskiy et
+      al., 2021). Its 768 numbers are set by training and are the same
+      for every image. The encoder mixes every patch into it, and the
+      head reads the answer from it alone.
+      :doc:`L4 </lectures/lecture4/l4_index>`
+
+   Classification
+      Given an image and a fixed set of :math:`K` classes, output one
+      score per class, :math:`p_1, \dots, p_K`, each at least 0 and
+      adding up to 1. The label is the class with the highest score,
+      :math:`\hat{y} = \arg\max_k p_k`. It gives one label for the
+      whole image and no box. On L4's street image, YOLOv8s-cls says
+      "police van" with a score of 0.616; the image shows a city bus.
+      :doc:`L4 </lectures/lecture4/l4_index>`
 
    CIoU Loss
       Complete Intersection over Union loss. A bounding box regression
@@ -397,9 +521,12 @@ C
       :term:`Open-Loop Evaluation`. :doc:`L13 </lectures/lecture13/l13_index>`
 
    CNN
-      Convolutional Neural Network. A class of deep neural networks that
-      use convolutional layers to extract spatial features from images.
-      The backbone architecture for most object detectors. :doc:`L4 </lectures/lecture4/l4_index>`
+      Convolutional Neural Network. A network built mostly from
+      convolutions. One layer reads only a small window (3 by 3 cells),
+      with the same filter everywhere, so its cost grows with the number
+      of cells and it learns from less data than a transformer. YOLOv8s
+      is a CNN. RT-DETR-L uses a CNN backbone, then a transformer.
+      :doc:`L4 </lectures/lecture4/l4_index>`
 
    Collision Detection
       The geometric test that determines whether a candidate path or
@@ -420,11 +547,29 @@ C
       making multi-sensor fusion essential for robust perception.
       :doc:`L2 </lectures/lecture2/l2_index>`
 
+   Concept-to-Road Pipeline
+      The seven stages an ADS goes through to reach a public road:
+      Framework, Specify, Build, Validate, Argue, Approve, and Operate
+      and monitor. It is not a release. It is a negotiation between a
+      developer, standards bodies and a regulator. Stage 4 takes almost
+      all the calendar time, and the vehicle runs at Level 2 the whole
+      way through it. Every software update in Stage 7 changes the
+      system that the approval in Stage 6 was granted for.
+      :doc:`L1 </lectures/lecture1/l1_index>`
+
    Concrete Scenario
       A :term:`Logical Scenario` with every parameter fixed to a value, and
       therefore the only scenario layer that can actually be executed. One
       logical scenario yields thousands of concrete ones, which is why test
       selection is a sampling problem. :doc:`L13 </lectures/lecture13/l13_index>`
+
+   Confidence (Detection)
+      The number from 0 to 1 that comes with each box: how strongly the
+      detector scores the class it names for that box. The head gives a
+      raw score per class, a sigmoid maps it into 0 to 1, and the
+      highest class wins. It is not the probability of being right, and
+      0.5 in one model is not 0.5 in another. Not the confidence of a
+      confidence interval. :doc:`L4 </lectures/lecture4/l4_index>`
 
    Confidence Interval
       A range built from data by a stated procedure. A 95 percent
@@ -445,6 +590,14 @@ C
       :math:`(x, y, \theta)` for a planar robot. Obstacles are mapped into
       configuration space to simplify collision checking during planning. :doc:`L10 </lectures/lecture10/l10_index>`
 
+   Contextual Embedding
+      A token's vector after the encoder layers: it describes its patch
+      together with what surrounds it, because attention mixed in the
+      other tokens. In L4, the same patch pasted into a CARLA frame
+      starts with the same vector as in the street image (similarity 1)
+      and ends near 0.3 after 12 layers. Contrast Static Embedding.
+      :doc:`L4 </lectures/lecture4/l4_index>`
+
    Conspicuity
       The DDT subtask of making the vehicle's presence and intent visible to
       other road users: lights, indicators, horn, gestures. A genuine gap in
@@ -459,10 +612,40 @@ C
       gyro's turn rate, :math:`[v, \omega]`, whose noise builds
       :math:`Q_k`. :doc:`L3 </lectures/lecture3/l3_index>`
 
+   Control Matrix
+      The matrix :math:`B` that turns the control input
+      :math:`\mathbf{u}` into changes of the state. Accelerating at
+      :math:`a` for :math:`\Delta t` adds :math:`\Delta t\,a` to a
+      velocity and :math:`\tfrac{1}{2}\Delta t^2 a` to a position: with
+      :math:`\Delta t = 0.1` s, that is :math:`0.1\,a` and
+      :math:`0.005\,a`. In the L3 hands-on, leaving :math:`B\mathbf{u}`
+      out of the predict step takes the error along the tunnel from
+      1.06 m to 3.58 m. :doc:`L3 </lectures/lecture3/l3_index>`
+
+   Convolution
+      The operation every CNN is built on. Slide a small grid of weights,
+      the filter, over the input. At each position, multiply cell by cell
+      and add, so each position gives one output number. A 3 by 3 filter
+      on a 5 by 5 input gives a 3 by 3 output. A filter spans all input
+      channels, so a layer with kernel size :math:`k` has
+      :math:`k \times k \times C_\text{in} \times C_\text{out}` weights:
+      864 for YOLOv8s's first layer (measured). Strictly the operation is
+      cross-correlation, but the weights are learned, so the flip makes
+      no difference. :doc:`L4 </lectures/lecture4/l4_index>`
+
    Cooperative Perception
       Multiple vehicles or roadside units sharing sensor data via V2X
       communication to build a collective, extended understanding of the
       driving scene beyond any single vehicle's sensor range. :doc:`L14 </lectures/lecture14/l14_index>`
+
+   Coordinate Frame
+      An agreed origin and set of axes. The LiDAR reports points in its
+      own frame, the camera in its own, and the vehicle in a third, so
+      two readings can be compared only after a transform puts them in
+      one frame. In L2 the word *frame* also means one camera image or
+      one LiDAR sweep. Where the meaning is unclear, the notes say
+      *coordinate frame* or *image*.
+      :doc:`L2 </lectures/lecture2/l2_index>`
 
    Covariance
       How much the errors in two quantities move together: the same
@@ -475,10 +658,21 @@ C
 
    Covariance Matrix
       A square matrix holding variances on the diagonal and covariances
-      off it. In a Kalman filter, P is the covariance of the state
-      estimate. Off-diagonal terms appear on their own during
-      prediction, because advancing position using velocity links the
-      two. :doc:`L3 </lectures/lecture3/l3_index>`
+      off it. In a Kalman filter, P is the covariance of the error: the
+      gap between the estimate and where the AV truly is. Off-diagonal
+      terms appear on their own during prediction, because advancing
+      position using velocity links the two.
+      :doc:`L3 </lectures/lecture3/l3_index>`
+
+   Correlated Errors
+      Errors that move together, so knowing one tells you something
+      about the other. In L3's leaning cloud of readings, 48 of the 62
+      readings ahead of the truth are also to the left; in the upright
+      cloud, 32 of 62, about half. Covariance measures it. In the
+      tunnel filter, predict ties speed to position (correlation
+      +0.79), and that link is how a sign match, which reads only
+      position, also corrects speed.
+      :doc:`L3 </lectures/lecture3/l3_index>`
 
    Coverage Interval
       The term the GUM and the VIM use in place of confidence interval,
@@ -488,16 +682,43 @@ C
 
    Credible Region
       A Bayesian region that contains the true value with a stated
-      probability, given the model. A Kalman filter's covariance ellipse
-      is a credible region rather than a confidence interval. In two
-      dimensions the 95 percent ellipse sits at 2.45 sigma, not 2 sigma.
+      probability, given the model; it differs from a confidence
+      interval (see the L3 references). In two dimensions, with
+      independent east and north errors of the same :math:`\sigma`, a
+      circle must reach :math:`2.45\sigma` to hold 95 percent of
+      readings, against :math:`2\sigma` on one axis.
       :doc:`L3 </lectures/lecture3/l3_index>`
+
+   Cross-Attention
+      Attention in which the queries come from a different set than the
+      keys and values. In DETR's decoder, the object queries ask the
+      image tokens "is my object here?". BEVFormer uses it to fill a
+      map of the ground from camera images. Contrast Self-Attention.
+      :doc:`L4 </lectures/lecture4/l4_index>`
 
    Cross-Attention Fusion
       A deep learning fusion approach that uses transformer cross-attention
       mechanisms to learn how features from one sensor modality should
       attend to features from another (e.g., camera features attending to
       LiDAR features in BEVFusion). :doc:`L6 </lectures/lecture6/l6_index>`
+
+   Cross-Covariance
+      In the UKF update, :math:`P_{xz}`: how the state and the reading
+      move together. For each sigma point, multiply how far it sits
+      from the prediction by how far its expected reading sits from
+      :math:`\hat{\mathbf{z}}`, weight the product, and add them all up.
+      It takes the place of :math:`P^- H^\top` in the gain,
+      :math:`K = P_{xz} S^{-1}`, and comes from the points, not from a
+      Jacobian. :doc:`L3 </lectures/lecture3/l3_index>`
+
+   Cross-Entropy Loss
+      The loss that training makes smaller for classification: minus the
+      natural log of the probability the network gave the correct class,
+      :math:`L = -\ln p_\text{correct}`. With softmax outputs 0.659, 0.242
+      and 0.099 for bus, person and car, the loss is 0.417 if the truth
+      is bus, 1.417 if person and 2.317 if car. A network that is sure
+      and right scores 0. The less probability the network gives the
+      truth, the larger the loss. :doc:`L4 </lectures/lecture4/l4_index>`
 
    Cross-Track Error
       The lateral distance between the vehicle (typically measured at the
@@ -562,7 +783,15 @@ D
    Dead Reckoning
       Estimating current position by integrating motion measurements
       (wheel odometry, IMU) from a known prior pose. Accumulates drift
-      over time without external corrections. :doc:`L7 </lectures/lecture7/l7_index>`
+      over time without external corrections. :doc:`L3 </lectures/lecture3/l3_index>` · :doc:`L7 </lectures/lecture7/l7_index>`
+
+   Decoder
+      The half of a transformer that writes the output. Each layer has
+      three steps: its inputs attend to each other (self-attention),
+      then to the encoder's output (cross-attention), then an MLP. In
+      DETR the inputs are object queries, all decoded at once, so no
+      mask is used. RT-DETR-L has six decoder layers.
+      :doc:`L4 </lectures/lecture4/l4_index>`
 
    DeepLabv3+
       A semantic segmentation architecture (Chen et al., 2018) using atrous
@@ -574,6 +803,14 @@ D
       Extends SORT with a deep appearance descriptor (128-D embedding)
       for re-identification after occlusion. :doc:`L6 </lectures/lecture6/l6_index>`
 
+   Degraded Mode
+      A reduced capability the vehicle falls back to when it loses a
+      sensor. You name the minimum sensor set for each capability in
+      advance. For example, losing a sensor disables lane-keeping but
+      keeps ACC at reduced speed on RADAR. The mode is decided at design
+      time, not invented at runtime.
+      :doc:`L2 </lectures/lecture2/l2_index>`
+
    Degrees of Freedom
       How many numbers a sensor reports at once, written :math:`m`. A
       sign match giving :math:`x` and :math:`y` has :math:`m = 2`. It
@@ -581,9 +818,13 @@ D
       :doc:`L3 </lectures/lecture3/l3_index>`
 
    DETR
-      DEtection TRansformer. A transformer-based object detector that
-      frames detection as a set prediction problem. Uses object queries
-      and bipartite matching instead of anchors and NMS. :doc:`L4 </lectures/lecture4/l4_index>`
+      DEtection TRansformer (Carion et al., 2020). A detector that
+      predicts a set: :math:`N` object queries give :math:`N` answers,
+      each a class and a box, or "no object". Each query is a learned
+      vector, and :math:`N = 100`. In training, the Hungarian algorithm
+      pairs each object with exactly one query, so DETR needs no NMS. It
+      matched Faster R-CNN at 42.0 mAP on COCO, but only after 500
+      training epochs. :doc:`L4 </lectures/lecture4/l4_index>`
 
    Diffusion-Based Planning
       Motion planning via iterative denoising of trajectories, learned
@@ -631,6 +872,16 @@ D
       estimate puts the tangent in the wrong place, which gives a worse
       estimate. :doc:`L3 </lectures/lecture3/l3_index>`
 
+   Domain Gap
+      The difference between the images a model was trained on and the
+      images it sees in use. The larger the gap, the worse the model
+      does, even when it scored well on its own test set. On an AV it
+      comes from simulation to real, everyday images to roads, weather
+      and light, place, and sensor. You see it when mAP on your own
+      data falls below the published mAP. You shrink it by fine-tuning
+      on data from where you drive. See Sim-to-Real Gap.
+      :doc:`L4 </lectures/lecture4/l4_index>`
+
    Domain Randomization
       Varying simulation parameters (lighting, textures, weather, sensor
       noise) during training to improve robustness and sim-to-real transfer
@@ -651,6 +902,13 @@ D
       2024) that combines a vision-language reasoning model with a fast
       driving policy, producing chain-of-thought scene descriptions
       alongside action outputs. :doc:`L12 </lectures/lecture12/l12_index>`
+
+   Driver Support Feature
+      SAE J3016's name for Levels 0 to 2. In all three, the human is
+      driving, whatever the system is doing: the human performs or
+      supervises the DDT. Capability varies a great deal across these
+      levels, and the level does not move. Contrast Automated Driving
+      Feature. :doc:`L1 </lectures/lecture1/l1_index>`
 
    Driving Automation Feature
       The unit that SAE J3016 actually classifies. A level applies to a
@@ -711,10 +969,49 @@ E
       Kalman Filter. :doc:`L3 </lectures/lecture3/l3_index>` ·
       :doc:`L7 </lectures/lecture7/l7_index>`
 
+   Embedding
+      Turning each piece of the input into a vector of :math:`D`
+      numbers that the network can compare and combine. ViT does it in
+      two steps: read each patch's pixels into one line of 768 numbers,
+      then multiply that line by a learned :math:`768 \times D` matrix
+      :math:`E`. In ViT-Base, :math:`D = 768`. See Token.
+      :doc:`L4 </lectures/lecture4/l4_index>`
+
+   Encoder
+      The half of a transformer that reads the input: a stack of
+      layers, each self-attention then an MLP. Tokens in, the same
+      number of tokens out, each now carrying the context of the
+      others. ViT-Base stacks 12 encoder layers. RT-DETR-L uses one,
+      over the 400 cells of its stride-32 map.
+      :doc:`L4 </lectures/lecture4/l4_index>`
+
+   Epoch
+      One pass over the training images: fifty epochs means fifty passes.
+      How many epochs to run is chosen on the validation set, and fewer
+      epochs is one remedy for overfitting.
+      :doc:`L4 </lectures/lecture4/l4_index>`
+
+   Estimate
+      The filter's best guess of the state, written with a hat,
+      :math:`\hat{\mathbf{x}}` (x-hat). The hat always means "our best
+      guess at", never the truth. A minus, :math:`\hat{\mathbf{x}}^-`,
+      marks the prediction, before the next measurement corrects it;
+      the minus marks every predicted quantity, as in :math:`P^-`. An
+      estimate without an uncertainty is useless to a filter: with
+      nothing to weigh, all it can do is trust every source equally.
+      :doc:`L3 </lectures/lecture3/l3_index>`
+
    Expectation
       The average of a quantity taken over all possible outcomes rather
       than over a finite sample. Written with E and square brackets.
       :doc:`L3 </lectures/lecture3/l3_index>`
+
+   Expected Reading
+      What a sensor should report if the prediction were right: the
+      measurement model run on the prediction, :math:`H\hat{\mathbf{x}}^-`
+      (in the EKF, :math:`h(\hat{\mathbf{x}}^-)`). The surprise is the
+      real reading minus this one. In L3's braking step it is
+      :math:`(100.995,\ 20)` m. :doc:`L3 </lectures/lecture3/l3_index>`
 
    Extended Kalman Filter
       EKF. A Kalman filter for models that are curves, not straight
@@ -752,6 +1049,49 @@ F
       few-seconds reacquisition of situational awareness it demands is a
       human-factors problem rather than a software one. :doc:`L1 </lectures/lecture1/l1_lecture>`
 
+   False Negative (FN)
+      A ground-truth object that no detection matched. Many false
+      negatives mean low recall: on an AV, a missed pedestrian.
+      :doc:`L4 </lectures/lecture4/l4_index>`
+
+   False Positive (FP)
+      A detection that matches nothing: a box on no object, or a second
+      box on an object already matched. Many false positives mean low
+      precision: on an AV, a phantom pedestrian that can cause a hard
+      brake for nothing. :doc:`L4 </lectures/lecture4/l4_index>`
+
+   Feature
+      One number computed for one place in the image: how strongly one
+      pattern is present there. L4's hand-made vertical-edge filter
+      gives 414.7 at the edge of a letter on the bus and -9.0 on the
+      flat roof. A network learns its own features, edges and colors
+      among them. :doc:`L4 </lectures/lecture4/l4_index>`
+
+   Feature Map
+      The features for one pattern at every place in the image: a grid
+      of numbers, drawn as an image where bright means large. YOLOv8s's
+      first layer gives :math:`240 \times 320` maps from a
+      :math:`480 \times 640` input, because its filter moves 2 pixels
+      per step (stride 2). :doc:`L4 </lectures/lecture4/l4_index>`
+
+   Filter (Convolution)
+      A small grid of weights, not a Kalman filter. Laid on a window of
+      pixels, it multiplies each pixel by the weight on top of it, and
+      the sum (the response) says how strongly one pattern is there.
+      L4's hand-made edge filter is :math:`3 \times 3`: -1 in the left
+      column, 0 in the middle, +1 in the right. A network's filter
+      weights are set by training. See Filter (Estimation).
+      :doc:`L4 </lectures/lecture4/l4_index>`
+
+   Filter (Estimation)
+      Something that keeps a running estimate (best guess) of something
+      no sensor gives you exactly, updates it whenever a measurement
+      arrives, and reports how uncertain that guess is right now. It
+      holds two things at all times: the estimate, and how much to
+      trust it. The Kalman filter, EKF, UKF and particle filter are
+      filters in this sense. See Filter (Convolution).
+      :doc:`L3 </lectures/lecture3/l3_index>`
+
    Filter Consistency
       Whether a filter's reported covariance matches the errors it
       actually makes: an honest filter is neither overconfident nor
@@ -760,6 +1100,17 @@ F
       the time. Without it, use the NIS, built only from quantities the
       filter already computes, so the check can run continuously on a
       vehicle. :doc:`L3 </lectures/lecture3/l3_index>`
+
+   Fine-Tuning
+      Training a pretrained network a little more, on your own data.
+      Replace the head so it outputs your classes (say 5, where COCO has
+      80), and train with a small learning rate; optionally freeze the
+      first layers, meaning you stop training them. The early layers
+      (edges, simple shapes) need little change, and the deeper ones
+      adapt. It needs a few thousand of your own images, not COCO's
+      118,287. It is how you add classes a dataset lacks, such as exit
+      signs, and how you shrink the domain gap.
+      :doc:`L4 </lectures/lecture4/l4_index>`
 
    FMCW
       Frequency-Modulated Continuous Wave. The radar modulation that
@@ -782,7 +1133,7 @@ F
       A large neural network pre-trained on broad data at scale and
       adaptable to many downstream tasks (e.g., GPT, CLIP). In AV, used
       as VLA backbones (DriveVLM, NVIDIA Alpamayo) and as world-model
-      starting points. :doc:`L12 </lectures/lecture12/l12_index>` · :doc:`L13 </lectures/lecture13/l13_index>`
+      starting points. :doc:`L4 </lectures/lecture4/l4_index>` · :doc:`L12 </lectures/lecture12/l12_index>` · :doc:`L13 </lectures/lecture13/l13_index>`
 
    FPN
       Feature Pyramid Network. A neck architecture that fuses features
@@ -800,6 +1151,13 @@ F
       discrete states (lane follow, lane change, stop, yield) and
       transition rules. Simple, interpretable, but brittle for complex
       scenarios. :doc:`L9 </lectures/lecture9/l9_index>`
+
+   Functional Safety
+      The scope of ISO 26262: hazards from things that break. A sensor
+      fails, a chip flips a bit, code crashes. ISO 26262 ranks each
+      hazard with an ASIL so the riskiest ones get the most
+      engineering. Contrast SOTIF, where nothing breaks.
+      :doc:`L1 </lectures/lecture1/l1_index>`
 
    Functional Scenario
       A scenario written in plain language so that humans can agree on it
@@ -839,7 +1197,20 @@ G
       time, normal-looking, and 25 m wrong. Its own failure mode: a
       filter that is already wrong rejects the good readings that would
       correct it, so count rejections in a row and raise an alarm past a
-      limit. :doc:`L3 </lectures/lecture3/l3_index>`
+      limit. :doc:`L3 </lectures/lecture3/l3_index>` ·
+      :doc:`L5 </lectures/lecture5/l5_index>`
+
+   Gaussian
+      A bell curve: one peak, with errors usually small and rarely
+      large. :math:`\mathbf{w} \sim \mathcal{N}(0, Q)` reads "drawn from
+      a bell curve centered on 0, with covariance :math:`Q`". On one
+      axis, about 68 percent of readings land within one :math:`\sigma`
+      of the mean, 95 percent within two and 99.7 percent within three.
+      A Kalman filter keeps its belief as one Gaussian: the estimate
+      sets where it peaks and :math:`P` sets how wide it is. A straight
+      line turns a Gaussian into a Gaussian; a curve bends it into a
+      lopsided shape, which is why the EKF is needed.
+      :doc:`L3 </lectures/lecture3/l3_index>`
 
    Geofence
       A boundary in the physical world, encoded in software, outside which a
@@ -851,7 +1222,7 @@ G
       the set of pairings with the lowest total cost, usually with the
       Hungarian algorithm. Removes the order dependence that makes plain
       nearest-neighbor association unreliable.
-      :doc:`L6 </lectures/lecture6/l6_index>`
+      :doc:`L5 </lectures/lecture5/l5_index>` · :doc:`L6 </lectures/lecture6/l6_index>`
 
    GNN
       Graph Neural Network. A neural network operating on graph-structured
@@ -864,12 +1235,32 @@ G
       (latitude, longitude, altitude). Includes GPS (US), GLONASS
       (Russia), Galileo (EU), BeiDou (China). :doc:`L2 </lectures/lecture2/l2_index>` · :doc:`L7 </lectures/lecture7/l7_index>`
 
+   Gradient
+      How much one number changes when another changes a little. In
+      training, the gradient :math:`\partial L / \partial w` says, for each
+      weight, how the loss changes when that weight changes. The L4
+      lecture uses the same tool on pixels: how much a cell's person score
+      would change if one pixel changed a little. See Backpropagation and
+      Gradient Descent. :doc:`L4 </lectures/lecture4/l4_index>`
+
+   Gradient Descent
+      The training step that moves every weight a little downhill, by the
+      learning rate :math:`\eta` times its gradient:
+      :math:`w \leftarrow w - \eta \, \partial L / \partial w`. In the L4
+      example (numbers chosen for it), one weight gives
+      :math:`\hat{y} = wx` with loss :math:`(wx - y)^2`, :math:`x = 2`,
+      :math:`y = 6`, :math:`w = 1` and :math:`\eta = 0.05`. The loss is
+      16, the gradient is -16, and one step gives :math:`w = 1.8`, which
+      drops the loss to 5.76. Training repeats this step thousands of
+      times or more. :doc:`L4 </lectures/lecture4/l4_index>`
+
    Ground Truth
       The true value of a quantity. Available in simulation and never
       available on a real vehicle. Used to check whether a filter's
       reported uncertainty matches the error it is actually making.
       :doc:`L2 </lectures/lecture2/l2_index>` · :doc:`L3
-      </lectures/lecture3/l3_index>`
+      </lectures/lecture3/l3_index>` ·
+      :doc:`L4 </lectures/lecture4/l4_index>`
 
    GUM
       Guide to the Expression of Uncertainty in Measurement, JCGM
@@ -887,26 +1278,49 @@ H
    HARA
       Hazard Analysis and Risk Assessment. An ISO 26262 process for
       systematically identifying potential hazards, assessing their
-      severity, exposure, and controllability, and assigning ASIL levels. :doc:`L14 </lectures/lecture14/l14_index>`
+      severity, exposure, and controllability, and assigning ASIL levels. :doc:`L1 </lectures/lecture1/l1_index>` ·
+      :doc:`L14 </lectures/lecture14/l14_index>`
 
    Hardware-in-the-Loop (HIL)
       A test level in which real ECUs run the software with real timing while
       the world remains simulated. Catches latency, scheduling and resource
       limits that :term:`Software-in-the-Loop (SIL)` cannot. :doc:`L13 </lectures/lecture13/l13_index>`
 
+   Hand-Eye Calibration
+      Motion-based extrinsic calibration: each sensor estimates its own
+      ego-motion, and you solve :math:`AX = XB` for the transform
+      :math:`X` between them. It needs no target, but it needs real
+      rotation and translation, so driving in a straight line is
+      degenerate. The other two families are target-based (a
+      checkerboard or AprilTag board seen by both sensors, most
+      accurate, hard to repeat in the field) and targetless (aligning
+      natural structure such as LiDAR intensity edges against image
+      edges). :doc:`L2 </lectures/lecture2/l2_index>`
+
    HD Map
       High-Definition map with centimeter-accurate road geometry, lane
       markings, traffic signs, and semantic annotations. Used for
       precise localization by matching live sensor data against the map.
       In the L3 tunnel, it is what turns "I see an exit sign" into "I am
-      here" (the sign match). :doc:`L3 </lectures/lecture3/l3_index>` ·
+      here" (the sign match). :doc:`L2 </lectures/lecture2/l2_index>` ·
+      :doc:`L3 </lectures/lecture3/l3_index>` ·
       :doc:`L7 </lectures/lecture7/l7_index>` ·
       :doc:`L8 </lectures/lecture8/l8_index>`
 
    Head (Detection)
-      The final component of an object detection architecture that
-      produces bounding box coordinates and class predictions. Can be
-      anchor-based (YOLO v3--v7) or anchor-free (YOLOv8+, DETR). :doc:`L4 </lectures/lecture4/l4_index>`
+      The last part of a detector: it turns features into the answer,
+      classes and boxes. In YOLOv8s it is a few small convolutions run
+      at every cell of the three maps: 144 numbers per cell, 80 class
+      scores and 64 for the box (four distances, each as 16 bins),
+      decoded to 84. Because it is a convolution, the same weights run
+      at all 6300 cells. RT-DETR-L's head is a transformer decoder.
+      :doc:`L4 </lectures/lecture4/l4_index>`
+
+   Height Map
+      A grid seen from above that stores, in each cell, the height of the
+      tallest LiDAR point in that cell. The L5 hands-on first drops the
+      points inside the AV's footprint, because the lowest beams hit its
+      own roof. :doc:`L5 </lectures/lecture5/l5_index>`
 
    HOTA
       Higher Order Tracking Accuracy. A tracking evaluation metric that
@@ -986,13 +1400,22 @@ I
       is smaller than either input. The one-number Kalman update is
       exactly this: a prediction of 50 m (:math:`\sigma = 2` m) and a
       sign match of 53 m (:math:`\sigma = 1` m) give 52.4 m with
-      :math:`\sigma = 0.89` m. Halving a sensor's sigma multiplies its
-      weight by four. :doc:`L3 </lectures/lecture3/l3_index>`
+      :math:`\sigma = 0.89` m. The weight is :math:`1/\sigma^2`, so half
+      the sigma gives four times the weight.
+      :doc:`L3 </lectures/lecture3/l3_index>`
 
    IoU
       Intersection over Union. The ratio of the overlap area to the
       union area of a predicted and ground truth bounding box. Used as
       the primary metric for evaluating detection localization. :doc:`L4 </lectures/lecture4/l4_index>`
+
+   IPM
+      Inverse perspective mapping. Redrawing a camera image as the ground
+      seen from above, by assuming everything in it lies on the road. It
+      needs no learning and no depth sensor, and it is exact for lane
+      markings on a flat road. Anything above the road breaks the
+      assumption: in the L5 hands-on, buildings smear into long streaks
+      pointing away from the AV. :doc:`L5 </lectures/lecture5/l5_index>`
 
    ISO 26262
       International standard for functional safety of road vehicle
@@ -1010,6 +1433,13 @@ I
       Scenario based safety evaluation framework* (2022). Part of the ISO
       34500 series: 34501 vocabulary, 34502 evaluation framework, 34503 ODD
       taxonomy, 34504 scenario categorization, 34505 test case generation. :doc:`L13 </lectures/lecture13/l13_index>`
+
+   ISO/SAE 21434
+      The automotive cybersecurity standard: things an attacker does
+      on purpose. Its analysis, TARA, asks what an attacker could do
+      and produces security goals in Stage 2 of the concept-to-road
+      pipeline. Covered in the cybersecurity pre-read before L14.
+      :doc:`L1 </lectures/lecture1/l1_index>`
 
 .. _glossary-j:
 
@@ -1064,6 +1494,14 @@ K
       A precise measurement pushes :math:`K` toward 1, an imprecise one
       toward 0. :doc:`L3 </lectures/lecture3/l3_index>`
 
+   Kidnapped Robot Problem
+      A robot picked up and moved somewhere unknown, so it has no idea
+      where it is. Its belief has several peaks, which makes it a
+      particle filter problem, not a Kalman filter one. The L3 particle
+      filter hands-on is a version of it: the AV's computer restarts in
+      a 700 m tunnel with 23 identical lights 25 m apart.
+      :doc:`L3 </lectures/lecture3/l3_index>`
+
 
 .. _glossary-l:
 
@@ -1071,6 +1509,17 @@ L
 =
 
 .. glossary::
+
+   L-Shape Fitting
+      Fitting a rotated box to a cluster of LiDAR points seen from above,
+      with no learning (Zhang et al., 2017). For each direction
+      :math:`\theta` from 0 to 89 degrees, in steps of 1 degree, take the
+      rectangle with those axes that just holds the points. Score it by
+      the sum over points of :math:`1/\max(d, d_0)`, where :math:`d` is a
+      point's distance to its nearest edge. The best direction gives the
+      box. One sweep shows a rectangle, not which end is the front, so
+      the heading is known only modulo 180 degrees.
+      :doc:`L5 </lectures/lecture5/l5_index>`
 
    Lanelet2
       An open lane-graph map format (Poggenhans et al., 2018) widely used
@@ -1083,11 +1532,31 @@ L
       sensor, but information is discarded before the combination
       happens. This is what GP3 uses. :doc:`L6 </lectures/lecture6/l6_index>`
 
+   Latency
+      The time from a camera frame arriving to its boxes coming out of
+      the detector. On L4's street image (RTX 4060 laptop, plugged in,
+      PyTorch, median of 50 runs): 9.1 ms for YOLOv8s, 29.9 ms for
+      RT-DETR-L. On battery the same calls took 13.3 and 42.0 ms, so a
+      latency is only useful with its conditions. See Time Budget.
+      :doc:`L4 </lectures/lecture4/l4_index>`
+
+   Lateral Control
+      The DDT subtask of steering: holding a lane, and turning. Covered
+      in L11. :doc:`L1 </lectures/lecture1/l1_index>`
+
    Lattice Planner
       A motion planning approach that performs graph search on a
       pre-computed state lattice of kinematically feasible motion
       primitives. Combines the completeness of graph search with
       kinematic feasibility. :doc:`L10 </lectures/lecture10/l10_index>`
+
+   Layer
+      One step of a network's computation: a set of filters, each slid
+      over the layer's input, each giving one feature map. Layers run
+      one after another, each working on the maps the layer before it
+      produced. YOLOv8s's first layer has 32 filters, each
+      :math:`3 \times 3` pixels times 3 colors, so 27 weights, all set
+      by training. :doc:`L4 </lectures/lecture4/l4_index>`
 
    LiDAR
       Light Detection and Ranging. Uses laser pulses and time-of-flight
@@ -1100,16 +1569,20 @@ L
       than visual odometry in low-light and textureless environments. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Lift-Splat-Shoot (LSS)
-      A foundational camera-to-BEV projection method (Philion & Fidler,
-      NeurIPS 2020) that predicts per-pixel depth distributions (Lift),
-      projects features into a voxel grid (Splat), and collapses to BEV
-      (Shoot). Fully differentiable end-to-end. :doc:`L5 </lectures/lecture5/l5_index>`
+      A camera-only BEV method (Philion and Fidler, NeurIPS 2020) in three
+      stages. Lift: predict a depth distribution for each pixel and spread
+      its feature over the depth bins, a frustum of features. Splat: drop
+      the frustum points into BEV cells with the camera intrinsics and
+      extrinsics and sum-pool them, which collapses the height. Shoot:
+      score a fixed set of candidate ego trajectories on the BEV cost map
+      and pick the best. Fully differentiable, with no depth labels.
+      :doc:`L5 </lectures/lecture5/l5_index>`
 
    Likelihood
       :math:`p(\mathbf{z} \mid \mathbf{x})`: how likely the reading
       :math:`\mathbf{z}` is, if the AV were at :math:`\mathbf{x}`. The
       particle filter weighs each particle by it. For one sign match
-      with noise :math:`\sigma`, it is
+      with noise :math:`\sigma`, it is, up to a constant,
       :math:`\exp(-(\mathbf{z} - h(\mathbf{x}))^2 / 2\sigma^2)`.
       :doc:`L3 </lectures/lecture3/l3_index>`
 
@@ -1128,6 +1601,16 @@ L
       separates high-frequency odometry (edge and planar feature matching)
       from low-frequency mapping for real-time operation. :doc:`L7 </lectures/lecture7/l7_index>`
 
+   Localization (Detection)
+      Given an image :math:`W` pixels wide and :math:`H` high and one
+      object of interest, output where it is: one box
+      :math:`b = (x_0, y_0, x_1, y_1)`, with
+      :math:`0 \le x_0 < x_1 \le W` and :math:`0 \le y_0 < y_1 \le H`.
+      No class. Pixel coordinates start at the top-left corner, with
+      :math:`x` to the right and :math:`y` down. Not the same as
+      working out where the AV is.
+      :doc:`L4 </lectures/lecture4/l4_index>`
+
    Logical Scenario
       A :term:`Functional Scenario` with its parameters named and given
       *ranges* (gap 5–30 m, closing speed 0–15 m/s). Still not runnable;
@@ -1136,13 +1619,34 @@ L
    Long-Tail Scenarios
       Rare but safety-critical driving events (e.g., a mattress on the
       highway, a child running into the road) that are underrepresented
-      in training data. The primary data challenge in AV development. :doc:`L13 </lectures/lecture13/l13_index>` · :doc:`L14 </lectures/lecture14/l14_index>`
+      in training data. The primary data challenge in AV development. :doc:`L1 </lectures/lecture1/l1_index>` ·
+      :doc:`L4 </lectures/lecture4/l4_index>` · :doc:`L13 </lectures/lecture13/l13_index>` · :doc:`L14 </lectures/lecture14/l14_index>`
+
+   Longitudinal Control
+      The DDT subtask of acceleration and braking: speed and gap
+      keeping. Covered in L11. :doc:`L1 </lectures/lecture1/l1_index>`
 
    Loop Closure
       Detection of a previously visited location during SLAM, used to
       correct accumulated drift by adding a constraint in the pose graph.
       Methods include scan context, visual bag-of-words, and neural
       descriptors. :doc:`L7 </lectures/lecture7/l7_index>`
+
+   Loss
+      A number :math:`L` that measures how wrong a network's output is.
+      Training adjusts the weights to make it smaller. Classification
+      uses cross-entropy loss. :doc:`L4 </lectures/lecture4/l4_index>`
+
+   Luo's Taxonomy
+      Three ways two sensors can relate, each with a consequence for
+      where you mount them. **Complementary:** different pieces of the
+      puzzle (the camera classifies, the LiDAR measures), so their
+      fields of view must overlap wherever you need both at once.
+      **Competitive:** the same information twice, for fault tolerance,
+      so the two must fail independently. **Cooperative:** new
+      information neither could produce alone, such as stereo depth, so
+      the geometry is the measurement and the baseline sets the depth
+      resolution. :doc:`L2 </lectures/lecture2/l2_index>`
 
 
 .. _glossary-m:
@@ -1158,6 +1662,11 @@ M
       measurement is statistically consistent with a predicted track
       state. :doc:`L6 </lectures/lecture6/l6_index>`
 
+   Maneuver Planning
+      The DDT subtask of deciding what to do next: change lane, wait,
+      turn, overtake. Covered in L8 to L10.
+      :doc:`L1 </lectures/lecture1/l1_index>`
+
    mAP
       Mean Average Precision. The primary metric for evaluating object
       detectors. mAP@0.5 uses a single IoU threshold; mAP@0.5:0.95
@@ -1168,11 +1677,39 @@ M
       R-CNN with a mask head predicting a binary segmentation mask for each
       detected bounding box, enabling pixel-level object delineation. :doc:`L5 </lectures/lecture5/l5_index>`
 
+   Matching Cascade
+      DeepSORT's name for matching the confirmed and coasting tracks to
+      detections first, and the tentative tracks only to the detections
+      left over. A new track has a large :math:`S`, so it looks close to
+      everything. Without the cascade, GNN hands it an older track's
+      detection whenever that lowers the total cost, and the object
+      changes ID. In the L5 LiDAR runs, ID switches fell from 202 to 119
+      with it. :doc:`L5 </lectures/lecture5/l5_index>`
+
+   Matrix Square Root
+      A matrix :math:`L` with :math:`LL^\top = P`: the matrix version of
+      taking :math:`\sigma` from a variance. Each column :math:`L_i` is
+      one direction to step in, already :math:`1\sigma` long, and the
+      UKF places its sigma points along these columns. Code gets
+      :math:`L` with one call, usually named Cholesky. It raises an
+      error when :math:`P` is not symmetric and positive. Treat that
+      error as a bug report, not something to catch and skip.
+      :doc:`L3 </lectures/lecture3/l3_index>`
+
+   Max Pooling
+      Keeping only the largest value in each window. With 2 by 2 windows,
+      each 2 by 2 block becomes its maximum, so the size halves: a 4 by 4
+      patch becomes 2 by 2. It keeps "there is an edge in this area" and
+      drops the exact pixel, so the network is less sensitive to small
+      shifts. YOLOv8 shrinks its maps with stride-2 convolutions instead,
+      and uses max pooling only in its SPPF block, with 5 by 5 windows.
+      :doc:`L4 </lectures/lecture4/l4_index>`
+
    MCL
       Monte Carlo Localization. A particle filter-based localization
       algorithm that represents the robot's belief as a set of weighted
       samples. AMCL (Adaptive MCL) dynamically adjusts particle count.
-      Standard localization algorithm in ROS. :doc:`L7 </lectures/lecture7/l7_index>`
+      Standard localization algorithm in ROS. :doc:`L3 </lectures/lecture3/l3_index>` · :doc:`L7 </lectures/lecture7/l7_index>`
 
    Mean
       The average of a set of readings, written with the Greek letter
@@ -1188,12 +1725,22 @@ M
       with an error :math:`\mathbf{v}`.
       :doc:`L3 </lectures/lecture3/l3_index>`
 
+   Measurement Matrix
+      The matrix :math:`H` that picks out the parts of the state a
+      sensor observes: the expected reading is
+      :math:`H\hat{\mathbf{x}}^-`. For the L3 sign match, :math:`H` is 2
+      by 4: a 1 keeps each position, and the zeros drop the two
+      velocities, which a sign match does not measure. Its shape tells
+      you what the sensor can see. In the EKF, the Jacobian :math:`H_k`
+      takes its place. :doc:`L3 </lectures/lecture3/l3_index>`
+
    Measurement Noise
       The random error :math:`\mathbf{v}` in a sensor reading, with
       covariance :math:`R`. Measured (by pointing the sensor at a known
       target and examining the spread), taken from the datasheet, or
       set, never guessed. For the L3 sign match we chose
-      :math:`\sigma = 1` m, so :math:`R = 1` m².
+      :math:`\sigma = 1` m on each axis, so :math:`R` has 1 m² on its
+      diagonal; the hands-on uses 1 m along the tunnel and 0.2 m across.
       :doc:`L3 </lectures/lecture3/l3_index>`
 
    MHT
@@ -1201,6 +1748,17 @@ M
       maintains a tree of hypotheses for measurement-to-track
       assignments, deferring hard decisions to resolve ambiguity over
       time. :doc:`L6 </lectures/lecture6/l6_index>`
+
+   mIoU
+      Mean intersection over union, the usual score for segmentation.
+      For each class :math:`c`, count pixels: TP (truth :math:`c` and
+      network :math:`c`), FP (network :math:`c`, truth not) and FN
+      (truth :math:`c`, network not). Then
+      :math:`\mathrm{IoU}(c) = TP/(TP + FP + FN)`: the pixels both call
+      :math:`c` over the pixels either calls :math:`c`. mIoU is the mean
+      over the classes. In the L5 hands-on, SegFormer-B0 scores 0.339 to
+      0.408 on CARLA over three runs.
+      :doc:`L5 </lectures/lecture5/l5_index>`
 
    Modality
       A kind of sensing rather than a piece of hardware. Two cameras are
@@ -1212,7 +1770,16 @@ M
       The rule that promotes a tentative track to confirmed, requiring M
       detections within N frames. It stops clutter from being reported
       as a real object, at the cost of a short delay before a genuine
-      object is confirmed. :doc:`L6 </lectures/lecture6/l6_index>`
+      object is confirmed. :doc:`L5 </lectures/lecture5/l5_index>` · :doc:`L6 </lectures/lecture6/l6_index>`
+
+   Monocular Depth
+      Depth from one camera, inferred by a network from the cues you use
+      in a photograph: familiar size, perspective, occlusion and ground
+      contact. It is the cheapest depth there is, but it is an estimate
+      with scale ambiguity. It also fails plausibly. Stereo returns
+      nothing when it cannot match, but a monocular network always
+      returns a full, confident depth map, even for an object it has
+      never seen. :doc:`L2 </lectures/lecture2/l2_index>`
 
    MOTA
       Multi-Object Tracking Accuracy. A tracking metric computed as
@@ -1279,9 +1846,20 @@ N
 .. glossary::
 
    Neck
-      The multi-scale feature fusion component of a detection
-      architecture, positioned between the backbone and head. Examples:
-      FPN, PAN, BiFPN. :doc:`L4 </lectures/lecture4/l4_index>`
+      The middle part of a detector, between the backbone and the head.
+      It mixes the feature maps of different sizes: a small map's cells
+      respond to whole objects like a bus, and a big map's cells mark
+      where its edges are. RT-DETR-L's neck adds a transformer layer.
+      :doc:`L4 </lectures/lecture4/l4_index>`
+
+   Neuron
+      The small piece every network is built from: a weighted sum of its
+      inputs, plus a bias, passed through an activation function,
+      :math:`y = \sigma(w_1 x_1 + w_2 x_2 + \dots + b)`. In the L4
+      example, :math:`(R, G, B) = (20, 83, 152)` with
+      :math:`w = (0.5, -0.2, 0.1)` and :math:`b = -5` (chosen for the
+      example) gives a sum of 8.6, then 3.6 with the bias, and ReLU
+      outputs 3.6. :doc:`L4 </lectures/lecture4/l4_index>`
 
    NDS
       nuScenes Detection Score. A composite ranking metric for 3D object
@@ -1325,11 +1903,14 @@ N
       (no lateral velocity in the body frame) -- planners must respect this
       when generating paths. :doc:`L10 </lectures/lecture10/l10_index>`
 
+   Normal Distribution
+      See Gaussian. :doc:`L3 </lectures/lecture3/l3_index>`
+
    nuScenes
-      A widely used AV benchmark dataset (Caesar et al., 2020) with
-      synchronized 6-camera, 5-radar, 1-LiDAR, IMU, and GPS data over
-      1000 driving scenes. Standard evaluation for BEV detection and
-      tracking; uses the NDS composite score. :doc:`L5 </lectures/lecture5/l5_index>`
+      The standard benchmark dataset for BEV perception evaluation
+      (Caesar et al., 2020). Detections are scored with mAP and the NDS
+      composite score. The L5 CARLA hands-on grades its boxes with the
+      nuScenes definitions. :doc:`L5 </lectures/lecture5/l5_index>`
 
    NVIDIA Cosmos
       NVIDIA's family of world foundation models for physical AI,
@@ -1344,21 +1925,50 @@ O
 
 .. glossary::
 
+   Object Detection
+      Given an image and a fixed set of :math:`C` classes, output a set
+      of detections, one per object found. Each detection is a class, a
+      confidence from 0 to 1, and a box
+      :math:`b = (x_0, y_0, x_1, y_1)`, its top-left and bottom-right
+      corners in pixels. The order of the detections means nothing, and
+      their number changes from image to image. :math:`C` comes from the
+      training data: 80 for COCO. Detection is classification plus
+      localization, for every object.
+      :doc:`L4 </lectures/lecture4/l4_index>`
+
    Object Query
-      In DETR, a learned embedding that is input to the transformer
-      decoder. Each query attends to the encoded image features via
-      cross-attention and specializes in detecting one object. :doc:`L4 </lectures/lecture4/l4_index>`
+      In DETR and RT-DETR, one of a fixed set of guesses that the
+      decoder turns into one answer each: one object, or none. Each
+      query reads the encoder's output by cross-attention. DETR uses 100
+      vectors learned in training. RT-DETR starts its 300 queries at the
+      300 encoder cells that score highest as objects.
+      :doc:`L4 </lectures/lecture4/l4_index>`
 
    ODD
-      Operational Design Domain. The specific operating conditions
-      (geographic, environmental, traffic) under which an ADS is designed
-      to function safely. :doc:`L1 </lectures/lecture1/l1_lecture>`
+      Operational Design Domain. The specific set of operating
+      conditions under which an ADS is designed to function safely.
+      Four kinds of limit: geographic (certain highways, a geofenced
+      area), environmental (no heavy snow, daytime only), traffic
+      (speed limits, traffic density) and infrastructure (mapped roads,
+      lane markings present, no active construction). If the vehicle is
+      about to leave its ODD, it must perform the DDT fallback.
+      :doc:`L1 </lectures/lecture1/l1_lecture>`
+
+   Occupancy Grid
+      A grid seen from above in which every cell is free, occupied or
+      unknown. The L5 ``lidar_bev`` node builds it from the LiDAR, along
+      rays 1 degree apart: free up to the farthest return, occupied where
+      a point is 0.3 to 2.5 m above the ground, unknown behind the
+      nearest obstacle (Autoware's three steps). It uses no learning.
+      Compare Occupancy Network (3D).
+      :doc:`L5 </lectures/lecture5/l5_index>`
 
    Occupancy Network (3D)
       A perception architecture that predicts the semantic state of every
       voxel in a 3D volume around the vehicle, capturing arbitrary geometry
-      beyond what bounding boxes can represent. Key methods: MonoScene,
-      TPVFormer, Occ3D. :doc:`L5 </lectures/lecture5/l5_index>`
+      beyond what bounding boxes can represent. Methods named in L5:
+      MonoScene and TPVFormer. Occ3D is the benchmark.
+      :doc:`L5 </lectures/lecture5/l5_index>`
 
    ODD Coverage
       The fraction of the claimed :term:`ODD` that a test campaign actually
@@ -1375,6 +1985,14 @@ O
    OES
       Operating Envelope Specification. A formal, machine-readable format
       proposed by NIST for precisely defining an ADS's ODD. :doc:`L1 </lectures/lecture1/l1_lecture>`
+
+   One-Stage Detector
+      A detector that predicts classes and boxes in one pass of the
+      network, from every cell of its feature maps, then removes the
+      duplicates with NMS. YOLO is the best-known family. YOLOv8s
+      predicts at 6300 cells: 4800, 1200 and 300 on its stride 8, 16
+      and 32 grids. Contrast Two-Stage Detector.
+      :doc:`L4 </lectures/lecture4/l4_index>`
 
    Open-Loop Evaluation
       Replaying a fixed recording past a system, so its decisions cannot
@@ -1418,14 +2036,24 @@ P
       pathway to FPN, improving information flow for accurate localization.
       Used in YOLO v4+. :doc:`L4 </lectures/lecture4/l4_index>`
 
+   Padding
+      A border of zeros around a convolution's input, written :math:`p`,
+      so the filter can also be centered on the edge pixels. With kernel
+      size :math:`k` and stride :math:`s`, the output size along one
+      direction is :math:`\lfloor (\text{in} + 2p - k)/s \rfloor + 1`.
+      YOLOv8s's first layer (:math:`k = 3`, :math:`s = 2`, :math:`p = 1`)
+      turns 640 into 320 and 480 into 240.
+      :doc:`L4 </lectures/lecture4/l4_index>`
+
    Panoptic Segmentation
       A perception task that combines semantic segmentation (labeling
       "stuff" like road, sky) with instance segmentation (identifying
       individual "things" like cars, pedestrians). :doc:`L5 </lectures/lecture5/l5_index>`
 
    Particle
-      One guess at the state, with a weight. Thousands of them together
-      are the particle filter's belief.
+      One complete guess at the state, with a weight that says how much
+      the filter believes it. A particle filter carries :math:`N` of
+      them, hundreds to thousands, and together they are its belief.
       :doc:`L3 </lectures/lecture3/l3_index>`
 
    Particle Filter
@@ -1437,6 +2065,14 @@ P
       has several peaks and the state is small; it scales badly as the
       state grows. :doc:`L3 </lectures/lecture3/l3_index>` ·
       :doc:`L7 </lectures/lecture7/l7_index>`
+
+   Patch
+      A small square of the image, cut on a fixed grid: in ViT,
+      :math:`16 \times 16` pixels, so
+      :math:`16 \times 16 \times 3 = 768` pixel values. A
+      :math:`224 \times 224` image gives :math:`14 \times 14 = 196`
+      patches. Detectors such as RT-DETR often use the cells of a CNN
+      feature map instead. :doc:`L4 </lectures/lecture4/l4_index>`
 
    Perception
       The process by which an autonomous system transforms unstructured
@@ -1461,10 +2097,26 @@ P
       Nothing in the data says which points belong to the same object.
       :doc:`L2 </lectures/lecture2/l2_index>`
 
+   PointPainting
+      A fusion method (Vora et al., CVPR 2020) that projects every LiDAR
+      point into the camera image and appends the segmentation network's
+      class scores at that pixel to the point. The L5 ``seg_lidar`` node
+      keeps only the winning class. The LiDAR and the camera sit in
+      different places, so a point the camera cannot see, behind a car,
+      still lands on the car's pixels and gets the class "car".
+      :doc:`L5 </lectures/lecture5/l5_index>`
+
    Pose Graph Optimization
       The SLAM backend formulation that represents the robot trajectory
       as a graph of poses (nodes) and relative constraints (edges), then
       optimizes all poses jointly to minimize constraint errors. :doc:`L7 </lectures/lecture7/l7_index>`
+
+   Position Embedding
+      A learned vector for each token position, added to the token, so
+      the network knows where its patch was in the image. Without it,
+      the encoder treats the tokens as a set: shuffle them and the
+      outputs only shuffle. ViT-Base has 197, one per token, the class
+      token included. :doc:`L4 </lectures/lecture4/l4_index>`
 
    Precision
       The fraction of detections that are correct: TP / (TP + FP).
@@ -1484,6 +2136,20 @@ P
       with no sign match take the position :math:`\sigma` along the
       tunnel from 0.81 to 1.35 m, mostly through :math:`FPF^\top`.
       :doc:`L3 </lectures/lecture3/l3_index>`
+
+   Pretrained
+      Trained first on a large, general image collection, then reused.
+      Example: ImageNet's 1000-class set, 1.2 million training images.
+      Both L4 detectors start from weights pretrained on COCO. See
+      Fine-Tuning. :doc:`L4 </lectures/lecture4/l4_index>`
+
+   Prior
+      Information you already hold before you measure anything. An HD
+      map is a prior. It is not a sensor, since nothing about it is
+      live, but it enters the stack where a sensor does. A stop line
+      moved two meters makes the map wrong, and a confidently wrong
+      prior is worse than none at all.
+      :doc:`L2 </lectures/lecture2/l2_index>`
 
    PRM
       Probabilistic Road Map. A multi-query sampling-based planner that
@@ -1520,6 +2186,16 @@ Q
       durability (transient-local vs. volatile), deadline, and lifespan.
       Critical for tuning real-time AV communication. :doc:`L14 </lectures/lecture14/l14_index>`
 
+   Query, Key and Value
+      The three vectors attention makes from each token, each by its
+      own weight matrix set by training. The query :math:`q` is what
+      the token looks for, the key :math:`k` is what it can offer, and
+      the value :math:`v` is what it passes on if chosen. Each query
+      scores every key with the dot product, divided by
+      :math:`\sqrt{d}`, where :math:`d` is the vector length. Softmax
+      turns the scores into weights, which average the values.
+      :doc:`L4 </lectures/lecture4/l4_index>`
+
    Quintic Polynomial Trajectory
       A 5th-degree polynomial trajectory that matches position, velocity,
       and acceleration boundary conditions at start and end points,
@@ -1539,6 +2215,12 @@ R
       effect. Operates in all weather conditions. Standard automotive
       frequency: 77 GHz. :doc:`L2 </lectures/lecture2/l2_index>`
 
+   Random Error
+      See Noise. Readings scatter around some center, each wrong by a
+      different amount in a different direction, and the error
+      averages away as you take more readings.
+      :doc:`L3 </lectures/lecture3/l3_index>`
+
    Redundancy
       Duplicating a capability. It protects against a component failing
       but not against a shared environmental failure. Two identical
@@ -1555,15 +2237,39 @@ R
       The fraction of real objects that the detector successfully found:
       TP / (TP + FN). High recall means few missed detections. :doc:`L4 </lectures/lecture4/l4_index>`
 
+   Receptive Field
+      The patch of the input image that can affect one cell of a feature
+      map. It grows with depth: each new layer adds its kernel size minus
+      one, times the total stride of the layers before it. Through
+      YOLOv8s's five stride-2, 3 by 3 layers it grows 3, 7, 15, 31, 63,
+      so a cell of the stride-32 map sees at least 63 by 63 pixels.
+      :doc:`L4 </lectures/lecture4/l4_index>`
+
+   Recursive Estimator
+      An estimator that never keeps the history of readings, only the
+      current estimate and its covariance :math:`P`. The Kalman filter
+      is one: each cycle starts from the last estimate and :math:`P`.
+      Large :math:`P` means uncertain, small :math:`P` means confident.
+      :doc:`L3 </lectures/lecture3/l3_index>`
+
    Reinforcement Learning (RL)
       Learning by optimizing a reward function through trial and error.
       Used in AV systems for planner fine-tuning (e.g., NVIDIA's
       end-to-end stack) and scenario-based policy improvement. :doc:`L12 </lectures/lecture12/l12_index>`
 
+   ReLU
+      Rectified linear unit, :math:`\max(0, x)`: an activation function
+      that keeps positive numbers and turns negative ones into zero. On
+      the L4 bus image, edge responses of 414.7 and -9.0 become 414.7 and
+      0: "edge here" and "nothing here".
+      :doc:`L4 </lectures/lecture4/l4_index>`
+
    Remote Assistance
-      A remote human **advising** an automated vehicle -- for example,
-      confirming that it may proceed around an obstruction -- without taking
-      control of the driving task. Does not change the vehicle's level. :doc:`L1 </lectures/lecture1/l1_lecture>`
+      A remote human **advising** an automated vehicle, for example
+      confirming that it may proceed around an obstruction, without
+      taking control of the driving task. Does not change the
+      feature's level. Contrast :term:`Remote Driving`.
+      :doc:`L1 </lectures/lecture1/l1_lecture>`
 
    Remote Driving
       A remote human **taking the controls** of a vehicle. This is a distinct
@@ -1571,10 +2277,27 @@ R
       does not change the level of the automated feature. Contrast
       :term:`Remote Assistance`. :doc:`L1 </lectures/lecture1/l1_lecture>`
 
+   Repeatability
+      Precision measured under the tightest conditions: same
+      instrument, same operator, same setup, over a short time. It is
+      not a third kind of error next to precision and trueness. Loosen
+      those conditions and the same idea is called reproducibility.
+      See Precision (Measurement). :doc:`L3 </lectures/lecture3/l3_index>`
+
+   Reproducibility
+      Precision measured once the tight conditions of repeatability
+      (same instrument, same operator, same setup, short time) are
+      loosened. Like repeatability, it describes noise, not bias. See
+      Repeatability. :doc:`L3 </lectures/lecture3/l3_index>`
+
    Reprojection Error
-      The distance (in pixels) between a known 3D point projected onto
-      the image using calibrated parameters and its actual observed
-      position. Used to validate calibration quality; should be < 2 px. :doc:`L2 </lectures/lecture2/l2_index>`
+      The pixel residual between where calibration places a known 3-D
+      point in the image and where it really appears. Report its
+      distribution, not its mean, because the tail is what breaks
+      association. Check it at range, not on the bench: a production
+      LiDAR-camera pair aims for rotation error below about 0.1 degree,
+      and 0.1 degree is 17 cm at 100 m.
+      :doc:`L2 </lectures/lecture2/l2_index>`
 
    Resampling
       The particle filter's last step in each cycle: draw :math:`N` new
@@ -1585,9 +2308,37 @@ R
       :math:`N/2`. :doc:`L3 </lectures/lecture3/l3_index>`
 
    ResNet
-      Residual Network. A CNN architecture (He et al., 2016) that
-      introduced skip connections, enabling training of very deep
-      networks (50--152 layers) without degradation. :doc:`L4 </lectures/lecture4/l4_index>`
+      Residual Network (He et al., 2016). A CNN whose blocks add their
+      input back to their output, :math:`y = F(x) + x` (a skip
+      connection), so each block learns only a correction to its input.
+      That made very deep networks trainable, and every transformer
+      layer uses the same idea. :doc:`L4 </lectures/lecture4/l4_index>`
+
+   Resolution
+      How close two things can be and still be told apart. It is
+      independent of accuracy: a sensor can report range to the
+      centimeter and still merge two objects into one. See Angular
+      Resolution. :doc:`L2 </lectures/lecture2/l2_index>`
+
+   Response
+      The sum of the products of a filter's weights and the pixels
+      under them: one number for one window. For a :math:`3 \times 3`
+      filter :math:`w` on a window :math:`x`,
+      :math:`r = \sum_{i=1}^{3} \sum_{j=1}^{3} w_{ij} x_{ij}`, with
+      :math:`i` the row and :math:`j` the column. Large either way
+      means an edge, and the sign gives its direction. Near 0 means no
+      edge. With pixels from 0 to 255, L4's edge filter runs from -765
+      to +765. :doc:`L4 </lectures/lecture4/l4_index>`
+
+   Road Frame
+      The frame every number in L3 lives in. Origin: a survey marker at
+      the roadside, :math:`(0, 0)`. Axes: :math:`x` runs along the road,
+      :math:`y` across it, positive toward the far curb. Unit: the meter
+      on both axes. Point on the AV: its base link. A position means
+      nothing until you say which frame it is in: move the marker 50 m
+      up the road, and the AV at :math:`(103.0,\ 2.5)` becomes
+      :math:`(53.0,\ 2.5)` without moving. See Base Link.
+      :doc:`L3 </lectures/lecture3/l3_index>`
 
    Rolling Shutter
       A camera readout mode where image rows are exposed sequentially
@@ -1599,7 +2350,7 @@ R
       Robot Operating System 2. An open-source middleware framework for
       building robotic systems, built on DDS for real-time communication.
       Industry standard for AV development. Used throughout ENPM818Z for
-      the ``ads_pipeline`` package. :doc:`L1 </lectures/lecture1/l1_lecture>` · :doc:`L14 </lectures/lecture14/l14_index>`
+      the ``ads_pipeline`` package. :doc:`L2 </lectures/lecture2/l2_index>` · :doc:`L14 </lectures/lecture14/l14_index>`
 
    Route Completion
       The percentage of a route's distance an agent covered. One of the two
@@ -1620,7 +2371,7 @@ R
    RTK-GPS
       Real-Time Kinematic GPS. A GNSS technique using carrier-phase
       measurements and a nearby base station to achieve centimeter-level
-      positioning accuracy. Essential for high-precision AV localization. :doc:`L2 </lectures/lecture2/l2_index>` · :doc:`L7 </lectures/lecture7/l7_index>`
+      positioning accuracy. Essential for high-precision AV localization. :doc:`L7 </lectures/lecture7/l7_index>`
 
 
 .. _glossary-s:
@@ -1631,9 +2382,23 @@ S
 .. glossary::
 
    SAE J3016
-      The Society of Automotive Engineers standard that defines six levels
-      of driving automation (Level 0--5), the industry-standard
-      classification system. :doc:`L1 </lectures/lecture1/l1_lecture>`
+      The SAE taxonomy of driving automation, written jointly with ISO
+      TC204/WG14. It defines six levels, 0 to 5. It classifies driving
+      automation features, not vehicles, by who is responsible for the
+      DDT, not by how capable the technology is. It is a Recommended
+      Practice, not a regulation: it has no legal force by itself,
+      though regulators reference it. See SAE Level.
+      :doc:`L1 </lectures/lecture1/l1_lecture>`
+
+   SAE Level
+      One of the six levels in SAE J3016: 0 no automation, 1 driver
+      assistance, 2 partial automation, 3 conditional automation, 4
+      high automation, 5 full automation. A level says who is
+      responsible for the DDT, not how good the engineering is, and it
+      applies to a feature, not a vehicle. The most consequential jump
+      is 2 to 3, and it is legal rather than technical: responsibility
+      moves from the person to the manufacturer.
+      :doc:`L1 </lectures/lecture1/l1_index>`
 
    Scale Ambiguity
       A single image cannot determine absolute size or distance, because
@@ -1657,12 +2422,48 @@ S
       Stage 5 of the concept-to-road pipeline and read there, for the first
       time, by someone outside the developer. :doc:`L1 </lectures/lecture1/l1_lecture>`
 
+   Sawtooth
+      The shape of a filter's :math:`\sigma` over time: it climbs at
+      every predict step and drops at each update. In L3's simplified
+      tunnel (predict at 10 Hz, a sign match every 2.5 s), :math:`\sigma`
+      climbs from 1.000 to 1.756 m, drops to 0.869 m at the first match,
+      then settles between about 0.9 and 2.0 m. With no sign matches it
+      grows without limit: IMU drift.
+      :doc:`L3 </lectures/lecture3/l3_index>`
+
    Scenario-Based Testing
       Validating an ADS against a deliberately enumerated set of situations
       rather than against distance driven, which is infeasible: demonstrating
       human-equivalent safety statistically would take hundreds of millions
       of miles. Trades an impossible sampling problem for a hard
       completeness argument. :doc:`L13 </lectures/lecture13/l13_index>`
+
+   SE(3)
+      The set of rigid motions in 3-D: a rotation :math:`R` and a
+      translation :math:`t`, written
+      :math:`T = \begin{bmatrix} R & t \\ 0 & 1 \end{bmatrix}`. Rigid
+      means you may carry and turn the object, never bend or stretch
+      it. Six numbers, no more: three for which way it points, three
+      for where it is. :math:`SO(3)` is the rotation alone. An
+      extrinsic calibration is one element of SE(3).
+      :doc:`L2 </lectures/lecture2/l2_index>`
+
+   SegFormer
+      A semantic segmentation network (Xie et al., NeurIPS 2021): a
+      transformer encoder, with attention between image patches as in
+      L4's ViT, then a small decoder that gives 19 scores per pixel, one
+      per class. The L5 hands-on runs SegFormer-B0 trained on Cityscapes,
+      photos of German streets, not CARLA. Its training labels have no
+      lane-marking class, so it cannot find lane lines.
+      :doc:`L5 </lectures/lecture5/l5_index>`
+
+   Self-Attention
+      Attention in which the queries, keys and values all come from the
+      same tokens: the image attends to itself. Used in the ViT encoder
+      and in DETR's encoder. In DETR's decoder the queries also attend
+      to each other this way, so one query can see that another has
+      already taken an object. Contrast Cross-Attention.
+      :doc:`L4 </lectures/lecture4/l4_index>`
 
    Semantic Segmentation
       A perception task that assigns a class label to every pixel in an
@@ -1675,14 +2476,30 @@ S
       </lectures/lecture2/l2_index>` · :doc:`L3
       </lectures/lecture3/l3_index>`
 
+   Shared Error
+      An error two sources have in common, so combining them cannot
+      cancel it. If the HD map puts every exit sign 2 m too far along,
+      the prediction and the sign match are both 2 m too far, and the
+      combined estimate stays 2 m off while the filter still reports
+      :math:`\pm 0.89` m. The surprise cannot reveal it; only a source
+      that does not use the map, such as GNSS at the tunnel exit, can.
+      The Kalman filter assumes sources share nothing.
+      :doc:`L3 </lectures/lecture3/l3_index>`
+
    Sigma Points
       :math:`2n+1` points (:math:`n` is the size of the state) whose
       weighted average is the mean and whose weighted spread is the
       covariance (Julier and Uhlmann, 1997). The UKF pushes each through
       the real nonlinear function and rebuilds the mean and covariance
-      from where they land, so it needs no Jacobian. For the state
-      :math:`[x, y, \theta]` that is 7 runs of the model per step.
-      :doc:`L3 </lectures/lecture3/l3_index>`
+      from where they land, so it needs no Jacobian of :math:`f` or
+      :math:`h`. For the state :math:`[x, y, \theta]` that is 7 runs of
+      the model per step. :doc:`L3 </lectures/lecture3/l3_index>`
+
+   Sigmoid
+      :math:`1 / (1 + e^{-x})`: turns any number into one from 0 to 1.
+      YOLOv8 scores each class on its own with a sigmoid, instead of one
+      softmax over all classes. The man's raw person score of 2.056 gives
+      a confidence of 0.887. :doc:`L4 </lectures/lecture4/l4_index>`
 
    Sign Match
       The measurement in L3's tunnel, where GNSS is lost: the camera
@@ -1705,11 +2522,30 @@ S
       feature extraction) and backend (pose graph optimization, loop
       closure). :doc:`L7 </lectures/lecture7/l7_index>`
 
+   Softmax
+      Turns raw scores :math:`s_1, \dots, s_K`, one per class, into numbers
+      that are positive and add to 1:
+      :math:`p_i = e^{s_i} / (e^{s_1} + e^{s_2} + \dots + e^{s_K})`.
+      Scores (2.0, 1.0, 0.1) for bus, person and car, chosen for the
+      example, become 0.659, 0.242 and 0.099. The order stays the same.
+      Attention uses it, and so does YOLOv8s on each side's 16 distance
+      bins. YOLOv8 scores classes with a sigmoid instead.
+      :doc:`L4 </lectures/lecture4/l4_index>`
+
    Software-in-the-Loop (SIL)
       A test level in which the real software runs against simulated sensors
       and vehicle dynamics. This is CARLA, and the level every project in
       this course occupies. Misses timing, hardware faults and real sensor
       noise. :doc:`L13 </lectures/lecture13/l13_index>`
+
+   Solid-State LiDAR
+      A LiDAR that steers its beams with MEMS mirrors or electronics
+      instead of a rotating assembly. It is compact, robust, cheaper at
+      volume and fits into the body, but it sees only a forward wedge,
+      so a car needs several. Production cars use it. A mechanical
+      spinning LiDAR sees a true 360 degrees from one unit, but it is
+      bulky, must sit high and has bearings that wear. Robotaxi and
+      research fleets use it. :doc:`L2 </lectures/lecture2/l2_index>`
 
    SORT
       Simple Online and Realtime Tracking (Bewley et al., 2016). A
@@ -1741,9 +2577,26 @@ S
       sensor reports directly, such as velocity, which the filter
       infers. :doc:`L3 </lectures/lecture3/l3_index>`
 
+   Static Embedding
+      An embedding that gives a piece of the input one vector, whatever
+      surrounds it: the word "bank" gets the same vector in every
+      sentence. ViT's patch embedding is static: a patch's vector
+      depends only on its own pixels and its place. Contrast Contextual
+      Embedding. :doc:`L4 </lectures/lecture4/l4_index>`
+
    Stereo Vision
       Depth estimation using two cameras separated by a known baseline.
       Computes depth from the disparity between left and right images. :doc:`L2 </lectures/lecture2/l2_index>`
+
+   Stride
+      How many pixels a filter moves per step as it slides over its
+      input, written :math:`s`. Stride 2 skips every other position, so
+      the output is half the size: YOLOv8s's first layer turns a
+      :math:`480 \times 640` input into a :math:`240 \times 320` map.
+      YOLOv8s has five stride-2 layers, and :math:`2^5 = 32`, so its
+      coarsest grid is :math:`15 \times 20` cells, one per
+      :math:`32 \times 32` pixels. See Padding.
+      :doc:`L4 </lectures/lecture4/l4_index>`
 
    Surprise
       L3's plain name for the innovation :math:`\nu`: the reading we got
@@ -1751,8 +2604,25 @@ S
       of it the update acts on. See Innovation.
       :doc:`L3 </lectures/lecture3/l3_index>`
 
+   Synchronous Mode
+      A CARLA setting in which the client drives the clock: the server
+      advances one fixed step, such as ``fixed_delta_seconds = 0.05``
+      (20 Hz), each time the client calls ``world.tick()``. Without it
+      the server runs as fast as the hardware allows, sensor data
+      arrives at irregular times, and two runs of the same script
+      disagree. Turn it on before you write anything else.
+      :doc:`L2 </lectures/lecture2/l2_index>`
+
    Systematic Error
       See Bias. :doc:`L3 </lectures/lecture3/l3_index>`
+
+   Systematic Resampling
+      Resampling a particle filter with one random number instead of
+      :math:`N`: :math:`N` evenly spaced pointers walk along the running
+      total of the weights, and each pointer picks the particle it
+      lands in. It loses fewer good particles than :math:`N` separate
+      draws. The L3 particle filter script uses it. See Resampling.
+      :doc:`L3 </lectures/lecture3/l3_index>`
 
 .. _glossary-t:
 
@@ -1783,10 +2653,34 @@ T
       The operating principle of LiDAR. Measures the round-trip time of a
       laser pulse to compute distance: ``distance = (c x dt) / 2``. :doc:`L2 </lectures/lecture2/l2_index>`
 
+   Time Budget
+      How long the detector may take on one frame. A camera at 20 Hz
+      sends a frame every :math:`1000/20 = 50` ms, and the detector
+      shares that time with tracking, prediction and planning. With six
+      cameras on one GPU, each frame gets :math:`50/6`, about 8 ms.
+      :doc:`L4 </lectures/lecture4/l4_index>`
+
+   Time Synchronization
+      Knowing when each sensor measured. Extrinsics tell you where each
+      sensor was, never when. A camera image fused with a LiDAR sweep
+      captured 30 ms later is an error that no extrinsic fixes. One
+      30 Hz frame of skew (33 ms) at 110 km/h is 1.01 m of travel.
+      Production stacks share one clock, through PTP (IEEE 1588) over
+      automotive Ethernet or GNSS-disciplined time, and every sensor
+      timestamps at capture. :doc:`L2 </lectures/lecture2/l2_index>`
+
+   Token
+      One piece of the input, turned into a vector of :math:`D`
+      numbers. For an image, one embedded patch or one feature-map cell.
+      In a language model, a word or part of a word, which is where the
+      name comes from. ViT-Base on a :math:`224 \times 224` image has
+      196 patch tokens plus the class token: 197.
+      :doc:`L4 </lectures/lecture4/l4_index>`
+
    Track Lifecycle
       The states a track passes through: tentative, confirmed, coasting
       and deleted. Track identity must not depend on classification,
-      which is the architectural lesson of the Tempe crash. :doc:`L6 </lectures/lecture6/l6_index>`
+      which is the architectural lesson of the Tempe crash. :doc:`L5 </lectures/lecture5/l5_index>` · :doc:`L6 </lectures/lecture6/l6_index>`
 
    Tracking-by-Detection
       The dominant MOT paradigm: at each frame, run an object detector,
@@ -1795,9 +2689,19 @@ T
       the detector and the tracker. :doc:`L6 </lectures/lecture6/l6_index>`
 
    Transfer Learning
-      Starting with a model pre-trained on a large dataset (e.g., COCO)
-      and fine-tuning it on a smaller target dataset. Reduces training
-      time and data requirements. :doc:`L4 </lectures/lecture4/l4_index>`
+      Starting from a pretrained network and fine-tuning it on your own
+      data. See Pretrained and Fine-Tuning.
+      :doc:`L4 </lectures/lecture4/l4_index>`
+
+   Transform (A from B)
+      The course convention for frame transforms:
+      :math:`T_{A \leftarrow B}` takes a point in frame :math:`B` and
+      returns it in frame :math:`A`. Say it as "A from B". Chains
+      compose and the inner frames cancel,
+      :math:`T_{A \leftarrow C} = T_{A \leftarrow B}\, T_{B \leftarrow C}`,
+      and inverting a transform flips the arrow. Applied to a point,
+      :math:`p_A = R\,p_B + t`. If the inner frames do not meet, the
+      chain is written backwards. :doc:`L2 </lectures/lecture2/l2_index>`
 
    Trajectory Prediction
       Forecasting the future positions and states of other traffic agents
@@ -1818,11 +2722,34 @@ T
       positions in a sequence simultaneously. Used in DETR, BEVFormer,
       and modern AV perception. :doc:`L4 </lectures/lecture4/l4_index>` · :doc:`L5 </lectures/lecture5/l5_index>`
 
+   Transition Matrix
+      The matrix :math:`F` that moves the state forward one step on its
+      own: :math:`\mathbf{x}_k = F\mathbf{x}_{k-1}`. Each row updates one
+      state number. With the L3 state :math:`[p_x\ p_y\ v_x\ v_y]^\top`
+      and :math:`\Delta t = 0.1` s (chosen for the example), the first
+      row is :math:`[\,1\ 0\ 0.1\ 0\,]`: keep :math:`p_x` and add 0.1 s
+      times the east speed, so 100 m at 10 m/s becomes 101 m. A fixed
+      matrix cannot make a cosine, so the EKF uses :math:`F_k` instead,
+      rebuilt every step. :doc:`L3 </lectures/lecture3/l3_index>`
+
+   True Positive (TP)
+      A detection that matches a not-yet-matched ground-truth box of its
+      class, with IoU at least a threshold the evaluator sets, often
+      0.5. Detections are matched from the most confident down, and
+      each ground-truth box can be matched only once.
+      :doc:`L4 </lectures/lecture4/l4_index>`
+
    Trueness
       How close the average of repeated readings sits to the truth (VIM
       2.14): the word for bias. In L3, receivers A and B scatter by the
       same 1.561 m, but B's average sits 3.2 m ahead: same precision,
       worse trueness. :doc:`L3 </lectures/lecture3/l3_index>`
+
+   Two-Stage Detector
+      An older kind of detector that first proposes regions that may
+      hold an object, then classifies each one. Faster R-CNN (Ren et
+      al., 2015) is L4's example. Contrast One-Stage Detector.
+      :doc:`L4 </lectures/lecture4/l4_index>`
 
 
 .. _glossary-u:
@@ -1833,10 +2760,21 @@ U
 .. glossary::
 
    UKF
-      Unscented Kalman Filter. An alternative to the EKF that uses
-      deterministic sigma points passed through the true nonlinear
-      function, avoiding the need for Jacobian matrices. See Unscented
-      Kalman Filter. :doc:`L3 </lectures/lecture3/l3_index>`
+      Unscented Kalman Filter. An alternative to the EKF that pushes
+      :math:`2n+1` chosen sigma points through the real nonlinear
+      function, so you write no Jacobian of :math:`f` or :math:`h`. See
+      Unscented Kalman Filter. :doc:`L3 </lectures/lecture3/l3_index>`
+
+   Ultrasonic Sensor
+      A sensor that sends a short pulse of sound at about 40 kHz and
+      times the echo. It uses the same time-of-flight principle as
+      LiDAR, but sound travels far slower than light, so the timing is
+      easy and the electronics are cheap. A production vehicle carries
+      eight to twelve along the bumpers. It covers the near field below
+      the bumper line that every other sensor misses. Its range is only
+      0.2 to 5 m, it reports a distance and not a direction, and it
+      cannot classify or measure velocity.
+      :doc:`L2 </lectures/lecture2/l2_index>`
 
    Uncertainty
       A number attached to an estimate saying how far the truth could
@@ -1882,8 +2820,23 @@ U
       pushes :math:`2n+1` sigma points through the real function and
       rebuilds the mean and covariance from where they land. The
       alternative to the EKF when the model curves hard across the
-      uncertainty, or exists only as code with no Jacobian. It needs no
-      Jacobians, which removes a class of silent bugs.
+      uncertainty, or exists only as code. You write :math:`f` and
+      :math:`h` but no Jacobian of either (only :math:`Q_k` still uses
+      :math:`G`). That removes a silent bug: a hand-derived Jacobian
+      with one wrong sign gives a filter that runs, settles and is
+      wrong. :doc:`L3 </lectures/lecture3/l3_index>`
+
+   Update Step
+      The second half of every filter cycle: correct the prediction with
+      a measurement by acting on part of the surprise. It computes
+      :math:`\boldsymbol{\nu} = \mathbf{z} - H\hat{\mathbf{x}}^-`,
+      :math:`S = HP^-H^\top + R`, :math:`K = P^-H^\top S^{-1}`,
+      :math:`\hat{\mathbf{x}} = \hat{\mathbf{x}}^- + K\boldsymbol{\nu}`
+      and :math:`P = (I - KH)P^-`. :math:`P` shrinks by the same amount
+      whether the reading was good or wildly wrong, because the surprise
+      is not in the :math:`P` line. In the L3 tunnel at 9.3 s, a 0.74 m
+      surprise with :math:`K = 0.65` moves the estimate 0.48 m, and the
+      position :math:`\sigma` along the tunnel goes from 1.35 to 0.80 m.
       :doc:`L3 </lectures/lecture3/l3_index>`
 
    Urban Canyon
@@ -1897,6 +2850,13 @@ V
 =
 
 .. glossary::
+
+   Validation
+      Checking whether the system was the right thing to build. In
+      Stage 4 of the concept-to-road pipeline it means scenario-based
+      simulation, then closed course, then supervised on-road testing
+      with a safety driver. Contrast Verification. You can pass one and
+      fail the other. :doc:`L1 </lectures/lecture1/l1_index>`
 
    Variance
       How spread out a set of readings is: the average of the squared
@@ -1927,6 +2887,12 @@ V
       A test level in which a real vehicle on a rig or test pad is fed
       synthetic objects, combining real dynamics and actuation with injected
       traffic that cannot cause harm. :doc:`L13 </lectures/lecture13/l13_index>`
+
+   Verification
+      Checking whether you built the thing correctly, through unit and
+      module checks in Stage 3 of the concept-to-road pipeline.
+      Contrast Validation, which asks whether it was the right thing to
+      build. :doc:`L1 </lectures/lecture1/l1_index>`
 
    Vista
       A generalizable driving world model (NeurIPS 2024) that learns to
@@ -1973,7 +2939,7 @@ W
    Waypoint
       In CARLA, a discrete point on the road network containing lane
       information, speed limits, and connectivity to other waypoints.
-      Used for path planning and navigation. :doc:`L1 </lectures/lecture1/l1_lecture>` · :doc:`L8 </lectures/lecture8/l8_index>`
+      Used for path planning and navigation. :doc:`L2 </lectures/lecture2/l2_index>` · :doc:`L8 </lectures/lecture8/l8_index>`
 
    White Noise
       Noise whose errors are unrelated from one moment to the next, with
@@ -1996,9 +2962,11 @@ Y
 .. glossary::
 
    YOLO
-      You Only Look Once. A family of single-stage object detectors that
-      predict all bounding boxes and class probabilities in a single
-      forward pass. Evolution: v1 (2015) to v11 (2024). :doc:`L4 </lectures/lecture4/l4_index>`
+      You Only Look Once (Redmon et al., 2016). The best-known family of
+      one-stage detectors: one pass of the network predicts a class and
+      a box at every grid cell, then NMS removes the duplicates. L4 uses
+      YOLOv8s (2023, anchor-free, 44.9 mAP on COCO). YOLO26 (2026)
+      drops NMS. :doc:`L4 </lectures/lecture4/l4_index>`
 
 
 .. _glossary-z:

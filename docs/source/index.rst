@@ -153,6 +153,30 @@ Course Resources
 - Visual Studio Code or preferred IDE
 - Git and GitHub for version control
 
+**Course Code**
+
+The lecture demos, the hands-on exercises and the GP1 starter are in two
+public repositories. Each setup page shows how to clone and build its
+repository.
+
+.. list-table::
+   :widths: 35 45 20
+   :header-rows: 1
+   :class: compact-table
+
+   * - Repository
+     - What it holds
+     - Setup
+   * - `enpm818z-fall-2026-carla-python <https://github.com/rubixcubic/enpm818z-fall-2026-carla-python>`__
+     - Python scripts for CARLA: the lecture demos and the viewer client,
+       one folder per lecture (``lecture2``, ``lecture3``, ``lecture4``).
+     - :doc:`/carla/carla-python`
+   * - `enpm818z-fall-2026-carla-ros <https://github.com/rubixcubic/enpm818z-fall-2026-carla-ros>`__
+     - ROS 2 packages: the lecture 2 bridge (``l2_carla_demo``), the
+       hands-on packages for L3 and L5, and the GP1 starter
+       (``gp1_starter/ads_pipeline``) that GP1 to GP4 build out.
+     - :doc:`/carla/carla-ros2`
+
 **Hardware Recommendations**
 
 - GPU: NVIDIA GTX 1060 (1070+ recommended)

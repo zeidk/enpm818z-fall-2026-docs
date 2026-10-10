@@ -602,8 +602,8 @@ Multiple Choice (Questions 1 to 21)
    :class: hint
 
    Your motion model curves hard across its uncertainty, or it is only code
-   (an HD-map search) with no slope to take. According to the lecture's
-   "choosing a filter" summary, which filter fits, and at what cost?
+   (an HD-map search) with no slope to take. According to the lecture,
+   which filter fits, and at what cost?
 
    A. The KF, at no extra cost
 

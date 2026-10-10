@@ -1,6 +1,11 @@
 Syllabus
 ========
 
+.. role:: reading
+.. role:: quiz
+.. role:: assignment
+.. role:: no-class
+
 .. note::
 
    The authoritative, printable syllabus is the PDF distributed on
@@ -624,10 +629,14 @@ and the last lecture is **December 10, 2026**. The Thanksgiving recess
 (**Nov 25 to 29**) includes Thursday Nov 26, so there is no class that week;
 all other Thursdays meet as scheduled. Dates below are given as MM/DD.
 
+**Color key:** :reading:`pre-read material`; :quiz:`quizzes`;
+:assignment:`assignments (setup, GPs and report) posted/due`;
+:no-class:`no class`.
+
 .. list-table::
    :header-rows: 1
    :widths: 10 8 34 20 28
-   :class: compact-table
+   :class: compact-table schedule-table
 
    * - Date
      - Week
@@ -638,22 +647,24 @@ all other Thursdays meet as scheduled. Dates below are given as MM/DD.
      - 1
      - Course Introduction & AV Landscape
      - L1
-     - Setup milestone posted
+     - | :reading:`Read before class: Development Environment`
+       | :assignment:`Setup milestone posted`
    * - 09/10
      - 2
      - Sensor Technologies & Calibration
      - L2
-     -
+     - :reading:`Read after class: Simulation for Automated Driving`
    * - 09/17
      - 3
      - Probabilistic State Estimation & Fusion
      - L3
-     - Setup due, teams formed, GP1 posted
+     - | :assignment:`Setup due, GP1 posted`
+       | Teams formed
    * - 09/24
      - 4
      - Probabilistic State Estimation & Fusion (continued)
      - L3
-     - Quiz 1
+     - :quiz:`Quiz 1`
    * - 10/01
      - 5
      - Perception I: Detecting Objects
@@ -663,7 +674,8 @@ all other Thursdays meet as scheduled. Dates below are given as MM/DD.
      - 6
      - Perception II: 3D Detection, BEV, Fusion & Tracking
      - L5
-     - Quiz 2, GP1 due, GP2 posted
+     - | :quiz:`Quiz 2`
+       | :assignment:`GP1 due, GP2 posted`
    * - 10/15
      - 7
      - Localization & SLAM
@@ -678,7 +690,8 @@ all other Thursdays meet as scheduled. Dates below are given as MM/DD.
      - 9
      - Prediction & Behavior Modeling
      - L9
-     - Quiz 3, GP2 due, GP3 posted
+     - | :quiz:`Quiz 3`
+       | :assignment:`GP2 due, GP3 posted`
    * - 11/05
      - 10
      - Motion Planning
@@ -693,10 +706,11 @@ all other Thursdays meet as scheduled. Dates below are given as MM/DD.
      - 12
      - End-to-End Driving, VLA & Imitation Learning
      - L12
-     - Quiz 4, GP3 due, GP4 and report posted
+     - | :quiz:`Quiz 4`
+       | :assignment:`GP3 due, GP4 and report posted`
    * - 11/26
-     - --
-     - **Thanksgiving recess -- no class**
+     -
+     - :no-class:`Thanksgiving recess: no class`
      -
      -
    * - 12/03
@@ -708,12 +722,14 @@ all other Thursdays meet as scheduled. Dates below are given as MM/DD.
      - 14
      - System Integration, Safety & Industry Outlook
      - L14
-     - Quiz 5, GP4 due
+     - | :reading:`Read before class: Automotive Cybersecurity`
+       | :quiz:`Quiz 5`
+       | :assignment:`GP4 due`
    * - 12/17
      - 15
-     - No class -- Final report submission window
+     - No class: final report submission window
      -
-     - Final Report Due
+     - :assignment:`Final report due`
 
 .. note::
 

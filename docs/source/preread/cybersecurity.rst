@@ -76,3 +76,19 @@ Secure Communication
    Sensor data (internal LAN)  → TLS 1.3 or DDS-Security
 
 
+Further Reading
+---------------
+
+The three attacks below are the ones the Attack Surfaces section describes,
+each shown on real hardware.
+
+- Charlie Miller and Chris Valasek, `Remote Exploitation of an Unaltered
+  Passenger Vehicle <https://illmatics.com/Remote%20Car%20Hacking.pdf>`__
+  (2015). A remote attack on a Jeep Cherokee: code run on the head unit,
+  then CAN messages sent to the vehicle's physical systems.
+- Kevin Eykholt et al., `Robust Physical-World Attacks on Deep Learning
+  Models <https://arxiv.org/abs/1707.08945>`__ (2017). Black and white
+  stickers on a real stop sign make a classifier misread it.
+- Yulong Cao et al., `Adversarial Sensor Attack on LiDAR-based Perception
+  in Autonomous Driving <https://arxiv.org/abs/1907.06826>`__ (2019).
+  LiDAR spoofing that injects fake obstacles into an AV's perception.

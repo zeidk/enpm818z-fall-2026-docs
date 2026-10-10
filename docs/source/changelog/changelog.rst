@@ -5,10 +5,45 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.3.0 -- L3 Updated to Slide Deck v3.0 (2026-10-04)
+.. dropdown:: v2.4.0: New Look, Colored Schedule and a Larger Glossary (2026-10-09)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Site
+
+   - **New logo** in the navbar, one for each theme. The navbar text next to
+     it is gone, since the logo already names the course.
+   - **Light theme** uses a warm sand palette.
+   - **The version menu** (bottom right) follows the site's theme, with
+     rounded corners.
+   - **Course code:** the home page links the two code repositories,
+     ``enpm818z-fall-2026-carla-python`` and ``enpm818z-fall-2026-carla-ros``.
+
+   .. rubric:: Syllabus and pre-reads
+
+   - **Course schedule in color:** pre-reads, quizzes and assignments each
+     have their own color, and the Thanksgiving recess row is tinted.
+   - **Pre-reads in the schedule**, in the week each one is due.
+   - **Further reading** added to the Development Environment and
+     Automotive Cybersecurity pre-reads.
+
+   .. rubric:: Lecture 3
+
+   - **Matched to the deck:** the reading slide "Matrices can only scale and
+     add" is now on the lecture page; the particle filter figure text and the
+     UKF worked example agree with the deck.
+   - **Exercise 3** states the motion-model rules it uses, so it no longer
+     depends on the appendix.
+
+   .. rubric:: Glossary
+
+   - **108 new terms** from L1 to L4 and the L5 code page, and 31 entries
+     corrected against the lectures.
+
+.. dropdown:: v2.3.0 -- L3 Updated to Slide Deck v3.0 (2026-10-04)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lecture 3: Probabilistic State Estimation & Sensor Fusion
 

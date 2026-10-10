@@ -67,9 +67,10 @@ html_theme = "pydata_sphinx_theme"
 html_theme_options = {
     # Logo (place files in _static/images/)
     "logo": {
-        "text": "ENPM818Z Fall 2026",
-        "image_light": "_static/images/enpm818z_logo_light.png",
-        "image_dark": "_static/images/enpm818z_logo_dark.png",
+        # No text: the logo already says ENPM818Z, and both linked to the home page.
+        "alt_text": "ENPM818Z Fall 2026, home",
+        "image_light": "_static/images/enpm818z_logo_light.svg",
+        "image_dark": "_static/images/enpm818z_logo_dark.svg",
     },
     # Header / navbar icon links
     "icon_links": [
@@ -116,4 +117,9 @@ master_doc = "index"
 
 html_css_files = [
     "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css", "my.css"
+]
+
+html_js_files = [
+    # Shape of the Read the Docs version menu; see the file's header.
+    ("flyout-style.js", {"defer": "defer"}),
 ]

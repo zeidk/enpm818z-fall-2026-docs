@@ -31,7 +31,7 @@ matches exit signs against the HD map (a **sign match**). A prediction of
 :math:`\sigma = 1` m blend into 52.4 m with :math:`\sigma = 0.89` m, smaller
 than either input. The same idea, written with matrices, gives the state,
 the motion model, the measurement model, predict, update and the **Kalman
-gain**, with every number taken from the hands-on script.
+gain**, with the predict and update numbers taken from the hands-on script.
 
 Next come the **four assumptions** the Kalman filter makes, and what happens
 when each one breaks: a model that is not a straight line, a model that
@@ -42,8 +42,8 @@ which GP3 uses, is built step by step: the tangent trick, the Jacobians,
 filter** are named as the other alternatives in class and worked out in the
 appendix.
 
-The last section is the part most courses skip. A filter that is wrong does
-not crash. It reports a small covariance and keeps running. So the lecture
+The last section covers what most people skip: they use the estimate and
+ignore the covariance. A filter that is wrong does not crash. It reports a small covariance and keeps running. So the lecture
 ends with a test of the filter's own uncertainty: the **normalized
 innovation squared (NIS)**, which compares each surprise with the size the
 filter predicted for it, and a **chi-square gate** that throws away a
@@ -81,7 +81,8 @@ reading that is wildly off.
 Learning Objectives
 -------------------
 
-By the end of this lecture, you will be able to:
+These objectives are on a reading slide in the deck's appendix; they are
+not shown in class. By the end of this lecture, you will be able to:
 
 - Define **variance**, **standard deviation** and the **covariance
   matrix** :math:`P`.
@@ -122,6 +123,7 @@ Next Steps
 - **Before next class:**
 
   - Run the four hands-on scripts (KF, EKF, UKF, PF) and move every slider.
+    The UKF and PF hands-on steps are in the appendix.
     **Most important: turn** :math:`Q` **down in** ``kf_tunnel.py`` **until
     the filter fails, and watch the share of time inside** :math:`1\sigma`
     **catch it.**

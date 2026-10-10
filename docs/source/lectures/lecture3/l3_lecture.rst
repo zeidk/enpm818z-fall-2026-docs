@@ -2346,6 +2346,36 @@ fakes a straight line, one step at a time. It splits the work in two. And it
 has a catch.
 
 
+Matrices Can Only Scale and Add
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The Kalman filter's engine is matrices, and a matrix does only two things: it
+**scales** numbers and **adds** them.
+
+.. figure:: /_static/images/L3/ekf_story_1_matrix.png
+   :alt: Three plots. Tag 1: three straight lines through the origin, output against input, with slopes 2, 0.5 and minus 1. Tag 2: an arch, x in meters against heading theta from minus 90 to 90 degrees, x equals 20 cos theta, highest at 20 meters for theta 0. Tag 3: a curve, range r in meters against AV position x from 0 to 30 meters, r equals the square root of 20 minus x squared plus 10 squared, lowest at 10 meters for x 20.
+   :width: 100%
+   :align: center
+
+   **1** A matrix: scale and add. Times 2, times 0.5, times :math:`-1`: every
+   output is a **straight line**. **2** Turning: driving 20 m at heading
+   :math:`\theta` moves :math:`x = 20\cos\theta` east, an **arch**. **3** The
+   range to a sign 10 m off the road, beside :math:`x = 20`:
+   :math:`r = \sqrt{(20 - x)^2 + 10^2}`, a **curve**.
+
+The Kalman filter is the best filter there is, but only when every model is a
+straight line and the noise is a bell curve. Whatever a matrix scales by, the
+result is a straight line through the origin. An AV that turns moves
+:math:`20\cos\theta` east, and the range from the camera to an exit sign is a
+square root: both curve.
+
+.. important::
+
+   **No fixed matrix times the state gives a cosine or a square root of the
+   state**, so the plain Kalman filter breaks the moment the AV turns or a
+   camera measures a range.
+
+
 Bell Curves on the Road
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -3010,8 +3040,8 @@ Each one costs somebody an evening in GP3.
 
    **The catch:** a tangent in the **wrong place** (:math:`P` shrinks anyway:
    **divergence**), or a curve that bends across the uncertainty (:math:`P`
-   too small: **overconfident**). That second failure is what the next
-   alternative, the UKF, is for.
+   too small: **overconfident**). That second failure is what the UKF is
+   for: see the appendix, :doc:`l3_appendix`.
 
 
 .. _l3-ekf-check:

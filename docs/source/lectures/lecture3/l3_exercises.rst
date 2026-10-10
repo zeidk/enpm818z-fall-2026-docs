@@ -313,7 +313,11 @@ reported uncertainty is honest.
    :math:`\hat{\mathbf{x}} = [100,\ 20,\ 10,\ 0]^\top` (m and m/s), and the
    IMU reads a brake of 1 m/s², so :math:`\mathbf{u} = [-1,\ 0]^\top`.
 
-   1. Write :math:`F` (4 by 4) and :math:`B` (4 by 2).
+   1. Write :math:`F` (4 by 4) and :math:`B` (4 by 2). Hint: the lecture's
+      motion-model table gives each row. Position becomes
+      :math:`p + \Delta t\,v` (from :math:`F`) plus
+      :math:`\tfrac{1}{2}\Delta t^2 a` (from :math:`B`); speed becomes
+      :math:`v + \Delta t\,a`.
    2. Compute :math:`\hat{\mathbf{x}}^- = F \hat{\mathbf{x}} + B \mathbf{u}`.
    3. The true motion has a term :math:`\mathbf{w}` that the prediction
       sets to 0. Why 0, and where does :math:`\mathbf{w}` go instead?
@@ -336,8 +340,11 @@ reported uncertainty is honest.
       Which term of the product added the most?
    6. The filter's :math:`Q` comes from the acceleration the IMU gets
       wrong: we chose :math:`\sigma_a = 0.5` m/s², pushed through the
-      position and speed rows of :math:`B`. Compute the position and speed
-      entries of :math:`Q` for one step. Which one matters?
+      position and speed rows of :math:`B`. An acceleration error of
+      :math:`\sigma_a` moves the speed by :math:`\Delta t\,\sigma_a` and the
+      position by :math:`\tfrac{1}{2}\Delta t^2 \sigma_a`, and each
+      diagonal entry of :math:`Q` is that size squared. Compute the position
+      and speed entries of :math:`Q` for one step. Which one matters?
    7. In the hands-on, 22 predict steps with no sign match take
       :math:`\sigma_p` from 0.81 to **1.35 m**. Without :math:`Q` it would
       still reach **1.32 m**. Explain, using questions 5 and 6, why
@@ -404,6 +411,11 @@ reported uncertainty is honest.
       :math:`\sigma_a`, that leak dominates. In the hands-on the same 22
       steps take :math:`\sigma_v` from 0.30 to 0.38 m/s and the correlation
       from +0.63 to +0.79. With no sign match, :math:`P` only grows.
+
+      The optional NumPy loop, started from the rounded values in Part B,
+      gives 1.36 m with :math:`Q` and 1.33 m without. The hands-on starts
+      from unrounded values, hence 1.35 and 1.32; the gap between the two
+      runs, about 0.03 m, is the same.
 
 
 .. dropdown:: Exercise 4. One Update, and the Tilt That Corrects Speed

@@ -173,3 +173,22 @@ with the operating system.
    Check your current shell with ``ps -p $$``.
 
 
+Further Reading
+---------------
+
+- `ROS 2 Humble tutorials <https://docs.ros.org/en/humble/Tutorials.html>`__
+  (Ubuntu 22.04) or
+  `ROS 2 Jazzy tutorials <https://docs.ros.org/en/jazzy/Tutorials.html>`__
+  (Ubuntu 24.04): the official tutorials for your ROS 2 distribution. Start
+  with the beginner command-line and client-library tutorials.
+- `Pro Git <https://git-scm.com/book/en/v2>`__, by Scott Chacon and Ben
+  Straub: the free Git book. Chapters 1 to 3 cover getting started, the
+  basics and branching; chapter 6 covers GitHub.
+- `Get started with GitHub <https://docs.github.com/en/get-started>`__: GitHub's
+  own documentation for accounts, repositories and pull requests.
+- `The Linux command line for beginners
+  <https://ubuntu.com/tutorials/command-line-for-beginners>`__: Ubuntu's
+  tutorial on the shell.
+- `Visual Studio Code documentation <https://code.visualstudio.com/docs>`__.
+- `CARLA 0.9.16 documentation <https://carla.readthedocs.io/en/0.9.16/>`__:
+  the reference for the simulator version this course uses.

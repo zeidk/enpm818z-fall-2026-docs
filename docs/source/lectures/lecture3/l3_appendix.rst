@@ -1822,7 +1822,8 @@ distance, or 21° in heading.
 
 .. important::
 
-   **Weighted average: 19.57 m.** The truth, from 500 samples, is 19.58 m. The
+   **Weighted average: 19.57 m.** The truth is 19.57 m too (exactly
+   :math:`20\,e^{-\sigma_\theta^2/2}`, with :math:`\sigma_\theta = 12^\circ = 0.209` rad). The
    EKF says 20.00 m. The along-track spread from the same five values is
    0.79 m, against an exact 0.78 m; the EKF says 0.5 m, and would say 0.5 m no
    matter how far the AV drove. The improvement came from two points that
@@ -2614,7 +2615,7 @@ Step 3: Watch the Crowd Settle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L3/tunnel_pf_clusters.png
-   :alt: How many places the crowd of particles is in, log scale, over 45 s: 23 at the start, then 17, then 4 at the first niche match near 2 s, 3 near 8 s, 2 at 14 s and 1 at 21 s. Green lines mark niche matches, a black line marks 12 s.
+   :alt: How many places the crowd of particles is in, log scale, over 45 s: 23 at the start, then 18, then 4 at the first niche match near 2 s, 3 near 8 s, 2 at 14 s and 1 at 21 s. Green lines mark niche matches, a black line marks 12 s.
    :width: 60%
    :align: center
 
