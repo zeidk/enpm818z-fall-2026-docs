@@ -15,18 +15,18 @@ GP1: Sensor Suite & Data Pipeline
 .. card::
    :class-card: sd-bg-dark sd-text-white sd-shadow-sm
 
-   **GP1 -- At a Glance**
+   **GP1: At a Glance**
 
    .. list-table::
       :widths: 30 70
       :class: compact-table
 
       * - **Duration**
-        - 3 weeks (Week 3 -- Week 6)
+        - 3 weeks (Week 3 to Week 6), due **Sunday, October 11**
       * - **Weight**
         - 15 points (15% of the group-project grade)
       * - **Lectures**
-        - L1--L2
+        - L1 and L2
       * - **Team Size**
         - 4 students
       * - **Submission**

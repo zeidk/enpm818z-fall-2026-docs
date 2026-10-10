@@ -13,7 +13,7 @@ Pre-Read: Simulation for Automated Driving
    Read it once the lecture has given you something concrete to attach it to,
    and **before you start GP1**. The engineering of scenario-based testing --
    how scenarios are specified, sampled, executed and scored -- is developed
-   properly in :doc:`L13 </lectures/lecture13/l13_index>`.
+   properly in L13.
 
 
 Why Simulation Is Not Optional
@@ -387,7 +387,7 @@ Where This Appears in the Course
    * - :doc:`L2 </lectures/lecture2/l2_index>`
      - CARLA's architecture, synchronous mode, spawning a sensor suite, and
        the limits of what it models.
-   * - :doc:`L13 </lectures/lecture13/l13_index>`
+   * - L13
      - Scenario-based testing in full: scenario layers, sampling, the test
        pyramid, driving scores, and world models.
    * - GP1--GP4

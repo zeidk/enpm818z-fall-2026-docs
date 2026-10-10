@@ -5,10 +5,37 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.4.0: New Look, Colored Schedule and a Larger Glossary (2026-10-09)
+.. dropdown:: v2.5.0: Lectures 6 to 14 Hidden, GP1 Date, L5 Overview (2026-10-09)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **Lectures 6 to 14 are hidden** until their slides match the syllabus.
+     They open one at a time; the Lectures page still lists the plan.
+   - **L5 overview rewritten** to match the deck: 3D detection,
+     segmentation, BEV and occupancy, fusion and tracking, with five
+     learning objectives. The next lecture is L7, Localization and SLAM.
+   - **L5 code page:** the tracking exercise's totals corrected to the
+     table students work from (NN 13.0 or 11.3, GNN 11.3).
+   - **Figures** in L3 and L5 that were transparent now have a white
+     background, so they read on the dark theme.
+
+   .. rubric:: Syllabus and assignments
+
+   - **GP1 is due, and GP2 is posted, on Sunday, October 11**: on the
+     schedule, the GP1 page, the assignments page and the L4 overview.
+
+   .. rubric:: Glossary
+
+   - **Duplicates merged** (EKF, UKF, extrinsic and intrinsic calibration,
+     complementarity, time of flight), five entries no lecture covers
+     removed, and every dash taken out.
+
+.. dropdown:: v2.4.0: New Look, Colored Schedule and a Larger Glossary (2026-10-09)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Site
 

@@ -675,7 +675,7 @@ all other Thursdays meet as scheduled. Dates below are given as MM/DD.
      - Perception II: 3D Detection, BEV, Fusion & Tracking
      - L5
      - | :quiz:`Quiz 2`
-       | :assignment:`GP1 due, GP2 posted`
+       | :assignment:`GP1 due, GP2 posted (Sun, Oct 11)`
    * - 10/15
      - 7
      - Localization & SLAM

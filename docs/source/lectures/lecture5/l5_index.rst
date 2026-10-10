@@ -1,57 +1,60 @@
 ====================================================================
-L5: Perception II -- BEV, Occupancy & Segmentation
+L5: Perception II, 3D Detection, BEV, Fusion & Tracking
 ====================================================================
 
 Overview
 --------
 
-This lecture extends the perception pipeline from L4 (Detection) along
-two complementary axes: **representation** -- moving from per-image
-bounding boxes to the Bird's-Eye View (BEV) and full 3D occupancy --
-and **density** -- moving from sparse detections to dense, per-pixel
-segmentation. You will study two landmark BEV architectures
-(Lift-Splat-Shoot and BEVFormer), 3D Occupancy Networks, and
-DeepLabv3+-style segmentation including driveable surface and lane
-detection. The lecture closes with industry adoption notes,
-nuScenes benchmarks, and a CARLA exercise that builds a BEV grid
-from a multi-camera rig and explores CARLA's semantic-segmentation
-ground truth.
+**L4 ended with a detector. Its box is in pixels, in one image, at one
+instant. This lecture turns it into what the rest of the AV can use.**
+
+L4 made a table of what perception hands to the rest of the AV, and each row
+still has something missing. Each section of this lecture fills one row:
+
+- **3D detection.** Prediction and planning need each object's position,
+  size and heading in meters, not pixels. LiDAR detectors work on a view
+  from above (PointPillars, CenterPoint).
+- **Segmentation.** The planner needs the road itself: a class for every
+  pixel, and the road seen from above.
+- **BEV and occupancy.** The **bird's-eye view** (BEV) puts every camera in
+  one grid on the ground (IPM, Lift-Splat-Shoot). **Occupancy** marks the
+  ground that is taken by anything at all, with or without a class.
+- **Fusion.** The AV has a camera, a LiDAR and a radar, and every answer has
+  to come out as one. Early, intermediate and late fusion, and other
+  vehicles' detections shared over V2X.
+- **Tracking.** A speed needs the same object from one frame to the next:
+  one Kalman filter per object (from L3), data association with a gate, and
+  a track lifecycle that keeps identity stable.
+
+The lecture frames all of it with Endsley's **situation awareness**: today
+covers Level 1 (perception) and Level 2 (comprehension, through tracking).
+Level 3, projection, is prediction in L9.
 
 Learning Objectives
 -------------------
 
 By the end of this lecture, you will be able to:
 
-- Explain why BEV is a preferred representation for autonomous driving
-  planning and multi-sensor fusion.
-- Describe the Lift-Splat-Shoot (LSS) pipeline for camera-to-BEV
-  projection including depth estimation, voxel pooling, and BEV
-  feature extraction.
-- Explain BEVFormer's learnable BEV queries, spatial cross-attention,
-  and temporal self-attention mechanisms.
-- Compare 2D perspective detection, BEV detection, and 3D occupancy
-  prediction in terms of representational power and planning utility.
-- Define 3D occupancy networks and explain per-voxel semantic
-  prediction.
-- Describe how multi-camera views are fused in BEV space.
-- Explain DeepLabv3+'s use of dilated convolutions and ASPP for
-  multi-scale segmentation.
-- Implement driveable-surface and lane segmentation pipelines, and
-  reason about their role in trajectory planning.
-- Distinguish semantic, instance, and panoptic segmentation; compute
-  Panoptic Quality (PQ).
-- Summarize how Tesla and other industry players adopt BEV perception.
-- Interpret nuScenes benchmark metrics (mAP, NDS) in the context of
-  modern BEV methods.
+- Read a **3D box** and say why LiDAR detectors work on a view from above.
+- Say what **semantic** segmentation gives the planner, and why the road is
+  segmented from above.
+- Explain why the **bird's-eye view** helps, and what **occupancy** adds to
+  boxes.
+- Place a design in **early**, **intermediate** or **late** fusion, and
+  project a LiDAR point into a camera box by hand.
+- Run one cycle of a **multi-object tracker**: predict, gate, associate, and
+  manage the track lifecycle.
 
 .. admonition:: Materials in revision
    :class: note
 
-   The lecture notes, exercises, quiz and references for this lecture are
-   being revised against the current slide deck and are not published yet.
-   This page will link to them once they are ready.
+   The lecture notes, their appendix, the exercises, the quiz and the
+   references are rewritten from the current slide deck and will be
+   published here soon.
 
-The **code** for this lecture is published: :doc:`l5_code`.
+The **code** for this lecture is published: :doc:`l5_code`, with the four
+hands-on packages (``l5_box_demo``, ``l5_seg_demo``, ``l5_bev_demo`` and
+``l5_tracking_demo``).
 
 .. toctree::
    :hidden:
@@ -64,14 +67,10 @@ The **code** for this lecture is published: :doc:`l5_code`.
 Next Steps
 ----------
 
-- The next lecture covers **Perception III -- Tracking, Temporal
-  Reasoning & Deep-Learning Fusion**: multi-object tracking (SORT,
-  DeepSORT, ByteTrack, transformer-based MOT), temporal context for
-  perception, and cross-attention / BEVFusion as the modern
-  deep-learning fusion paradigm built on top of the BEV
-  representation introduced here.
-- Review the BEVFormer paper: Li et al. (2022) ``BEVFormer: Learning
-  Bird's-Eye-View Representation from Multi-Camera Images via
-  Spatiotemporal Transformers.``
-- Explore the `nuScenes leaderboard <https://nuscenes.org/object-det>`_
-  to see where current BEV methods rank in 3D object detection.
+- **Next class, L7: Localization and SLAM.** Where the AV itself is. Today
+  needed it twice without saying so: sharing detections over V2X needs the
+  sender's position, and the tracker's fixed frame needs the AV's.
+- **Level 3, projection**, where everyone will be in a few seconds, is L9,
+  Prediction.
+- **Before next class:** run the four hands-on packages on the
+  :doc:`Code page <l5_code>`.

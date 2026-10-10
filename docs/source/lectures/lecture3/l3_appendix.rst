@@ -2292,7 +2292,7 @@ the same job with a thousandth of the work.
 .. note::
 
    Monte Carlo Localization (Dellaert et al., 1999), this filter used on a
-   real map, is :doc:`L7 <../lecture7/l7_index>`.
+   real map, is L7.
 
 The Three Steps as Equations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

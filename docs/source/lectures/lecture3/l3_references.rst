@@ -113,7 +113,7 @@ lecture's bibliography that no slide cites.
 
          The particle filter applied to robot localization (particle filter
          appendix). Monte Carlo Localization itself is
-         :doc:`L7 <../lecture7/l7_index>`.
+         L7.
 
 
 .. dropdown:: Checking the Covariance
@@ -203,4 +203,4 @@ lecture's bibliography that no slide cites.
 
    The bibliography file also holds the sources for Mahalanobis distance,
    the Hungarian algorithm, JPDA, MHT and the Tempe crash report. Those
-   topics are taught in :doc:`L6 <../lecture6/l6_index>`.
+   topics are taught in L6.

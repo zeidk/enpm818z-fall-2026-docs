@@ -42,18 +42,30 @@ todo_include_todos = True
 
 templates_path = ["_templates"]
 # ---------------------------------------------------------------------------
-# L1 to L4 are published in full. For L5 to L14 the index page is built and
-# the lecture, exercises, quiz and references pages are held back until they
-# are revised against the current slide decks. The source files stay on disk;
-# raise the start of the range below to publish the next lecture. Glossary
-# lecture tags point at the index pages, so they keep resolving while these
-# are excluded.
+# What is published.
+#
+# L1 to L4 are published in full.
+#
+# L5: the index and code pages are published; the lecture, appendix,
+# exercises, quiz and references pages are held back until the user
+# publishes them. All five are rewritten from the deck (2026-10-09).
+#
+# L6 to L14 are hidden completely: they do not match the syllabus yet and
+# open one at a time as their decks are finished. To reopen lecture N:
+#   1. remove N from HIDDEN_LECTURES below,
+#   2. restore its line in the toctree of lectures/index.rst,
+#   3. turn its plain-text tags ("L7") back into links,
+#      :doc:`L7 </lectures/lecture7/l7_index>`, in the glossary and on the
+#      pages that mention it.
+# The source files stay on disk.
 # ---------------------------------------------------------------------------
+HIDDEN_LECTURES = range(6, 15)
+
 exclude_patterns = [
-    f"lectures/lecture{n}/l{n}_{page}.rst"
-    for n in range(5, 15)
-    for page in ("lecture", "exercises", "quiz", "references")
+    f"lectures/lecture5/l5_{page}.rst"
+    for page in ("lecture", "appendix", "exercises", "quiz", "references")
 ]
+exclude_patterns += [f"lectures/lecture{n}/**" for n in HIDDEN_LECTURES]
 
 # GP2--GP4 are held back until they are posted. Remove an entry here (and
 # restore its toctree line in assignments/index.rst) to publish it.

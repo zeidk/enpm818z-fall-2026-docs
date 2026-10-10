@@ -74,9 +74,9 @@ A live demo then runs both detectors side by side on a CARLA frame.
 .. admonition:: This week
    :class: warning
 
-   - **Next week (week 6):** Quiz 2, GP1 due, and GP2 posted. Its two
-     detectors are YOLOv8s and RT-DETR-L, which is why every example in this
-     lecture uses them.
+   - **Next week (week 6):** Quiz 2. **GP1 is due, and GP2 is posted, on
+     Sunday, October 11.** GP2's two detectors are YOLOv8s and RT-DETR-L,
+     which is why every example in this lecture uses them.
    - **Perception is two lectures now:** L4 this week and L5 next week. The
      old L6 slot was folded into them.
 
@@ -135,7 +135,7 @@ Next Steps
     the convolution arithmetic, stride and padding, activations, pooling,
     training and fine-tuning.
   - Work through the L4 exercises and the quiz.
-  - **Quiz 2** is next week, and **GP1 is due**.
+  - **Quiz 2** is next week. **GP1 is due on Sunday, October 11.**
 
 - **How the lectures connect.** L2 gave the sensors and the camera model. L3
   gave the filter that combines measurements, and took the camera's

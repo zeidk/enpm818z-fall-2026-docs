@@ -517,8 +517,8 @@ while the track coasts.
 The tracker itself, ``tracker_core.py``, has no ROS in it, and
 ``test/test_tracker_core.py`` runs the slides' numbers through it: car B
 predicted to :math:`(12.35, -1.80)`, :math:`\varepsilon` = 400 and 0.44 for the
-same 2 m, and the exercise "two tracks, three detections" (NN gives 7.0 or
-2.5 depending on the order, GNN gives 2.5).
+same 2 m, and the exercise "two tracks, three detections" (NN gives 13.0 or
+11.3 depending on the order, GNN gives 11.3).
 
 Tracker nodes
 ~~~~~~~~~~~~~

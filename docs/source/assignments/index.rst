@@ -44,8 +44,8 @@ split between the group projects (**85%**) and the Final Report
    * - GP1: Sensor Suite & Data Pipeline
      - 15
      - 15%
-     - 3 weeks
-     - L1--L2
+     - 3 weeks, due Sun, Oct 11
+     - L1 and L2
 
 .. note::
 

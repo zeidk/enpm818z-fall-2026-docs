@@ -15,6 +15,9 @@ The lectures in ENPM818Z follow a progressive structure, starting with the auton
 Schedule
 --------
 
+L1 to L5 are open. The later lectures open here one at a time, as their
+slides are finished; the table shows the plan.
+
 .. list-table::
    :widths: 8 40 52
    :header-rows: 1
@@ -73,7 +76,11 @@ Schedule
    lecture3/l3_index
    lecture4/l4_index
    lecture5/l5_index
-   lecture6/l6_index
+
+..
+   Hidden until each deck is finished (see HIDDEN_LECTURES in conf.py).
+   To reopen a lecture, move its line back into the toctree above.
+   lecture6/l6_index   (not in the current syllabus: L5 replaced it)
    lecture7/l7_index
    lecture8/l8_index
    lecture9/l9_index

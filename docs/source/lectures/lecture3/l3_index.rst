@@ -65,9 +65,9 @@ reading that is wildly off.
    **Not in this lecture.** Detection is :doc:`L4 <../lecture4/l4_index>`.
    Fusion architectures, learned fusion, data association (deciding which
    measurement belongs to which object) and the Tempe crash (Uber, 2018) are
-   :doc:`L6 <../lecture6/l6_index>`. Monte Carlo Localization, which is the
+   L6. Monte Carlo Localization, which is the
    particle filter applied to localization, is
-   :doc:`L7 <../lecture7/l7_index>`.
+   L7.
 
 .. admonition:: This week
    :class: warning

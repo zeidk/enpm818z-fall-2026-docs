@@ -42,9 +42,9 @@ that needs everything in between, and the core of GP1.
    A map is treated here only as a **prior**, which is what you need in
    order to read the industry sensor-configuration comparison. HD map
    *layers* and map-based localization are covered in
-   :doc:`L7 <../lecture7/l7_index>`; the map formats that encode them
+   L7; the map formats that encode them
    (OpenDRIVE, Lanelet2) and how routing consumes them are covered in
-   :doc:`L8 <../lecture8/l8_index>`.
+   L8.
 
 
 Learning Objectives
