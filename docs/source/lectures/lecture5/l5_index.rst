@@ -45,23 +45,28 @@ By the end of this lecture, you will be able to:
 - Run one cycle of a **multi-object tracker**: predict, gate, associate, and
   manage the track lifecycle.
 
-.. admonition:: Materials in revision
-   :class: note
+Lecture Materials
+-----------------
 
-   The lecture notes, their appendix, the exercises, the quiz and the
-   references are rewritten from the current slide deck and will be
-   published here soon.
-
-The **code** for this lecture is published: :doc:`l5_code`, with the four
-hands-on packages (``l5_box_demo``, ``l5_seg_demo``, ``l5_bev_demo`` and
-``l5_tracking_demo``).
+- :doc:`l5_lecture`: the notes, following the slides shown in class.
+- :doc:`Going Further <l5_appendix>`: the deck's appendix (inside
+  CenterPoint, one pixel onto the grid, Lift and Splat by hand, BEVFormer,
+  the match distance, tracking in industry).
+- :doc:`l5_code`: the four hands-on packages (``l5_box_demo``,
+  ``l5_seg_demo``, ``l5_bev_demo`` and ``l5_tracking_demo``).
+- :doc:`l5_exercises`, :doc:`l5_quiz` and :doc:`l5_references`.
 
 .. toctree::
    :hidden:
    :maxdepth: 2
    :titlesonly:
 
+   l5_lecture
+   l5_appendix
    l5_code
+   l5_exercises
+   l5_quiz
+   l5_references
 
 
 Next Steps
@@ -73,4 +78,5 @@ Next Steps
 - **Level 3, projection**, where everyone will be in a few seconds, is L9,
   Prediction.
 - **Before next class:** run the four hands-on packages on the
-  :doc:`Code page <l5_code>`.
+  :doc:`Code page <l5_code>`, read :doc:`Going Further <l5_appendix>`, and
+  work through the :doc:`exercises <l5_exercises>`.

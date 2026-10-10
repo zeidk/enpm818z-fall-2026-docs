@@ -44,11 +44,7 @@ templates_path = ["_templates"]
 # ---------------------------------------------------------------------------
 # What is published.
 #
-# L1 to L4 are published in full.
-#
-# L5: the index and code pages are published; the lecture, appendix,
-# exercises, quiz and references pages are held back until the user
-# publishes them. All five are rewritten from the deck (2026-10-09).
+# L1 to L5 are published in full (L5 since 2026-10-10).
 #
 # L6 to L14 are hidden completely: they do not match the syllabus yet and
 # open one at a time as their decks are finished. To reopen lecture N:
@@ -61,11 +57,7 @@ templates_path = ["_templates"]
 # ---------------------------------------------------------------------------
 HIDDEN_LECTURES = range(6, 15)
 
-exclude_patterns = [
-    f"lectures/lecture5/l5_{page}.rst"
-    for page in ("lecture", "appendix", "exercises", "quiz", "references")
-]
-exclude_patterns += [f"lectures/lecture{n}/**" for n in HIDDEN_LECTURES]
+exclude_patterns = [f"lectures/lecture{n}/**" for n in HIDDEN_LECTURES]
 
 # GP2--GP4 are held back until they are posted. Remove an entry here (and
 # restore its toctree line in assignments/index.rst) to publish it.

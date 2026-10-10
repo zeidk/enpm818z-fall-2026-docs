@@ -5,10 +5,24 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.5.0: Lectures 6 to 14 Hidden, GP1 Date, L5 Overview (2026-10-09)
+.. dropdown:: v2.6.0: Lecture 5 Published (2026-10-10)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lecture 5: Perception II, 3D Detection, BEV, Fusion & Tracking
+
+   - **Lecture notes** for the whole deck: 3D detection, segmentation, BEV
+     and occupancy, fusion, and tracking.
+   - **New page: Going Further**, the deck's appendix (inside CenterPoint,
+     one pixel onto the grid, Lift and Splat by hand, BEVFormer, the match
+     distance, tracking in industry).
+   - **Quiz** (38 questions) and **exercises** (7) on the class material,
+     and **references** for every source the slides cite.
+
+.. dropdown:: v2.5.0: Lectures 6 to 14 Hidden, GP1 Date, L5 Overview (2026-10-09)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 
