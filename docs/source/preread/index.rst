@@ -27,10 +27,10 @@ That material lives here. **Each page states when to read it.** Most are read
      - **After L2**
      - Why the industry simulates, what simulation cannot tell you, how it is
        done in production, and the landscape beyond CARLA. Read once L2 has
-       shown you a simulator, and before GP1. Returned to in L13.
+       shown you a simulator, and before GP1. Returned to in L12.
    * - :doc:`Automotive Cybersecurity </preread/cybersecurity>`
-     - Before L14
-     - Attack surfaces, ISO/SAE 21434, and TARA. Supports the L14
+     - Before L13
+     - Attack surfaces, ISO/SAE 21434, and TARA. Supports the L13
        system-integration and safety discussion.
 
 .. toctree::

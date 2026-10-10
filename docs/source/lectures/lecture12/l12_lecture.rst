@@ -3,756 +3,636 @@ Lecture
 ====================================================
 
 
-The Fundamental Debate: Modular vs. End-to-End
------------------------------------------------
+What Is a World Model?
+-----------------------
 
-The autonomous driving community has long debated two competing architectural
-philosophies for building a complete ADS stack.
+A **world model** is a learned model that captures how the world evolves over
+time -- how future states follow from past states and the actions of an agent.
+In autonomous driving, a world model trained on video data can predict what
+the scene ahead will look like after the ego vehicle takes a specific action,
+acting as a learned, data-driven simulator.
+
+.. admonition:: Formal Definition
+   :class: note
+
+   Given a history of observations :math:`o_{1:t}` and a sequence of future
+   actions :math:`a_{t:t+H}`, a world model predicts the distribution over
+   future observations:
+
+   .. math::
+
+      p(o_{t+1:t+H} \mid o_{1:t},\, a_{t:t+H})
+
+   A **generative** world model can sample from this distribution to produce
+   photorealistic video of what the world would look like if the vehicle
+   took those actions.
+
+Why Does Autonomous Driving Need World Models?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. grid:: 1 2 2 2
+   :gutter: 3
+
+   .. grid-item-card:: Data Scarcity for Rare Events
+      :class-card: sd-border-info
+
+      Real-world driving data is abundant for common scenarios but extremely
+      sparse for safety-critical edge cases (vehicle running a red light,
+      sudden tire blowout, child chasing a ball). World models can synthesize
+      these rare events at scale.
+
+   .. grid-item-card:: Offline Policy Evaluation
+      :class-card: sd-border-info
+
+      Before deploying a new planner on the road, it can be evaluated against
+      the world model: "What would happen if I had used this new planner on
+      yesterday's fleet data?" This avoids costly on-road experiments.
+
+   .. grid-item-card:: Model-Based Planning
+      :class-card: sd-border-info
+
+      A planner can use a world model as an internal simulator to "imagine"
+      the consequences of candidate action sequences and select the one that
+      leads to the best predicted outcome.
+
+   .. grid-item-card:: Sim-to-Real Reduction
+      :class-card: sd-border-info
+
+      World models trained on real data produce training images that are
+      indistinguishable from real sensor data, dramatically reducing the
+      distributional gap compared to traditional physics-based simulators.
+
+
+Architecture: Video Prediction Transformers
+--------------------------------------------
+
+Modern driving world models are built on **video generation transformers** --
+large autoregressive or diffusion-based models that operate in a compressed
+latent space.
+
+Tokenization and Latent Space
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Raw video frames are too high-dimensional to process directly. World models
+use a **visual tokenizer** (typically a VQ-VAE or a video VAE) to compress
+each frame into a grid of discrete or continuous tokens:
+
+.. code-block:: text
+
+   Raw frame (1920×1080 RGB)
+         |
+   Visual Tokenizer (VQ-VAE / Video VAE)
+         |
+   Latent tokens (32×32 = 1024 tokens per frame)
+         |
+   Transformer backbone (attention across time and space)
+         |
+   Predicted latent tokens (future frames)
+         |
+   Decoder → Synthesized future video frames
+
+Autoregressive vs. Diffusion Generation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. tab-set::
 
-   .. tab-item:: Modular Pipeline
+   .. tab-item:: Autoregressive
 
-      The **modular pipeline** decomposes the driving task into a sequence of
-      specialized subsystems:
+      Predicts future tokens one at a time, conditioned on all previous tokens.
+      Simple to train (next-token prediction), but slow at inference because
+      tokens must be generated sequentially.
 
-      1. **Perception** -- Detects and classifies objects, estimates 3-D bounding
-         boxes, segments the scene.
-      2. **Prediction** -- Forecasts future trajectories of agents.
-      3. **Planning** -- Generates a safe, comfortable trajectory for the ego
-         vehicle.
-      4. **Control** -- Converts the planned trajectory into actuator commands
-         (steering, throttle, brake).
+      .. math::
 
-      Each module is developed and validated independently, with structured
-      intermediate representations (object lists, maps, trajectories) passed
-      between stages.
+         p(o_{1:T}) = \prod_{t=1}^{T} p(o_t \mid o_{1:t-1},\, a_{1:t-1})
 
-   .. tab-item:: End-to-End
+   .. tab-item:: Diffusion-Based
 
-      An **end-to-end** (E2E) system replaces the hand-engineered pipeline with
-      a single model (or tightly coupled set of models) that maps raw sensor
-      inputs directly to driving actions or waypoints.
+      Generates future frames by iteratively denoising a random noise tensor.
+      Faster than autoregressive at high resolution, and produces sharper,
+      more consistent video. Used by NVIDIA Cosmos.
 
-      - Sensors (cameras, LiDAR, radar) feed directly into a neural network.
-      - The network learns all intermediate representations implicitly.
-      - The output is typically a set of planned waypoints or direct actuator
-        commands.
+      .. math::
 
-.. list-table:: Modular vs. End-to-End Trade-offs
+         p_\theta(x_{0}) = \int p_\theta(x_{0:T})\, dx_{1:T}
+
+Action Conditioning
+~~~~~~~~~~~~~~~~~~~~
+
+To make predictions useful for planning, the world model must condition on
+**ego-vehicle actions** (steering angle, acceleration). This is implemented
+via cross-attention between the action embeddings and the latent video tokens:
+
+.. code-block:: text
+
+   [Action sequence a_{t:t+H}] → Action Encoder → Action Embeddings
+                                                            ↓
+   [Past latent tokens] → Transformer → Cross-Attention ← → Next token prediction
+
+
+Wayve GAIA
+------------
+
+**GAIA** is Wayve's family of generative driving world models, and the
+clearest example of the "learned simulator" idea applied at industrial
+scale on real fleet data.
+
+.. list-table:: The GAIA line
+   :widths: 20 80
+   :header-rows: 1
+   :class: compact-table
+
+   * - Model
+     - Contribution
+   * - **GAIA-1** (2023)
+     - ~9B-parameter proof of concept. Established the recipe: tokenize
+       driving video, model it autoregressively in latent space, and
+       condition generation on **ego actions and text**, so the model can
+       be asked "what if I steered left here?"
+   * - **GAIA-2** (2025)
+     - Latent-diffusion successor. Multi-camera generation with
+       cross-view consistency, and richer structured conditioning (ego
+       action, other agents, road layout, weather, time of day) aimed
+       squarely at controllable safety-critical scenario synthesis.
+
+.. warning::
+
+   Vendor world models are announced frequently and the version numbers
+   move quickly. Confirm the **current** generation, its parameter count,
+   and its published capabilities from Wayve's own technical report
+   before citing specifications -- do not carry forward figures from
+   lecture notes, including these.
+
+Key Capabilities
+~~~~~~~~~~~~~~~~
+
+.. grid:: 1 1 2 2
+   :gutter: 3
+
+   .. grid-item-card:: Multi-Camera Consistency
+      :class-card: sd-border-primary
+
+      GAIA-2 generates video across multiple cameras simultaneously, maintaining
+      geometric consistency between views. This is critical for training BEV
+      perception models that require multi-camera input.
+
+   .. grid-item-card:: Long-Horizon Generation
+      :class-card: sd-border-primary
+
+      Can synthesize driving video for up to 30+ seconds while maintaining
+      scene consistency -- long enough to simulate complete intersection
+      negotiations and lane change maneuvers.
+
+   .. grid-item-card:: Controllable Rare Events
+      :class-card: sd-border-primary
+
+      Using text conditioning, operators can request specific scenarios: "a
+      cyclist merges into the ego lane at an intersection" or "heavy rain
+      begins during a highway merge". The model synthesizes plausible video
+      matching the description.
+
+   .. grid-item-card:: Action-Conditional Rollouts
+      :class-card: sd-border-primary
+
+      Given a sequence of planned waypoints, GAIA renders what the scene
+      would look like if the ego vehicle executed those waypoints -- enabling
+      closed-loop policy evaluation entirely within the world model.
+
+.. admonition:: The trajectory of the GAIA line
+   :class: tip
+
+   The progression is instructive: GAIA-1 proved that action-conditioned
+   driving video generation was possible at all; GAIA-2 shifted the
+   emphasis from raw generation quality to **controllability** --
+   multi-camera consistency and structured conditioning on the things a
+   safety engineer actually wants to vary.
+
+   That shift matters more than the parameter count. A world model is
+   only useful for validation if you can *ask it for a specific
+   scenario*; an uncontrollable model that produces beautiful video is a
+   demo, not a tool.
+
+
+NVIDIA Cosmos
+-------------
+
+NVIDIA Cosmos is a family of **world foundation models** for physical AI,
+announced at CES 2025 and developed as part of NVIDIA's end-to-end ADS stack.
+
+Design Philosophy
+~~~~~~~~~~~~~~~~~
+
+Unlike GAIA, which is specialized for driving video, Cosmos is a general
+physical world model trained on diverse real-world video (robotics,
+manufacturing, driving, outdoor scenes). It is then fine-tuned for specific
+domains such as autonomous driving.
+
+Cosmos Architecture
+~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: text
+
+   Pre-training (diverse physical world video)
+         |
+   Cosmos Base (general physics world model)
+         |
+   Fine-tuning (AV driving data, robotics data)
+         |
+   Cosmos-Drive / Cosmos-Robot (domain-specific models)
+
+Integration with NVIDIA DRIVE
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+NVIDIA integrates Cosmos directly into its ADS development pipeline:
+
+1. **Synthetic data generation** -- Cosmos generates additional training data
+   from existing fleet footage, augmenting with rare weather, unusual agents,
+   and edge-case scenarios.
+2. **RL environment** -- The planner trained via reinforcement learning
+   (L11) uses Cosmos as a differentiable environment, receiving visual
+   feedback on the consequences of planned actions.
+3. **Test oracle** -- Candidate planners are evaluated in Cosmos rollouts before
+   any on-road testing, reducing safety risk.
+
+.. note::
+
+   NVIDIA released Cosmos under an open license for non-commercial research,
+   making it accessible for academic study and experimentation. The DRIVE
+   production variant is proprietary.
+
+
+Vista: Generalizable Driving World Models (NeurIPS 2024)
+---------------------------------------------------------
+
+Vista (Gao et al., NeurIPS 2024) comes from **OpenDriveLab / Shanghai AI
+Laboratory** and, unlike the proprietary models above, is **openly
+released**. Its central contribution is **generalizability**: earlier
+world models were trained and evaluated largely on a single dataset, with
+limited transfer to unseen locations and driving styles.
+
+Key Contributions
+~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 30 70
+   :class: compact-table
+
+   * - **Web-scale pre-training**
+     - Vista pre-trains on **OpenDV-2K**, a large corpus assembled from
+       publicly available driving video (thousands of hours spanning many
+       countries, vehicles, and cameras), then fine-tunes on curated
+       datasets such as nuScenes. The scale and diversity of the
+       pre-training corpus is what drives the generalization.
+   * - **High fidelity and long horizon**
+     - Generates at higher spatial resolution and frame rate than prior
+       driving world models, with a latent-replacement scheme to extend
+       rollouts beyond a single generation window without collapsing.
+   * - **Versatile action conditioning**
+     - Accepts control at several levels of abstraction -- steering
+       angle, speed, trajectory, or a high-level command -- rather than a
+       single fixed action format.
+   * - **Evaluation without ground truth**
+     - Proposes a reward formulation that scores generated futures
+       without requiring matched real-world video, addressing the
+       awkward problem of evaluating counterfactual rollouts.
+   * - **Open source**
+     - Model weights and training code are publicly available, which is
+       what makes Vista usable in coursework -- GAIA and Cosmos-Drive are
+       not.
+
+Why Vista Matters
+~~~~~~~~~~~~~~~~~~
+
+Vista addresses the **generalization problem** that limits real-world
+driving world models: a model trained on data from one city may not
+simulate driving in another. Training on a geographically diverse,
+web-scale corpus is a step toward a universal driving world model -- and
+being open, it is the one model in this lecture you can actually run.
+
+
+Applications of Driving World Models
+--------------------------------------
+
+Data Augmentation
+~~~~~~~~~~~~~~~~~
+
+Training end-to-end perception and planning models requires diverse, balanced
+datasets. World models can augment existing data by:
+
+- **Weather augmentation** -- Converting clear-day sequences to rain, fog, or
+  night, producing free labels for all conditions.
+- **Camera failure simulation** -- Degrading one camera input to train
+  perception redundancy.
+- **Novel viewpoint synthesis** -- Generating views from hypothetical sensor
+  positions not present in the original vehicle.
+
+.. code-block:: python
+
+   # Conceptual pseudocode: world model augmentation
+   from gaia3 import WorldModel
+
+   model = WorldModel.load_pretrained("gaia3-15b")
+
+   for frame_seq in real_driving_data:
+       # Generate rain version
+       rain_seq = model.generate(
+           conditioning_video=frame_seq,
+           text_condition="heavy rain",
+           ego_actions=frame_seq.actions
+       )
+       augmented_dataset.add(rain_seq, labels=frame_seq.labels)
+
+Long-Tail Scenario Generation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The **long tail** of rare safety-critical scenarios is the primary unsolved
+data challenge in AV development. Traditional simulation can script these
+scenarios, but scripted CARLA scenarios lack the visual realism of real data.
+World models generate photo-realistic long-tail scenarios:
+
+.. list-table:: Example Long-Tail Scenarios
+   :widths: 40 60
+   :header-rows: 1
+   :class: compact-table
+
+   * - Scenario Type
+     - World Model Conditioning
+   * - Pedestrian stepping off curb into traffic
+     - ``"pedestrian suddenly steps into the road from the right sidewalk"``
+   * - Emergency vehicle approaching from behind
+     - ``ego_action=pull_right`` + ``text="ambulance with siren behind ego"``
+   * - Road debris in travel lane
+     - ``"large cardboard box in the center of the left lane ahead"``
+   * - Sensor degradation (camera flare)
+     - ``"strong sun glare on front-left camera"``
+   * - Construction zone with atypical lane markings
+     - ``"construction cones redirect traffic, no visible lane lines"``
+
+Policy Evaluation (Offline Closed-Loop)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+One of the most valuable applications of world models is **offline closed-loop
+evaluation**: testing a new planner version on historical data without deploying
+it on the road.
+
+.. code-block:: text
+
+   Historical fleet log (O_1:T, A_human)
+              |
+   Replace human actions with new planner: A_planner
+              |
+   World model generates: O'_2:T = WM(O_1, A_planner_2, ...)
+              |
+   Evaluate: collision rate, comfort metrics, lane adherence
+              |
+   If acceptable → promote to shadow mode → on-road test
+
+This **counterfactual evaluation** pipeline dramatically reduces the cost
+and risk of iterating on planners.
+
+
+World Models vs. Traditional Simulation (CARLA)
+------------------------------------------------
+
+.. list-table::
    :widths: 25 38 37
    :header-rows: 1
    :class: compact-table
 
    * - Dimension
-     - Modular Pipeline
-     - End-to-End
-   * - **Interpretability**
-     - High -- each module can be inspected
-     - Low -- internal representations are opaque
-   * - **Debuggability**
-     - Failures are localizable to a module
-     - Hard to attribute failures to causes
-   * - **Joint optimization**
-     - Absent -- each module optimized separately
-     - Full -- gradients flow across the entire stack
-   * - **Information loss**
-     - Present at each module boundary
-     - Minimal -- raw data preserved throughout
-   * - **Data requirements**
-     - Moderate per module
-     - Massive -- billions of labeled driving miles
-   * - **Validation**
-     - Module-level + integration testing
-     - Requires comprehensive scenario coverage
-   * - **Regulatory acceptance**
-     - Mature frameworks available
-     - Open research question
+     - Physics-Based (CARLA)
+     - Generative World Model
+   * - **Realism**
+     - High geometry; synthetic appearance
+     - Photo-realistic (trained on real data)
+   * - **Physical accuracy**
+     - Exact (rules-based physics engine)
+     - Approximate (learned from data)
+   * - **Scenario control**
+     - Precise API control over all agents
+     - Probabilistic; conditioning may not be obeyed exactly
+   * - **Scalability**
+     - Limited by hand-crafting scenarios
+     - Can generate unlimited variations at scale
+   * - **Training data quality**
+     - Sim-to-real gap in appearance
+     - Near-real; minimal appearance gap
+   * - **Compute cost**
+     - Low (game engine rendering)
+     - High (large GPU inference)
+   * - **Best use case**
+     - Algorithm development, course instruction
+     - Large-scale synthetic data, E2E training
 
-
-Information Loss at Module Boundaries
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A key theoretical argument for end-to-end approaches is the **information loss
-problem**: when perception outputs a discretized object list, geometric
-uncertainty, rare edge cases, and subtle scene context that did not fit the
-output schema are permanently discarded before the planner ever sees them.
-
-.. admonition:: Example
-   :class: note
-
-   A modular system that represents a pedestrian as a 3-D bounding box cannot
-   convey that the pedestrian is holding a ball that may roll into the road.
-   An end-to-end system working on raw images can, in principle, learn to
-   condition its plan on such subtle visual cues.
-
-
-UniAD: Planning-Oriented Autonomous Driving (CVPR 2023)
--------------------------------------------------------
-
-UniAD was a landmark result that demonstrated that **unifying all driving tasks
-in a single end-to-end model** outperforms carefully tuned specialized modules
-on every sub-task.
-
-Architecture
-~~~~~~~~~~~~
-
-UniAD introduces a hierarchical query-based architecture built on a shared BEV
-backbone:
-
-.. code-block:: text
-
-   Camera inputs (multi-view)
-         |
-   BEV Feature Encoder (BEVFormer)
-         |
-   ┌─────┴──────────────────────────────────────────┐
-   │  TrackFormer   → Agent Tracking Queries        │
-   │  MapFormer     → Map Element Queries           │
-   │  MotionFormer  → Multi-modal Motion Queries    │
-   │  OccFormer     → Occupancy Grid Queries        │
-   │  Planner       → Ego Trajectory Waypoints      │
-   └────────────────────────────────────────────────┘
-
-Each downstream module receives **queries** -- learned embeddings that
-accumulate task-specific features from the shared BEV representation via
-cross-attention.
-
-Key Contributions
-~~~~~~~~~~~~~~~~~
-
-.. grid:: 1 2 2 2
-   :gutter: 3
-
-   .. grid-item-card:: Unified Query Propagation
-      :class-card: sd-border-info
-
-      Agent tracking queries flow downstream to the motion forecasting module,
-      which then informs occupancy prediction, which informs the planner. This
-      creates an explicit information flow that mimics the intuitive reasoning
-      chain a human driver uses.
-
-   .. grid-item-card:: Planning-Centric Loss
-      :class-card: sd-border-info
-
-      All sub-task losses are co-optimized with a planning loss, so every
-      component is incentivized to produce representations that ultimately
-      improve the planned trajectory rather than just maximizing its own
-      metric in isolation.
-
-   .. grid-item-card:: CVPR 2023 SOTA
-      :class-card: sd-border-info
-
-      UniAD achieved state-of-the-art results on nuScenes across tracking,
-      mapping, motion prediction, occupancy, and planning simultaneously --
-      the first single model to do so.
-
-   .. grid-item-card:: Influence
-      :class-card: sd-border-info
-
-      UniAD became the foundation for a wave of follow-on work (SparseDrive,
-      DriveTransformer) and is widely cited as the model that proved the
-      end-to-end paradigm works at the systems level.
-
-Performance Snapshot
-~~~~~~~~~~~~~~~~~~~~~
-
-.. list-table::
-   :widths: 35 35 30
-   :header-rows: 1
-   :class: compact-table
-
-   * - Task
-     - Metric
-     - UniAD Result
-   * - 3-D Object Tracking
-     - AMOTA
-     - 0.359
-   * - Motion Forecasting
-     - minADE
-     - ~0.7 m
-   * - Occupancy Prediction
-     - IoU
-     - ~63% (near) / ~40% (far)
-   * - Planning
-     - Average L2 over 1/2/3 s
-     - ~1.0 m (rising to ~1.65 m at 3 s)
-
-.. warning::
-
-   **Check these against the paper before quoting them.** Reported
-   numbers for UniAD vary considerably between the original paper,
-   subsequent reproductions, and re-evaluations under corrected
-   protocols -- especially the planning L2 figures, which depend heavily
-   on whether ego status is fed to the model. Treat the table above as
-   indicative of magnitude, not as citable values.
-
-.. admonition:: Open-loop planning metrics are weaker evidence than they look
+.. admonition:: Key Insight
    :class: important
 
-   Before accepting "UniAD achieves 1.0 m L2, therefore end-to-end
-   works," note the critique that followed. **AD-MLP** (Zhai et al.,
-   2023) and the paper *"Is Ego Status All You Need for Open-Loop
-   End-to-End Autonomous Driving?"* (Li et al., CVPR 2024) showed that a
-   trivial MLP fed **only the ego vehicle's own state** -- no camera
-   input at all -- matches or beats sophisticated E2E models on the
-   nuScenes open-loop L2 metric.
+   CARLA and world models are **complementary**, not competing. CARLA
+   excels for controlled algorithm development and testing where precise
+   scenario specification matters. World models excel for large-scale data
+   augmentation and photo-realistic long-tail generation where visual
+   realism is the priority. In production ADS development, both are used.
 
-   The reason is that nuScenes driving is overwhelmingly "continue doing
-   what you were just doing." Extrapolating your own recent motion is
-   therefore a very strong baseline, and the metric rewards it. The
-   models may still be learning something real, but **this benchmark
-   cannot demonstrate it**.
 
-   The field's response has been to move toward closed-loop evaluation
-   (nuPlan, CARLA leaderboards, NAVSIM), where the policy's own actions
-   determine the states it subsequently sees, and compounding error --
-   the failure mode from behavior cloning later in this lecture --
-   actually shows up. When you read any planning result, the first
-   question is: **open-loop or closed-loop?**
+Generative Scenario Generation for Safety Validation
+------------------------------------------------------
 
+Safety validation requires demonstrating that an ADS handles a comprehensive
+set of scenarios safely. Traditional testing approaches face the **coverage
+problem**: there are infinite possible scenarios, and testing on a finite set
+cannot guarantee safety.
 
-DriveTransformer (ICLR 2025)
------------------------------
+Adversarial Scenario Generation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-DriveTransformer extended the UniAD paradigm with a key architectural
-insight: **a single set of attention operations can simultaneously serve all
-driving tasks** rather than using separate specialized decoder heads.
-
-Shared Attention Mechanism
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-In UniAD, each task head applies cross-attention to the BEV features
-independently. DriveTransformer instead defines **three unified token types**:
-
-- **Agent tokens** -- represent moving objects (vehicles, pedestrians).
-- **Map tokens** -- represent static scene elements (lanes, crosswalks).
-- **Ego token** -- represents the autonomous vehicle itself.
-
-All tokens attend to each other and to raw sensor features in a **single
-joint attention block**, repeated across multiple layers.
-
-.. admonition:: Why This Matters
-   :class: tip
-
-   By sharing attention computations across tasks, DriveTransformer eliminates
-   the redundant feature extraction that each separate head in UniAD performs.
-   This leads to a **3x throughput improvement** over UniAD at equivalent
-   performance -- a critical difference for real-time deployment where inference
-   must complete in under 50 ms.
-
-Throughput Comparison
-~~~~~~~~~~~~~~~~~~~~~
-
-.. list-table::
-   :widths: 35 30 35
-   :header-rows: 1
-   :class: compact-table
-
-   * - Model
-     - Relative throughput
-     - Planning quality
-   * - UniAD
-     - 1x (baseline)
-     - baseline
-   * - DriveTransformer
-     - ~3x
-     - comparable or slightly better
-
-.. note::
-
-   The throughput ratio is the meaningful claim here and is what the
-   paper argues for. Absolute FPS depends entirely on GPU, batch size,
-   resolution, and precision, so it is not quoted. Apply the open-loop
-   caveat above to the planning column as well.
-
-.. note::
-
-   DriveTransformer was accepted at ICLR 2025, and subsequent industrial
-   implementations have pushed throughput further with quantization and
-   hardware-specific optimization.
-
-
-Vision-Language-Action (VLA) Models
-------------------------------------
-
-The emergence of large language models (LLMs) and vision-language models
-(VLMs) has opened a new direction in autonomous driving: embedding
-**natural language reasoning** directly into the driving loop.
-
-What Is a VLA Model?
-~~~~~~~~~~~~~~~~~~~~~
-
-A **Vision-Language-Action (VLA)** model takes visual input (camera images,
-BEV features) and conditions its output on language -- either explicit
-text commands or implicit chain-of-thought reasoning -- before producing
-driving actions or waypoints.
-
-.. code-block:: text
-
-   [Camera images] + [Language context / CoT]
-            |
-   Vision-Language Model backbone (e.g., LLaVA, InternVL)
-            |
-   [Action decoder] → Waypoints / control signals
-
-Chain-of-Thought Reasoning for Driving
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Rather than directly regressing waypoints, VLA systems can generate an
-intermediate **textual reasoning trace** that makes their logic auditable:
-
-.. code-block:: text
-
-   "The pedestrian on the left is looking toward the road and is likely
-    to cross. The traffic light ahead is yellow. I should slow down
-    and prepare to stop at the crosswalk."
-    → [decelerate, target_speed=0, stop_distance=12m]
-
-This chain-of-thought approach offers several benefits:
-
-- The reasoning trace is **human-readable**, dramatically improving
-  interpretability over pure neural planners.
-- The model can be queried in natural language to **explain a past
-  decision** (important for incident investigation).
-- Language supervision provides a rich additional training signal beyond
-  imitation labels.
-
-NVIDIA Alpamayo
-~~~~~~~~~~~~~~~
-
-NVIDIA Alpamayo is a VLA model for driving released in 2025 as part of
-NVIDIA's DRIVE platform. Key features:
-
-- Built on a large vision-language backbone fine-tuned on driving data.
-- Produces **driving decisions conditioned on natural language scene
-  descriptions** generated by the model itself.
-- Integrated with NVIDIA's end-to-end DRIVE stack and evaluated in
-  CARLA and on-road in partnership with automotive OEMs.
-- Supports **free-form language commands** from the passenger or dispatcher
-  (e.g., "take the scenic route" or "avoid the highway").
-
-DriveVLM
-~~~~~~~~~
-
-DriveVLM (Tsinghua University with Li Auto, 2024) demonstrated that:
-
-- A VLM backbone can successfully ground visual driving scenes to language.
-- Chain-of-thought driving -- scene description, then analysis, then
-  hierarchical planning -- outperforms direct waypoint regression on rare
-  and complex scenarios where standard E2E models fail.
-- A **dual-system** design is what makes it practical: the slow VLM
-  reasons about the scene while a fast conventional planner runs at
-  control rate, because a large VLM cannot itself meet a 10 Hz deadline.
-
-.. note::
-
-   **Wayve** pursues a related but distinct line of work: LINGO-1 and
-   LINGO-2 add natural-language commentary and instruction-following to
-   their driving models. Do not conflate the two -- they are different
-   groups with different architectures.
-
-
-Tesla's End-to-End Approach
-----------------------------
-
-Tesla represents the most large-scale industrial deployment of end-to-end
-driving principles.
-
-The FSD v12 Architecture
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Starting with FSD v12 (2024), Tesla replaced its modular pipeline with a
-**fully neural, camera-only end-to-end system**:
-
-.. code-block:: text
-
-   8 Cameras (1280×960 @ 36 FPS each)
-         |
-   Video encoder (space-time transformers per camera)
-         |
-   BEV feature fusion (cross-camera attention)
-         |
-   Occupancy & flow prediction
-         |
-   Planning transformer (waypoint sequence)
-         |
-   Low-level PID / MPC controller
-         |
-   Steering, throttle, brake actuators
-
-Key characteristics:
-
-- **Camera-only** -- no LiDAR or radar. Tesla argues cameras suffice because
-  humans drive with eyes.
-- **End-to-end differentiable** -- gradients flow from control commands back
-  through the planner to the video encoder.
-- **Fleet learning** -- 8.3 billion supervised FSD miles as of early 2026,
-  continuously improving through shadow mode and human correction labels.
-
-.. admonition:: Scale as a Moat
-   :class: important
-
-   Tesla's fleet data advantage is structural. With millions of vehicles
-   collecting edge cases daily, the system receives training signal that
-   no simulation-only approach can easily replicate.
-
-
-NVIDIA's End-to-End Stack
---------------------------
-
-NVIDIA's approach combines hardware (DRIVE Orin/Thor SoC) with a full
-software stack that incorporates end-to-end learning with reinforcement
-learning fine-tuning.
-
-Key Layers
-~~~~~~~~~~
-
-.. grid:: 1 2 2 2
-   :gutter: 3
-
-   .. grid-item-card:: Perception (NVIDIA Hydra-MDP)
-      :class-card: sd-border-primary
-
-      Multi-task BEV perception trained with a single unified decoder
-      for detection, segmentation, and occupancy.
-
-   .. grid-item-card:: World Model
-      :class-card: sd-border-primary
-
-      NVIDIA Cosmos generates synthetic training data and serves as a
-      differentiable environment for RL fine-tuning of the planner.
-
-   .. grid-item-card:: Planner (E2E + RL)
-      :class-card: sd-border-primary
-
-      A learned planner trained with imitation learning then refined
-      with reinforcement learning rewards (comfort, safety, progress).
-
-   .. grid-item-card:: DRIVE Thor SoC
-      :class-card: sd-border-primary
-
-      Up to 2000 TOPS of compute. Executes all E2E inference at the
-      latency required for real-time vehicle control.
-
-Reinforcement Learning Fine-Tuning
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Imitation learning alone inherits the distribution of human driving,
-including human mistakes and sub-optimal decisions. NVIDIA uses RL
-to optimize for **explicit reward functions** that humans cannot
-efficiently demonstrate:
+World models can be combined with adversarial optimization to systematically
+find **failure-inducing scenarios** for a given planner:
 
 .. math::
 
-   \mathcal{R} = w_1 \cdot r_{\text{safety}} + w_2 \cdot r_{\text{comfort}} + w_3 \cdot r_{\text{progress}}
+   \text{scenario}^* = \arg\max_{\text{scenario}} \mathcal{L}_{\text{safety}}(\text{planner}(\text{scenario}))
 
-where :math:`r_{\text{safety}}` penalizes proximity to obstacles and traffic
-violations, :math:`r_{\text{comfort}}` penalizes high jerk and acceleration,
-and :math:`r_{\text{progress}}` rewards making forward progress toward the
-destination.
+The optimizer finds the scenario parameters (pedestrian timing, vehicle
+speed, weather) that maximize safety-relevant losses (collision probability,
+traffic law violations). This is more efficient than random scenario sampling
+for finding the planner's failure modes.
 
+Structured Scenario Families
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Advantages of End-to-End Driving
-----------------------------------
+Regulatory bodies are beginning to specify **scenario families** -- systematic
+parameterizations of scenario classes -- as the basis for safety validation.
+World models can populate these families with photo-realistic instances:
 
-.. grid:: 1 1 2 2
-   :gutter: 3
-
-   .. grid-item-card:: Joint Optimization
-      :class-card: sd-border-success
-
-      All components are optimized for the same ultimate objective (safe,
-      comfortable driving), eliminating the proxy-metric misalignment that
-      plagues modular pipelines.
-
-   .. grid-item-card:: No Information Loss
-      :class-card: sd-border-success
-
-      Raw sensor data flows through the entire computation graph. Features
-      relevant to planning that don't fit a predefined schema can still
-      influence the output.
-
-   .. grid-item-card:: Emergent Capabilities
-      :class-card: sd-border-success
-
-      E2E models trained at scale have demonstrated emergent abilities --
-      behaviors that appear without explicit programming, analogous to
-      emergent capabilities in large language models.
-
-   .. grid-item-card:: Architectural Simplicity
-      :class-card: sd-border-success
-
-      A single model (or small set of coupled models) replaces dozens of
-      specialized subsystems, reducing the engineering surface area for
-      integration bugs.
+- **ASAM OpenSCENARIO 2.0** -- A standard format for specifying scenario
+  families that world models can instantiate.
+- **UNECE GTR safety cases** -- The UNECE GTR (January 2026) encourages
+  safety case arguments based on systematic scenario coverage.
 
 
-Disadvantages and Open Challenges
------------------------------------
+Sim-to-Real Gap and Domain Adaptation
+--------------------------------------
 
-.. admonition:: Black-Box Behavior
-   :class: warning
+The sim-to-real gap remains a fundamental challenge for any simulation-based
+training approach, including world models.
 
-   End-to-end models provide no interpretable intermediate representations.
-   When the system makes an error, it is extremely difficult to determine
-   whether the failure was due to perception, prediction, or planning -- or
-   some emergent interaction between them.
+Sources of the Gap
+~~~~~~~~~~~~~~~~~~~
 
-.. admonition:: Massive Data Requirements
-   :class: warning
+.. tab-set::
 
-   Training competitive E2E models requires hundreds of millions of labeled
-   driving frames. Labeling cost, data diversity (geography, weather, culture),
-   and long-tail coverage all remain significant challenges.
+   .. tab-item:: Appearance Gap
 
-.. admonition:: Validation Difficulty
-   :class: warning
+      Even photorealistic simulators differ from real cameras in subtle ways:
+      lens flare, compression artifacts, sensor noise spectral characteristics,
+      and HDR handling. Models that overfit to simulation appearance fail in
+      the real world.
 
-   ISO 26262 and SOTIF assume a modular decomposition where each component
-   can be tested in isolation. Validating a monolithic E2E system against
-   an ASIL-D safety argument is an open research problem with no settled
-   industry-wide methodology.
+   .. tab-item:: Dynamics Gap
 
-.. admonition:: Distribution Shift
-   :class: warning
+      Physics engines make simplifying assumptions (rigid bodies, simplified
+      tire models) that differ from real vehicle dynamics. Learned world
+      models inherit the biases of their training data distribution.
 
-   E2E systems trained on one geographic region or driving culture may
-   fail silently when deployed in a different environment, with no explicit
-   module to flag the out-of-distribution condition.
+   .. tab-item:: Agent Behavior Gap
 
-Interpretability Research
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+      Simulated pedestrians and vehicles follow programmed behavior models.
+      Real agents are unpredictable and culturally diverse. A world model
+      trained on London driving data may not model the behavior of drivers
+      in Cairo or Mumbai.
 
-Researchers are actively developing methods to add interpretability to E2E
-systems without sacrificing performance:
-
-- **Attention visualization** -- Identifying which image regions most
-  influenced a particular action.
-- **Concept bottleneck models** -- Forcing the network to predict human-
-  interpretable concepts (e.g., "pedestrian present", "rain") as an
-  intermediate representation.
-- **Chain-of-thought supervision** (VLA models) -- Training the model to
-  produce textual reasoning before acting.
-
-
-The Role of Simulation in Training E2E Models
-----------------------------------------------
-
-End-to-end models are data-hungry, and real-world data collection is slow
-and expensive. Simulation plays a critical role in closing this gap.
-
-Data Generation at Scale
-~~~~~~~~~~~~~~~~~~~~~~~~
+Mitigation Strategies
+~~~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
    :widths: 30 70
    :class: compact-table
 
-   * - **Scenario diversity**
-     - Simulators (CARLA, Waymo Sim, NVIDIA Cosmos) can generate rare
-       events (jaywalking, debris on road, sensor degradation) that are
-       almost impossible to encounter at sufficient frequency in the real world.
-   * - **Automatic labeling**
-     - Ground-truth labels (depth, optical flow, 3-D boxes) are free in
-       simulation, eliminating human annotation cost.
-   * - **Perturbation testing**
-     - Systematic parameter sweeps (weather, traffic density, lighting) can
-       evaluate robustness.
-
-Sim-to-Real Gap
-~~~~~~~~~~~~~~~
-
-The fundamental limitation of simulation-based training is the **sim-to-real
-gap**: models trained in simulation may fail in the real world because the
-simulated sensor outputs, scene textures, and agent behavior distributions
-differ from reality.
-
-Mitigation strategies include:
-
-- **Domain randomization** -- Randomly varying simulation parameters during
-  training so the model learns features robust to environment variation.
-- **Generative world models** (L13) -- Using neural world models
-  trained on real data to generate photo-realistic synthetic data.
-- **Real + sim co-training** -- Mixing real and simulated data during training.
-
-.. code-block:: python
-
-   # Example: CARLA batch data collection for E2E training
-   import carla
-
-   client = carla.Client("localhost", 2000)
-   world = client.get_world()
-
-   # Randomize weather for domain randomization
-   weathers = [
-       carla.WeatherParameters.ClearNoon,
-       carla.WeatherParameters.HardRainNoon,
-       carla.WeatherParameters.WetCloudySunset,
-   ]
-   for weather in weathers:
-       world.set_weather(weather)
-       # collect_episode(world, duration_seconds=60)
+   * - **Domain randomization**
+     - Randomly vary simulation parameters (textures, lighting, weather,
+       dynamics) during training so the model learns invariant features.
+   * - **Domain adaptation**
+     - Fine-tune simulation-trained models on a small amount of real data
+       using techniques like DANN (Domain Adversarial Neural Networks).
+   * - **Real + sim co-training**
+     - Mix real and simulated data in fixed ratios during training batches.
+   * - **Neural rendering augmentation**
+     - Use a style-transfer network to make synthetic images look like
+       real camera data before feeding them to the perception model.
+   * - **World model as bridge**
+     - Generate synthetic training data using a world model trained on
+       real data -- the generated data has real-world appearance statistics
+       without the annotation cost.
 
 
-Imitation Learning
-------------------
+World Models as the "Imagination Module"
+-----------------------------------------
 
-Imitation learning trains a policy to mimic expert (human driver)
-behavior from logged demonstrations. It is the most direct way to
-distil human driving skill into the kinds of end-to-end networks
-covered earlier in this lecture.
+The most exciting architectural implication of world models is their role
+as an **imagination module** inside an end-to-end driving system.
 
-Behavior Cloning
-~~~~~~~~~~~~~~~~
+Model-Based Planning
+~~~~~~~~~~~~~~~~~~~~
 
-**Behavior cloning (BC)** is the simplest imitation learning
-algorithm: treat demonstrations as a supervised learning dataset.
+Classic model-based control uses a physics model to predict the future and
+select actions. A world model extends this to high-dimensional sensory
+predictions:
 
-Given a dataset of expert state-action pairs
-:math:`\mathcal{D} = \{(s_i, a_i^*)\}_{i=1}^{N}` collected
-from human drivers:
+.. code-block:: text
+
+   Current observation o_t
+         |
+   Encoder → Latent state z_t
+         |
+   For each candidate action sequence A_i:
+       z_{t+1:t+H} = WorldModel.rollout(z_t, A_i)     ← "imagine" the future
+       reward_i    = Reward(z_{t+1:t+H})
+   Select A* = argmax reward_i
+         |
+   Execute a*_t in the real world, observe o_{t+1}
+
+This **imagination-based planning** allows the system to evaluate many action
+sequences before committing, improving decision quality in complex situations
+like multi-agent negotiation at intersections.
+
+Dreamer Architecture Analogy
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The Dreamer algorithm (Hafner et al., 2020) demonstrated world-model-based
+planning in video games. The driving world models described in this lecture
+can be seen as domain-specific, large-scale instantiations of the same
+principle:
 
 .. math::
 
-   \min_\theta \; \mathbb{E}_{(s,a^*) \sim \mathcal{D}}
-   \left[ \mathcal{L}(\pi_\theta(s), a^*) \right]
+   \underbrace{z_{t+1} = f_\theta(z_t, a_t)}_{\text{world model}} \quad
+   \underbrace{a_t = \pi_\phi(z_t)}_{\text{policy}} \quad
+   \underbrace{r_t = r_\psi(z_t)}_{\text{reward model}}
 
-where :math:`\mathcal{L}` is a regression loss (e.g., MSE for
-continuous actions) or cross-entropy for discrete maneuver
-classification.
+Training the policy :math:`\pi_\phi` entirely within the world model
+(without real-world rollouts) is called **in-model RL** and is an active
+research frontier for autonomous driving.
 
-**BC pipeline:**
 
-.. code-block:: text
+CARLA's Role Alongside World Models
+-------------------------------------
 
-   1. Collect expert demonstrations: (obs_t, action_t) pairs
-   2. Train policy network: obs -> action
-   3. Deploy: at each step, feed current obs and execute action
+Despite the rise of neural world models, CARLA retains an important role
+in ADS education and research for several reasons:
 
-Distribution Shift: The Key Failure Mode
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The fundamental problem with behavior cloning is
-**distribution shift** (also called covariate shift).
-
-During training, the policy sees states from the expert's
-distribution :math:`d_{\pi^*}`. During deployment, the policy's
-own actions cause it to visit states in :math:`d_{\pi_\theta}`,
-which may be far from :math:`d_{\pi^*}`.
-
-**Compounding error:** Small deviations from the expert
-trajectory accumulate over time, driving the policy into
-states never seen during training. The policy has no
-supervision signal for recovery from these states.
-
-.. admonition:: Compounding Error Formula
-   :class: warning
-
-   For a policy with per-step error :math:`\epsilon`:
-
-   .. math::
-
-      \text{Total error after } T \text{ steps} = O(\epsilon T^2)
-
-   Errors compound **quadratically** in time horizon --
-   a fundamental limitation of open-loop behavior cloning.
-
-DAgger: Dataset Aggregation
-----------------------------
-
-DAgger (Ross et al., ICML 2011) addresses distribution shift
-by iteratively augmenting the training dataset with states
-visited by the learned policy.
-
-Algorithm
-~~~~~~~~~
-
-.. code-block:: text
-
-   Initialize: D = {} (empty dataset), pi_1 = any policy
-   For iteration i = 1, 2, ..., N:
-       1. Roll out policy pi_i in the environment
-          (or simulator) to collect trajectory states {s_t}
-       2. Query the expert at each visited state: a*_t = pi*(s_t)
-       3. Add {(s_t, a*_t)} to D
-       4. Train policy pi_{i+1} on the full aggregated D
-   Return: best pi_i on validation
-
-Why DAgger Works
-~~~~~~~~~~~~~~~~
-
-DAgger ensures the training distribution converges to the
-deployment distribution.
-
-- After :math:`n` iterations, the training dataset contains
-  states sampled from the policies
-  :math:`\pi_1, \pi_2, \ldots, \pi_n`.
-- As the policy improves, the states it visits converge toward
-  the expert's states.
-- In the limit, the training distribution matches the
-  deployment distribution and compounding errors vanish.
-
-**DAgger guarantees** (Ross et al., 2011): Under mild
-conditions, DAgger reduces the per-step regret to
-:math:`O(\epsilon)` (linear) compared to BC's
-:math:`O(\epsilon T^2)` (quadratic).
-
-Practical Considerations
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. list-table::
-   :header-rows: 1
-   :widths: 30 70
-
-   * - Challenge
-     - Solution
-   * - Expert query cost
-     - Use simulator with scripted expert; reserve human feedback for hard cases
-   * - Safety during rollout
-     - Run in simulation (CARLA); use safety fallback controller
-   * - Dataset size
-     - Prioritize states with high policy uncertainty (active DAgger)
-   * - Convergence
-     - Monitor validation loss across iterations; stop when plateaued
-
-Where the Industry Is Heading
-------------------------------
-
-The tension between modular and end-to-end is resolving into a **spectrum**
-rather than a binary choice:
-
-.. grid:: 1 1 3 3
+.. grid:: 1 2 2 3
    :gutter: 3
 
-   .. grid-item-card:: Fully Modular
+   .. grid-item-card:: Precise Scenario Control
       :class-card: sd-border-secondary
 
-      Traditional approach. Each module developed independently. Mature
-      validation tooling. Used by Mobileye (RSS + modular stack).
+      CARLA's Python API allows exact specification of actor positions,
+      velocities, traffic light states, and weather -- essential for
+      debugging specific edge cases in perception and planning.
 
-   .. grid-item-card:: Hybrid (Dominant today)
-      :class-card: sd-border-warning
+   .. grid-item-card:: Ground-Truth Labels
+      :class-card: sd-border-secondary
 
-      E2E perception + learned planner, but with explicit safety monitors,
-      interpretable occupancy maps, and override logic. Used by Waymo's
-      current-generation stack and recent Baidu Apollo releases.
+      CARLA provides perfect ground-truth bounding boxes, semantic
+      segmentation, depth maps, and ego state. Neural world models do
+      not provide these structured labels.
 
-   .. grid-item-card:: Fully E2E
-      :class-card: sd-border-success
+   .. grid-item-card:: Real-Time Closed-Loop
+      :class-card: sd-border-secondary
 
-      Single neural model from pixels to actuators. Tesla FSD has been
-      end-to-end since v12 (and has iterated well past it); Wayve builds
-      on the same principle. Requires massive fleet data and novel
-      validation frameworks.
+      CARLA supports genuine closed-loop interaction where the ego
+      vehicle's actions affect the scene physics in real time. World
+      model rollouts are typically open-loop or slow.
 
-.. note::
+   .. grid-item-card:: Compute Accessibility
+      :class-card: sd-border-secondary
 
-   No major robotaxi operator runs a fully end-to-end system without any
-   engineered safety layer. The industry consensus in 2026 is that E2E
-   models excel at perception and scene understanding, while explicit safety
-   checks (collision avoidance, traffic law compliance) remain engineered
-   components layered on top.
+      Running CARLA requires a consumer-grade GPU. Running a
+      large driving world model at full resolution requires a
+      multi-GPU datacenter node. CARLA is realistic for coursework
+      and academic research; these models are not.
+
+   .. grid-item-card:: Education
+      :class-card: sd-border-secondary
+
+      CARLA is the pedagogical platform for this course. Students learn
+      sensor physics, ROS 2 integration, and pipeline development through
+      hands-on CARLA assignments before encountering world models.
+
+   .. grid-item-card:: Algorithmic Validation
+      :class-card: sd-border-secondary
+
+      Localization, SLAM, motion planning, and MPC algorithms can be
+      tested and visualized in CARLA without the complexity of real
+      data management.
+
+.. tip::
+
+   In production AV companies (Waymo, Zoox, Mobileye), CARLA-like
+   physics simulators and neural world models operate in parallel. Physics
+   simulation handles algorithm development and unit testing; world models
+   handle large-scale synthetic data generation and system-level evaluation.
+
 
 Summary
 --------
@@ -760,34 +640,39 @@ Summary
 .. grid:: 1 2 2 2
    :gutter: 3
 
-   .. grid-item-card:: End-to-End Architectures
+   .. grid-item-card:: World Models
       :class-card: sd-border-primary
 
-      - Modular vs E2E: interpretability and validation traded against
-        joint optimization and no information loss at boundaries
-      - UniAD: query propagation through tracking -> motion -> occupancy
-        -> planning, all co-optimized with a planning loss
-      - DriveTransformer: one shared attention block over agent, map and
-        ego tokens; ~3x throughput at comparable quality
-      - VLA: language as an intermediate representation, giving auditable
-        chain-of-thought reasoning (DriveVLM, and Wayve's LINGO line)
+      - A world model learns :math:`p(o_{t+1:t+H} \mid o_{1:t}, a_{t:t+H})`
+        -- a **learned simulator** conditioned on the ego's own actions
+      - Built as video generation transformers over a compressed latent
+        space, either autoregressive or diffusion-based
+      - **GAIA** (Wayve): fleet-data driving models; the arc runs from
+        raw generation quality toward *controllability*
+      - **Cosmos** (NVIDIA): general physical-world foundation models,
+        fine-tuned per domain
+      - **Vista** (OpenDriveLab): web-scale pre-training for
+        generalization, and the one that is openly available
 
-   .. grid-item-card:: Imitation Learning
+   .. grid-item-card:: Why They Matter
       :class-card: sd-border-primary
 
-      - Behavior cloning is supervised learning on expert demonstrations
-      - Its failure mode is distribution shift: error compounds as
-        :math:`O(\epsilon T^2)` because the policy visits states the
-        expert never did
-      - DAgger fixes this by querying the expert **on states the learner
-        actually visits**, reducing the bound to linear
-      - Open-loop benchmarks flatter these methods; insist on closed-loop
-        evaluation before believing a planning result
+      - **Long-tail generation**: synthesize rare safety-critical events
+        that are too infrequent to collect
+      - **Offline closed-loop evaluation**: replay fleet logs with a new
+        planner's actions substituted, before any on-road testing
+      - **Imagination-based planning**: roll out candidate action
+        sequences internally and pick the best (the Dreamer idea, scaled)
+      - Complementary to CARLA, not a replacement: CARLA gives exact
+        control and free ground-truth labels; world models give
+        photorealism and scale
 
-.. note::
+.. admonition:: The honest caveat
+   :class: warning
 
-   **On the numbers in this lecture.** Nearly every quantitative claim
-   here comes from a fast-moving literature with inconsistent evaluation
-   protocols. The architectural ideas are durable; the leaderboard
-   positions are not. Cite the paper, state the benchmark, and say
-   whether it was open-loop.
+   World models are **approximate**. They learn physics from data rather
+   than enforcing it, they can be asked for a scenario and quietly
+   deliver something slightly different, and they inherit every bias in
+   their training distribution. A model trained on one region's driving
+   culture does not faithfully simulate another's. Treat generated video
+   as a rich data source, not as ground truth about the world.

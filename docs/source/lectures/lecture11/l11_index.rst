@@ -1,19 +1,24 @@
-====================================================
-L11: Trajectory Generation & Control
-====================================================
+============================================================
+L11: End-to-End Driving, VLA & Imitation Learning
+============================================================
 
 Overview
 --------
 
-This lecture bridges motion planning and vehicle execution by adding
-the time dimension to geometric paths and designing feedback
-controllers that follow the resulting trajectories. You will learn
-how polynomial and spline methods generate smooth, feasible
-trajectories, how Model Predictive Control (MPC) optimizes a
-receding-horizon plan in real time, and how Pure Pursuit, Stanley,
-and PID controllers translate trajectory references into steering
-and throttle commands. The lecture concludes with a CARLA exercise
-implementing lane-following and obstacle avoidance.
+This lecture examines the fundamental architectural shift from
+modular autonomous driving pipelines to end-to-end learned systems
+and develops the imitation-learning theory that underpins them.
+We analyze landmark E2E systems such as UniAD (CVPR 2023) and
+DriveTransformer (ICLR 2025), explore how Vision-Language-Action
+(VLA) models are beginning to encode common-sense reasoning into
+driving, and assess the practical trade-offs of black-box neural
+approaches versus interpretable, hand-engineered pipelines. The
+imitation-learning section -- previously folded into the prediction
+lecture -- now lives here alongside the policies it teaches:
+behavior cloning, distribution shift, and DAgger. The lecture also
+covers the industrial deployments of Tesla and NVIDIA and addresses
+the outstanding challenges of validation, safety, and
+interpretability for data-driven end-to-end systems.
 
 
 Learning Objectives
@@ -21,21 +26,28 @@ Learning Objectives
 
 By the end of this lecture, you will be able to:
 
-- Distinguish between a path (geometry only) and a trajectory
-  (geometry plus time / velocity profile).
-- Generate smooth trajectories using quintic polynomial and cubic
-  spline methods.
-- Formulate an MPC problem with prediction horizon, cost function,
-  and constraints, and explain the receding-horizon principle.
-- Implement the Pure Pursuit controller and derive the relationship
-  between lookahead distance and lateral error.
-- Implement the Stanley controller combining cross-track error and
-  heading error for path following.
-- Design a PID controller for longitudinal speed control.
-- Select among Pure Pursuit, Stanley, MPC, and PID given task
-  requirements, speed regime, and computational constraints.
-- Implement lane-following and obstacle avoidance in CARLA using
-  a trajectory planner and feedback controller.
+- Distinguish the modular ADS pipeline from end-to-end approaches and articulate
+  the key trade-offs of each design philosophy.
+- Describe the architecture and key contributions of UniAD (CVPR 2023), including
+  its unified query-based perception-prediction-planning formulation.
+- Explain how DriveTransformer (ICLR 2025) achieves shared attention across all
+  driving tasks and why this yields a 3x throughput improvement over UniAD.
+- Identify the role of Vision-Language-Action (VLA) models -- including NVIDIA
+  Alpamayo and DriveVLM -- in enabling chain-of-thought reasoning for driving.
+- Summarize Tesla's and NVIDIA's end-to-end stacks, from sensor input through
+  Bird's-Eye-View (BEV) feature extraction to planning and vehicle control.
+- Evaluate the advantages (joint optimization, no cross-module information loss)
+  and disadvantages (black-box behavior, data hunger, validation difficulty) of
+  end-to-end driving.
+- Discuss the safety, interpretability, and regulatory challenges that must be
+  resolved before end-to-end systems can be deployed at scale.
+- Explain the role of simulation in generating the training data and evaluation
+  benchmarks required by end-to-end driving models.
+- Formulate behavior cloning as supervised learning and identify
+  its key failure mode (distribution shift, compounding-error
+  bound :math:`O(\epsilon T^2)`).
+- Explain how DAgger addresses distribution shift and when it
+  reduces regret to :math:`O(\epsilon)`.
 
 
 .. admonition:: Materials in revision
@@ -49,15 +61,19 @@ By the end of this lecture, you will be able to:
 Next Steps
 ----------
 
-- In the next lecture, we will cover **End-to-End Driving, VLA &
-  Imitation Learning**:
+- In the next lecture, we will cover **Simulation, Scenario-Based Testing & World Models**:
 
-  - End-to-end driving stacks (UniAD, DriveTransformer)
-  - Vision-Language-Action models (DriveVLM) and foundation models
-    for AV
-  - Imitation learning and DAgger for behavioral cloning
-  - The modular vs. end-to-end debate
+  - Why distance-based testing cannot support a safety claim, and what
+    replaced it.
+  - Functional, logical and concrete scenarios; where scenarios come from;
+    OpenSCENARIO and the ISO 34500 series.
+  - The test pyramid, and open-loop vs. closed-loop evaluation -- **the
+    open-loop critique from this lecture, stated as an engineering property**.
+  - Reading the CARLA driving score, and what happens to a metric that can be
+    gamed.
+  - World models (GAIA-1 to GAIA-4, NVIDIA Cosmos, Vista) as the newest
+    answer to the same validation problem.
 
-- Complete the CARLA trajectory following exercise from this lecture.
-- Review the MPC tutorial in *Model Predictive Control: Theory and
-  Design* (Rawlings & Mayne) Chapter 1.
+- Review the UniAD paper: *Planning-Oriented Autonomous Driving* (Hu et al.,
+  CVPR 2023).
+- Skim the DriveTransformer preprint for its attention-sharing mechanism.

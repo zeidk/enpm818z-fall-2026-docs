@@ -13,11 +13,12 @@ Quiz
    through this page is good preparation for one. Memorising the answers
    below is not.
 
-This quiz covers the key concepts from Lecture 10: Motion Planning,
-including the planning hierarchy, bicycle kinematic model,
-graph-based planners (Dijkstra, A*, Weighted A*), sampling-based
-planners (RRT, RRT*, PRM), lattice-based planning, collision
-detection, and diffusion-based planning.
+This quiz covers the key concepts from Lecture 10: Trajectory
+Generation & Control, including path vs. trajectory, quintic
+polynomial and spline methods, optimization-based trajectory
+planning, MPC formulation and receding-horizon control, Pure
+Pursuit, Stanley, and PID controllers, and emergency maneuver
+synthesis.
 
 .. note::
 
@@ -40,302 +41,318 @@ Multiple Choice
 .. admonition:: Question 1
    :class: hint
 
-   In the three-tier autonomous vehicle planning hierarchy, which tier
-   is responsible for deciding whether the vehicle should change lanes
-   or yield to an oncoming vehicle?
+   What is the minimum polynomial degree required to match position,
+   velocity, **and** acceleration at both the start and end of a
+   trajectory segment?
 
-   A. Route planning (Tier 1)
+   A. 3rd degree (cubic)
 
-   B. Behavior planning (Tier 2)
+   B. 4th degree (quartic)
 
-   C. Motion planning (Tier 3)
+   C. 5th degree (quintic)
 
-   D. Trajectory planning (a separate fourth tier)
+   D. 6th degree (sextic)
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Behavior planning (Tier 2).
+   **C** -- 5th degree (quintic).
 
-   Behavior planning operates at the intersection scale and decides
-   *how* the vehicle interacts with other agents -- lane-keeping,
-   lane-change, yield, stop. Route planning selects which roads to
-   use. Motion planning finds a collision-free geometric path within
-   the maneuver envelope defined by the behavior planner. Trajectory
-   planning (covered in L11) adds the time dimension to the path.
+   A degree-:math:`n` polynomial has :math:`n+1` coefficients.
+   Matching position, velocity, and acceleration at two endpoints
+   gives 6 constraints. The minimum degree satisfying 6 constraints
+   is :math:`n = 5` (quintic), yielding exactly 6 coefficients.
+   Cubic polynomials (4 coefficients) can match only position and
+   velocity at both ends; quartics (5 coefficients) are
+   over-constrained by the 6 boundary conditions.
 
 
 .. admonition:: Question 2
    :class: hint
 
-   The bicycle kinematic model describes vehicle heading change as:
+   In MPC, the **receding horizon** principle means that:
 
-   .. math::
+   A. The prediction horizon :math:`N` shrinks as the vehicle
+      approaches the goal.
 
-      \dot{\theta} = \frac{v}{L} \tan\delta
+   B. Only the first control action from the optimized sequence is
+      applied; the optimization is then re-solved at the next
+      time step.
 
-   If the wheelbase :math:`L = 2.7` m, speed :math:`v = 10` m/s,
-   and the steering angle :math:`\delta = 0.15` rad, what is
-   :math:`\dot{\theta}` (approximately)?
+   C. The vehicle predicts the future states of surrounding agents
+      over horizon :math:`N`.
 
-   A. 0.055 rad/s
-
-   B. 0.55 rad/s
-
-   C. 5.5 rad/s
-
-   D. 0.0055 rad/s
+   D. The cost function is evaluated backwards from the terminal
+      state to the current state.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Approximately 0.55 rad/s.
+   **B** -- Only the first control action is applied; the
+   optimization is re-solved at the next time step.
 
-   .. math::
-
-      \dot{\theta} = \frac{10}{2.7} \tan(0.15) \approx
-      3.70 \times 0.1501 \approx 0.556 \text{ rad/s}
-
-   At this heading rate the vehicle completes roughly one full turn
-   every 11 seconds, consistent with a gentle highway curve at
-   36 km/h.
+   The receding horizon principle is what makes MPC a *feedback*
+   controller rather than an open-loop trajectory tracker. By
+   re-solving at every time step with the current measured state,
+   MPC corrects for disturbances, model errors, and state
+   estimation noise. The horizon "recedes" because the planning
+   window always starts from the current time.
 
 
 .. admonition:: Question 3
    :class: hint
 
-   A* search is guaranteed to find the optimal path when:
+   In the Pure Pursuit controller, if the lookahead distance
+   :math:`L_d` is doubled while speed remains constant, the
+   steering response becomes:
 
-   A. The heuristic overestimates the true cost-to-go by at most 10%.
+   A. More aggressive (tighter turns)
 
-   B. The heuristic is admissible (never overestimates the true
-      cost-to-go).
+   B. Less aggressive (smoother, cutting corners more)
 
-   C. The graph has no negative edge weights.
+   C. Identical, because only :math:`\alpha` determines steering
 
-   D. The goal node is expanded before any other node with higher
-      :math:`f`-value.
+   D. Unstable, because the lookahead point leaves the path
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- The heuristic is admissible (never overestimates).
+   **B** -- Less aggressive (smoother, cutting corners more).
 
-   Admissibility ensures that whenever a node is expanded, its
-   :math:`g`-value is already optimal. An overestimating heuristic
-   can cause A* to expand the goal prematurely with a suboptimal
-   cost. Note: non-negative edge weights are required by Dijkstra
-   but A* inherits this requirement too; however, the critical
-   guarantee for *optimality specifically* is admissibility of
-   the heuristic.
+   From the steering equation
+   :math:`\delta = \arctan(2L\sin\alpha / L_d)`, increasing
+   :math:`L_d` (denominator) reduces :math:`\delta` for the same
+   angular error :math:`\alpha`. A larger lookahead point is
+   further ahead on the path, requiring less steering to reach it.
+   The result is smoother tracking but larger corner-cutting at
+   high curvature.
 
 
 .. admonition:: Question 4
    :class: hint
 
-   Weighted A* with inflation factor :math:`\varepsilon = 3` finds a
-   path of cost 120. What is the tightest guarantee on the optimal
-   path cost?
+   The Stanley controller steering command
+   :math:`\delta = \psi_e + \arctan(ke/v)` divides the cross-track
+   correction by speed :math:`v` because:
 
-   A. The optimal cost is at least 40.
+   A. The steering actuator has a velocity-dependent deadband.
 
-   B. The optimal cost is at least 60.
+   B. At higher speeds, the same steering angle produces a larger
+      lateral displacement per unit time, so less correction is
+      needed to achieve the same path convergence rate.
 
-   C. The optimal cost is at least 90.
+   C. The cross-track error :math:`e` grows proportionally to
+      speed.
 
-   D. No guarantee can be made.
+   D. The heading error :math:`\psi_e` is inversely proportional
+      to speed.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **A** -- The optimal cost is at least 40.
+   **B** -- At higher speeds, the same steering angle produces
+   larger lateral displacement per unit time, requiring less
+   proportional correction.
 
-   Weighted A* guarantees that the returned cost is at most
-   :math:`\varepsilon` times the optimal cost:
-
-   .. math::
-
-      \text{cost}_{returned} \leq \varepsilon \cdot \text{cost}^*
-      \implies 120 \leq 3 \cdot \text{cost}^*
-      \implies \text{cost}^* \geq 40
-
-   The optimal cost is therefore at least 40 (it could be anywhere
-   in :math:`[40, 120]`).
+   The :math:`1/v` factor normalizes the cross-track correction
+   by time-to-travel: at high speed the vehicle is moving
+   quickly toward the path anyway, so a smaller steering angle
+   suffices. Without this factor, the controller would oversteer
+   at high speed and understeer at low speed.
 
 
 .. admonition:: Question 5
    :class: hint
 
-   What is the key property that makes RRT* asymptotically optimal
-   but plain RRT is not?
+   Integrator windup in a PID speed controller occurs when:
 
-   A. RRT* uses a bidirectional search from both start and goal.
+   A. The derivative term grows too large due to measurement noise.
 
-   B. RRT* rewires the tree to reassign parents when a cheaper
-      path to a node is found.
+   B. The integral accumulates error during actuator saturation,
+      causing large overshoot when the saturation constraint
+      is released.
 
-   C. RRT* uses a grid-based heuristic instead of random sampling.
+   C. The proportional gain is set too high, causing the system
+      to become underdamped.
 
-   D. RRT* runs Dijkstra on the final tree to extract the path.
+   D. The reference speed changes faster than the vehicle can
+      accelerate.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- RRT* rewires the tree to reassign parents when a cheaper
-   path to a node is found.
+   **B** -- The integral accumulates error during actuator
+   saturation.
 
-   The two extra steps in RRT* (parent selection within a shrinking
-   radius and tree rewiring) allow the algorithm to continuously
-   improve path cost as more samples are added. Plain RRT only
-   adds edges and never removes or reassigns them, so the first
-   path found is never improved.
+   When the throttle or brake is saturated (clamped at its
+   physical limit), the PID output is clipped but the integrator
+   continues to add the current error at every time step. When
+   the constraint is eventually released (e.g., vehicle reaches
+   the speed range), the large accumulated integral causes the
+   output to shoot far beyond the target. Anti-windup strategies
+   prevent accumulation during saturation.
 
 
 .. admonition:: Question 6
    :class: hint
 
-   A Probabilistic Road Map (PRM) is best described as:
+   A natural cubic spline minimizes which quantity over the
+   interpolated curve?
 
-   A. A single-query planner that rebuilds the graph for every new
-      start/goal pair.
+   A. Maximum curvature along the curve
 
-   B. A multi-query planner that constructs a roadmap offline and
-      reuses it for many queries.
+   B. Total arc length
 
-   C. A planner that samples configurations online during execution
-      to react to dynamic obstacles.
+   C. Integral of the squared second derivative (bending energy)
 
-   D. An exact planner that guarantees finding the shortest path.
+   D. Sum of squared interpolation errors at the waypoints
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- A multi-query planner that constructs a roadmap offline
-   and reuses it for many queries.
+   **C** -- Integral of the squared second derivative (bending
+   energy).
 
-   PRM's two-phase design (offline construction + online query)
-   amortizes the sampling cost over many planning queries. This
-   makes it efficient for static or semi-static environments
-   where the same roadmap can be queried repeatedly (e.g., a
-   warehouse or structured parking garage).
+   The natural cubic spline is the unique minimum-bending-energy
+   interpolant through the given waypoints:
+
+   .. math::
+
+      \min \int_{t_0}^{t_n} \left[S''(t)\right]^2 dt
+
+   This is why cubic splines produce visually smooth curves --
+   they distribute curvature as evenly as possible. This property
+   also relates to the physical deflection of a thin elastic beam
+   (a "spline" in the engineering sense).
 
 
 .. admonition:: Question 7
    :class: hint
 
-   In lattice-based planning for autonomous vehicles, motion
-   primitives are:
+   In linear MPC for vehicle trajectory tracking, the bicycle
+   model is **linearized** around the reference trajectory because:
 
-   A. Computed online at every planning cycle using numerical
-      integration of the bicycle model.
+   A. The full nonlinear model cannot represent vehicle dynamics.
 
-   B. Pre-computed offline kinematically feasible maneuvers stored
-      in a lookup table.
+   B. Linearization converts the nonlinear optimization problem
+      into a quadratic program (QP), which can be solved in
+      milliseconds at real-time rates.
 
-   C. Straight-line segments connecting adjacent grid cells,
-      ignoring vehicle kinematics.
+   C. The bicycle model is already linear; no approximation is
+      needed.
 
-   D. Neural network outputs that map sensor data to control actions.
+   D. Linearization eliminates the need for a prediction horizon.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Pre-computed offline kinematically feasible maneuvers
-   stored in a lookup table.
+   **B** -- Linearization converts the NLP to a QP solvable in
+   milliseconds.
 
-   The key advantage of lattice planning is that the expensive
-   kinematic computation (integrating the bicycle model, checking
-   curvature limits) is done once offline. At runtime, planning
-   reduces to pure graph search with O(1) edge lookups, enabling
-   real-time replanning at 20--50 Hz.
+   The bicycle model is nonlinear (trigonometric functions of
+   heading). Linearizing around the reference trajectory yields
+   linear state equations, and if the cost is quadratic the
+   resulting optimization is a QP. QPs have polynomial-time
+   algorithms (active-set, interior-point) and can be solved
+   in under 1 ms with code-generated solvers, enabling
+   real-time MPC at 50 Hz.
 
 
 .. admonition:: Question 8
    :class: hint
 
-   The Minkowski sum :math:`\mathcal{O} \oplus \mathcal{B}(d)` used
-   in collision detection safety margins:
+   A B-spline trajectory has the **local support** property,
+   meaning:
 
-   A. Shrinks the obstacle by radius :math:`d` to create a
-      conservative free space.
+   A. The curve passes through all control points.
 
-   B. Inflates the obstacle boundary outward by radius :math:`d`,
-      equivalent to shrinking the robot to a point.
+   B. Moving one control point affects only a local portion
+      of the curve (at most :math:`k+1` spans for degree
+      :math:`k`).
 
-   C. Computes the intersection of the obstacle with a circle of
-      radius :math:`d`.
+   C. The curve is supported (lies above) the convex hull of
+      the control points.
 
-   D. Rotates the obstacle by angle :math:`d` around its centroid.
+   D. The spline can only be evaluated at the knot locations.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Inflates the obstacle boundary outward by radius
-   :math:`d`.
+   **B** -- Moving one control point affects only the local
+   portion of the curve (at most :math:`k+1` spans).
 
-   The Minkowski sum with a disk inflates every point on the
-   obstacle boundary outward by :math:`d`. This is equivalent
-   to shrinking the robot to a point and planning in the inflated
-   configuration space -- a standard trick that reduces collision
-   checking to point-in-polygon tests. The safety margin encodes
-   both localization uncertainty and comfort distance.
+   Local support is a key advantage of B-splines over global
+   polynomials. It means that local adjustments to the trajectory
+   (e.g., routing around a newly detected obstacle) require
+   modifying only a few control points, and the change affects
+   only the nearby portion of the path. This is critical for
+   efficient online trajectory editing.
 
 
 .. admonition:: Question 9
    :class: hint
 
-   DiffusionDrive (CVPR 2025) achieves real-time performance
-   compared to earlier diffusion planners primarily by:
+   In Frenet-frame trajectory planning, generating multiple
+   candidate quintic polynomials by varying the terminal lateral
+   offset :math:`d_f` serves what purpose?
 
-   A. Using a larger neural network with more parameters.
+   A. It guarantees that at least one candidate is kinematically
+      feasible.
 
-   B. Running a truncated diffusion schedule starting partway
-      through the denoising chain, reducing denoising steps from
-      ~100 to ~10.
+   B. It produces a discrete set of trajectory options that can
+      be evaluated for cost and safety, with the best feasible
+      candidate selected.
 
-   C. Replacing the Transformer encoder with a simpler CNN.
+   C. It reduces the computation time by parallelizing the
+      coefficient calculation.
 
-   D. Only planning for the next 1 second instead of 8 seconds.
+   D. It ensures the trajectory converges to the road centerline
+      within one planning step.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Using a truncated diffusion schedule starting partway
-   through the denoising chain.
+   **B** -- It produces a discrete set of options evaluated for
+   cost and safety.
 
-   DiffusionDrive initializes from anchored Gaussian noise
-   (clustered around likely trajectory modes) rather than pure
-   noise, and runs the reverse diffusion process starting from
-   step :math:`T' \ll T`. This dramatically cuts the number of
-   network forward passes required at inference while maintaining
-   trajectory quality, enabling 45 FPS on a single GPU.
+   By sampling a grid of terminal conditions
+   :math:`(d_f, \dot{d}_f, T)`, the planner generates many
+   candidate trajectories covering different lateral positions
+   and durations. Each is evaluated for collision clearance and
+   cost. The lowest-cost collision-free candidate is selected.
+   This sampling-then-scoring approach is efficient and handles
+   multi-modal situations (e.g., passing on either side of
+   an obstacle).
 
 
 .. admonition:: Question 10
    :class: hint
 
-   Which planning algorithm is most appropriate for real-time motion
-   planning on a structured highway road network?
+   Emergency braking distance at :math:`v_0 = 20` m/s with maximum
+   deceleration :math:`a_{\max} = 6` m/s² is:
 
-   A. Plain RRT (fast first path)
+   A. 20 m
 
-   B. PRM (multi-query roadmap)
+   B. 33.3 m
 
-   C. Lattice-based planner in Frenet frame
+   C. 60 m
 
-   D. Full RRT* (asymptotically optimal)
+   D. 66.7 m
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- Lattice-based planner in Frenet frame.
+   **B** -- Approximately 33.3 m.
 
-   Highway driving is highly structured: lanes are well-defined,
-   maneuvers are limited, and replanning must occur at 10--50 Hz.
-   Lattice planners exploit this structure through pre-built
-   road-aligned motion primitives and fast graph search. RRT/RRT*
-   are designed for unstructured spaces and converge slowly. PRM
-   is a multi-query planner but its roadmap is not road-aligned.
+   .. math::
+
+      d_{\text{stop}} = \frac{v_0^2}{2 a_{\max}}
+      = \frac{20^2}{2 \times 6} = \frac{400}{12} \approx 33.3 \text{ m}
+
+   At 72 km/h, an autonomous vehicle must begin emergency braking
+   at least 33 m before an obstacle (plus any perception and
+   actuation latency). Typical system latency of 100--200 ms adds
+   2--4 m to the required detection range.
 
 
 ----
@@ -347,101 +364,105 @@ True / False
 .. admonition:: Question 11
    :class: hint
 
-   **True or False:** The bicycle model imposes a holonomic
-   constraint, meaning the vehicle can move freely in any direction
-   including sideways.
+   **True or False:** A path and a trajectory contain the same
+   information; the terms can be used interchangeably in motion
+   planning.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   The bicycle model imposes a **nonholonomic** constraint:
-   :math:`\dot{x}\sin\theta - \dot{y}\cos\theta = 0`. This
-   prohibits lateral (sideways) motion. A nonholonomic constraint
-   restricts the instantaneously achievable velocities but not
-   necessarily the reachable configurations over time (the vehicle
-   can parallel-park using a sequence of forward/backward arcs).
+   A path specifies only the geometric shape of the route (as a
+   function of arc length or an arbitrary parameter). A trajectory
+   adds a time parameterization: it specifies where the vehicle is
+   at every point in time, implicitly defining velocity and
+   acceleration profiles. Controllers that handle speed regulation
+   (throttle, brake) require a trajectory, not just a path.
 
 
 .. admonition:: Question 12
    :class: hint
 
-   **True or False:** Dijkstra's algorithm expands nodes in
-   increasing order of their true cost-to-come :math:`g(v)`.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**
-
-   Dijkstra maintains a min-priority queue keyed on :math:`g(v)`.
-   Each extraction yields the node with the smallest known
-   cost-to-come among unvisited nodes. This is exactly the
-   Bellman optimality condition: once a node is extracted, its
-   :math:`g`-value is optimal (assuming non-negative edge weights).
-
-
-.. admonition:: Question 13
-   :class: hint
-
-   **True or False:** RRT is probabilistically complete, meaning
-   that given infinite samples it will always find a path if one
-   exists.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**
-
-   RRT is probabilistically complete. As the number of random
-   samples :math:`N \to \infty`, the probability that the tree
-   fails to reach any reachable configuration goes to zero. This
-   follows from the density of the sampling distribution over
-   :math:`\mathcal{C}_{free}`. However, probabilistic completeness
-   does not guarantee path quality -- RRT finds *a* path, not
-   necessarily a *good* path.
-
-
-.. admonition:: Question 14
-   :class: hint
-
-   **True or False:** In diffusion-based planning, the reverse
-   (denoising) process starts from a trajectory drawn from the
-   dataset and gradually removes noise.
+   **True or False:** The Stanley controller produces a non-zero
+   steady-state lateral error on a straight road at constant speed.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   The reverse process starts from **pure Gaussian noise**
-   :math:`\tau_T \sim \mathcal{N}(0, I)` (or, in DiffusionDrive,
-   from anchored noise near likely trajectory clusters). It is the
-   *forward* process that starts from a real trajectory and adds
-   noise. The reverse process is the generative (planning) process
-   that denoises from noise to a plausible trajectory.
+   On a straight road at constant speed with zero initial
+   cross-track error, the Stanley controller produces zero
+   steady-state lateral error. The heading-error term
+   :math:`\psi_e` drives the vehicle parallel to the path,
+   and the :math:`\arctan(ke/v)` term drives cross-track error
+   :math:`e` to zero. Unlike Pure Pursuit, Stanley has no
+   geometry-induced steady-state error on straight or
+   gently curved roads.
 
 
-.. admonition:: Question 15
+.. admonition:: Question 13
    :class: hint
 
-   **True or False:** Inflating obstacle representations by a safety
-   margin :math:`d_{\text{safe}}` is equivalent to planning with a
-   point-mass robot in the inflated configuration space.
+   **True or False:** In MPC, increasing the prediction horizon
+   :math:`N` always improves closed-loop performance.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False**
+
+   Increasing :math:`N` provides better foresight (the optimizer
+   can plan further ahead, avoiding locally greedy actions), but
+   it also increases the size of the QP or NLP, requiring more
+   computation time per solve. If the solve time exceeds the
+   control period, the controller misses its real-time deadline
+   and performance degrades. There is an optimal :math:`N` that
+   balances foresight and computational feasibility.
+
+
+.. admonition:: Question 14
+   :class: hint
+
+   **True or False:** The convex hull property of B-splines
+   guarantees that the trajectory lies within the convex hull of
+   its control points, which is useful for conservative collision
+   checking.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **True**
 
-   When all obstacles are inflated by the robot's radius (or
-   safety margin) via the Minkowski sum, the robot can be treated
-   as a point mass for collision checking purposes. Any path that
-   is collision-free for the point mass in the inflated space is
-   also collision-free for the full-size robot in the original
-   space. This simplification is used in virtually all practical
-   motion planners.
+   The B-spline convex hull property states that every point on
+   the curve lies within the convex hull of its local control
+   points. For collision checking, this means: if the convex hull
+   of the control polygon is collision-free, the curve itself is
+   guaranteed to be collision-free -- a fast and conservative
+   check without evaluating the curve densely.
+
+
+.. admonition:: Question 15
+   :class: hint
+
+   **True or False:** The Ziegler-Nichols tuning method for PID
+   controllers produces gains that are optimal in the
+   :math:`H_\infty` sense.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False**
+
+   Ziegler-Nichols is a heuristic tuning method based on
+   observing the system's response at the stability boundary
+   (ultimate gain and period). It provides a practical starting
+   point for tuning but does not produce :math:`H_\infty`-optimal
+   or even :math:`H_2`-optimal gains. The resulting controller
+   typically has approximately 25% overshoot and adequate
+   disturbance rejection, which is acceptable for many applications
+   but suboptimal for comfort-critical AV control.
 
 
 ----
@@ -453,10 +474,10 @@ Essay Questions
 .. admonition:: Question 16
    :class: hint
 
-   **Compare RRT and A* as motion planners for an autonomous
-   vehicle navigating a structured urban environment.** Address
-   completeness, optimality, computational efficiency, and
-   suitability for real-time replanning.
+   **Compare Model Predictive Control with the Stanley controller
+   for autonomous vehicle lateral control.** What are the
+   key advantages of MPC over Stanley, and in what scenarios
+   would Stanley be preferred?
 
    *(2-4 sentences)*
 
@@ -465,29 +486,32 @@ Essay Questions
 
    *Key points to include:*
 
-   - A* on a pre-built road graph is complete and optimal
-     (with an admissible heuristic) and runs in milliseconds
-     on sparse road graphs, making it well-suited for real-time
-     replanning in structured environments.
-   - RRT is probabilistically complete but not optimal; it
-     explores uniformly in all directions including off-road
-     areas, making it inefficient when the environment has
-     exploitable structure (lanes, intersections).
-   - For structured urban driving, A* (or lattice search) is
-     strongly preferred. RRT is better suited to unstructured
-     spaces (parking, off-road) where a road-graph abstraction
-     does not exist.
-   - Weighted A* with :math:`\varepsilon > 1` reduces the number
-     of expanded nodes at the cost of a bounded suboptimality,
-     making it the practical choice for real-time urban planning.
+   - MPC optimizes a multi-step cost function that incorporates
+     future predictions, allowing it to anticipate upcoming curves
+     and constraints, respect actuator limits explicitly, and
+     trade off multiple objectives (comfort, tracking, safety)
+     simultaneously.
+   - Stanley is a reactive, single-step controller: it responds
+     to current cross-track and heading error without planning
+     ahead. This makes it simpler but unable to proactively
+     adjust for upcoming trajectory features.
+   - MPC advantages: constraint handling (curvature limits,
+     speed bounds), look-ahead, comfort optimization, and the
+     ability to incorporate obstacle avoidance directly.
+   - Stanley is preferred in resource-constrained systems
+     (embedded microcontrollers), low-speed applications, or
+     as a baseline where MPC's computational cost is unjustified.
+     Stanley's O(1) compute cost makes it deterministic and
+     latency-free.
 
 
 .. admonition:: Question 17
    :class: hint
 
-   **Explain the concept of asymptotic optimality in RRT* and
-   why it matters for practical motion planning.** What is the
-   trade-off between RRT and RRT* in a time-constrained setting?
+   **Explain why quintic polynomials are preferred over cubic
+   polynomials for trajectory segment generation.** What
+   additional property does the quintic provide, and why does it
+   matter for passenger comfort?
 
    *(2-4 sentences)*
 
@@ -496,29 +520,31 @@ Essay Questions
 
    *Key points to include:*
 
-   - Asymptotic optimality means that as the number of samples
-     :math:`N \to \infty`, the cost of the RRT* path converges
-     to the true optimal cost. For any finite :math:`N`, RRT*
-     provides a path that is at least as good as RRT's.
-   - RRT* achieves this through the parent-selection and rewiring
-     steps that continuously improve the tree structure as new
-     samples are added.
-   - The trade-off: RRT* does more work per sample (neighbor
-     search within radius :math:`r_N`), so it runs slower than
-     RRT for a fixed time budget. In time-constrained scenarios
-     RRT might find a feasible path faster.
-   - In practice, RRT* is used for offline planning or as an
-     *anytime* algorithm: run it until the time budget expires
-     and return the best path found so far.
+   - A cubic polynomial has 4 coefficients, which can be uniquely
+     determined by 4 boundary conditions: position and velocity at
+     both endpoints. It cannot simultaneously match acceleration at
+     both endpoints.
+   - A quintic polynomial has 6 coefficients, allowing it to match
+     position, velocity, **and** acceleration at both endpoints.
+     This ensures :math:`C^2` continuity across trajectory
+     segments.
+   - Continuity of acceleration means there are no impulsive
+     changes in acceleration when the vehicle transitions between
+     trajectory segments. Without this, passengers experience a
+     jerk spike at every segment boundary.
+   - Jerk (rate of change of acceleration) is the primary
+     perceptual discomfort metric; bounding it through :math:`C^2`
+     continuity is essential for a smooth passenger experience.
 
 
 .. admonition:: Question 18
    :class: hint
 
-   **Describe how diffusion-based planners differ from classical
-   optimization-based motion planners.** What advantages do they
-   offer for complex multi-agent scenarios, and what are their
-   current limitations?
+   **Describe the Frenet-frame approach to trajectory planning.**
+   Why is the Frenet frame more convenient than Cartesian
+   coordinates for road-following trajectories, and how is a
+   Frenet trajectory converted back to a Cartesian plan for
+   execution?
 
    *(2-4 sentences)*
 
@@ -527,21 +553,20 @@ Essay Questions
 
    *Key points to include:*
 
-   - Classical optimization-based planners define an explicit
-     cost function (e.g., path length + smoothness + safety
-     margin) and solve a constrained optimization problem. They
-     are interpretable and can encode hard constraints but
-     struggle with multi-modal distributions over possible
-     futures.
-   - Diffusion planners learn a generative model of plausible
-     trajectories from expert data. The denoising process
-     implicitly captures the multi-modal distribution of human
-     driving behavior and can generate diverse, interaction-
-     consistent plans.
-   - Advantages: handles complex interactions without hand-crafted
-     cost functions; naturally multi-modal (can represent
-     uncertainty over which maneuver to take).
-   - Limitations: require large, high-quality training datasets;
-     inference is more expensive than classical planners;
-     safety guarantees are harder to formally prove; behavior
-     can be hard to interpret or correct when it fails.
+   - The Frenet frame decomposes vehicle motion into longitudinal
+     (:math:`s`, along the road centerline) and lateral
+     (:math:`d`, perpendicular to it) components. This decouples
+     the planning problem: longitudinal and lateral trajectories
+     can be planned independently as 1-D polynomial problems.
+   - In Cartesian coordinates, a lane-following trajectory on a
+     curved road is a complex 2-D curve; in Frenet coordinates,
+     it is simply :math:`d(t) \approx 0` -- a nearly trivial
+     1-D problem.
+   - Conversion back to Cartesian: for each time sample, evaluate
+     :math:`s(t)` and :math:`d(t)`, look up the Cartesian position
+     of the road centerline at arc length :math:`s(t)`, and offset
+     perpendicular to the centerline by :math:`d(t)`.
+   - The Frenet frame is only valid where the road centerline
+     curvature is non-singular. At very sharp turns or
+     intersections, the frame may become ill-conditioned and
+     Cartesian planning must be used instead.

@@ -13,7 +13,7 @@ Pre-Read: Simulation for Automated Driving
    Read it once the lecture has given you something concrete to attach it to,
    and **before you start GP1**. The engineering of scenario-based testing --
    how scenarios are specified, sampled, executed and scored -- is developed
-   properly in L13.
+   properly in L12.
 
 
 Why Simulation Is Not Optional
@@ -56,7 +56,7 @@ every run is a different run.
 
    These four arguments are why *simulation* exists. They do not yet tell you
    **which** situations to simulate, or how to know when you have simulated
-   enough. That question -- scenario-based testing -- is L13, and it is the
+   enough. That question -- scenario-based testing -- is L12, and it is the
    harder half.
 
 
@@ -117,7 +117,7 @@ period. That is on the order of **750 simulated miles for every real one**.
 In February 2026 Waymo announced the `Waymo World Model
 <https://waymo.com/blog/2026/02/the-waymo-world-model-a-new-frontier-for-autonomous-driving-simulation/>`__,
 a generative approach to the same problem. Learned simulators are covered in
-L13.
+L12.
 
 Where each test runs
 ~~~~~~~~~~~~~~~~~~~~
@@ -260,7 +260,7 @@ The Open-Source Landscape
    **A name clash worth knowing.** MIT's **VISTA** is a data-driven
    photorealistic simulator built from recorded driving. **Vista** (Gao et
    al., NeurIPS 2024) is a generative driving *world model*. Different things,
-   same name, both discussed in the literature you will meet in L13.
+   same name, both discussed in the literature you will meet in L12.
 
 
 Commercial Tooling
@@ -285,7 +285,7 @@ looks like classical simulation at all:
   result. This part is open source, and is in the table above.
 
 That chain -- *record, reconstruct, vary, re-run closed-loop* -- is the same
-argument L13 makes about world models, implemented as a product.
+argument L12 makes about world models, implemented as a product.
 
 Others you will encounter:
 
@@ -328,7 +328,7 @@ A scenario is only useful if another organisation can run it and get the same
 thing. Two ASAM formats do that work:
 
 - **OpenDRIVE** describes the *road*: geometry, lanes, signals. CARLA maps are
-  built from it, and L8 routing consumes it.
+  built from it, and L7 routing consumes it.
 - **OpenSCENARIO** describes *what happens on the road*: actors, manoeuvres,
   triggers. See `ASAM
   <https://www.asam.net/standards/detail/openscenario/>`__.
@@ -387,7 +387,7 @@ Where This Appears in the Course
    * - :doc:`L2 </lectures/lecture2/l2_index>`
      - CARLA's architecture, synchronous mode, spawning a sensor suite, and
        the limits of what it models.
-   * - L13
+   * - L12
      - Scenario-based testing in full: scenario layers, sampling, the test
        pyramid, driving scores, and world models.
    * - GP1--GP4

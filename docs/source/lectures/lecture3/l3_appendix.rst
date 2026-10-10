@@ -144,13 +144,13 @@ you every piece of it.
    Detection, the step that turns pixels into boxes, is **L4**. Fusion
    architectures, learned fusion, data association (deciding which
    measurement belongs to which object) and the Tempe crash (Uber, 2018) are
-   **L6**. Monte Carlo Localization is **L7**.
+   **L5**. Monte Carlo Localization is **L6**.
 
 There Is Almost No AI in This Lecture
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This is a self-driving course, so you may expect a neural network in every
-section. Everything in this lecture, and the tracking in L6, is classical
+section. Everything in this lecture, and the tracking in L5, is classical
 probability and linear algebra, and most of it is decades old.
 
 .. list-table::
@@ -161,19 +161,19 @@ probability and linear algebra, and most of it is decades old.
    * - **Technique**
      - **Year**
      - **What it is**
-   * - Mahalanobis distance (L6)
+   * - Mahalanobis distance (L5)
      - 1936
      - A distance
-   * - Hungarian algorithm (GNN, L6)
+   * - Hungarian algorithm (GNN, L5)
      - 1955
      - An assignment
    * - Kalman filter
      - 1960
      - Closed-form algebra
-   * - MHT (L6)
+   * - MHT (L5)
      - 1979
      - A hypothesis search
-   * - JPDA (L6)
+   * - JPDA (L5)
      - 1983
      - Weighted averaging
    * - Particle filter
@@ -201,7 +201,7 @@ will do.
 
 So where is the AI? In everything that **produces** the measurements this
 filter takes in: detection in **L4**, BEV in **L5**, learned fusion in
-**L6**, prediction in **L9**, end-to-end driving in **L12**. Learned parts
+**L5**, prediction in **L8**, end-to-end driving in **L11**. Learned parts
 turn pixels into objects. Classical estimation decides what to believe about
 them over time, because that half has to be verifiable. **Know which half you
 are debugging.**
@@ -2292,7 +2292,7 @@ the same job with a thousandth of the work.
 .. note::
 
    Monte Carlo Localization (Dellaert et al., 1999), this filter used on a
-   real map, is L7.
+   real map, is L6.
 
 The Three Steps as Equations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

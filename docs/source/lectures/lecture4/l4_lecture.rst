@@ -82,13 +82,13 @@ The detector answers the first two questions: which objects, and where. Where
 the AV may drive comes from other parts, such as segmentation, next week.
 
 .. figure:: /_static/images/L4/stack_pipeline.png
-   :alt: Five boxes in a row joined by arrows: Sensors, Perception (highlighted in green), Prediction, Planning and Control, with the lecture that covers each below them: L2; L4, L5; L9; L10; L11. A second, curved arrow runs from Perception directly to Planning, over Prediction.
+   :alt: Five boxes in a row joined by arrows: Sensors, Perception (highlighted in green), Prediction, Planning and Control, with the lecture that covers each below them: L2; L4, L5; L8; L9; L10. A second, curved arrow runs from Perception directly to Planning, over Prediction.
    :width: 90%
    :align: center
 
    Perception in the AV software. Lecture 2 gave you the sensors. Perception
    (L4 and L5) is the next box: pixels and points go in, a list of objects
-   comes out. Then come prediction (L9), planning (L10) and control (L11).
+   comes out. Then come prediction (L8), planning (L9) and control (L10).
    The curved arrow is a shortcut from perception straight to planning.
 
 Two arrows leave perception:
@@ -411,7 +411,7 @@ learn from**.
      - CLIP; Grounding DINO
    * - **Reinforcement:** rewards from acting
      - try, get a reward, adjust
-     - **not used for detection**; driving policies, L12
+     - **not used for detection**; driving policies, L11
 
 - **Supervised learning** uses labeled examples. Someone drew a box around
   every car and person and named it, or a simulator like CARLA wrote the
@@ -425,7 +425,7 @@ learn from**.
   internet, and Grounding DINO learns from boxes tied to phrases.
 - **Reinforcement learning** learns by acting: try something, get a reward,
   adjust. It is not used to train detectors, because a detector does not
-  act. It is used for driving policies, and Lecture 12 fine-tunes a learned
+  act. It is used for driving policies, and Lecture 11 fine-tunes a learned
   planner with rewards for safety, comfort and progress.
 
 
@@ -1821,7 +1821,7 @@ Transformers
 - **In this section:** the **transformer**, the other way to build the
   network.
 - **What it is for:** RT-DETR, our second model, and next week's bird's-eye
-  view models and L12's driving models.
+  view models and L11's driving models.
 
 .. admonition:: Definition: transformer
    :class: note

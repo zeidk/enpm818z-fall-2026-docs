@@ -5,10 +5,26 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.6.0: Lecture 5 Published (2026-10-10)
+.. dropdown:: v2.7.0: Lectures Renumbered, 13 in Total (2026-10-10)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lecture numbers
+
+   - **The lectures after L5 move down by one**, so there is no gap: L6 is
+     now Localization & SLAM, L7 Navigation & Route Planning, L8 Prediction,
+     L9 Motion Planning, L10 Trajectory Generation & Control, L11 End-to-End
+     Driving, L12 Simulation & Testing, L13 System Integration & Safety.
+     The old L6 (tracking and deep fusion) is part of L5.
+   - Updated on the schedule, the lectures page, the pipeline figure in L1,
+     the glossary and every lecture page that names another lecture. Older
+     entries in this changelog keep the numbers they had at the time.
+   - **Glossary filter:** one button per published lecture.
+
+.. dropdown:: v2.6.0: Lecture 5 Published (2026-10-10)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lecture 5: Perception II, 3D Detection, BEV, Fusion & Tracking
 

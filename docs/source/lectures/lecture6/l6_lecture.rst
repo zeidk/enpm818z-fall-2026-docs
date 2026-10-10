@@ -3,436 +3,888 @@ Lecture
 ====================================================
 
 
-Multi-Object Tracking (MOT)
------------------------------
+The Localization Problem
+-------------------------
 
-Detection gives us objects in a single frame. **Multi-Object Tracking (MOT)**
-maintains consistent identities for all objects across a video sequence.
-
-Problem Formulation
-~~~~~~~~~~~~~~~~~~~~
-
-Given detections :math:`\mathcal{D}_t = \{d_1, d_2, \ldots\}` at each frame
-:math:`t`, produce **tracks** :math:`\mathcal{T} = \{T_1, T_2, \ldots\}` where
-each track is a sequence of states associated with the same physical object:
-
-.. math::
-
-   T_i = \{(t, s_t^i) : t \in [t_{start}^i, t_{end}^i]\}
-
-where :math:`s_t^i` is the state (position, velocity, class) of track :math:`i`
-at time :math:`t`.
-
-Challenges: occlusion, similar-looking objects, appearance changes, variable
-frame rate, missed detections, false positives from the detector.
-
-
-SORT: Simple Online and Realtime Tracking
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-SORT (Bewley et al., 2016) is a minimal, highly efficient tracker built on
-two components:
-
-.. tab-set::
-
-   .. tab-item:: Kalman Filter State
-
-      Each track maintains a Kalman Filter state:
-
-      .. math::
-
-         \mathbf{x} = [u, v, s, r, \dot{u}, \dot{v}, \dot{s}]^T
-
-      where :math:`(u, v)` is the bounding box center, :math:`s` is scale
-      (area), :math:`r` is aspect ratio (constant), and the dots denote
-      velocities. The state is propagated with a constant-velocity model.
-
-   .. tab-item:: Hungarian Algorithm
-
-      At each frame, detections and tracks are associated using the **Hungarian
-      algorithm** (optimal bipartite matching) on an IoU cost matrix:
-
-      .. math::
-
-         C_{ij} = 1 - \text{IoU}(\hat{b}_i, d_j)
-
-      where :math:`\hat{b}_i` is the predicted bounding box of track :math:`i`
-      and :math:`d_j` is detection :math:`j`. Pairs below a minimum IoU
-      threshold are rejected.
-
-   .. tab-item:: Track Management
-
-      - **New track**: created for unmatched detections.
-      - **Confirmed track**: promoted after 3 consecutive matches.
-      - **Dead track**: removed after :math:`T_{lost}` frames without a match.
-
-SORT achieves real-time tracking (260 Hz on a standard CPU for 6 tracks)
-but re-assigns IDs after occlusion because it uses no appearance features.
-
-
-DeepSORT
-~~~~~~~~~
-
-DeepSORT (Wojke et al., 2017) extends SORT with a **deep appearance
-descriptor** to handle re-identification after occlusion:
-
-1. A CNN (trained on person re-ID datasets) extracts a 128-dimensional
-   appearance embedding for each detection crop.
-2. Each track maintains a **gallery** of the last 100 appearance embeddings.
-3. The cost matrix combines IoU distance and **cosine appearance distance**:
-
-   .. math::
-
-      C_{ij} = \lambda \cdot d_{appear}(i, j) + (1 - \lambda) \cdot d_{IoU}(i, j)
-
-4. Tracks are confirmed/tentative/deleted as in SORT.
-
-The appearance matching allows DeepSORT to correctly re-identify an object
-returning from a long occlusion, at the cost of slightly higher compute.
-
-
-ByteTrack
-~~~~~~~~~~
-
-ByteTrack (Zhang et al., 2022) addresses a fundamental issue in tracking:
-SORT and DeepSORT only associate **high-confidence** detections with tracks,
-discarding low-confidence detections as noise.
-
-ByteTrack's insight: **low-confidence detections often correspond to occluded
-or distant objects** -- exactly the objects most likely to cause ID switches.
-
-.. admonition:: ByteTrack Algorithm
+.. admonition:: Core Question
    :class: note
 
-   1. Run detector; split detections into high-score (:math:`\tau_{high} = 0.6`)
-      and low-score (:math:`\tau_{low} = 0.1` to :math:`\tau_{high}`).
-   2. **First association**: match high-score detections to all tracks via
-      IoU-based Hungarian matching.
-   3. **Second association**: match low-score detections to **unmatched tracks**
-      from step 2 -- recovering occluded objects.
-   4. Initialize new tracks from unmatched high-score detections only.
+   **"Where am I?"** -- Autonomous vehicles need to know their pose
+   (position + orientation) in a global or local reference frame with
+   sufficient accuracy and reliability to plan safe trajectories.
 
-ByteTrack achieves state-of-the-art on MOT17 (80.3 MOTA, 77.3 IDF1) at
-30 FPS, with no appearance model required.
-
-
-Tracking Metrics
-~~~~~~~~~~~~~~~~~
+Required accuracy varies by task:
 
 .. list-table::
-   :widths: 15 40 45
+   :widths: 35 25 40
    :header-rows: 1
    :class: compact-table
 
-   * - Metric
-     - Formula
-     - Interpretation
-   * - **MOTA**
-     - :math:`1 - \frac{\sum_t (FN_t + FP_t + IDSW_t)}{\sum_t GT_t}`
-     - Overall tracking accuracy; penalizes FN, FP, and ID switches. Range: :math:`(-\infty, 1]`.
-   * - **MOTP**
-     - :math:`\frac{\sum_{i,t} d_t^i}{\sum_t c_t}`
-     - Average localization quality over matched pairs, where :math:`c_t`
-       is the number of matches at time :math:`t`. **Read the definition
-       of** :math:`d_t^i` **before interpreting it:** if it is a distance
-       error, lower is better; if it is IoU overlap (the MOTChallenge
-       convention), higher is better. The two conventions are both in
-       common use and are reported as the same metric name.
-   * - **IDF1**
-     - :math:`\frac{2 \cdot IDTP}{2 \cdot IDTP + IDFP + IDFN}`
-     - F1 score for correct identity assignments. Emphasizes consistent ID maintenance.
-   * - **HOTA**
-     - Geometric mean of detection and association accuracy
-     - Balances detection quality and track association quality equally.
+   * - Task
+     - Required accuracy
+     - Method
+   * - Highway lane keeping
+     - ~20 cm lateral
+     - GPS + IMU + map
+   * - Urban lane-level routing
+     - ~10 cm lateral
+     - RTK-GPS or LiDAR scan matching
+   * - Parking slot detection
+     - ~5 cm
+     - LiDAR SLAM or HD map matching
+   * - High-speed overtaking
+     - ~10 cm (velocity critical)
+     - RTK + IMU tight coupling
 
-.. admonition:: Metric Intuition
-   :class: tip
+Coordinate Systems and Transformations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   - MOTA is dominated by detection quality (FP/FN). A perfect detector with
-     random IDs can still score high MOTA.
-   - IDF1 better captures ID consistency -- important for downstream tasks
-     like trajectory prediction.
-   - HOTA (newer metric) explicitly balances both.
-
-
-Temporal Reasoning
--------------------
-
-Single-frame perception has fundamental limits: a fast-moving car is a static
-snapshot, an occluded pedestrian is invisible, noise has no temporal structure.
-**Temporal reasoning** uses multiple frames to overcome these limits.
-
-Why Temporal Context Matters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. grid:: 1 2 2 3
-   :gutter: 3
-
-   .. grid-item-card:: Velocity Estimation
-      :class-card: sd-border-success
-
-      Observing the same object across consecutive frames provides direct
-      velocity estimates via optical flow or Kalman filter -- impossible from
-      a single frame without additional assumptions.
-
-   .. grid-item-card:: Occlusion Handling
-      :class-card: sd-border-success
-
-      An object occluded in frame :math:`t` was visible in frame :math:`t-1`.
-      Temporal models can propagate its estimated state through occlusion gaps.
-
-   .. grid-item-card:: Noise Reduction
-      :class-card: sd-border-success
-
-      Random detection noise is uncorrelated across frames. Temporal smoothing
-      (Kalman filter, temporal attention) averages out noise while preserving
-      true object motion.
-
-Methods for Temporal Perception
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AV systems use a hierarchy of coordinate frames. Understanding transforms
+between them is fundamental.
 
 .. list-table::
-   :widths: 25 75
+   :widths: 20 80
+   :class: compact-table
+
+   * - **WGS84**
+     - World Geodetic System 1984. GPS coordinates: latitude, longitude,
+       altitude. Ellipsoidal model of the Earth.
+   * - **ENU / NED**
+     - Local Cartesian frames: East-North-Up or North-East-Down. Centered
+       at a reference GPS point. Units: meters.
+   * - **Map frame**
+     - Arbitrary origin fixed during operation. HD map coordinates live here.
+   * - **Odom frame**
+     - Continuous odometry origin. Drifts over time but smooth short-term.
+   * - **Base link**
+     - Vehicle body frame. Origin at vehicle center (or rear axle center).
+   * - **Sensor frames**
+     - Each sensor has its own frame. Extrinsic calibration defines the
+       transform to base link.
+
+A rigid body transform between frames :math:`A` and :math:`B` is a
+**homogeneous transformation matrix**:
+
+.. math::
+
+   T_{AB} = \begin{bmatrix} R_{AB} & t_{AB} \\ 0 & 1 \end{bmatrix} \in SE(3)
+
+where :math:`R_{AB} \in SO(3)` is a :math:`3 \times 3` rotation matrix and
+:math:`t_{AB} \in \mathbb{R}^3` is a translation vector.
+
+
+GNSS-Based Localization
+------------------------
+
+GPS / GNSS Fundamentals
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Global Navigation Satellite Systems (GNSS) include GPS (US), GLONASS (Russia),
+Galileo (EU), and BeiDou (China). The receiver computes position by measuring
+**pseudoranges** to multiple satellites:
+
+.. math::
+
+   \rho_i = \| \mathbf{p}_{sat,i} - \mathbf{p}_{recv} \| + c \cdot \delta t + \epsilon_i
+
+where :math:`\mathbf{p}_{sat,i}` is the known satellite position,
+:math:`\mathbf{p}_{recv}` is the unknown receiver position, :math:`c` is
+the speed of light, :math:`\delta t` is clock offset, and :math:`\epsilon_i`
+includes atmospheric delays and multipath errors.
+
+Standard GPS accuracy: **1-5 meters** (civilian L1 signal). Not sufficient
+for AV lane-level localization.
+
+RTK-GPS (Real-Time Kinematic)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+RTK uses a **base station** at a precisely known location to compute and
+broadcast correction signals in real time. The rover receiver applies these
+corrections to resolve carrier-phase ambiguities.
+
+.. tab-set::
+
+   .. tab-item:: How RTK Works
+
+      1. Base station measures carrier phase of GPS signals.
+      2. Computes corrections (residual errors).
+      3. Broadcasts corrections via radio or internet (NTRIP protocol).
+      4. Rover applies corrections and resolves integer ambiguities.
+      5. Result: centimeter-level positioning (1-2 cm horizontal, 2-5 cm vertical).
+
+   .. tab-item:: Limitations
+
+      - Requires base station within ~20-50 km.
+      - Initialization ("fixing") takes 30-120 seconds.
+      - Performance degrades in urban canyons (multipath from buildings).
+      - No satellite signal in tunnels, underground parking.
+
+PPP (Precise Point Positioning)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+PPP uses precise satellite orbit and clock corrections broadcast globally
+(no local base station needed). Accuracy: ~5-10 cm after convergence (30-60
+minutes). Used for offline post-processing and emerging real-time services
+(PPP-RTK targets cm-level in <1 minute).
+
+.. admonition:: AV Reality
+   :class: warning
+
+   GNSS alone is insufficient for production AV systems because of urban
+   canyon multipath, tunnel outages, and multipath interference. GNSS
+   provides the global reference frame; other sensors (LiDAR, IMU) maintain
+   accuracy when GNSS is unreliable.
+
+
+Dead Reckoning
+---------------
+
+Dead reckoning estimates the current pose by integrating motion measurements
+from the prior known pose, without requiring external reference.
+
+:math:`\hat{\mathbf{x}}_k = \hat{\mathbf{x}}_{k-1} \oplus \Delta \mathbf{x}_k`
+
+where :math:`\oplus` denotes pose composition in SE(3) and :math:`\Delta \mathbf{x}_k`
+is the incremental motion estimate.
+
+Wheel Odometry
+~~~~~~~~~~~~~~~
+
+Integrates wheel encoder measurements to estimate 2D pose. **The model
+must match the vehicle**, and cars are not differential-drive robots.
+
+.. tab-set::
+
+   .. tab-item:: Ackermann (cars) -- use this one
+
+      A passenger car steers its front wheels and cannot change heading
+      without moving forward. Heading rate comes from the **steering
+      angle** via the bicycle model (L9), not from a left/right wheel
+      speed difference:
+
+      .. math::
+
+         \Delta d &= \frac{\Delta d_{RL} + \Delta d_{RR}}{2}
+           \quad \text{(rear wheels: undriven by steering)} \\
+         \Delta \theta &= \frac{\Delta d}{L_{wb}} \tan \delta
+
+      where :math:`L_{wb}` is the wheelbase (front axle to rear axle) and
+      :math:`\delta` is the road-wheel steering angle. Integration then
+      uses the midpoint heading:
+
+      .. math::
+
+         x_{k+1} &= x_k + \Delta d \cos(\theta_k + \Delta\theta/2) \\
+         y_{k+1} &= y_k + \Delta d \sin(\theta_k + \Delta\theta/2) \\
+         \theta_{k+1} &= \theta_k + \Delta\theta
+
+      In practice the yaw rate is taken from the **IMU gyroscope**
+      instead, which is far more accurate than differentiating a
+      steering-angle sensor.
+
+   .. tab-item:: Differential drive (not cars)
+
+      For a two-wheeled robot that steers by driving its wheels at
+      different speeds:
+
+      .. math::
+
+         \Delta d = \frac{\Delta d_L + \Delta d_R}{2}, \quad
+         \Delta \theta = \frac{\Delta d_R - \Delta d_L}{b}
+
+      where :math:`b` is the **track width** between the two wheels.
+
+      .. warning::
+
+         This model appears in most robotics textbooks and is wrong for
+         a car. On an Ackermann vehicle the left/right rear wheel speed
+         difference during a turn is a small geometric side-effect, not
+         the steering input, and it vanishes entirely when driving
+         straight. Applying this formula to a car gives a heading
+         estimate dominated by tyre-radius mismatch and noise.
+
+**Error sources**: wheel slip (especially on turns, wet roads), uneven terrain
+(suspension deflection changes wheel-ground contact), encoder resolution,
+and tyre radius changing with load, temperature, and pressure.
+
+**Drift behaviour**: distance error grows roughly linearly with distance
+travelled, but a *heading* bias causes position error to grow
+**quadratically** -- which is why a small uncorrected yaw error is far
+more damaging than a scale error.
+
+Visual Odometry (VO)
+~~~~~~~~~~~~~~~~~~~~~~
+
+Estimates camera motion by tracking/matching feature points across consecutive
+frames:
+
+1. Detect keypoints (ORB, SIFT, SuperPoint).
+2. Match keypoints between frames.
+3. Compute the essential matrix :math:`E` using RANSAC.
+4. Decompose :math:`E = [\mathbf{t}]_\times R` to recover rotation and
+   (scale-ambiguous) translation, where :math:`[\mathbf{t}]_\times` is the
+   skew-symmetric matrix of the translation vector:
+
+   .. math::
+
+      [\mathbf{t}]_\times = \begin{bmatrix}
+        0 & -t_z & t_y \\ t_z & 0 & -t_x \\ -t_y & t_x & 0
+      \end{bmatrix}
+
+   The decomposition yields **four** candidate :math:`(R, \mathbf{t})`
+   solutions; the correct one is selected by the cheirality check --
+   requiring triangulated points to lie in front of both cameras.
+5. (Stereo VO) Use the stereo baseline to recover metric scale.
+
+**Monocular VO**: scale-ambiguous; scale drift over long sequences.
+**Stereo VO**: metric scale recovered from baseline; drift ~0.5-1% of distance.
+
+LiDAR Odometry
+~~~~~~~~~~~~~~~
+
+Estimates motion by matching consecutive LiDAR scans (see ICP below).
+**Drift**: ~0.1-0.5% of distance for state-of-the-art systems (LOAM).
+Higher accuracy than VO due to direct 3D metric measurements.
+
+Drift Comparison
+~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 30 25 25 20
    :header-rows: 1
    :class: compact-table
 
    * - Method
-     - Mechanism
-   * - **Recurrent Networks (LSTM/GRU)**
-     - Maintain a hidden state that accumulates frame history. Used in
-       early video object detection models.
-   * - **3D Convolutions**
-     - Apply convolutions along both spatial and temporal dimensions
-       simultaneously (C3D, SlowFast, Video Swin).
-   * - **Temporal BEV Attention**
-     - BEVFormer-style: warp previous BEV frame to current ego pose, then
-       cross-attend with current queries (most practical for AV systems).
-   * - **Optical Flow**
-     - Estimate dense pixel motion between frames; used to warp features
-       or as an explicit velocity prior.
-
-Tracking-by-Detection Paradigm
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The dominant MOT paradigm in autonomous driving:
-
-.. code-block:: text
-
-   Frame t:
-   ┌──────────────┐     ┌──────────────────┐     ┌────────────────────┐
-   │  Detector    │────>│  State Predictor │────>│  Data Association  │
-   │  (YOLO,      │     │  (Kalman Filter) │     │  (Hungarian Algo / │
-   │   DETR, etc) │     │  Predict track   │     │   Appearance dist) │
-   └──────────────┘     │  positions to t  │     └────────┬───────────┘
-                        └──────────────────┘              │
-                                                   ┌──────▼──────────┐
-                                                   │  Track Update   │
-                                                   │  + Management   │
-                                                   │  (new/dead)     │
-                                                   └─────────────────┘
-
-The detector is completely independent of the tracker. This means improving
-either component independently improves overall tracking.
+     - Typical drift
+     - Frequency
+     - 3D?
+   * - Wheel odometry
+     - 1-5% of distance
+     - 100-1000 Hz
+     - No (2D)
+   * - Visual odometry (mono)
+     - 0.5-2% (scale drift)
+     - 10-30 Hz
+     - Yes
+   * - Visual odometry (stereo)
+     - 0.5-1%
+     - 10-30 Hz
+     - Yes
+   * - LiDAR odometry
+     - 0.1-0.5%
+     - 10-20 Hz
+     - Yes
+   * - IMU (integrated)
+     - Diverges in seconds
+     - 100-1000 Hz
+     - Yes
 
 
-End-to-End Transformer MOT
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Probabilistic Localization
+---------------------------
 
-Tracking-by-detection treats association as a separate, hand-designed
-step. **Transformer MOT** dissolves that boundary the same way DETR
-dissolved NMS in L4: by making association an emergent property of
-attention rather than an algorithm bolted on afterwards.
+Rather than a single pose estimate, probabilistic localization maintains a
+**belief** -- a probability distribution over possible poses.
 
-.. tab-set::
+EKF Localization
+~~~~~~~~~~~~~~~~~
 
-   .. tab-item:: TrackFormer (2022)
+Given a known map of landmarks :math:`m = \{m_1, \ldots, m_N\}`:
 
-      Extends DETR with **track queries**. Alongside DETR's usual object
-      queries (which spawn new tracks), each existing track carries its
-      own query forward from the previous frame. That query attends to
-      the current frame's features and directly outputs the object's new
-      position -- keeping its identity implicitly, with no IoU matrix and
-      no Hungarian algorithm at inference.
+1. **Predict**: propagate pose estimate using motion model (wheel odometry or
+   IMU).
+2. **Update**: when a landmark is observed, compute expected observation
+   :math:`h(\mathbf{x}, m_j)` and update using the EKF equations from
+   :doc:`L3 </lectures/lecture3/l3_index>`.
 
-   .. tab-item:: MOTR (2022)
+The observation function :math:`h` is typically nonlinear (e.g., range-bearing
+to a known landmark), requiring the EKF's Jacobian linearization.
 
-      Similar track-query concept, with the focus on end-to-end temporal
-      modelling: queries are updated across a whole video clip during
-      training, so the network learns long-term association behaviour
-      rather than just frame-to-frame matching.
+MCL: Monte Carlo Localization
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   .. tab-item:: Why it has not taken over
+.. admonition:: Prerequisite Recap (ENPM673)
+   :class: note
 
-      Two practical obstacles keep tracking-by-detection dominant in
-      production. First, **detection dominates the metrics**: ByteTrack
-      with a strong detector still beats most end-to-end trackers on
-      MOTA, because a better detector helps immediately while an
-      end-to-end tracker must relearn everything. Second, **modularity
-      is worth a lot** -- a separable detector and tracker can be
-      validated, profiled, and swapped independently, which matters
-      enormously for the safety case in L14.
+   In ENPM673, you implemented a particle filter for robot localization
+   (predict with motion model, weight by sensor likelihood, resample).
+   MCL (also called AMCL) applies this same algorithm to AV pose estimation
+   using LiDAR scans against a reference map.
 
-.. admonition:: The recurring pattern
-   :class: tip
+**LiDAR Sensor Model.** The sensor update step scores each particle by how
+well the vehicle's actual LiDAR scan matches a simulated scan from that
+particle's hypothesized pose. The map-based sensor model works as follows:
 
-   You have now seen the same architectural move three times: DETR
-   replaced NMS with learned set prediction (L4), BEVFormer replaced
-   geometric projection with learned attention (L5), and TrackFormer
-   replaces the Hungarian algorithm with learned queries. In each case a
-   hand-designed combinatorial step becomes a learned one -- and in each
-   case adoption depends on whether the learned version is worth giving
-   up the modularity.
+1. For each particle, perform **ray-casting** against a 2D occupancy grid or
+   3D voxel map to compute the expected scan from that pose.
+2. Compare the expected scan to the actual scan using a likelihood function
+   (e.g., beam model with Gaussian noise, or likelihood field model that
+   queries the distance to the nearest obstacle for each measured endpoint).
+3. Assign the particle a weight proportional to the scan match score.
 
+**Adaptive Particle Count (KLD-Sampling).** Standard MCL uses a fixed number
+of particles :math:`N`. AMCL adjusts :math:`N` dynamically using
+**KLD-sampling** (Kullback-Leibler divergence sampling):
 
-3D Multi-Object Tracking
-~~~~~~~~~~~~~~~~~~~~~~~~~
+- When the particle distribution is converged (vehicle well-localized), fewer
+  particles are needed -- :math:`N` shrinks, reducing CPU load.
+- When the distribution is spread out (high uncertainty, e.g., after
+  initialization or GPS dropout), :math:`N` grows to cover the hypothesis
+  space adequately.
+- The bound is derived from the KL divergence between the true posterior and
+  the sample-based approximation, guaranteeing a maximum approximation error
+  with probability :math:`1 - \delta`.
 
-Everything above tracks boxes in the **image plane**. A planner cannot
-use that: it needs objects tracked in metric space, which is what L4's 3-D
-detectors and L5's BEV representation produce. Fortunately the algorithm
-barely changes -- the state vector does.
+**Operating Modes.**
 
-.. list-table::
-   :widths: 22 39 39
-   :header-rows: 1
-   :class: compact-table
+- **Global localization**: particles are initialized uniformly across the
+  entire map. The filter converges to the correct pose as scans accumulate.
+  Required at startup when no GPS prior is available.
+- **Pose tracking**: particles are initialized around a known pose (e.g., from
+  GPS). The filter tracks incremental motion. Much faster convergence.
+- A small fraction of random particles can be injected each cycle to enable
+  **kidnapped robot recovery** -- detecting and recovering from sudden
+  relocations (e.g., a localization failure after passing through a tunnel).
 
-   * - Aspect
-     - 2D image tracking
-     - 3D / BEV tracking
-   * - State
-     - :math:`[c_x, c_y, s, r, \dot{c}_x, \dot{c}_y, \dot{s}]`
-     - :math:`[x, y, z, \theta, l, w, h, \dot{x}, \dot{y}, \dot{z}]`
-   * - Association metric
-     - IoU between 2-D boxes
-     - 3-D/BEV IoU, or centre distance, or Mahalanobis
-   * - Motion model
-     - Constant velocity in pixels (breaks under ego motion)
-     - Constant velocity in **world** coordinates
-   * - Ego motion
-     - Confounds everything
-     - Compensated using the L7 pose estimate
-
-.. admonition:: Ego-motion compensation is the key difference
-   :class: important
-
-   In image space, a parked car "moves" whenever the ego vehicle does,
-   so the constant-velocity model is fitting the wrong thing entirely.
-   In 3-D you transform tracks into a **world or map frame** using the
-   ego pose from L7, and then a parked car has genuinely zero velocity.
-   The motion model finally matches reality, and tracking through
-   occlusion improves dramatically as a result.
-
-**AB3DMOT** (Weng et al., 2020) is the standard baseline and is
-deliberately minimal: a 3-D Kalman filter with a constant-velocity model
-plus greedy 3-D IoU association -- essentially SORT lifted into 3-D. Its
-lesson mirrors ByteTrack's: with good detections, a simple tracker is
-hard to beat. **CenterPoint** (L4) goes further and has the detector
-regress per-object velocity directly, so association becomes little more
-than matching predicted to detected centres.
-
-
-Integration with the Perception Pipeline
-------------------------------------------
-
-The full perception pipeline for autonomous driving:
+**Integration with ROS 2 Nav2.** The ``nav2_amcl`` package provides a
+production-ready AMCL implementation for the ROS 2 navigation stack:
 
 .. list-table::
-   :widths: 15 85
+   :widths: 30 70
    :class: compact-table
 
-   * - **L3**
-     - State estimation backbone: Kalman filter family + data association
-       (used by tracking below) and weighted-averaging fusion for redundant
-       sensors.
-   * - **L4**
-     - Raw sensor inputs → 2D / 3D object detection (LiDAR PointPillars /
-       VoxelNet, camera DETR / YOLO) → bounding boxes with class and
-       confidence.
-   * - **L5 (BEV + Occupancy)**
-     - Multi-camera images → BEV feature construction (LSS, BEVFormer) →
-       BEV detection heads → 3D boxes or occupancy voxels in ego frame.
-   * - **L5 (Segmentation)**
-     - Camera images → semantic / panoptic segmentation → driveable
-       surface mask, lane lines, free-space boundaries. BEV projection for
-       planning.
-   * - **L6 (Tracking)**
-     - 3D bounding boxes from L4 / L5 → Kalman filter state prediction
-       (from L3) → Hungarian / ByteTrack association → confirmed tracks
-       with IDs and velocity estimates.
-   * - **L6 (Deep Fusion)**
-     - LiDAR + camera BEV features → cross-attention / BEVFusion →
-       fused BEV representation feeding tracking and downstream tasks.
+   * - **Input**
+     - 2D laser scan (``sensor_msgs/LaserScan``), odometry, and a 2D
+       occupancy grid map (``nav_msgs/OccupancyGrid``)
    * - **Output**
-     - Per-object tracks with state history: position, velocity,
-       orientation, class, ID. Input to prediction (L9) and planning
-       (L10-L11) modules.
+     - Corrected pose as the ``map`` → ``odom`` transform on ``/tf``
+   * - **Key parameters**
+     - ``min_particles`` / ``max_particles`` (KLD bounds),
+       ``laser_model_type`` (beam or likelihood field),
+       ``recovery_alpha_slow`` / ``recovery_alpha_fast`` (random particle
+       injection rates for kidnapped-robot recovery)
 
-.. admonition:: Real-World Performance Trade-offs
-   :class: warning
-
-   In production AV systems, tracking must run within a strict latency budget
-   (typically <50 ms total for the perception stack). Appearance-based methods
-   (DeepSORT) improve ID consistency but add compute. ByteTrack's approach of
-   using all detections (not just high-confidence) significantly reduces ID
-   switches at negligible compute cost -- a favorable engineering trade-off.
+Key advantage: MCL handles the **global localization** problem (starting
+without a prior pose) and recovers from **kidnapped robot** scenarios
+(sudden relocation), which EKF cannot.
 
 
-Deep Learning Fusion: Cross-Attention
----------------------------------------
+Map-Based Localization
+-----------------------
 
-Beyond the classical Kalman / weighted-averaging fusion covered in L3,
-modern AV stacks increasingly fuse modalities through **learned
-attention mechanisms** -- particularly in BEV space, where the
-representation from L5 makes camera and LiDAR features spatially
-comparable.
-
-Cross-Attention Fusion
+Scan Matching with ICP
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Given LiDAR BEV features :math:`\mathbf{F}_L \in \mathbb{R}^{H \times W \times C}`
-and camera BEV features :math:`\mathbf{F}_C \in \mathbb{R}^{H \times W \times C}`:
+**Iterative Closest Point (ICP)** is the core algorithm for aligning a
+source point cloud :math:`\mathcal{P}` to a target point cloud :math:`\mathcal{Q}`:
 
 .. math::
 
-   \text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right) V
+   T^* = \argmin_{T} \sum_{i} \| q_i - T p_i \|^2
 
-   Q = \mathbf{F}_L W_Q, \quad K = \mathbf{F}_C W_K, \quad V = \mathbf{F}_C W_V
+where :math:`(p_i, q_i)` are corresponding point pairs. ICP alternates between:
 
-The LiDAR features **query** the camera features -- each LiDAR BEV cell
-attends to the most relevant camera BEV cells, learning to weight
-semantic camera information based on geometric LiDAR context.
+1. **Correspondence**: find nearest neighbor in :math:`\mathcal{Q}` for each
+   point in :math:`T \cdot \mathcal{P}`.
+2. **Minimize**: solve for the optimal rigid transform using SVD (the
+   Kabsch algorithm):
 
-BEVFusion (MIT) Example
-~~~~~~~~~~~~~~~~~~~~~~~~
+   .. math::
+
+      [U, S, V^T] = \text{SVD}(H) \quad \text{where } H = \sum_i (p_i - \bar{p})(q_i - \bar{q})^T
+
+      R = V D U^T, \quad t = \bar{q} - R \bar{p}
+
+   where :math:`D = \text{diag}(1, 1, \det(VU^T))`.
+
+   .. warning::
+
+      The :math:`D` term is not optional. Without it, degenerate or
+      noisy correspondences can produce a matrix with
+      :math:`\det = -1` -- a **reflection** rather than a rotation. It
+      minimizes the cost function perfectly while describing a physically
+      impossible motion, and it is a classic silent ICP failure.
+
+3. **Update**: apply transform and check convergence.
+
+ICP Variants
+~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 25 75
+   :header-rows: 1
+   :class: compact-table
+
+   * - Variant
+     - Improvement
+   * - **Point-to-plane ICP**
+     - Minimizes distance from source point to target surface (normal).
+       Converges ~10x faster than point-to-point.
+   * - **NDT (Normal Distributions Transform)**
+     - Represents target cloud as a grid of Gaussians. Robust to outliers,
+       no explicit correspondences needed. Used in Autoware.
+   * - **GICP (Generalized ICP)**
+     - Treats both clouds as Gaussians; maximum likelihood formulation.
+       More robust and accurate than standard ICP.
+
+HD Map Localization
+~~~~~~~~~~~~~~~~~~~~
+
+HD (High-Definition) maps contain centimeter-accurate road geometry, lane
+markings, signs, and semantic features. The vehicle localizes by matching
+current sensor observations to the HD map:
+
+1. LiDAR scan → extract lane markings, curbs, poles.
+2. Match extracted features to HD map features.
+3. Compute 6-DoF pose correction.
+4. Fuse with GNSS and IMU via EKF.
+
+**Advantages**: globally consistent, no accumulated drift.
+**Disadvantages**: HD maps cost millions to create and maintain; they go stale
+(road construction, seasonal changes). Requires prior map of the operating area.
+
+
+SLAM Problem Formulation
+--------------------------
+
+In SLAM, the vehicle simultaneously estimates its trajectory and builds a
+map from scratch -- no prior map is assumed.
+
+.. math::
+
+   p(\mathbf{x}_{0:t}, m \mid \mathbf{z}_{1:t}, \mathbf{u}_{1:t})
+
+where:
+
+- :math:`\mathbf{x}_{0:t}` -- vehicle trajectory (sequence of poses)
+- :math:`m` -- map (set of landmarks, point cloud, or dense voxel map)
+- :math:`\mathbf{z}_{1:t}` -- all measurements (LiDAR scans, image features)
+- :math:`\mathbf{u}_{1:t}` -- all control inputs (odometry)
+
+The chicken-and-egg problem: accurate mapping requires knowing the pose;
+accurate pose estimation requires knowing the map.
+
+.. admonition:: SLAM is the AV chicken-and-egg
+   :class: note
+
+   HD map localization requires a pre-built HD map. But building that HD map
+   required SLAM. In practice: SLAM is used offline to build maps; HD map
+   localization is used online during operation.
+
+
+SLAM Frontend
+--------------
+
+The frontend processes raw sensor data to produce odometry estimates and
+detect loop closures.
+
+Scan Acquisition and Preprocessing
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
    :widths: 25 75
    :class: compact-table
 
-   * - **Camera branch**
-     - LSS-based camera-to-BEV transform → camera BEV features
-   * - **LiDAR branch**
-     - Voxel encoder → sparse 3D conv → BEV feature map
-   * - **Fusion**
-     - Concatenate camera + LiDAR BEV features → channel fusion conv
-   * - **Output**
-     - Fused BEV features → detection/segmentation heads
+   * - **Motion distortion**
+     - LiDAR scans take 50-100 ms to complete. During this time, the vehicle
+       moves. Each point is captured at a slightly different vehicle pose.
+       IMU data is used to de-skew the scan -- correcting each point to the
+       pose at the scan start time.
+   * - **Ground removal**
+     - Remove points belonging to the ground plane (RANSAC plane fitting).
+       Reduces data and avoids matching ground points across scans.
+   * - **Downsampling**
+     - Voxel grid filter: retain one point per voxel. Reduces compute while
+       preserving structure.
+   * - **Range filtering**
+     - Remove points beyond useful range (e.g., > 80 m) and very close range
+       (< 0.5 m) artifacts.
 
-On the nuScenes detection benchmark, BEVFusion improves clearly over a
-LiDAR-only baseline of the same design -- camera features add semantic
-richness that particularly helps small and distant objects. Consult the
-paper for current figures and be careful to compare val against val: the
-reported numbers differ by several NDS points between the validation and
-test splits, and between the MIT and Peking University papers that share
-the name "BEVFusion."
+Feature Extraction
+~~~~~~~~~~~~~~~~~~~
 
-.. note::
+.. tab-set::
 
-   Cross-attention fusion sits *downstream* of the BEV construction
-   covered in L5. The tracker (Tasks above) consumes whatever object
-   detections come out of this fused BEV -- the better the fusion, the
-   cleaner the input to MOT.
+   .. tab-item:: Edge Features (LOAM)
+
+      Points with large **curvature** values lie on edges (corners, poles).
+      Computed as:
+
+      .. math::
+
+         c = \frac{1}{|S| \cdot \|p_i\|} \left\| \sum_{j \in S, j \neq i} (p_j - p_i) \right\|
+
+      High curvature → edge feature. Low curvature → planar feature.
+
+   .. tab-item:: Planar Features (LOAM)
+
+      Points with **small curvature** lie on flat surfaces (walls, ground).
+      Selected from each scan ring as the points with minimum curvature.
+
+   .. tab-item:: 3D Descriptors
+
+      For place recognition and loop closure: FPFH, SHOT, or learned
+      descriptors (FCGF, D3Feat). Encode local geometry around each keypoint
+      into a descriptor vector.
+
+ICP-Based Scan-to-Scan Matching
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The frontend matches each new scan to the previous scan (scan-to-scan) or
+to a local map (scan-to-map):
+
+.. code-block:: text
+
+   # Pseudocode: LOAM-style frontend
+   for each new_scan:
+       # 1. Preprocessing
+       new_scan = remove_motion_distortion(new_scan, imu_data)
+       new_scan = voxel_downsample(new_scan, voxel_size=0.2)
+
+       # 2. Feature extraction
+       edges, planes = extract_loam_features(new_scan)
+
+       # 3. Scan matching (edge-to-edge, plane-to-plane)
+       T_delta = icp_feature_match(edges, planes, local_map)
+
+       # 4. Update pose estimate
+       current_pose = current_pose @ T_delta
+
+       # 5. Keyframe selection
+       if is_keyframe(T_delta):
+           add_keyframe(current_pose, new_scan)
+           update_local_map()
+
+Keyframe Strategy
+~~~~~~~~~~~~~~~~~~
+
+Not every scan is a keyframe. Keyframes are selected when the vehicle has
+moved sufficiently (e.g., >0.5 m or >10 deg rotation from the last keyframe).
+
+- **Too frequent**: high memory use, backend overwhelmed.
+- **Too sparse**: large gaps in map coverage, ICP initialization failures.
+
+
+SLAM Backend
+-------------
+
+The backend refines the entire trajectory and map globally by solving a
+**pose graph optimization** problem.
+
+Pose Graph Formulation
+~~~~~~~~~~~~~~~~~~~~~~~
+
+A **pose graph** has:
+
+- **Nodes**: :math:`x_i \in SE(3)` -- the estimated pose at each keyframe.
+- **Edges**: constraints between poses. Each edge :math:`(i, j)` represents
+  a relative pose measurement :math:`z_{ij}` with information matrix
+  :math:`\Omega_{ij}`:
+
+.. math::
+
+   F = \sum_{(i,j) \in \mathcal{E}} e_{ij}^T \Omega_{ij} e_{ij}
+
+   e_{ij} = \text{Log}(T_{ij}^{-1} \cdot x_i^{-1} \cdot x_j)
+
+where :math:`\text{Log}` is the Lie algebra logarithm that converts an SE(3)
+transform to a 6D vector. Minimizing F gives the maximum likelihood trajectory.
+
+This is solved with **nonlinear least squares** (Gauss-Newton or Levenberg-
+Marquardt), implemented in libraries like g2o, GTSAM, and Ceres Solver.
+
+Loop Closure Detection
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Without loop closure, SLAM drift accumulates without bound. Loop closure
+detects when the vehicle **revisits a previously mapped area** and adds a
+long-range edge to the pose graph, correcting accumulated drift globally.
+
+.. grid:: 1 2 2 2
+   :gutter: 3
+
+   .. grid-item-card:: Detection (Place Recognition)
+      :class-card: sd-border-info
+
+      Match current scan against all previous keyframes using:
+
+      - **Scan context** (Kim & Kim, 2018): compact 2D histogram encoding
+        of the 3D scene structure. Fast retrieval via KD-tree.
+      - **FPFH descriptors + RANSAC**: geometric verification.
+      - **Neural: PointNetVLAD, MinkLoc3D**: learned place recognition.
+
+   .. grid-item-card:: Verification (Geometric)
+      :class-card: sd-border-info
+
+      Once a candidate loop is found, verify with ICP. Accept only if
+      ICP converges to a consistent transform with low residual error.
+
+      Reject false positives: use a minimum overlap threshold and a
+      maximum residual threshold.
+
+.. admonition:: Why Loop Closure Matters
+   :class: important
+
+   Odometry drift is **unbounded**: at ~0.5% translational drift, 100 m
+   of driving accumulates ~0.5 m of error and 1 km accumulates ~5 m --
+   already unusable for lane-level driving, and it keeps growing.
+
+   A correct loop closure adds a constraint saying "these two poses are
+   the same place." The optimizer then distributes the accumulated error
+   backwards across the whole loop, so drift becomes **bounded by the
+   loop-closure constraint's own accuracy** (typically a few centimetres
+   to tens of centimetres, set by the ICP registration quality) rather
+   than growing with distance travelled.
+
+   .. warning::
+
+      Loop closure bounds error; it does not eliminate it. Claims of
+      "sub-centimetre after loop closure" are not achievable in practice
+      -- the corrected trajectory is only as good as the registration
+      that produced the constraint. And a **false** loop closure is far
+      worse than none at all: it warps the entire map irrecoverably,
+      which is why geometric verification is mandatory before accepting
+      a candidate.
+
+
+SLAM Evaluation Metrics
+------------------------
+
+.. list-table::
+   :widths: 20 40 40
+   :header-rows: 1
+   :class: compact-table
+
+   * - Metric
+     - Definition
+     - Notes
+   * - **APE**
+     - Absolute Pose Error: RMSE between estimated and ground-truth poses
+       at each timestep
+     - Global accuracy; sensitive to loop closure quality
+   * - **RPE**
+     - Relative Pose Error: RMSE of relative transforms over a fixed
+       interval (e.g., 100 m)
+     - Local accuracy; measures odometry drift rate
+   * - **Map consistency**
+     - Overlap IoU of map with ground-truth HD map or aerial survey
+     - End-to-end mapping quality
+   * - **Runtime**
+     - Processing time per scan (Hz)
+     - Must exceed sensor rate (>10 Hz for 10 Hz LiDAR)
+
+The **EVO** tool provides standardized APE/RPE computation from trajectory
+files in TUM, KITTI, and ROS bag formats.
+
+
+Modern LiDAR SLAM Systems
+--------------------------
+
+.. tab-set::
+
+   .. tab-item:: LOAM (2014)
+
+      **LiDAR Odometry and Mapping** (Zhang & Singh, RSS 2014).
+
+      - Frontend: edge + planar feature extraction and matching (scan-to-map).
+      - Backend: none (no pose graph, no loop closure).
+      - Performance: ~0.55% average translational error on the KITTI
+        odometry benchmark -- the top-ranked method at publication.
+        (KITTI scores odometry as *relative* translation/rotation error
+        over 100--800 m sub-sequences, expressed as a percentage; it does
+        not report an absolute pose error in centimetres.)
+      - Limitation: drift accumulates without loop closure; memory grows unbounded.
+      - Legacy: LOAM's feature extraction approach inspired all later systems.
+
+   .. tab-item:: LeGO-LOAM (2018)
+
+      **Lightweight and Ground-Optimized LOAM** (Shan & Englot, IROS 2018).
+
+      - Adds explicit ground segmentation before feature extraction.
+      - Two-step optimization: ground plane features first (z, roll, pitch),
+        then edge features (x, y, yaw).
+      - Pose graph backend with loop closure.
+      - Designed for ground vehicles; 30% compute reduction vs. LOAM.
+      - Widely used in AV research and robotics competitions.
+
+   .. tab-item:: LIO-SAM (2020)
+
+      **Tightly-Coupled LiDAR Inertial Odometry via Smoothing and Mapping**
+      (Shan et al., IROS 2020).
+
+      - Tightly couples IMU pre-integration with LiDAR scan matching.
+      - Factor graph backend (GTSAM): LiDAR, IMU, GPS, and loop closure
+        factors in a single unified optimization.
+      - Real-time at 10 Hz; excellent for outdoor environments.
+      - De facto standard for LiDAR-IMU SLAM research.
+
+   .. tab-item:: KISS-ICP (2023)
+
+      **Keep It Small and Simple** (Vizzo et al., RA-L 2023).
+
+      - Remarkably simple design: adaptive threshold ICP on raw point clouds.
+      - No feature extraction, no map management, no loop closure.
+      - Achieves competitive accuracy with state-of-the-art systems on
+        multiple benchmarks.
+      - Highlights that well-designed ICP with adaptive parameters can
+        compete with complex feature-based systems.
+
+CARLA Hands-On: LiDAR Odometry and Mapping
+--------------------------------------------
+
+This exercise builds a minimal LiDAR odometry system: collect scans,
+register consecutive scans with ICP, chain the transforms into a
+trajectory, and measure how far it has drifted from ground truth.
+
+Task 1: Collect Synchronized LiDAR and Ground-Truth Poses
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   import carla
+   import numpy as np
+   import open3d as o3d
+
+   client = carla.Client('localhost', 2000)
+   client.set_timeout(10.0)
+   world = client.load_world('Town03')
+
+   # Synchronous mode -- essential here, because scan-to-scan
+   # registration assumes a fixed time step between scans (see L3).
+   settings = world.get_settings()
+   settings.synchronous_mode = True
+   settings.fixed_delta_seconds = 0.1          # 10 Hz
+   world.apply_settings(settings)
+   tm = client.get_trafficmanager()
+   tm.set_synchronous_mode(True)
+
+   bp_lib = world.get_blueprint_library()
+   vehicle = world.spawn_actor(
+       bp_lib.find('vehicle.tesla.model3'),
+       world.get_map().get_spawn_points()[0])
+   vehicle.set_autopilot(True, tm.get_port())
+
+   lidar_bp = bp_lib.find('sensor.lidar.ray_cast')
+   lidar_bp.set_attribute('channels', '64')
+   lidar_bp.set_attribute('range', '80')
+   lidar_bp.set_attribute('points_per_second', '1000000')
+   lidar_bp.set_attribute('rotation_frequency', '10')   # match the tick
+   lidar = world.spawn_actor(
+       lidar_bp, carla.Transform(carla.Location(z=2.4)), attach_to=vehicle)
+
+   scans, gt_poses = [], []
+
+   def lidar_callback(data):
+       pts = np.frombuffer(data.raw_data, dtype=np.float32).reshape(-1, 4)
+       scans.append(pts[:, :3].copy())
+       # Ground-truth pose for evaluation ONLY -- never feed this to ICP
+       gt_poses.append(np.array(data.transform.get_matrix()))
+
+   lidar.listen(lidar_callback)
+
+   try:
+       for _ in range(600):        # 60 s at 10 Hz
+           world.tick()
+   finally:
+       lidar.destroy()
+       vehicle.destroy()
+       settings.synchronous_mode = False
+       settings.fixed_delta_seconds = None
+       world.apply_settings(settings)
+       tm.set_synchronous_mode(False)
+
+Task 2: Preprocess and Register Consecutive Scans
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   def to_o3d(points, voxel_size=0.2, z_min=-1.6):
+       """Numpy -> Open3D cloud, with ground removed and downsampling."""
+       # Dropping the ground plane matters: it is a large, locally flat
+       # region that constrains z/roll/pitch well but slides freely in
+       # x/y, so leaving it in lets ICP converge to a confidently wrong
+       # answer along the direction of travel.
+       pts = points[points[:, 2] > z_min]
+       pcd = o3d.geometry.PointCloud()
+       pcd.points = o3d.utility.Vector3dVector(pts)
+       return pcd.voxel_down_sample(voxel_size)
+
+   def icp_registration(source, target, init_transform=np.eye(4),
+                        threshold=0.5):
+       """Point-to-plane ICP registration (converges faster than point-to-point)."""
+       for cloud in (source, target):
+           cloud.estimate_normals(
+               o3d.geometry.KDTreeSearchParamHybrid(radius=1.0, max_nn=30))
+
+       result = o3d.pipelines.registration.registration_icp(
+           source, target, threshold, init_transform,
+           o3d.pipelines.registration.TransformationEstimationPointToPlane(),
+           o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=50))
+
+       return result.transformation, result.inlier_rmse, result.fitness
+
+Task 3: Chain Transforms into a Trajectory
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   pose = np.eye(4)
+   trajectory = [pose.copy()]
+   prev = to_o3d(scans[0])
+
+   for i in range(1, len(scans)):
+       curr = to_o3d(scans[i])
+
+       # Constant-velocity initial guess: assume this frame's motion
+       # resembles the last one. ICP is local, so a good seed is the
+       # difference between converging and diverging.
+       if len(trajectory) >= 2:
+           init = np.linalg.inv(trajectory[-2]) @ trajectory[-1]
+       else:
+           init = np.eye(4)
+
+       T_delta, rmse, fitness = icp_registration(curr, prev, init)
+
+       if fitness < 0.3:
+           print(f"Frame {i}: ICP failed (fitness={fitness:.2f}), "
+                 f"falling back to constant velocity")
+           T_delta = init
+
+       pose = pose @ T_delta
+       trajectory.append(pose.copy())
+       prev = curr
+
+Task 4: Evaluate Against Ground Truth
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. admonition:: Exercise Tasks
+   :class: tip
+
+   1. **Plot the trajectory** against ground truth (top-down x-y). The
+      shapes should agree early and diverge progressively -- that
+      divergence *is* the drift.
+   2. **Quantify the drift.** Compute final position error as a
+      percentage of total path length, and compare against the
+      0.1--0.5% figure quoted for LOAM earlier in this lecture. Expect
+      to do worse: you have no feature extraction and no backend.
+   3. **Vary the voxel size** (0.1, 0.2, 0.5, 1.0 m). Plot registration
+      time and drift against voxel size. Where is the knee?
+   4. **Remove the ground-removal step** and re-run. Explain the change
+      in longitudinal drift using the degeneracy argument above.
+   5. **Break it deliberately**: replace the constant-velocity seed with
+      ``np.eye(4)`` and drive a fast, curving route. Count how many
+      frames report ``fitness < 0.3``. This is why every production
+      system seeds ICP with IMU or wheel odometry.
+   6. **Export to TUM format** and compute APE/RPE with ``evo``:
+
+      .. code-block:: bash
+
+         evo_ape tum groundtruth.txt estimated.txt -va --plot
+         evo_rpe tum groundtruth.txt estimated.txt --delta 100 \
+                 --delta_unit m -va
+
+      Note how RPE stays roughly constant while APE grows without bound
+      -- the signature of drift with no loop closure.
 
 
 Summary
@@ -441,373 +893,30 @@ Summary
 .. grid:: 1 2 2 2
    :gutter: 3
 
-   .. grid-item-card:: Tracking
+   .. grid-item-card:: Localization Methods
       :class-card: sd-border-primary
 
-      - MOT paradigm: tracking-by-detection
-      - SORT: Kalman filter + IoU Hungarian matching
-      - DeepSORT: adds appearance embedding for re-ID
-      - ByteTrack: uses low-confidence detections for occlusion recovery
-      - Metrics: MOTA (accuracy), IDF1 (identity), HOTA (balanced)
+      - GNSS: global reference, 1-5 m accuracy (standard), 1-2 cm (RTK)
+      - Dead reckoning: wheel, visual, LiDAR odometry -- drift accumulates
+      - Probabilistic: EKF localization, MCL/AMCL (particle filter)
+      - Map-based: ICP scan matching, HD map feature matching
 
-   .. grid-item-card:: Temporal & Deep Fusion
+   .. grid-item-card:: SLAM
       :class-card: sd-border-primary
 
-      - Temporal context: motion, occlusion, noise averaging
-      - Transformer MOT (TrackFormer, MOTR): track queries replace the
-        Hungarian step, but modularity keeps tracking-by-detection ahead
-      - 3D/BEV tracking: same filter, world-frame state, ego-motion
-        compensated (AB3DMOT, CenterPoint)
-      - Cross-attention fusion of camera + LiDAR BEV features
-      - BEVFusion: concatenate-then-conv vs. attention-based fusion
+      - Problem: simultaneous pose estimation and map building
+      - Frontend: preprocessing, feature extraction, ICP, keyframe selection
+      - Backend: pose graph optimization, loop closure detection
+      - Systems: LOAM, LeGO-LOAM, LIO-SAM, KISS-ICP
+      - Metrics: APE (global), RPE (local drift rate)
 
-
-CARLA Hands-On: Multi-Object Tracking
---------------------------------------------------
-
-This exercise implements a basic SORT tracker on CARLA vehicle
-detections, relying on the Kalman filter taught in L3 and consuming
-detection outputs from L4 / L5.
-
-
-Task 1: Implement a Basic SORT Tracker
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This implements the core SORT algorithm: Kalman filter prediction +
-IoU-based Hungarian matching.
-
-.. code-block:: python
-
-   from scipy.optimize import linear_sum_assignment
-
-   class KalmanBoxTracker:
-       """Kalman filter tracker for a single bounding box.
-
-       This is a real KF, using the machinery from L3: a state vector
-       with an explicit covariance P, a process model (F, Q), and a
-       measurement model (H, R). The covariance is the whole point --
-       it is what lets the tracker express "I have not seen this object
-       for four frames, so I am no longer confident where it is," which
-       in turn is what makes gating and association work.
-
-       State (SORT's parameterization, Bewley et al. 2016):
-           x = [cx, cy, s, r, vx, vy, vs]^T
-       where s is box AREA and r is aspect ratio (assumed constant, so
-       it has no velocity term).
-       """
-       _count = 0
-
-       def __init__(self, bbox, dt=1.0):
-           self.id = KalmanBoxTracker._count
-           KalmanBoxTracker._count += 1
-
-           # --- Process model: constant velocity in (cx, cy, s) ---
-           self.F = np.eye(7)
-           self.F[0, 4] = dt      # cx += vx * dt
-           self.F[1, 5] = dt      # cy += vy * dt
-           self.F[2, 6] = dt      # s  += vs * dt
-
-           # --- Measurement model: we observe (cx, cy, s, r) ---
-           self.H = np.zeros((4, 7))
-           self.H[:4, :4] = np.eye(4)
-
-           # --- Noise. These are the tuning knobs. ---
-           # R: detector noise. Area is measured far less reliably than
-           # the centre, so it gets a much larger variance.
-           self.R = np.diag([1.0, 1.0, 10.0, 0.01])
-           # Q: how much we distrust constant velocity. Velocities are
-           # unobserved at init, so give them large process noise.
-           self.Q = np.diag([1.0, 1.0, 1.0, 0.01, 0.01, 0.01, 0.0001])
-
-           # --- Initial state and covariance ---
-           z = self._bbox_to_z(bbox)
-           self.x = np.zeros(7)
-           self.x[:4] = z
-           self.P = np.diag([10., 10., 10., 10., 1000., 1000., 1000.])
-           # Huge variance on the velocity block: after ONE detection we
-           # genuinely have no idea how fast the object is moving, and
-           # saying so lets the second detection dominate the estimate.
-
-           self.hits = 1
-           self.age = 0
-           self.time_since_update = 0
-
-       @staticmethod
-       def _bbox_to_z(bbox):
-           """[x1,y1,x2,y2] -> [cx, cy, area, aspect]."""
-           w = max(bbox[2] - bbox[0], 1e-6)
-           h = max(bbox[3] - bbox[1], 1e-6)
-           return np.array([bbox[0] + w / 2, bbox[1] + h / 2, w * h, w / h])
-
-       def predict(self):
-           """KF predict step."""
-           self.x = self.F @ self.x
-           self.P = self.F @ self.P @ self.F.T + self.Q
-           # Area must stay positive after prediction
-           if self.x[2] <= 0:
-               self.x[2] = 1e-6
-           self.age += 1
-           self.time_since_update += 1
-           return self.to_bbox()
-
-       def update(self, bbox):
-           """KF update step with a matched detection."""
-           z = self._bbox_to_z(bbox)
-           y = z - self.H @ self.x                    # innovation
-           S = self.H @ self.P @ self.H.T + self.R    # innovation covariance
-           K = self.P @ self.H.T @ np.linalg.inv(S)   # Kalman gain
-           self.x = self.x + K @ y
-
-           # Joseph form -- keeps P symmetric positive-definite (see L3)
-           I_KH = np.eye(7) - K @ self.H
-           self.P = I_KH @ self.P @ I_KH.T + K @ self.R @ K.T
-
-           self.hits += 1
-           self.time_since_update = 0
-
-       def mahalanobis(self, bbox):
-           """Gating distance from L3 -- uses the covariance, unlike IoU."""
-           z = self._bbox_to_z(bbox)
-           y = z - self.H @ self.x
-           S = self.H @ self.P @ self.H.T + self.R
-           return float(np.sqrt(y.T @ np.linalg.inv(S) @ y))
-
-       def to_bbox(self):
-           """Convert state back to [x1, y1, x2, y2]."""
-           cx, cy, s, r = self.x[:4]
-           s = max(s, 1e-6)
-           r = max(r, 1e-6)
-           w = np.sqrt(s * r)
-           h = s / w
-           return np.array([cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2])
-
-.. admonition:: Why this must be a Kalman filter and not a moving average
+.. admonition:: Assignment Unlocked -- GP3: Fusion & Localization
    :class: important
 
-   An exponential moving average can smooth a track, but it has no
-   notion of **uncertainty**. That costs you three things SORT depends
-   on:
+   You now have the foundational knowledge from **L3 and L6** to begin
+   **GP3: Fusion & Localization**. In GP3 you will implement camera-LiDAR
+   frustum fusion for 3D object detection, build an Extended Kalman Filter
+   that fuses GNSS and IMU for vehicle localization, and evaluate both
+   against CARLA ground truth.
 
-   1. **Occlusion handling.** During a gap, :math:`P` grows through the
-      predict step, so the tracker automatically becomes more willing to
-      accept a re-detection that has drifted. A moving average has a
-      fixed implicit trust level forever.
-   2. **Principled gating.** The Mahalanobis distance above scales the
-      residual by :math:`S`, so a confident track rejects distant
-      matches while an uncertain one accepts them. A fixed IoU threshold
-      cannot adapt.
-   3. **Correct initialization.** Setting velocity variance to 1000 at
-      birth means the second detection essentially defines the velocity.
-      A moving average with :math:`\alpha = 0.7` would instead spend
-      several frames crawling toward the truth.
-
-   This is exactly the L3 machinery -- same predict/update cycle, same
-   Joseph-form covariance update -- applied per track.
-
-.. code-block:: python
-
-   def iou_batch(bb_det, bb_trk):
-       """Compute IoU between all pairs of detection and track boxes."""
-       # bb_det: (M, 4), bb_trk: (N, 4) -- [x1, y1, x2, y2]
-       M, N = len(bb_det), len(bb_trk)
-       iou_matrix = np.zeros((M, N))
-       for m in range(M):
-           for n in range(N):
-               x1 = max(bb_det[m, 0], bb_trk[n, 0])
-               y1 = max(bb_det[m, 1], bb_trk[n, 1])
-               x2 = min(bb_det[m, 2], bb_trk[n, 2])
-               y2 = min(bb_det[m, 3], bb_trk[n, 3])
-               inter = max(0, x2 - x1) * max(0, y2 - y1)
-               area_d = ((bb_det[m, 2] - bb_det[m, 0])
-                         * (bb_det[m, 3] - bb_det[m, 1]))
-               area_t = ((bb_trk[n, 2] - bb_trk[n, 0])
-                         * (bb_trk[n, 3] - bb_trk[n, 1]))
-               iou_matrix[m, n] = inter / max(area_d + area_t - inter, 1e-6)
-       return iou_matrix
-
-
-   class SORTTracker:
-       """Simple Online and Realtime Tracking."""
-
-       def __init__(self, max_age=5, min_hits=3, iou_threshold=0.3):
-           self.max_age = max_age
-           self.min_hits = min_hits
-           self.iou_threshold = iou_threshold
-           self.trackers = []
-
-       def update(self, detections):
-           """
-           Update tracks with new detections.
-
-           Args:
-               detections: np.array of shape (M, 4) -- [x1, y1, x2, y2]
-
-           Returns:
-               np.array of shape (K, 5) -- [x1, y1, x2, y2, track_id]
-           """
-           # Predict existing tracks
-           predicted = []
-           for trk in self.trackers:
-               predicted.append(trk.predict())
-           predicted = np.array(predicted) if predicted else np.empty((0, 4))
-
-           # Associate detections to tracks via Hungarian algorithm
-           if len(detections) > 0 and len(predicted) > 0:
-               iou_matrix = iou_batch(detections, predicted)
-               row_idx, col_idx = linear_sum_assignment(-iou_matrix)
-
-               matched, unmatched_dets, unmatched_trks = [], [], []
-               for m, t in zip(row_idx, col_idx):
-                   if iou_matrix[m, t] >= self.iou_threshold:
-                       matched.append((m, t))
-                   else:
-                       unmatched_dets.append(m)
-                       unmatched_trks.append(t)
-
-               unmatched_dets += [m for m in range(len(detections))
-                                  if m not in row_idx]
-               unmatched_trks += [t for t in range(len(predicted))
-                                  if t not in col_idx]
-           else:
-               matched = []
-               unmatched_dets = list(range(len(detections)))
-               unmatched_trks = list(range(len(predicted)))
-
-           # Update matched tracks
-           for m, t in matched:
-               self.trackers[t].update(detections[m])
-
-           # Create new tracks for unmatched detections
-           for m in unmatched_dets:
-               self.trackers.append(KalmanBoxTracker(detections[m]))
-
-           # Remove dead tracks
-           self.trackers = [t for t in self.trackers
-                            if t.time_since_update <= self.max_age]
-
-           # Return confirmed tracks
-           results = []
-           for trk in self.trackers:
-               if trk.hits >= self.min_hits:
-                   bbox = trk.to_bbox()
-                   results.append([*bbox, trk.id])
-           return np.array(results) if results else np.empty((0, 5))
-
-
-Task 2: Run the Tracker on CARLA Vehicles
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. important::
-
-   **Track real detections, not ground truth.** It is tempting to feed
-   the tracker CARLA's actor list, but that defeats the exercise: ground
-   truth never misses an object, never produces a false positive, never
-   occludes, and carries **no confidence score** -- so there would be
-   nothing for the tracker to fix and no way to attempt ByteTrack's
-   two-tier association in Task 4.
-
-   Use the YOLO detector from L4. Ground truth still has a role, but as
-   the *reference* against which you score MOTA and IDF1 in Task 5 --
-   not as the tracker's input.
-
-.. code-block:: python
-
-   from ultralytics import YOLO
-
-   detector = YOLO('yolov8s.pt')          # or your GP2 fine-tuned model
-   VEHICLE_CLASSES = {1, 2, 3, 5, 7}      # COCO: bicycle, car, motorcycle,
-                                          #       bus, truck
-
-   def detect_vehicles(frame_bgr, conf_threshold=0.1):
-       """Run YOLO and return boxes WITH confidence scores.
-
-       Note the low threshold: ByteTrack needs the low-confidence
-       detections that a conventional 0.5 cutoff would discard, so we
-       keep them and let the tracker decide.
-       """
-       results = detector(frame_bgr, verbose=False, conf=conf_threshold)[0]
-
-       dets = []
-       for box in results.boxes:
-           if int(box.cls[0]) not in VEHICLE_CLASSES:
-               continue
-           x1, y1, x2, y2 = box.xyxy[0].tolist()
-           dets.append([x1, y1, x2, y2, float(box.conf[0])])
-
-       return np.array(dets) if dets else np.empty((0, 5))
-
-   # ── Main tracking loop ────────────────────────────────────────────
-   tracker = SORTTracker(max_age=5, min_hits=3, iou_threshold=0.3)
-   track_colors = {}
-
-   def tracking_callback(image):
-       array = np.frombuffer(image.raw_data, dtype=np.uint8)
-       # CARLA delivers BGRA; slicing to 3 channels gives BGR, which is
-       # what both YOLO and cv2 expect. Do not convert to RGB here.
-       frame = array.reshape((image.height, image.width, 4))[:, :, :3].copy()
-
-       dets = detect_vehicles(frame)              # (M, 5): box + score
-
-       # Basic SORT ignores the score column; ByteTrack (Task 4) uses it.
-       tracks = tracker.update(dets[:, :4] if len(dets) else dets)
-
-       for trk in tracks:
-           x1, y1, x2, y2, tid = trk.astype(int)
-           if tid not in track_colors:
-               track_colors[tid] = tuple(
-                   int(c) for c in np.random.randint(50, 255, 3))
-           color = track_colors[tid]
-           cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
-           cv2.putText(frame, f"ID:{tid}", (x1, y1 - 8),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
-
-       cv2.imshow("SORT Tracker", frame)
-       cv2.waitKey(1)
-
-   cameras['front'].listen(tracking_callback)
-
-.. note::
-
-   For **Task 5** you need ground-truth boxes as a reference. Project
-   each vehicle actor's ``bounding_box`` vertices into the image using
-   the UE-to-optical permutation from L2 (projecting only the actor
-   *centre*, and guessing a box size from range, gives boxes too
-   inaccurate to score against). Then match tracks to ground truth by
-   IoU per frame and count false negatives, false positives, and
-   identity switches to assemble MOTA.
-
-.. admonition:: Exercise Tasks
-   :class: tip
-
-   1. **Run the SORT tracker** on live YOLO detections. Observe how track
-      IDs are assigned and maintained as vehicles move through the scene.
-   2. **Inspect the covariance**: Print ``np.trace(trk.P)`` for one track
-      each frame. Watch it grow while the object is occluded and collapse
-      when a detection re-associates. This is the behaviour a moving
-      average cannot reproduce.
-   3. **Stress-test with occlusion**: Drive through a busy intersection and
-      observe ID switches when vehicles occlude each other. Count the number
-      of ID switches over 100 frames.
-   4. **Implement ByteTrack's two-pass association**: Modify
-      ``SORTTracker.update()`` to split detections at
-      :math:`\tau_{high} = 0.6`, match the high-confidence set to all
-      tracks first, then match the low-confidence set to whatever tracks
-      remain unmatched. Compare the ID-switch count against basic SORT.
-   5. **Swap IoU for Mahalanobis gating**: Use ``trk.mahalanobis(det)``
-      to reject implausible pairings before the Hungarian step (a
-      :math:`\chi^2` gate at 4 degrees of freedom, 95%, is about 9.49).
-      Does it help most where boxes are small and IoU is brittle?
-   6. **Compute tracking metrics**: Using CARLA's ground-truth vehicle
-      boxes as reference, compute MOTA and IDF1 for your tracker over
-      a 30-second driving sequence.
-
-.. admonition:: Assignment Unlocked -- GP2: Perception
-   :class: important
-
-   You now have the foundational knowledge from **L4--L6** to begin
-   **GP2: Perception**. In GP2 you will collect a labeled dataset from
-   CARLA, fine-tune both YOLOv8 and RT-DETR, deploy each as a ROS 2
-   perception node, add the tracker from this lecture, and perform a
-   rigorous comparison across weather and lighting conditions.
-
-   :doc:`Go to GP2 </assignments/gp2>`
+   :doc:`Go to GP3 </assignments/gp3>`

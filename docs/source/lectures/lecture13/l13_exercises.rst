@@ -12,19 +12,19 @@ Exercises
    listed in the :doc:`syllabus </syllabus/index>`.
 
 This page contains five take-home exercises that reinforce the concepts
-from Lecture 13. Exercises cover world model concepts, scenario design,
-domain randomization, and counterfactual evaluation.
+from Lecture 13. Exercises cover system integration, safety standards,
+real-time constraints, and cybersecurity.
 
 
-.. dropdown:: Exercise 1 -- World Model Concepts
+.. dropdown:: Exercise 1 -- Latency Budget Analysis
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Solidify the formal definition of a world model and reason about
-   its advantages and risks.
+   Reason about end-to-end latency requirements and the consequences
+   of budget overruns.
 
 
    .. raw:: html
@@ -34,35 +34,55 @@ domain randomization, and counterfactual evaluation.
 
    **Specification**
 
-   Answer the following questions:
+   The ADS latency budget is **100 ms** end-to-end:
 
-   1. A world model predicts
-      :math:`p(o_{t+1:t+H} \mid o_{1:t}, a_{t:t+H})`. In the context
-      of autonomous driving, what are :math:`o` (observations),
-      :math:`a` (actions), and :math:`H` (horizon)? Give concrete
-      examples.
-   2. Why is a world model more useful than a **replay buffer** of
-      past driving data for training a planner? (Hint: think about
-      counterfactual actions.)
-   3. Name **two advantages** of generating training data with a world
-      model vs. collecting real-world data.
-   4. Name **two risks** of training exclusively on world-model
-      generated data.
+   .. list-table::
+      :widths: 40 20 40
+      :header-rows: 1
+      :class: compact-table
+
+      * - Module
+        - Budget (ms)
+        - Notes
+      * - Sensor capture + preprocessing
+        - 15
+        -
+      * - Perception (detection + tracking)
+        - 40
+        -
+      * - Prediction
+        - 15
+        -
+      * - Planning
+        - 20
+        -
+      * - Control + CAN bus
+        - 10
+        -
+
+   1. If perception takes **60 ms** instead of 40 ms, which module(s)
+      must compensate? Is this feasible without degrading output
+      quality?
+   2. At **60 km/h**, how far does the vehicle travel during the full
+      100 ms latency? During a 200 ms latency?
+   3. Why is the control module given the **smallest** budget?
+   4. Name **one technique** to reduce perception latency without
+      changing the model architecture.
 
    **Deliverable**
 
-   Written answers (2--4 sentences per question).
+   Written answers with distance calculations shown.
 
 
-.. dropdown:: Exercise 2 -- Safety-Critical Scenario Design
+.. dropdown:: Exercise 2 -- ASIL Classification
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Design and implement rare but dangerous scenarios in CARLA that
-   would be difficult to encounter in real-world data collection.
+   Practice assigning ASIL levels using Hazard Analysis and Risk
+   Assessment (HARA).
 
 
    .. raw:: html
@@ -72,48 +92,63 @@ domain randomization, and counterfactual evaluation.
 
    **Specification**
 
-   Create the file ``critical_scenarios.py`` that implements **three
-   scenarios**:
+   For each failure mode, assign **Severity** (S0--S3), **Exposure**
+   (E1--E4), **Controllability** (C0--C3), and the resulting **ASIL**
+   (QM, A, B, C, or D).
 
-   1. **Pedestrian dart-out**: A pedestrian suddenly steps off the
-      curb into the ego vehicle's lane. Use
-      ``walker_controller.go_to_location()`` with a timed trigger
-      (activate when ego is 30 m away).
+   .. list-table::
+      :widths: 30 12 12 12 12
+      :header-rows: 1
+      :class: compact-table
 
-   2. **Stopped vehicle on highway**: Place a stationary vehicle in a
-      highway lane in Town04. The ego vehicle approaches at 60 km/h.
+      * - Hazard
+        - S
+        - E
+        - C
+        - ASIL
+      * - Steering locks at 120 km/h on highway
+        -
+        -
+        -
+        -
+      * - Camera freezes for 500 ms in a parking lot at 5 km/h
+        -
+        -
+        -
+        -
+      * - False positive pedestrian causes unnecessary stop on road
+        -
+        -
+        -
+        -
+      * - LiDAR returns no points for 2 s at 80 km/h
+        -
+        -
+        -
+        -
+      * - Incorrect lane detection on a rural road at 30 km/h
+        -
+        -
+        -
+        -
 
-   3. **Sensor blackout**: Simulate a 2-second camera failure by
-      stopping the camera callback mid-drive.
-
-   For each scenario:
-
-   - Enable CARLA's autopilot on the ego vehicle.
-   - Record the ego vehicle's response (speed, steering, braking).
-   - Note whether the autopilot handled it correctly.
-
-   **Written analysis**
-
-   For each scenario, explain:
-
-   - Why is this scenario important for **ADS validation**?
-   - How would a world model help generate **variations** of this
-     scenario at scale?
+   For each row, write a **one-sentence justification** for your S, E,
+   and C ratings.
 
    **Deliverable**
 
-   The script, recorded responses, and written analysis.
+   Completed table with justifications.
 
 
-.. dropdown:: Exercise 3 -- Domain Randomization
+.. dropdown:: Exercise 3 -- ROS 2 QoS Configuration
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Implement domain randomization in CARLA and evaluate its impact on
-   detector robustness.
+   Configure ROS 2 Quality of Service policies for safety-critical
+   perception data and design a watchdog strategy.
 
 
    .. raw:: html
@@ -123,46 +158,50 @@ domain randomization, and counterfactual evaluation.
 
    **Specification**
 
-   Create the file ``domain_randomization.py`` that performs the
-   following:
+   A perception node publishes detections at 10 Hz. A planning node
+   subscribes.
 
-   1. For each of **100 frames**, randomize:
+   1. Should the **reliability** policy be ``RELIABLE`` or
+      ``BEST_EFFORT``? Justify for safety-critical data.
+   2. What **history depth** is appropriate? What happens if the
+      planner is slower than the publisher?
+   3. Configure a QoS profile with a **150 ms deadline**:
 
-      - **Weather**: randomly select from 5+ presets.
-      - **Sun altitude**: random value between -20° and 90°.
-      - **NPC count**: random vehicles (10--80) and pedestrians
-        (5--30).
-      - **Camera noise**: add Gaussian noise (:math:`\sigma = 5`) to
-        the captured image.
+      .. code-block:: python
 
-   2. Collect a second set of **100 frames** under fixed
-      ``ClearNoon`` conditions (no randomization).
-   3. Run YOLOv8s inference on both sets and compute:
+         from rclpy.qos import QoSProfile, ReliabilityPolicy
+         from rclpy.qos import HistoryPolicy, DurabilityPolicy
+         from rclpy.duration import Duration
 
-      - **Mean confidence** of detections.
-      - **Mean detection count** per frame.
+         perception_qos = QoSProfile(
+             reliability=...,
+             durability=...,
+             history=...,
+             depth=...,
+             deadline=Duration(seconds=0, nanoseconds=150_000_000),
+         )
 
-   4. Print a comparison table.
+      Fill in the ``...`` values and explain each choice.
 
-   **Written analysis**
-
-   If you trained a detector on the randomized dataset vs. the fixed
-   dataset, which would generalize better to the real world? Why?
+   4. Design a **watchdog strategy**: if the deadline is missed **three
+      times consecutively**, what should the system do? Write
+      pseudocode for the watchdog callback.
 
    **Deliverable**
 
-   The script, comparison table, and written analysis (3--5 sentences).
+   Completed QoS code, explanation of each setting, and watchdog
+   pseudocode.
 
 
-.. dropdown:: Exercise 4 -- Synthetic Data Quality Assessment
+.. dropdown:: Exercise 4 -- Cybersecurity Threat Analysis
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Assess the quality of CARLA-generated data by comparing its
-   characteristics to real-world driving datasets.
+   Perform a simplified TARA (Threat Analysis and Risk Assessment)
+   for common ADS attack surfaces.
 
 
    .. raw:: html
@@ -172,40 +211,60 @@ domain randomization, and counterfactual evaluation.
 
    **Specification**
 
-   Create the file ``data_quality.py`` that performs the following:
+   For each attack surface, describe a concrete threat, rate its
+   impact, and propose a mitigation.
 
-   1. Generate **200 labeled images** from CARLA across 4 weather
-      conditions and 2 towns. Use CARLA's ground-truth bounding box
-      API.
-   2. Compute the **class distribution** across the dataset (vehicles,
-      pedestrians, cyclists, traffic lights, stop signs).
-   3. Compare to the **nuScenes** dataset class frequencies (look up
-      approximate ratios from the nuScenes website or papers).
-   4. Identify **three visual differences** between CARLA images and
-      real-world driving images (e.g., texture quality, lighting,
-      pedestrian appearance).
+   .. list-table::
+      :widths: 20 25 15 40
+      :header-rows: 1
+      :class: compact-table
 
-   **Written analysis**
+      * - Attack Surface
+        - Threat Example
+        - Impact
+        - Mitigation
+      * - Camera input
+        -
+        -
+        -
+      * - V2X communication
+        -
+        -
+        -
+      * - OTA software update
+        -
+        -
+        -
+      * - LiDAR sensor
+        -
+        -
+        -
+      * - GNSS signal
+        -
+        -
+        -
 
-   - Are the CARLA and nuScenes class distributions similar?
-   - Name **two techniques** from the lecture that help bridge the
-     sim-to-real gap.
+   For each row:
+
+   1. Describe a **specific attack** (e.g., adversarial patch on stop
+      sign, GPS spoofing).
+   2. Rate impact as **Low**, **Medium**, or **High**.
+   3. Propose one concrete **mitigation strategy**.
 
    **Deliverable**
 
-   The script, class distribution bar chart, comparison table, and
-   written analysis.
+   Completed TARA table with 1--2 sentence descriptions per cell.
 
 
-.. dropdown:: Exercise 5 -- Counterfactual Evaluation
+.. dropdown:: Exercise 5 -- Integration Pre-Flight Checklist
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Reason about how world models enable offline evaluation of
-   alternative planning decisions.
+   Create a systematic verification checklist for running the complete
+   GP1--GP4 pipeline in CARLA.
 
 
    .. raw:: html
@@ -215,29 +274,58 @@ domain randomization, and counterfactual evaluation.
 
    **Specification**
 
-   Consider the following logged scenario: the ego vehicle encounters
-   a slow truck and decides to **follow it for 30 seconds**.
+   You are preparing to run a full ADS demonstration. Create a
+   pre-flight checklist covering five subsystems. For each check,
+   specify the **ROS 2 command** you would use.
 
-   1. Define **three alternative actions** the planner could have
-      taken (e.g., lane change left, overtake via oncoming lane, slow
-      down earlier).
-   2. For each alternative, list the information a world model would
-      need to **simulate the outcome** (other agents' reactions,
-      traffic rules, visibility, road geometry).
-   3. Design a **reward function** to score each outcome:
+   1. **Sensor verification** (3 checks):
 
-      .. math::
+      - All sensors publishing at expected rates?
+      - Data formats match subscriber expectations?
+      - Calibration parameters loaded?
 
-         R = w_s \cdot \text{safety} + w_p \cdot \text{progress}
-             + w_c \cdot \text{comfort}
+   2. **Perception verification** (3 checks):
 
-      Define each term concretely (e.g., safety = 0 if collision,
-      progress = distance traveled / time, comfort = -RMS jerk).
+      - Detection node running and publishing?
+      - Confidence threshold configured?
+      - Inference latency within budget?
 
-   4. Why is counterfactual evaluation **difficult without a world
-      model**? What assumption does simple log replay make that breaks
-      down?
+   3. **Localization verification** (3 checks):
+
+      - EKF converged before motion?
+      - GNSS fix acquired?
+      - Odometry drift within limits?
+
+   4. **Planning & control verification** (3 checks):
+
+      - Path planned and published?
+      - Controller gains loaded from config?
+      - Emergency stop functional?
+
+   5. **Safety verification** (3 checks):
+
+      - FSM starts in safe state?
+      - Maximum speed limit enforced?
+      - Watchdog monitoring all critical nodes?
+
+   Format as a table:
+
+   .. list-table::
+      :widths: 25 40 35
+      :header-rows: 1
+      :class: compact-table
+
+      * - Subsystem
+        - Check
+        - ROS 2 Command
+      * - Sensors
+        - Camera publishing at 10 Hz?
+        - ``ros2 topic hz /carla/camera/rgb/image``
+      * - ...
+        - ...
+        - ...
 
    **Deliverable**
 
-   Written answers with the reward function definition and reasoning.
+   Completed checklist table with 15 entries (3 per subsystem) and
+   the exact ROS 2 command for each.

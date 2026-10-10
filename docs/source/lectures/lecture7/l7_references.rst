@@ -3,226 +3,198 @@ References
 ====================================================
 
 
-.. dropdown:: Localization Fundamentals
-   :class-container: sd-border-secondary
-   :open:
+Textbooks and Surveys
+---------------------
 
-   .. grid:: 1 1 2 2
-      :gutter: 2
+.. list-table::
+   :widths: 100
+   :class: compact-table
 
-      .. grid-item-card:: Probabilistic Robotics
-         :link: https://probabilistic-robotics.org/
-         :class-card: sd-border-secondary
+   * - .. dropdown:: LaValle (2006) -- Planning Algorithms, Ch. 2: Discrete Planning
 
-         **Thrun, Burgard & Fox (2005)**
+         | **Planning Algorithms**
+         | Steven M. LaValle, Cambridge University Press, 2006
+         | `Available free online <http://lavalle.pl/planning/>`_
 
-         The definitive reference for probabilistic localization and SLAM.
-         Chapters 4-7 cover EKF localization, particle filter, and SLAM.
+         Covers graph search algorithms (BFS, DFS, Dijkstra, A*) with
+         formal analysis. Chapter 2 provides the theoretical foundation
+         for route planning on discrete graphs.
 
-      .. grid-item-card:: State Estimation for Robotics
-         :link: https://www.cambridge.org/core/books/state-estimation-for-robotics/
-         :class-card: sd-border-secondary
+         **Key topics:**
 
-         **Barfoot (2017)**
+            - Graph representations
+            - Dijkstra's algorithm
+            - A* search and admissible heuristics
+            - Complexity analysis
 
-         Rigorous treatment of state estimation using Lie groups (SE(3)),
-         Kalman filters, and factor graphs. Graduate-level reference.
+   * - .. dropdown:: Paden et al. (2016) -- A Survey of Motion Planning and Control Techniques for Self-Driving Vehicles
 
-      .. grid-item-card:: Monte Carlo Localization
-         :link: https://papers.nips.cc/paper/1998/hash/c88d8d0a6097754525e02c2246d8d27f-Abstract.html
-         :class-card: sd-border-secondary
+         | **A Survey of Motion Planning and Control Techniques for Self-Driving Vehicles**
+         | Brian Paden, Michal Čáp, Sze Zheng Yong, Dmitry Yershov, Emilio Frazzoli
+         | IEEE Transactions on Intelligent Vehicles, 2016
 
-         **Dellaert et al. (1999)**
+         Covers the full planning hierarchy including route planning,
+         behavioral planning, and motion planning. Provides the three-tier
+         framework used in this lecture.
 
-         Original MCL paper. Landmark paper introducing particle filter
-         localization for mobile robots.
+         **Key topics:**
 
-      .. grid-item-card:: AMCL (ROS)
-         :link: https://wiki.ros.org/amcl
-         :class-card: sd-border-secondary
+            - Route, behavior, motion planning hierarchy
+            - Road network representations
+            - Decision-making architectures
 
-         **ROS Navigation Stack**
 
-         Adaptive Monte Carlo Localization implementation. Standard
-         localization package for ROS-based robots.
+Map Formats and Standards
+-------------------------
 
+.. list-table::
+   :widths: 100
+   :class: compact-table
 
-.. dropdown:: Scan Matching and ICP
-   :class-container: sd-border-secondary
+   * - .. dropdown:: ASAM OpenDRIVE Standard
 
-   .. grid:: 1 1 2 2
-      :gutter: 2
+         | **ASAM OpenDRIVE -- Open Dynamic Road Information for Vehicle Environment**
+         | `ASAM OpenDRIVE <https://www.asam.net/standards/detail/opendrive/>`_
 
-      .. grid-item-card:: ICP (Besl & McKay, 1992)
-         :link: https://ieeexplore.ieee.org/document/121791
-         :class-card: sd-border-secondary
+         The industry standard for describing road networks in driving
+         simulation. Used by CARLA, dSPACE, IPG CarMaker, and others.
 
-         **Besl & McKay, TPAMI 1992**
+         **Key topics:**
 
-         Original point-to-point ICP paper. Foundation of all scan
-         matching approaches.
+            - Road reference lines (geometry primitives)
+            - Lane sections and lane types
+            - Junction definitions
+            - Signal and object elements
 
-      .. grid-item-card:: Point-to-Plane ICP
-         :link: https://www.cs.princeton.edu/~smr/papers/icpstability.pdf
-         :class-card: sd-border-secondary
+   * - .. dropdown:: Poggenhans et al. (2018) -- Lanelet2: A High-Definition Map Framework
 
-         **Chen & Medioni, 1992 / Low, 2004**
+         | **Lanelet2: A High-Definition Map Framework for the Future of Automated Driving**
+         | Fabian Poggenhans et al., IEEE ITSC 2018
 
-         Point-to-plane variant with faster convergence on planar surfaces.
+         Describes the Lanelet2 map framework used by Autoware and many
+         research platforms. Boundary-based lane representation with
+         regulatory elements.
 
-      .. grid-item-card:: NDT (Normal Distributions Transform)
-         :link: https://ieeexplore.ieee.org/document/1249285
-         :class-card: sd-border-secondary
+         **Key topics:**
 
-         **Biber & Strasser, IROS 2003**
+            - Lanelet representation (left/right linestrings)
+            - Regulatory elements (traffic lights, stop lines)
+            - Routing graph construction
+            - OSM-based file format
 
-         NDT represents the target as a grid of Gaussians. Robust to
-         outliers; used in Autoware for LiDAR localization.
 
-      .. grid-item-card:: GICP
-         :link: https://journals.sagepub.com/doi/10.1177/0278364910388359
-         :class-card: sd-border-secondary
+Route Planning Algorithms
+-------------------------
 
-         **Segal et al., RSS 2009**
+.. list-table::
+   :widths: 100
+   :class: compact-table
 
-         Generalized ICP: maximum-likelihood formulation treating both
-         clouds as Gaussian distributions.
+   * - .. dropdown:: Geisberger et al. (2012) -- Exact Routing in Large Road Networks Using Contraction Hierarchies
 
-      .. grid-item-card:: Open3D
-         :link: http://www.open3d.org/
-         :class-card: sd-border-secondary
+         | **Exact Routing in Large Road Networks Using Contraction Hierarchies**
+         | Robert Geisberger, Peter Sanders, Dominik Schultes, Christian Vetter
+         | Transportation Science, 2012
 
-         **Zhou, Park & Koltun (2018)**
+         Describes Contraction Hierarchies, the algorithm behind many
+         production routing engines. Precomputes a hierarchy that enables
+         microsecond query times on continental-scale road networks.
 
-         Open-source library for 3D data processing. Includes ICP,
-         RANSAC, point cloud visualization, and mesh tools.
+         **Key topics:**
 
-         +++
+            - Node contraction and shortcut edges
+            - Bidirectional search on the hierarchy
+            - Preprocessing vs. query time trade-off
 
-         - `ICP Tutorial <http://www.open3d.org/docs/release/tutorial/pipelines/icp_registration.html>`_
+   * - .. dropdown:: Hart, Nilsson & Raphael (1968) -- A Formal Basis for the Heuristic Determination of Minimum Cost Paths
 
+         | **A Formal Basis for the Heuristic Determination of Minimum Cost Paths**
+         | Peter E. Hart, Nils J. Nilsson, Bertram Raphael
+         | IEEE Transactions on Systems Science and Cybernetics, 1968
 
-.. dropdown:: LiDAR SLAM Systems
-   :class-container: sd-border-secondary
+         The original A* paper. Proves optimality and completeness of A*
+         with admissible heuristics.
 
-   .. grid:: 1 1 2 2
-      :gutter: 2
+         **Key topics:**
 
-      .. grid-item-card:: LOAM
-         :link: https://www.ri.cmu.edu/pub_files/2014/7/Ji_LidarMapping_RSS2014_v8.pdf
-         :class-card: sd-border-secondary
+            - A* algorithm formulation
+            - Admissibility and consistency of heuristics
+            - Optimality proof
 
-         **Zhang & Singh, RSS 2014**
 
-         LiDAR Odometry and Mapping. Feature-based LiDAR SLAM. Seminal
-         paper achieving top results on KITTI at publication.
+CARLA Navigation
+----------------
 
-      .. grid-item-card:: LeGO-LOAM
-         :link: https://github.com/RobustFieldAutonomyLab/LeGO-LOAM
-         :class-card: sd-border-secondary
+.. list-table::
+   :widths: 100
+   :class: compact-table
 
-         **Shan & Englot, IROS 2018**
+   * - .. dropdown:: CARLA Documentation -- Navigation and Maps
 
-         Lightweight and Ground-Optimized LOAM. Adds explicit ground
-         segmentation and pose graph backend with loop closure.
+         | **CARLA Documentation: Maps and Navigation**
+         | `carla.readthedocs.io <https://carla.readthedocs.io/en/0.9.16/core_map/>`__
 
-         +++
+         Official documentation for CARLA's map and waypoint system,
+         including the GlobalRoutePlanner API.
 
-         - `LeGO-LOAM on GitHub <https://github.com/RobustFieldAutonomyLab/LeGO-LOAM>`_
+         **Key topics:**
 
-      .. grid-item-card:: LIO-SAM
-         :link: https://arxiv.org/abs/2007.00258
-         :class-card: sd-border-secondary
+            - Map and waypoint API
+            - GlobalRoutePlanner usage
+            - Road topology queries
+            - OpenDRIVE integration
 
-         **Shan et al., IROS 2020**
+   * - .. dropdown:: CARLA Documentation -- Agents Module
 
-         Tightly-coupled LiDAR-IMU SLAM via factor graph smoothing.
-         Current state-of-the-art for outdoor LiDAR SLAM.
+         | **CARLA Agents**
+         | `carla.readthedocs.io <https://carla.readthedocs.io/en/0.9.16/adv_agents/>`__
 
-         +++
+         Documentation for CARLA's built-in agent implementations,
+         including the BasicAgent and BehaviorAgent that use the
+         GlobalRoutePlanner internally.
 
-         - `LIO-SAM on GitHub <https://github.com/TixiaoShan/LIO-SAM>`_
+         **Key topics:**
 
-      .. grid-item-card:: KISS-ICP
-         :link: https://arxiv.org/abs/2209.15397
-         :class-card: sd-border-secondary
+            - BasicAgent (route following)
+            - BehaviorAgent (traffic-aware driving)
+            - Local planner integration
 
-         **Vizzo et al., RA-L 2023**
 
-         Simple adaptive threshold ICP achieving competitive accuracy
-         with minimal complexity. Winner of multiple SLAM benchmarks.
+Industry and Applications
+-------------------------
 
-         +++
+.. list-table::
+   :widths: 100
+   :class: compact-table
 
-         - `KISS-ICP on GitHub <https://github.com/PRBonn/kiss-icp>`_
+   * - .. dropdown:: Bast et al. (2016) -- Route Planning in Transportation Networks
 
+         | **Route Planning in Transportation Networks**
+         | Hannah Bast, Daniel Delling, Andrew Goldberg, et al.
+         | Algorithm Engineering, Springer, 2016
 
-.. dropdown:: SLAM Backends and Factor Graphs
-   :class-container: sd-border-secondary
+         Comprehensive survey of route planning algorithms used in
+         production systems (Google Maps, Bing Maps, OSRM).
 
-   .. grid:: 1 1 2 2
-      :gutter: 2
+         **Key topics:**
 
-      .. grid-item-card:: g2o
-         :link: https://github.com/RainerKuemmerle/g2o
-         :class-card: sd-border-secondary
+            - Dijkstra, A*, bidirectional search
+            - Contraction Hierarchies, Transit Node Routing
+            - Time-dependent and multi-criteria routing
+            - Real-world engineering considerations
 
-         **Kümmerle et al., ICRA 2011**
+   * - .. dropdown:: Autoware Foundation -- Autoware.Universe Routing
 
-         General framework for graph-based nonlinear optimization.
-         Standard backend for 2D and 3D SLAM pose graphs.
+         | **Autoware.Universe: Mission Planner and Route Planner**
+         | `Autoware Documentation <https://autowarefoundation.github.io/autoware-documentation/main/>`_
 
-      .. grid-item-card:: GTSAM
-         :link: https://gtsam.org/
-         :class-card: sd-border-secondary
+         Open-source AV routing implementation built on Lanelet2 maps.
+         Demonstrates a production-grade route planner integrated with
+         ROS 2.
 
-         **Dellaert & GTSAM Contributors**
+         **Key topics:**
 
-         Georgia Tech Smoothing and Mapping library. Factor graph
-         framework supporting IMU, GPS, LiDAR, and visual factors.
-
-         +++
-
-         - `Python API <https://gtsam.org/docs/python.html>`_
-
-      .. grid-item-card:: Scan Context
-         :link: https://arxiv.org/abs/2109.13494
-         :class-card: sd-border-secondary
-
-         **Kim & Kim, IROS 2018 / TITS 2021**
-
-         Compact global descriptor for LiDAR-based place recognition.
-         Rotation-invariant and efficient for large-scale retrieval.
-
-
-.. dropdown:: Datasets and Evaluation
-   :class-container: sd-border-secondary
-
-   .. grid:: 1 1 2 2
-      :gutter: 2
-
-      .. grid-item-card:: KITTI Odometry Benchmark
-         :link: https://www.cvlibs.net/datasets/kitti/eval_odometry.php
-         :class-card: sd-border-secondary
-
-         **Geiger et al., IJRR 2013**
-
-         Standard LiDAR SLAM evaluation benchmark with 22 sequences.
-
-      .. grid-item-card:: EVO Trajectory Evaluation
-         :link: https://github.com/MichaelGrupp/evo
-         :class-card: sd-border-secondary
-
-         **Grupp (2017)**
-
-         Python tool for evaluating SLAM trajectories (APE, RPE).
-         Supports TUM, KITTI, EuRoC, and ROS bag formats.
-
-      .. grid-item-card:: MulRan Dataset
-         :link: https://sites.google.com/view/mulran-pr/
-         :class-card: sd-border-secondary
-
-         **Kim et al., ICRA 2020**
-
-         Multi-experience range dataset for place recognition evaluation
-         across seasons and conditions.
+            - Mission planner architecture
+            - Lanelet2 routing graph
+            - Lane-level route generation
+            - Integration with behavior and motion planners

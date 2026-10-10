@@ -1,42 +1,44 @@
 ====================================================
-L7: Localization & SLAM
+L7: Navigation & Route Planning
 ====================================================
 
 Overview
 --------
 
-Knowing **where the vehicle is** in the world with centimeter-level accuracy
-is a prerequisite for safe autonomous driving. This lecture covers the full
-spectrum of localization approaches -- from GNSS-based methods to dead
-reckoning, probabilistic filters, and map-based scan matching -- before
-introducing the Simultaneous Localization and Mapping (SLAM) problem, where
-the vehicle must build its own map while localizing within it. You will
-examine both the SLAM frontend (scan acquisition, feature extraction, ICP)
-and backend (pose graph optimization, loop closure), and survey modern LiDAR
-SLAM systems used in production AV stacks.
+This lecture covers the **navigation layer** of the autonomous driving
+stack -- the system that determines *which roads to take* to reach a
+destination. Navigation sits between localization (L6: knowing where
+you are) and motion planning (L8: finding a collision-free local path).
+While motion planning operates at the 10--50 m scale, navigation
+operates at the city scale, producing a sequence of road segments and
+lane-level waypoints that guide all downstream planning.
+
+Students will learn how road networks are represented as graphs, how
+global route planning algorithms work on these graphs, and how to use
+CARLA's navigation API to plan and execute multi-kilometer routes.
+This lecture directly supports **GP4: Planning & Control**, where
+students must achieve route completion on instructor-provided scenarios.
 
 Learning Objectives
 -------------------
 
 By the end of this lecture, you will be able to:
 
-- Formulate the localization problem and describe the coordinate systems and
-  transformations used in AV systems.
-- Describe GNSS-based localization including GPS, RTK, and PPP, and their
-  accuracy limitations.
-- Explain wheel odometry, visual odometry, and LiDAR odometry as dead reckoning
-  methods, and characterize their drift properties.
-- Apply the Extended Kalman Filter and particle filter to probabilistic
-  localization with map observations.
-- Describe scan matching (ICP and variants) and HD map-based localization.
-- Formulate the SLAM problem as simultaneous state estimation and map building.
-- Explain the SLAM frontend components: scan acquisition, preprocessing,
-  feature extraction, ICP, and keyframe selection.
-- Explain the SLAM backend: pose graph construction, optimization, and loop
-  closure detection.
-- Identify evaluation metrics for SLAM and localization systems.
-- Describe modern LiDAR SLAM systems (LOAM, LeGO-LOAM) and their design
-  choices.
+- Explain the role of navigation in the AV planning hierarchy and how
+  it constrains behavior and motion planning.
+- Describe how road networks are represented as directed graphs with
+  lane-level topology (OpenDRIVE, Lanelet2).
+- Apply Dijkstra and A* algorithms to road network graphs with
+  appropriate cost functions.
+- Use CARLA's ``GlobalRoutePlanner`` API to compute and visualize
+  global routes.
+- Explain how HD maps encode semantic road information (speed limits,
+  traffic rules, lane connectivity) for navigation.
+- Implement lane-level routing decisions (lane selection, merge
+  planning, highway exit timing).
+- Discuss dynamic rerouting strategies for handling road closures and
+  unexpected obstacles.
+
 
 .. admonition:: Materials in revision
    :class: note
@@ -45,17 +47,17 @@ By the end of this lecture, you will be able to:
    being revised against the current slide deck and are not published yet.
    This page will link to them once they are ready.
 
+
 Next Steps
 ----------
 
-- The next lecture covers **L8: Navigation & Route Planning**: road networks
-  as directed graphs with lane-level topology (OpenDRIVE, Lanelet2), Dijkstra
-  and A* on those graphs, CARLA's ``GlobalRoutePlanner`` API, and how HD maps
-  encode the semantic road information that routing consumes. Motion planning
-  itself follows in L10.
-- Install and explore the ``open3d`` Python library for point cloud processing:
-  `https://www.open3d.org/ <https://www.open3d.org/>`_.
-- Review the LOAM paper: Zhang & Singh (2014) for the foundational LiDAR
-  odometry and mapping algorithm.
-- Explore the EVO trajectory evaluation tool:
-  `https://github.com/MichaelGrupp/evo <https://github.com/MichaelGrupp/evo>`_.
+- The next lecture covers **L8: Prediction & Behavior Modeling**: physics-,
+  maneuver- and interaction-based trajectory prediction, Transformer-based
+  scene encoding, multi-modal prediction, and finite state machine behavior
+  planning. The route this lecture produces is the constraint every
+  downstream planner works inside.
+- Read the `CARLA map and navigation documentation
+  <https://carla.readthedocs.io/en/0.9.16/core_map/>`_, in particular the
+  waypoint API and the OpenDRIVE discussion.
+- Review the `Lanelet2 <https://github.com/fzi-forschungszentrum-informatik/Lanelet2>`_
+  map format to see how lane-level topology is represented in production.

@@ -335,3 +335,37 @@ html[data-theme="light"] {
 html[data-theme="dark"] {
   --enpm-flyout-logo-filter: none;
 }
+
+/* ============================================================
+ * Desktop toggle for the left section navigation
+ *
+ * The theme ships a .primary-toggle button but hides it above 960px, so
+ * the sidebar is permanent on desktop. These rules put the button back
+ * and collapse the sidebar when sidebar-persist.js sets the class.
+ *
+ * Desktop does NOT reuse the theme's checkbox. On mobile `:checked`
+ * means the drawer is open; on desktop it would have to mean the
+ * opposite, and sharing it made the theme focus a link inside the
+ * sidebar we had just hidden. sidebar-persist.js intercepts the click in
+ * the capture phase instead, so below 960px the theme is untouched.
+ * ============================================================ */
+
+@media (min-width: 960px) {
+  .sidebar-toggle.primary-toggle {
+    display: flex !important;
+    align-items: center;
+  }
+
+  /* Collapse is driven by a class on <html>, set by sidebar-persist.js,
+     not by the theme's checkbox: on desktop we never leave the checkbox
+     checked, so the theme's own mobile rules stay inert. */
+  html.pst-primary-collapsed .bd-sidebar-primary {
+    display: none;
+  }
+
+  /* the theme grows this label to cover the viewport when the checkbox is
+     checked; keep it inert on desktop so nothing blocks clicks */
+  input#pst-primary-sidebar-checkbox:checked + label.overlay.overlay-primary {
+    display: none;
+  }
+}

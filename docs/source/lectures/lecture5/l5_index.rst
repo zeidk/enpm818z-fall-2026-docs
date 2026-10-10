@@ -28,7 +28,7 @@ still has something missing. Each section of this lecture fills one row:
 
 The lecture frames all of it with Endsley's **situation awareness**: today
 covers Level 1 (perception) and Level 2 (comprehension, through tracking).
-Level 3, projection, is prediction in L9.
+Level 3, projection, is prediction in L8.
 
 Learning Objectives
 -------------------
@@ -72,10 +72,10 @@ Lecture Materials
 Next Steps
 ----------
 
-- **Next class, L7: Localization and SLAM.** Where the AV itself is. Today
+- **Next class, L6: Localization and SLAM.** Where the AV itself is. Today
   needed it twice without saying so: sharing detections over V2X needs the
   sender's position, and the tracker's fixed frame needs the AV's.
-- **Level 3, projection**, where everyone will be in a few seconds, is L9,
+- **Level 3, projection**, where everyone will be in a few seconds, is L8,
   Prediction.
 - **Before next class:** run the four hands-on packages on the
   :doc:`Code page <l5_code>`, read :doc:`Going Further <l5_appendix>`, and

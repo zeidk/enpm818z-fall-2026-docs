@@ -118,20 +118,20 @@ J3016 splits it into six subtasks. **You will build five of them.**
      - Course
    * - **Lateral control**
      - Steering. Holding a lane, and turning.
-     - L11
+     - L10
    * - **Longitudinal control**
      - Acceleration and braking. Speed and gap keeping.
-     - L11
+     - L10
    * - **OEDR: detection**
      - *Object and event detection and response.* Monitoring the environment:
        detecting and classifying objects and events, and deciding what to do.
-     - L4--L6
+     - L4 and L5
    * - **OEDR: response**
      - Actually carrying that response out.
-     - L10, L11
+     - L9, L10
    * - **Maneuver planning**
      - Deciding what to do next: change lane, wait, turn, overtake.
-     - L8--L10
+     - L7 to L9
    * - **Conspicuity**
      - Making your intent visible: lights, indicators, horn, gestures.
      - *not covered*
@@ -176,7 +176,7 @@ the DDT**.
      - Robotaxi, driverless shuttle, traffic-jam pilot
    * - **Who is fallback**
      - The human, always, immediately
-     - L3: the human, on request. L4--L5: the system itself
+     - L3: the human, on request. L4 and L5: the system itself
    * - **Role of the ODD**
      - May have limits, but the human covers everything outside them
      - The ODD bounds the system's responsibility
@@ -494,7 +494,7 @@ Structural Features Worth Knowing
   at scale, under quite different regulatory regimes.
 - **Two architectural bets.** Modular pipelines with interpretable interfaces,
   versus increasingly end-to-end learned systems. **This course builds the
-  former and studies the latter in L12 and L13.**
+  former and studies the latter in L11 and L12.**
 
 
 Why It Is Taking So Long: The Long Tail
@@ -556,27 +556,27 @@ Technical Challenges
    * - **Perception**
      - Seeing reliably in rain, fog, snow and glare, and recognizing events
        that appear a handful of times in a dataset
-     - L2, L4--L6
+     - L2, L4 and L5
    * - **Prediction**
      - Forecasting what unpredictable humans will do, when their behavior
        depends on what your vehicle does
-     - L9
+     - L8
    * - **Planning**
      - Safe, efficient and human-legible decisions in interactive scenarios
        where hesitation is itself a hazard
-     - L8, L10
+     - L7, L9
    * - **Control**
      - Tracking a trajectory smoothly across varied surfaces and vehicle
        dynamics
-     - L11
+     - L10
    * - **Validation**
      - Proving safety when the events you care about are the ones you have
        never observed
-     - L13, L14
+     - L12, L13
    * - **Integration**
      - Making the subsystems above work together with redundancy, timing
        guarantees and cybersecurity
-     - L14
+     - L13
 
 .. admonition:: What this table really is
    :class: note
@@ -611,7 +611,7 @@ Key Safety Standards
    * - **ISO/SAE 21434**
      - **Things an attacker does on purpose.** Automotive cybersecurity, and
        the subject of the
-       :doc:`cybersecurity pre-read </preread/cybersecurity>` before L14.
+       :doc:`cybersecurity pre-read </preread/cybersecurity>` before L13.
 
 Both kinds of hazard are real, and **finding them takes completely different
 work**.
@@ -1024,7 +1024,7 @@ The Semester Ahead
 ------------------
 
 .. figure:: /_static/images/L1/pipeline.png
-   :alt: Block diagram of the ADS pipeline. Sensing (L2, GP1) feeds Perception (L4 to L6, GP2), which feeds Fusion and Localization (L3, L7, GP3), which feeds Prediction (L9), then Planning (L8, L10, GP4), then Control (L11, GP4), then Integration and Safety (L14, final report).
+   :alt: Block diagram of the ADS pipeline. Sensing (L2, GP1) feeds Perception (L4 and L5, GP2), which feeds Fusion and Localization (L3, L6, GP3), which feeds Prediction (L8), then Planning (L7, L9, GP4), then Control (L10, GP4), then Integration and Safety (L13, final report).
    :align: center
    :width: 100%
    :class: white-figure
@@ -1034,19 +1034,19 @@ The Semester Ahead
 
 **The pipeline you will build**
 
-- **Sensing** (L2) -- cameras, LiDAR, RADAR, IMU, GNSS, and the calibration
+- **Sensing** (L2): cameras, LiDAR, RADAR, IMU, GNSS, and the calibration
   that makes them agree with each other.
-- **Perception** (L4--L6) -- detection, bird's-eye-view representations,
+- **Perception** (L4 and L5): detection, bird's-eye-view representations,
   segmentation, multi-object tracking.
-- **State estimation** (L3, L7) -- Kalman filtering, sensor fusion,
+- **State estimation** (L3, L6): Kalman filtering, sensor fusion,
   localization and SLAM.
-- **Decision** (L8--L10) -- route planning, behavior prediction, motion
+- **Decision** (L7 to L9): route planning, behavior prediction, motion
   planning.
-- **Action** (L11) -- trajectory generation and control.
-- **Frontier and safety** (L12--L14) -- end-to-end driving, world models,
+- **Action** (L10): trajectory generation and control.
+- **Frontier and safety** (L11 to L13): end-to-end driving, world models,
   system integration and safety cases.
 
-**L12 and L13 sit alongside this rather than inside it**: end-to-end driving
+**L11 and L12 sit alongside this rather than inside it**: end-to-end driving
 and world models are the alternative to the modular pipeline you are building,
 and you should be able to argue about the trade-off by December.
 

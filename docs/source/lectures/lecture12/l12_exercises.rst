@@ -12,19 +12,19 @@ Exercises
    listed in the :doc:`syllabus </syllabus/index>`.
 
 This page contains five take-home exercises that reinforce the concepts
-from Lecture 12. Exercises cover end-to-end architectures, behavior
-cloning, and attention visualization.
+from Lecture 12. Exercises cover world model concepts, scenario design,
+domain randomization, and counterfactual evaluation.
 
 
-.. dropdown:: Exercise 1 -- Modular vs. End-to-End Trade-Offs
+.. dropdown:: Exercise 1 -- World Model Concepts
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Develop a nuanced understanding of when modular and end-to-end
-   pipelines each have the advantage.
+   Solidify the formal definition of a world model and reason about
+   its advantages and risks.
 
 
    .. raw:: html
@@ -34,50 +34,35 @@ cloning, and attention visualization.
 
    **Specification**
 
-   For each criterion below, indicate whether **modular** or **E2E**
-   has the advantage and write a 1--2 sentence justification.
+   Answer the following questions:
 
-   .. list-table::
-      :widths: 40 15 45
-      :header-rows: 1
-      :class: compact-table
-
-      * - Criterion
-        - Advantage
-        - Justification
-      * - Debugging a false detection
-        -
-        -
-      * - Handling a never-before-seen object
-        -
-        -
-      * - Optimizing full-system performance jointly
-        -
-        -
-      * - Satisfying safety certification (ISO 26262)
-        -
-        -
-      * - Development speed with a small team (< 5 engineers)
-        -
-        -
-      * - Leveraging billions of driving miles
-        -
-        -
+   1. A world model predicts
+      :math:`p(o_{t+1:t+H} \mid o_{1:t}, a_{t:t+H})`. In the context
+      of autonomous driving, what are :math:`o` (observations),
+      :math:`a` (actions), and :math:`H` (horizon)? Give concrete
+      examples.
+   2. Why is a world model more useful than a **replay buffer** of
+      past driving data for training a planner? (Hint: think about
+      counterfactual actions.)
+   3. Name **two advantages** of generating training data with a world
+      model vs. collecting real-world data.
+   4. Name **two risks** of training exclusively on world-model
+      generated data.
 
    **Deliverable**
 
-   Completed table with clear justifications.
+   Written answers (2--4 sentences per question).
 
 
-.. dropdown:: Exercise 2 -- Information Loss at Module Boundaries
+.. dropdown:: Exercise 2 -- Safety-Critical Scenario Design
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Identify what information is discarded in a modular pipeline and
-   reason about safety implications.
+   Design and implement rare but dangerous scenarios in CARLA that
+   would be difficult to encounter in real-world data collection.
 
 
    .. raw:: html
@@ -87,83 +72,48 @@ cloning, and attention visualization.
 
    **Specification**
 
-   In a modular pipeline, perception outputs bounding boxes
-   ``(class, x, y, z, w, h, l, confidence)`` to the planner.
+   Create the file ``critical_scenarios.py`` that implements **three
+   scenarios**:
 
-   1. Name **three types of information** present in the raw sensor
-      data that are **lost** by the time the planner receives bounding
-      boxes. Be specific.
-   2. For each type of lost information, describe a **concrete driving
-      scenario** where it would be safety-critical.
-   3. Explain how **UniAD's architecture** (query-based unified
-      decoder) addresses the information loss problem.
-   4. What is the **trade-off** of passing richer intermediate
-      representations (e.g., BEV feature maps) instead of bounding
-      boxes? Consider compute cost, bandwidth, and interpretability.
+   1. **Pedestrian dart-out**: A pedestrian suddenly steps off the
+      curb into the ego vehicle's lane. Use
+      ``walker_controller.go_to_location()`` with a timed trigger
+      (activate when ego is 30 m away).
 
-   **Deliverable**
+   2. **Stopped vehicle on highway**: Place a stationary vehicle in a
+      highway lane in Town04. The ego vehicle approaches at 60 km/h.
 
-   Written answers (one paragraph per question).
+   3. **Sensor blackout**: Simulate a 2-second camera failure by
+      stopping the camera callback mid-drive.
 
+   For each scenario:
 
-.. dropdown:: Exercise 3 -- Behavior Cloning Data Collection
-   :icon: gear
-   :class-container: sd-border-primary
-   :class-title: sd-font-weight-bold
-
-   **Goal**
-
-   Collect and analyze a small expert driving dataset from CARLA's
-   autopilot for behavior cloning.
-
-
-   .. raw:: html
-
-      <hr>
-
-
-   **Specification**
-
-   Create the file ``collect_bc_data.py`` that performs the following:
-
-   1. Spawn an ego vehicle with autopilot enabled and an RGB camera
-      (640 × 480) in Town01.
-   2. Record **500 frames** at 10 Hz. For each frame, save:
-
-      - RGB image to disk.
-      - Vehicle controls: ``steer``, ``throttle``, ``brake``.
-      - Vehicle speed (m/s).
-      - Frame index and timestamp.
-
-   3. Save the metadata to a CSV file.
-   4. After collection, compute and print:
-
-      - **Distribution of steering angles** (histogram with 20 bins).
-      - **Fraction of stopped frames** (speed < 0.5 m/s).
-      - **Min/max/mean speed**.
+   - Enable CARLA's autopilot on the ego vehicle.
+   - Record the ego vehicle's response (speed, steering, braking).
+   - Note whether the autopilot handled it correctly.
 
    **Written analysis**
 
-   - Is the steering distribution balanced or skewed? What problem
-     does skew cause for training?
-   - Why should stopped frames be subsampled?
-   - Why should train/validation splits be done **by episode** rather
-     than by random frame?
+   For each scenario, explain:
+
+   - Why is this scenario important for **ADS validation**?
+   - How would a world model help generate **variations** of this
+     scenario at scale?
 
    **Deliverable**
 
-   The script, CSV file, steering histogram, and written analysis.
+   The script, recorded responses, and written analysis.
 
 
-.. dropdown:: Exercise 4 -- Simple Steering Network
+.. dropdown:: Exercise 3 -- Domain Randomization
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Train a minimal behavior cloning model to predict steering angle
-   from camera images and test it in CARLA.
+   Implement domain randomization in CARLA and evaluate its impact on
+   detector robustness.
 
 
    .. raw:: html
@@ -173,54 +123,46 @@ cloning, and attention visualization.
 
    **Specification**
 
-   Create the file ``steer_net.py`` that implements the following:
+   Create the file ``domain_randomization.py`` that performs the
+   following:
 
-   1. Define a simple network using a pre-trained ResNet-18 backbone
-      with the final FC layer replaced to output a **single steering
-      value**:
+   1. For each of **100 frames**, randomize:
 
-      .. code-block:: python
+      - **Weather**: randomly select from 5+ presets.
+      - **Sun altitude**: random value between -20° and 90°.
+      - **NPC count**: random vehicles (10--80) and pedestrians
+        (5--30).
+      - **Camera noise**: add Gaussian noise (:math:`\sigma = 5`) to
+        the captured image.
 
-         import torch.nn as nn
-         from torchvision import models
+   2. Collect a second set of **100 frames** under fixed
+      ``ClearNoon`` conditions (no randomization).
+   3. Run YOLOv8s inference on both sets and compute:
 
-         class SteerNet(nn.Module):
-             def __init__(self):
-                 super().__init__()
-                 self.backbone = models.resnet18(pretrained=True)
-                 self.backbone.fc = nn.Linear(512, 1)
+      - **Mean confidence** of detections.
+      - **Mean detection count** per frame.
 
-             def forward(self, x):
-                 return self.backbone(x)
-
-   2. Load the dataset from Exercise 3. Resize images to 224 × 224,
-      normalize using ImageNet statistics.
-   3. Split **80/20 by episode** into train/validation sets.
-   4. Train for **20 epochs** with MSE loss and Adam optimizer
-      (lr = 1e-4). Plot train and validation loss.
-   5. Report **MAE** (mean absolute error) for steering on the
-      validation set.
+   4. Print a comparison table.
 
    **Written analysis**
 
-   Deploy the model in CARLA (feed camera images, apply predicted
-   steering). Does the vehicle stay in lane? For how many seconds?
-   Relate any failures to the distribution shift problem from L11.
+   If you trained a detector on the randomized dataset vs. the fixed
+   dataset, which would generalize better to the real world? Why?
 
    **Deliverable**
 
-   The script, training loss plot, MAE value, and written analysis.
+   The script, comparison table, and written analysis (3--5 sentences).
 
 
-.. dropdown:: Exercise 5 -- Attention Visualization
+.. dropdown:: Exercise 4 -- Synthetic Data Quality Assessment
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Visualize what a vision transformer attends to in driving images
-   and reason about task relevance.
+   Assess the quality of CARLA-generated data by comparing its
+   characteristics to real-world driving datasets.
 
 
    .. raw:: html
@@ -230,30 +172,72 @@ cloning, and attention visualization.
 
    **Specification**
 
-   Create the file ``attention_viz.py`` that performs the following:
+   Create the file ``data_quality.py`` that performs the following:
 
-   1. Load a pre-trained **CLIP ViT-B/16** model.
-   2. Capture two CARLA driving images:
-
-      - One under ``ClearNoon``.
-      - One under ``HardRainNoon``.
-
-   3. Pass each image through the model and extract **attention
-      weights** from the last transformer layer.
-   4. Reshape the CLS token's attention over patches to a 2D grid
-      and overlay it as a heatmap on the original image.
-   5. Save both visualizations side-by-side.
+   1. Generate **200 labeled images** from CARLA across 4 weather
+      conditions and 2 towns. Use CARLA's ground-truth bounding box
+      API.
+   2. Compute the **class distribution** across the dataset (vehicles,
+      pedestrians, cyclists, traffic lights, stop signs).
+   3. Compare to the **nuScenes** dataset class frequencies (look up
+      approximate ratios from the nuScenes website or papers).
+   4. Identify **three visual differences** between CARLA images and
+      real-world driving images (e.g., texture quality, lighting,
+      pedestrian appearance).
 
    **Written analysis**
 
-   - Does the model attend to **task-relevant regions** (road,
-     vehicles, traffic signs)?
-   - How does the attention pattern change between clear and rainy
-     conditions?
-   - What does this tell you about using pre-trained vision models
-     for driving?
+   - Are the CARLA and nuScenes class distributions similar?
+   - Name **two techniques** from the lecture that help bridge the
+     sim-to-real gap.
 
    **Deliverable**
 
-   The script, side-by-side attention heatmap image, and written
-   analysis (5--8 sentences).
+   The script, class distribution bar chart, comparison table, and
+   written analysis.
+
+
+.. dropdown:: Exercise 5 -- Counterfactual Evaluation
+   :icon: gear
+   :class-container: sd-border-primary
+   :class-title: sd-font-weight-bold
+
+   **Goal**
+
+   Reason about how world models enable offline evaluation of
+   alternative planning decisions.
+
+
+   .. raw:: html
+
+      <hr>
+
+
+   **Specification**
+
+   Consider the following logged scenario: the ego vehicle encounters
+   a slow truck and decides to **follow it for 30 seconds**.
+
+   1. Define **three alternative actions** the planner could have
+      taken (e.g., lane change left, overtake via oncoming lane, slow
+      down earlier).
+   2. For each alternative, list the information a world model would
+      need to **simulate the outcome** (other agents' reactions,
+      traffic rules, visibility, road geometry).
+   3. Design a **reward function** to score each outcome:
+
+      .. math::
+
+         R = w_s \cdot \text{safety} + w_p \cdot \text{progress}
+             + w_c \cdot \text{comfort}
+
+      Define each term concretely (e.g., safety = 0 if collision,
+      progress = distance traveled / time, comfort = -RMS jerk).
+
+   4. Why is counterfactual evaluation **difficult without a world
+      model**? What assumption does simple log replay make that breaks
+      down?
+
+   **Deliverable**
+
+   Written answers with the reward function definition and reasoning.

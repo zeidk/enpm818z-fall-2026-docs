@@ -679,33 +679,33 @@ all other Thursdays meet as scheduled. Dates below are given as MM/DD.
    * - 10/15
      - 7
      - Localization & SLAM
-     - L7
+     - L6
      -
    * - 10/22
      - 8
      - Navigation & Route Planning
-     - L8
+     - L7
      -
    * - 10/29
      - 9
      - Prediction & Behavior Modeling
-     - L9
+     - L8
      - | :quiz:`Quiz 3`
        | :assignment:`GP2 due, GP3 posted`
    * - 11/05
      - 10
      - Motion Planning
-     - L10
+     - L9
      -
    * - 11/12
      - 11
      - Trajectory Generation & Control
-     - L11
+     - L10
      -
    * - 11/19
      - 12
      - End-to-End Driving, VLA & Imitation Learning
-     - L12
+     - L11
      - | :quiz:`Quiz 4`
        | :assignment:`GP3 due, GP4 and report posted`
    * - 11/26
@@ -716,12 +716,12 @@ all other Thursdays meet as scheduled. Dates below are given as MM/DD.
    * - 12/03
      - 13
      - Simulation, Scenario-Based Testing & World Models
-     - L13
+     - L12
      -
    * - 12/10
      - 14
      - System Integration, Safety & Industry Outlook
-     - L14
+     - L13
      - | :reading:`Read before class: Automotive Cybersecurity`
        | :quiz:`Quiz 5`
        | :assignment:`GP4 due`
@@ -737,8 +737,8 @@ all other Thursdays meet as scheduled. Dates below are given as MM/DD.
    Monitor ELMS-Canvas for current deadlines.
 
    L3 runs over two weeks (weeks 3 and 4), and perception is taught in two
-   lectures, L4 and L5, instead of three. The lecture numbers after L5 are
-   unchanged, so there is no L6.
+   lectures, L4 and L5, instead of three. The course has 13 lectures: L6 is
+   Localization & SLAM.
 
 
 Final Project: Building an ADS Pipeline

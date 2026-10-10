@@ -13,12 +13,12 @@ Quiz
    through this page is good preparation for one. Memorising the answers
    below is not.
 
-This quiz covers the key concepts from Lecture 7: Localization & SLAM.
-Topics include the localization problem, coordinate frames, GNSS/RTK,
-dead reckoning (wheel/visual/LiDAR odometry), probabilistic localization
-(EKF, MCL), scan matching (ICP), HD map localization, SLAM formulation,
-SLAM frontend and backend, loop closure, evaluation metrics, and modern
-LiDAR SLAM systems.
+This quiz covers the key concepts from Lecture 7: Navigation & Route
+Planning. Topics include the navigation vs. motion planning distinction,
+road network graph representation, OpenDRIVE and Lanelet2 map formats,
+HD maps, multi-objective cost functions, Dijkstra and A* on road graphs,
+lane-level routing, dynamic rerouting, CARLA's GlobalRoutePlanner, and
+route-to-reference-path conversion.
 
 .. note::
 
@@ -40,289 +40,258 @@ Multiple Choice (Questions 1-10)
 .. admonition:: Question 1
    :class: hint
 
-   What is the typical horizontal accuracy of standard civilian GPS without
-   any corrections, and why is this insufficient for autonomous driving
-   lane-keeping?
+   What is the key difference between navigation (route planning) and
+   motion planning?
 
-   A. 1-5 mm; unnecessary precision wastes compute.
-
-   B. 1-5 m; lane widths are approximately 3-4 m, requiring <20 cm for
-      reliable lane-level localization.
-
-   C. 10-50 m; cannot distinguish even road segments.
-
-   D. 1-5 cm; sufficient for all AV applications.
+   A. Navigation uses neural networks; motion planning uses classical algorithms.
+   B. Navigation operates at the city scale on road graphs; motion planning
+      operates at the local scale on continuous space.
+   C. Navigation considers obstacles; motion planning does not.
+   D. Navigation runs at 50 Hz; motion planning runs once per trip.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- 1-5 m; lane widths are approximately 3-4 m, requiring <20 cm
-   for reliable lane-level localization.
+   **B**
 
-   Standard GPS (civilian L1 signal) achieves 1-5 m accuracy under good
-   conditions, degrading further in urban canyons due to multipath. With
-   lane widths of ~3.5 m, a 5 m position error means the vehicle cannot
-   determine which lane it is in, let alone where within the lane. RTK-GPS
-   or LiDAR scan matching is required for lane-level localization.
+   Navigation operates at the city scale, finding the optimal sequence of
+   road segments on a road network graph (km scale, replanned every few
+   minutes or on request). Motion planning operates at the local scale
+   (10--50 m) in continuous space, producing a collision-free trajectory
+   at 10--50 Hz. Option C is backwards: motion planning is precisely the
+   layer that reasons about individual obstacle geometry, while navigation
+   sees only aggregate traffic conditions.
 
 
 .. admonition:: Question 2
    :class: hint
 
-   **RTK-GPS** achieves centimeter-level accuracy by:
+   In a lane-level road network graph, which of the following is **not**
+   a standard edge type?
 
-   A. Using more satellites simultaneously than standard GPS.
-
-   B. Applying corrections computed by a nearby base station at a precisely
-      known location, enabling carrier-phase integer ambiguity resolution.
-
-   C. Operating at a higher signal frequency (L5 band) than standard GPS.
-
-   D. Averaging position estimates over multiple minutes to reduce noise.
+   A. Lane follow
+   B. Lane change (left/right)
+   C. Junction maneuver
+   D. Obstacle avoidance
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Applying corrections computed by a nearby base station at a
-   precisely known location, enabling carrier-phase integer ambiguity
-   resolution.
+   **D**
 
-   RTK stands for Real-Time Kinematic. The base station measures carrier-
-   phase signals from GPS satellites and, knowing its exact position,
-   computes the residual errors. These corrections are broadcast to the
-   rover. By resolving the integer ambiguity in the carrier phase (wavelength
-   ~19 cm for L1), the rover achieves 1-2 cm horizontal accuracy.
+   Edges encode topological connectivity: continuing along a lane,
+   transitioning to an adjacent lane, or traversing an intersection.
+   Obstacle avoidance is not a topological property of the map -- it is a
+   runtime decision made by the motion planner (L9) against perceived
+   obstacles, which are not in the map at all.
 
 
 .. admonition:: Question 3
    :class: hint
 
-   Which dead reckoning method has the **lowest positional drift** per unit
-   distance traveled?
+   Which statement correctly describes the difference between OpenDRIVE
+   and Lanelet2 geometry representation?
 
-   A. Wheel odometry
-
-   B. Monocular visual odometry
-
-   C. LiDAR odometry
-
-   D. IMU integration (without external corrections)
+   A. OpenDRIVE uses polylines; Lanelet2 uses parametric curves.
+   B. OpenDRIVE uses parametric curves (lines, arcs, spirals) with lanes
+      defined as offsets from a road reference line; Lanelet2 uses
+      polylines defining left and right lane boundaries.
+   C. Both use identical geometry; they differ only in file extension.
+   D. OpenDRIVE stores geometry as a raster occupancy grid.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- LiDAR odometry
+   **B**
 
-   LiDAR odometry (e.g., LOAM) achieves ~0.1-0.5% drift per distance
-   traveled by directly measuring 3D geometry via scan matching. Wheel
-   odometry drifts 1-5% due to wheel slip and terrain. Stereo visual
-   odometry drifts 0.5-1%. IMU integration diverges within seconds due to
-   gyroscope and accelerometer bias accumulation.
+   OpenDRIVE (``.xodr``, used by CARLA and SUMO) describes each road by a
+   reference line built from analytic primitives -- straight lines, arcs,
+   and spirals (clothoids) -- with lanes specified as width offsets from
+   that line. Lanelet2 (OSM-based ``.osm``, used by Autoware) instead
+   represents a lanelet as the region bounded by two explicit linestrings.
+   The practical consequence: OpenDRIVE gives exact curvature analytically,
+   while Lanelet2 is simpler to edit and query but must approximate
+   curvature from discrete points.
 
 
 .. admonition:: Question 4
    :class: hint
 
-   In **Iterative Closest Point (ICP)**, what is the role of the
-   **correspondence step**?
+   A route planner uses the cost function
+   :math:`\text{cost}(e) = w_d d(e) + w_t t(e) + w_r r(e) + w_c c(e) + w_m m(e)`.
+   To produce the **fastest** route rather than the shortest, you should:
 
-   A. Compute the SVD of the cross-covariance matrix to find the optimal
-      rotation and translation.
-
-   B. For each point in the source cloud, find its nearest neighbor in the
-      target cloud to establish point pairs for optimization.
-
-   C. Apply motion distortion correction to each scan point using IMU data.
-
-   D. Select keyframes by comparing the distance traveled since the last
-      keyframe.
+   A. Increase :math:`w_d` and set all other weights to zero.
+   B. Increase :math:`w_t` relative to :math:`w_d`, since
+      :math:`t(e)` = segment length / speed limit.
+   C. Increase :math:`w_m` to penalize complex maneuvers.
+   D. Switch from A* to Dijkstra.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- For each point in the source cloud, find its nearest neighbor
-   in the target cloud to establish point pairs for optimization.
+   **B**
 
-   ICP alternates between two steps: (1) correspondence -- find nearest
-   neighbors between current aligned source and target to form point pairs
-   (p_i, q_i); (2) minimize -- solve for the rigid transform T that minimizes
-   sum||q_i - T*p_i||^2 using SVD. The process repeats until convergence
-   (translation/rotation change below threshold).
+   The travel-time term :math:`t(e)` divides segment length by the speed
+   limit, so weighting it favors highways over shorter but slower surface
+   streets. Option D is a category error: Dijkstra and A* are *search
+   algorithms* that both return the optimal path for whatever cost
+   function they are given -- changing the algorithm cannot change the
+   objective.
 
 
 .. admonition:: Question 5
    :class: hint
 
-   **Monte Carlo Localization (MCL/AMCL)** has an advantage over EKF
-   localization because it can:
+   What is the time complexity of Dijkstra's algorithm with a binary heap,
+   and why is it tractable on city-scale road networks?
 
-   A. Run faster than EKF on embedded hardware.
-
-   B. Handle global localization (no initial pose given) and recovery from
-      the "kidnapped robot" problem, which EKF cannot.
-
-   C. Use fewer parameters than EKF.
-
-   D. Provide a closed-form analytical solution to the posterior distribution.
+   A. :math:`O(V^2)`; road graphs are small.
+   B. :math:`O((V + E)\log V)`; road networks are sparse, with
+      :math:`|E| \approx 3|V|`.
+   C. :math:`O(V!)`; tractable only with pruning.
+   D. :math:`O(E \log E)`; road networks are dense.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Handle global localization (no initial pose given) and recovery
-   from the "kidnapped robot" problem, which EKF cannot.
+   **B**
 
-   EKF maintains a single Gaussian estimate of pose -- if the initialization
-   is wrong or the vehicle is suddenly teleported (kidnapped), the single
-   Gaussian cannot represent multiple hypotheses. MCL represents the belief
-   as N particles spread across the entire map, naturally supporting multiple
-   hypotheses. As measurements arrive, particles in wrong locations get low
-   weight and die off; correct particles survive.
+   With a binary heap, Dijkstra runs in :math:`O((V + E)\log V)`. Road
+   networks are **sparse** -- each intersection connects to only a handful
+   of others, giving :math:`|E| \approx 3|V|` -- so the term is effectively
+   :math:`O(V \log V)`. This is why city-scale routing is feasible without
+   specialized preprocessing.
 
 
 .. admonition:: Question 6
    :class: hint
 
-   In the SLAM pose graph, what does a **loop closure edge** represent?
+   For a road graph whose edge costs are **travel times**, which heuristic
+   is admissible for A*?
 
-   A. A constraint between consecutive keyframes from scan-to-scan ICP.
-
-   B. A constraint between two non-consecutive keyframes that were identified
-      as the same location (the vehicle revisited a prior area), verified
-      by ICP.
-
-   C. A GPS measurement at a specific keyframe position.
-
-   D. The initial pose prior used to anchor the first node.
+   A. :math:`h(n) = 0` for all nodes.
+   B. :math:`h(n) = \|\text{pos}(n) - \text{pos}(\text{goal})\|_2 / v_{\max}`
+   C. :math:`h(n) = \|\text{pos}(n) - \text{pos}(\text{goal})\|_2`
+   D. :math:`h(n) = \|\text{pos}(n) - \text{pos}(\text{goal})\|_2 \times v_{\max}`
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- A constraint between two non-consecutive keyframes that were
-   identified as the same location (the vehicle revisited a prior area),
-   verified by ICP.
+   **B**
 
-   Loop closure edges connect keyframe i to keyframe j (where j >> i+1) when
-   place recognition detects that the current scan matches a previous keyframe.
-   The relative transform is computed by ICP and added as a long-range edge.
-   During pose graph optimization, this edge pulls the two distant keyframes
-   into alignment, distributing the accumulated drift correction across the
-   entire trajectory.
+   The heuristic must be in the **same units as the edge costs** (seconds)
+   and must never overestimate. Dividing straight-line distance by the
+   maximum speed limit gives the shortest conceivable travel time, which
+   is admissible. Option C returns metres and is dimensionally
+   inconsistent with a time-weighted graph. Option A is technically
+   admissible but reduces A* to Dijkstra.
 
 
 .. admonition:: Question 7
    :class: hint
 
-   **LOAM** (LiDAR Odometry and Mapping) achieves high-accuracy odometry by:
+   In CARLA, ``GlobalRoutePlanner.trace_route()`` returns a list of:
 
-   A. Using a particle filter to track the vehicle pose.
-
-   B. Matching edge features (high curvature points) and planar features
-      (low curvature points) between scans using point-to-edge and
-      point-to-plane distance minimization.
-
-   C. Aligning raw LiDAR point clouds using standard point-to-point ICP.
-
-   D. Fusing LiDAR with GPS measurements via a Kalman filter.
+   A. ``carla.Location`` objects only.
+   B. ``(waypoint, RoadOption)`` tuples, where ``RoadOption`` annotates the
+      maneuver type.
+   C. Raw OpenDRIVE XML strings.
+   D. A single smoothed spline.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Matching edge features (high curvature points) and planar features
-   (low curvature points) between scans using point-to-edge and point-to-plane
-   distance minimization.
+   **B**
 
-   LOAM extracts features based on local curvature: high curvature → edge
-   features (on sharp corners and poles); low curvature → planar features
-   (on flat walls and ground). Matching edge-to-edge and plane-to-plane
-   (rather than arbitrary point-to-point) is more discriminative and produces
-   better-constrained, more accurate scan matching results.
+   Each element pairs a ``carla.Waypoint`` with a ``RoadOption``
+   (``LANEFOLLOW``, ``LEFT``, ``RIGHT``, ``STRAIGHT``, ``CHANGELANELEFT``,
+   ``CHANGELANERIGHT``, ``VOID``). The annotation is what lets the behavior
+   planner prepare for an upcoming maneuver -- slowing before a turn, or
+   checking the blind spot before a lane change.
 
 
 .. admonition:: Question 8
    :class: hint
 
-   The **Absolute Pose Error (APE)** metric measures:
+   A vehicle must exit the highway in 400 m but is in the leftmost of four
+   lanes. Which lane-level routing behavior is correct?
 
-   A. The drift rate per meter of trajectory (local accuracy).
-
-   B. The RMSE between estimated and ground-truth poses over the full
-      trajectory (global accuracy).
-
-   C. The number of loop closures detected per kilometer.
-
-   D. The processing time per LiDAR scan.
+   A. Wait until 50 m before the exit, then change all three lanes at once.
+   B. Begin transitioning right immediately, allowing one lane change at a
+      time with adequate gaps; if the exit becomes unreachable, reroute.
+   C. Stop on the highway and wait for a gap.
+   D. Ignore the exit and let the motion planner handle it.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- The RMSE between estimated and ground-truth poses over the full
-   trajectory (global accuracy).
+   **B**
 
-   APE aligns the estimated trajectory to the ground truth (removing
-   global gauge freedom) and then measures the RMSE of pose errors at
-   each timestep. It reflects the overall quality of the map and the
-   effectiveness of loop closure. Relative Pose Error (RPE) measures
-   drift over fixed intervals -- a complementary local accuracy metric.
+   Lane changes take time and require gap acceptance in the target lane,
+   so the navigation layer must signal the need for a lane change with
+   substantial lead distance -- typically 500 m before a highway diverge.
+   Critically, the system must also be willing to **miss the exit and
+   reroute**: forcing a late multi-lane change is the unsafe option, and a
+   missed exit costs only time.
 
 
 .. admonition:: Question 9
    :class: hint
 
-   Why is **motion distortion correction** necessary for LiDAR scans in a
-   moving vehicle?
+   The curvature-constrained speed limit is
+   :math:`v_{\max} = \sqrt{a_{\text{lat,max}} / \kappa}`. With
+   :math:`a_{\text{lat,max}} = 2.5\ \text{m/s}^2` and a curve of radius
+   50 m, the maximum comfortable speed is approximately:
 
-   A. LiDAR sensors have a calibration error that must be corrected offline.
-
-   B. A spinning LiDAR scan takes 50-100 ms to complete; during this time the
-      vehicle moves, so each point is captured at a different vehicle pose.
-      Without correction, the scan appears sheared/distorted.
-
-   C. LiDAR returns require temperature correction to compute accurate ranges.
-
-   D. Multiple LiDAR returns from the same surface must be averaged.
+   A. 5.0 m/s
+   B. 11.2 m/s
+   C. 25.0 m/s
+   D. 125.0 m/s
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- A spinning LiDAR scan takes 50-100 ms to complete; during this
-   time the vehicle moves, so each point is captured at a different vehicle
-   pose. Without correction, the scan appears sheared/distorted.
+   **B**
 
-   At 50 km/h, a vehicle moves ~1.4 m during a 100 ms scan. Points at the
-   start of the scan are displaced ~1.4 m relative to the end-of-scan points.
-   IMU data (100-1000 Hz) is interpolated to compute the vehicle pose at
-   each point's acquisition time, and each point is transformed to the
-   common reference pose (e.g., scan start or scan center).
+   Curvature is the reciprocal of radius: :math:`\kappa = 1/50 = 0.02`
+   m\ :sup:`-1`. Then
+
+   .. math::
+
+      v_{\max} = \sqrt{2.5 / 0.02} = \sqrt{125} \approx 11.2\ \text{m/s}
+
+   which is about 40 km/h. The common error is to substitute the radius
+   directly for :math:`\kappa`, giving :math:`\sqrt{2.5/50} = 0.22` m/s.
 
 
 .. admonition:: Question 10
    :class: hint
 
-   **LIO-SAM** improves on LOAM by:
+   When building a road graph from CARLA waypoints, keying nodes on the
+   raw tuple ``(road_id, section_id, lane_id, wp.s)`` produces a graph
+   with almost no edges. Why?
 
-   A. Removing the need for LiDAR entirely, using cameras and IMU.
-
-   B. Tightly coupling IMU pre-integration with LiDAR scan matching in a
-      unified factor graph (GTSAM), enabling accurate real-time SLAM with
-      GPS and loop closure.
-
-   C. Using neural network-based scan matching instead of ICP.
-
-   D. Operating at 100 Hz by reducing scan resolution.
+   A. ``wp.next()`` returns waypoints on different roads only.
+   B. ``wp.s`` is a float, and ``generate_waypoints()`` and ``wp.next()``
+      do not return bit-identical values for the same road position, so
+      dictionary lookups fail.
+   C. CARLA waypoints are immutable and cannot be dictionary keys.
+   D. ``section_id`` is always zero, causing hash collisions.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Tightly coupling IMU pre-integration with LiDAR scan matching
-   in a unified factor graph (GTSAM), enabling accurate real-time SLAM with
-   GPS and loop closure.
+   **B**
 
-   LIO-SAM adds three key improvements over LOAM: (1) tight IMU integration
-   via pre-integration factors for high-frequency motion estimates, (2) a
-   full factor graph backend (GTSAM) that jointly optimizes IMU, LiDAR, GPS,
-   and loop closure constraints, and (3) efficient sliding window map
-   representation. This makes it robust to aggressive motions and suitable
-   for long-duration outdoor mapping.
+   The two APIs compute ``s`` independently, so tiny floating-point
+   differences make ``next_key in waypoint_map`` fail for essentially
+   every neighbour. The graph builds with the right number of *nodes* and
+   almost zero *edges* -- and because the failure is silent, it surfaces
+   later as "no route found." Quantizing ``s`` (e.g.
+   ``int(round(wp.s / 1.0))``) makes both APIs agree. Asserting that the
+   edge count is non-zero immediately after construction turns a
+   mysterious failure into an obvious one.
 
 
 ----
@@ -334,198 +303,211 @@ True or False (Questions 11-15)
 .. admonition:: Question 11
    :class: hint
 
-   **True or False:** Dead reckoning methods like wheel odometry produce
-   position estimates with bounded error -- the error does not grow
-   indefinitely over time.
+   **True or False:** CARLA's ``GlobalRoutePlanner.trace_route()`` returns
+   a collision-free trajectory that accounts for other vehicles on the road.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   Dead reckoning error is **unbounded** -- it accumulates over time (or
-   distance traveled) through integration. Systematic errors (e.g., slight
-   wheel diameter miscalibration) cause the error to grow linearly with
-   distance; random noise causes it to grow as a random walk (proportional
-   to sqrt of distance). Without external corrections (GPS, scan matching,
-   landmarks), any dead reckoning method will eventually lose track of
-   the vehicle's true position.
+   ``trace_route()`` is a **global route planner**: it searches the static
+   road network topology and returns an ordered sequence of waypoints. It
+   has no knowledge of dynamic obstacles, and it produces a path rather
+   than a timed trajectory. Collision avoidance against other agents is
+   the responsibility of the behavior planner (L8) and motion planner
+   (L9).
 
 
 .. admonition:: Question 12
    :class: hint
 
-   **True or False:** In the SLAM problem, the vehicle must have a pre-built
-   map of the environment before it can operate.
+   **True or False:** A* with an admissible heuristic will always expand
+   fewer nodes than Dijkstra on the same graph.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   SLAM (Simultaneous Localization and Mapping) is specifically designed
-   for operation WITHOUT a prior map. The vehicle builds the map from scratch
-   using sensor observations while simultaneously estimating its own position
-   within that growing map. This is in contrast to map-based localization
-   (e.g., HD map matching), which requires a pre-built map.
+   A* never expands *more* nodes than Dijkstra given the same admissible
+   heuristic, but it does not always expand strictly fewer. With
+   :math:`h(n) = 0` the two are identical. More practically, a very weak
+   heuristic -- such as Euclidean distance divided by a large
+   :math:`v_{\max}` on a distance-weighted graph -- provides almost no
+   guidance, and A* degenerates toward Dijkstra's behavior. The strength
+   of the heuristic, not the choice of algorithm, determines the saving.
 
 
 .. admonition:: Question 13
    :class: hint
 
-   **True or False:** Loop closure detection can reduce the accumulated
-   drift in a SLAM trajectory even if the loop closure occurs only once
-   at the very end of a long mission.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**
-
-   A single loop closure edge in the pose graph, added at the end of a long
-   trajectory, creates a constraint between the start and end of the loop.
-   Pose graph optimization distributes this correction across all
-   intermediate poses in the loop, reducing the drift from meters to
-   centimeters throughout the entire trajectory. This is the power of global
-   backend optimization -- it retroactively corrects the entire history.
-
-
-.. admonition:: Question 14
-   :class: hint
-
-   **True or False:** Point-to-plane ICP is generally faster to converge
-   than standard point-to-point ICP when matching planar surfaces.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**
-
-   Point-to-plane ICP minimizes the distance from each source point to the
-   tangent plane at the corresponding target point (using surface normals).
-   This objective provides a more accurate gradient for optimization near
-   flat surfaces -- the most common geometry in man-made environments.
-   Empirically, point-to-plane converges in ~5-10 iterations vs. ~30-50 for
-   point-to-point, on typical urban LiDAR scans.
-
-
-.. admonition:: Question 15
-   :class: hint
-
-   **True or False:** HD map-based localization suffers from accumulated
-   drift over long drives because it integrates odometry without correction.
+   **True or False:** HD maps eliminate the need for online perception,
+   since all road geometry and traffic control devices are already
+   encoded.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   HD map-based localization does NOT accumulate drift. The HD map provides
-   a globally consistent reference frame. At each step, the current sensor
-   scan is matched against the global HD map to compute a position correction
-   -- this measurement-to-map comparison anchors the pose estimate to the
-   global frame. The limitation of HD maps is not drift but rather their
-   cost to create, maintain, and update when the environment changes.
+   HD maps provide static **priors** -- lane geometry, speed limits,
+   traffic light positions -- but they cannot represent anything dynamic
+   or anything that has changed since the survey. The vehicle still needs
+   perception for other agents, for the current *state* of a traffic light
+   (the map gives its position, not whether it is red), and for
+   construction zones or closures. Maps also go stale, which is why the
+   industry trend is toward lighter maps with stronger online perception.
+
+
+.. admonition:: Question 14
+   :class: hint
+
+   **True or False:** Dynamic rerouting should be triggered as soon as the
+   vehicle detects any blockage on the planned route, and the new route
+   may be adopted at any point.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False**
+
+   Two problems. First, rerouting is normally triggered by a **threshold**
+   (for instance when the remaining cost exceeds 1.5x an alternative)
+   rather than by any blockage, to avoid oscillating between routes on
+   minor fluctuations. Second, and more importantly, the new route must be
+   ready **before the last decision point where the routes diverge** -- a
+   vehicle cannot stop on a highway to recompute, and a route adopted
+   after the exit has passed is useless.
+
+
+.. admonition:: Question 15
+   :class: hint
+
+   **True or False:** Contraction Hierarchies and Hub Labeling are
+   preprocessing techniques that let continental-scale routing queries be
+   answered in microseconds.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **True**
+
+   Both precompute auxiliary structures over the road graph -- shortcut
+   edges for Contraction Hierarchies, distance labels for Hub Labeling --
+   trading offline computation and memory for extremely fast online
+   queries. They are what makes Google Maps and OSRM feel instantaneous
+   at continental scale. They are also why plain Dijkstra is adequate for
+   this course: our graphs are a single CARLA town.
 
 
 ----
 
 
 Essay Questions (Questions 16-18)
-===================================
+==================================
 
 .. admonition:: Question 16
    :class: hint
 
-   **Explain the SLAM frontend and backend** as a two-stage processing
-   pipeline. What does each stage produce, and why must they work together
-   for accurate long-range mapping?
+   Explain the three-layer separation between the navigation layer, the
+   behavior planner, and the motion planner when executing a lane change.
+   State specifically what each layer decides.
 
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
+.. dropdown:: Answer
    :class-container: sd-border-success
 
-   *Key points to include:*
+   The layers answer three different questions about the same maneuver:
 
-   - Frontend: processes raw LiDAR scans in real time to produce a local
-     odometry estimate (incremental pose changes) and detects potential
-     loop closure candidates. It includes preprocessing (motion distortion,
-     downsampling), feature extraction, ICP scan matching, and keyframe
-     selection. Frontend must run faster than the sensor rate (>10 Hz for
-     a 10 Hz LiDAR).
-   - Backend: receives keyframes and their relative pose constraints from
-     the frontend and solves a global pose graph optimization problem to
-     find the maximum-likelihood trajectory. When loop closures are added,
-     the backend redistributes drift corrections across the entire history.
-   - Why both are needed: the frontend provides the real-time incremental
-     estimates and detects loop candidates; but without the backend's global
-     optimization, drift accumulates indefinitely. Without the frontend's
-     real-time operation, the backend has no input. Together they achieve
-     real-time, globally consistent mapping.
-   - Example: after 500 m, the frontend has 5 m of drift. One loop closure
-     detected by the frontend triggers backend optimization, reducing APE
-     to <5 cm across the entire 500 m trajectory.
+   - **Navigation** decides *whether a lane change is needed at all*, and
+     roughly where. It knows the route requires an exit in 500 m and the
+     vehicle is in the wrong lane. It works on the static map, at km
+     scale, and replans on the order of minutes.
+   - **Behavior planning** (L8) decides *whether it is safe to execute
+     now*. It consumes predicted trajectories of surrounding agents,
+     evaluates gap acceptance in the target lane, and either commits to
+     the maneuver, waits, or aborts one already in progress. It runs at
+     1--10 Hz.
+   - **Motion planning** (L9) decides *what the geometry is*. Given the
+     committed decision, it generates a kinematically feasible,
+     collision-free path into the target lane, respecting curvature and
+     comfort limits, at 10--50 Hz.
+
+   The value of the separation is that each layer's output constrains the
+   layer below, keeping each search tractable. It also localizes failures:
+   an unnecessary lane change is a navigation bug, an unsafe one is a
+   behavior bug, and an uncomfortable one is a motion planning bug.
 
 
 .. admonition:: Question 17
    :class: hint
 
-   **Describe why loop closure is critical for SLAM** and how place
-   recognition enables it. What happens to the map quality if loop
-   closure fails?
+   You are given a road graph whose edge costs are distances in metres.
+   A colleague runs Dijkstra and A* on it, observes that both return the
+   same route, and concludes that A* is broken. Explain what is actually
+   happening and describe how to set up a meaningful comparison of the two,
+   and separately a meaningful comparison of shortest-distance against
+   fastest-time routing.
 
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
+.. dropdown:: Answer
    :class-container: sd-border-success
 
-   *Key points to include:*
+   Nothing is broken. Dijkstra and A* with an admissible heuristic are
+   **both optimal**, so on the same graph with the same cost function they
+   must return paths of the same cost. Returning the same route is
+   evidence that the implementation is correct, not that it is faulty.
 
-   - SLAM odometry (frontend) accumulates drift -- typically 0.1-0.5% of
-     distance for LiDAR SLAM. Over 1 km, this means 1-5 m of accumulated
-     error. Without correction, the map shows the start and end of a loop
-     as two separate locations (map "split"), making the map inconsistent.
-   - Loop closure detects that the vehicle is revisiting a known location
-     by comparing the current scan's global descriptor (Scan Context,
-     FPFH) against all stored keyframe descriptors. When a match is found,
-     ICP verifies the relative transform.
-   - The verified loop closure edge is added to the pose graph. Backend
-     optimization distributes the correction: all keyframes in the loop
-     are adjusted to make the loop geometrically consistent.
-   - Without loop closure: maps of large environments (>100 m) are
-     unusable for localization because the start and end of a revisited
-     area appear at different locations. The map cannot be used for
-     place recognition in future operations.
+   The two comparisons are different experiments:
+
+   - **Dijkstra vs A\*** is a comparison of *search efficiency*, not
+     route quality. Instrument both to count the number of nodes expanded
+     (or popped from the priority queue) and compare those counts. A*
+     should expand fewer, and the margin grows with the quality of the
+     heuristic. Weighted A* with :math:`\varepsilon > 1` will expand fewer
+     still, at the cost of an :math:`\varepsilon`-suboptimal route.
+   - **Shortest-distance vs fastest-time** is a comparison of
+     *objectives*, which lives in the **edge costs**, not the algorithm.
+     Rebuild the graph with :math:`\text{cost}(e) = \text{length}(e) /
+     v_{\text{limit}}(e)` and rerun. Only then can the routes legitimately
+     differ -- and the fastest-time route will typically be longer in
+     distance while favoring high-speed roads. Remember to change the
+     heuristic to match the new units, or A* loses admissibility.
 
 
 .. admonition:: Question 18
    :class: hint
 
-   **Compare GNSS-based localization and LiDAR scan matching** as
-   localization methods for autonomous driving. In what environments does
-   each perform best, and how do production AV systems combine them?
+   Describe the steps needed to convert a global route (a sequence of
+   discrete waypoints) into a **reference path** usable by the motion
+   planner, and explain why a raw waypoint list is insufficient.
 
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
+.. dropdown:: Answer
    :class-container: sd-border-success
 
-   *Key points to include:*
+   A raw waypoint list gives position only, at a fixed spacing, with no
+   indication of how fast to travel or how sharply the path bends. The
+   motion planner and controller need both. Conversion involves:
 
-   - GNSS (especially RTK): provides global, drift-free localization but
-     fails in urban canyons (multipath), tunnels, and underground areas.
-     Accuracy: 1-2 cm (RTK) under open sky; degrades to meters or loss
-     of fix in dense urban environments. No map required.
-   - LiDAR scan matching: provides high-accuracy local positioning (0.1-0.5%
-     drift for odometry; centimeter-level for map-based matching against
-     HD maps) but requires a pre-built map and accumulates drift without
-     loop closure. Works in tunnels, indoor parking, urban canyons.
-   - Production systems (Waymo, Cruise, Mobileye): use a tight EKF/factor
-     graph fusion of GNSS, LiDAR scan matching against HD maps, and IMU.
-     GNSS provides the global anchor; LiDAR provides accuracy in GNSS-denied
-     environments; IMU fills short gaps at high frequency.
-   - The HD map acts as the "long-term memory" -- accumulated drift from
-     LiDAR odometry is corrected at each map feature observation, providing
-     globally consistent, centimeter-accurate localization in all covered
-     environments.
+   1. **Pose extraction.** Pull the ordered :math:`(x, y, z,
+      \text{yaw})` from each waypoint to form the geometric path.
+   2. **Curvature estimation.** Compute curvature at each point, for
+      example via the Menger curvature of three consecutive points,
+      :math:`\kappa = 4A / (abc)`. Curvature is what couples geometry to
+      the speed profile.
+   3. **Speed profile generation.** Set the target speed at each point to
+
+      .. math::
+
+         v_{\max}(s) = \min\left(v_{\text{limit}}(s),\;
+           \sqrt{a_{\text{lat,max}} / \kappa(s)},\; v_{\text{comfort}}\right)
+
+      so the vehicle slows for curves before reaching them rather than
+      discovering the constraint mid-corner.
+   4. **Smoothing (optional but usual).** Fit splines through the
+      waypoints to remove the heading discontinuities that appear at lane
+      changes and junction boundaries, where consecutive waypoints can
+      jump laterally.
+
+   The result is a dense reference with position, heading, curvature, and
+   target speed at every sample -- which is exactly the input the Stanley
+   and Pure Pursuit controllers of L10 expect.

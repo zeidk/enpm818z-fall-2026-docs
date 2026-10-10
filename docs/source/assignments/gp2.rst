@@ -16,7 +16,7 @@ GP2: Perception -- YOLO vs DETR
       * - **Weight**
         - 40 points (40% of final project)
       * - **Lectures**
-        - L4--L5
+        - L4 and L5
       * - **Team Size**
         - 4 students
       * - **Submission**

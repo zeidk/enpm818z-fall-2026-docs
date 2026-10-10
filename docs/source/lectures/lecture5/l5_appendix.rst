@@ -327,7 +327,7 @@ Temporal Self-Attention: Line Up the Last Frame First
 **Scenario:** the AV drives forward; each query also reads the last frame's
 grid, centered where the AV *was*. **The question:** which old cell holds the
 same ground? **What we have:** the AV's **ego-motion**, its own motion between
-frames, measured by localization (L7) every frame. Shift the old grid by it.
+frames, measured by localization (L6) every frame. Shift the old grid by it.
 
 Numbers chosen for this example: the AV drove 5.12 m straight ahead between
 frames; cells are 0.512 m.

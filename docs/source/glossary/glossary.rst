@@ -39,7 +39,7 @@ Glossary
                        background: #444; color: #fff; border-radius: 3px; cursor: pointer;">
           All
         </button>
-        <!-- L1..L14 buttons inserted by JS -->
+        <!-- one button per published lecture, inserted by JS -->
       </div>
 
       <script>
@@ -51,21 +51,7 @@ Glossary
           var filterBar = document.getElementById('glossary-lecture-filter');
           if (!input || !filterBar) return;
 
-          var TOTAL_LECTURES = 14;
           var activeLecture = null;  /* null = "All" */
-
-          /* Build L1..L14 buttons. */
-          for (var i = 1; i <= TOTAL_LECTURES; i++) {
-            var btn = document.createElement('button');
-            btn.type = 'button';
-            btn.dataset.lecture = 'L' + i;
-            btn.textContent = 'L' + i;
-            btn.style.cssText =
-              'padding: 0.25em 0.6em; font-size: 0.85em; ' +
-              'border: 1px solid #ccc; background: #fff; color: #333; ' +
-              'border-radius: 3px; cursor: pointer;';
-            filterBar.appendChild(btn);
-          }
 
           /* Cache lecture tags per <dt> so we don't rescan the DOM on every keystroke.
              A "tag" is the visible text of any link inside the dd block matching ^L\d+$. */
@@ -86,6 +72,25 @@ Glossary
             });
             dtIndex.push({ dt: dt, dds: dds, tags: tags, text: dt.textContent.toLowerCase() });
           });
+
+          /* One button per lecture that has at least one linked entry. Tags
+             for hidden lectures are plain text, not links, so their lectures
+             get no button until they are published. */
+          var lectures = new Set();
+          dtIndex.forEach(function (e) { e.tags.forEach(function (tag) { lectures.add(tag); }); });
+          Array.from(lectures)
+            .sort(function (a, b) { return parseInt(a.slice(1)) - parseInt(b.slice(1)); })
+            .forEach(function (lec) {
+              var btn = document.createElement('button');
+              btn.type = 'button';
+              btn.dataset.lecture = lec;
+              btn.textContent = lec;
+              btn.style.cssText =
+                'padding: 0.25em 0.6em; font-size: 0.85em; ' +
+                'border: 1px solid #ccc; background: #fff; color: #333; ' +
+                'border-radius: 3px; cursor: pointer;';
+              filterBar.appendChild(btn);
+            });
 
           function getLetterSection(el) {
             var node = el;
@@ -245,7 +250,7 @@ A
       start to goal by expanding the node with the lowest :math:`f(n) =
       g(n) + h(n)`, where :math:`g` is the cost so far and :math:`h` is an
       admissible heuristic. Used for global route planning on the road
-      graph and for grid/lattice-based motion planning. L8 · L10
+      graph and for grid/lattice-based motion planning. L7 · L9
 
    Angle Wrapping
       Bringing every angle back into the range -180° to 180°, with
@@ -273,7 +278,7 @@ A
    ASIL
       Automotive Safety Integrity Level. Defined by ISO 26262 to classify
       the severity of safety risks. Ranges from ASIL A (lowest) to ASIL D
-      (highest), determining the rigor of development and testing required. :doc:`L1 </lectures/lecture1/l1_lecture>` · L14
+      (highest), determining the rigor of development and testing required. :doc:`L1 </lectures/lecture1/l1_lecture>` · L13
 
    ASPP
       Atrous Spatial Pyramid Pooling. The multi-scale context module in
@@ -362,12 +367,12 @@ B
       An imitation learning approach where a policy is trained by supervised
       regression on expert state-action pairs. Simple but suffers from
       distribution shift and compounding errors that grow as
-      :math:`O(\epsilon T^2)`. L12
+      :math:`O(\epsilon T^2)`. L11
 
    Behavior Planning
       The strategic decision-making layer that selects high-level maneuvers
       (lane follow, lane change, yield, stop) based on the current driving
-      context. Often implemented as a finite state machine (FSM). L9
+      context. Often implemented as a finite state machine (FSM). L8
 
    Belief
       The probability of every possible state, given everything measured
@@ -391,7 +396,7 @@ B
    BEVFusion
       A multi-sensor BEV fusion framework that unifies camera and LiDAR
       features in a shared BEV space using learned attention-weighted
-      aggregation. L6
+      aggregation. :doc:`L5 </lectures/lecture5/l5_index>`
 
    Bias
       A systematic error that shifts every reading the same way. Unlike
@@ -415,7 +420,7 @@ B
    Bicycle Model
       A simplified kinematic vehicle model that merges the two front wheels
       and two rear wheels into single virtual wheels. Used as the foundation
-      for motion planning and control. L10 · L11
+      for motion planning and control. L9 · L10
 
    Bipartite Matching
       The Hungarian algorithm used by DETR to find an optimal one-to-one
@@ -432,12 +437,12 @@ B
    B-Spline
       A piecewise polynomial curve with local control point support, used
       for smooth trajectory representation in motion planning. Changes to
-      one control point only affect a local segment of the curve. L11
+      one control point only affect a local segment of the curve. L10
 
    ByteTrack
       A multi-object tracking method (Zhang et al., 2022) that recovers
       occluded objects by performing a second association pass using
-      low-confidence detections that other trackers would discard. L6
+      low-confidence detections that other trackers would discard.
 
 
 .. _glossary-c:
@@ -503,7 +508,7 @@ C
       Evaluating a system in a setting where its own decisions change what
       happens next, so errors compound as they do on a road. The only way to
       observe recovery, or a small error growing into a large one. Contrast
-      :term:`Open-Loop Evaluation`. L13
+      :term:`Open-Loop Evaluation`. L12
 
    CNN
       Convolutional Neural Network. A network built mostly from
@@ -517,7 +522,7 @@ C
       The geometric test that determines whether a candidate path or
       trajectory intersects any obstacle (often expressed as inflated
       bounding boxes, OBBs, or Minkowski sums). Run at every node
-      expansion during sampling- and graph-based planning. L10
+      expansion during sampling- and graph-based planning. L9
 
    Complementarity
       See Complementarity Principle. :doc:`L2 </lectures/lecture2/l2_index>`
@@ -544,7 +549,7 @@ C
       A :term:`Logical Scenario` with every parameter fixed to a value, and
       therefore the only scenario layer that can actually be executed. One
       logical scenario yields thousands of concrete ones, which is why test
-      selection is a sampling problem. L13
+      selection is a sampling problem. L12
 
    Confidence (Detection)
       The number from 0 to 1 that comes with each box: how strongly the
@@ -571,7 +576,7 @@ C
    Configuration Space
       The space of all possible vehicle configurations, typically
       :math:`(x, y, \theta)` for a planar robot. Obstacles are mapped into
-      configuration space to simplify collision checking during planning. L10
+      configuration space to simplify collision checking during planning. L9
 
    Contextual Embedding
       A token's vector after the encoder layers: it describes its patch
@@ -619,7 +624,7 @@ C
    Cooperative Perception
       Multiple vehicles or roadside units sharing sensor data via V2X
       communication to build a collective, extended understanding of the
-      driving scene beyond any single vehicle's sensor range. L14
+      driving scene beyond any single vehicle's sensor range. L13
 
    Coordinate Frame
       An agreed origin and set of axes. The LiDAR reports points in its
@@ -683,7 +688,7 @@ C
       A deep learning fusion approach that uses transformer cross-attention
       mechanisms to learn how features from one sensor modality should
       attend to features from another (e.g., camera features attending to
-      LiDAR features in BEVFusion). L6
+      LiDAR features in BEVFusion).
 
    Cross-Covariance
       In the UKF update, :math:`P_{xz}`: how the state and the reading
@@ -707,17 +712,17 @@ C
       The lateral distance between the vehicle (typically measured at the
       front axle for Stanley, rear axle for Pure Pursuit) and the nearest
       point on the reference path. Drives the steering correction in both
-      controllers. L11
+      controllers. L10
 
    CTRA
       Constant Turn Rate and Acceleration. A physics-based motion prediction
       model that assumes constant yaw rate and longitudinal acceleration.
-      More realistic than constant-velocity models for curving trajectories. L9
+      More realistic than constant-velocity models for curving trajectories. L8
 
    C-V2X
       Cellular Vehicle-to-Everything. A 3GPP-based V2X communication
       standard (LTE-V2X, NR-V2X/5G) that leverages cellular infrastructure
-      for vehicle communication. Competing with DSRC for V2X deployment. L14
+      for vehicle communication. Competing with DSRC for V2X deployment. L13
 
 
 .. _glossary-d:
@@ -732,19 +737,19 @@ D
       addresses distribution shift by collecting new training data under
       the learner's own policy, then re-labeling with the expert's actions.
       Reduces per-step regret from :math:`O(\epsilon T^2)` (BC) to
-      :math:`O(\epsilon)`. L12
+      :math:`O(\epsilon)`. L11
 
    Data Association
       The problem of deciding which incoming measurement corresponds to
       which existing track (or that it is a new object or clutter).
       Solved by nearest neighbor, Hungarian/GNN, JPDA, or MHT depending
       on the ambiguity tolerated.
-      L6
+      :doc:`L5 </lectures/lecture5/l5_index>`
 
    DDS
       Data Distribution Service. An OASIS/OMG standard for real-time
       publish-subscribe communication. The middleware layer underlying
-      ROS 2, providing configurable QoS policies for message delivery. L14
+      ROS 2, providing configurable QoS policies for message delivery. L13
 
    DDT
       Dynamic Driving Task. All real-time operational and tactical functions
@@ -766,7 +771,7 @@ D
    Dead Reckoning
       Estimating current position by integrating motion measurements
       (wheel odometry, IMU) from a known prior pose. Accumulates drift
-      over time without external corrections. :doc:`L3 </lectures/lecture3/l3_index>` · L7
+      over time without external corrections. :doc:`L3 </lectures/lecture3/l3_index>` · L6
 
    Decoder
       The half of a transformer that writes the output. Each layer has
@@ -784,7 +789,7 @@ D
    DeepSORT
       Deep Simple Online and Realtime Tracking (Wojke et al., 2017).
       Extends SORT with a deep appearance descriptor (128-D embedding)
-      for re-identification after occlusion. L6
+      for re-identification after occlusion. :doc:`L5 </lectures/lecture5/l5_index>`
 
    Degraded Mode
       A reduced capability the vehicle falls back to when it loses a
@@ -813,12 +818,12 @@ D
       Motion planning via iterative denoising of trajectories, learned
       from expert demonstrations. Models the trajectory distribution as
       a diffusion process and generates plans by reverse diffusion.
-      Examples: Diffusion Planner (ICLR 2025), DiffusionDrive (CVPR 2025). L10
+      Examples: Diffusion Planner (ICLR 2025), DiffusionDrive (CVPR 2025). L9
 
    Dijkstra
       A classical shortest-path graph search algorithm that expands nodes
       in order of accumulated cost from the source. Equivalent to A* with
-      zero heuristic; preferred when no useful heuristic is available. L8 · L10
+      zero heuristic; preferred when no useful heuristic is available. L7 · L9
 
    Dilated Convolution
       A convolution that inserts "holes" (zeros) between kernel weights,
@@ -844,7 +849,7 @@ D
    Distribution Shift
       The mismatch between the state distribution seen during training and
       the distribution encountered during deployment. A key failure mode
-      of behavior cloning where small errors compound over time. L12
+      of behavior cloning where small errors compound over time. L11
 
    Divergence
       The failure in which a filter becomes more confident as it becomes
@@ -868,7 +873,7 @@ D
    Domain Randomization
       Varying simulation parameters (lighting, textures, weather, sensor
       noise) during training to improve robustness and sim-to-real transfer
-      of learned models. L13
+      of learned models. L12
 
    Doppler Effect
       The frequency shift in a reflected signal caused by the relative
@@ -878,13 +883,13 @@ D
    DriveTransformer
       An end-to-end autonomous driving model (ICLR 2025) that uses shared
       attention across all perception, prediction, and planning tasks,
-      achieving high throughput through task-parallel processing. L12
+      achieving high throughput through task-parallel processing. L11
 
    DriveVLM
       A Vision-Language-Action model for autonomous driving (Tian et al.,
       2024) that combines a vision-language reasoning model with a fast
       driving policy, producing chain-of-thought scene descriptions
-      alongside action outputs. L12
+      alongside action outputs. L11
 
    Driver Support Feature
       SAE J3016's name for Levels 0 to 2. In all three, the human is
@@ -905,12 +910,12 @@ D
       multiplied by an infraction penalty
       :math:`P = 1/(1 + \sum_j c_j n_j)`. Coefficients range from 1.00 for a
       collision with a pedestrian down to 0.25 for running a stop sign.
-      Used to score GP4. L13
+      Used to score GP4. L12
 
    DSRC
       Dedicated Short-Range Communications (IEEE 802.11p). The original
       V2X communication technology operating in the 5.9 GHz band.
-      Competing with C-V2X for industry adoption. L14
+      Competing with C-V2X for industry adoption. L13
 
    Dynamic Range
       The ratio between the brightest and darkest elements a camera sensor
@@ -929,7 +934,7 @@ E
       Combining raw measurements before anything interprets them.
       Preserves the most information, but demands accurate calibration
       and tight timing, moves large amounts of data, and lets one bad
-      sensor affect everything. L6
+      sensor affect everything. :doc:`L5 </lectures/lecture5/l5_index>`
 
    Effective Number of Particles
       :math:`N_\text{eff} = 1/\sum_i (w^{(i)})^2`: how many particles
@@ -941,11 +946,11 @@ E
    End-to-End Driving
       An approach where a single neural network maps raw sensor input
       directly to driving actions, bypassing the traditional modular
-      pipeline (perception -> planning -> control). L12
+      pipeline (perception -> planning -> control). L11
 
    EKF
       Extended Kalman Filter. See Extended Kalman Filter. :doc:`L3 </lectures/lecture3/l3_index>` ·
-      L7
+      L6
 
    Embedding
       Turning each piece of the input into a vector of :math:`D`
@@ -1000,7 +1005,7 @@ E
       mode is a feedback loop: a poor estimate gives a wrong tangent,
       which gives a worse estimate (divergence). It is the filter GP3
       uses, to fuse GNSS fixes with IMU and wheel-speed data.
-      :doc:`L3 </lectures/lecture3/l3_index>` · L7
+      :doc:`L3 </lectures/lecture3/l3_index>` · L6
 
    Extrinsic Calibration
       The rigid transform describing where one sensor sits relative to
@@ -1019,7 +1024,7 @@ F
    Failure Boundary
       The conditions at which a system stops working, stated explicitly. A
       system with a known and reported boundary is more useful to a safety
-      case than one with a high pass rate and no known limit. L13
+      case than one with a high pass rate and no known limit. L12
 
    Fallback-Ready User
       The human occupant of a Level 3 vehicle who is not driving but must
@@ -1100,25 +1105,25 @@ F
    FMEA
       Failure Mode and Effects Analysis. A systematic method for
       identifying potential failure modes in a system, assessing their
-      impact, and designing mitigations (e.g., sensor redundancy). L14
+      impact, and designing mitigations (e.g., sensor redundancy). L13
 
    Foundation Model
       A large neural network pre-trained on broad data at scale and
       adaptable to many downstream tasks (e.g., GPT, CLIP). In AV, used
       as VLA backbones (DriveVLM, NVIDIA Alpamayo) and as world-model
-      starting points. :doc:`L4 </lectures/lecture4/l4_index>` · L12 · L13
+      starting points. :doc:`L4 </lectures/lecture4/l4_index>` · L11 · L12
 
    Frenet Frame
       A curvilinear coordinate system :math:`(s, d)` defined along a road
       centerline, where :math:`s` is the arc-length along the path and
       :math:`d` is the lateral offset. Simplifies trajectory planning on
-      curved roads. L11
+      curved roads. L10
 
    FSM
       Finite State Machine. A classical approach to behavior planning using
       discrete states (lane follow, lane change, stop, yield) and
       transition rules. Simple, interpretable, but brittle for complex
-      scenarios. L9
+      scenarios. L8
 
    Functional Safety
       The scope of ISO 26262: hazards from things that break. A sensor
@@ -1130,12 +1135,12 @@ F
    Functional Scenario
       A scenario written in plain language so that humans can agree on it
       ("a vehicle cuts into my lane from the right"). The most abstract of
-      the three scenario layers; refined into a :term:`Logical Scenario`. L13
+      the three scenario layers; refined into a :term:`Logical Scenario`. L12
 
    Fusion Architecture
       The strategy for combining data from multiple sensors. Three main
       types: early fusion (raw data), intermediate/mid-level fusion
-      (features), and late fusion (detection outputs). L6
+      (features), and late fusion (detection outputs).
 
 
 .. _glossary-g:
@@ -1148,14 +1153,14 @@ G
    GAIA-3
       Wayve's 15-billion-parameter generative driving world model
       (December 2025) that predicts realistic future driving video
-      conditioned on actions and text prompts. L13
+      conditioned on actions and text prompts. L12
 
    GAIA-4
       Wayve's world model announced August 2026, which added **closed-loop**
       simulation: the AI Driver's decisions change the generated future,
       rather than the scene replaying regardless. Uses a "world on rails"
       approach in which other road users keep their recorded trajectories,
-      so it cannot evaluate negotiation. L13
+      so it cannot evaluate negotiation. L12
 
    Gating
       Throwing away a reading that disagrees with the prediction by more
@@ -1186,24 +1191,24 @@ G
       expressing the geographic component of an :term:`ODD`. :doc:`L1 </lectures/lecture1/l1_lecture>`
 
    Global Nearest Neighbor
-      GNN (not the graph neural network of L9). Data association that
+      GNN (not the graph neural network of L8). Data association that
       solves a whole frame at once, choosing the set of pairings with the
       lowest total cost, usually with the Hungarian algorithm. Removes the
       order dependence that makes plain nearest-neighbor association
       unreliable.
-      :doc:`L5 </lectures/lecture5/l5_index>` · L6
+      :doc:`L5 </lectures/lecture5/l5_index>`
 
    GNN
       Graph Neural Network. A neural network operating on graph-structured
       data. Used in trajectory prediction to model interactions between
       agents, where nodes represent agents and edges represent
       relationships. Not the Global Nearest Neighbor data association of
-      L5. L9
+      L5. L8
 
    GNSS
       Global Navigation Satellite System. Provides absolute position
       (latitude, longitude, altitude). Includes GPS (US), GLONASS
-      (Russia), Galileo (EU), BeiDou (China). :doc:`L2 </lectures/lecture2/l2_index>` · L7
+      (Russia), Galileo (EU), BeiDou (China). :doc:`L2 </lectures/lecture2/l2_index>` · L6
 
    Gradient
       How much one number changes when another changes a little. In
@@ -1249,12 +1254,12 @@ H
       Hazard Analysis and Risk Assessment. An ISO 26262 process for
       systematically identifying potential hazards, assessing their
       severity, exposure, and controllability, and assigning ASIL levels. :doc:`L1 </lectures/lecture1/l1_index>` ·
-      L14
+      L13
 
    Hardware-in-the-Loop (HIL)
       A test level in which real ECUs run the software with real timing while
       the world remains simulated. Catches latency, scheduling and resource
-      limits that :term:`Software-in-the-Loop (SIL)` cannot. L13
+      limits that :term:`Software-in-the-Loop (SIL)` cannot. L12
 
    Hand-Eye Calibration
       Motion-based extrinsic calibration: each sensor estimates its own
@@ -1274,8 +1279,8 @@ H
       In the L3 tunnel, it is what turns "I see an exit sign" into "I am
       here" (the sign match). :doc:`L2 </lectures/lecture2/l2_index>` ·
       :doc:`L3 </lectures/lecture3/l3_index>` ·
-      L7 ·
-      L8
+      L6 ·
+      L7
 
    Head (Detection)
       The last part of a detector: it turns features into the answer,
@@ -1295,7 +1300,7 @@ H
    HOTA
       Higher Order Tracking Accuracy. A tracking evaluation metric that
       balances detection quality and association quality equally via
-      their geometric mean, addressing biases in MOTA and IDF1. L6
+      their geometric mean, addressing biases in MOTA and IDF1.
 
    Hungarian Algorithm
       An optimization algorithm that finds the minimum-cost one-to-one
@@ -1303,7 +1308,7 @@ H
       between predictions and ground truth, and by SORT/DeepSORT for
       association between predicted tracks and new detections.
       :doc:`L4 </lectures/lecture4/l4_index>` ·
-      L6
+      :doc:`L5 </lectures/lecture5/l5_index>`
 
 
 .. _glossary-i:
@@ -1317,17 +1322,17 @@ I
       Iterative Closest Point. An algorithm for aligning two point clouds
       by iteratively finding closest-point correspondences and minimizing
       the alignment error. Core algorithm for scan matching in SLAM and
-      LiDAR odometry. L7
+      LiDAR odometry. L6
 
    IDF1
       Identity F1 Score. A tracking evaluation metric computed as the F1
       score of correct identity assignments. Emphasizes consistent ID
-      maintenance over raw detection accuracy. L6
+      maintenance over raw detection accuracy.
 
    IMU
       Inertial Measurement Unit. Measures linear acceleration
       (accelerometers) and angular velocity (gyroscopes) at high
-      frequency (>100 Hz). Suffers from drift over time. :doc:`L2 </lectures/lecture2/l2_index>` · L7
+      frequency (>100 Hz). Suffers from drift over time. :doc:`L2 </lectures/lecture2/l2_index>` · L6
 
    Innovation
       The surprise: the reading the filter got minus the reading it
@@ -1355,7 +1360,7 @@ I
       Combining learned features from each sensor. The network can learn
       which sensor to trust in which conditions, at the cost of needing
       training data with every modality present, and of being hard to
-      interpret or certify. L6
+      interpret or certify. :doc:`L5 </lectures/lecture5/l5_index>`
 
    Intrinsic Calibration
       The parameters describing how a camera turns an incoming ray of
@@ -1390,25 +1395,25 @@ I
    ISO 26262
       International standard for functional safety of road vehicle
       electrical and electronic systems. Defines ASIL levels to classify
-      risk severity. :doc:`L1 </lectures/lecture1/l1_lecture>` · L14
+      risk severity. :doc:`L1 </lectures/lecture1/l1_lecture>` · L13
 
    ISO 21448 (SOTIF)
       Safety of the Intended Functionality. Addresses safety hazards that
       occur without a system failure (e.g., sensor limitations). A
-      critical complement to ISO 26262. :doc:`L1 </lectures/lecture1/l1_lecture>` · L14
+      critical complement to ISO 26262. :doc:`L1 </lectures/lecture1/l1_lecture>` · L13
 
 
    ISO 34502
       *Road vehicles: Test scenarios for automated driving systems:
       Scenario based safety evaluation framework* (2022). Part of the ISO
       34500 series: 34501 vocabulary, 34502 evaluation framework, 34503 ODD
-      taxonomy, 34504 scenario categorization, 34505 test case generation. L13
+      taxonomy, 34504 scenario categorization, 34505 test case generation. L12
 
    ISO/SAE 21434
       The automotive cybersecurity standard: things an attacker does
       on purpose. Its analysis, TARA, asks what an attacker could do
       and produces security goals in Stage 2 of the concept-to-road
-      pipeline. Covered in the cybersecurity pre-read before L14.
+      pipeline. Covered in the cybersecurity pre-read before L13.
       :doc:`L1 </lectures/lecture1/l1_index>`
 
 .. _glossary-j:
@@ -1432,7 +1437,7 @@ J
       Joint Probabilistic Data Association. A probabilistic data
       association method for multi-target tracking in clutter that
       considers all possible measurement-to-track assignments weighted
-      by their probabilities. L6
+      by their probabilities. :doc:`L5 </lectures/lecture5/l5_index>`
 
 
 .. _glossary-k:
@@ -1450,8 +1455,8 @@ K
       other estimator has a smaller expected squared error (Kalman,
       1960). Foundation of IMU and GNSS fusion and the state-update step
       inside SORT and DeepSORT. :doc:`L3 </lectures/lecture3/l3_index>`
-      · L6 ·
-      L7
+      · :doc:`L5 </lectures/lecture5/l5_index>` ·
+      L6
 
    Kalman Gain
       :math:`K`, the fraction of the surprise the filter acts on: the
@@ -1494,13 +1499,13 @@ L
    Lanelet2
       An open lane-graph map format (Poggenhans et al., 2018) widely used
       by Autoware and many research stacks. Represents drivable lanes as
-      typed line strings with explicit topological connectivity. L8
+      typed line strings with explicit topological connectivity. L7
 
    Late Fusion
       Combining finished per-sensor results such as tracks, object lists
       or pose estimates. Modular, testable and robust to a failed
       sensor, but information is discarded before the combination
-      happens. This is what GP3 uses. L6
+      happens. This is what GP3 uses. :doc:`L5 </lectures/lecture5/l5_index>`
 
    Latency
       The time from a camera frame arriving to its boxes coming out of
@@ -1512,13 +1517,13 @@ L
 
    Lateral Control
       The DDT subtask of steering: holding a lane, and turning. Covered
-      in L11. :doc:`L1 </lectures/lecture1/l1_index>`
+      in L10. :doc:`L1 </lectures/lecture1/l1_index>`
 
    Lattice Planner
       A motion planning approach that performs graph search on a
       pre-computed state lattice of kinematically feasible motion
       primitives. Combines the completeness of graph search with
-      kinematic feasibility. L10
+      kinematic feasibility. L9
 
    Layer
       One step of a network's computation: a set of filters, each slid
@@ -1536,7 +1541,7 @@ L
    LiDAR Odometry
       Estimating ego-motion by matching consecutive LiDAR scans using
       algorithms like ICP or feature-based methods (LOAM). More robust
-      than visual odometry in low-light and textureless environments. L7
+      than visual odometry in low-light and textureless environments. L6
 
    Lift-Splat-Shoot (LSS)
       A camera-only BEV method (Philion and Fidler, NeurIPS 2020) in three
@@ -1569,7 +1574,7 @@ L
    LOAM
       LiDAR Odometry and Mapping. A foundational LiDAR SLAM system that
       separates high-frequency odometry (edge and planar feature matching)
-      from low-frequency mapping for real-time operation. L7
+      from low-frequency mapping for real-time operation. L6
 
    Localization (Detection)
       Given an image :math:`W` pixels wide and :math:`H` high and one
@@ -1584,23 +1589,23 @@ L
    Logical Scenario
       A :term:`Functional Scenario` with its parameters named and given
       *ranges* (gap 5 to 30 m, closing speed 0 to 15 m/s). Still not runnable;
-      fixing the values produces a :term:`Concrete Scenario`. L13
+      fixing the values produces a :term:`Concrete Scenario`. L12
 
    Long-Tail Scenarios
       Rare but safety-critical driving events (e.g., a mattress on the
       highway, a child running into the road) that are underrepresented
       in training data. The primary data challenge in AV development. :doc:`L1 </lectures/lecture1/l1_index>` ·
-      :doc:`L4 </lectures/lecture4/l4_index>` · L13 · L14
+      :doc:`L4 </lectures/lecture4/l4_index>` · L12 · L13
 
    Longitudinal Control
       The DDT subtask of acceleration and braking: speed and gap
-      keeping. Covered in L11. :doc:`L1 </lectures/lecture1/l1_index>`
+      keeping. Covered in L10. :doc:`L1 </lectures/lecture1/l1_index>`
 
    Loop Closure
       Detection of a previously visited location during SLAM, used to
       correct accumulated drift by adding a constraint in the pose graph.
       Methods include scan context, visual bag-of-words, and neural
-      descriptors. L7
+      descriptors. L6
 
    Loss
       A number :math:`L` that measures how wrong a network's output is.
@@ -1630,11 +1635,11 @@ M
       A distance metric that accounts for the covariance (uncertainty)
       of a distribution. Used in data association to determine whether a
       measurement is statistically consistent with a predicted track
-      state. L6
+      state. :doc:`L5 </lectures/lecture5/l5_index>`
 
    Maneuver Planning
       The DDT subtask of deciding what to do next: change lane, wait,
-      turn, overtake. Covered in L8 to L10.
+      turn, overtake. Covered in L7 to L9.
       :doc:`L1 </lectures/lecture1/l1_index>`
 
    mAP
@@ -1679,7 +1684,7 @@ M
       Monte Carlo Localization. A particle filter-based localization
       algorithm that represents the robot's belief as a set of weighted
       samples. AMCL (Adaptive MCL) dynamically adjusts particle count.
-      Standard localization algorithm in ROS. :doc:`L3 </lectures/lecture3/l3_index>` · L7
+      Standard localization algorithm in ROS. :doc:`L3 </lectures/lecture3/l3_index>` · L6
 
    Mean
       The average of a set of readings, written with the Greek letter
@@ -1717,7 +1722,7 @@ M
       Multiple Hypothesis Tracking. A data association method that
       maintains a tree of hypotheses for measurement-to-track
       assignments, deferring hard decisions to resolve ambiguity over
-      time. L6
+      time. :doc:`L5 </lectures/lecture5/l5_index>`
 
    mIoU
       Mean intersection over union, the usual score for segmentation.
@@ -1740,7 +1745,7 @@ M
       The rule that promotes a tentative track to confirmed, requiring M
       detections within N frames. It stops clutter from being reported
       as a real object, at the cost of a short delay before a genuine
-      object is confirmed. :doc:`L5 </lectures/lecture5/l5_index>` · L6
+      object is confirmed. :doc:`L5 </lectures/lecture5/l5_index>`
 
    Monocular Depth
       Depth from one camera, inferred by a network from the cues you use
@@ -1754,7 +1759,7 @@ M
    MOTA
       Multi-Object Tracking Accuracy. A tracking metric computed as
       :math:`1 - (FN + FP + IDSW) / GT`, penalizing false negatives,
-      false positives, and identity switches. Range: :math:`(-\infty, 1]`. L6
+      false positives, and identity switches. Range: :math:`(-\infty, 1]`. :doc:`L5 </lectures/lecture5/l5_index>`
 
    Motion Model
       The rule that predicts the next state from the current one, using
@@ -1769,13 +1774,13 @@ M
       Multi-Object Tracking Precision. The average overlap (IoU) between
       true positives and their assigned ground-truth boxes. Complements
       MOTA by measuring localisation quality independently of identity
-      switches. L6
+      switches.
 
    MPC
       Model Predictive Control. A receding-horizon optimization-based
       controller that solves a finite-horizon optimal control problem at
       each time step, applying only the first control action. Dominant
-      controller in production AV systems. L11
+      controller in production AV systems. L10
 
    MRC
       Minimal Risk Condition. The stable, low-risk state a vehicle reaches
@@ -1788,18 +1793,18 @@ M
       of; if reality is not on the list, the vehicle still follows the list.
       Every candidate hides an assumption: stopping in place assumes traffic
       behind can react, pulling over assumes a shoulder exists and that
-      nothing is trapped underneath. :doc:`L1 </lectures/lecture1/l1_lecture>` · L14
+      nothing is trapped underneath. :doc:`L1 </lectures/lecture1/l1_lecture>` · L13
 
    Multi-Modal Prediction
       A trajectory prediction output that represents several plausible
       futures simultaneously (typically as :math:`K` weighted trajectory
       modes), capturing the inherent uncertainty in other agents'
-      intentions. L9
+      intentions. L8
 
    Multi-Object Tracking (MOT)
       The task of maintaining consistent identity for detected objects
       across consecutive frames. Methods: SORT, DeepSORT, ByteTrack,
-      transformer-based MOT. L6
+      transformer-based MOT. :doc:`L5 </lectures/lecture5/l5_index>`
 
    Multipath
       A GNSS error in which the signal arrives by a reflected path
@@ -1840,7 +1845,7 @@ N
       Normal Distributions Transform. A point cloud registration method
       that represents clouds as a grid of Gaussian distributions.
       Used in Autoware for LiDAR-based localization. Faster than ICP
-      for large-scale matching. L7
+      for large-scale matching. L6
 
    NIS
       Normalized innovation squared,
@@ -1871,7 +1876,7 @@ N
       A motion constraint that limits achievable velocities but not the
       configuration space itself. A car cannot move sideways instantaneously
       (no lateral velocity in the body frame), and planners must respect
-      this when generating paths. L10
+      this when generating paths. L9
 
    Normal Distribution
       See Gaussian. :doc:`L3 </lectures/lecture3/l3_index>`
@@ -1885,7 +1890,7 @@ N
    NVIDIA Cosmos
       NVIDIA's family of world foundation models for physical AI,
       designed to generate realistic driving video and enable
-      simulation-based AV training and evaluation. L13
+      simulation-based AV training and evaluation. L12
 
 
 .. _glossary-o:
@@ -1944,13 +1949,13 @@ O
       The fraction of the claimed :term:`ODD` that a test campaign actually
       exercised. The coverage figure a safety case wants, and only ever as
       good as the ODD it is measured against. Not mileage, and not a pass
-      rate. L13
+      rate. L12
 
    OEDR
       Object and Event Detection and Response. The :term:`DDT` subtask of
       monitoring the driving environment (detecting and classifying objects
       and events, and deciding on a response), and then executing that
-      response. Detection is covered in L4 to L6; response in L10 and L11. :doc:`L1 </lectures/lecture1/l1_lecture>`
+      response. Detection is covered in L4 and L5; response in L9 and L10. :doc:`L1 </lectures/lecture1/l1_lecture>`
 
    OES
       Operating Envelope Specification. A formal, machine-readable format
@@ -1969,20 +1974,20 @@ O
       change what happens next. Correct for perception regression testing,
       and unable to evaluate driving: brake in a replay and the recorded
       world carries on regardless. Contrast
-      :term:`Closed-Loop Evaluation`. L13
+      :term:`Closed-Loop Evaluation`. L12
 
    OpenDRIVE
       An ASAM open standard for describing road networks (geometry,
       lanes, signals, junctions) in XML. Widely used as an interchange
       format between map providers, simulators (including CARLA), and
-      planning stacks. L8
+      planning stacks. L7
 
 
    OpenSCENARIO
       An ASAM interchange format describing *what happens* on a road network
       (actors, manoeuvres and triggers), as a companion to
       :term:`OpenDRIVE`, which describes the road itself. Makes a scenario
-      portable between simulators. L13
+      portable between simulators. L12
 
    Overconfident
       Said of a filter whose reported uncertainty is smaller than the
@@ -2029,7 +2034,7 @@ P
       weigh (by the likelihood), and resample. Use it when the belief
       has several peaks and the state is small; it scales badly as the
       state grows. :doc:`L3 </lectures/lecture3/l3_index>` ·
-      L7
+      L6
 
    Patch
       A small square of the image, cut on a fixed grid: in ViT,
@@ -2042,13 +2047,13 @@ P
    Perception
       The process by which an autonomous system transforms unstructured
       sensor data into a structured, semantic understanding of the
-      surrounding environment. :doc:`L4 </lectures/lecture4/l4_index>` · :doc:`L5 </lectures/lecture5/l5_index>` · L6
+      surrounding environment. :doc:`L4 </lectures/lecture4/l4_index>` · :doc:`L5 </lectures/lecture5/l5_index>`
 
    PID Controller
       Proportional-Integral-Derivative controller. A classical feedback
       controller used for longitudinal speed control in AVs. The three
       terms correct present error (P), accumulated past error (I), and
-      predicted future error (D). L11
+      predicted future error (D). L10
 
    Pinhole Camera Model
       The idealized projective camera model that maps 3D world points to
@@ -2074,7 +2079,7 @@ P
    Pose Graph Optimization
       The SLAM backend formulation that represents the robot trajectory
       as a graph of poses (nodes) and relative constraints (edges), then
-      optimizes all poses jointly to minimize constraint errors. L7
+      optimizes all poses jointly to minimize constraint errors. L6
 
    Position Embedding
       A learned vector for each token position, added to the token, so
@@ -2119,7 +2124,7 @@ P
    PRM
       Probabilistic Road Map. A multi-query sampling-based planner that
       pre-computes a graph of collision-free configurations connected by
-      feasible paths, then searches this graph for start-to-goal queries. L10
+      feasible paths, then searches this graph for start-to-goal queries. L9
 
    Process Noise
       How wrong the motion model's prediction can be: the covariance
@@ -2135,7 +2140,7 @@ P
       A geometric path-following controller that steers the vehicle toward
       a lookahead point on the reference path. The steering angle is
       computed from the curvature of the arc connecting the rear axle to
-      the lookahead point. L11
+      the lookahead point. L10
 
 
 .. _glossary-q:
@@ -2149,7 +2154,7 @@ Q
       Quality of Service. Configurable DDS policies governing message
       delivery in ROS 2, including reliability (best-effort vs. reliable),
       durability (transient-local vs. volatile), deadline, and lifespan.
-      Critical for tuning real-time AV communication. L14
+      Critical for tuning real-time AV communication. L13
 
    Query, Key and Value
       The three vectors attention makes from each token, each by its
@@ -2164,7 +2169,7 @@ Q
    Quintic Polynomial Trajectory
       A 5th-degree polynomial trajectory that matches position, velocity,
       and acceleration boundary conditions at start and end points,
-      producing smooth, jerk-minimized motion profiles for comfort. L11
+      producing smooth, jerk-minimized motion profiles for comfort. L10
 
 
 .. _glossary-r:
@@ -2196,7 +2201,7 @@ R
       Replaying recorded drives against a new software build, also called log
       replay. The regression test of AV development: it proves you have not
       broken what previously worked. Being :term:`Open-Loop Evaluation`, it
-      is not by itself a validation of driving ability. L13
+      is not by itself a validation of driving ability. L12
 
    Recall
       The fraction of real objects that the detector successfully found:
@@ -2220,7 +2225,7 @@ R
    Reinforcement Learning (RL)
       Learning by optimizing a reward function through trial and error.
       Used in AV systems for planner fine-tuning (e.g., NVIDIA's
-      end-to-end stack) and scenario-based policy improvement. L12
+      end-to-end stack) and scenario-based policy improvement. L11
 
    ReLU
       Rectified linear unit, :math:`\max(0, x)`: an activation function
@@ -2315,18 +2320,18 @@ R
       Robot Operating System 2. An open-source middleware framework for
       building robotic systems, built on DDS for real-time communication.
       Industry standard for AV development. Used throughout ENPM818Z for
-      the ``ads_pipeline`` package. :doc:`L2 </lectures/lecture2/l2_index>` · L14
+      the ``ads_pipeline`` package. :doc:`L2 </lectures/lecture2/l2_index>` · L13
 
    Route Completion
       The percentage of a route's distance an agent covered. One of the two
       factors in the :term:`Driving Score`; driving off-road reduces it
       rather than incurring a separate penalty. GP4 requires at least
-      70%. L13
+      70%. L12
 
    RRT
       Rapidly-Exploring Random Tree. A sampling-based motion planning
       algorithm that incrementally builds a tree of feasible configurations
-      by random sampling. RRT* is its asymptotically optimal variant. L10
+      by random sampling. RRT* is its asymptotically optimal variant. L9
 
    RT-DETR
       Real-Time DETR. A transformer-based detector with an efficient
@@ -2336,7 +2341,7 @@ R
    RTK-GPS
       Real-Time Kinematic GPS. A GNSS technique using carrier-phase
       measurements and a nearby base station to achieve centimeter-level
-      positioning accuracy. Essential for high-precision AV localization. L7
+      positioning accuracy. Essential for high-precision AV localization. L6
 
 
 .. _glossary-s:
@@ -2376,7 +2381,7 @@ S
       Aligning a new LiDAR scan to a previous scan or map by finding the
       rigid transformation that minimizes inter-point distance. Algorithms
       include ICP, NDT, and feature-based variants. It is the workhorse of
-      LiDAR localization and SLAM. L7
+      LiDAR localization and SLAM. L6
 
    Safety Case
       A written argument that a system is acceptably safe in a given context,
@@ -2401,7 +2406,7 @@ S
       rather than against distance driven, which is infeasible: demonstrating
       human-equivalent safety statistically would take hundreds of millions
       of miles. Trades an impossible sampling problem for a hard
-      completeness argument. L13
+      completeness argument. L12
 
    SE(3)
       The set of rigid motions in 3-D: a rotation :math:`R` and a
@@ -2478,14 +2483,14 @@ S
       The distributional mismatch between simulation-generated data and
       real-world sensor data. A fundamental challenge for training AV
       models in simulation. Mitigations include domain randomization,
-      neural rendering, and fine-tuning on real data. L13
+      neural rendering, and fine-tuning on real data. L12
 
    SLAM
       Simultaneous Localization and Mapping. The problem of building a
       map of an unknown environment while simultaneously tracking the
       agent's pose within it. Comprises a frontend (scan matching,
       feature extraction) and backend (pose graph optimization, loop
-      closure). L7
+      closure). L6
 
    Softmax
       Turns raw scores :math:`s_1, \dots, s_K`, one per class, into numbers
@@ -2501,7 +2506,7 @@ S
       A test level in which the real software runs against simulated sensors
       and vehicle dynamics. This is CARLA, and the level every project in
       this course occupies. Misses timing, hardware faults and real sensor
-      noise. L13
+      noise. L12
 
    Solid-State LiDAR
       A LiDAR that steers its beams with MEMS mirrors or electronics
@@ -2516,10 +2521,10 @@ S
       Simple Online and Realtime Tracking (Bewley et al., 2016). A
       minimal, efficient multi-object tracker using a Kalman filter for
       state prediction and the Hungarian algorithm for IoU-based data
-      association. L6
+      association. :doc:`L5 </lectures/lecture5/l5_index>`
 
    SOTIF
-      See :term:`ISO 21448 (SOTIF)`. :doc:`L1 </lectures/lecture1/l1_lecture>` · L14
+      See :term:`ISO 21448 (SOTIF)`. :doc:`L1 </lectures/lecture1/l1_lecture>` · L13
 
    Standard Deviation
       The square root of the variance, written with the Greek letter
@@ -2532,7 +2537,7 @@ S
       A lateral path-following controller (developed for the DARPA Grand
       Challenge) that computes steering based on both heading error and
       cross-track error measured at the front axle. More aggressive
-      correction than Pure Pursuit at high cross-track errors. L11
+      correction than Pure Pursuit at high cross-track errors. L10
 
    State Vector
       The state: the list of numbers that describes the AV at one
@@ -2606,7 +2611,7 @@ T
       The progression MIL → SIL → HIL → VIL → proving ground → public road.
       Cost per scenario rises by orders of magnitude down the levels and
       realism rises with it, so millions of scenarios run at the top and
-      dozens at the bottom. L13
+      dozens at the bottom. L12
 
    Time of Flight
       Measuring distance by timing how long a pulse takes to travel out
@@ -2644,13 +2649,13 @@ T
    Track Lifecycle
       The states a track passes through: tentative, confirmed, coasting
       and deleted. Track identity must not depend on classification,
-      which is the architectural lesson of the Tempe crash. :doc:`L5 </lectures/lecture5/l5_index>` · L6
+      which is the architectural lesson of the Tempe crash. :doc:`L5 </lectures/lecture5/l5_index>`
 
    Tracking-by-Detection
       The dominant MOT paradigm: at each frame, run an object detector,
       then associate the new detections with existing tracks (via
       KF prediction + Hungarian / cosine appearance matching). Decouples
-      the detector and the tracker. L6
+      the detector and the tracker.
 
    Transfer Learning
       Starting from a pretrained network and fine-tuning it on your own
@@ -2671,7 +2676,7 @@ T
       Forecasting the future positions and states of other traffic agents
       (vehicles, pedestrians, cyclists) over a prediction horizon.
       Methods range from physics-based (CTRA) to transformer-based
-      models generating multi-modal trajectory distributions. L9
+      models generating multi-modal trajectory distributions. L8
 
    Triggering Condition
       A specific environmental or operational circumstance that causes an
@@ -2763,7 +2768,7 @@ U
       United Nations Economic Commission for Europe Global Technical
       Regulation. Work toward a harmonized, **safety-case-based**
       international framework for ADS is underway at UNECE. Check its current
-      status before citing it. :doc:`L1 </lectures/lecture1/l1_lecture>` · L14
+      status before citing it. :doc:`L1 </lectures/lecture1/l1_lecture>` · L13
 
    UNECE R157
       UN Regulation No. 157, covering the approval of Automated Lane Keeping
@@ -2774,7 +2779,7 @@ U
       Unified Autonomous Driving (CVPR 2023 Best Paper). A landmark
       end-to-end architecture that jointly performs perception, prediction,
       and planning through a unified transformer framework with
-      planning-oriented task design. L12
+      planning-oriented task design. L11
 
    Unscented Kalman Filter
       UKF. A Kalman filter for curved models that needs no tangents: it
@@ -2836,18 +2841,18 @@ V
    V-Model
       The ISO 26262 development lifecycle where each design stage (left
       side) is paired with a corresponding verification/test stage (right
-      side), ensuring systematic validation from unit to system level. L14
+      side), ensuring systematic validation from unit to system level. L13
 
    V2X
       Vehicle-to-Everything communication. Includes V2V (vehicle-to-
       vehicle), V2I (vehicle-to-infrastructure), and V2P (vehicle-to-
       pedestrian). Enables cooperative perception and situational
-      awareness. L14
+      awareness. L13
 
    Vehicle-in-the-Loop (VIL)
       A test level in which a real vehicle on a rig or test pad is fed
       synthetic objects, combining real dynamics and actuation with injected
-      traffic that cannot cause harm. L13
+      traffic that cannot cause harm. L12
 
    Verification
       Checking whether you built the thing correctly, through unit and
@@ -2858,7 +2863,7 @@ V
    Vista
       A generalizable driving world model (NeurIPS 2024) that learns to
       predict diverse future video from a small amount of driving data,
-      enabling synthetic scenario generation for evaluation. L13
+      enabling synthetic scenario generation for evaluation. L12
 
    ViT
       Vision Transformer. A transformer architecture (Dosovitskiy et al.,
@@ -2869,13 +2874,13 @@ V
       Estimating camera ego-motion by tracking visual features across
       consecutive frames. Methods include feature-based (ORB-SLAM) and
       direct (DSO) approaches. Provides drift-prone but high-frequency
-      relative pose updates. L7
+      relative pose updates. L6
 
    VLA Model
       Vision-Language-Action model. A multimodal architecture that
       combines visual perception, language reasoning (chain-of-thought),
       and action prediction for autonomous driving. Examples: DriveVLM,
-      NVIDIA Alpamayo. L12
+      NVIDIA Alpamayo. L11
 
    Voxel
       A volumetric pixel: a discrete cell in a 3D grid. Used to
@@ -2887,7 +2892,7 @@ V
       Vector Quantized Variational Autoencoder. A generative model that
       encodes inputs into discrete codebook tokens. Used in world models
       as a visual tokenizer to compress video frames into sequences of
-      discrete tokens for autoregressive prediction. L13
+      discrete tokens for autoregressive prediction. L12
 
 
 .. _glossary-w:
@@ -2900,7 +2905,7 @@ W
    Waypoint
       In CARLA, a discrete point on the road network containing lane
       information, speed limits, and connectivity to other waypoints.
-      Used for path planning and navigation. :doc:`L2 </lectures/lecture2/l2_index>` · L8
+      Used for path planning and navigation. :doc:`L2 </lectures/lecture2/l2_index>` · L7
 
    White Noise
       Noise whose errors are unrelated from one moment to the next, with
@@ -2912,7 +2917,7 @@ W
       A learned model that predicts future scene states (typically video
       frames) conditioned on actions and current observations. Acts as
       a data-driven simulator for training, evaluation, and imagination-
-      based planning. Examples: GAIA-3, NVIDIA Cosmos, Vista. L13
+      based planning. Examples: GAIA-3, NVIDIA Cosmos, Vista. L12
 
 
 .. _glossary-y:

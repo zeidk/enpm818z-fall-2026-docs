@@ -18,7 +18,7 @@ Lecture
    turns pixels into boxes is :doc:`L4 <../lecture4/l4_index>`.
 
    **Data association**, deciding which measurement belongs to which object,
-   is L6. Here there is one AV and every
+   is L5. Here there is one AV and every
    measurement is about it.
 
 .. admonition:: Class logistics for this week

@@ -3,888 +3,965 @@ Lecture
 ====================================================
 
 
-The Localization Problem
--------------------------
-
-.. admonition:: Core Question
-   :class: note
-
-   **"Where am I?"** -- Autonomous vehicles need to know their pose
-   (position + orientation) in a global or local reference frame with
-   sufficient accuracy and reliability to plan safe trajectories.
-
-Required accuracy varies by task:
-
-.. list-table::
-   :widths: 35 25 40
-   :header-rows: 1
-   :class: compact-table
-
-   * - Task
-     - Required accuracy
-     - Method
-   * - Highway lane keeping
-     - ~20 cm lateral
-     - GPS + IMU + map
-   * - Urban lane-level routing
-     - ~10 cm lateral
-     - RTK-GPS or LiDAR scan matching
-   * - Parking slot detection
-     - ~5 cm
-     - LiDAR SLAM or HD map matching
-   * - High-speed overtaking
-     - ~10 cm (velocity critical)
-     - RTK + IMU tight coupling
-
-Coordinate Systems and Transformations
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-AV systems use a hierarchy of coordinate frames. Understanding transforms
-between them is fundamental.
-
-.. list-table::
-   :widths: 20 80
-   :class: compact-table
-
-   * - **WGS84**
-     - World Geodetic System 1984. GPS coordinates: latitude, longitude,
-       altitude. Ellipsoidal model of the Earth.
-   * - **ENU / NED**
-     - Local Cartesian frames: East-North-Up or North-East-Down. Centered
-       at a reference GPS point. Units: meters.
-   * - **Map frame**
-     - Arbitrary origin fixed during operation. HD map coordinates live here.
-   * - **Odom frame**
-     - Continuous odometry origin. Drifts over time but smooth short-term.
-   * - **Base link**
-     - Vehicle body frame. Origin at vehicle center (or rear axle center).
-   * - **Sensor frames**
-     - Each sensor has its own frame. Extrinsic calibration defines the
-       transform to base link.
-
-A rigid body transform between frames :math:`A` and :math:`B` is a
-**homogeneous transformation matrix**:
-
-.. math::
-
-   T_{AB} = \begin{bmatrix} R_{AB} & t_{AB} \\ 0 & 1 \end{bmatrix} \in SE(3)
-
-where :math:`R_{AB} \in SO(3)` is a :math:`3 \times 3` rotation matrix and
-:math:`t_{AB} \in \mathbb{R}^3` is a translation vector.
-
-
-GNSS-Based Localization
-------------------------
-
-GPS / GNSS Fundamentals
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Global Navigation Satellite Systems (GNSS) include GPS (US), GLONASS (Russia),
-Galileo (EU), and BeiDou (China). The receiver computes position by measuring
-**pseudoranges** to multiple satellites:
-
-.. math::
-
-   \rho_i = \| \mathbf{p}_{sat,i} - \mathbf{p}_{recv} \| + c \cdot \delta t + \epsilon_i
-
-where :math:`\mathbf{p}_{sat,i}` is the known satellite position,
-:math:`\mathbf{p}_{recv}` is the unknown receiver position, :math:`c` is
-the speed of light, :math:`\delta t` is clock offset, and :math:`\epsilon_i`
-includes atmospheric delays and multipath errors.
-
-Standard GPS accuracy: **1-5 meters** (civilian L1 signal). Not sufficient
-for AV lane-level localization.
-
-RTK-GPS (Real-Time Kinematic)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-RTK uses a **base station** at a precisely known location to compute and
-broadcast correction signals in real time. The rover receiver applies these
-corrections to resolve carrier-phase ambiguities.
-
-.. tab-set::
-
-   .. tab-item:: How RTK Works
-
-      1. Base station measures carrier phase of GPS signals.
-      2. Computes corrections (residual errors).
-      3. Broadcasts corrections via radio or internet (NTRIP protocol).
-      4. Rover applies corrections and resolves integer ambiguities.
-      5. Result: centimeter-level positioning (1-2 cm horizontal, 2-5 cm vertical).
-
-   .. tab-item:: Limitations
-
-      - Requires base station within ~20-50 km.
-      - Initialization ("fixing") takes 30-120 seconds.
-      - Performance degrades in urban canyons (multipath from buildings).
-      - No satellite signal in tunnels, underground parking.
-
-PPP (Precise Point Positioning)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-PPP uses precise satellite orbit and clock corrections broadcast globally
-(no local base station needed). Accuracy: ~5-10 cm after convergence (30-60
-minutes). Used for offline post-processing and emerging real-time services
-(PPP-RTK targets cm-level in <1 minute).
-
-.. admonition:: AV Reality
-   :class: warning
-
-   GNSS alone is insufficient for production AV systems because of urban
-   canyon multipath, tunnel outages, and multipath interference. GNSS
-   provides the global reference frame; other sensors (LiDAR, IMU) maintain
-   accuracy when GNSS is unreliable.
-
-
-Dead Reckoning
----------------
-
-Dead reckoning estimates the current pose by integrating motion measurements
-from the prior known pose, without requiring external reference.
-
-:math:`\hat{\mathbf{x}}_k = \hat{\mathbf{x}}_{k-1} \oplus \Delta \mathbf{x}_k`
-
-where :math:`\oplus` denotes pose composition in SE(3) and :math:`\Delta \mathbf{x}_k`
-is the incremental motion estimate.
-
-Wheel Odometry
-~~~~~~~~~~~~~~~
-
-Integrates wheel encoder measurements to estimate 2D pose. **The model
-must match the vehicle**, and cars are not differential-drive robots.
-
-.. tab-set::
-
-   .. tab-item:: Ackermann (cars) -- use this one
-
-      A passenger car steers its front wheels and cannot change heading
-      without moving forward. Heading rate comes from the **steering
-      angle** via the bicycle model (L10), not from a left/right wheel
-      speed difference:
-
-      .. math::
-
-         \Delta d &= \frac{\Delta d_{RL} + \Delta d_{RR}}{2}
-           \quad \text{(rear wheels: undriven by steering)} \\
-         \Delta \theta &= \frac{\Delta d}{L_{wb}} \tan \delta
-
-      where :math:`L_{wb}` is the wheelbase (front axle to rear axle) and
-      :math:`\delta` is the road-wheel steering angle. Integration then
-      uses the midpoint heading:
-
-      .. math::
-
-         x_{k+1} &= x_k + \Delta d \cos(\theta_k + \Delta\theta/2) \\
-         y_{k+1} &= y_k + \Delta d \sin(\theta_k + \Delta\theta/2) \\
-         \theta_{k+1} &= \theta_k + \Delta\theta
-
-      In practice the yaw rate is taken from the **IMU gyroscope**
-      instead, which is far more accurate than differentiating a
-      steering-angle sensor.
-
-   .. tab-item:: Differential drive (not cars)
-
-      For a two-wheeled robot that steers by driving its wheels at
-      different speeds:
-
-      .. math::
-
-         \Delta d = \frac{\Delta d_L + \Delta d_R}{2}, \quad
-         \Delta \theta = \frac{\Delta d_R - \Delta d_L}{b}
-
-      where :math:`b` is the **track width** between the two wheels.
-
-      .. warning::
-
-         This model appears in most robotics textbooks and is wrong for
-         a car. On an Ackermann vehicle the left/right rear wheel speed
-         difference during a turn is a small geometric side-effect, not
-         the steering input, and it vanishes entirely when driving
-         straight. Applying this formula to a car gives a heading
-         estimate dominated by tyre-radius mismatch and noise.
-
-**Error sources**: wheel slip (especially on turns, wet roads), uneven terrain
-(suspension deflection changes wheel-ground contact), encoder resolution,
-and tyre radius changing with load, temperature, and pressure.
-
-**Drift behaviour**: distance error grows roughly linearly with distance
-travelled, but a *heading* bias causes position error to grow
-**quadratically** -- which is why a small uncorrected yaw error is far
-more damaging than a scale error.
-
-Visual Odometry (VO)
-~~~~~~~~~~~~~~~~~~~~~~
-
-Estimates camera motion by tracking/matching feature points across consecutive
-frames:
-
-1. Detect keypoints (ORB, SIFT, SuperPoint).
-2. Match keypoints between frames.
-3. Compute the essential matrix :math:`E` using RANSAC.
-4. Decompose :math:`E = [\mathbf{t}]_\times R` to recover rotation and
-   (scale-ambiguous) translation, where :math:`[\mathbf{t}]_\times` is the
-   skew-symmetric matrix of the translation vector:
-
-   .. math::
-
-      [\mathbf{t}]_\times = \begin{bmatrix}
-        0 & -t_z & t_y \\ t_z & 0 & -t_x \\ -t_y & t_x & 0
-      \end{bmatrix}
-
-   The decomposition yields **four** candidate :math:`(R, \mathbf{t})`
-   solutions; the correct one is selected by the cheirality check --
-   requiring triangulated points to lie in front of both cameras.
-5. (Stereo VO) Use the stereo baseline to recover metric scale.
-
-**Monocular VO**: scale-ambiguous; scale drift over long sequences.
-**Stereo VO**: metric scale recovered from baseline; drift ~0.5-1% of distance.
-
-LiDAR Odometry
-~~~~~~~~~~~~~~~
-
-Estimates motion by matching consecutive LiDAR scans (see ICP below).
-**Drift**: ~0.1-0.5% of distance for state-of-the-art systems (LOAM).
-Higher accuracy than VO due to direct 3D metric measurements.
-
-Drift Comparison
-~~~~~~~~~~~~~~~~~
-
-.. list-table::
-   :widths: 30 25 25 20
-   :header-rows: 1
-   :class: compact-table
-
-   * - Method
-     - Typical drift
-     - Frequency
-     - 3D?
-   * - Wheel odometry
-     - 1-5% of distance
-     - 100-1000 Hz
-     - No (2D)
-   * - Visual odometry (mono)
-     - 0.5-2% (scale drift)
-     - 10-30 Hz
-     - Yes
-   * - Visual odometry (stereo)
-     - 0.5-1%
-     - 10-30 Hz
-     - Yes
-   * - LiDAR odometry
-     - 0.1-0.5%
-     - 10-20 Hz
-     - Yes
-   * - IMU (integrated)
-     - Diverges in seconds
-     - 100-1000 Hz
-     - Yes
-
-
-Probabilistic Localization
----------------------------
-
-Rather than a single pose estimate, probabilistic localization maintains a
-**belief** -- a probability distribution over possible poses.
-
-EKF Localization
-~~~~~~~~~~~~~~~~~
-
-Given a known map of landmarks :math:`m = \{m_1, \ldots, m_N\}`:
-
-1. **Predict**: propagate pose estimate using motion model (wheel odometry or
-   IMU).
-2. **Update**: when a landmark is observed, compute expected observation
-   :math:`h(\mathbf{x}, m_j)` and update using the EKF equations from
-   :doc:`L3 </lectures/lecture3/l3_index>`.
-
-The observation function :math:`h` is typically nonlinear (e.g., range-bearing
-to a known landmark), requiring the EKF's Jacobian linearization.
-
-MCL: Monte Carlo Localization
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. admonition:: Prerequisite Recap (ENPM673)
-   :class: note
-
-   In ENPM673, you implemented a particle filter for robot localization
-   (predict with motion model, weight by sensor likelihood, resample).
-   MCL (also called AMCL) applies this same algorithm to AV pose estimation
-   using LiDAR scans against a reference map.
-
-**LiDAR Sensor Model.** The sensor update step scores each particle by how
-well the vehicle's actual LiDAR scan matches a simulated scan from that
-particle's hypothesized pose. The map-based sensor model works as follows:
-
-1. For each particle, perform **ray-casting** against a 2D occupancy grid or
-   3D voxel map to compute the expected scan from that pose.
-2. Compare the expected scan to the actual scan using a likelihood function
-   (e.g., beam model with Gaussian noise, or likelihood field model that
-   queries the distance to the nearest obstacle for each measured endpoint).
-3. Assign the particle a weight proportional to the scan match score.
-
-**Adaptive Particle Count (KLD-Sampling).** Standard MCL uses a fixed number
-of particles :math:`N`. AMCL adjusts :math:`N` dynamically using
-**KLD-sampling** (Kullback-Leibler divergence sampling):
-
-- When the particle distribution is converged (vehicle well-localized), fewer
-  particles are needed -- :math:`N` shrinks, reducing CPU load.
-- When the distribution is spread out (high uncertainty, e.g., after
-  initialization or GPS dropout), :math:`N` grows to cover the hypothesis
-  space adequately.
-- The bound is derived from the KL divergence between the true posterior and
-  the sample-based approximation, guaranteeing a maximum approximation error
-  with probability :math:`1 - \delta`.
-
-**Operating Modes.**
-
-- **Global localization**: particles are initialized uniformly across the
-  entire map. The filter converges to the correct pose as scans accumulate.
-  Required at startup when no GPS prior is available.
-- **Pose tracking**: particles are initialized around a known pose (e.g., from
-  GPS). The filter tracks incremental motion. Much faster convergence.
-- A small fraction of random particles can be injected each cycle to enable
-  **kidnapped robot recovery** -- detecting and recovering from sudden
-  relocations (e.g., a localization failure after passing through a tunnel).
-
-**Integration with ROS 2 Nav2.** The ``nav2_amcl`` package provides a
-production-ready AMCL implementation for the ROS 2 navigation stack:
-
-.. list-table::
-   :widths: 30 70
-   :class: compact-table
-
-   * - **Input**
-     - 2D laser scan (``sensor_msgs/LaserScan``), odometry, and a 2D
-       occupancy grid map (``nav_msgs/OccupancyGrid``)
-   * - **Output**
-     - Corrected pose as the ``map`` → ``odom`` transform on ``/tf``
-   * - **Key parameters**
-     - ``min_particles`` / ``max_particles`` (KLD bounds),
-       ``laser_model_type`` (beam or likelihood field),
-       ``recovery_alpha_slow`` / ``recovery_alpha_fast`` (random particle
-       injection rates for kidnapped-robot recovery)
-
-Key advantage: MCL handles the **global localization** problem (starting
-without a prior pose) and recovers from **kidnapped robot** scenarios
-(sudden relocation), which EKF cannot.
-
-
-Map-Based Localization
+The Navigation Problem
 -----------------------
 
-Scan Matching with ICP
-~~~~~~~~~~~~~~~~~~~~~~~
+Navigation answers the question: **"Which sequence of roads and lanes
+should I take to reach my destination?"** This is fundamentally different
+from motion planning (L9), which asks *"How do I move safely along this
+road segment?"*
 
-**Iterative Closest Point (ICP)** is the core algorithm for aligning a
-source point cloud :math:`\mathcal{P}` to a target point cloud :math:`\mathcal{Q}`:
-
-.. math::
-
-   T^* = \argmin_{T} \sum_{i} \| q_i - T p_i \|^2
-
-where :math:`(p_i, q_i)` are corresponding point pairs. ICP alternates between:
-
-1. **Correspondence**: find nearest neighbor in :math:`\mathcal{Q}` for each
-   point in :math:`T \cdot \mathcal{P}`.
-2. **Minimize**: solve for the optimal rigid transform using SVD (the
-   Kabsch algorithm):
-
-   .. math::
-
-      [U, S, V^T] = \text{SVD}(H) \quad \text{where } H = \sum_i (p_i - \bar{p})(q_i - \bar{q})^T
-
-      R = V D U^T, \quad t = \bar{q} - R \bar{p}
-
-   where :math:`D = \text{diag}(1, 1, \det(VU^T))`.
-
-   .. warning::
-
-      The :math:`D` term is not optional. Without it, degenerate or
-      noisy correspondences can produce a matrix with
-      :math:`\det = -1` -- a **reflection** rather than a rotation. It
-      minimizes the cost function perfectly while describing a physically
-      impossible motion, and it is a classic silent ICP failure.
-
-3. **Update**: apply transform and check convergence.
-
-ICP Variants
-~~~~~~~~~~~~
-
-.. list-table::
-   :widths: 25 75
+.. list-table:: Navigation vs. Motion Planning
+   :widths: 20 40 40
    :header-rows: 1
    :class: compact-table
 
-   * - Variant
-     - Improvement
-   * - **Point-to-plane ICP**
-     - Minimizes distance from source point to target surface (normal).
-       Converges ~10x faster than point-to-point.
-   * - **NDT (Normal Distributions Transform)**
-     - Represents target cloud as a grid of Gaussians. Robust to outliers,
-       no explicit correspondences needed. Used in Autoware.
-   * - **GICP (Generalized ICP)**
-     - Treats both clouds as Gaussians; maximum likelihood formulation.
-       More robust and accurate than standard ICP.
-
-HD Map Localization
-~~~~~~~~~~~~~~~~~~~~
-
-HD (High-Definition) maps contain centimeter-accurate road geometry, lane
-markings, signs, and semantic features. The vehicle localizes by matching
-current sensor observations to the HD map:
-
-1. LiDAR scan → extract lane markings, curbs, poles.
-2. Match extracted features to HD map features.
-3. Compute 6-DoF pose correction.
-4. Fuse with GNSS and IMU via EKF.
-
-**Advantages**: globally consistent, no accumulated drift.
-**Disadvantages**: HD maps cost millions to create and maintain; they go stale
-(road construction, seasonal changes). Requires prior map of the operating area.
+   * - Property
+     - Navigation (Route Planning)
+     - Motion Planning (L9)
+   * - Scale
+     - City-wide (km)
+     - Local (10--50 m)
+   * - Input
+     - Road network graph, current position, goal
+     - Reference path, obstacles, vehicle dynamics
+   * - Output
+     - Sequence of road segments / waypoints
+     - Collision-free trajectory
+   * - Replanning rate
+     - On request or every few minutes
+     - 10--50 Hz
+   * - Algorithm class
+     - Graph search (Dijkstra, A*)
+     - Sampling, optimization, lattice search
+   * - Obstacle awareness
+     - Traffic conditions (aggregate)
+     - Individual obstacles (precise geometry)
 
 
-SLAM Problem Formulation
---------------------------
-
-In SLAM, the vehicle simultaneously estimates its trajectory and builds a
-map from scratch -- no prior map is assumed.
-
-.. math::
-
-   p(\mathbf{x}_{0:t}, m \mid \mathbf{z}_{1:t}, \mathbf{u}_{1:t})
-
-where:
-
-- :math:`\mathbf{x}_{0:t}` -- vehicle trajectory (sequence of poses)
-- :math:`m` -- map (set of landmarks, point cloud, or dense voxel map)
-- :math:`\mathbf{z}_{1:t}` -- all measurements (LiDAR scans, image features)
-- :math:`\mathbf{u}_{1:t}` -- all control inputs (odometry)
-
-The chicken-and-egg problem: accurate mapping requires knowing the pose;
-accurate pose estimation requires knowing the map.
-
-.. admonition:: SLAM is the AV chicken-and-egg
-   :class: note
-
-   HD map localization requires a pre-built HD map. But building that HD map
-   required SLAM. In practice: SLAM is used offline to build maps; HD map
-   localization is used online during operation.
-
-
-SLAM Frontend
---------------
-
-The frontend processes raw sensor data to produce odometry estimates and
-detect loop closures.
-
-Scan Acquisition and Preprocessing
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. list-table::
-   :widths: 25 75
-   :class: compact-table
-
-   * - **Motion distortion**
-     - LiDAR scans take 50-100 ms to complete. During this time, the vehicle
-       moves. Each point is captured at a slightly different vehicle pose.
-       IMU data is used to de-skew the scan -- correcting each point to the
-       pose at the scan start time.
-   * - **Ground removal**
-     - Remove points belonging to the ground plane (RANSAC plane fitting).
-       Reduces data and avoids matching ground points across scans.
-   * - **Downsampling**
-     - Voxel grid filter: retain one point per voxel. Reduces compute while
-       preserving structure.
-   * - **Range filtering**
-     - Remove points beyond useful range (e.g., > 80 m) and very close range
-       (< 0.5 m) artifacts.
-
-Feature Extraction
-~~~~~~~~~~~~~~~~~~~
-
-.. tab-set::
-
-   .. tab-item:: Edge Features (LOAM)
-
-      Points with large **curvature** values lie on edges (corners, poles).
-      Computed as:
-
-      .. math::
-
-         c = \frac{1}{|S| \cdot \|p_i\|} \left\| \sum_{j \in S, j \neq i} (p_j - p_i) \right\|
-
-      High curvature → edge feature. Low curvature → planar feature.
-
-   .. tab-item:: Planar Features (LOAM)
-
-      Points with **small curvature** lie on flat surfaces (walls, ground).
-      Selected from each scan ring as the points with minimum curvature.
-
-   .. tab-item:: 3D Descriptors
-
-      For place recognition and loop closure: FPFH, SHOT, or learned
-      descriptors (FCGF, D3Feat). Encode local geometry around each keypoint
-      into a descriptor vector.
-
-ICP-Based Scan-to-Scan Matching
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The frontend matches each new scan to the previous scan (scan-to-scan) or
-to a local map (scan-to-map):
+Position in the AV Stack
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
-   # Pseudocode: LOAM-style frontend
-   for each new_scan:
-       # 1. Preprocessing
-       new_scan = remove_motion_distortion(new_scan, imu_data)
-       new_scan = voxel_downsample(new_scan, voxel_size=0.2)
+   ┌──────────────────────────────────────────────────────────┐
+   │  L6: Localization           → Where am I?                │
+   ├──────────────────────────────────────────────────────────┤
+   │  L7: Navigation (this)      → Which roads do I take?     │
+   │      Output: ordered list of road segments / waypoints   │
+   ├──────────────────────────────────────────────────────────┤
+   │  L8: Prediction & Behavior  → What will others do, and   │
+   │                               which maneuver do I pick?  │
+   ├──────────────────────────────────────────────────────────┤
+   │  L9: Motion Planning       → What collision-free path?  │
+   ├──────────────────────────────────────────────────────────┤
+   │  L10: Trajectory & Control  → Execute the path smoothly  │
+   └──────────────────────────────────────────────────────────┘
 
-       # 2. Feature extraction
-       edges, planes = extract_loam_features(new_scan)
-
-       # 3. Scan matching (edge-to-edge, plane-to-plane)
-       T_delta = icp_feature_match(edges, planes, local_map)
-
-       # 4. Update pose estimate
-       current_pose = current_pose @ T_delta
-
-       # 5. Keyframe selection
-       if is_keyframe(T_delta):
-           add_keyframe(current_pose, new_scan)
-           update_local_map()
-
-Keyframe Strategy
-~~~~~~~~~~~~~~~~~~
-
-Not every scan is a keyframe. Keyframes are selected when the vehicle has
-moved sufficiently (e.g., >0.5 m or >10 deg rotation from the last keyframe).
-
-- **Too frequent**: high memory use, backend overwhelmed.
-- **Too sparse**: large gaps in map coverage, ICP initialization failures.
+The route planner produces a **reference route** (sequence of waypoints
+or road segments). The behavior planner decides how to handle each
+segment (follow lane, change lane, yield). The motion planner generates
+a geometrically feasible, collision-free path within those constraints.
 
 
-SLAM Backend
--------------
+Road Network Representation
+-----------------------------
 
-The backend refines the entire trajectory and map globally by solving a
-**pose graph optimization** problem.
-
-Pose Graph Formulation
-~~~~~~~~~~~~~~~~~~~~~~~
-
-A **pose graph** has:
-
-- **Nodes**: :math:`x_i \in SE(3)` -- the estimated pose at each keyframe.
-- **Edges**: constraints between poses. Each edge :math:`(i, j)` represents
-  a relative pose measurement :math:`z_{ij}` with information matrix
-  :math:`\Omega_{ij}`:
-
-.. math::
-
-   F = \sum_{(i,j) \in \mathcal{E}} e_{ij}^T \Omega_{ij} e_{ij}
-
-   e_{ij} = \text{Log}(T_{ij}^{-1} \cdot x_i^{-1} \cdot x_j)
-
-where :math:`\text{Log}` is the Lie algebra logarithm that converts an SE(3)
-transform to a 6D vector. Minimizing F gives the maximum likelihood trajectory.
-
-This is solved with **nonlinear least squares** (Gauss-Newton or Levenberg-
-Marquardt), implemented in libraries like g2o, GTSAM, and Ceres Solver.
-
-Loop Closure Detection
-~~~~~~~~~~~~~~~~~~~~~~~
-
-Without loop closure, SLAM drift accumulates without bound. Loop closure
-detects when the vehicle **revisits a previously mapped area** and adds a
-long-range edge to the pose graph, correcting accumulated drift globally.
-
-.. grid:: 1 2 2 2
-   :gutter: 3
-
-   .. grid-item-card:: Detection (Place Recognition)
-      :class-card: sd-border-info
-
-      Match current scan against all previous keyframes using:
-
-      - **Scan context** (Kim & Kim, 2018): compact 2D histogram encoding
-        of the 3D scene structure. Fast retrieval via KD-tree.
-      - **FPFH descriptors + RANSAC**: geometric verification.
-      - **Neural: PointNetVLAD, MinkLoc3D**: learned place recognition.
-
-   .. grid-item-card:: Verification (Geometric)
-      :class-card: sd-border-info
-
-      Once a candidate loop is found, verify with ICP. Accept only if
-      ICP converges to a consistent transform with low residual error.
-
-      Reject false positives: use a minimum overlap threshold and a
-      maximum residual threshold.
-
-.. admonition:: Why Loop Closure Matters
-   :class: important
-
-   Odometry drift is **unbounded**: at ~0.5% translational drift, 100 m
-   of driving accumulates ~0.5 m of error and 1 km accumulates ~5 m --
-   already unusable for lane-level driving, and it keeps growing.
-
-   A correct loop closure adds a constraint saying "these two poses are
-   the same place." The optimizer then distributes the accumulated error
-   backwards across the whole loop, so drift becomes **bounded by the
-   loop-closure constraint's own accuracy** (typically a few centimetres
-   to tens of centimetres, set by the ICP registration quality) rather
-   than growing with distance travelled.
-
-   .. warning::
-
-      Loop closure bounds error; it does not eliminate it. Claims of
-      "sub-centimetre after loop closure" are not achievable in practice
-      -- the corrected trajectory is only as good as the registration
-      that produced the constraint. And a **false** loop closure is far
-      worse than none at all: it warps the entire map irrecoverably,
-      which is why geometric verification is mandatory before accepting
-      a candidate.
+Road networks for AV navigation are significantly more detailed than
+consumer GPS maps. They encode **lane-level topology**, not just
+road-level connectivity.
 
 
-SLAM Evaluation Metrics
-------------------------
+Graph Structure
+~~~~~~~~~~~~~~~~
+
+A road network is modeled as a **directed graph** :math:`G = (V, E)`:
+
+- **Nodes** :math:`V`: Lane-level waypoints at regular intervals
+  (e.g., every 2 m). Each node stores position :math:`(x, y, z)`,
+  road ID, lane ID, speed limit, and lane width.
+- **Edges** :math:`E`: Connections between consecutive waypoints.
+  Edges encode whether a transition is a **lane follow**, **lane
+  change**, or **junction maneuver**.
+
+.. list-table:: Edge Types
+   :widths: 20 30 50
+   :header-rows: 1
+   :class: compact-table
+
+   * - Type
+     - Connectivity
+     - Example
+   * - Lane follow
+     - Same lane, consecutive waypoints
+     - Driving straight along a road
+   * - Lane change (left)
+     - Adjacent lane, same road section
+     - Moving to the left lane for overtaking
+   * - Lane change (right)
+     - Adjacent lane, same road section
+     - Moving to the right lane before an exit
+   * - Junction
+     - Different roads, connected through intersection
+     - Turning left at a traffic light
+
+
+OpenDRIVE Format
+~~~~~~~~~~~~~~~~~
+
+CARLA uses the **OpenDRIVE** standard (ISO, adopted by ASAM) to define
+road networks. An OpenDRIVE file (``.xodr``) describes:
+
+.. list-table::
+   :widths: 25 75
+   :class: compact-table
+
+   * - **Roads**
+     - Defined by a reference line (geometry: line, arc, spiral, cubic)
+       with a unique road ID.
+   * - **Lanes**
+     - Organized in lane sections along each road. Each lane has an ID,
+       type (driving, shoulder, sidewalk), width, and speed limit.
+   * - **Junctions**
+     - Connect roads at intersections. Define which incoming lanes can
+       connect to which outgoing lanes (connection elements).
+   * - **Signals**
+     - Traffic lights, stop signs, speed limit signs with position and
+       orientation relative to the road.
+   * - **Objects**
+     - Static objects like barriers, poles, and crosswalks.
+
+.. code-block:: python
+
+   # Access CARLA's OpenDRIVE data
+   import carla
+
+   client = carla.Client('localhost', 2000)
+   world = client.get_world()
+   carla_map = world.get_map()
+
+   # Get the raw OpenDRIVE XML
+   opendrive_xml = carla_map.to_opendrive()
+   print(f"OpenDRIVE data: {len(opendrive_xml)} characters")
+
+   # Get topology: list of (waypoint, waypoint) pairs
+   # representing road segment start-end connections
+   topology = carla_map.get_topology()
+   print(f"Topology: {len(topology)} road segments")
+
+
+Lanelet2 Format
+~~~~~~~~~~~~~~~~
+
+**Lanelet2** is the map format used by Autoware and many research
+platforms. It differs from OpenDRIVE in its representation:
 
 .. list-table::
    :widths: 20 40 40
    :header-rows: 1
    :class: compact-table
 
-   * - Metric
-     - Definition
-     - Notes
-   * - **APE**
-     - Absolute Pose Error: RMSE between estimated and ground-truth poses
-       at each timestep
-     - Global accuracy; sensitive to loop closure quality
-   * - **RPE**
-     - Relative Pose Error: RMSE of relative transforms over a fixed
-       interval (e.g., 100 m)
-     - Local accuracy; measures odometry drift rate
-   * - **Map consistency**
-     - Overlap IoU of map with ground-truth HD map or aerial survey
-     - End-to-end mapping quality
-   * - **Runtime**
-     - Processing time per scan (Hz)
-     - Must exceed sensor rate (>10 Hz for 10 Hz LiDAR)
-
-The **EVO** tool provides standardized APE/RPE computation from trajectory
-files in TUM, KITTI, and ROS bag formats.
+   * - Feature
+     - OpenDRIVE
+     - Lanelet2
+   * - Geometry
+     - Parametric curves (arcs, spirals)
+     - Polylines (left/right boundary points)
+   * - Lane representation
+     - Offset from road reference line
+     - Bounded region between two linestrings
+   * - Traffic rules
+     - Signal elements attached to roads
+     - Regulatory elements attached to lanelets
+   * - Primary users
+     - CARLA, SUMO, dSPACE
+     - Autoware, many research platforms
+   * - File format
+     - XML (.xodr)
+     - OSM-based XML (.osm)
 
 
-Modern LiDAR SLAM Systems
---------------------------
+HD Maps for Navigation
+~~~~~~~~~~~~~~~~~~~~~~~
 
-.. tab-set::
+High-Definition maps go beyond basic road geometry to encode rich
+semantic information used by the navigation and planning stack:
 
-   .. tab-item:: LOAM (2014)
+.. grid:: 1 2 2 3
+   :gutter: 3
 
-      **LiDAR Odometry and Mapping** (Zhang & Singh, RSS 2014).
+   .. grid-item-card:: Geometry
+      :class-card: sd-border-info
 
-      - Frontend: edge + planar feature extraction and matching (scan-to-map).
-      - Backend: none (no pose graph, no loop closure).
-      - Performance: ~0.55% average translational error on the KITTI
-        odometry benchmark -- the top-ranked method at publication.
-        (KITTI scores odometry as *relative* translation/rotation error
-        over 100--800 m sub-sequences, expressed as a percentage; it does
-        not report an absolute pose error in centimetres.)
-      - Limitation: drift accumulates without loop closure; memory grows unbounded.
-      - Legacy: LOAM's feature extraction approach inspired all later systems.
+      - Lane boundaries with centimeter accuracy
+      - Road elevation profile
+      - Curvature at every point
+      - Intersection geometry
 
-   .. tab-item:: LeGO-LOAM (2018)
+   .. grid-item-card:: Topology
+      :class-card: sd-border-info
 
-      **Lightweight and Ground-Optimized LOAM** (Shan & Englot, IROS 2018).
+      - Lane-level connectivity graph
+      - Lane change permissions (solid vs. dashed lines)
+      - Merge/diverge points
+      - Turn restrictions
 
-      - Adds explicit ground segmentation before feature extraction.
-      - Two-step optimization: ground plane features first (z, roll, pitch),
-        then edge features (x, y, yaw).
-      - Pose graph backend with loop closure.
-      - Designed for ground vehicles; 30% compute reduction vs. LOAM.
-      - Widely used in AV research and robotics competitions.
+   .. grid-item-card:: Semantics
+      :class-card: sd-border-info
 
-   .. tab-item:: LIO-SAM (2020)
+      - Speed limits per lane segment
+      - Traffic light positions and associations
+      - Stop/yield sign locations
+      - Crosswalk boundaries
 
-      **Tightly-Coupled LiDAR Inertial Odometry via Smoothing and Mapping**
-      (Shan et al., IROS 2020).
+.. admonition:: HD Map Limitations
+   :class: warning
 
-      - Tightly couples IMU pre-integration with LiDAR scan matching.
-      - Factor graph backend (GTSAM): LiDAR, IMU, GPS, and loop closure
-        factors in a single unified optimization.
-      - Real-time at 10 Hz; excellent for outdoor environments.
-      - De facto standard for LiDAR-IMU SLAM research.
+   HD maps are expensive to create ($5K--$50K per km), require
+   continuous maintenance, and limit the ODD to mapped areas. The
+   industry trend is toward lighter maps supplemented by stronger
+   online perception (Tesla, Mobileye REM).
 
-   .. tab-item:: KISS-ICP (2023)
 
-      **Keep It Small and Simple** (Vizzo et al., RA-L 2023).
+Global Route Planning
+----------------------
 
-      - Remarkably simple design: adaptive threshold ICP on raw point clouds.
-      - No feature extraction, no map management, no loop closure.
-      - Achieves competitive accuracy with state-of-the-art systems on
-        multiple benchmarks.
-      - Highlights that well-designed ICP with adaptive parameters can
-        compete with complex feature-based systems.
+Given the road network graph, a start position, and a goal position,
+the route planner finds the optimal sequence of road segments to
+traverse.
 
-CARLA Hands-On: LiDAR Odometry and Mapping
---------------------------------------------
 
-This exercise builds a minimal LiDAR odometry system: collect scans,
-register consecutive scans with ICP, chain the transforms into a
-trajectory, and measure how far it has drifted from ground truth.
+Cost Functions for Road Networks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Task 1: Collect Synchronized LiDAR and Ground-Truth Poses
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Unlike grid-based planning, road network edges carry rich cost
+information:
+
+.. math::
+
+   \text{cost}(e) = w_d \cdot d(e) + w_t \cdot t(e) + w_r \cdot r(e)
+                    + w_c \cdot c(e) + w_m \cdot m(e)
+
+.. list-table::
+   :widths: 15 25 60
+   :header-rows: 1
+   :class: compact-table
+
+   * - Term
+     - Component
+     - Description
+   * - :math:`d(e)`
+     - Distance
+     - Physical length of the road segment (meters).
+   * - :math:`t(e)`
+     - Travel time
+     - Segment length / speed limit. Accounts for faster highways vs.
+       slower urban roads.
+   * - :math:`r(e)`
+     - Road class
+     - Penalty for road types: prefer highways over residential streets
+       for long routes, or vice versa in urban settings.
+   * - :math:`c(e)`
+     - Comfort
+     - Penalty for sharp turns, steep grades, or frequent lane changes.
+   * - :math:`m(e)`
+     - Maneuver complexity
+     - Penalty for unprotected left turns, complex merges, or high-risk
+       intersections.
+
+.. tip::
+
+   By adjusting the weights :math:`w_d, w_t, w_r, w_c, w_m`, the same
+   algorithm can produce shortest-distance, fastest-time, or
+   safest/most-comfortable routes.
+
+
+Dijkstra's Algorithm on Road Graphs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Dijkstra's algorithm finds the shortest path from a start node to all
+other nodes in a weighted graph with non-negative edge costs.
+
+.. code-block:: python
+
+   import heapq
+
+   def dijkstra(graph, start_id, goal_id):
+       """
+       Find shortest path on a road network graph.
+
+       Args:
+           graph: dict of {node_id: [(neighbor_id, cost), ...]}
+           start_id: starting waypoint ID
+           goal_id: goal waypoint ID
+
+       Returns:
+           path: list of waypoint keys from start to goal
+           total_cost: total path cost
+           expanded: number of nodes expanded (for comparison with A*)
+       """
+       dist = {start_id: 0.0}
+       prev = {}
+       pq = [(0.0, start_id)]
+       expanded = 0
+
+       while pq:
+           d, u = heapq.heappop(pq)
+           if u == goal_id:
+               break
+           if d > dist.get(u, float('inf')):
+               continue
+           expanded += 1
+           for v, cost in graph.get(u, []):     # .get: u may be a dead end
+               new_dist = d + cost
+               if new_dist < dist.get(v, float('inf')):
+                   dist[v] = new_dist
+                   prev[v] = u
+                   heapq.heappush(pq, (new_dist, v))
+
+       # Reconstruct path
+       path = []
+       node = goal_id
+       while node in prev:
+           path.append(node)
+           node = prev[node]
+       path.append(start_id)
+       return path[::-1], dist.get(goal_id, float('inf')), expanded
+
+**Complexity:** :math:`O((|V| + |E|) \log |V|)` with a binary heap.
+Road networks are sparse (:math:`|E| \approx 3|V|`), so this is
+efficient even for city-scale graphs.
+
+
+A* with Road Network Heuristics
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A* improves on Dijkstra by using a heuristic to guide the search
+toward the goal:
+
+.. math::
+
+   f(n) = g(n) + h(n)
+
+For road networks, the **Euclidean distance** to the goal divided by
+the maximum speed limit is an admissible heuristic for travel-time
+optimization:
+
+.. math::
+
+   h(n) = \frac{\| \text{pos}(n) - \text{pos}(\text{goal}) \|_2}{v_{\max}}
+
+.. code-block:: python
+
+   import numpy as np
+
+   def astar_road(graph, start_id, goal_id, positions, v_max=None):
+       """A* search on a road network graph.
+
+       The heuristic MUST be in the same units as the edge costs, or it
+       is not admissible and A* loses its optimality guarantee:
+
+         * edge cost = distance (m)  ->  h = Euclidean distance (m)
+         * edge cost = time (s)      ->  h = distance / v_max (s)
+
+       Pass v_max (in m/s) for a time-weighted graph; leave it None for
+       a distance-weighted one.
+       """
+
+       def heuristic(node_id):
+           d = np.linalg.norm(positions[node_id] - positions[goal_id])
+           return d / v_max if v_max else d
+
+       dist = {start_id: 0.0}
+       prev = {}
+       pq = [(heuristic(start_id), 0.0, start_id)]
+       expanded = 0
+
+       while pq:
+           _, g, u = heapq.heappop(pq)
+           if u == goal_id:
+               break
+           if g > dist.get(u, float('inf')):
+               continue
+           expanded += 1
+           for v, cost in graph.get(u, []):
+               new_g = g + cost
+               if new_g < dist.get(v, float('inf')):
+                   dist[v] = new_g
+                   prev[v] = u
+                   f = new_g + heuristic(v)
+                   heapq.heappush(pq, (f, new_g, v))
+
+       path = []
+       node = goal_id
+       while node in prev:
+           path.append(node)
+           node = prev[node]
+       path.append(start_id)
+       return path[::-1], dist.get(goal_id, float('inf')), expanded
+
+.. note::
+
+   For very large road networks (city/country scale), algorithms like
+   **Contraction Hierarchies** and **Hub Labeling** preprocess the graph
+   to answer queries in microseconds. These are used by Google Maps and
+   OSRM but are beyond the scope of this course.
+
+
+Lane-Level Routing
+-------------------
+
+Global route planning on road segments answers *which roads to take*.
+**Lane-level routing** answers *which lane to be in* on each road
+segment.
+
+Lane Selection Strategy
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 25 75
+   :header-rows: 1
+   :class: compact-table
+
+   * - Scenario
+     - Lane Selection Rule
+   * - Approaching a right turn
+     - Transition to rightmost lane at least 200 m before the turn.
+   * - Approaching a left turn
+     - Transition to leftmost lane at least 200 m before the turn.
+   * - Highway cruising
+     - Prefer the rightmost non-exit lane. Move left to overtake.
+   * - Highway exit
+     - Transition to exit lane at least 500 m before the diverge point.
+   * - Merge
+     - Target the merge lane, matching speed of traffic flow.
+   * - Construction zone
+     - Follow lane closure signs; merge early (zipper merge).
+
+.. admonition:: Lane Change Planning
+   :class: tip
+
+   Lane changes are not instantaneous -- they require gap finding in the
+   target lane, a safe trajectory, and coordination with the behavior
+   planner. The navigation layer determines *when* a lane change is
+   needed; the behavior planner decides *whether it is safe to execute
+   now*; the motion planner generates the *trajectory*.
+
+
+Dynamic Rerouting
+~~~~~~~~~~~~~~~~~~
+
+Static routes computed at trip start may become invalid due to:
+
+- **Road closures** -- Construction, accidents, police activity.
+- **Traffic congestion** -- Travel time on the current route exceeds
+  alternatives.
+- **Mission changes** -- New destination or waypoint added.
+- **Sensor-detected obstacles** -- Blocked road not in the map.
+
+**Rerouting strategy:**
+
+1. Monitor route cost continuously using real-time traffic data or
+   perception-detected blockages.
+2. If the estimated remaining cost exceeds a threshold (e.g., 1.5x the
+   alternative route cost), trigger replanning.
+3. Rerun A* from the current position to the goal on the updated graph.
+4. Smoothly transition to the new route at the next intersection.
+
+.. important::
+
+   Rerouting must be seamless -- the vehicle cannot stop in the middle
+   of a highway to recompute. The new route must be ready before the
+   last decision point where the old and new routes diverge.
+
+
+CARLA Navigation API
+---------------------
+
+CARLA provides a complete navigation stack through its Python API. The
+key component is the ``GlobalRoutePlanner``.
+
+
+GlobalRoutePlanner
+~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   import carla
+   from agents.navigation.global_route_planner import GlobalRoutePlanner
+
+   client = carla.Client('localhost', 2000)
+   client.set_timeout(10.0)
+   world = client.get_world()
+   carla_map = world.get_map()
+
+   # ── Initialize the GlobalRoutePlanner ─────────────────────────────
+   sampling_resolution = 2.0  # meters between waypoints
+   grp = GlobalRoutePlanner(carla_map, sampling_resolution)
+
+   # ── Define start and goal ─────────────────────────────────────────
+   spawn_points = carla_map.get_spawn_points()
+   start = spawn_points[0].location
+   goal = spawn_points[50].location
+
+   # ── Compute the route ─────────────────────────────────────────────
+   route = grp.trace_route(start, goal)
+   print(f"Route: {len(route)} waypoints")
+
+   # Each element is a (waypoint, road_option) tuple
+   for i, (wp, option) in enumerate(route[:10]):
+       print(f"  [{i}] pos=({wp.transform.location.x:.1f}, "
+             f"{wp.transform.location.y:.1f}) "
+             f"road={wp.road_id} lane={wp.lane_id} "
+             f"option={option}")
+
+
+Road Options
+~~~~~~~~~~~~~
+
+The ``GlobalRoutePlanner`` annotates each waypoint with a
+``RoadOption`` indicating the maneuver type:
+
+.. list-table::
+   :widths: 25 75
+   :header-rows: 1
+   :class: compact-table
+
+   * - RoadOption
+     - Meaning
+   * - ``LANEFOLLOW``
+     - Continue in the current lane.
+   * - ``LEFT``
+     - Turn left at a junction.
+   * - ``RIGHT``
+     - Turn right at a junction.
+   * - ``STRAIGHT``
+     - Go straight through a junction.
+   * - ``CHANGELANELEFT``
+     - Change to the left lane.
+   * - ``CHANGELANERIGHT``
+     - Change to the right lane.
+   * - ``VOID``
+     - Unclassified (e.g., roundabout entry).
+
+These annotations are critical for the behavior planner -- they tell
+it *what kind of maneuver* is coming up so it can prepare (e.g., slow
+down before a turn, check blind spot before a lane change).
+
+
+Visualizing Routes in CARLA
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   import numpy as np
+
+   def draw_route(world, route, life_time=60.0):
+       """Draw the planned route as colored waypoints in CARLA."""
+       color_map = {
+           'LANEFOLLOW':      carla.Color(0, 255, 0),     # green
+           'LEFT':            carla.Color(255, 0, 0),     # red
+           'RIGHT':           carla.Color(0, 0, 255),     # blue
+           'STRAIGHT':        carla.Color(255, 255, 0),   # yellow
+           'CHANGELANELEFT':  carla.Color(255, 128, 0),   # orange
+           'CHANGELANERIGHT': carla.Color(128, 0, 255),   # purple
+       }
+
+       for wp, option in route:
+           color = color_map.get(option.name, carla.Color(128, 128, 128))
+           world.debug.draw_point(
+               wp.transform.location + carla.Location(z=0.5),
+               size=0.1,
+               color=color,
+               life_time=life_time)
+
+       # Draw start and goal markers
+       start_loc = route[0][0].transform.location + carla.Location(z=1.0)
+       goal_loc = route[-1][0].transform.location + carla.Location(z=1.0)
+       world.debug.draw_string(start_loc, "START", color=carla.Color(0,255,0))
+       world.debug.draw_string(goal_loc, "GOAL", color=carla.Color(255,0,0))
+
+   draw_route(world, route)
+
+
+Building a Custom Road Graph
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For custom cost functions or research purposes, you can build your own
+graph from CARLA's waypoint API:
+
+.. code-block:: python
+
+   S_QUANT = 1.0    # metres; must be <= resolution
+
+   def wp_key(wp):
+       """Stable, hashable identity for a CARLA waypoint.
+
+       CRITICAL: `wp.s` is a float, and generate_waypoints() and
+       wp.next() do NOT return bit-identical values for the same road
+       position. Keying on the raw float makes every
+       `next_key in waypoint_map` test fail, so the graph ends up with
+       zero edges -- a silent failure that later looks like
+       "no route found".
+
+       Quantizing `s` to a coarse grid makes both APIs agree.
+       """
+       return (wp.road_id, wp.section_id, wp.lane_id,
+               int(round(wp.s / S_QUANT)))
+
+   def build_road_graph(carla_map, resolution=2.0, lane_change_penalty=5.0):
+       """
+       Build a road network graph from CARLA waypoints.
+
+       Returns:
+           graph: dict {wp_key: [(neighbor_key, cost), ...]}
+           waypoint_map: dict {wp_key: carla.Waypoint}
+       """
+       waypoints = carla_map.generate_waypoints(resolution)
+       waypoint_map = {wp_key(wp): wp for wp in waypoints}
+       graph = {k: [] for k in waypoint_map}
+
+       for key, wp in waypoint_map.items():
+           # Lane follow: next waypoints along the lane
+           for next_wp in wp.next(resolution):
+               nkey = wp_key(next_wp)
+               if nkey in waypoint_map:
+                   dist = wp.transform.location.distance(
+                       next_wp.transform.location)
+                   graph[key].append((nkey, dist))
+
+           # Lane changes (if permitted)
+           left_wp = wp.get_left_lane()
+           if (left_wp is not None and
+                   left_wp.lane_type == carla.LaneType.Driving and
+                   str(wp.lane_change) in ['Left', 'Both']):
+               lkey = wp_key(left_wp)
+               if lkey in waypoint_map:
+                   # Lane change cost = distance + penalty
+                   dist = wp.transform.location.distance(
+                       left_wp.transform.location)
+                   graph[key].append((lkey, dist + lane_change_penalty))
+
+           right_wp = wp.get_right_lane()
+           if (right_wp is not None and
+                   right_wp.lane_type == carla.LaneType.Driving and
+                   str(wp.lane_change) in ['Right', 'Both']):
+               rkey = wp_key(right_wp)
+               if rkey in waypoint_map:
+                   dist = wp.transform.location.distance(
+                       right_wp.transform.location)
+                   graph[key].append((rkey, dist + lane_change_penalty))
+
+       return graph, waypoint_map
+
+   graph, wp_map = build_road_graph(carla_map, resolution=2.0)
+   n_edges = sum(len(v) for v in graph.values())
+   print(f"Graph: {len(graph)} nodes, {n_edges} edges")
+
+   # Fail loudly now rather than "finding no route" ten minutes later
+   assert n_edges > 0, (
+       "No edges built. Check that S_QUANT <= resolution and that "
+       "wp_key() quantizes `s` instead of using the raw float.")
+
+
+From Route to Reference Path
+------------------------------
+
+The global route is a sequence of discrete waypoints. Before the motion
+planner (L9) can use it, the route must be converted into a smooth
+**reference path** with associated metadata.
+
+
+Waypoint-to-Path Conversion
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   DEFAULT_SPEED_KMH = 30.0
+
+   def route_to_reference_path(route):
+       """
+       Convert a CARLA route to a reference path for the motion planner.
+
+       Returns:
+           path: np.array of shape (N, 6) -- [x, y, z, yaw, speed_limit, curvature]
+       """
+       path = []
+       for i, (wp, option) in enumerate(route):
+           loc = wp.transform.location
+           rot = wp.transform.rotation
+           yaw = np.radians(rot.yaw)
+
+           # Speed limit, in m/s. CARLA exposes posted limits as
+           # landmarks attached to the road; fall back to a default when
+           # a segment has no sign.
+           speed_limit = DEFAULT_SPEED_KMH / 3.6
+           landmarks = wp.get_landmarks_of_type(
+               50.0, '274')          # OpenDRIVE type 274 = speed limit
+           if landmarks:
+               speed_limit = landmarks[0].value / 3.6
+
+           # Estimate curvature from consecutive waypoints
+           if 0 < i < len(route) - 1:
+               p0 = np.array([route[i-1][0].transform.location.x,
+                              route[i-1][0].transform.location.y])
+               p1 = np.array([loc.x, loc.y])
+               p2 = np.array([route[i+1][0].transform.location.x,
+                              route[i+1][0].transform.location.y])
+               # Menger curvature from three points.
+               # NOTE: np.cross on 2-D vectors is REMOVED in NumPy 2.0 --
+               # compute the scalar cross product explicitly.
+               v1, v2 = p1 - p0, p2 - p0
+               cross_z = v1[0] * v2[1] - v1[1] * v2[0]
+               a = np.linalg.norm(p1 - p0)
+               b = np.linalg.norm(p2 - p1)
+               c = np.linalg.norm(p2 - p0)
+               area = abs(cross_z) / 2.0
+               curvature = 4.0 * area / max(a * b * c, 1e-6)
+           else:
+               curvature = 0.0
+
+           path.append([loc.x, loc.y, loc.z, yaw, speed_limit, curvature])
+
+       return np.array(path)
+
+
+Speed Profile Generation
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The reference path needs a **speed profile** that respects speed limits,
+curvature constraints, and comfort requirements:
+
+.. math::
+
+   v_{\max}(s) = \min\left(
+       v_{\text{limit}}(s), \;
+       \sqrt{\frac{a_{\text{lat,max}}}{\kappa(s)}}, \;
+       v_{\text{comfort}}
+   \right)
+
+where:
+
+- :math:`v_{\text{limit}}(s)` is the posted speed limit at arc-length
+  :math:`s`.
+- :math:`\kappa(s)` is the curvature, and :math:`a_{\text{lat,max}}` is
+  the maximum comfortable lateral acceleration (typically 2--3 m/s²).
+- :math:`v_{\text{comfort}}` is a global comfort cap.
+
+.. code-block:: python
+
+   def generate_speed_profile(path, a_lat_max=2.5, v_comfort=15.0):
+       """Generate a speed profile respecting curvature and speed limits."""
+       speeds = np.zeros(len(path))
+       for i in range(len(path)):
+           v_limit = path[i, 4]
+           kappa = abs(path[i, 5])
+           v_curvature = np.sqrt(a_lat_max / max(kappa, 1e-4))
+           speeds[i] = min(v_limit, v_curvature, v_comfort)
+       return speeds
+
+
+CARLA Hands-On: Plan and Execute a Multi-Kilometer Route
+----------------------------------------------------------
+
+
+Task 1: Compute and Visualize a Global Route
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
    import carla
    import numpy as np
-   import open3d as o3d
+   from agents.navigation.global_route_planner import GlobalRoutePlanner
 
    client = carla.Client('localhost', 2000)
    client.set_timeout(10.0)
+
+   # Load Town03 (urban grid with intersections)
    world = client.load_world('Town03')
+   carla_map = world.get_map()
 
-   # Synchronous mode -- essential here, because scan-to-scan
-   # registration assumes a fixed time step between scans (see L3).
-   settings = world.get_settings()
-   settings.synchronous_mode = True
-   settings.fixed_delta_seconds = 0.1          # 10 Hz
-   world.apply_settings(settings)
-   tm = client.get_trafficmanager()
-   tm.set_synchronous_mode(True)
+   # Set up route planner
+   grp = GlobalRoutePlanner(carla_map, sampling_resolution=2.0)
 
-   bp_lib = world.get_blueprint_library()
-   vehicle = world.spawn_actor(
-       bp_lib.find('vehicle.tesla.model3'),
-       world.get_map().get_spawn_points()[0])
-   vehicle.set_autopilot(True, tm.get_port())
+   # Plan a long route across the town
+   spawn_points = carla_map.get_spawn_points()
+   start = spawn_points[0].location
+   goal = spawn_points[100].location
 
-   lidar_bp = bp_lib.find('sensor.lidar.ray_cast')
-   lidar_bp.set_attribute('channels', '64')
-   lidar_bp.set_attribute('range', '80')
-   lidar_bp.set_attribute('points_per_second', '1000000')
-   lidar_bp.set_attribute('rotation_frequency', '10')   # match the tick
-   lidar = world.spawn_actor(
-       lidar_bp, carla.Transform(carla.Location(z=2.4)), attach_to=vehicle)
+   route = grp.trace_route(start, goal)
+   print(f"Planned route: {len(route)} waypoints")
 
-   scans, gt_poses = [], []
+   # Count maneuver types
+   from collections import Counter
+   maneuvers = Counter(option.name for _, option in route)
+   print(f"Maneuvers: {dict(maneuvers)}")
 
-   def lidar_callback(data):
-       pts = np.frombuffer(data.raw_data, dtype=np.float32).reshape(-1, 4)
-       scans.append(pts[:, :3].copy())
-       # Ground-truth pose for evaluation ONLY -- never feed this to ICP
-       gt_poses.append(np.array(data.transform.get_matrix()))
+   # Visualize
+   draw_route(world, route, life_time=120.0)
 
-   lidar.listen(lidar_callback)
 
-   try:
-       for _ in range(600):        # 60 s at 10 Hz
-           world.tick()
-   finally:
-       lidar.destroy()
-       vehicle.destroy()
-       settings.synchronous_mode = False
-       settings.fixed_delta_seconds = None
-       world.apply_settings(settings)
-       tm.set_synchronous_mode(False)
-
-Task 2: Preprocess and Register Consecutive Scans
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Task 2: Build a Road Graph and Compare Routes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
-   def to_o3d(points, voxel_size=0.2, z_min=-1.6):
-       """Numpy -> Open3D cloud, with ground removed and downsampling."""
-       # Dropping the ground plane matters: it is a large, locally flat
-       # region that constrains z/roll/pitch well but slides freely in
-       # x/y, so leaving it in lets ICP converge to a confidently wrong
-       # answer along the direction of travel.
-       pts = points[points[:, 2] > z_min]
-       pcd = o3d.geometry.PointCloud()
-       pcd.points = o3d.utility.Vector3dVector(pts)
-       return pcd.voxel_down_sample(voxel_size)
+   # Build the road graph
+   graph, wp_map = build_road_graph(carla_map, resolution=2.0)
+   print(f"Road graph: {len(graph)} nodes")
 
-   def icp_registration(source, target, init_transform=np.eye(4),
-                        threshold=0.5):
-       """Point-to-plane ICP registration (converges faster than point-to-point)."""
-       for cloud in (source, target):
-           cloud.estimate_normals(
-               o3d.geometry.KDTreeSearchParamHybrid(radius=1.0, max_nn=30))
+   # Find nearest waypoints to start and goal
+   def find_nearest_wp(wp_map, location):
+       min_dist = float('inf')
+       nearest_id = None
+       for wp_id, wp in wp_map.items():
+           dist = wp.transform.location.distance(location)
+           if dist < min_dist:
+               min_dist = dist
+               nearest_id = wp_id
+       return nearest_id
 
-       result = o3d.pipelines.registration.registration_icp(
-           source, target, threshold, init_transform,
-           o3d.pipelines.registration.TransformationEstimationPointToPlane(),
-           o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=50))
+   start_id = find_nearest_wp(wp_map, start)
+   goal_id = find_nearest_wp(wp_map, goal)
 
-       return result.transformation, result.inlier_rmse, result.fitness
+   # --- Dijkstra vs A* on the SAME distance-weighted graph ---
+   # Both are optimal, so they return the same-cost path. What differs
+   # is HOW MUCH OF THE GRAPH each had to explore. That is the point of
+   # the comparison -- not the route.
+   path_d, cost_d, expanded_d = dijkstra(graph, start_id, goal_id)
+   print(f"Dijkstra: {len(path_d)} wp, cost={cost_d:.1f}, "
+         f"expanded={expanded_d}")
 
-Task 3: Chain Transforms into a Trajectory
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   positions = {k: np.array([wp.transform.location.x,
+                             wp.transform.location.y])
+                for k, wp in wp_map.items()}
+
+   path_a, cost_a, expanded_a = astar_road(graph, start_id, goal_id,
+                                           positions)
+   print(f"A*:       {len(path_a)} wp, cost={cost_a:.1f}, "
+         f"expanded={expanded_a}")
+   print(f"A* explored {100 * expanded_a / expanded_d:.0f}% "
+         f"as many nodes as Dijkstra")
+
+   # --- Now a genuinely different objective: fastest TIME ---
+   # To compare shortest-distance against fastest-time you must change
+   # the EDGE COSTS, not just the search algorithm. Rebuild the graph
+   # with cost = length / speed_limit and re-run.
+   def to_time_graph(graph, wp_map, default_kmh=30.0):
+       tgraph = {}
+       for key, edges in graph.items():
+           tgraph[key] = []
+           for nkey, dist in edges:
+               v = default_kmh / 3.6            # m/s; use posted limit
+               tgraph[key].append((nkey, dist / v))
+       return tgraph
+
+   time_graph = to_time_graph(graph, wp_map)
+   path_t, cost_t, _ = astar_road(time_graph, start_id, goal_id,
+                                  positions, v_max=50.0 / 3.6)
+   print(f"Fastest-time route: {len(path_t)} wp, {cost_t:.1f} s")
+
+
+Task 3: Route-Following Autonomous Agent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
-   pose = np.eye(4)
-   trajectory = [pose.copy()]
-   prev = to_o3d(scans[0])
+   import time
 
-   for i in range(1, len(scans)):
-       curr = to_o3d(scans[i])
+   # Spawn ego vehicle at the route start
+   vehicle_bp = world.get_blueprint_library().find('vehicle.tesla.model3')
+   vehicle = world.spawn_actor(vehicle_bp, spawn_points[0])
 
-       # Constant-velocity initial guess: assume this frame's motion
-       # resembles the last one. ICP is local, so a good seed is the
-       # difference between converging and diverging.
-       if len(trajectory) >= 2:
-           init = np.linalg.inv(trajectory[-2]) @ trajectory[-1]
-       else:
-           init = np.eye(4)
+   # Simple waypoint-following controller
+   def follow_route(vehicle, route, target_speed_kmh=30,
+                    reach_radius=3.0, timeout_per_wp=15.0, dt=0.05):
+       """Follow a route using basic waypoint steering.
 
-       T_delta, rmse, fitness = icp_registration(curr, prev, init)
+       Control is recomputed EVERY tick, not once per waypoint. The
+       naive version -- apply a control, then busy-wait until the
+       waypoint is reached -- drives open-loop with a frozen steering
+       angle, and hangs forever if the vehicle never arrives.
+       """
+       for i, (wp, option) in enumerate(route):
+           target = wp.transform.location
+           elapsed = 0.0
 
-       if fitness < 0.3:
-           print(f"Frame {i}: ICP failed (fitness={fitness:.2f}), "
-                 f"falling back to constant velocity")
-           T_delta = init
+           while True:
+               tf = vehicle.get_transform()
+               v_loc = tf.location
 
-       pose = pose @ T_delta
-       trajectory.append(pose.copy())
-       prev = curr
+               if v_loc.distance(target) <= reach_radius:
+                   break                       # waypoint reached
 
-Task 4: Evaluate Against Ground Truth
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+               if elapsed > timeout_per_wp:
+                   print(f"  [WARN] Waypoint {i} unreachable after "
+                         f"{timeout_per_wp:.0f}s -- skipping. The vehicle "
+                         f"is likely stuck or the route is infeasible.")
+                   break                       # give up, do not hang
+
+               # --- Recompute steering toward the target every tick ---
+               v_fwd = tf.get_forward_vector()
+               dx = target.x - v_loc.x
+               dy = target.y - v_loc.y
+               dot = v_fwd.x * dx + v_fwd.y * dy
+               cross = v_fwd.x * dy - v_fwd.y * dx
+
+               # Angle to target is better behaved than cross/dot, which
+               # blows up when the target is beside or behind the car.
+               angle = np.arctan2(cross, dot)
+               steer = float(np.clip(angle / np.radians(45.0), -1.0, 1.0))
+
+               # --- Speed control ---
+               velocity = vehicle.get_velocity()
+               speed = 3.6 * np.sqrt(velocity.x**2 + velocity.y**2)
+               throttle = 0.5 if speed < target_speed_kmh else 0.0
+               brake = 0.3 if speed > target_speed_kmh + 10 else 0.0
+
+               vehicle.apply_control(carla.VehicleControl(
+                   throttle=throttle, steer=steer, brake=brake))
+
+               time.sleep(dt)
+               elapsed += dt
+
+           if i % 20 == 0:
+               print(f"  Waypoint {i}/{len(route)}: option={option.name}")
+
+       vehicle.apply_control(carla.VehicleControl(throttle=0.0, brake=1.0))
+
+   print("Following route...")
+   follow_route(vehicle, route, target_speed_kmh=30)
+   print("Route complete!")
 
 .. admonition:: Exercise Tasks
    :class: tip
 
-   1. **Plot the trajectory** against ground truth (top-down x-y). The
-      shapes should agree early and diverge progressively -- that
-      divergence *is* the drift.
-   2. **Quantify the drift.** Compute final position error as a
-      percentage of total path length, and compare against the
-      0.1--0.5% figure quoted for LOAM earlier in this lecture. Expect
-      to do worse: you have no feature extraction and no backend.
-   3. **Vary the voxel size** (0.1, 0.2, 0.5, 1.0 m). Plot registration
-      time and drift against voxel size. Where is the knee?
-   4. **Remove the ground-removal step** and re-run. Explain the change
-      in longitudinal drift using the degeneracy argument above.
-   5. **Break it deliberately**: replace the constant-velocity seed with
-      ``np.eye(4)`` and drive a fast, curving route. Count how many
-      frames report ``fitness < 0.3``. This is why every production
-      system seeds ICP with IMU or wheel odometry.
-   6. **Export to TUM format** and compute APE/RPE with ``evo``:
+   1. **Plan and visualize** a route through Town03 using the
+      ``GlobalRoutePlanner``. Count the number of left turns, right turns,
+      lane follows, and lane changes.
+   2. **Build a custom road graph** and run Dijkstra and A* on the
+      *same* distance-weighted graph. Both are optimal, so they return
+      the same-cost route -- compare the **number of nodes expanded**
+      instead. Then rebuild the graph with time-based edge costs and
+      confirm that the fastest-time route can differ from the
+      shortest-distance one.
+   3. **Modify the cost function** to penalize left turns (add +10 to
+      junction edges that involve left turns). How does the route change?
+   4. **Implement the route-following controller** and drive the full route
+      autonomously. Measure route completion percentage and average speed.
+   5. **Dynamic rerouting**: Place a static obstacle (``world.spawn_actor``
+      with a barrier blueprint) on the planned route. Detect when the
+      vehicle cannot proceed and replan from the current position.
+   6. **Multi-town comparison**: Plan routes in Town01, Town03, and Town04.
+      Compare graph sizes, route lengths, and maneuver distributions.
 
-      .. code-block:: bash
+.. note::
 
-         evo_ape tum groundtruth.txt estimated.txt -va --plot
-         evo_rpe tum groundtruth.txt estimated.txt --delta 100 \
-                 --delta_unit m -va
-
-      Note how RPE stays roughly constant while APE grows without bound
-      -- the signature of drift with no loop closure.
+   The waypoint-following controller in Task 3 is intentionally simple.
+   In **L9: Motion Planning** and **L10: Trajectory Generation &
+   Control**, you will replace it with proper path planners and
+   controllers (A*, Hybrid A*, Pure Pursuit, Stanley, MPC) that handle
+   obstacles and dynamics.
 
 
 Summary
@@ -893,30 +970,30 @@ Summary
 .. grid:: 1 2 2 2
    :gutter: 3
 
-   .. grid-item-card:: Localization Methods
+   .. grid-item-card:: Road Network
       :class-card: sd-border-primary
 
-      - GNSS: global reference, 1-5 m accuracy (standard), 1-2 cm (RTK)
-      - Dead reckoning: wheel, visual, LiDAR odometry -- drift accumulates
-      - Probabilistic: EKF localization, MCL/AMCL (particle filter)
-      - Map-based: ICP scan matching, HD map feature matching
+      - Lane-level directed graph with typed edges (follow, change, junction)
+      - OpenDRIVE (CARLA) and Lanelet2 (Autoware) map formats
+      - HD maps encode geometry, topology, and semantics
 
-   .. grid-item-card:: SLAM
+   .. grid-item-card:: Route Planning
       :class-card: sd-border-primary
 
-      - Problem: simultaneous pose estimation and map building
-      - Frontend: preprocessing, feature extraction, ICP, keyframe selection
-      - Backend: pose graph optimization, loop closure detection
-      - Systems: LOAM, LeGO-LOAM, LIO-SAM, KISS-ICP
-      - Metrics: APE (global), RPE (local drift rate)
+      - Dijkstra / A* on road graphs with multi-objective cost functions
+      - Lane-level routing for turn preparation and highway exits
+      - Dynamic rerouting for closures and congestion
 
-.. admonition:: Assignment Unlocked -- GP3: Fusion & Localization
-   :class: important
+   .. grid-item-card:: CARLA Navigation
+      :class-card: sd-border-primary
 
-   You now have the foundational knowledge from **L3 and L7** to begin
-   **GP3: Fusion & Localization**. In GP3 you will implement camera-LiDAR
-   frustum fusion for 3D object detection, build an Extended Kalman Filter
-   that fuses GNSS and IMU for vehicle localization, and evaluate both
-   against CARLA ground truth.
+      - GlobalRoutePlanner: trace_route() with RoadOption annotations
+      - Custom graph building from waypoint API
+      - Route-to-reference-path conversion for downstream planners
 
-   :doc:`Go to GP3 </assignments/gp3>`
+.. note::
+
+   Navigation is the *strategic* layer of the planning stack. It tells
+   the vehicle where to go. The *tactical* (behavior, L8) and
+   *operational* (motion planning L9, trajectory and control L10)
+   layers determine how to get there safely and smoothly.

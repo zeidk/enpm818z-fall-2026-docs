@@ -2,998 +2,712 @@
 Lecture
 ====================================================
 
+Why Prediction Matters
+====================================================
 
-The Navigation Problem
------------------------
+An autonomous vehicle does not exist in isolation. At every moment,
+it shares the road with pedestrians, cyclists, motorcycles, and
+other vehicles -- all of whose future positions directly affect
+which plans are safe.
 
-Navigation answers the question: **"Which sequence of roads and lanes
-should I take to reach my destination?"** This is fundamentally different
-from motion planning (L10), which asks *"How do I move safely along this
-road segment?"*
-
-.. list-table:: Navigation vs. Motion Planning
-   :widths: 20 40 40
-   :header-rows: 1
-   :class: compact-table
-
-   * - Property
-     - Navigation (Route Planning)
-     - Motion Planning (L10)
-   * - Scale
-     - City-wide (km)
-     - Local (10--50 m)
-   * - Input
-     - Road network graph, current position, goal
-     - Reference path, obstacles, vehicle dynamics
-   * - Output
-     - Sequence of road segments / waypoints
-     - Collision-free trajectory
-   * - Replanning rate
-     - On request or every few minutes
-     - 10--50 Hz
-   * - Algorithm class
-     - Graph search (Dijkstra, A*)
-     - Sampling, optimization, lattice search
-   * - Obstacle awareness
-     - Traffic conditions (aggregate)
-     - Individual obstacles (precise geometry)
-
-
-Position in the AV Stack
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: text
-
-   ┌──────────────────────────────────────────────────────────┐
-   │  L7: Localization           → Where am I?                │
-   ├──────────────────────────────────────────────────────────┤
-   │  L8: Navigation (this)      → Which roads do I take?     │
-   │      Output: ordered list of road segments / waypoints   │
-   ├──────────────────────────────────────────────────────────┤
-   │  L9: Prediction & Behavior  → What will others do, and   │
-   │                               which maneuver do I pick?  │
-   ├──────────────────────────────────────────────────────────┤
-   │  L10: Motion Planning       → What collision-free path?  │
-   ├──────────────────────────────────────────────────────────┤
-   │  L11: Trajectory & Control  → Execute the path smoothly  │
-   └──────────────────────────────────────────────────────────┘
-
-The route planner produces a **reference route** (sequence of waypoints
-or road segments). The behavior planner decides how to handle each
-segment (follow lane, change lane, yield). The motion planner generates
-a geometrically feasible, collision-free path within those constraints.
-
-
-Road Network Representation
------------------------------
-
-Road networks for AV navigation are significantly more detailed than
-consumer GPS maps. They encode **lane-level topology**, not just
-road-level connectivity.
-
-
-Graph Structure
-~~~~~~~~~~~~~~~~
-
-A road network is modeled as a **directed graph** :math:`G = (V, E)`:
-
-- **Nodes** :math:`V`: Lane-level waypoints at regular intervals
-  (e.g., every 2 m). Each node stores position :math:`(x, y, z)`,
-  road ID, lane ID, speed limit, and lane width.
-- **Edges** :math:`E`: Connections between consecutive waypoints.
-  Edges encode whether a transition is a **lane follow**, **lane
-  change**, or **junction maneuver**.
-
-.. list-table:: Edge Types
-   :widths: 20 30 50
-   :header-rows: 1
-   :class: compact-table
-
-   * - Type
-     - Connectivity
-     - Example
-   * - Lane follow
-     - Same lane, consecutive waypoints
-     - Driving straight along a road
-   * - Lane change (left)
-     - Adjacent lane, same road section
-     - Moving to the left lane for overtaking
-   * - Lane change (right)
-     - Adjacent lane, same road section
-     - Moving to the right lane before an exit
-   * - Junction
-     - Different roads, connected through intersection
-     - Turning left at a traffic light
-
-
-OpenDRIVE Format
-~~~~~~~~~~~~~~~~~
-
-CARLA uses the **OpenDRIVE** standard (ISO, adopted by ASAM) to define
-road networks. An OpenDRIVE file (``.xodr``) describes:
-
-.. list-table::
-   :widths: 25 75
-   :class: compact-table
-
-   * - **Roads**
-     - Defined by a reference line (geometry: line, arc, spiral, cubic)
-       with a unique road ID.
-   * - **Lanes**
-     - Organized in lane sections along each road. Each lane has an ID,
-       type (driving, shoulder, sidewalk), width, and speed limit.
-   * - **Junctions**
-     - Connect roads at intersections. Define which incoming lanes can
-       connect to which outgoing lanes (connection elements).
-   * - **Signals**
-     - Traffic lights, stop signs, speed limit signs with position and
-       orientation relative to the road.
-   * - **Objects**
-     - Static objects like barriers, poles, and crosswalks.
-
-.. code-block:: python
-
-   # Access CARLA's OpenDRIVE data
-   import carla
-
-   client = carla.Client('localhost', 2000)
-   world = client.get_world()
-   carla_map = world.get_map()
-
-   # Get the raw OpenDRIVE XML
-   opendrive_xml = carla_map.to_opendrive()
-   print(f"OpenDRIVE data: {len(opendrive_xml)} characters")
-
-   # Get topology: list of (waypoint, waypoint) pairs
-   # representing road segment start-end connections
-   topology = carla_map.get_topology()
-   print(f"Topology: {len(topology)} road segments")
-
-
-Lanelet2 Format
-~~~~~~~~~~~~~~~~
-
-**Lanelet2** is the map format used by Autoware and many research
-platforms. It differs from OpenDRIVE in its representation:
-
-.. list-table::
-   :widths: 20 40 40
-   :header-rows: 1
-   :class: compact-table
-
-   * - Feature
-     - OpenDRIVE
-     - Lanelet2
-   * - Geometry
-     - Parametric curves (arcs, spirals)
-     - Polylines (left/right boundary points)
-   * - Lane representation
-     - Offset from road reference line
-     - Bounded region between two linestrings
-   * - Traffic rules
-     - Signal elements attached to roads
-     - Regulatory elements attached to lanelets
-   * - Primary users
-     - CARLA, SUMO, dSPACE
-     - Autoware, many research platforms
-   * - File format
-     - XML (.xodr)
-     - OSM-based XML (.osm)
-
-
-HD Maps for Navigation
-~~~~~~~~~~~~~~~~~~~~~~~
-
-High-Definition maps go beyond basic road geometry to encode rich
-semantic information used by the navigation and planning stack:
-
-.. grid:: 1 2 2 3
-   :gutter: 3
-
-   .. grid-item-card:: Geometry
-      :class-card: sd-border-info
-
-      - Lane boundaries with centimeter accuracy
-      - Road elevation profile
-      - Curvature at every point
-      - Intersection geometry
-
-   .. grid-item-card:: Topology
-      :class-card: sd-border-info
-
-      - Lane-level connectivity graph
-      - Lane change permissions (solid vs. dashed lines)
-      - Merge/diverge points
-      - Turn restrictions
-
-   .. grid-item-card:: Semantics
-      :class-card: sd-border-info
-
-      - Speed limits per lane segment
-      - Traffic light positions and associations
-      - Stop/yield sign locations
-      - Crosswalk boundaries
-
-.. admonition:: HD Map Limitations
-   :class: warning
-
-   HD maps are expensive to create ($5K--$50K per km), require
-   continuous maintenance, and limit the ODD to mapped areas. The
-   industry trend is toward lighter maps supplemented by stronger
-   online perception (Tesla, Mobileye REM).
-
-
-Global Route Planning
+The Prediction Problem
 ----------------------
 
-Given the road network graph, a start position, and a goal position,
-the route planner finds the optimal sequence of road segments to
-traverse.
+**Planning needs future states, but only current states are
+observable.**
 
+Without prediction, a planner can only react to the current
+positions of other agents. By the time the planner computes a
+safe maneuver and the vehicle executes it (200--500 ms latency),
+other agents have moved -- potentially into the path.
 
-Cost Functions for Road Networks
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Unlike grid-based planning, road network edges carry rich cost
-information:
-
-.. math::
-
-   \text{cost}(e) = w_d \cdot d(e) + w_t \cdot t(e) + w_r \cdot r(e)
-                    + w_c \cdot c(e) + w_m \cdot m(e)
+**Prediction horizon requirements:**
 
 .. list-table::
-   :widths: 15 25 60
    :header-rows: 1
-   :class: compact-table
+   :widths: 30 20 50
 
-   * - Term
-     - Component
-     - Description
-   * - :math:`d(e)`
-     - Distance
-     - Physical length of the road segment (meters).
-   * - :math:`t(e)`
-     - Travel time
-     - Segment length / speed limit. Accounts for faster highways vs.
-       slower urban roads.
-   * - :math:`r(e)`
-     - Road class
-     - Penalty for road types: prefer highways over residential streets
-       for long routes, or vice versa in urban settings.
-   * - :math:`c(e)`
-     - Comfort
-     - Penalty for sharp turns, steep grades, or frequent lane changes.
-   * - :math:`m(e)`
-     - Maneuver complexity
-     - Penalty for unprotected left turns, complex merges, or high-risk
-       intersections.
+   * - Maneuver type
+     - Horizon needed
+     - Rationale
+   * - Emergency braking
+     - 1 s
+     - Collision imminent
+   * - Lane change
+     - 3--5 s
+     - Must verify clearance ahead
+   * - Intersection negotiation
+     - 5--8 s
+     - Other agents crossing at full speed
+   * - Highway merge
+     - 5--10 s
+     - Speed differential at merge point
 
-.. tip::
-
-   By adjusting the weights :math:`w_d, w_t, w_r, w_c, w_m`, the same
-   algorithm can produce shortest-distance, fastest-time, or
-   safest/most-comfortable routes.
-
-
-Dijkstra's Algorithm on Road Graphs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Dijkstra's algorithm finds the shortest path from a start node to all
-other nodes in a weighted graph with non-negative edge costs.
-
-.. code-block:: python
-
-   import heapq
-
-   def dijkstra(graph, start_id, goal_id):
-       """
-       Find shortest path on a road network graph.
-
-       Args:
-           graph: dict of {node_id: [(neighbor_id, cost), ...]}
-           start_id: starting waypoint ID
-           goal_id: goal waypoint ID
-
-       Returns:
-           path: list of waypoint keys from start to goal
-           total_cost: total path cost
-           expanded: number of nodes expanded (for comparison with A*)
-       """
-       dist = {start_id: 0.0}
-       prev = {}
-       pq = [(0.0, start_id)]
-       expanded = 0
-
-       while pq:
-           d, u = heapq.heappop(pq)
-           if u == goal_id:
-               break
-           if d > dist.get(u, float('inf')):
-               continue
-           expanded += 1
-           for v, cost in graph.get(u, []):     # .get: u may be a dead end
-               new_dist = d + cost
-               if new_dist < dist.get(v, float('inf')):
-                   dist[v] = new_dist
-                   prev[v] = u
-                   heapq.heappush(pq, (new_dist, v))
-
-       # Reconstruct path
-       path = []
-       node = goal_id
-       while node in prev:
-           path.append(node)
-           node = prev[node]
-       path.append(start_id)
-       return path[::-1], dist.get(goal_id, float('inf')), expanded
-
-**Complexity:** :math:`O((|V| + |E|) \log |V|)` with a binary heap.
-Road networks are sparse (:math:`|E| \approx 3|V|`), so this is
-efficient even for city-scale graphs.
-
-
-A* with Road Network Heuristics
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A* improves on Dijkstra by using a heuristic to guide the search
-toward the goal:
-
-.. math::
-
-   f(n) = g(n) + h(n)
-
-For road networks, the **Euclidean distance** to the goal divided by
-the maximum speed limit is an admissible heuristic for travel-time
-optimization:
-
-.. math::
-
-   h(n) = \frac{\| \text{pos}(n) - \text{pos}(\text{goal}) \|_2}{v_{\max}}
-
-.. code-block:: python
-
-   import numpy as np
-
-   def astar_road(graph, start_id, goal_id, positions, v_max=None):
-       """A* search on a road network graph.
-
-       The heuristic MUST be in the same units as the edge costs, or it
-       is not admissible and A* loses its optimality guarantee:
-
-         * edge cost = distance (m)  ->  h = Euclidean distance (m)
-         * edge cost = time (s)      ->  h = distance / v_max (s)
-
-       Pass v_max (in m/s) for a time-weighted graph; leave it None for
-       a distance-weighted one.
-       """
-
-       def heuristic(node_id):
-           d = np.linalg.norm(positions[node_id] - positions[goal_id])
-           return d / v_max if v_max else d
-
-       dist = {start_id: 0.0}
-       prev = {}
-       pq = [(heuristic(start_id), 0.0, start_id)]
-       expanded = 0
-
-       while pq:
-           _, g, u = heapq.heappop(pq)
-           if u == goal_id:
-               break
-           if g > dist.get(u, float('inf')):
-               continue
-           expanded += 1
-           for v, cost in graph.get(u, []):
-               new_g = g + cost
-               if new_g < dist.get(v, float('inf')):
-                   dist[v] = new_g
-                   prev[v] = u
-                   f = new_g + heuristic(v)
-                   heapq.heappush(pq, (f, new_g, v))
-
-       path = []
-       node = goal_id
-       while node in prev:
-           path.append(node)
-           node = prev[node]
-       path.append(start_id)
-       return path[::-1], dist.get(goal_id, float('inf')), expanded
-
-.. note::
-
-   For very large road networks (city/country scale), algorithms like
-   **Contraction Hierarchies** and **Hub Labeling** preprocess the graph
-   to answer queries in microseconds. These are used by Google Maps and
-   OSRM but are beyond the scope of this course.
-
-
-Lane-Level Routing
--------------------
-
-Global route planning on road segments answers *which roads to take*.
-**Lane-level routing** answers *which lane to be in* on each road
-segment.
-
-Lane Selection Strategy
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. list-table::
-   :widths: 25 75
-   :header-rows: 1
-   :class: compact-table
-
-   * - Scenario
-     - Lane Selection Rule
-   * - Approaching a right turn
-     - Transition to rightmost lane at least 200 m before the turn.
-   * - Approaching a left turn
-     - Transition to leftmost lane at least 200 m before the turn.
-   * - Highway cruising
-     - Prefer the rightmost non-exit lane. Move left to overtake.
-   * - Highway exit
-     - Transition to exit lane at least 500 m before the diverge point.
-   * - Merge
-     - Target the merge lane, matching speed of traffic flow.
-   * - Construction zone
-     - Follow lane closure signs; merge early (zipper merge).
-
-.. admonition:: Lane Change Planning
+.. admonition:: The Prediction-Planning Loop
    :class: tip
 
-   Lane changes are not instantaneous -- they require gap finding in the
-   target lane, a safe trajectory, and coordination with the behavior
-   planner. The navigation layer determines *when* a lane change is
-   needed; the behavior planner decides *whether it is safe to execute
-   now*; the motion planner generates the *trajectory*.
+   Prediction feeds planning: the planner uses predicted agent
+   trajectories to evaluate which candidate ego-trajectories are
+   collision-free. In interaction-aware systems, ego plans and
+   agent predictions are solved jointly -- the ego's action
+   changes agent behavior, which changes the optimal ego action.
 
+Trajectory Prediction Approaches
+====================================================
 
-Dynamic Rerouting
-~~~~~~~~~~~~~~~~~~
+Prediction methods span a spectrum from physics-based extrapolation
+to data-driven interaction modeling.
 
-Static routes computed at trip start may become invalid due to:
-
-- **Road closures** -- Construction, accidents, police activity.
-- **Traffic congestion** -- Travel time on the current route exceeds
-  alternatives.
-- **Mission changes** -- New destination or waypoint added.
-- **Sensor-detected obstacles** -- Blocked road not in the map.
-
-**Rerouting strategy:**
-
-1. Monitor route cost continuously using real-time traffic data or
-   perception-detected blockages.
-2. If the estimated remaining cost exceeds a threshold (e.g., 1.5x the
-   alternative route cost), trigger replanning.
-3. Rerun A* from the current position to the goal on the updated graph.
-4. Smoothly transition to the new route at the next intersection.
-
-.. important::
-
-   Rerouting must be seamless -- the vehicle cannot stop in the middle
-   of a highway to recompute. The new route must be ready before the
-   last decision point where the old and new routes diverge.
-
-
-CARLA Navigation API
----------------------
-
-CARLA provides a complete navigation stack through its Python API. The
-key component is the ``GlobalRoutePlanner``.
-
-
-GlobalRoutePlanner
-~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-   import carla
-   from agents.navigation.global_route_planner import GlobalRoutePlanner
-
-   client = carla.Client('localhost', 2000)
-   client.set_timeout(10.0)
-   world = client.get_world()
-   carla_map = world.get_map()
-
-   # ── Initialize the GlobalRoutePlanner ─────────────────────────────
-   sampling_resolution = 2.0  # meters between waypoints
-   grp = GlobalRoutePlanner(carla_map, sampling_resolution)
-
-   # ── Define start and goal ─────────────────────────────────────────
-   spawn_points = carla_map.get_spawn_points()
-   start = spawn_points[0].location
-   goal = spawn_points[50].location
-
-   # ── Compute the route ─────────────────────────────────────────────
-   route = grp.trace_route(start, goal)
-   print(f"Route: {len(route)} waypoints")
-
-   # Each element is a (waypoint, road_option) tuple
-   for i, (wp, option) in enumerate(route[:10]):
-       print(f"  [{i}] pos=({wp.transform.location.x:.1f}, "
-             f"{wp.transform.location.y:.1f}) "
-             f"road={wp.road_id} lane={wp.lane_id} "
-             f"option={option}")
-
-
-Road Options
-~~~~~~~~~~~~~
-
-The ``GlobalRoutePlanner`` annotates each waypoint with a
-``RoadOption`` indicating the maneuver type:
-
-.. list-table::
-   :widths: 25 75
+.. list-table:: Prediction Approach Comparison
    :header-rows: 1
-   :class: compact-table
+   :widths: 22 22 22 34
 
-   * - RoadOption
-     - Meaning
-   * - ``LANEFOLLOW``
-     - Continue in the current lane.
-   * - ``LEFT``
-     - Turn left at a junction.
-   * - ``RIGHT``
-     - Turn right at a junction.
-   * - ``STRAIGHT``
-     - Go straight through a junction.
-   * - ``CHANGELANELEFT``
-     - Change to the left lane.
-   * - ``CHANGELANERIGHT``
-     - Change to the right lane.
-   * - ``VOID``
-     - Unclassified (e.g., roundabout entry).
-
-These annotations are critical for the behavior planner -- they tell
-it *what kind of maneuver* is coming up so it can prepare (e.g., slow
-down before a turn, check blind spot before a lane change).
-
-
-Visualizing Routes in CARLA
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-   import numpy as np
-
-   def draw_route(world, route, life_time=60.0):
-       """Draw the planned route as colored waypoints in CARLA."""
-       color_map = {
-           'LANEFOLLOW':      carla.Color(0, 255, 0),     # green
-           'LEFT':            carla.Color(255, 0, 0),     # red
-           'RIGHT':           carla.Color(0, 0, 255),     # blue
-           'STRAIGHT':        carla.Color(255, 255, 0),   # yellow
-           'CHANGELANELEFT':  carla.Color(255, 128, 0),   # orange
-           'CHANGELANERIGHT': carla.Color(128, 0, 255),   # purple
-       }
-
-       for wp, option in route:
-           color = color_map.get(option.name, carla.Color(128, 128, 128))
-           world.debug.draw_point(
-               wp.transform.location + carla.Location(z=0.5),
-               size=0.1,
-               color=color,
-               life_time=life_time)
-
-       # Draw start and goal markers
-       start_loc = route[0][0].transform.location + carla.Location(z=1.0)
-       goal_loc = route[-1][0].transform.location + carla.Location(z=1.0)
-       world.debug.draw_string(start_loc, "START", color=carla.Color(0,255,0))
-       world.debug.draw_string(goal_loc, "GOAL", color=carla.Color(255,0,0))
-
-   draw_route(world, route)
+   * - Approach
+     - Representation
+     - Interaction-aware
+     - Key limitation
+   * - Physics-based
+     - Constant velocity / CTRA
+     - No
+     - Fails at maneuvers, intersections
+   * - Maneuver-based
+     - Intent + conditional model
+     - Partial
+     - Discrete maneuver set
+   * - Interaction-aware
+     - Social force / LSTM
+     - Yes
+     - Complex to train, slow
+   * - Transformer-based
+     - Attention over agents
+     - Yes
+     - Requires large datasets
 
 
-Building a Custom Road Graph
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Physics-Based Prediction
+------------------------
 
-For custom cost functions or research purposes, you can build your own
-graph from CARLA's waypoint API:
-
-.. code-block:: python
-
-   S_QUANT = 1.0    # metres; must be <= resolution
-
-   def wp_key(wp):
-       """Stable, hashable identity for a CARLA waypoint.
-
-       CRITICAL: `wp.s` is a float, and generate_waypoints() and
-       wp.next() do NOT return bit-identical values for the same road
-       position. Keying on the raw float makes every
-       `next_key in waypoint_map` test fail, so the graph ends up with
-       zero edges -- a silent failure that later looks like
-       "no route found".
-
-       Quantizing `s` to a coarse grid makes both APIs agree.
-       """
-       return (wp.road_id, wp.section_id, wp.lane_id,
-               int(round(wp.s / S_QUANT)))
-
-   def build_road_graph(carla_map, resolution=2.0, lane_change_penalty=5.0):
-       """
-       Build a road network graph from CARLA waypoints.
-
-       Returns:
-           graph: dict {wp_key: [(neighbor_key, cost), ...]}
-           waypoint_map: dict {wp_key: carla.Waypoint}
-       """
-       waypoints = carla_map.generate_waypoints(resolution)
-       waypoint_map = {wp_key(wp): wp for wp in waypoints}
-       graph = {k: [] for k in waypoint_map}
-
-       for key, wp in waypoint_map.items():
-           # Lane follow: next waypoints along the lane
-           for next_wp in wp.next(resolution):
-               nkey = wp_key(next_wp)
-               if nkey in waypoint_map:
-                   dist = wp.transform.location.distance(
-                       next_wp.transform.location)
-                   graph[key].append((nkey, dist))
-
-           # Lane changes (if permitted)
-           left_wp = wp.get_left_lane()
-           if (left_wp is not None and
-                   left_wp.lane_type == carla.LaneType.Driving and
-                   str(wp.lane_change) in ['Left', 'Both']):
-               lkey = wp_key(left_wp)
-               if lkey in waypoint_map:
-                   # Lane change cost = distance + penalty
-                   dist = wp.transform.location.distance(
-                       left_wp.transform.location)
-                   graph[key].append((lkey, dist + lane_change_penalty))
-
-           right_wp = wp.get_right_lane()
-           if (right_wp is not None and
-                   right_wp.lane_type == carla.LaneType.Driving and
-                   str(wp.lane_change) in ['Right', 'Both']):
-               rkey = wp_key(right_wp)
-               if rkey in waypoint_map:
-                   dist = wp.transform.location.distance(
-                       right_wp.transform.location)
-                   graph[key].append((rkey, dist + lane_change_penalty))
-
-       return graph, waypoint_map
-
-   graph, wp_map = build_road_graph(carla_map, resolution=2.0)
-   n_edges = sum(len(v) for v in graph.values())
-   print(f"Graph: {len(graph)} nodes, {n_edges} edges")
-
-   # Fail loudly now rather than "finding no route" ten minutes later
-   assert n_edges > 0, (
-       "No edges built. Check that S_QUANT <= resolution and that "
-       "wp_key() quantizes `s` instead of using the raw float.")
-
-
-From Route to Reference Path
-------------------------------
-
-The global route is a sequence of discrete waypoints. Before the motion
-planner (L10) can use it, the route must be converted into a smooth
-**reference path** with associated metadata.
-
-
-Waypoint-to-Path Conversion
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-   DEFAULT_SPEED_KMH = 30.0
-
-   def route_to_reference_path(route):
-       """
-       Convert a CARLA route to a reference path for the motion planner.
-
-       Returns:
-           path: np.array of shape (N, 6) -- [x, y, z, yaw, speed_limit, curvature]
-       """
-       path = []
-       for i, (wp, option) in enumerate(route):
-           loc = wp.transform.location
-           rot = wp.transform.rotation
-           yaw = np.radians(rot.yaw)
-
-           # Speed limit, in m/s. CARLA exposes posted limits as
-           # landmarks attached to the road; fall back to a default when
-           # a segment has no sign.
-           speed_limit = DEFAULT_SPEED_KMH / 3.6
-           landmarks = wp.get_landmarks_of_type(
-               50.0, '274')          # OpenDRIVE type 274 = speed limit
-           if landmarks:
-               speed_limit = landmarks[0].value / 3.6
-
-           # Estimate curvature from consecutive waypoints
-           if 0 < i < len(route) - 1:
-               p0 = np.array([route[i-1][0].transform.location.x,
-                              route[i-1][0].transform.location.y])
-               p1 = np.array([loc.x, loc.y])
-               p2 = np.array([route[i+1][0].transform.location.x,
-                              route[i+1][0].transform.location.y])
-               # Menger curvature from three points.
-               # NOTE: np.cross on 2-D vectors is REMOVED in NumPy 2.0 --
-               # compute the scalar cross product explicitly.
-               v1, v2 = p1 - p0, p2 - p0
-               cross_z = v1[0] * v2[1] - v1[1] * v2[0]
-               a = np.linalg.norm(p1 - p0)
-               b = np.linalg.norm(p2 - p1)
-               c = np.linalg.norm(p2 - p0)
-               area = abs(cross_z) / 2.0
-               curvature = 4.0 * area / max(a * b * c, 1e-6)
-           else:
-               curvature = 0.0
-
-           path.append([loc.x, loc.y, loc.z, yaw, speed_limit, curvature])
-
-       return np.array(path)
-
-
-Speed Profile Generation
+Constant Velocity and CTRA
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The reference path needs a **speed profile** that respects speed limits,
-curvature constraints, and comfort requirements:
+The simplest prediction model assumes the agent continues
+its current motion:
+
+**Constant Velocity (CV):**
 
 .. math::
 
-   v_{\max}(s) = \min\left(
-       v_{\text{limit}}(s), \;
-       \sqrt{\frac{a_{\text{lat,max}}}{\kappa(s)}}, \;
-       v_{\text{comfort}}
-   \right)
+   x(t+\Delta t) &= x(t) + v_x \Delta t \\
+   y(t+\Delta t) &= y(t) + v_y \Delta t
 
-where:
+**Constant Turn Rate and Acceleration (CTRA):**
 
-- :math:`v_{\text{limit}}(s)` is the posted speed limit at arc-length
-  :math:`s`.
-- :math:`\kappa(s)` is the curvature, and :math:`a_{\text{lat,max}}` is
-  the maximum comfortable lateral acceleration (typically 2--3 m/s²).
-- :math:`v_{\text{comfort}}` is a global comfort cap.
+.. math::
+
+   x(t+\Delta t) &= x + \frac{1}{\omega^2} \Big[
+     (v\omega + a\omega\Delta t)\sin(\theta + \omega\Delta t)
+     + a\cos(\theta + \omega\Delta t)
+     - v\omega\sin\theta - a\cos\theta \Big] \\
+   y(t+\Delta t) &= y + \frac{1}{\omega^2} \Big[
+     -(v\omega + a\omega\Delta t)\cos(\theta + \omega\Delta t)
+     + a\sin(\theta + \omega\Delta t)
+     + v\omega\cos\theta - a\sin\theta \Big] \\
+   \theta(t+\Delta t) &= \theta + \omega\Delta t, \qquad
+   v(t+\Delta t) = v + a\Delta t
+
+where :math:`v` is the current speed, :math:`\omega` is the measured
+yaw rate, and :math:`a` is longitudinal acceleration.
+
+.. admonition:: Sanity check and the straight-line case
+   :class: note
+
+   Setting :math:`a = 0` collapses CTRA to the **CTRV** (constant turn
+   rate and velocity) model:
+
+   .. math::
+
+      x(t+\Delta t) = x + \frac{v}{\omega}
+        \left[\sin(\theta + \omega\Delta t) - \sin\theta\right], \quad
+      y(t+\Delta t) = y + \frac{v}{\omega}
+        \left[\cos\theta - \cos(\theta + \omega\Delta t)\right]
+
+   Both forms divide by :math:`\omega`, so they are **singular when the
+   agent drives straight**. Any implementation must branch to the CV
+   model when :math:`|\omega| < \epsilon` (typically
+   :math:`10^{-4}` rad/s) -- forgetting this guard is the most common
+   bug in CTRA code.
+
+Physics-based models are O(1), deterministic, and run in
+microseconds. They are accurate for the first 0.5--1 s but
+diverge rapidly at maneuver boundaries.
+
+Maneuver-Based Prediction
+-------------------------
+
+Intent Classification + Conditional Model
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Maneuver-based prediction separates the problem into two stages:
+
+1. **Intent classification:** classify the agent's current
+   maneuver intent into a discrete set :math:`\mathcal{M}` =
+   {keep lane, left change, right change, accelerate, decelerate,
+   stop}.
+
+2. **Conditional trajectory model:** given intent :math:`m`,
+   predict the trajectory using a physics model or learned
+   regressor conditioned on :math:`m`.
+
+**Intent classification** is typically a binary or multi-class
+classifier taking as input:
+
+- Relative velocity and acceleration of the agent
+- Distance to lane boundaries
+- Turn signal state (if observable)
+- Historical trajectory over the past 2--3 s
+
+**Limitation:** the maneuver set is hand-designed and may not
+cover all real-world behaviors. Transitions between maneuvers
+are abrupt.
+
+Interaction-Aware Prediction
+----------------------------
+
+Social Force and Graph Models
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Interaction-aware models explicitly model the influence of
+nearby agents on each other.
+
+**Social Force Model (Helbing & Molnar, 1995):**
+
+.. math::
+
+   \dot{\mathbf{v}}_i = \frac{\mathbf{v}_i^0 - \mathbf{v}_i}{\tau}
+   + \sum_{j \neq i} f_{ij} + f_{i,\text{boundary}}
+
+where :math:`\mathbf{v}_i^0` is the desired velocity, :math:`\tau`
+is a relaxation time, and :math:`f_{ij}` is a repulsive force
+from agent :math:`j`.
+
+**Graph Neural Network (GNN) approaches:** agents are nodes
+in a graph; edges encode pairwise interactions. Graph
+convolutions propagate influence across agents at each
+prediction step.
+
+Interaction-aware models capture behaviors like merging
+courtesy and pedestrian group dynamics that physics-based
+models entirely miss.
+
+Transformer-Based Prediction
+====================================================
+
+Modern state-of-the-art prediction systems use Transformer
+architectures to encode the full scene context.
+
+Scene Encoding
+--------------
+
+A Transformer-based predictor encodes:
+
+- **Agent history:** past trajectory tokens
+  :math:`\{(x_t, y_t, \theta_t, v_t)\}_{t=-T}^{0}`
+  for each agent, projected to a feature dimension
+  :math:`d_{\text{model}}`.
+- **Map context:** road centerlines, lane boundaries,
+  stop lines, and crosswalks are encoded as polyline
+  tokens using a PointNet-style encoder.
+- **Agent type:** pedestrian, cyclist, vehicle --
+  embedded as a learned type token.
+
+All tokens are concatenated and processed by a Transformer
+encoder with multi-head self-attention, allowing each agent
+to attend to all other agents and map elements.
+
+MotionTransformer Architecture
+------------------------------
+
+**MotionTransformer** (Shi et al., NeurIPS 2023) introduces
+a two-stage architecture:
+
+1. **Global motion transformer:** encodes all agents and map
+   elements jointly using factorized attention, producing
+   per-agent context embeddings.
+
+2. **Local motion transformer:** for each agent, decodes
+   :math:`K` future trajectory modes using a set of
+   learnable **motion query pairs** (one per mode) that
+   attend to the agent's context embedding.
+
+The output is :math:`K` trajectory predictions with
+associated probabilities:
+
+.. math::
+
+   \{(\hat{\tau}_k, p_k)\}_{k=1}^{K}, \quad \sum_k p_k = 1
+
+**MotionTransformer** (Shi et al., NeurIPS 2022) won the 2022 Waymo
+Open Motion Dataset (WOMD) motion-prediction challenge, and its
+successor **MTR++** (TPAMI 2024) extends the same motion-query design
+to joint multi-agent prediction.
+
+Scene Context Encoding Detail
+-----------------------------
+
+The map encoding uses a **hierarchical polyline encoder**:
+
+- Each road element (lane, boundary, stop line) is a polyline
+  of ordered points.
+- A PointNet-style MLP encodes each point to a feature vector.
+- Max-pooling over the points gives a fixed-size polyline
+  feature.
+- Cross-attention allows each agent query to attend to all
+  polyline features, incorporating spatial map context.
+
+**Positional encoding** uses sinusoidal encodings of
+:math:`(x, y, \theta)` so the attention mechanism is
+geometry-aware.
+
+Multi-Modal Prediction
+====================================================
+
+Real agents can take multiple plausible future actions. A single
+deterministic prediction is insufficient for safe planning.
+
+Why Multi-Modal Matters
+-----------------------
+
+At an intersection, a vehicle approaching from the left
+might go straight, turn right, or turn left. Any single
+predicted trajectory represents only one hypothesis.
+
+If the ego planner uses a single predicted trajectory and
+the agent takes a different action, the plan may fail.
+With multi-modal predictions, the planner can:
+
+- Generate candidate ego-trajectories for each agent mode.
+- Compute the worst-case (most dangerous) agent mode.
+- Select the ego trajectory that is safe across all likely
+  agent modes weighted by probability.
+
+Evaluation Metrics
+------------------
+
+.. list-table:: Multi-Modal Prediction Metrics
+   :header-rows: 1
+   :widths: 25 30 45
+
+   * - Metric
+     - Formula
+     - Meaning
+   * - minADE_K
+     - :math:`\min_k \text{ADE}(\hat{\tau}_k, \tau^*)`
+     - Best-of-K average displacement error
+   * - minFDE_K
+     - :math:`\min_k \|\hat{\tau}_k(T) - \tau^*(T)\|`
+     - Best-of-K final displacement error
+   * - MissRate
+     - Fraction of scenarios where :math:`\text{FDE} > 2` m
+     - Prediction failure rate
+   * - mAP
+     - Mean Average Precision over modes
+     - Joint quality of positions and probabilities
+
+.. admonition:: The Oracle Problem
+   :class: warning
+
+   MinADE and MinFDE evaluate only the *best* of :math:`K`
+   predictions. A system that outputs many diverse trajectories
+   will score well on these metrics even if its probability
+   estimates are poor. mAP jointly evaluates probability
+   calibration and trajectory accuracy.
+
+Behavior Planning
+====================================================
+
+Behavior planning is the **strategic layer**: it decides what the
+vehicle should *do* (which maneuver to execute) based on the
+current traffic situation.
+
+Position in the Stack
+---------------------
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 30 50
+
+   * - Layer
+     - Input
+     - Output
+   * - Perception
+     - Sensor data
+     - Agent detections, HD map
+   * - Prediction
+     - Agent history + map
+     - Agent trajectory distributions
+   * - **Behavior planning**
+     - Predicted states + rules
+     - Maneuver decision (current + next N steps)
+   * - Motion planning
+     - Maneuver decision + map
+     - Collision-free path
+   * - Trajectory planning
+     - Path + speed profile
+     - Time-stamped trajectory
+   * - Control
+     - Trajectory
+     - Steering + throttle/brake
+
+State Machine Behavior Planner
+===============================
+
+The finite state machine (FSM) is the classical approach to
+behavior planning.
+
+States and Transitions
+----------------------
+
+A highway driving FSM with six states:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 40 40
+
+   * - State
+     - Behavior
+     - Exit condition
+   * - ``LANE_FOLLOW``
+     - Follow lane at reference speed
+     - Slow vehicle ahead OR lane change opportunity
+   * - ``LANE_CHANGE_LEFT``
+     - Execute left lane change maneuver
+     - Maneuver complete OR abort (gap closes)
+   * - ``LANE_CHANGE_RIGHT``
+     - Execute right lane change maneuver
+     - Maneuver complete OR abort
+   * - ``FOLLOW``
+     - Adaptive cruise control behind lead vehicle
+     - Lead vehicle clears OR speed returns to reference
+   * - ``STOP``
+     - Decelerate to zero
+     - Stop line reached, signal clears, or obstacle removed
+   * - ``YIELD``
+     - Decelerate, give right-of-way
+     - Intersection clear
+
+**Transition conditions** use predicted agent states:
+
+- ``LANE_FOLLOW`` → ``FOLLOW``: predicted collision with lead
+  vehicle within :math:`t_{\text{ttc}} < 3` s.
+- ``FOLLOW`` → ``LANE_CHANGE_LEFT``: speed below threshold
+  AND left lane gap :math:`> d_{\text{safe}}`.
+
+Implementation
+--------------
 
 .. code-block:: python
 
-   def generate_speed_profile(path, a_lat_max=2.5, v_comfort=15.0):
-       """Generate a speed profile respecting curvature and speed limits."""
-       speeds = np.zeros(len(path))
-       for i in range(len(path)):
-           v_limit = path[i, 4]
-           kappa = abs(path[i, 5])
-           v_curvature = np.sqrt(a_lat_max / max(kappa, 1e-4))
-           speeds[i] = min(v_limit, v_curvature, v_comfort)
-       return speeds
+   from enum import Enum
+
+   class State(Enum):
+       LANE_FOLLOW = 0
+       FOLLOW      = 1
+       LANE_CHANGE_LEFT  = 2
+       LANE_CHANGE_RIGHT = 3
+       STOP        = 4
+       YIELD       = 5
+
+   class BehaviorPlanner:
+       def __init__(self):
+           self.state = State.LANE_FOLLOW
+
+       def update(self, ego, predictions, map_info):
+           lead = self._find_lead(ego, predictions)
+           ttc  = self._time_to_collision(ego, lead)
+
+           if self.state == State.LANE_FOLLOW:
+               if ttc < 3.0:
+                   self.state = State.FOLLOW
+               elif map_info.stop_line_ahead and ego.speed > 0.1:
+                   self.state = State.STOP
+
+           elif self.state == State.FOLLOW:
+               if ttc > 6.0:
+                   self.state = State.LANE_FOLLOW
+               elif self._left_gap_safe(ego, predictions):
+                   self.state = State.LANE_CHANGE_LEFT
+
+           # ... additional transitions ...
+           return self.state
+
+Limitations of FSMs
+-------------------
+
+FSMs are **brittle** at the boundary conditions between states
+and in novel scenarios not covered by hand-designed transitions.
+
+- **State explosion:** a complete real-world driving FSM
+  requires hundreds of states and thousands of transition
+  conditions.
+- **No uncertainty handling:** FSM transitions are crisp;
+  they do not naturally incorporate prediction uncertainty.
+- **Manual engineering:** every new scenario requires a
+  new transition to be hand-coded and tested.
+
+These limitations motivate learned decision-making approaches.
+
+Rule-Based vs. Learned Decision-Making
+====================================================
+
+Rule-Based Systems
+------------------
+
+Rule-based behavior planners (including FSMs and decision trees)
+encode expert knowledge as explicit logical conditions.
+
+**Advantages:**
+
+- Interpretable: every decision can be traced to a rule.
+- Predictable: behavior is deterministic given the same input.
+- Certifiable: rules can be formally verified for safety.
+
+**Disadvantages:**
+
+- Incomplete: rare scenarios not covered by rules cause failures.
+- Brittle: edge cases and ambiguous situations require complex
+  rule interactions.
+- High engineering cost: thousands of rules must be maintained.
+
+Learned Decision-Making
+-----------------------
+
+Learned approaches replace hand-crafted rules with a policy
+:math:`\pi(a | s)` trained from data.
+
+**Advantages:**
+
+- Generalizes to unseen scenarios not covered by rules.
+- Can capture complex multi-agent interactions implicitly.
+- Lower engineering effort once training infrastructure exists.
+
+**Disadvantages:**
+
+- Interpretability: the policy is a black box.
+- Safety guarantees are hard to prove formally.
+- Requires large, diverse training data.
+- Distribution shift: policy fails on inputs far from training
+  distribution.
+
+.. seealso::
+
+   The learned-policy approach is developed in depth in **L11: End-to-End
+   Driving, VLA & Imitation Learning**, which covers behavior cloning,
+   DAgger, and modern foundation-model policies.
 
 
-CARLA Hands-On: Plan and Execute a Multi-Kilometer Route
-----------------------------------------------------------
+Practical Decision-Making in Traffic
+====================================================
+
+Intersection Negotiation
+------------------------
+
+Intersections require reasoning about right-of-way, crossing
+trajectories, and agent intent simultaneously.
+
+A behavior planner for intersections must:
+
+1. **Detect the intersection** and classify the control type
+   (traffic signal, stop sign, uncontrolled, roundabout).
+2. **Determine right-of-way** from signal state or traffic rules.
+3. **Predict crossing agents** and compute time-to-conflict (TTC)
+   for each crossing trajectory pair.
+4. **Decide:** proceed, yield, or stop based on TTC and
+   predicted agent gaps.
+
+.. admonition:: Gap Acceptance
+   :class: note
+
+   The fundamental decision at an uncontrolled intersection is
+   **gap acceptance**: is the time gap in the crossing stream
+   large enough to enter safely? Gap acceptance models learned
+   from human data outperform fixed-threshold rules because
+   they incorporate speed, visibility, and vehicle type.
+
+Merging onto a Highway
+----------------------
+
+Merging requires the ego vehicle to find a gap in the highway
+traffic stream and adjust speed to reach the merge point
+simultaneously with the gap.
+
+Key considerations:
+
+- Predict lead and following highway vehicles for 8--10 s.
+- Compute the gap size at the merge point as a function of
+  ego speed.
+- Select the target gap and compute the acceleration profile
+  (quintic polynomial) to arrive at the merge point
+  within the gap.
+- Monitor the gap in real time; abort and re-plan if the
+  gap closes.
+
+Pedestrian Interactions
+-----------------------
+
+Pedestrians are the most challenging agents for prediction
+because:
+
+- They can change direction instantly (no kinematic constraints).
+- Their intent is often unobservable (phone in hand, not looking).
+- Social norms (yielding, eye contact) are implicit.
+
+Best practices:
+
+- Use multi-modal prediction with high-uncertainty modes.
+- Apply conservative safety margins (1.5--2.0 m clearance).
+- Prefer slow-speed trajectories when pedestrian uncertainty
+  is high (reduces collision energy).
+- Never assume a pedestrian will stop or yield.
+
+CARLA Exercise
+====================================================
+
+.. admonition:: Exercise: Trajectory Prediction and Behavioral Planner
+   :class: note
+
+   **Goal:** Integrate a simple prediction module and FSM behavior
+   planner into a CARLA agent that navigates a multi-lane road
+   with traffic.
+
+   **Tasks:**
+
+   1. **Perception:** Use CARLA's ground-truth bounding boxes to
+      obtain the positions, velocities, and headings of all
+      nearby vehicles within 50 m.
+
+   2. **Constant-velocity prediction:** For each nearby vehicle,
+      predict its trajectory over 5 s at 0.1 s intervals using
+      the CV model. Visualize predicted positions with
+      ``world.debug.draw_point()``.
+
+   3. **FSM behavior planner:** Implement a four-state FSM
+      (``LANE_FOLLOW``, ``FOLLOW``, ``LANE_CHANGE_LEFT``,
+      ``STOP``) with transitions based on:
+
+      - TTC to lead vehicle (< 3 s → ``FOLLOW``)
+      - Speed below reference (→ attempt ``LANE_CHANGE_LEFT``)
+      - Stop sign detected ahead (→ ``STOP``)
+
+   4. **Integration:** Drive the FSM output with the simple
+      proportional steering and speed controller provided in the
+      starter code below. Run the agent on a multi-vehicle Town04
+      scenario for 120 s.
+
+      .. note::
+
+         Proper lateral and longitudinal control (Stanley, Pure
+         Pursuit, PID, MPC) is covered in **L10: Trajectory Generation
+         & Control**, which comes *after* this lecture. The placeholder
+         controller here is deliberately crude -- its job is only to
+         make the FSM's decisions observable. You will revisit this
+         exercise with real controllers in GP4.
+
+   5. **Evaluation:** Log the FSM state sequence, speed profile,
+      and collision events. Report: time in each state, max speed
+      deviation, number of hard braking events (deceleration
+      > 4 m/s²).
+
+   **Starter code:**
+
+   .. code-block:: python
+
+      import carla
+      import numpy as np
+
+      def cv_predict(vehicle, horizon=5.0, dt=0.1):
+          """Constant-velocity trajectory prediction."""
+          t = vehicle.get_transform()
+          v = vehicle.get_velocity()
+          vx, vy = v.x, v.y
+          x0, y0 = t.location.x, t.location.y
+          steps = int(horizon / dt)
+          trajectory = []
+          for i in range(steps):
+              t_i = (i + 1) * dt
+              trajectory.append(
+                  carla.Location(x=x0 + vx * t_i,
+                                 y=y0 + vy * t_i,
+                                 z=t.location.z))
+          return trajectory
+
+      def time_to_collision(ego, lead, predictions, dt=0.1,
+                            collision_radius=3.0):
+          """Estimate TTC by propagating BOTH ego and lead forward.
+
+          A common mistake is to compare the *current* ego position
+          against the lead's *future* positions -- that ignores ego
+          motion entirely and reports a TTC that is far too large when
+          closing on a slower vehicle. Both agents must be propagated
+          over the same time base.
+          """
+          if lead is None or lead.id not in predictions:
+              return float('inf')
+
+          lead_traj = predictions[lead.id]          # from cv_predict()
+          ego_traj = cv_predict(ego, horizon=len(lead_traj) * dt, dt=dt)
+
+          for i, (ego_loc, lead_loc) in enumerate(zip(ego_traj, lead_traj)):
+              if ego_loc.distance(lead_loc) < collision_radius:
+                  return (i + 1) * dt              # seconds until contact
+          return float('inf')
 
 
-Task 1: Compute and Visualize a Global Route
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      def simple_control(vehicle, target_wp, target_speed_mps):
+          """Placeholder P-controller so the FSM's decisions are visible.
 
-.. code-block:: python
+          Replaced by Stanley / Pure Pursuit / PID in L10.
+          """
+          tf = vehicle.get_transform()
+          fwd = tf.get_forward_vector()
+          to_target = target_wp.transform.location - tf.location
 
-   import carla
-   import numpy as np
-   from agents.navigation.global_route_planner import GlobalRoutePlanner
+          # Signed lateral offset -> proportional steer
+          cross = fwd.x * to_target.y - fwd.y * to_target.x
+          steer = max(-1.0, min(1.0, 0.5 * cross))
 
-   client = carla.Client('localhost', 2000)
-   client.set_timeout(10.0)
+          v = vehicle.get_velocity()
+          speed = (v.x**2 + v.y**2)**0.5
+          err = target_speed_mps - speed
+          throttle = max(0.0, min(0.6, 0.5 * err))
+          brake = max(0.0, min(1.0, -0.5 * err))
 
-   # Load Town03 (urban grid with intersections)
-   world = client.load_world('Town03')
-   carla_map = world.get_map()
-
-   # Set up route planner
-   grp = GlobalRoutePlanner(carla_map, sampling_resolution=2.0)
-
-   # Plan a long route across the town
-   spawn_points = carla_map.get_spawn_points()
-   start = spawn_points[0].location
-   goal = spawn_points[100].location
-
-   route = grp.trace_route(start, goal)
-   print(f"Planned route: {len(route)} waypoints")
-
-   # Count maneuver types
-   from collections import Counter
-   maneuvers = Counter(option.name for _, option in route)
-   print(f"Maneuvers: {dict(maneuvers)}")
-
-   # Visualize
-   draw_route(world, route, life_time=120.0)
-
-
-Task 2: Build a Road Graph and Compare Routes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-   # Build the road graph
-   graph, wp_map = build_road_graph(carla_map, resolution=2.0)
-   print(f"Road graph: {len(graph)} nodes")
-
-   # Find nearest waypoints to start and goal
-   def find_nearest_wp(wp_map, location):
-       min_dist = float('inf')
-       nearest_id = None
-       for wp_id, wp in wp_map.items():
-           dist = wp.transform.location.distance(location)
-           if dist < min_dist:
-               min_dist = dist
-               nearest_id = wp_id
-       return nearest_id
-
-   start_id = find_nearest_wp(wp_map, start)
-   goal_id = find_nearest_wp(wp_map, goal)
-
-   # --- Dijkstra vs A* on the SAME distance-weighted graph ---
-   # Both are optimal, so they return the same-cost path. What differs
-   # is HOW MUCH OF THE GRAPH each had to explore. That is the point of
-   # the comparison -- not the route.
-   path_d, cost_d, expanded_d = dijkstra(graph, start_id, goal_id)
-   print(f"Dijkstra: {len(path_d)} wp, cost={cost_d:.1f}, "
-         f"expanded={expanded_d}")
-
-   positions = {k: np.array([wp.transform.location.x,
-                             wp.transform.location.y])
-                for k, wp in wp_map.items()}
-
-   path_a, cost_a, expanded_a = astar_road(graph, start_id, goal_id,
-                                           positions)
-   print(f"A*:       {len(path_a)} wp, cost={cost_a:.1f}, "
-         f"expanded={expanded_a}")
-   print(f"A* explored {100 * expanded_a / expanded_d:.0f}% "
-         f"as many nodes as Dijkstra")
-
-   # --- Now a genuinely different objective: fastest TIME ---
-   # To compare shortest-distance against fastest-time you must change
-   # the EDGE COSTS, not just the search algorithm. Rebuild the graph
-   # with cost = length / speed_limit and re-run.
-   def to_time_graph(graph, wp_map, default_kmh=30.0):
-       tgraph = {}
-       for key, edges in graph.items():
-           tgraph[key] = []
-           for nkey, dist in edges:
-               v = default_kmh / 3.6            # m/s; use posted limit
-               tgraph[key].append((nkey, dist / v))
-       return tgraph
-
-   time_graph = to_time_graph(graph, wp_map)
-   path_t, cost_t, _ = astar_road(time_graph, start_id, goal_id,
-                                  positions, v_max=50.0 / 3.6)
-   print(f"Fastest-time route: {len(path_t)} wp, {cost_t:.1f} s")
-
-
-Task 3: Route-Following Autonomous Agent
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-   import time
-
-   # Spawn ego vehicle at the route start
-   vehicle_bp = world.get_blueprint_library().find('vehicle.tesla.model3')
-   vehicle = world.spawn_actor(vehicle_bp, spawn_points[0])
-
-   # Simple waypoint-following controller
-   def follow_route(vehicle, route, target_speed_kmh=30,
-                    reach_radius=3.0, timeout_per_wp=15.0, dt=0.05):
-       """Follow a route using basic waypoint steering.
-
-       Control is recomputed EVERY tick, not once per waypoint. The
-       naive version -- apply a control, then busy-wait until the
-       waypoint is reached -- drives open-loop with a frozen steering
-       angle, and hangs forever if the vehicle never arrives.
-       """
-       for i, (wp, option) in enumerate(route):
-           target = wp.transform.location
-           elapsed = 0.0
-
-           while True:
-               tf = vehicle.get_transform()
-               v_loc = tf.location
-
-               if v_loc.distance(target) <= reach_radius:
-                   break                       # waypoint reached
-
-               if elapsed > timeout_per_wp:
-                   print(f"  [WARN] Waypoint {i} unreachable after "
-                         f"{timeout_per_wp:.0f}s -- skipping. The vehicle "
-                         f"is likely stuck or the route is infeasible.")
-                   break                       # give up, do not hang
-
-               # --- Recompute steering toward the target every tick ---
-               v_fwd = tf.get_forward_vector()
-               dx = target.x - v_loc.x
-               dy = target.y - v_loc.y
-               dot = v_fwd.x * dx + v_fwd.y * dy
-               cross = v_fwd.x * dy - v_fwd.y * dx
-
-               # Angle to target is better behaved than cross/dot, which
-               # blows up when the target is beside or behind the car.
-               angle = np.arctan2(cross, dot)
-               steer = float(np.clip(angle / np.radians(45.0), -1.0, 1.0))
-
-               # --- Speed control ---
-               velocity = vehicle.get_velocity()
-               speed = 3.6 * np.sqrt(velocity.x**2 + velocity.y**2)
-               throttle = 0.5 if speed < target_speed_kmh else 0.0
-               brake = 0.3 if speed > target_speed_kmh + 10 else 0.0
-
-               vehicle.apply_control(carla.VehicleControl(
-                   throttle=throttle, steer=steer, brake=brake))
-
-               time.sleep(dt)
-               elapsed += dt
-
-           if i % 20 == 0:
-               print(f"  Waypoint {i}/{len(route)}: option={option.name}")
-
-       vehicle.apply_control(carla.VehicleControl(throttle=0.0, brake=1.0))
-
-   print("Following route...")
-   follow_route(vehicle, route, target_speed_kmh=30)
-   print("Route complete!")
-
-.. admonition:: Exercise Tasks
-   :class: tip
-
-   1. **Plan and visualize** a route through Town03 using the
-      ``GlobalRoutePlanner``. Count the number of left turns, right turns,
-      lane follows, and lane changes.
-   2. **Build a custom road graph** and run Dijkstra and A* on the
-      *same* distance-weighted graph. Both are optimal, so they return
-      the same-cost route -- compare the **number of nodes expanded**
-      instead. Then rebuild the graph with time-based edge costs and
-      confirm that the fastest-time route can differ from the
-      shortest-distance one.
-   3. **Modify the cost function** to penalize left turns (add +10 to
-      junction edges that involve left turns). How does the route change?
-   4. **Implement the route-following controller** and drive the full route
-      autonomously. Measure route completion percentage and average speed.
-   5. **Dynamic rerouting**: Place a static obstacle (``world.spawn_actor``
-      with a barrier blueprint) on the planned route. Detect when the
-      vehicle cannot proceed and replan from the current position.
-   6. **Multi-town comparison**: Plan routes in Town01, Town03, and Town04.
-      Compare graph sizes, route lengths, and maneuver distributions.
-
-.. note::
-
-   The waypoint-following controller in Task 3 is intentionally simple.
-   In **L10: Motion Planning** and **L11: Trajectory Generation &
-   Control**, you will replace it with proper path planners and
-   controllers (A*, Hybrid A*, Pure Pursuit, Stanley, MPC) that handle
-   obstacles and dynamics.
+          return carla.VehicleControl(throttle=throttle, steer=steer,
+                                      brake=brake)
 
 
 Summary
---------
+====================================================
 
 .. grid:: 1 2 2 2
    :gutter: 3
 
-   .. grid-item-card:: Road Network
+   .. grid-item-card:: Prediction
       :class-card: sd-border-primary
 
-      - Lane-level directed graph with typed edges (follow, change, junction)
-      - OpenDRIVE (CARLA) and Lanelet2 (Autoware) map formats
-      - HD maps encode geometry, topology, and semantics
+      - Horizon requirements scale with maneuver: 1 s braking, 5--10 s merge
+      - Physics (CV / CTRA): exact, O(1), valid ~1 s; singular at zero yaw rate
+      - Maneuver-based: intent classifier + conditional model
+      - Interaction-aware: social forces, GNNs, Transformer scene encoding
+      - Multi-modal output :math:`\{(\hat{\tau}_k, p_k)\}`; minADE/minFDE
+        reward diversity, so check mAP for probability calibration
 
-   .. grid-item-card:: Route Planning
+   .. grid-item-card:: Behavior Planning
       :class-card: sd-border-primary
 
-      - Dijkstra / A* on road graphs with multi-objective cost functions
-      - Lane-level routing for turn preparation and highway exits
-      - Dynamic rerouting for closures and congestion
-
-   .. grid-item-card:: CARLA Navigation
-      :class-card: sd-border-primary
-
-      - GlobalRoutePlanner: trace_route() with RoadOption annotations
-      - Custom graph building from waypoint API
-      - Route-to-reference-path conversion for downstream planners
-
-.. note::
-
-   Navigation is the *strategic* layer of the planning stack. It tells
-   the vehicle where to go. The *tactical* (behavior, L9) and
-   *operational* (motion planning L10, trajectory and control L11)
-   layers determine how to get there safely and smoothly.
+      - Strategic layer: chooses the maneuver, not the trajectory
+      - FSM: interpretable and certifiable, but state explosion and
+        no uncertainty handling
+      - Rule-based vs learned: interpretability and verifiability
+        traded against generalization
+      - Practical patterns: gap acceptance, merge planning, and
+        never assuming a pedestrian will yield

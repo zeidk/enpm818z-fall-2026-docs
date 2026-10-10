@@ -2,15 +2,15 @@
 Pre-Read: Automotive Cybersecurity
 ====================================================
 
-.. admonition:: Read this before Lecture 14
+.. admonition:: Read this before Lecture 13
    :class: important
 
-   This page is **pre-read material** for L14. Cybersecurity is a full
+   This page is **pre-read material** for L13. Cybersecurity is a full
    discipline in its own right; this page gives you the vocabulary and
-   the standard (ISO/SAE 21434) so that the L14 discussion of system
+   the standard (ISO/SAE 21434) so that the L13 discussion of system
    integration and safety can assume it rather than rebuild it.
 
-   The L14 quiz may reference the attack surfaces and the TARA process
+   The L13 quiz may reference the attack surfaces and the TARA process
    described here.
 
 Autonomous vehicles are networked computers on wheels -- and therefore

@@ -2,687 +2,902 @@
 Lecture
 ====================================================
 
-Why Prediction Matters
+Motion Planning Hierarchy
 ====================================================
 
-An autonomous vehicle does not exist in isolation. At every moment,
-it shares the road with pedestrians, cyclists, motorcycles, and
-other vehicles -- all of whose future positions directly affect
-which plans are safe.
+Autonomous vehicle planning is organized into three tiers, each
+operating at a different temporal and spatial resolution.
 
-The Prediction Problem
-----------------------
-
-**Planning needs future states, but only current states are
-observable.**
-
-Without prediction, a planner can only react to the current
-positions of other agents. By the time the planner computes a
-safe maneuver and the vehicle executes it (200--500 ms latency),
-other agents have moved -- potentially into the path.
-
-**Prediction horizon requirements:**
-
-.. list-table::
+.. list-table:: Planning Hierarchy
    :header-rows: 1
-   :widths: 30 20 50
+   :widths: 15 20 20 25 20
 
-   * - Maneuver type
-     - Horizon needed
-     - Rationale
-   * - Emergency braking
-     - 1 s
-     - Collision imminent
-   * - Lane change
-     - 3--5 s
-     - Must verify clearance ahead
-   * - Intersection negotiation
-     - 5--8 s
-     - Other agents crossing at full speed
-   * - Highway merge
-     - 5--10 s
-     - Speed differential at merge point
+   * - Tier
+     - Name
+     - Horizon
+     - Output
+     - Replanning Rate
+   * - 1
+     - Route Planning
+     - City-scale (km)
+     - Sequence of road segments
+     - Minutes / on request
+   * - 2
+     - Behavior Planning
+     - Intersection-scale (100 m)
+     - Maneuver selection (follow, change lane, yield)
+     - 1–10 Hz
+   * - 3
+     - Motion Planning
+     - Local (10–50 m)
+     - Collision-free path or trajectory
+     - 10–50 Hz
 
-.. admonition:: The Prediction-Planning Loop
+Tier Interactions
+-----------------
+
+Each tier produces constraints that narrow the search space of the
+tier below it. The route planner selects which roads to traverse;
+the behavior planner decides how to interact with other agents at
+each road segment; the motion planner finds a geometrically
+feasible, collision-free path within the envelope defined by the
+behavior decision.
+
+This hierarchical decomposition keeps each planner computationally
+tractable. A flat planner operating at city scale with
+millimeter-level resolution is computationally infeasible.
+
+.. admonition:: Key Insight
    :class: tip
 
-   Prediction feeds planning: the planner uses predicted agent
-   trajectories to evaluate which candidate ego-trajectories are
-   collision-free. In interaction-aware systems, ego plans and
-   agent predictions are solved jointly -- the ego's action
-   changes agent behavior, which changes the optimal ego action.
+   The output of tier *n* is the **input constraint** of tier
+   *n+1*. Motion planners do not choose which lane to be in;
+   behavior planners do not choose which street to take.
 
-Trajectory Prediction Approaches
+Vehicle Kinematic Models
 ====================================================
 
-Prediction methods span a spectrum from physics-based extrapolation
-to data-driven interaction modeling.
-
-.. list-table:: Prediction Approach Comparison
-   :header-rows: 1
-   :widths: 22 22 22 34
-
-   * - Approach
-     - Representation
-     - Interaction-aware
-     - Key limitation
-   * - Physics-based
-     - Constant velocity / CTRA
-     - No
-     - Fails at maneuvers, intersections
-   * - Maneuver-based
-     - Intent + conditional model
-     - Partial
-     - Discrete maneuver set
-   * - Interaction-aware
-     - Social force / LSTM
-     - Yes
-     - Complex to train, slow
-   * - Transformer-based
-     - Attention over agents
-     - Yes
-     - Requires large datasets
+A kinematic model captures geometric relationships between vehicle
+configuration and velocity without modeling forces.
 
 
-Physics-Based Prediction
-------------------------
+Bicycle Model
+-------------
 
-Constant Velocity and CTRA
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+The **bicycle model** approximates a four-wheeled vehicle by merging
+the two front wheels into one steerable wheel and the two rear
+wheels into one driven wheel. This yields a tractable model for
+planning at low to moderate speeds.
 
-The simplest prediction model assumes the agent continues
-its current motion:
+Bicycle Model Equations
+~~~~~~~~~~~~~~~~~~~~~~~
 
-**Constant Velocity (CV):**
+Let :math:`(x, y)` be the rear-axle position, :math:`\theta` the
+heading, :math:`v` the speed, :math:`\delta` the front-wheel
+steering angle, and :math:`L` the wheelbase.
+
+The kinematic equations are:
 
 .. math::
 
-   x(t+\Delta t) &= x(t) + v_x \Delta t \\
-   y(t+\Delta t) &= y(t) + v_y \Delta t
+   \dot{x} &= v \cos\theta \\
+   \dot{y} &= v \sin\theta \\
+   \dot{\theta} &= \frac{v}{L} \tan\delta
 
-**Constant Turn Rate and Acceleration (CTRA):**
+The **turning radius** for steering angle :math:`\delta` is:
 
 .. math::
 
-   x(t+\Delta t) &= x + \frac{1}{\omega^2} \Big[
-     (v\omega + a\omega\Delta t)\sin(\theta + \omega\Delta t)
-     + a\cos(\theta + \omega\Delta t)
-     - v\omega\sin\theta - a\cos\theta \Big] \\
-   y(t+\Delta t) &= y + \frac{1}{\omega^2} \Big[
-     -(v\omega + a\omega\Delta t)\cos(\theta + \omega\Delta t)
-     + a\sin(\theta + \omega\Delta t)
-     + v\omega\cos\theta - a\sin\theta \Big] \\
-   \theta(t+\Delta t) &= \theta + \omega\Delta t, \qquad
-   v(t+\Delta t) = v + a\Delta t
+   R = \frac{L}{\tan\delta}
 
-where :math:`v` is the current speed, :math:`\omega` is the measured
-yaw rate, and :math:`a` is longitudinal acceleration.
+Maximum curvature is bounded by the physical steering limit
+:math:`\delta_{\max}`:
 
-.. admonition:: Sanity check and the straight-line case
-   :class: note
+.. math::
 
-   Setting :math:`a = 0` collapses CTRA to the **CTRV** (constant turn
-   rate and velocity) model:
+   \kappa_{\max} = \frac{\tan\delta_{\max}}{L}
+
+.. admonition:: Nonholonomic Constraint
+   :class: warning
+
+   The vehicle cannot move sideways. Formally:
 
    .. math::
 
-      x(t+\Delta t) = x + \frac{v}{\omega}
-        \left[\sin(\theta + \omega\Delta t) - \sin\theta\right], \quad
-      y(t+\Delta t) = y + \frac{v}{\omega}
-        \left[\cos\theta - \cos(\theta + \omega\Delta t)\right]
+      \dot{x}\sin\theta - \dot{y}\cos\theta = 0
 
-   Both forms divide by :math:`\omega`, so they are **singular when the
-   agent drives straight**. Any implementation must branch to the CV
-   model when :math:`|\omega| < \epsilon` (typically
-   :math:`10^{-4}` rad/s) -- forgetting this guard is the most common
-   bug in CTRA code.
+   This constraint eliminates lateral translations and
+   fundamentally distinguishes vehicle planning from point-robot
+   planning.
 
-Physics-based models are O(1), deterministic, and run in
-microseconds. They are accurate for the first 0.5--1 s but
-diverge rapidly at maneuver boundaries.
+Configuration Space
+~~~~~~~~~~~~~~~~~~~
 
-Maneuver-Based Prediction
--------------------------
+The vehicle's **configuration** is the tuple
+:math:`q = (x, y, \theta)`. Planning must find a path through
+3-D configuration space :math:`\mathcal{C}` that satisfies the
+nonholonomic constraints and avoids obstacles.
 
-Intent Classification + Conditional Model
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+For parking and low-speed maneuvers, the full nonholonomic
+constraint must be respected. For high-speed highway driving,
+approximate unicycle models are often sufficient because
+lateral slipping is small.
 
-Maneuver-based prediction separates the problem into two stages:
+The Frenet Frame
+~~~~~~~~~~~~~~~~
 
-1. **Intent classification:** classify the agent's current
-   maneuver intent into a discrete set :math:`\mathcal{M}` =
-   {keep lane, left change, right change, accelerate, decelerate,
-   stop}.
+Structured-road planning is almost never done in Cartesian
+:math:`(x, y)`. Instead the road centerline is used as a curved
+axis and every pose is expressed in the **Frenet frame**
+:math:`(s, d)`:
 
-2. **Conditional trajectory model:** given intent :math:`m`,
-   predict the trajectory using a physics model or learned
-   regressor conditioned on :math:`m`.
+- :math:`s` -- arc length **along** the reference centerline.
+- :math:`d` -- signed lateral offset **perpendicular** to it
+  (positive to the left).
 
-**Intent classification** is typically a binary or multi-class
-classifier taking as input:
-
-- Relative velocity and acceleration of the agent
-- Distance to lane boundaries
-- Turn signal state (if observable)
-- Historical trajectory over the past 2--3 s
-
-**Limitation:** the maneuver set is hand-designed and may not
-cover all real-world behaviors. Transitions between maneuvers
-are abrupt.
-
-Interaction-Aware Prediction
-----------------------------
-
-Social Force and Graph Models
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Interaction-aware models explicitly model the influence of
-nearby agents on each other.
-
-**Social Force Model (Helbing & Molnar, 1995):**
+Given a centerline point :math:`\mathbf{r}(s)` with unit tangent
+:math:`\mathbf{t}(s)` and unit normal :math:`\mathbf{n}(s)`, the
+conversion back to Cartesian is:
 
 .. math::
 
-   \dot{\mathbf{v}}_i = \frac{\mathbf{v}_i^0 - \mathbf{v}_i}{\tau}
-   + \sum_{j \neq i} f_{ij} + f_{i,\text{boundary}}
+   \mathbf{p}(s, d) = \mathbf{r}(s) + d \, \mathbf{n}(s)
 
-where :math:`\mathbf{v}_i^0` is the desired velocity, :math:`\tau`
-is a relaxation time, and :math:`f_{ij}` is a repulsive force
-from agent :math:`j`.
+and the heading and curvature transform as:
 
-**Graph Neural Network (GNN) approaches:** agents are nodes
-in a graph; edges encode pairwise interactions. Graph
-convolutions propagate influence across agents at each
-prediction step.
+.. math::
 
-Interaction-aware models capture behaviors like merging
-courtesy and pedestrian group dynamics that physics-based
-models entirely miss.
+   \theta = \theta_r(s) + \arctan\!\left(\frac{d'}{1 - \kappa_r d}\right),
+   \qquad
+   \kappa = \frac{\kappa_r}{1 - \kappa_r d} \;+\; \text{(curvature of } d(s))
 
-Transformer-Based Prediction
+where :math:`\kappa_r(s)` is the centerline curvature and
+:math:`d' = \mathrm{d}d/\mathrm{d}s`.
+
+.. admonition:: Why this matters
+   :class: tip
+
+   In Frenet coordinates "stay in the lane" becomes
+   :math:`d \approx 0` and "change lanes" becomes a step in
+   :math:`d` -- both trivially expressible. Lattice planners
+   (below) and the quintic-polynomial planners of **L10** both
+   operate in this frame.
+
+   The transform degenerates when :math:`\kappa_r d \to 1`, i.e.
+   when the lateral offset reaches the centerline's radius of
+   curvature. On tight turns this bounds how far off-centerline
+   the frame remains valid.
+
+Graph-Based Planning
 ====================================================
 
-Modern state-of-the-art prediction systems use Transformer
-architectures to encode the full scene context.
+Graph-based planners discretize the environment into a graph and
+apply shortest-path search.
 
-Scene Encoding
---------------
 
-A Transformer-based predictor encodes:
+Dijkstra's Algorithm
+--------------------
 
-- **Agent history:** past trajectory tokens
-  :math:`\{(x_t, y_t, \theta_t, v_t)\}_{t=-T}^{0}`
-  for each agent, projected to a feature dimension
-  :math:`d_{\text{model}}`.
-- **Map context:** road centerlines, lane boundaries,
-  stop lines, and crosswalks are encoded as polyline
-  tokens using a PointNet-style encoder.
-- **Agent type:** pedestrian, cyclist, vehicle --
-  embedded as a learned type token.
+Algorithm and Complexity
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-All tokens are concatenated and processed by a Transformer
-encoder with multi-head self-attention, allowing each agent
-to attend to all other agents and map elements.
+Dijkstra's algorithm finds the shortest path from a source node
+to all reachable nodes in a weighted graph with non-negative edge
+weights.
 
-MotionTransformer Architecture
-------------------------------
+**Core steps:**
 
-**MotionTransformer** (Shi et al., NeurIPS 2023) introduces
-a two-stage architecture:
+1. Initialize distance :math:`d[s] = 0`, :math:`d[v] = \infty`
+   for all :math:`v \neq s`.
+2. Push :math:`(0, s)` onto a min-priority queue.
+3. Pop the minimum-cost node :math:`u`. If already visited, skip.
+4. For each neighbor :math:`v` of :math:`u`: if
+   :math:`d[u] + w(u,v) < d[v]`, update and push
+   :math:`(d[u] + w(u,v), v)`.
+5. Repeat until the queue is empty or the goal is popped.
 
-1. **Global motion transformer:** encodes all agents and map
-   elements jointly using factorized attention, producing
-   per-agent context embeddings.
+**Time complexity:** :math:`O((V + E)\log V)` with a binary heap.
 
-2. **Local motion transformer:** for each agent, decodes
-   :math:`K` future trajectory modes using a set of
-   learnable **motion query pairs** (one per mode) that
-   attend to the agent's context embedding.
+**Completeness:** Yes (finds a path if one exists).
 
-The output is :math:`K` trajectory predictions with
-associated probabilities:
+**Optimality:** Yes (with non-negative edge weights).
+
+**Limitation:** Explores in all directions uniformly; slow on
+large road networks.
+
+A* Search
+---------
+
+Heuristic and Optimality
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+A* augments Dijkstra with a **heuristic** :math:`h(v)` that
+estimates the cost-to-go from node :math:`v` to the goal.
+Nodes are prioritized by:
 
 .. math::
 
-   \{(\hat{\tau}_k, p_k)\}_{k=1}^{K}, \quad \sum_k p_k = 1
+   f(v) = g(v) + h(v)
 
-**MotionTransformer** (Shi et al., NeurIPS 2022) won the 2022 Waymo
-Open Motion Dataset (WOMD) motion-prediction challenge, and its
-successor **MTR++** (TPAMI 2024) extends the same motion-query design
-to joint multi-agent prediction.
+where :math:`g(v)` is the true cost-to-come and :math:`h(v)` is
+the estimated cost-to-go.
 
-Scene Context Encoding Detail
+**Admissibility:** A heuristic is admissible if it never
+overestimates the true cost:
+
+.. math::
+
+   h(v) \leq h^*(v) \quad \forall v
+
+A common admissible heuristic for road networks is the Euclidean
+distance to the goal.
+
+**Optimality:** A* with an admissible heuristic always finds the
+optimal path.
+
+**Consistency (monotonicity):** :math:`h(u) \leq w(u,v) + h(v)`
+for every edge :math:`(u, v)`. Consistent heuristics guarantee
+that each node is expanded at most once.
+
+Weighted A*
+~~~~~~~~~~~
+
+**Weighted A*** inflates the heuristic by a factor
+:math:`\varepsilon > 1`:
+
+.. math::
+
+   f(v) = g(v) + \varepsilon \cdot h(v)
+
+This biases search toward the goal, dramatically reducing the
+number of expanded nodes. The solution cost is bounded:
+
+.. math::
+
+   \text{cost}(path) \leq \varepsilon \cdot \text{cost}^*
+
+Weighted A* is the standard choice for real-time motion planning
+where a suboptimal but fast solution is preferable to an optimal
+but slow one.
+
+.. list-table:: A* Variant Comparison
+   :header-rows: 1
+   :widths: 30 20 20 30
+
+   * - Variant
+     - Optimal
+     - Speed
+     - Use case
+   * - Dijkstra
+     - Yes
+     - Slow
+     - Offline, small graphs
+   * - A* (:math:`\varepsilon=1`)
+     - Yes
+     - Medium
+     - Moderate graphs
+   * - Weighted A* (:math:`\varepsilon>1`)
+     - :math:`\varepsilon`-suboptimal
+     - Fast
+     - Real-time planning
+
+Hybrid A*
+---------
+
+Plain A* on a grid produces paths a car cannot drive: the path can
+turn in place and ignores the minimum turning radius. **Hybrid A***
+(Dolgov & Thrun, used on Stanford's *Junior* in the DARPA Urban
+Challenge) fixes this by searching over **continuous** poses while
+using a grid only for bookkeeping.
+
+How Hybrid A\* Differs from Grid A\*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 37 38
+
+   * - Aspect
+     - Grid A\*
+     - Hybrid A\*
+   * - Node
+     - Grid cell centre :math:`(i, j)`
+     - Continuous pose :math:`(x, y, \theta)`
+   * - Expansion
+     - 4- or 8-connected neighbours
+     - Steering primitives from the bicycle model
+   * - Visited set
+     - One flag per cell
+     - One flag per :math:`(i, j, \theta_{\text{bin}})` cell
+   * - Path feasibility
+     - Not guaranteed
+     - Kinematically feasible by construction
+
+The key trick: each expansion applies a **constant steering angle**
+:math:`\delta \in \{-\delta_{\max}, 0, +\delta_{\max}\}` (plus
+optional reverse) for a short arc using the bicycle model from
+earlier in this lecture. The resulting pose lands *anywhere* in the
+cell, not at its centre -- so the stored continuous pose is exact
+while the discrete cell prevents infinite re-expansion.
+
+The Two Heuristics
+~~~~~~~~~~~~~~~~~~
+
+Hybrid A\* takes the **maximum** of two complementary admissible
+heuristics -- each covers the other's blind spot:
+
+1. **Nonholonomic-without-obstacles.** The Reeds-Shepp (or Dubins,
+   if reverse is disallowed) distance from the node to the goal,
+   ignoring obstacles. Precomputed into a lookup table. This
+   captures the turning-radius constraint and guides the final
+   approach heading.
+
+2. **Holonomic-with-obstacles.** A 2-D Dijkstra over the obstacle
+   grid, ignoring the vehicle's kinematics. This captures dead ends
+   and detours that the first heuristic cannot see.
+
+.. math::
+
+   h(n) = \max\big(h_{\text{RS}}(n),\; h_{\text{2D}}(n)\big)
+
+Taking the max preserves admissibility (both underestimate) while
+being far tighter than either alone.
+
+Analytic Expansion
+~~~~~~~~~~~~~~~~~~
+
+Near the goal, Hybrid A\* periodically attempts a direct
+**Reeds-Shepp shot**: an analytically computed
+minimum-length curve from the current node straight to the goal
+pose. If that curve is collision-free, the search terminates
+immediately with an exactly-feasible tail.
+
+This is what makes Hybrid A\* practical -- without it, hitting an
+exact goal *heading* by discrete expansion alone is prohibitively
+slow.
+
+.. admonition:: Where It Is Used
+   :class: tip
+
+   Hybrid A\* is the standard planner for **unstructured**
+   environments: parking lots, valet manoeuvres, construction
+   detours, and three-point turns. Apollo, Autoware, and most
+   production parking stacks ship a variant of it. On structured
+   roads the Frenet lattice (below) is preferred because it
+   exploits road geometry that Hybrid A\* would have to rediscover.
+
+Sampling-Based Planning
+====================================================
+
+Sampling-based planners avoid explicit discretization by randomly
+sampling the configuration space.
+
+
+Rapidly-Exploring Random Trees (RRT)
+-------------------------------------
+
+RRT Algorithm
+~~~~~~~~~~~~~
+
+RRT incrementally builds a tree rooted at the start configuration
+by randomly extending toward sampled configurations.
+
+**Algorithm:**
+
+.. code-block:: text
+
+   T.init(q_start)
+   for i = 1 to N:
+       q_rand = SAMPLE()           # random config, or goal with prob p_goal
+       q_near = NEAREST(T, q_rand) # nearest node in tree
+       q_new  = STEER(q_near, q_rand, step_size)
+       if COLLISION_FREE(q_near, q_new):
+           T.add_vertex(q_new)
+           T.add_edge(q_near, q_new)
+           if q_new == q_goal:
+               return PATH(T, q_start, q_goal)
+   return FAILURE
+
+**Properties:**
+
+- **Probabilistically complete:** As :math:`N \to \infty`, the
+  probability of finding a path (if one exists) approaches 1.
+- **Not optimal:** RRT returns the first path found, which is
+  typically far from optimal.
+- **Exploration bias:** The Voronoi bias of RRT causes it to
+  preferentially expand toward unexplored regions.
+
+RRT*
+----
+
+Asymptotic Optimality
+~~~~~~~~~~~~~~~~~~~~~
+
+RRT* extends RRT with two additional steps that guarantee
+**asymptotic optimality**: the path cost converges to optimal as
+the number of samples :math:`N \to \infty`.
+
+**Added steps after adding** :math:`q_{new}`:
+
+1. **Choose parent:** Among all nodes within radius
+   :math:`r_n = \gamma(\log N / N)^{1/d}`, select the parent
+   that minimizes the cost-to-come to :math:`q_{new}`.
+
+2. **Rewire:** For each neighbor :math:`q_{near}` within
+   :math:`r_n`, check if routing through :math:`q_{new}` reduces
+   its cost. If so, reassign its parent.
+
+The radius :math:`r_n` shrinks as :math:`N` grows, so the
+computational overhead per iteration remains bounded.
+
+.. admonition:: RRT vs RRT* Summary
+   :class: note
+
+   RRT finds a feasible path quickly but never improves it.
+   RRT* continually refines the path and converges to optimal
+   given enough computation time -- making it suitable for offline
+   planning or anytime planners.
+
+Probabilistic Road Map (PRM)
 -----------------------------
 
-The map encoding uses a **hierarchical polyline encoder**:
+Two-Phase Construction
+~~~~~~~~~~~~~~~~~~~~~~
 
-- Each road element (lane, boundary, stop line) is a polyline
-  of ordered points.
-- A PointNet-style MLP encodes each point to a feature vector.
-- Max-pooling over the points gives a fixed-size polyline
-  feature.
-- Cross-attention allows each agent query to attend to all
-  polyline features, incorporating spatial map context.
+PRM operates in two phases:
 
-**Positional encoding** uses sinusoidal encodings of
-:math:`(x, y, \theta)` so the attention mechanism is
-geometry-aware.
+**Construction phase:**
 
-Multi-Modal Prediction
+1. Sample :math:`N` random configurations in :math:`\mathcal{C}_{free}`.
+2. For each sample, attempt to connect it to its :math:`k` nearest
+   neighbors using a local planner (usually straight-line).
+3. Accept edges where the local plan is collision-free.
+
+**Query phase:**
+
+1. Connect the start and goal to the roadmap.
+2. Run A* or Dijkstra on the roadmap graph.
+
+PRM is a **multi-query** planner: the roadmap is built once and
+reused for many start/goal pairs. This is useful for
+semi-static environments like parking structures.
+
+Lattice-Based Planning
 ====================================================
 
-Real agents can take multiple plausible future actions. A single
-deterministic prediction is insufficient for safe planning.
+Lattice planners discretize the configuration space using a
+structured, pre-computed graph called a **state lattice**.
 
-Why Multi-Modal Matters
------------------------
 
-At an intersection, a vehicle approaching from the left
-might go straight, turn right, or turn left. Any single
-predicted trajectory represents only one hypothesis.
+State Lattice Construction
+--------------------------
 
-If the ego planner uses a single predicted trajectory and
-the agent takes a different action, the plan may fail.
-With multi-modal predictions, the planner can:
+A state lattice is a graph :math:`\mathcal{L} = (V, E)` where:
 
-- Generate candidate ego-trajectories for each agent mode.
-- Compute the worst-case (most dangerous) agent mode.
-- Select the ego trajectory that is safe across all likely
-  agent modes weighted by probability.
+- **Vertices** :math:`V` correspond to configurations
+  :math:`(x, y, \theta, \kappa)` on a regular grid aligned
+  with the road.
+- **Edges** :math:`E` are pre-computed **motion primitives** --
+  short kinematically feasible maneuvers (e.g., 2-second constant-
+  curvature arcs) that connect adjacent lattice states.
 
-Evaluation Metrics
-------------------
+Motion primitives are computed offline and stored in a lookup
+table. At runtime, planning is pure graph search on
+:math:`\mathcal{L}`.
 
-.. list-table:: Multi-Modal Prediction Metrics
-   :header-rows: 1
-   :widths: 25 30 45
+Automotive Lattice Planning
+---------------------------
 
-   * - Metric
-     - Formula
-     - Meaning
-   * - minADE_K
-     - :math:`\min_k \text{ADE}(\hat{\tau}_k, \tau^*)`
-     - Best-of-K average displacement error
-   * - minFDE_K
-     - :math:`\min_k \|\hat{\tau}_k(T) - \tau^*(T)\|`
-     - Best-of-K final displacement error
-   * - MissRate
-     - Fraction of scenarios where :math:`\text{FDE} > 2` m
-     - Prediction failure rate
-   * - mAP
-     - Mean Average Precision over modes
-     - Joint quality of positions and probabilities
+In structured road environments:
 
-.. admonition:: The Oracle Problem
-   :class: warning
+- The lattice is aligned with the road centerline (Frenet frame).
+- Lateral positions correspond to lane positions.
+- Longitudinal positions correspond to distance along the road.
+- Motion primitives include lane-following arcs, lane-change
+  maneuvers, and deceleration profiles.
 
-   MinADE and MinFDE evaluate only the *best* of :math:`K`
-   predictions. A system that outputs many diverse trajectories
-   will score well on these metrics even if its probability
-   estimates are poor. mAP jointly evaluates probability
-   calibration and trajectory accuracy.
+**Advantages over RRT for roads:**
 
-Behavior Planning
+- Systematic coverage of the reachable space.
+- Consistent, predictable maneuver shapes.
+- Easy to encode traffic rules as edge costs.
+- Real-time performance (graph is pre-built).
+
+.. admonition:: Industrial Use
+   :class: tip
+
+   Lattice planners in the Frenet frame are the dominant approach
+   for highway and structured urban driving, and appear in Apollo's
+   public planning stack and Autoware. The design traces back to the
+   DARPA Urban Challenge era (including the former Uber ATG, whose
+   technology was acquired by Aurora in 2021).
+
+Collision Detection
 ====================================================
 
-Behavior planning is the **strategic layer**: it decides what the
-vehicle should *do* (which maneuver to execute) based on the
-current traffic situation.
+Every candidate path must be checked for collisions before execution.
 
-Position in the Stack
----------------------
+Geometric Methods
+-----------------
 
-.. list-table::
+.. list-table:: Collision Detection Representations
    :header-rows: 1
-   :widths: 20 30 50
+   :widths: 25 30 25 20
 
-   * - Layer
-     - Input
-     - Output
-   * - Perception
-     - Sensor data
-     - Agent detections, HD map
-   * - Prediction
-     - Agent history + map
-     - Agent trajectory distributions
-   * - **Behavior planning**
-     - Predicted states + rules
-     - Maneuver decision (current + next N steps)
-   * - Motion planning
-     - Maneuver decision + map
-     - Collision-free path
-   * - Trajectory planning
-     - Path + speed profile
-     - Time-stamped trajectory
-   * - Control
-     - Trajectory
-     - Steering + throttle/brake
+   * - Method
+     - Description
+     - Accuracy
+     - Cost
+   * - Bounding circle
+     - Single circle per object
+     - Low
+     - O(1)
+   * - Axis-aligned bounding box (AABB)
+     - Axis-aligned rectangle
+     - Medium
+     - O(1)
+   * - Oriented bounding box (OBB)
+     - Rotated rectangle
+     - High
+     - O(1)
+   * - Convex hull
+     - Tight convex polygon
+     - Very high
+     - O(n)
+   * - Swept volume
+     - Union along path
+     - Exact
+     - O(path length)
 
-State Machine Behavior Planner
-===============================
+For real-time AV planning, **OBB** representations are the
+standard: they are tight enough to avoid false collisions yet
+cheap enough to evaluate at 50 Hz.
 
-The finite state machine (FSM) is the classical approach to
-behavior planning.
-
-States and Transitions
-----------------------
-
-A highway driving FSM with six states:
-
-.. list-table::
-   :header-rows: 1
-   :widths: 20 40 40
-
-   * - State
-     - Behavior
-     - Exit condition
-   * - ``LANE_FOLLOW``
-     - Follow lane at reference speed
-     - Slow vehicle ahead OR lane change opportunity
-   * - ``LANE_CHANGE_LEFT``
-     - Execute left lane change maneuver
-     - Maneuver complete OR abort (gap closes)
-   * - ``LANE_CHANGE_RIGHT``
-     - Execute right lane change maneuver
-     - Maneuver complete OR abort
-   * - ``FOLLOW``
-     - Adaptive cruise control behind lead vehicle
-     - Lead vehicle clears OR speed returns to reference
-   * - ``STOP``
-     - Decelerate to zero
-     - Stop line reached, signal clears, or obstacle removed
-   * - ``YIELD``
-     - Decelerate, give right-of-way
-     - Intersection clear
-
-**Transition conditions** use predicted agent states:
-
-- ``LANE_FOLLOW`` → ``FOLLOW``: predicted collision with lead
-  vehicle within :math:`t_{\text{ttc}} < 3` s.
-- ``FOLLOW`` → ``LANE_CHANGE_LEFT``: speed below threshold
-  AND left lane gap :math:`> d_{\text{safe}}`.
-
-Implementation
+Safety Margins
 --------------
 
-.. code-block:: python
+Collision checks use **inflated** obstacle representations.
+A margin :math:`d_{\text{safe}}` is added to all obstacle
+boundaries before checking:
 
-   from enum import Enum
+.. math::
 
-   class State(Enum):
-       LANE_FOLLOW = 0
-       FOLLOW      = 1
-       LANE_CHANGE_LEFT  = 2
-       LANE_CHANGE_RIGHT = 3
-       STOP        = 4
-       YIELD       = 5
+   \mathcal{O}_{\text{inflated}} = \mathcal{O} \oplus
+   \mathcal{B}(d_{\text{safe}})
 
-   class BehaviorPlanner:
-       def __init__(self):
-           self.state = State.LANE_FOLLOW
+where :math:`\oplus` is the Minkowski sum and
+:math:`\mathcal{B}(r)` is a disk of radius :math:`r`.
 
-       def update(self, ego, predictions, map_info):
-           lead = self._find_lead(ego, predictions)
-           ttc  = self._time_to_collision(ego, lead)
+Typical safety margins:
 
-           if self.state == State.LANE_FOLLOW:
-               if ttc < 3.0:
-                   self.state = State.FOLLOW
-               elif map_info.stop_line_ahead and ego.speed > 0.1:
-                   self.state = State.STOP
+- Stationary obstacle: 0.3–0.5 m
+- Moving vehicle (same direction): 0.5–1.0 m
+- Pedestrian: 1.0–1.5 m
 
-           elif self.state == State.FOLLOW:
-               if ttc > 6.0:
-                   self.state = State.LANE_FOLLOW
-               elif self._left_gap_safe(ego, predictions):
-                   self.state = State.LANE_CHANGE_LEFT
+Safety margins encode **uncertainty** (localization error,
+prediction error) and **comfort** (passengers should not feel
+near-miss events).
 
-           # ... additional transitions ...
-           return self.state
-
-Limitations of FSMs
--------------------
-
-FSMs are **brittle** at the boundary conditions between states
-and in novel scenarios not covered by hand-designed transitions.
-
-- **State explosion:** a complete real-world driving FSM
-  requires hundreds of states and thousands of transition
-  conditions.
-- **No uncertainty handling:** FSM transitions are crisp;
-  they do not naturally incorporate prediction uncertainty.
-- **Manual engineering:** every new scenario requires a
-  new transition to be hand-coded and tested.
-
-These limitations motivate learned decision-making approaches.
-
-Rule-Based vs. Learned Decision-Making
+Diffusion-Based Planning
 ====================================================
 
-Rule-Based Systems
-------------------
+A new class of motion planners formulates path generation as an
+iterative **denoising** process learned from expert driving data.
 
-Rule-based behavior planners (including FSMs and decision trees)
-encode expert knowledge as explicit logical conditions.
+Diffusion Models for Planning
+-----------------------------
 
-**Advantages:**
+**Forward process:** Given a ground-truth trajectory
+:math:`\tau_0`, add Gaussian noise over :math:`T` steps:
 
-- Interpretable: every decision can be traced to a rule.
-- Predictable: behavior is deterministic given the same input.
-- Certifiable: rules can be formally verified for safety.
+.. math::
 
-**Disadvantages:**
+   q(\tau_t | \tau_{t-1}) = \mathcal{N}(\tau_t;\,
+   \sqrt{1-\beta_t}\,\tau_{t-1},\, \beta_t I)
 
-- Incomplete: rare scenarios not covered by rules cause failures.
-- Brittle: edge cases and ambiguous situations require complex
-  rule interactions.
-- High engineering cost: thousands of rules must be maintained.
+**Reverse process (planning):** Starting from pure noise
+:math:`\tau_T \sim \mathcal{N}(0, I)`, a learned denoising
+network :math:`\epsilon_\theta` iteratively removes noise:
 
-Learned Decision-Making
------------------------
+.. math::
 
-Learned approaches replace hand-crafted rules with a policy
-:math:`\pi(a | s)` trained from data.
+   p_\theta(\tau_{t-1}|\tau_t) = \mathcal{N}(\tau_{t-1};\,
+   \mu_\theta(\tau_t, t),\, \Sigma_\theta(\tau_t, t))
 
-**Advantages:**
+The network :math:`\epsilon_\theta` is conditioned on the
+**scene context** (HD map, agent states, ego history) so that
+the denoised trajectory is consistent with the current
+traffic situation.
 
-- Generalizes to unseen scenarios not covered by rules.
-- Can capture complex multi-agent interactions implicitly.
-- Lower engineering effort once training infrastructure exists.
+Diffusion Planner (ICLR 2025)
+-----------------------------
 
-**Disadvantages:**
+**Diffusion Planner** (Zheng et al., ICLR 2025) is a
+diffusion-based closed-loop planner that:
 
-- Interpretability: the policy is a black box.
-- Safety guarantees are hard to prove formally.
-- Requires large, diverse training data.
-- Distribution shift: policy fails on inputs far from training
-  distribution.
+- Encodes the HD map and surrounding agent trajectories using
+  a Transformer encoder.
+- Runs a DDPM-style denoising process to generate the ego
+  trajectory.
+- Achieves state-of-the-art closed-loop scores on the nuPlan
+  benchmark, outperforming both rule-based and regression-based
+  learned planners.
 
-.. seealso::
+Key design choices:
 
-   The learned-policy approach is developed in depth in **L12: End-to-End
-   Driving, VLA & Imitation Learning**, which covers behavior cloning,
-   DAgger, and modern foundation-model policies.
+- **Joint prediction:** ego trajectory and agent trajectories
+  are denoised together, enabling interaction-aware planning.
+- **Guidance:** traffic rules and comfort metrics can be
+  incorporated as classifier guidance during inference.
 
+DiffusionDrive (CVPR 2025)
+--------------------------
 
-Practical Decision-Making in Traffic
+**DiffusionDrive** (Liao et al., CVPR 2025) demonstrates
+real-time diffusion planning by:
+
+- Using a **truncated diffusion schedule** (starting from
+  step :math:`T' < T`) to cut the denoising loop to a handful of
+  steps rather than the tens-to-hundreds a standard DDPM needs.
+- Employing an **anchored Gaussian diffusion** that initializes
+  from clustered prior trajectories rather than pure noise.
+- Reporting real-time inference (tens of FPS on a single modern
+  GPU) on the **NAVSIM** end-to-end planning benchmark.
+
+.. list-table:: Diffusion Planner Comparison
+   :header-rows: 1
+   :widths: 26 18 26 30
+
+   * - Method
+     - Venue
+     - Evaluated on
+     - Key Feature
+   * - Diffusion Planner
+     - ICLR 2025
+     - nuPlan (closed-loop)
+     - Joint ego + agent denoising
+   * - DiffusionDrive
+     - CVPR 2025
+     - NAVSIM / nuScenes
+     - Truncated + anchored diffusion
+
+.. warning::
+
+   The two systems are evaluated on **different benchmarks**
+   (nuPlan closed-loop vs. NAVSIM), so their headline scores are
+   not directly comparable. Always check which benchmark and which
+   protocol (open-loop vs. closed-loop) a planning number comes
+   from before quoting it. Verify current step counts and FPS
+   figures against the published papers -- both move between the
+   arXiv and camera-ready versions.
+
+Algorithm Comparison and Selection
 ====================================================
 
-Intersection Negotiation
-------------------------
+.. list-table:: Motion Planning Algorithm Summary
+   :header-rows: 1
+   :widths: 18 12 12 12 22 24
 
-Intersections require reasoning about right-of-way, crossing
-trajectories, and agent intent simultaneously.
+   * - Algorithm
+     - Complete
+     - Optimal
+     - Real-time
+     - Best for
+     - Limitation
+   * - Dijkstra
+     - Yes
+     - Yes
+     - No
+     - Small road graphs
+     - Exhaustive, slow
+   * - A*
+     - Yes
+     - Yes
+     - Marginal
+     - Mid-size graphs with good heuristic
+     - Needs admissible heuristic
+   * - Weighted A*
+     - Yes
+     - :math:`\varepsilon`-suboptimal
+     - Yes
+     - Real-time road graphs
+     - Solution quality varies with :math:`\varepsilon`
+   * - Hybrid A*
+     - Yes (in discretization)
+     - Near-optimal
+     - Yes
+     - Parking, unstructured, 3-point turns
+     - Needs Reeds-Shepp tables; slower than lattice on roads
+   * - RRT
+     - Prob.
+     - No
+     - Yes
+     - Unstructured, high-D spaces
+     - Suboptimal paths
+   * - RRT*
+     - Prob.
+     - Asymp.
+     - No (slow conv.)
+     - Offline planning
+     - Slow convergence
+   * - PRM
+     - Prob.
+     - Asymp.
+     - Yes (query)
+     - Semi-static multi-query
+     - Construction offline
+   * - Lattice
+     - Yes (in lattice)
+     - Yes (in lattice)
+     - Yes
+     - Structured roads
+     - Requires pre-built primitives
+   * - Diffusion
+     - --
+     - --
+     - Yes (DiffusionDrive)
+     - Data-rich, complex interactions
+     - Requires large training set
 
-A behavior planner for intersections must:
+Selection Guidelines
+--------------------
 
-1. **Detect the intersection** and classify the control type
-   (traffic signal, stop sign, uncontrolled, roundabout).
-2. **Determine right-of-way** from signal state or traffic rules.
-3. **Predict crossing agents** and compute time-to-conflict (TTC)
-   for each crossing trajectory pair.
-4. **Decide:** proceed, yield, or stop based on TTC and
-   predicted agent gaps.
+.. grid:: 1 1 2 2
+   :gutter: 2
 
-.. admonition:: Gap Acceptance
+   .. grid-item-card:: Structured Road (Highway / Urban)
+      :class-card: sd-border-primary
+
+      **Recommended:** Lattice-based planner in Frenet frame
+
+      - Pre-built primitives exploit road structure.
+      - Efficient graph search at 20–50 Hz.
+      - Easy to add traffic rule costs.
+
+   .. grid-item-card:: Unstructured (Parking / Off-Road)
+      :class-card: sd-border-primary
+
+      **Recommended:** Hybrid A\* (primary) or RRT\* (offline)
+
+      - No road structure to exploit.
+      - Nonholonomic constraints handled by steering primitives.
+      - Hybrid A\*'s dual heuristic plus analytic Reeds-Shepp
+        expansion gives feasible paths with exact goal headings.
+
+   .. grid-item-card:: Large Road Network Routing
+      :class-card: sd-border-primary
+
+      **Recommended:** Dijkstra or A* on road graph
+
+      - Road graph is sparse and small relative to grid.
+      - Euclidean heuristic is admissible and tight.
+
+   .. grid-item-card:: Learning-Based (Complex Interactions)
+      :class-card: sd-border-primary
+
+      **Recommended:** Diffusion Planner / DiffusionDrive
+
+      - Captures multi-modal human behavior.
+      - Handles unstructured interactions not covered by rules.
+      - Requires annotated training data.
+
+CARLA Implementation Exercise
+====================================================
+
+.. admonition:: Exercise: A* Planner in CARLA
    :class: note
 
-   The fundamental decision at an uncontrolled intersection is
-   **gap acceptance**: is the time gap in the crossing stream
-   large enough to enter safely? Gap acceptance models learned
-   from human data outperform fixed-threshold rules because
-   they incorporate speed, visibility, and vehicle type.
-
-Merging onto a Highway
-----------------------
-
-Merging requires the ego vehicle to find a gap in the highway
-traffic stream and adjust speed to reach the merge point
-simultaneously with the gap.
-
-Key considerations:
-
-- Predict lead and following highway vehicles for 8--10 s.
-- Compute the gap size at the merge point as a function of
-  ego speed.
-- Select the target gap and compute the acceleration profile
-  (quintic polynomial) to arrive at the merge point
-  within the gap.
-- Monitor the gap in real time; abort and re-plan if the
-  gap closes.
-
-Pedestrian Interactions
------------------------
-
-Pedestrians are the most challenging agents for prediction
-because:
-
-- They can change direction instantly (no kinematic constraints).
-- Their intent is often unobservable (phone in hand, not looking).
-- Social norms (yielding, eye contact) are implicit.
-
-Best practices:
-
-- Use multi-modal prediction with high-uncertainty modes.
-- Apply conservative safety margins (1.5--2.0 m clearance).
-- Prefer slow-speed trajectories when pedestrian uncertainty
-  is high (reduces collision energy).
-- Never assume a pedestrian will stop or yield.
-
-CARLA Exercise
-====================================================
-
-.. admonition:: Exercise: Trajectory Prediction and Behavioral Planner
-   :class: note
-
-   **Goal:** Integrate a simple prediction module and FSM behavior
-   planner into a CARLA agent that navigates a multi-lane road
-   with traffic.
+   **Goal:** Implement a graph-based planner that navigates a
+   simulated ego vehicle from a start waypoint to a goal waypoint
+   in the CARLA Town03 map.
 
    **Tasks:**
 
-   1. **Perception:** Use CARLA's ground-truth bounding boxes to
-      obtain the positions, velocities, and headings of all
-      nearby vehicles within 50 m.
+   1. Extract the CARLA waypoint graph using the
+      ``carla.Map.generate_waypoints()`` API and build an adjacency
+      list with Euclidean edge weights.
 
-   2. **Constant-velocity prediction:** For each nearby vehicle,
-      predict its trajectory over 5 s at 0.1 s intervals using
-      the CV model. Visualize predicted positions with
-      ``world.debug.draw_point()``.
+   2. Implement A* search with a Euclidean heuristic to find the
+      shortest path on the waypoint graph.
 
-   3. **FSM behavior planner:** Implement a four-state FSM
-      (``LANE_FOLLOW``, ``FOLLOW``, ``LANE_CHANGE_LEFT``,
-      ``STOP``) with transitions based on:
+   3. Visualize the planned path using CARLA's debug drawing API
+      (``world.debug.draw_point()``).
 
-      - TTC to lead vehicle (< 3 s → ``FOLLOW``)
-      - Speed below reference (→ attempt ``LANE_CHANGE_LEFT``)
-      - Stop sign detected ahead (→ ``STOP``)
+   4. Drive the ego vehicle along the planned path using a
+      waypoint-following controller.
 
-   4. **Integration:** Drive the FSM output with the simple
-      proportional steering and speed controller provided in the
-      starter code below. Run the agent on a multi-vehicle Town04
-      scenario for 120 s.
+   5. **Extension:** Replace the Euclidean heuristic with a
+      weighted A* variant (:math:`\varepsilon = 2`) and compare the
+      number of nodes expanded vs. plain A*.
 
-      .. note::
+   .. warning::
 
-         Proper lateral and longitudinal control (Stanley, Pure
-         Pursuit, PID, MPC) is covered in **L11: Trajectory Generation
-         & Control**, which comes *after* this lecture. The placeholder
-         controller here is deliberately crude -- its job is only to
-         make the FSM's decisions observable. You will revisit this
-         exercise with real controllers in GP4.
-
-   5. **Evaluation:** Log the FSM state sequence, speed profile,
-      and collision events. Report: time in each state, max speed
-      deviation, number of hard braking events (deceleration
-      > 4 m/s²).
+      **CARLA waypoint identity is the trap in this exercise.**
+      ``generate_waypoints()`` and ``wp.next()`` return *different
+      Waypoint objects* for the same road position, and their ``.id``
+      and ``.s`` values will not match. If you key your graph on raw
+      ``.id`` or raw ``.s``, ``wp.next()`` will return neighbours that
+      are not nodes in your graph and the search will dead-end
+      immediately. The starter code below keys on a **quantized**
+      ``(road_id, lane_id, s)`` tuple so both APIs agree.
 
    **Starter code:**
 
    .. code-block:: python
 
       import carla
-      import numpy as np
+      import heapq
 
-      def cv_predict(vehicle, horizon=5.0, dt=0.1):
-          """Constant-velocity trajectory prediction."""
-          t = vehicle.get_transform()
-          v = vehicle.get_velocity()
-          vx, vy = v.x, v.y
-          x0, y0 = t.location.x, t.location.y
-          steps = int(horizon / dt)
-          trajectory = []
-          for i in range(steps):
-              t_i = (i + 1) * dt
-              trajectory.append(
-                  carla.Location(x=x0 + vx * t_i,
-                                 y=y0 + vy * t_i,
-                                 z=t.location.z))
-          return trajectory
+      S_QUANT = 1.0   # metres; must be <= sampling_resolution
 
-      def time_to_collision(ego, lead, predictions, dt=0.1,
-                            collision_radius=3.0):
-          """Estimate TTC by propagating BOTH ego and lead forward.
+      def wp_key(wp):
+          """Stable, hashable identity for a CARLA waypoint.
 
-          A common mistake is to compare the *current* ego position
-          against the lead's *future* positions -- that ignores ego
-          motion entirely and reports a TTC that is far too large when
-          closing on a slower vehicle. Both agents must be propagated
-          over the same time base.
+          Quantizing `s` is what makes generate_waypoints() and
+          wp.next() agree on node identity.
           """
-          if lead is None or lead.id not in predictions:
-              return float('inf')
+          return (wp.road_id, wp.lane_id, round(wp.s / S_QUANT))
 
-          lead_traj = predictions[lead.id]          # from cv_predict()
-          ego_traj = cv_predict(ego, horizon=len(lead_traj) * dt, dt=dt)
+      def build_graph(world, sampling_resolution=2.0):
+          waypoints = world.get_map().generate_waypoints(sampling_resolution)
+          waypoint_map = {wp_key(wp): wp for wp in waypoints}
+          graph = {k: [] for k in waypoint_map}
 
-          for i, (ego_loc, lead_loc) in enumerate(zip(ego_traj, lead_traj)):
-              if ego_loc.distance(lead_loc) < collision_radius:
-                  return (i + 1) * dt              # seconds until contact
-          return float('inf')
+          for key, wp in waypoint_map.items():
+              for next_wp in wp.next(sampling_resolution):
+                  nkey = wp_key(next_wp)
+                  if nkey not in waypoint_map:      # off the sampled set
+                      continue
+                  dist = wp.transform.location.distance(
+                      next_wp.transform.location)
+                  graph[key].append((nkey, dist))
 
+          n_edges = sum(len(v) for v in graph.values())
+          print(f"Graph: {len(graph)} nodes, {n_edges} edges")
+          assert n_edges > 0, "No edges built -- check wp_key quantization"
+          return graph, waypoint_map
 
-      def simple_control(vehicle, target_wp, target_speed_mps):
-          """Placeholder P-controller so the FSM's decisions are visible.
+      def astar(graph, waypoint_map, start_key, goal_loc, epsilon=1.0):
+          """A* over the waypoint graph. epsilon>1 gives Weighted A*."""
+          def h(key):
+              return waypoint_map[key].transform.location.distance(goal_loc)
 
-          Replaced by Stanley / Pure Pursuit / PID in L11.
-          """
-          tf = vehicle.get_transform()
-          fwd = tf.get_forward_vector()
-          to_target = target_wp.transform.location - tf.location
+          open_set = [(epsilon * h(start_key), 0.0, start_key)]
+          came_from = {}
+          g_score = {start_key: 0.0}
+          visited = set()
+          expanded = 0                      # for the Task 5 comparison
 
-          # Signed lateral offset -> proportional steer
-          cross = fwd.x * to_target.y - fwd.y * to_target.x
-          steer = max(-1.0, min(1.0, 0.5 * cross))
+          while open_set:
+              _, g, current = heapq.heappop(open_set)
+              if current in visited:
+                  continue
+              visited.add(current)
+              expanded += 1
 
-          v = vehicle.get_velocity()
-          speed = (v.x**2 + v.y**2)**0.5
-          err = target_speed_mps - speed
-          throttle = max(0.0, min(0.6, 0.5 * err))
-          brake = max(0.0, min(1.0, -0.5 * err))
+              if h(current) < 2.0:          # within 2 m of goal
+                  path = [current]
+                  while path[-1] in came_from:
+                      path.append(came_from[path[-1]])
+                  return path[::-1], expanded
 
-          return carla.VehicleControl(throttle=throttle, steer=steer,
-                                      brake=brake)
+              for nkey, cost in graph.get(current, []):
+                  new_g = g + cost
+                  if new_g < g_score.get(nkey, float('inf')):
+                      g_score[nkey] = new_g
+                      came_from[nkey] = current
+                      heapq.heappush(
+                          open_set, (new_g + epsilon * h(nkey), new_g, nkey))
+
+          return None, expanded
+
+      # Usage
+      graph, wp_map = build_graph(world, sampling_resolution=2.0)
+      start_key = wp_key(world.get_map().get_waypoint(start_location))
+      path, n = astar(graph, wp_map, start_key, goal_location, epsilon=1.0)
+      print(f"A*:          {len(path)} waypoints, {n} nodes expanded")
+      path_w, n_w = astar(graph, wp_map, start_key, goal_location, epsilon=2.0)
+      print(f"Weighted A*: {len(path_w)} waypoints, {n_w} nodes expanded")
 
 
 Summary
@@ -691,23 +906,23 @@ Summary
 .. grid:: 1 2 2 2
    :gutter: 3
 
-   .. grid-item-card:: Prediction
+   .. grid-item-card:: Models and Frames
       :class-card: sd-border-primary
 
-      - Horizon requirements scale with maneuver: 1 s braking, 5--10 s merge
-      - Physics (CV / CTRA): exact, O(1), valid ~1 s; singular at zero yaw rate
-      - Maneuver-based: intent classifier + conditional model
-      - Interaction-aware: social forces, GNNs, Transformer scene encoding
-      - Multi-modal output :math:`\{(\hat{\tau}_k, p_k)\}`; minADE/minFDE
-        reward diversity, so check mAP for probability calibration
+      - Three-tier hierarchy: route (km) -> behavior (100 m) -> motion (10--50 m)
+      - Bicycle model: :math:`\dot\theta = (v/L)\tan\delta`,
+        :math:`\kappa_{\max} = \tan\delta_{\max}/L`
+      - Nonholonomic constraint is what separates cars from point robots
+      - Frenet :math:`(s, d)` frame turns "stay in lane" into :math:`d \approx 0`
 
-   .. grid-item-card:: Behavior Planning
+   .. grid-item-card:: Algorithms
       :class-card: sd-border-primary
 
-      - Strategic layer: chooses the maneuver, not the trajectory
-      - FSM: interpretable and certifiable, but state explosion and
-        no uncertainty handling
-      - Rule-based vs learned: interpretability and verifiability
-        traded against generalization
-      - Practical patterns: gap acceptance, merge planning, and
-        never assuming a pedestrian will yield
+      - Dijkstra / A* / Weighted A*: optimal to
+        :math:`\varepsilon`-suboptimal, complete
+      - Hybrid A*: continuous poses + steering primitives + dual
+        heuristic + Reeds-Shepp shot -- the unstructured-space workhorse
+      - RRT (feasible fast) vs RRT* (asymptotically optimal, slow)
+      - Frenet lattice: pre-built primitives, the structured-road default
+      - Diffusion planners: learned denoising, strong on interaction-heavy
+        scenes, benchmark-dependent numbers

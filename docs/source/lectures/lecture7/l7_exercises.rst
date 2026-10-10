@@ -12,19 +12,19 @@ Exercises
    listed in the :doc:`syllabus </syllabus/index>`.
 
 This page contains five take-home exercises that reinforce the concepts
-from Lecture 7. Exercises cover coordinate transforms, odometry drift,
-ICP registration, and SLAM evaluation.
+from Lecture 7. Exercises cover road graph construction, route planning
+algorithms, and dynamic rerouting.
 
 
-.. dropdown:: Exercise 1 -- Coordinate Frame Transforms
+.. dropdown:: Exercise 1 -- Road Graph Construction
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Practice converting between GNSS (geodetic) coordinates and local
-   ENU coordinates, and constructing SE(2) transformation matrices.
+   Build a directed road graph from CARLA waypoints and analyze its
+   structure.
 
 
    .. raw:: html
@@ -34,36 +34,47 @@ ICP registration, and SLAM evaluation.
 
    **Specification**
 
-   A vehicle is at GNSS coordinates **(lat 38.9897, lon -76.9378,
-   alt 50 m)**. The local ENU origin is at **(lat 38.9900, lon
-   -76.9380, alt 50 m)**.
+   Create the file ``road_graph.py`` that performs the following:
 
-   1. Convert the vehicle's position to **ENU coordinates** using:
+   1. Load **Town01** and generate waypoints at **5.0 m** spacing.
+   2. Build a **directed graph** where:
 
-      - :math:`\Delta E \approx \Delta\text{lon} \times \cos(\text{lat}) \times 111{,}320` m
-      - :math:`\Delta N \approx \Delta\text{lat} \times 110{,}540` m
+      - Each waypoint is a node (keyed by its ``id``).
+      - Lane-follow edges connect to ``waypoint.next(5.0)``.
+      - Lane-change edges connect to ``get_left_lane()`` /
+        ``get_right_lane()`` (if they exist and are drivable).
 
-   2. The vehicle's heading is **45° from North** (clockwise). Write
-      the **3 × 3 SE(2) homogeneous transformation matrix**
-      :math:`T_{\text{vehicle}}^{\text{ENU}}`.
+   3. Report the following statistics:
 
-   3. A LiDAR point at ``(5, 2, 0)`` in the vehicle frame -- what are
-      its **ENU coordinates**?
+      - Total number of **nodes** and **edges**.
+      - Number of **junction waypoints** (``is_junction == True``).
+      - Number of **lane-change edges** vs. **lane-follow edges**.
+
+   4. Repeat for **Town03** and compare.
+
+   **Expected output**
+
+   .. code-block:: text
+
+      Town01: nodes=1234, edges=2345, junctions=189, lane_follow=2100, lane_change=245
+      Town03: nodes=3456, edges=6789, junctions=412, lane_follow=5800, lane_change=989
+
+   (Exact numbers will vary.)
 
    **Deliverable**
 
-   All conversions and matrix operations shown with numerical results.
+   The script and a comparison table for both towns.
 
 
-.. dropdown:: Exercise 2 -- Odometry Drift Analysis
+.. dropdown:: Exercise 2 -- Dijkstra vs. A* Comparison
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Quantify odometry drift rates and reason about their impact on
-   long-range navigation without GNSS.
+   Implement and compare Dijkstra and A* on a CARLA road graph,
+   measuring optimality and efficiency.
 
 
    .. raw:: html
@@ -73,80 +84,49 @@ ICP registration, and SLAM evaluation.
 
    **Specification**
 
-   A vehicle drives a 500 m loop and returns to the start. Three
-   odometry sources report the following final position errors:
+   Using the road graph from Exercise 1 (Town01):
 
-   - **Wheel odometry**: 12.5 m error
-   - **Visual odometry (stereo)**: 3.2 m error
-   - **LiDAR odometry**: 0.8 m error
+   1. Implement **Dijkstra's algorithm** with edge weight = Euclidean
+      distance between waypoints.
+   2. Implement **A* search** with heuristic = Euclidean distance to
+      goal.
+   3. Plan a route between two distant spawn points and record:
 
-   1. Compute the **drift rate** (% of distance traveled) for each.
-   2. If the vehicle must drive **10 km** without GNSS (tunnel + urban
-      canyon), what is the expected error from each source?
-   3. Name **two physical causes** of wheel odometry drift.
-   4. Would fusing wheel + LiDAR odometry help? Explain using the
-      concept of complementary information.
-   5. At what drift rate does localization become **unsafe for lane
-      keeping** (assume lane width = 3.7 m)?
+      - **Nodes expanded** by each algorithm.
+      - **Total path distance** (should be identical -- explain why).
+      - **Computation time**.
 
-   **Deliverable**
+   4. Implement **Weighted A*** with :math:`\epsilon = 2.0`. Record
+      nodes expanded and path distance.
 
-   Drift rate table, projected 10 km errors, and written answers.
+   Print a comparison table:
 
+   .. code-block:: text
 
-.. dropdown:: Exercise 3 -- ICP Registration
-   :icon: gear
-   :class-container: sd-border-primary
-   :class-title: sd-font-weight-bold
-
-   **Goal**
-
-   Understand and implement the ICP algorithm using Open3D.
-
-
-   .. raw:: html
-
-      <hr>
-
-
-   **Specification**
-
-   Create the file ``icp_exercise.py`` that performs the following:
-
-   1. Generate a synthetic **source point cloud**: a 10 m × 10 m
-      plane with 1000 random points and Gaussian noise
-      (:math:`\sigma = 0.02` m).
-   2. Create a **target point cloud** by applying a known
-      transformation to the source: translation ``(1.0, 0.5, 0.0)``
-      and rotation of ``5°`` about the z-axis.
-   3. Run ``o3d.pipelines.registration.registration_icp`` with
-      ``TransformationEstimationPointToPlane`` (estimate normals
-      first).
-   4. Print the **recovered transformation** and compare it to the
-      ground-truth transform.
-   5. Report the **fitness score** and **inlier RMSE**.
+      Algorithm      | Nodes expanded | Path dist (m) | Time (ms)
+      Dijkstra       |           1842 |         623.5 |      45.2
+      A*             |            534 |         623.5 |      12.1
+      Weighted A*    |            287 |         641.2 |       6.8
 
    **Written analysis**
 
-   - What happens if you increase the rotation to 45°? Does ICP still
-     converge?
-   - Name two strategies to improve convergence for large initial
-     displacements.
+   Why does Dijkstra and A* produce the same path distance? Why might
+   Weighted A* produce a longer path?
 
    **Deliverable**
 
-   The script, printed results, and written analysis.
+   The script, comparison table, and written analysis.
 
 
-.. dropdown:: Exercise 4 -- SLAM Evaluation with EVO
+.. dropdown:: Exercise 3 -- Cost Function Design
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Run a SLAM frontend in CARLA and evaluate trajectory accuracy
-   using standard metrics.
+   Design multi-objective cost functions for route planning and
+   observe how they change the selected route.
 
 
    .. raw:: html
@@ -156,40 +136,46 @@ ICP registration, and SLAM evaluation.
 
    **Specification**
 
-   1. Run the SLAM frontend from the lecture on a **60-second drive**
-      in Town03 (ICP-based scan matching).
-   2. Record the **ground-truth trajectory** from CARLA at each
-      timestep.
-   3. Save both trajectories in **TUM format**:
-      ``timestamp tx ty tz qx qy qz qw``.
-   4. Use the ``evo`` tool to compute:
+   The route planner evaluates edges using:
 
-      .. code-block:: console
+   .. math::
 
-         evo_ape tum gt.txt est.txt -p --save_results ape.zip
-         evo_rpe tum gt.txt est.txt -p --save_results rpe.zip
+      c(e) = w_d \cdot d(e) + w_t \cdot t(e) + w_m \cdot m(e)
+             + w_r \cdot r(e)
 
-   5. Report: **mean APE**, **max APE**, **mean RPE**.
+   where:
 
-   **Written analysis**
+   - :math:`d(e)` = edge distance (m)
+   - :math:`t(e)` = estimated travel time (s), assuming speed limit
+   - :math:`m(e)` = maneuver complexity (0 = straight, 0.5 = lane
+     change, 1.0 = turn)
+   - :math:`r(e)` = road class penalty (0 = highway, 0.5 = arterial,
+     1.0 = residential)
 
-   Is the drift accumulating **linearly** or **accelerating**? What
-   would a loop closure add to this pipeline?
+   1. Choose weights for the **fastest route** (minimize travel time).
+   2. Choose weights for the **most comfortable route** (fewest
+      maneuvers, avoid small roads).
+   3. Plan the same origin-destination pair with both weight sets in
+      CARLA.
+   4. Visualize both routes using ``world.debug.draw_string()`` (red
+      for fastest, blue for most comfortable).
+   5. Report the total distance, estimated time, and maneuver count
+      for each route.
 
    **Deliverable**
 
-   Both trajectory files, EVO output plots, metrics, and analysis.
+   The script, screenshots of both routes, and a comparison table.
 
 
-.. dropdown:: Exercise 5 -- Loop Closure Impact
+.. dropdown:: Exercise 4 -- Dynamic Rerouting
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Reason about the role of loop closure in SLAM and the dangers of
-   false loop closures.
+   Implement a dynamic rerouting trigger when an obstacle blocks the
+   planned path.
 
 
    .. raw:: html
@@ -199,23 +185,73 @@ ICP registration, and SLAM evaluation.
 
    **Specification**
 
-   Consider a pose graph with 100 nodes (poses) connected by 99
-   sequential odometry edges.
+   Create the file ``dynamic_reroute.py`` that performs the following:
 
-   1. Draw a simple **pose graph** with 5 nodes and 4 sequential
-      edges. Add a **loop closure edge** from node 5 back to node 1.
-   2. Before optimization, node 5 has drifted **2 m** from its true
-      position. After pose graph optimization, the correction is
-      distributed across all nodes. What is the **approximate
-      per-node correction** (assume uniform distribution)?
-   3. In the 100-node graph, if the accumulated drift at node 100 is
-      **5 m**, what is the per-node correction after a loop closure
-      from node 100 to node 1?
-   4. Why can a **single false loop closure** be catastrophic for the
-      entire map?
-   5. Name **two methods** used to verify loop closure candidates
-      before adding them to the pose graph.
+   1. Plan a route from point A to point B in Town03 using
+      ``GlobalRoutePlanner``.
+   2. Spawn the ego vehicle and begin following the route.
+   3. After the vehicle has traveled **30%** of the route, spawn a
+      **static obstacle** (parked vehicle) blocking the planned path.
+   4. Implement a rerouting trigger: when the planner detects the
+      obstacle is within **20 m** of the planned path, replan from
+      the current position to the original destination.
+   5. Visualize both routes:
+
+      - Original route: **red** waypoints.
+      - New route: **green** waypoints.
+
+   6. Print the **additional distance** caused by the reroute.
 
    **Deliverable**
 
-   Pose graph sketch, calculations, and written answers.
+   The script and a screenshot showing both routes with the obstacle.
+
+
+.. dropdown:: Exercise 5 -- RoadOption Sequence Analysis
+   :icon: gear
+   :class-container: sd-border-primary
+   :class-title: sd-font-weight-bold
+
+   **Goal**
+
+   Analyze the maneuver complexity of different routes and reason
+   about execution difficulty.
+
+
+   .. raw:: html
+
+      <hr>
+
+
+   **Specification**
+
+   Use CARLA's ``GlobalRoutePlanner`` to plan **three different routes**
+   in Town03 (choose different origin-destination pairs).
+
+   For each route:
+
+   1. Extract the sequence of ``RoadOption`` values.
+   2. Count occurrences of each type (``LANEFOLLOW``, ``LEFT``,
+      ``RIGHT``, ``STRAIGHT``, ``CHANGELANELEFT``,
+      ``CHANGELANERIGHT``).
+   3. Compute the **maneuver density**:
+
+      .. math::
+
+         \rho = \frac{\text{non-LANEFOLLOW maneuvers}}
+                     {\text{route length (m)}}
+
+   4. If a behavioral planner has a **5% failure rate** per maneuver,
+      compute the **probability of completing** each route without a
+      failure:
+
+      .. math::
+
+         P_{\text{success}} = (1 - 0.05)^{n_{\text{maneuvers}}}
+
+   5. Which route is simplest? Which is most risky?
+
+   **Deliverable**
+
+   Maneuver count tables, density values, success probabilities, and
+   a brief comparison (3--5 sentences).

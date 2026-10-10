@@ -1706,7 +1706,7 @@ you think of the bet, the engineering answers are specific.
         modality cannot check itself against an independent physical
         measurement, so a perception error has nothing to disagree with.
 
-That last point is a **validation** problem. It is L13's problem, and it does
+That last point is a **validation** problem. It is L12's problem, and it does
 not go away with a better network.
 
 
@@ -1735,8 +1735,8 @@ stack where a sensor does, and it brings a failure mode of its own.
    launches city by city. Tesla does not, and ships everywhere.** One choice,
    most of the difference between those two rows.
 
-Map *layers* and map-based localisation are **L7**; the formats that encode
-them (OpenDRIVE, Lanelet2) and routing are **L8**.
+Map *layers* and map-based localisation are **L6**; the formats that encode
+them (OpenDRIVE, Lanelet2) and routing are **L7**.
 
 
 What a Map Is

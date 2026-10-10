@@ -9,338 +9,333 @@ References
     .. card::
         :class-card: sd-border-secondary
 
-        **ENPM818Z -- L10: Motion Planning**
+        **ENPM818Z -- L10: Trajectory Generation & Control**
 
-        Covers the three-tier motion planning hierarchy (route,
-        behavior, motion), bicycle kinematic model and nonholonomic
-        constraints, graph-based planners (Dijkstra, A*, Weighted
-        A*), sampling-based planners (RRT, RRT*, PRM), lattice-based
-        planning in the Frenet frame with pre-computed motion
-        primitives, geometric collision detection with safety
-        margins (OBB, Minkowski sum), and diffusion-based planners
-        (Diffusion Planner ICLR 2025, DiffusionDrive CVPR 2025).
+        Covers path vs. trajectory (time parameterization),
+        trajectory requirements (continuity, feasibility, comfort,
+        safety), quintic polynomial trajectory generation in the
+        Frenet frame, natural cubic splines and B-splines, optimization-
+        based trajectory planning with QP/NLP cost functions,
+        Model Predictive Control (MPC formulation, receding horizon,
+        prediction horizon tuning, real-time QP solving), Pure
+        Pursuit controller (lookahead distance, adaptive gain),
+        Stanley controller (cross-track + heading error), PID
+        longitudinal speed control with anti-windup, and CARLA
+        lane-following implementation.
 
 
-.. dropdown:: Foundational Textbooks
+.. dropdown:: Trajectory Planning
     :class-container: sd-border-secondary
 
     .. grid:: 1 1 2 2
         :gutter: 2
 
-        .. grid-item-card:: Choset et al. -- Principles of Robot Motion
+        .. grid-item-card:: Werling et al. -- Frenet-Frame Planner (ICRA 2010)
             :class-card: sd-border-secondary
 
-            **MIT Press, 2005**
+            **ICRA 2010**
 
-            Comprehensive coverage of configuration spaces,
-            potential fields, graph-based planning, and sampling-
-            based planners. Chapters 4--7 are directly relevant
-            to this lecture.
+            Seminal paper on Frenet-frame quintic polynomial
+            trajectory generation for highway driving, including
+            candidate sampling and cost-function-based selection.
 
             +++
 
-            - Configuration space theory
-            - PRM and RRT derivations
-            - Completeness and optimality proofs
+            - Frenet frame formulation
+            - Quintic polynomial candidates
+            - Cost function design
 
-        .. grid-item-card:: LaValle -- Planning Algorithms
+        .. grid-item-card:: Ziegler et al. -- AV Berlin (2014)
             :class-card: sd-border-secondary
 
-            **Cambridge University Press, 2006**
-            (freely available at planning.cs.uiuc.edu)
+            **IEEE Intelligent Transportation Systems, 2014**
 
-            The definitive reference for motion planning
-            algorithms. Covers discrete planning, sampling-based
-            methods, and nonholonomic systems.
+            Describes the full trajectory planning and control
+            stack of the Bertha-Benz Memorial Route autonomous
+            vehicle (Mercedes-Benz research).
 
             +++
 
-            - RRT and PRM foundations
-            - Nonholonomic planning
-            - Optimality analysis
+            - End-to-end AV trajectory system
+            - Spline-based path representation
+            - Emergency maneuver handling
 
-        .. grid-item-card:: Thrun, Burgard, Fox -- Probabilistic Robotics
+        .. grid-item-card:: Brezak & Petrovic -- Spline Path Planning
             :class-card: sd-border-secondary
 
-            **MIT Press, 2005**
+            **IEEE T-ITS, 2014**
 
-            Probabilistic foundations for robotics including
-            localization, mapping, and planning under uncertainty.
-            Relevant for understanding safety margins and
-            uncertainty-aware planning.
+            Comparison of cubic and quintic spline methods for
+            smooth path planning under kinematic constraints.
 
             +++
 
-            - Probabilistic state estimation
-            - Occupancy grid maps
-            - Planning under uncertainty
+            - Curvature continuity analysis
+            - Spline vs. polynomial trade-offs
+            - Constraint satisfaction
 
-        .. grid-item-card:: Paden et al. -- Survey of AV Motion Planning
+        .. grid-item-card:: Farin -- NURBS and B-Splines
             :class-card: sd-border-secondary
 
-            **IEEE T-ITS, 2016**
+            **A K Peters / CRC Press, 5th Ed.**
 
-            Comprehensive survey of motion planning techniques
-            specifically for autonomous vehicles, covering all
-            algorithm families in this lecture.
+            Comprehensive reference for B-spline and NURBS
+            theory, including knot insertion, degree elevation,
+            and the convex hull and local support properties.
 
             +++
 
-            - Route, behavior, motion hierarchy
-            - Graph-based and sampling-based planners
-            - AV-specific constraints
+            - B-spline basis functions
+            - Convex hull property
+            - Knot vector design
 
 
-.. dropdown:: Graph-Based Planning
+.. dropdown:: Model Predictive Control
     :class-container: sd-border-secondary
 
     .. grid:: 1 1 2 2
         :gutter: 2
 
-        .. grid-item-card:: Hart, Nilsson, Raphael -- A* (1968)
+        .. grid-item-card:: Rawlings & Mayne -- MPC: Theory and Design
             :class-card: sd-border-secondary
 
-            **IEEE T-SSC, 1968**
+            **Nob Hill Publishing, 2nd Ed.**
 
-            The original A* paper introducing the heuristic
-            search algorithm and proving its optimality under
-            admissible heuristics.
+            The definitive graduate-level MPC textbook covering
+            stability theory, constraint handling, and real-time
+            implementation.
 
             +++
 
-            - Original A* formulation
-            - Admissibility proof
-            - Heuristic design
+            - Receding horizon optimality
+            - Terminal cost and constraint design
+            - Stability guarantees
 
-        .. grid-item-card:: Likhachev et al. -- Weighted A* (2003)
+        .. grid-item-card:: Kong et al. -- Kinematic and Dynamic MPC (2015)
             :class-card: sd-border-secondary
 
-            **NIPS 2003**
+            **IV 2015**
 
-            Introduces the :math:`\varepsilon`-suboptimal
-            weighted A* variant with formal bounds on solution
-            quality vs. computation time.
+            Comparison of kinematic and dynamic bicycle model
+            MPC for vehicle trajectory tracking across speed
+            regimes.
 
             +++
 
-            - Inflation factor analysis
-            - Anytime planning extensions
-            - Practical implementation
+            - Kinematic vs. dynamic MPC
+            - Speed-regime suitability
+            - Experimental validation
 
-
-.. dropdown:: Sampling-Based Planning
-    :class-container: sd-border-secondary
-
-    .. grid:: 1 1 2 2
-        :gutter: 2
-
-        .. grid-item-card:: LaValle -- RRT (1998)
+        .. grid-item-card:: OSQP Solver
+            :link: https://osqp.org/
             :class-card: sd-border-secondary
 
-            **Technical Report, Iowa State, 1998**
+            **OSQP (Operator Splitting QP)**
 
-            Original RRT paper introducing rapidly-exploring
-            random trees for single-query kinodynamic planning.
+            Open-source QP solver well-suited to MPC due to
+            its warm-starting capability and predictable
+            real-time performance.
 
             +++
 
-            - RRT algorithm
-            - Probabilistic completeness proof
-            - Kinodynamic extension
-
-        .. grid-item-card:: Karaman & Frazzoli -- RRT* (2011)
-            :class-card: sd-border-secondary
-
-            **IJRR, 2011**
-
-            Introduces RRT* with asymptotic optimality guarantee.
-            Also introduces PRM* and formal analysis of
-            sampling-based planner convergence rates.
-
-            +++
-
-            - RRT* rewiring algorithm
-            - Asymptotic optimality proof
-            - Convergence rate analysis
-
-        .. grid-item-card:: Kavraki et al. -- PRM (1996)
-            :class-card: sd-border-secondary
-
-            **IEEE T-RA, 1996**
-
-            Original PRM paper introducing probabilistic road
-            maps for multi-query planning in high-dimensional
-            configuration spaces.
-
-            +++
-
-            - Two-phase construction
-            - Probabilistic completeness
-            - Multi-query efficiency
-
-
-.. dropdown:: Lattice-Based Planning
-    :class-container: sd-border-secondary
-
-    .. grid:: 1 1 2 2
-        :gutter: 2
-
-        .. grid-item-card:: Pivtoraiko et al. -- State Lattice (2009)
-            :class-card: sd-border-secondary
-
-            **JFR, 2009**
-
-            Introduces the state lattice framework with
-            pre-computed motion primitives for kinematically
-            feasible robot motion planning.
-
-            +++
-
-            - Lattice construction methodology
-            - Motion primitive generation
-            - Search algorithms
-
-        .. grid-item-card:: McNaughton et al. -- Frenet Lattice (2011)
-            :class-card: sd-border-secondary
-
-            **ICRA 2011 (Uber ATG)**
-
-            Describes the Frenet-frame lattice planner used
-            in structured autonomous driving, including
-            lane-change and yield maneuver encoding.
-
-            +++
-
-            - Road-aligned lattice design
-            - Lane change primitives
+            - Warm-starting for MPC
+            - Embedded C code generation
             - Real-time performance
 
+        .. grid-item-card:: acados -- Real-Time NMPC
+            :link: https://docs.acados.org/
+            :class-card: sd-border-secondary
 
-.. dropdown:: Diffusion-Based Planning
+            **acados**
+
+            Fast C library for nonlinear MPC with code
+            generation for embedded automotive controllers.
+            Supports SQP with Gauss-Newton Hessian approximation.
+
+            +++
+
+            - Nonlinear MPC formulation
+            - Code generation
+            - ROS 2 integration examples
+
+
+.. dropdown:: Path-Following Controllers
     :class-container: sd-border-secondary
 
     .. grid:: 1 1 2 2
         :gutter: 2
 
-        .. grid-item-card:: Zheng et al. -- Diffusion Planner (ICLR 2025)
+        .. grid-item-card:: Coulter -- Pure Pursuit (1992)
             :class-card: sd-border-secondary
 
-            **ICLR 2025**
+            **CMU Technical Report, 1992**
 
-            Joint ego-agent diffusion planner achieving
-            state-of-the-art closed-loop performance on the
-            nuPlan benchmark through interaction-aware trajectory
-            denoising.
+            Original Pure Pursuit algorithm from the CMU
+            Navlab project. Includes derivation of the
+            lookahead-to-curvature relationship and
+            experimental results.
 
             +++
 
-            - Joint prediction and planning
-            - Scene context encoding
-            - nuPlan benchmark results
+            - Geometric derivation
+            - Lookahead distance analysis
+            - Experimental validation
 
-        .. grid-item-card:: Liao et al. -- DiffusionDrive (CVPR 2025)
+        .. grid-item-card:: Thrun et al. -- Stanley Controller (2006)
             :class-card: sd-border-secondary
 
-            **CVPR 2025**
+            **JAIR, 2006 (DARPA Grand Challenge)**
 
-            Real-time diffusion planner using truncated schedule
-            and anchored Gaussian initialization achieving 45 FPS
-            while maintaining competitive nuPlan performance.
+            Describes the Stanley controller used on the
+            Stanford entry in the DARPA Urban Challenge, with
+            analysis of heading and cross-track error behavior.
 
             +++
 
-            - Truncated diffusion schedule
-            - Anchored Gaussian initialization
-            - Real-time inference analysis
+            - Stanley derivation
+            - Heading + cross-track error
+            - Urban challenge results
 
-        .. grid-item-card:: Ho et al. -- DDPM (NeurIPS 2020)
+        .. grid-item-card:: Snider -- Path Tracking Survey (2009)
             :class-card: sd-border-secondary
 
-            **NeurIPS 2020**
+            **CMU Technical Report, 2009**
 
-            Foundational paper establishing denoising diffusion
-            probabilistic models, the framework underlying
-            all diffusion-based planners.
+            Comprehensive comparison of path-tracking controllers
+            (Pure Pursuit, Stanley, and variants) on the same
+            test tracks and conditions.
 
             +++
 
-            - Forward/reverse process formulation
-            - Denoising score matching
-            - Image generation results
+            - Side-by-side comparison
+            - Speed-regime analysis
+            - Implementation details
 
 
-.. dropdown:: Collision Detection
+.. dropdown:: PID Control
     :class-container: sd-border-secondary
 
     .. grid:: 1 1 2 2
         :gutter: 2
 
-        .. grid-item-card:: Ericson -- Real-Time Collision Detection
+        .. grid-item-card:: Astrom & Hagglund -- PID Controllers
             :class-card: sd-border-secondary
 
-            **Morgan Kaufmann, 2004**
+            **ISA, 2nd Ed.**
 
-            Comprehensive reference for geometric collision
-            detection algorithms including AABB, OBB, GJK,
-            and sweep-based methods.
+            Standard reference for PID control covering
+            Ziegler-Nichols tuning, anti-windup, derivative
+            filtering, and practical implementation.
 
             +++
 
-            - Bounding volume hierarchies
-            - OBB intersection tests
-            - Minkowski sum computation
+            - Ziegler-Nichols tuning
+            - Anti-windup strategies
+            - Bumpless transfer
 
-        .. grid-item-card:: Berg et al. -- Reciprocal Velocity Obstacles
+        .. grid-item-card:: Franklin, Powell, Emami-Naeini
             :class-card: sd-border-secondary
 
-            **IJRR, 2011**
+            **Feedback Control of Dynamic Systems (8th Ed.)**
 
-            Velocity-obstacle-based collision avoidance for
-            multi-agent scenarios, relevant to dynamic obstacle
-            handling in AV planning.
+            Undergraduate-level control systems textbook with
+            in-depth coverage of PID design, root locus, and
+            frequency-domain stability analysis.
 
             +++
 
-            - Velocity obstacles
-            - Multi-agent collision avoidance
-            - Real-time performance
+            - PID design methodology
+            - Stability margins
+            - Digital implementation
 
 
-.. dropdown:: Benchmarks and Datasets
+.. dropdown:: CARLA Simulator
     :class-container: sd-border-secondary
 
     .. grid:: 1 1 2 2
         :gutter: 2
 
-        .. grid-item-card:: nuPlan Benchmark
+        .. grid-item-card:: CARLA Documentation
+            :link: https://carla.readthedocs.io/
+            :class-card: sd-border-secondary
+
+            **carla.readthedocs.io**
+
+            Official CARLA Python API documentation including
+            vehicle control interfaces, waypoint API, sensor
+            mounting, and traffic management.
+
+            +++
+
+            - VehicleControl API
+            - Map and waypoint access
+            - Sensor blueprint library
+
+        .. grid-item-card:: Dosovitskiy et al. -- CARLA (CoRL 2017)
+            :class-card: sd-border-secondary
+
+            **CoRL 2017**
+
+            Original CARLA paper describing the simulator
+            architecture, sensor models, and evaluation metrics.
+
+            +++
+
+            - Simulator design
+            - Benchmark scenarios
+            - Sensor simulation fidelity
+
+        .. grid-item-card:: Leaderboard 2.0
+            :link: https://leaderboard.carla.org/
+            :class-card: sd-border-secondary
+
+            **CARLA Autonomous Driving Leaderboard**
+
+            Official benchmark for evaluating autonomous driving
+            agents in CARLA, including town routes, traffic
+            scenarios, and scoring methodology.
+
+            +++
+
+            - Route completion metric
+            - Infraction taxonomy
+            - Submission guidelines
+
+
+.. dropdown:: Benchmarks
+    :class-container: sd-border-secondary
+
+    .. grid:: 1 1 2 2
+        :gutter: 2
+
+        .. grid-item-card:: nuPlan
             :link: https://nuplan.org/
             :class-card: sd-border-secondary
 
-            **Motional / nuPlan**
+            **nuPlan Planning Benchmark**
 
-            Closed-loop planning benchmark used to evaluate
-            Diffusion Planner and DiffusionDrive, based on
-            real-world driving logs.
+            Closed-loop planning benchmark with 1300+ hours
+            of real-world data. Used to evaluate MPC and
+            learning-based trajectory planners.
 
             +++
 
             - Closed-loop reactive simulation
-            - 1300+ hours of driving data
-            - Standardized metrics
+            - Standardized metrics (PDMs score)
+            - Real-world driving scenarios
 
-        .. grid-item-card:: CARLA Simulator
-            :link: https://carla.org/
+        .. grid-item-card:: CommonRoad
+            :link: https://commonroad.in.tum.de/
             :class-card: sd-border-secondary
 
-            **CARLA Open-Source Simulator**
+            **CommonRoad (TU Munich)**
 
-            High-fidelity autonomous driving simulator used
-            for the lecture's implementation exercise. Provides
-            waypoint graphs, sensor simulation, and traffic
-            scenarios.
+            Benchmark and scenario format for trajectory
+            planning evaluation with standardized kinematic
+            feasibility checks.
 
             +++
 
-            - Python API documentation
-            - Waypoint graph API
-            - Traffic scenario library
+            - Standardized scenario format
+            - Feasibility checkers
+            - Planning solution library

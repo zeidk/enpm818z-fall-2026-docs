@@ -78,7 +78,7 @@ A live demo then runs both detectors side by side on a CARLA frame.
      Sunday, October 11.** GP2's two detectors are YOLOv8s and RT-DETR-L,
      which is why every example in this lecture uses them.
    - **Perception is two lectures now:** L4 this week and L5 next week. The
-     old L6 slot was folded into them.
+     old third perception lecture was folded into them.
 
 
 Learning Objectives

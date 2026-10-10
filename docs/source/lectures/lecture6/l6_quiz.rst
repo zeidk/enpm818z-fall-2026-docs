@@ -13,11 +13,12 @@ Quiz
    through this page is good preparation for one. Memorising the answers
    below is not.
 
-This quiz covers the key concepts from Lecture 6: Perception III --
-Tracking, Temporal Reasoning & Deep Fusion. Topics include multi-object
-tracking (SORT, DeepSORT, ByteTrack); track lifecycle management;
-tracking metrics (MOTA, MOTP, IDF1); temporal reasoning for improved
-perception; and deep-learning fusion (cross-attention, BEVFusion).
+This quiz covers the key concepts from Lecture 6: Localization & SLAM.
+Topics include the localization problem, coordinate frames, GNSS/RTK,
+dead reckoning (wheel/visual/LiDAR odometry), probabilistic localization
+(EKF, MCL), scan matching (ICP), HD map localization, SLAM formulation,
+SLAM frontend and backend, loop closure, evaluation metrics, and modern
+LiDAR SLAM systems.
 
 .. note::
 
@@ -39,284 +40,289 @@ Multiple Choice (Questions 1-10)
 .. admonition:: Question 1
    :class: hint
 
-   In a tracking-by-detection system, how is a new track typically promoted
-   from **tentative** to **confirmed**, and when is a track **deleted**?
+   What is the typical horizontal accuracy of standard civilian GPS without
+   any corrections, and why is this insufficient for autonomous driving
+   lane-keeping?
 
-   A. A track is confirmed after a single detection and deleted after a
-      single missed frame.
+   A. 1-5 mm; unnecessary precision wastes compute.
 
-   B. A track is confirmed once it is matched to detections for several
-      consecutive frames, and deleted after it goes unmatched for more than
-      a set number of frames (``max_age``).
+   B. 1-5 m; lane widths are approximately 3-4 m, requiring <20 cm for
+      reliable lane-level localization.
 
-   C. Tracks are never deleted; they persist for the entire sequence.
+   C. 10-50 m; cannot distinguish even road segments.
 
-   D. Confirmation and deletion are decided by the detector confidence alone,
-      independent of matching history.
+   D. 1-5 cm; sufficient for all AV applications.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- A track is confirmed once it is matched to detections for several
-   consecutive frames, and deleted after it goes unmatched for more than a set
-   number of frames (``max_age``).
+   **B** -- 1-5 m; lane widths are approximately 3-4 m, requiring <20 cm
+   for reliable lane-level localization.
 
-   Track lifecycle management avoids reacting to spurious single-frame
-   detections (require ``n_init`` consecutive hits to confirm) and tolerates
-   short occlusions (keep coasting a track on Kalman prediction until
-   ``max_age`` misses accumulate, then delete it).
+   Standard GPS (civilian L1 signal) achieves 1-5 m accuracy under good
+   conditions, degrading further in urban canyons due to multipath. With
+   lane widths of ~3.5 m, a 5 m position error means the vehicle cannot
+   determine which lane it is in, let alone where within the lane. RTK-GPS
+   or LiDAR scan matching is required for lane-level localization.
 
 
 .. admonition:: Question 2
    :class: hint
 
-   The **MOTP** (Multi-Object Tracking Precision) metric measures:
+   **RTK-GPS** achieves centimeter-level accuracy by:
 
-   A. The fraction of ground-truth objects that were tracked without any
-      ID switch.
+   A. Using more satellites simultaneously than standard GPS.
 
-   B. The average localization accuracy (e.g., IoU or distance error) of the
-      matched track-detection pairs.
+   B. Applying corrections computed by a nearby base station at a precisely
+      known location, enabling carrier-phase integer ambiguity resolution.
 
-   C. The number of false positives per frame.
+   C. Operating at a higher signal frequency (L5 band) than standard GPS.
 
-   D. The ratio of confirmed tracks to tentative tracks.
+   D. Averaging position estimates over multiple minutes to reduce noise.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- The average localization accuracy (e.g., IoU or distance error)
-   of the matched track-detection pairs.
+   **B** -- Applying corrections computed by a nearby base station at a
+   precisely known location, enabling carrier-phase integer ambiguity
+   resolution.
 
-   MOTP captures *how precisely* matched objects are localized, independent of
-   how many are detected. It is complementary to MOTA (which counts FN, FP, and
-   ID switches): a tracker can have high MOTA but mediocre MOTP if boxes are
-   consistently matched but loosely localized.
+   RTK stands for Real-Time Kinematic. The base station measures carrier-
+   phase signals from GPS satellites and, knowing its exact position,
+   computes the residual errors. These corrections are broadcast to the
+   rover. By resolving the integer ambiguity in the carrier phase (wavelength
+   ~19 cm for L1), the rover achieves 1-2 cm horizontal accuracy.
 
 
 .. admonition:: Question 3
    :class: hint
 
-   Why is a shared **BEV feature space** an effective representation for deep
-   **LiDAR-camera fusion**?
+   Which dead reckoning method has the **lowest positional drift** per unit
+   distance traveled?
 
-   A. It discards camera features and keeps only LiDAR points.
+   A. Wheel odometry
 
-   B. It removes the need for extrinsic calibration between the sensors.
+   B. Monocular visual odometry
 
-   C. Both modalities can be projected into the same top-down metric grid,
-      where their features are spatially aligned and can be combined per cell.
+   C. LiDAR odometry
 
-   D. It converts LiDAR points into RGB images so a 2D CNN can process them.
+   D. IMU integration (without external corrections)
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- Both modalities can be projected into the same top-down metric
-   grid, where their features are spatially aligned and can be combined per
-   cell.
+   **C** -- LiDAR odometry
 
-   LiDAR provides accurate geometry and camera provides dense semantics. A
-   shared BEV grid gives a common, metric, ego-centered coordinate frame in
-   which a camera BEV feature and a LiDAR BEV feature for the same location
-   line up, so they can be concatenated or fused with attention per cell.
+   LiDAR odometry (e.g., LOAM) achieves ~0.1-0.5% drift per distance
+   traveled by directly measuring 3D geometry via scan matching. Wheel
+   odometry drifts 1-5% due to wheel slip and terrain. Stereo visual
+   odometry drifts 0.5-1%. IMU integration diverges within seconds due to
+   gyroscope and accelerometer bias accumulation.
 
 
 .. admonition:: Question 4
    :class: hint
 
-   In the **SORT** tracker, how are detections in a new frame associated with
-   existing tracks?
+   In **Iterative Closest Point (ICP)**, what is the role of the
+   **correspondence step**?
 
-   A. By comparing appearance embeddings (CNN features) from each detection
-      and track.
+   A. Compute the SVD of the cross-covariance matrix to find the optimal
+      rotation and translation.
 
-   B. By using a Kalman filter to predict track positions and then solving a
-      bipartite matching problem minimizing IoU distance via the Hungarian
-      algorithm.
+   B. For each point in the source cloud, find its nearest neighbor in the
+      target cloud to establish point pairs for optimization.
 
-   C. By computing optical flow between frames and linking detections along
-      flow vectors.
+   C. Apply motion distortion correction to each scan point using IMU data.
 
-   D. By comparing 3D LiDAR point cloud segments across frames.
+   D. Select keyframes by comparing the distance traveled since the last
+      keyframe.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- By using a Kalman filter to predict track positions and then
-   solving a bipartite matching problem minimizing IoU distance via the
-   Hungarian algorithm.
+   **B** -- For each point in the source cloud, find its nearest neighbor
+   in the target cloud to establish point pairs for optimization.
 
-   SORT propagates each track's state (position, velocity) forward with a
-   Kalman filter to predict where it should be in the new frame. It then
-   constructs an IoU-based cost matrix between predicted track boxes and new
-   detections, and solves the optimal assignment with the Hungarian algorithm.
+   ICP alternates between two steps: (1) correspondence -- find nearest
+   neighbors between current aligned source and target to form point pairs
+   (p_i, q_i); (2) minimize -- solve for the rigid transform T that minimizes
+   sum||q_i - T*p_i||^2 using SVD. The process repeats until convergence
+   (translation/rotation change below threshold).
 
 
 .. admonition:: Question 5
    :class: hint
 
-   What key limitation of SORT does **DeepSORT** address?
+   **Monte Carlo Localization (MCL/AMCL)** has an advantage over EKF
+   localization because it can:
 
-   A. SORT cannot run in real time on embedded hardware.
+   A. Run faster than EKF on embedded hardware.
 
-   B. SORT fails at long-range detection because it uses only IoU for matching
-      and has no appearance model to re-identify objects after occlusion.
+   B. Handle global localization (no initial pose given) and recovery from
+      the "kidnapped robot" problem, which EKF cannot.
 
-   C. SORT cannot handle more than 10 simultaneous tracks.
+   C. Use fewer parameters than EKF.
 
-   D. SORT requires LiDAR input and cannot process camera-only data.
+   D. Provide a closed-form analytical solution to the posterior distribution.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- SORT fails at long-range detection because it uses only IoU for
-   matching and has no appearance model to re-identify objects after occlusion.
+   **B** -- Handle global localization (no initial pose given) and recovery
+   from the "kidnapped robot" problem, which EKF cannot.
 
-   When an object is occluded, SORT's track dies (no IoU match available).
-   When the object reappears, SORT assigns a new ID -- an "ID switch." DeepSORT
-   addresses this by maintaining a CNN-based appearance embedding gallery per
-   track, enabling re-identification based on visual similarity even after
-   long occlusions.
+   EKF maintains a single Gaussian estimate of pose -- if the initialization
+   is wrong or the vehicle is suddenly teleported (kidnapped), the single
+   Gaussian cannot represent multiple hypotheses. MCL represents the belief
+   as N particles spread across the entire map, naturally supporting multiple
+   hypotheses. As measurements arrive, particles in wrong locations get low
+   weight and die off; correct particles survive.
 
 
 .. admonition:: Question 6
    :class: hint
 
-   **ByteTrack's** key innovation over SORT/DeepSORT is:
+   In the SLAM pose graph, what does a **loop closure edge** represent?
 
-   A. Using a Transformer-based detector instead of YOLO.
+   A. A constraint between consecutive keyframes from scan-to-scan ICP.
 
-   B. Performing a second association pass that matches low-confidence
-      detections to unmatched tracks, recovering occluded objects.
+   B. A constraint between two non-consecutive keyframes that were identified
+      as the same location (the vehicle revisited a prior area), verified
+      by ICP.
 
-   C. Replacing the Kalman filter with an LSTM for state prediction.
+   C. A GPS measurement at a specific keyframe position.
 
-   D. Running tracking in BEV space instead of image space.
+   D. The initial pose prior used to anchor the first node.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Performing a second association pass that matches low-confidence
-   detections to unmatched tracks, recovering occluded objects.
+   **B** -- A constraint between two non-consecutive keyframes that were
+   identified as the same location (the vehicle revisited a prior area),
+   verified by ICP.
 
-   ByteTrack observes that occluded objects often produce low-confidence
-   (but valid) detections that SORT/DeepSORT discard. ByteTrack first
-   associates high-confidence detections, then in a second pass associates
-   remaining (unmatched) tracks with low-confidence detections, significantly
-   reducing ID switches at essentially zero additional compute.
+   Loop closure edges connect keyframe i to keyframe j (where j >> i+1) when
+   place recognition detects that the current scan matches a previous keyframe.
+   The relative transform is computed by ICP and added as a long-range edge.
+   During pose graph optimization, this edge pulls the two distant keyframes
+   into alignment, distributing the accumulated drift correction across the
+   entire trajectory.
 
 
 .. admonition:: Question 7
    :class: hint
 
-   The **MOTA** (Multi-Object Tracking Accuracy) metric penalizes which three
-   types of errors?
+   **LOAM** (LiDAR Odometry and Mapping) achieves high-accuracy odometry by:
 
-   A. False positives, false negatives, and localization errors.
+   A. Using a particle filter to track the vehicle pose.
 
-   B. False positives, false negatives, and ID switches.
+   B. Matching edge features (high curvature points) and planar features
+      (low curvature points) between scans using point-to-edge and
+      point-to-plane distance minimization.
 
-   C. ID switches, localization errors, and classification errors.
+   C. Aligning raw LiDAR point clouds using standard point-to-point ICP.
 
-   D. False negatives, velocity errors, and ID switches.
+   D. Fusing LiDAR with GPS measurements via a Kalman filter.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- False positives, false negatives, and ID switches.
+   **B** -- Matching edge features (high curvature points) and planar features
+   (low curvature points) between scans using point-to-edge and point-to-plane
+   distance minimization.
 
-   MOTA = 1 - (FN + FP + IDSW) / GT. It penalizes all three error types:
-   missed detections (FN), spurious detections (FP), and identity switches
-   (IDSW) where a track's ID changes on the same object. MOTA does NOT
-   penalize localization errors -- that is captured by MOTP.
+   LOAM extracts features based on local curvature: high curvature → edge
+   features (on sharp corners and poles); low curvature → planar features
+   (on flat walls and ground). Matching edge-to-edge and plane-to-plane
+   (rather than arbitrary point-to-point) is more discriminative and produces
+   better-constrained, more accurate scan matching results.
 
 
 .. admonition:: Question 8
    :class: hint
 
-   In **BEVFusion**'s cross-attention fusion, what role do the LiDAR BEV
-   features play in the attention mechanism?
+   The **Absolute Pose Error (APE)** metric measures:
 
-   A. They serve as Values (V) -- providing the content that is read out.
+   A. The drift rate per meter of trajectory (local accuracy).
 
-   B. They serve as Queries (Q) -- asking "what camera features are relevant
-      to this spatial location?"
+   B. The RMSE between estimated and ground-truth poses over the full
+      trajectory (global accuracy).
 
-   C. They serve as Keys (K) -- indexing which camera features to attend to.
+   C. The number of loop closures detected per kilometer.
 
-   D. They are not used in the attention; only camera features are fused.
+   D. The processing time per LiDAR scan.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- They serve as Queries (Q) -- asking "what camera features are
-   relevant to this spatial location?"
+   **B** -- The RMSE between estimated and ground-truth poses over the full
+   trajectory (global accuracy).
 
-   In cross-attention fusion: LiDAR BEV features → Q (queries); Camera BEV
-   features → K (keys) and V (values). The LiDAR features "query" the
-   camera features: for each LiDAR BEV cell (which knows geometry), the
-   attention mechanism selectively retrieves relevant semantic information
-   from the camera BEV. This is directional fusion where geometry guides
-   semantic information retrieval.
+   APE aligns the estimated trajectory to the ground truth (removing
+   global gauge freedom) and then measures the RMSE of pose errors at
+   each timestep. It reflects the overall quality of the map and the
+   effectiveness of loop closure. Relative Pose Error (RPE) measures
+   drift over fixed intervals -- a complementary local accuracy metric.
 
 
 .. admonition:: Question 9
    :class: hint
 
-   Why is the **IDF1** metric preferred over MOTA for evaluating tracking
-   algorithms in autonomous driving applications?
+   Why is **motion distortion correction** necessary for LiDAR scans in a
+   moving vehicle?
 
-   A. IDF1 is faster to compute than MOTA.
+   A. LiDAR sensors have a calibration error that must be corrected offline.
 
-   B. IDF1 focuses on ID consistency over time, which is critical for
-      trajectory prediction -- knowing it is the same car across frames
-      matters more than counting detections.
+   B. A spinning LiDAR scan takes 50-100 ms to complete; during this time the
+      vehicle moves, so each point is captured at a different vehicle pose.
+      Without correction, the scan appears sheared/distorted.
 
-   C. IDF1 penalizes localization errors more strictly than MOTA.
+   C. LiDAR returns require temperature correction to compute accurate ranges.
 
-   D. IDF1 requires no ground-truth annotations.
+   D. Multiple LiDAR returns from the same surface must be averaged.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- IDF1 focuses on ID consistency over time, which is critical for
-   trajectory prediction -- knowing it is the same car across frames matters
-   more than counting detections.
+   **B** -- A spinning LiDAR scan takes 50-100 ms to complete; during this
+   time the vehicle moves, so each point is captured at a different vehicle
+   pose. Without correction, the scan appears sheared/distorted.
 
-   MOTA is dominated by detection quality (FP/FN). A tracker with many ID
-   switches can still achieve high MOTA if the detector is good. For
-   downstream prediction, consistent IDs are essential -- the predictor must
-   know it is tracking the same pedestrian over 2 seconds. IDF1 directly
-   measures this identity consistency.
+   At 50 km/h, a vehicle moves ~1.4 m during a 100 ms scan. Points at the
+   start of the scan are displaced ~1.4 m relative to the end-of-scan points.
+   IMU data (100-1000 Hz) is interpolated to compute the vehicle pose at
+   each point's acquisition time, and each point is transformed to the
+   common reference pose (e.g., scan start or scan center).
 
 
 .. admonition:: Question 10
    :class: hint
 
-   Which approach for **temporal reasoning** in autonomous driving is most
-   commonly used in production BEV perception stacks?
+   **LIO-SAM** improves on LOAM by:
 
-   A. 3D convolutions over a video volume (C3D, SlowFast).
+   A. Removing the need for LiDAR entirely, using cameras and IMU.
 
-   B. LSTM hidden state over flattened image features.
+   B. Tightly coupling IMU pre-integration with LiDAR scan matching in a
+      unified factor graph (GTSAM), enabling accurate real-time SLAM with
+      GPS and loop closure.
 
-   C. Warping the previous BEV feature map to the current ego frame using
-      ego-motion and computing temporal cross-attention.
+   C. Using neural network-based scan matching instead of ICP.
 
-   D. Optical flow estimation between consecutive camera frames.
+   D. Operating at 100 Hz by reducing scan resolution.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- Warping the previous BEV feature map to the current ego frame
-   using ego-motion and computing temporal cross-attention.
+   **B** -- Tightly coupling IMU pre-integration with LiDAR scan matching
+   in a unified factor graph (GTSAM), enabling accurate real-time SLAM with
+   GPS and loop closure.
 
-   BEVFormer's temporal self-attention is the dominant approach in modern
-   production-adjacent stacks. It uses known ego-motion (from odometry/
-   localization) to spatially align previous BEV features with the current
-   frame, then applies attention to selectively integrate temporal information.
-   This is efficient, interpretable, and achieves large gains (+4-7 NDS).
+   LIO-SAM adds three key improvements over LOAM: (1) tight IMU integration
+   via pre-integration factors for high-frequency motion estimates, (2) a
+   full factor graph backend (GTSAM) that jointly optimizes IMU, LiDAR, GPS,
+   and loop closure constraints, and (3) efficient sliding window map
+   representation. This makes it robust to aggressive motions and suitable
+   for long-duration outdoor mapping.
 
 
 ----
@@ -328,95 +334,98 @@ True or False (Questions 11-15)
 .. admonition:: Question 11
    :class: hint
 
-   **True or False:** MOTP measures the localization precision of matched
-   track-detection pairs, while MOTA measures detection and identity errors;
-   the two metrics are complementary.
+   **True or False:** Dead reckoning methods like wheel odometry produce
+   position estimates with bounded error -- the error does not grow
+   indefinitely over time.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **True**
+   **False**
 
-   MOTP answers "how precisely are the matched objects localized?" (average
-   IoU or distance error of matches), while MOTA answers "how many objects
-   were missed, hallucinated, or swapped?" (FN + FP + IDSW). A complete
-   tracking evaluation reports both, since a tracker can score well on one and
-   poorly on the other.
+   Dead reckoning error is **unbounded** -- it accumulates over time (or
+   distance traveled) through integration. Systematic errors (e.g., slight
+   wheel diameter miscalibration) cause the error to grow linearly with
+   distance; random noise causes it to grow as a random walk (proportional
+   to sqrt of distance). Without external corrections (GPS, scan matching,
+   landmarks), any dead reckoning method will eventually lose track of
+   the vehicle's true position.
 
 
 .. admonition:: Question 12
    :class: hint
 
-   **True or False:** The Kalman filter used inside a SORT tracker typically
-   assumes a constant-velocity motion model for each object.
+   **True or False:** In the SLAM problem, the vehicle must have a pre-built
+   map of the environment before it can operate.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **True**
+   **False**
 
-   SORT models each track with a linear constant-velocity Kalman filter (state
-   includes box center, scale, aspect ratio, and their velocities). Between
-   frames it predicts the box forward assuming constant velocity; the IoU
-   matching then corrects the estimate. The constant-velocity assumption is
-   why fast maneuvers and long occlusions cause the prediction to drift.
+   SLAM (Simultaneous Localization and Mapping) is specifically designed
+   for operation WITHOUT a prior map. The vehicle builds the map from scratch
+   using sensor observations while simultaneously estimating its own position
+   within that growing map. This is in contrast to map-based localization
+   (e.g., HD map matching), which requires a pre-built map.
 
 
 .. admonition:: Question 13
    :class: hint
 
-   **True or False:** SORT uses a deep convolutional neural network to
-   compute appearance embeddings for matching detections to tracks.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   SORT does NOT use appearance embeddings. Its matching relies solely on
-   IoU between predicted bounding boxes (from the Kalman filter) and new
-   detections, solved via the Hungarian algorithm. Appearance embeddings
-   were introduced in DeepSORT, which is the extension of SORT that adds
-   a CNN-based re-identification module.
-
-
-.. admonition:: Question 14
-   :class: hint
-
-   **True or False:** In BEVFusion, LiDAR and camera features are combined in
-   a shared bird's-eye-view representation rather than being concatenated at
-   the raw sensor level.
+   **True or False:** Loop closure detection can reduce the accumulated
+   drift in a SLAM trajectory even if the loop closure occurs only once
+   at the very end of a long mission.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **True**
 
-   BEVFusion transforms both the camera features (via a view transform such as
-   LSS) and the LiDAR features into a common BEV grid, then fuses them there.
-   Fusing in a shared, spatially-aligned BEV space is what makes the fusion
-   robust to calibration noise and lets a single downstream head consume both
-   modalities.
+   A single loop closure edge in the pose graph, added at the end of a long
+   trajectory, creates a constraint between the start and end of the loop.
+   Pose graph optimization distributes this correction across all
+   intermediate poses in the loop, reducing the drift from meters to
+   centimeters throughout the entire trajectory. This is the power of global
+   backend optimization -- it retroactively corrects the entire history.
+
+
+.. admonition:: Question 14
+   :class: hint
+
+   **True or False:** Point-to-plane ICP is generally faster to converge
+   than standard point-to-point ICP when matching planar surfaces.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **True**
+
+   Point-to-plane ICP minimizes the distance from each source point to the
+   tangent plane at the corresponding target point (using surface normals).
+   This objective provides a more accurate gradient for optimization near
+   flat surfaces -- the most common geometry in man-made environments.
+   Empirically, point-to-plane converges in ~5-10 iterations vs. ~30-50 for
+   point-to-point, on typical urban LiDAR scans.
 
 
 .. admonition:: Question 15
    :class: hint
 
-   **True or False:** In the tracking-by-detection paradigm, the detector
-   and tracker are trained jointly end-to-end to optimize tracking performance
-   directly.
+   **True or False:** HD map-based localization suffers from accumulated
+   drift over long drives because it integrates odometry without correction.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   In tracking-by-detection, the detector and tracker are completely
-   independent modules. The detector is trained separately (often on static
-   image datasets) and produces detection outputs. The tracker then processes
-   these outputs to maintain object identities. This modularity allows
-   improving either component independently but means the detector is not
-   optimized for tracking.
+   HD map-based localization does NOT accumulate drift. The HD map provides
+   a globally consistent reference frame. At each step, the current sensor
+   scan is matched against the global HD map to compute a position correction
+   -- this measurement-to-map comparison anchors the pose estimate to the
+   global frame. The limitation of HD maps is not drift but rather their
+   cost to create, maintain, and update when the environment changes.
 
 
 ----
@@ -428,9 +437,9 @@ Essay Questions (Questions 16-18)
 .. admonition:: Question 16
    :class: hint
 
-   **Compare SORT, DeepSORT, and ByteTrack** in terms of their key design
-   choices, strengths, and weaknesses. Which would you choose for a
-   production AV system and why?
+   **Explain the SLAM frontend and backend** as a two-stage processing
+   pipeline. What does each stage produce, and why must they work together
+   for accurate long-range mapping?
 
    *(2-4 sentences)*
 
@@ -439,27 +448,32 @@ Essay Questions (Questions 16-18)
 
    *Key points to include:*
 
-   - SORT: Kalman filter + IoU Hungarian matching. Extremely fast (260 Hz),
-     minimal compute. Weakness: no appearance model, poor re-ID after
-     occlusion, frequent ID switches in crowded scenes.
-   - DeepSORT: adds CNN appearance embedding gallery. Improves re-ID but
-     adds compute (CNN inference per detection crop) and requires a
-     separate re-ID training dataset.
-   - ByteTrack: uses all detections (high + low confidence) in two-pass
-     association. Matches SORT speed with significantly fewer ID switches.
-     No appearance model needed.
-   - For production AV: ByteTrack or ByteTrack + lightweight appearance
-     model is the best trade-off -- low latency, robust to occlusion, no
-     re-ID dataset dependency. DeepSORT suits pedestrian-heavy scenarios
-     where re-ID matters most.
+   - Frontend: processes raw LiDAR scans in real time to produce a local
+     odometry estimate (incremental pose changes) and detects potential
+     loop closure candidates. It includes preprocessing (motion distortion,
+     downsampling), feature extraction, ICP scan matching, and keyframe
+     selection. Frontend must run faster than the sensor rate (>10 Hz for
+     a 10 Hz LiDAR).
+   - Backend: receives keyframes and their relative pose constraints from
+     the frontend and solves a global pose graph optimization problem to
+     find the maximum-likelihood trajectory. When loop closures are added,
+     the backend redistributes drift corrections across the entire history.
+   - Why both are needed: the frontend provides the real-time incremental
+     estimates and detects loop candidates; but without the backend's global
+     optimization, drift accumulates indefinitely. Without the frontend's
+     real-time operation, the backend has no input. Together they achieve
+     real-time, globally consistent mapping.
+   - Example: after 500 m, the frontend has 5 m of drift. One loop closure
+     detected by the frontend triggers backend optimization, reducing APE
+     to <5 cm across the entire 500 m trajectory.
 
 
 .. admonition:: Question 17
    :class: hint
 
-   **Explain the difference between MOTA and IDF1 as tracking metrics.**
-   Give a concrete example where a tracker with high MOTA has poor IDF1,
-   and explain why IDF1 matters for autonomous driving.
+   **Describe why loop closure is critical for SLAM** and how place
+   recognition enables it. What happens to the map quality if loop
+   closure fails?
 
    *(2-4 sentences)*
 
@@ -468,25 +482,29 @@ Essay Questions (Questions 16-18)
 
    *Key points to include:*
 
-   - MOTA = 1 - (FN + FP + IDSW) / GT. It is dominated by detection
-     quality -- a perfect detector with frequent ID switches can achieve
-     high MOTA.
-   - IDF1 measures F1 score for correct identity assignments across the
-     full track lifetime, directly measuring ID consistency.
-   - Concrete example: a tracker that detects every vehicle correctly
-     (zero FP/FN) but switches the ID of Vehicle A and Vehicle B at every
-     occlusion would have MOTA near 1.0 but IDF1 near 0.5.
-   - For AV: downstream prediction modules track a vehicle's trajectory
-     to predict where it will be in 3 seconds. If IDs switch frequently,
-     the predictor mixes trajectories of different vehicles -- producing
-     catastrophically wrong predictions. High IDF1 is therefore safety-critical.
+   - SLAM odometry (frontend) accumulates drift -- typically 0.1-0.5% of
+     distance for LiDAR SLAM. Over 1 km, this means 1-5 m of accumulated
+     error. Without correction, the map shows the start and end of a loop
+     as two separate locations (map "split"), making the map inconsistent.
+   - Loop closure detects that the vehicle is revisiting a known location
+     by comparing the current scan's global descriptor (Scan Context,
+     FPFH) against all stored keyframe descriptors. When a match is found,
+     ICP verifies the relative transform.
+   - The verified loop closure edge is added to the pose graph. Backend
+     optimization distributes the correction: all keyframes in the loop
+     are adjusted to make the loop geometrically consistent.
+   - Without loop closure: maps of large environments (>100 m) are
+     unusable for localization because the start and end of a revisited
+     area appear at different locations. The map cannot be used for
+     place recognition in future operations.
 
 
 .. admonition:: Question 18
    :class: hint
 
-   **Describe three ways that temporal reasoning improves perception quality**
-   in autonomous driving beyond what a single-frame detector can provide.
+   **Compare GNSS-based localization and LiDAR scan matching** as
+   localization methods for autonomous driving. In what environments does
+   each perform best, and how do production AV systems combine them?
 
    *(2-4 sentences)*
 
@@ -495,17 +513,19 @@ Essay Questions (Questions 16-18)
 
    *Key points to include:*
 
-   - Velocity estimation: observing the same object across multiple frames
-     provides direct velocity measurements via state propagation (Kalman
-     filter) or feature-level optical flow. Single frames provide no velocity.
-   - Occlusion handling: an object invisible in frame t was visible in frame
-     t-1. A temporal model (tracker, temporal BEV attention) can propagate
-     the estimated state through the occlusion window, maintaining awareness
-     of the object.
-   - Noise suppression: random detection noise is temporally uncorrelated.
-     Averaging estimates over multiple frames (or Kalman filter smoothing)
-     reduces variance in position and classification confidence, while true
-     object signals are correlated across frames and survive averaging.
-   - Additionally: attribute estimation (classification confidence improves
-     with multiple views of the same object from different angles as the
-     vehicle moves).
+   - GNSS (especially RTK): provides global, drift-free localization but
+     fails in urban canyons (multipath), tunnels, and underground areas.
+     Accuracy: 1-2 cm (RTK) under open sky; degrades to meters or loss
+     of fix in dense urban environments. No map required.
+   - LiDAR scan matching: provides high-accuracy local positioning (0.1-0.5%
+     drift for odometry; centimeter-level for map-based matching against
+     HD maps) but requires a pre-built map and accumulates drift without
+     loop closure. Works in tunnels, indoor parking, urban canyons.
+   - Production systems (Waymo, Cruise, Mobileye): use a tight EKF/factor
+     graph fusion of GNSS, LiDAR scan matching against HD maps, and IMU.
+     GNSS provides the global anchor; LiDAR provides accuracy in GNSS-denied
+     environments; IMU fills short gaps at high frequency.
+   - The HD map acts as the "long-term memory" -- accumulated drift from
+     LiDAR odometry is corrected at each map feature observation, providing
+     globally consistent, centimeter-accurate localization in all covered
+     environments.

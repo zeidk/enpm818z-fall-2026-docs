@@ -13,12 +13,14 @@ Quiz
    through this page is good preparation for one. Memorising the answers
    below is not.
 
-This quiz covers the key concepts from Lecture 11: Trajectory
-Generation & Control, including path vs. trajectory, quintic
-polynomial and spline methods, optimization-based trajectory
-planning, MPC formulation and receding-horizon control, Pure
-Pursuit, Stanley, and PID controllers, and emergency maneuver
-synthesis.
+This quiz covers the key concepts from Lecture 11: End-to-End Driving,
+VLA & Imitation Learning. Topics include the modular vs. end-to-end
+debate, UniAD (CVPR 2023), DriveTransformer (ICLR 2025),
+Vision-Language-Action (VLA) models, Tesla's FSD v12 architecture,
+NVIDIA's end-to-end stack with reinforcement learning, behavior
+cloning and the distribution-shift / compounding-error problem,
+DAgger, and the safety and validation challenges of black-box neural
+driving systems.
 
 .. note::
 
@@ -26,8 +28,7 @@ synthesis.
 
    - Answer all questions to the best of your ability.
    - Multiple choice questions have exactly one correct answer.
-   - True/False questions require you to determine if the statement
-     is correct.
+   - True/False questions require you to determine if the statement is correct.
    - Essay questions require short written responses (2-4 sentences).
    - Click the dropdown after each question to reveal the answer.
 
@@ -35,449 +36,415 @@ synthesis.
 ----
 
 
-Multiple Choice
-===============
+Multiple Choice (Questions 1-10)
+=================================
 
 .. admonition:: Question 1
    :class: hint
 
-   What is the minimum polynomial degree required to match position,
-   velocity, **and** acceleration at both the start and end of a
-   trajectory segment?
+   What is the **primary theoretical advantage** of end-to-end driving over
+   the modular pipeline?
 
-   A. 3rd degree (cubic)
+   A. End-to-end models are always faster to train than modular pipelines.
 
-   B. 4th degree (quartic)
+   B. End-to-end models eliminate information loss at module boundaries and
+      allow joint optimization toward a unified driving objective.
 
-   C. 5th degree (quintic)
+   C. End-to-end models do not require any labeled training data.
 
-   D. 6th degree (sextic)
+   D. End-to-end models are more interpretable because their representations
+      are learned rather than hand-engineered.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- 5th degree (quintic).
+   **B** -- End-to-end models eliminate information loss at module boundaries
+   and allow joint optimization toward a unified driving objective.
 
-   A degree-:math:`n` polynomial has :math:`n+1` coefficients.
-   Matching position, velocity, and acceleration at two endpoints
-   gives 6 constraints. The minimum degree satisfying 6 constraints
-   is :math:`n = 5` (quintic), yielding exactly 6 coefficients.
-   Cubic polynomials (4 coefficients) can match only position and
-   velocity at both ends; quartics (5 coefficients) are
-   over-constrained by the 6 boundary conditions.
+   In a modular pipeline, each stage outputs a fixed schema (e.g., object
+   lists), discarding information that doesn't fit. E2E models propagate
+   gradients from the final planning loss back through all representations,
+   ensuring every feature extraction step is optimized for the ultimate goal.
 
 
 .. admonition:: Question 2
    :class: hint
 
-   In MPC, the **receding horizon** principle means that:
+   UniAD (CVPR 2023) uses a **query-based architecture** built on a shared
+   BEV backbone. What are the four task-specific modules it introduces?
 
-   A. The prediction horizon :math:`N` shrinks as the vehicle
-      approaches the goal.
+   A. TrackFormer, MapFormer, PredictFormer, ControlFormer
 
-   B. Only the first control action from the optimized sequence is
-      applied; the optimization is then re-solved at the next
-      time step.
+   B. TrackFormer, MapFormer, MotionFormer, OccFormer
 
-   C. The vehicle predicts the future states of surrounding agents
-      over horizon :math:`N`.
+   C. PerceptionFormer, FusionFormer, PlanFormer, ControlFormer
 
-   D. The cost function is evaluated backwards from the terminal
-      state to the current state.
+   D. BEVFormer, OccFormer, MotionFormer, PlanFormer
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Only the first control action is applied; the
-   optimization is re-solved at the next time step.
+   **B** -- TrackFormer, MapFormer, MotionFormer, OccFormer
 
-   The receding horizon principle is what makes MPC a *feedback*
-   controller rather than an open-loop trajectory tracker. By
-   re-solving at every time step with the current measured state,
-   MPC corrects for disturbances, model errors, and state
-   estimation noise. The horizon "recedes" because the planning
-   window always starts from the current time.
+   UniAD's architecture flows from a shared BEV encoder into TrackFormer
+   (agent tracking), MapFormer (map element detection), MotionFormer
+   (multi-modal motion forecasting), and OccFormer (occupancy grid
+   prediction), with a final ego-trajectory planner on top.
 
 
 .. admonition:: Question 3
    :class: hint
 
-   In the Pure Pursuit controller, if the lookahead distance
-   :math:`L_d` is doubled while speed remains constant, the
-   steering response becomes:
+   DriveTransformer (ICLR 2025) achieves approximately **3x the throughput**
+   of UniAD. What is the key architectural change that enables this?
 
-   A. More aggressive (tighter turns)
+   A. DriveTransformer removes the planning module entirely.
 
-   B. Less aggressive (smoother, cutting corners more)
+   B. DriveTransformer uses a single joint attention block shared across
+      all tasks, eliminating redundant feature extraction in separate heads.
 
-   C. Identical, because only :math:`\alpha` determines steering
+   C. DriveTransformer operates on LiDAR point clouds instead of cameras.
 
-   D. Unstable, because the lookahead point leaves the path
+   D. DriveTransformer uses knowledge distillation to compress UniAD into
+      a smaller model.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Less aggressive (smoother, cutting corners more).
+   **B** -- DriveTransformer uses a single joint attention block shared across
+   all tasks, eliminating redundant feature extraction in separate heads.
 
-   From the steering equation
-   :math:`\delta = \arctan(2L\sin\alpha / L_d)`, increasing
-   :math:`L_d` (denominator) reduces :math:`\delta` for the same
-   angular error :math:`\alpha`. A larger lookahead point is
-   further ahead on the path, requiring less steering to reach it.
-   The result is smoother tracking but larger corner-cutting at
-   high curvature.
+   Instead of having each task head independently attend to BEV features,
+   DriveTransformer defines three unified token types (agent, map, ego) that
+   all attend to each other and to sensor features in a single operation.
+   This sharing eliminates the computational duplication that made UniAD slow.
 
 
 .. admonition:: Question 4
    :class: hint
 
-   The Stanley controller steering command
-   :math:`\delta = \psi_e + \arctan(ke/v)` divides the cross-track
-   correction by speed :math:`v` because:
+   In the context of Vision-Language-Action (VLA) models, what is the
+   purpose of **chain-of-thought reasoning**?
 
-   A. The steering actuator has a velocity-dependent deadband.
+   A. To increase the size of the training dataset through data augmentation.
 
-   B. At higher speeds, the same steering angle produces a larger
-      lateral displacement per unit time, so less correction is
-      needed to achieve the same path convergence rate.
+   B. To generate an intermediate textual reasoning trace that makes the
+      model's driving decisions auditable and interpretable.
 
-   C. The cross-track error :math:`e` grows proportionally to
-      speed.
+   C. To replace the camera sensor with a language description of the scene.
 
-   D. The heading error :math:`\psi_e` is inversely proportional
-      to speed.
+   D. To fine-tune the model on a chain of reinforcement learning rewards.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- At higher speeds, the same steering angle produces
-   larger lateral displacement per unit time, requiring less
-   proportional correction.
+   **B** -- To generate an intermediate textual reasoning trace that makes
+   the model's driving decisions auditable and interpretable.
 
-   The :math:`1/v` factor normalizes the cross-track correction
-   by time-to-travel: at high speed the vehicle is moving
-   quickly toward the path anyway, so a smaller steering angle
-   suffices. Without this factor, the controller would oversteer
-   at high speed and understeer at low speed.
+   Chain-of-thought (CoT) prompting/training encourages the model to produce
+   a human-readable reasoning step (e.g., "the pedestrian may cross; I should
+   slow down") before outputting a waypoint or action. This dramatically
+   improves interpretability compared to direct regression models.
 
 
 .. admonition:: Question 5
    :class: hint
 
-   Integrator windup in a PID speed controller occurs when:
+   Starting with FSD v12, Tesla's end-to-end architecture is:
 
-   A. The derivative term grows too large due to measurement noise.
+   A. LiDAR-primary with camera redundancy.
 
-   B. The integral accumulates error during actuator saturation,
-      causing large overshoot when the saturation constraint
-      is released.
+   B. Camera-only, with gradients flowing from control commands back through
+      the video encoder.
 
-   C. The proportional gain is set too high, causing the system
-      to become underdamped.
+   C. Radar-primary with camera confirmation.
 
-   D. The reference speed changes faster than the vehicle can
-      accelerate.
+   D. A hybrid of modular perception and learned planning.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- The integral accumulates error during actuator
-   saturation.
+   **B** -- Camera-only, with gradients flowing from control commands back
+   through the video encoder.
 
-   When the throttle or brake is saturated (clamped at its
-   physical limit), the PID output is clipped but the integrator
-   continues to add the current error at every time step. When
-   the constraint is eventually released (e.g., vehicle reaches
-   the speed range), the large accumulated integral causes the
-   output to shoot far beyond the target. Anti-windup strategies
-   prevent accumulation during saturation.
+   Tesla's FSD v12 uses 8 cameras feeding space-time transformers that
+   produce BEV features, which feed an occupancy/flow predictor, and then a
+   planning transformer. The entire pipeline is differentiable, and Tesla
+   trains it using billions of fleet miles of human supervision and shadow
+   mode corrections.
 
 
 .. admonition:: Question 6
    :class: hint
 
-   A natural cubic spline minimizes which quantity over the
-   interpolated curve?
+   NVIDIA's end-to-end stack uses reinforcement learning (RL) **after**
+   imitation learning (IL). Why?
 
-   A. Maximum curvature along the curve
+   A. Imitation learning is too slow, so RL is used to speed up training.
 
-   B. Total arc length
+   B. RL allows the model to be deployed without any labeled data.
 
-   C. Integral of the squared second derivative (bending energy)
+   C. Imitation learning inherits the distribution of human driving (including
+      human mistakes), while RL can optimize explicitly for safety and comfort
+      reward functions.
 
-   D. Sum of squared interpolation errors at the waypoints
+   D. RL generates the camera images used for imitation learning.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- Integral of the squared second derivative (bending
-   energy).
+   **C** -- Imitation learning inherits the distribution of human driving
+   (including human mistakes), while RL can optimize explicitly for safety and
+   comfort reward functions.
 
-   The natural cubic spline is the unique minimum-bending-energy
-   interpolant through the given waypoints:
-
-   .. math::
-
-      \min \int_{t_0}^{t_n} \left[S''(t)\right]^2 dt
-
-   This is why cubic splines produce visually smooth curves --
-   they distribute curvature as evenly as possible. This property
-   also relates to the physical deflection of a thin elastic beam
-   (a "spline" in the engineering sense).
+   IL is a strong initialization because it immediately produces human-like
+   behavior. RL fine-tuning then corrects the inherited human errors and
+   optimizes for explicit objectives (minimize collision risk, maximize
+   comfort, make progress) that are difficult to demonstrate.
 
 
 .. admonition:: Question 7
    :class: hint
 
-   In linear MPC for vehicle trajectory tracking, the bicycle
-   model is **linearized** around the reference trajectory because:
+   Which of the following is a **key validation challenge** specific to
+   end-to-end driving models compared to modular pipelines?
 
-   A. The full nonlinear model cannot represent vehicle dynamics.
+   A. End-to-end models cannot be evaluated in simulation.
 
-   B. Linearization converts the nonlinear optimization problem
-      into a quadratic program (QP), which can be solved in
-      milliseconds at real-time rates.
+   B. ISO 26262 assumes modular decomposition, making it difficult to apply
+      standard safety arguments to a monolithic E2E system.
 
-   C. The bicycle model is already linear; no approximation is
-      needed.
+   C. End-to-end models require more compute than modular pipelines.
 
-   D. Linearization eliminates the need for a prediction horizon.
+   D. End-to-end models cannot process LiDAR data.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Linearization converts the NLP to a QP solvable in
-   milliseconds.
+   **B** -- ISO 26262 assumes modular decomposition, making it difficult to
+   apply standard safety arguments to a monolithic E2E system.
 
-   The bicycle model is nonlinear (trigonometric functions of
-   heading). Linearizing around the reference trajectory yields
-   linear state equations, and if the cost is quadratic the
-   resulting optimization is a QP. QPs have polynomial-time
-   algorithms (active-set, interior-point) and can be solved
-   in under 1 ms with code-generated solvers, enabling
-   real-time MPC at 50 Hz.
+   ISO 26262 functional safety methodology relies on decomposing system
+   requirements into subsystem requirements and testing each component
+   independently. A monolithic neural network has no such decomposition,
+   requiring novel "neural system safety" frameworks that are still being
+   developed by standards bodies in 2026.
 
 
 .. admonition:: Question 8
    :class: hint
 
-   A B-spline trajectory has the **local support** property,
-   meaning:
+   The fundamental problem with behavior cloning (BC) that
+   DAgger is designed to solve is:
 
-   A. The curve passes through all control points.
+   A. Behavior cloning requires labeled data, which is expensive
+      to collect.
 
-   B. Moving one control point affects only a local portion
-      of the curve (at most :math:`k+1` spans for degree
-      :math:`k`).
+   B. Distribution shift: the policy visits states not seen
+      during training, where it has no supervision signal,
+      causing compounding errors.
 
-   C. The curve is supported (lies above) the convex hull of
-      the control points.
+   C. Behavior cloning converges to the wrong policy because
+      the supervised loss is non-convex.
 
-   D. The spline can only be evaluated at the knot locations.
+   D. Behavior cloning cannot learn from continuous action
+      spaces.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Moving one control point affects only the local
-   portion of the curve (at most :math:`k+1` spans).
+   **B** -- Distribution shift causing compounding errors.
 
-   Local support is a key advantage of B-splines over global
-   polynomials. It means that local adjustments to the trajectory
-   (e.g., routing around a newly detected obstacle) require
-   modifying only a few control points, and the change affects
-   only the nearby portion of the path. This is critical for
-   efficient online trajectory editing.
+   When a BC policy makes a small error, it moves to a state
+   slightly off the expert's trajectory. The policy was never
+   trained on this state, so it may make another error in
+   a bad direction. Errors compound quadratically in the time
+   horizon (:math:`O(\epsilon T^2)`). DAgger fixes this by
+   querying the expert at states the learned policy actually
+   visits, so the training distribution converges to the
+   deployment distribution.
 
 
 .. admonition:: Question 9
    :class: hint
 
-   In Frenet-frame trajectory planning, generating multiple
-   candidate quintic polynomials by varying the terminal lateral
-   offset :math:`d_f` serves what purpose?
+   DAgger improves over behavior cloning by:
 
-   A. It guarantees that at least one candidate is kinematically
-      feasible.
+   A. Using a larger neural network with more capacity.
 
-   B. It produces a discrete set of trajectory options that can
-      be evaluated for cost and safety, with the best feasible
-      candidate selected.
+   B. Iteratively rolling out the learned policy and augmenting
+      the training dataset with expert actions at visited states.
 
-   C. It reduces the computation time by parallelizing the
-      coefficient calculation.
+   C. Using reinforcement learning with a reward signal instead
+      of supervised learning.
 
-   D. It ensures the trajectory converges to the road centerline
-      within one planning step.
+   D. Training on randomized simulation environments to cover
+      more state diversity.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- It produces a discrete set of options evaluated for
-   cost and safety.
+   **B** -- Iteratively rolling out the learned policy and
+   augmenting the dataset with expert labels at visited states.
 
-   By sampling a grid of terminal conditions
-   :math:`(d_f, \dot{d}_f, T)`, the planner generates many
-   candidate trajectories covering different lateral positions
-   and durations. Each is evaluated for collision clearance and
-   cost. The lowest-cost collision-free candidate is selected.
-   This sampling-then-scoring approach is efficient and handles
-   multi-modal situations (e.g., passing on either side of
-   an obstacle).
+   DAgger is a supervised learning algorithm (not RL), but it
+   uses an online data collection loop. At each iteration the
+   current policy generates new states, the expert labels them,
+   and these are added to the aggregated dataset. Over iterations
+   the training distribution converges to the deployment
+   distribution, reducing compounding errors from
+   :math:`O(\epsilon T^2)` to :math:`O(\epsilon T)`.
 
 
 .. admonition:: Question 10
    :class: hint
 
-   Emergency braking distance at :math:`v_0 = 20` m/s with maximum
-   deceleration :math:`a_{\max} = 6` m/s² is:
+   As of 2026, what describes the **industry consensus** on where end-to-end
+   learning fits in production ADS systems?
 
-   A. 20 m
+   A. Major robotaxi operators run fully end-to-end systems from pixels to
+      actuators with no engineered safety layers.
 
-   B. 33.3 m
+   B. End-to-end learning is considered a failed approach and the industry
+      has returned to purely modular pipelines.
 
-   C. 60 m
+   C. E2E models excel at perception and scene understanding, but explicit
+      safety checks and rule-based overrides remain as engineered layers on top.
 
-   D. 66.7 m
+   D. End-to-end models are only used for highway driving, not urban
+      environments.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Approximately 33.3 m.
+   **C** -- E2E models excel at perception and scene understanding, but
+   explicit safety checks and rule-based overrides remain as engineered
+   layers on top.
 
-   .. math::
-
-      d_{\text{stop}} = \frac{v_0^2}{2 a_{\max}}
-      = \frac{20^2}{2 \times 6} = \frac{400}{12} \approx 33.3 \text{ m}
-
-   At 72 km/h, an autonomous vehicle must begin emergency braking
-   at least 33 m before an obstacle (plus any perception and
-   actuation latency). Typical system latency of 100--200 ms adds
-   2--4 m to the required detection range.
+   No major robotaxi operator in 2026 runs a system that is purely neural
+   from camera to brake pedal without any engineered safety monitoring. The
+   dominant pattern is a hybrid: a powerful E2E neural backbone for perception
+   and initial planning, with an explicit safety module (RSS, rule-based
+   overrides) that can veto unsafe actions.
 
 
 ----
 
 
-True / False
-============
+True or False (Questions 11-15)
+================================
 
 .. admonition:: Question 11
    :class: hint
 
-   **True or False:** A path and a trajectory contain the same
-   information; the terms can be used interchangeably in motion
-   planning.
+   **True or False:** In a modular ADS pipeline, a detected pedestrian's
+   probability of entering the road can be fully preserved and communicated
+   to the planner via the standard object-list interface between perception
+   and prediction modules.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   A path specifies only the geometric shape of the route (as a
-   function of arc length or an arbitrary parameter). A trajectory
-   adds a time parameterization: it specifies where the vehicle is
-   at every point in time, implicitly defining velocity and
-   acceleration profiles. Controllers that handle speed regulation
-   (throttle, brake) require a trajectory, not just a path.
+   The object-list interface between perception and prediction modules
+   typically encodes discrete detections with fixed attributes (class, 3-D
+   box, velocity). Subtle behavioral cues -- such as a pedestrian looking
+   toward the road, crouching, or holding a ball -- that are visible in the
+   raw image are often discarded because they don't fit the schema. This is
+   the information loss problem that motivates end-to-end approaches.
 
 
 .. admonition:: Question 12
    :class: hint
 
-   **True or False:** The Stanley controller produces a non-zero
-   steady-state lateral error on a straight road at constant speed.
+   **True or False:** DriveTransformer achieves 3x throughput over UniAD
+   by using a smaller model with fewer parameters, sacrificing performance
+   on individual driving tasks.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   On a straight road at constant speed with zero initial
-   cross-track error, the Stanley controller produces zero
-   steady-state lateral error. The heading-error term
-   :math:`\psi_e` drives the vehicle parallel to the path,
-   and the :math:`\arctan(ke/v)` term drives cross-track error
-   :math:`e` to zero. Unlike Pure Pursuit, Stanley has no
-   geometry-induced steady-state error on straight or
-   gently curved roads.
+   DriveTransformer's throughput improvement comes from **sharing** attention
+   computations across tasks through unified agent, map, and ego token types --
+   not from reducing model size. DriveTransformer matches or exceeds UniAD on
+   planning metrics (L2 distance) while running approximately 3x faster.
 
 
 .. admonition:: Question 13
    :class: hint
 
-   **True or False:** In MPC, increasing the prediction horizon
-   :math:`N` always improves closed-loop performance.
+   **True or False:** In DAgger, the expert is only queried at
+   states that the *expert* would visit, not states that the
+   *learned policy* visits.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   Increasing :math:`N` provides better foresight (the optimizer
-   can plan further ahead, avoiding locally greedy actions), but
-   it also increases the size of the QP or NLP, requiring more
-   computation time per solve. If the solve time exceeds the
-   control period, the controller misses its real-time deadline
-   and performance degrades. There is an optimal :math:`N` that
-   balances foresight and computational feasibility.
+   DAgger explicitly queries the expert at states that the
+   **learned policy** visits during its rollouts. This is the
+   key distinction from standard behavior cloning. By labeling
+   states on the *policy's* trajectory (not the expert's),
+   DAgger provides supervision at the states where the policy
+   will actually be deployed, closing the distribution shift gap.
 
 
 .. admonition:: Question 14
    :class: hint
 
-   **True or False:** The convex hull property of B-splines
-   guarantees that the trajectory lies within the convex hull of
-   its control points, which is useful for conservative collision
-   checking.
+   **True or False:** Chain-of-thought (CoT) supervision in VLA models
+   provides a language-based training signal that can improve generalization
+   to novel scenarios compared to direct waypoint regression.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **True**
 
-   The B-spline convex hull property states that every point on
-   the curve lies within the convex hull of its local control
-   points. For collision checking, this means: if the convex hull
-   of the control polygon is collision-free, the curve itself is
-   guaranteed to be collision-free -- a fast and conservative
-   check without evaluating the curve densely.
+   Language descriptions of scenes encode semantic reasoning (e.g., "the
+   cyclist may merge left") that transfers across geographic domains and
+   lighting conditions far better than pixel-level imitation labels. VLA
+   models trained with CoT supervision have demonstrated better zero-shot
+   generalization than equivalent direct regression models in several
+   benchmarks (DriveVLM, 2024).
 
 
 .. admonition:: Question 15
    :class: hint
 
-   **True or False:** The Ziegler-Nichols tuning method for PID
-   controllers produces gains that are optimal in the
-   :math:`H_\infty` sense.
+   **True or False:** The sim-to-real gap is fully eliminated by using
+   CARLA for end-to-end training because CARLA uses Unreal Engine 4 for
+   photorealistic rendering.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   Ziegler-Nichols is a heuristic tuning method based on
-   observing the system's response at the stability boundary
-   (ultimate gain and period). It provides a practical starting
-   point for tuning but does not produce :math:`H_\infty`-optimal
-   or even :math:`H_2`-optimal gains. The resulting controller
-   typically has approximately 25% overshoot and adequate
-   disturbance rejection, which is acceptable for many applications
-   but suboptimal for comfort-critical AV control.
+   Despite CARLA's high-quality rendering, a significant sim-to-real gap
+   remains. Sensor noise models, material reflectances, dynamic agent
+   behavior distributions, and environmental conditions in CARLA do not
+   perfectly match reality. Neural world models (GAIA-3, Cosmos) trained
+   on real data are emerging as a complementary approach to reduce this gap,
+   but it has not been eliminated.
 
 
 ----
 
 
-Essay Questions
-===============
+Essay Questions (Questions 16-18)
+===================================
 
 .. admonition:: Question 16
    :class: hint
 
-   **Compare Model Predictive Control with the Stanley controller
-   for autonomous vehicle lateral control.** What are the
-   key advantages of MPC over Stanley, and in what scenarios
-   would Stanley be preferred?
+   **Explain the distribution shift problem in behavior cloning
+   and why it causes compounding errors.** Use a concrete
+   autonomous driving example to illustrate the failure mode.
 
    *(2-4 sentences)*
 
@@ -486,32 +453,29 @@ Essay Questions
 
    *Key points to include:*
 
-   - MPC optimizes a multi-step cost function that incorporates
-     future predictions, allowing it to anticipate upcoming curves
-     and constraints, respect actuator limits explicitly, and
-     trade off multiple objectives (comfort, tracking, safety)
-     simultaneously.
-   - Stanley is a reactive, single-step controller: it responds
-     to current cross-track and heading error without planning
-     ahead. This makes it simpler but unable to proactively
-     adjust for upcoming trajectory features.
-   - MPC advantages: constraint handling (curvature limits,
-     speed bounds), look-ahead, comfort optimization, and the
-     ability to incorporate obstacle avoidance directly.
-   - Stanley is preferred in resource-constrained systems
-     (embedded microcontrollers), low-speed applications, or
-     as a baseline where MPC's computational cost is unjustified.
-     Stanley's O(1) compute cost makes it deterministic and
-     latency-free.
+   - Behavior cloning trains a policy on expert state-action pairs.
+     During deployment, the policy's own actions take it to states
+     that differ from the expert's trajectory -- these states were
+     never seen during training.
+   - Concrete example: the expert always stays centered in the lane.
+     The BC policy makes a small right-drift error, ending up
+     slightly off-center. This state was never in the training set,
+     so the policy has no reliable recovery action and may drift
+     further right -- eventually leaving the lane.
+   - Errors compound because each mistake produces a new out-of-
+     distribution state, which produces a larger mistake, which
+     produces an even more out-of-distribution state.
+   - The compounding grows as :math:`O(\epsilon T^2)` where
+     :math:`\epsilon` is the per-step error and :math:`T` is
+     the episode length -- making BC fragile for long-horizon tasks.
 
 
 .. admonition:: Question 17
    :class: hint
 
-   **Explain why quintic polynomials are preferred over cubic
-   polynomials for trajectory segment generation.** What
-   additional property does the quintic provide, and why does it
-   matter for passenger comfort?
+   **Explain the safety and validation challenges unique to end-to-end driving
+   models** compared to modular systems. What approaches are researchers and
+   engineers pursuing to address these challenges?
 
    *(2-4 sentences)*
 
@@ -520,31 +484,31 @@ Essay Questions
 
    *Key points to include:*
 
-   - A cubic polynomial has 4 coefficients, which can be uniquely
-     determined by 4 boundary conditions: position and velocity at
-     both endpoints. It cannot simultaneously match acceleration at
-     both endpoints.
-   - A quintic polynomial has 6 coefficients, allowing it to match
-     position, velocity, **and** acceleration at both endpoints.
-     This ensures :math:`C^2` continuity across trajectory
-     segments.
-   - Continuity of acceleration means there are no impulsive
-     changes in acceleration when the vehicle transitions between
-     trajectory segments. Without this, passengers experience a
-     jerk spike at every segment boundary.
-   - Jerk (rate of change of acceleration) is the primary
-     perceptual discomfort metric; bounding it through :math:`C^2`
-     continuity is essential for a smooth passenger experience.
+   - Modular systems can be validated module-by-module against ISO 26262
+     ASIL requirements with component-level fault trees. E2E models have no
+     such decomposition -- the entire neural network must be validated as a
+     whole, which is computationally intractable for exhaustive testing.
+   - Black-box behavior makes it difficult to determine the root cause of
+     failures, which is essential for constructing safety cases and for
+     regulator approval.
+   - Approaches being pursued include: neural network formal verification
+     (limited to small networks), comprehensive simulation-based scenario
+     testing, runtime safety monitors (Responsibility-Sensitive Safety),
+     concept bottleneck models that enforce interpretable intermediate
+     representations, and VLA chain-of-thought reasoning for post-hoc
+     explainability.
+   - The UNECE GTR (Jan 2026) is moving toward a "safety case" approach
+     that may be more amenable to E2E systems than component-level ASIL
+     certification.
 
 
 .. admonition:: Question 18
    :class: hint
 
-   **Describe the Frenet-frame approach to trajectory planning.**
-   Why is the Frenet frame more convenient than Cartesian
-   coordinates for road-following trajectories, and how is a
-   Frenet trajectory converted back to a Cartesian plan for
-   execution?
+   **Compare rule-based FSM behavior planners with learned
+   (imitation learning) behavior planners.** Under what
+   operational conditions would you choose each approach, and
+   what hybrid strategies exist?
 
    *(2-4 sentences)*
 
@@ -553,20 +517,20 @@ Essay Questions
 
    *Key points to include:*
 
-   - The Frenet frame decomposes vehicle motion into longitudinal
-     (:math:`s`, along the road centerline) and lateral
-     (:math:`d`, perpendicular to it) components. This decouples
-     the planning problem: longitudinal and lateral trajectories
-     can be planned independently as 1-D polynomial problems.
-   - In Cartesian coordinates, a lane-following trajectory on a
-     curved road is a complex 2-D curve; in Frenet coordinates,
-     it is simply :math:`d(t) \approx 0` -- a nearly trivial
-     1-D problem.
-   - Conversion back to Cartesian: for each time sample, evaluate
-     :math:`s(t)` and :math:`d(t)`, look up the Cartesian position
-     of the road centerline at arc length :math:`s(t)`, and offset
-     perpendicular to the centerline by :math:`d(t)`.
-   - The Frenet frame is only valid where the road centerline
-     curvature is non-singular. At very sharp turns or
-     intersections, the frame may become ill-conditioned and
-     Cartesian planning must be used instead.
+   - FSM planners are preferred when: interpretability and
+     certifiability are required (regulatory approval), the
+     operational design domain (ODD) is well-defined and narrow,
+     or real-time guarantees with bounded computation are needed.
+   - Learned planners are preferred when: the ODD is broad and
+     difficult to enumerate (urban driving), human-like interaction
+     is required (gap acceptance, courtesy behaviors), or large
+     logged datasets are available to train from.
+   - Hybrid strategies: use an FSM for safety-critical decisions
+     (emergency stop, right-of-way) with a learned planner for
+     non-safety-critical comfort behaviors (smooth merges, yield
+     negotiation). The safety layer can override the learned policy
+     whenever a formal safety condition is violated.
+   - Another hybrid: use a learned policy as a cost function or
+     prior within a model-based planner (e.g., RL-guided lattice
+     search), combining the interpretability of the lattice with
+     the generalization of learned policies.

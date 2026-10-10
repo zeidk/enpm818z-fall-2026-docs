@@ -12,19 +12,19 @@ Exercises
    listed in the :doc:`syllabus </syllabus/index>`.
 
 This page contains five take-home exercises that reinforce the concepts
-from Lecture 11. Exercises cover trajectory generation, lateral and
-longitudinal controllers, and MPC concepts.
+from Lecture 11. Exercises cover end-to-end architectures, behavior
+cloning, and attention visualization.
 
 
-.. dropdown:: Exercise 1 -- Quintic Polynomial Trajectory
+.. dropdown:: Exercise 1 -- Modular vs. End-to-End Trade-Offs
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Generate a smooth trajectory using quintic polynomials and verify
-   that it satisfies comfort constraints.
+   Develop a nuanced understanding of when modular and end-to-end
+   pipelines each have the advantage.
 
 
    .. raw:: html
@@ -34,39 +34,50 @@ longitudinal controllers, and MPC concepts.
 
    **Specification**
 
-   Create the file ``quintic_trajectory.py`` that performs the
-   following:
+   For each criterion below, indicate whether **modular** or **E2E**
+   has the advantage and write a 1--2 sentence justification.
 
-   Generate a quintic polynomial
-   :math:`s(t) = a_0 + a_1 t + a_2 t^2 + a_3 t^3 + a_4 t^4 + a_5 t^5`
-   satisfying:
+   .. list-table::
+      :widths: 40 15 45
+      :header-rows: 1
+      :class: compact-table
 
-   - :math:`s(0) = 0,\; \dot{s}(0) = 10,\; \ddot{s}(0) = 0`
-   - :math:`s(3) = 40,\; \dot{s}(3) = 15,\; \ddot{s}(3) = 0`
-
-   1. Set up the **6 × 6 linear system** and solve for
-      :math:`a_0 \ldots a_5` using ``numpy.linalg.solve``.
-   2. Plot :math:`s(t)`, :math:`\dot{s}(t)` (velocity), and
-      :math:`\ddot{s}(t)` (acceleration) over :math:`t \in [0, 3]` s
-      in a 3-subplot figure.
-   3. Print the **maximum acceleration** along the trajectory.
-   4. If the comfort limit is :math:`|\ddot{s}| \leq 3` m/s², does
-      this trajectory satisfy it?
+      * - Criterion
+        - Advantage
+        - Justification
+      * - Debugging a false detection
+        -
+        -
+      * - Handling a never-before-seen object
+        -
+        -
+      * - Optimizing full-system performance jointly
+        -
+        -
+      * - Satisfying safety certification (ISO 26262)
+        -
+        -
+      * - Development speed with a small team (< 5 engineers)
+        -
+        -
+      * - Leveraging billions of driving miles
+        -
+        -
 
    **Deliverable**
 
-   The script, 3-subplot figure, and written answer about comfort.
+   Completed table with clear justifications.
 
 
-.. dropdown:: Exercise 2 -- Pure Pursuit Controller
+.. dropdown:: Exercise 2 -- Information Loss at Module Boundaries
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Implement Pure Pursuit and observe how the lookahead distance
-   affects convergence to a reference path.
+   Identify what information is discarded in a modular pipeline and
+   reason about safety implications.
 
 
    .. raw:: html
@@ -76,44 +87,83 @@ longitudinal controllers, and MPC concepts.
 
    **Specification**
 
-   Create the file ``pure_pursuit.py`` that performs the following:
+   In a modular pipeline, perception outputs bounding boxes
+   ``(class, x, y, z, w, h, l, confidence)`` to the planner.
 
-   A vehicle starts at :math:`(x, y) = (0, 1)` with heading
-   :math:`\theta = 0`. The reference path is the x-axis
-   (:math:`y = 0`). Wheelbase :math:`L = 2.9` m.
+   1. Name **three types of information** present in the raw sensor
+      data that are **lost** by the time the planner receives bounding
+      boxes. Be specific.
+   2. For each type of lost information, describe a **concrete driving
+      scenario** where it would be safety-critical.
+   3. Explain how **UniAD's architecture** (query-based unified
+      decoder) addresses the information loss problem.
+   4. What is the **trade-off** of passing richer intermediate
+      representations (e.g., BEV feature maps) instead of bounding
+      boxes? Consider compute cost, bandwidth, and interpretability.
 
-   1. With lookahead :math:`L_d = 5` m, find the **lookahead point**
-      on the path.
-   2. Compute the **curvature**
-      :math:`\kappa = 2 \sin(\alpha) / L_d` where :math:`\alpha` is
-      the angle from the vehicle heading to the lookahead point.
-   3. Compute the **steering angle**
-      :math:`\delta = \arctan(\kappa \cdot L)`.
-   4. Simulate the vehicle for **10 seconds** at :math:`v = 10` m/s,
-      :math:`\Delta t = 0.05` s, with Pure Pursuit updating at each
-      step. **Plot the trajectory** showing convergence to the path.
-   5. Repeat with :math:`L_d = 10` m and :math:`L_d = 2` m. Plot all
-      three on the same figure.
+   **Deliverable**
+
+   Written answers (one paragraph per question).
+
+
+.. dropdown:: Exercise 3 -- Behavior Cloning Data Collection
+   :icon: gear
+   :class-container: sd-border-primary
+   :class-title: sd-font-weight-bold
+
+   **Goal**
+
+   Collect and analyze a small expert driving dataset from CARLA's
+   autopilot for behavior cloning.
+
+
+   .. raw:: html
+
+      <hr>
+
+
+   **Specification**
+
+   Create the file ``collect_bc_data.py`` that performs the following:
+
+   1. Spawn an ego vehicle with autopilot enabled and an RGB camera
+      (640 × 480) in Town01.
+   2. Record **500 frames** at 10 Hz. For each frame, save:
+
+      - RGB image to disk.
+      - Vehicle controls: ``steer``, ``throttle``, ``brake``.
+      - Vehicle speed (m/s).
+      - Frame index and timestamp.
+
+   3. Save the metadata to a CSV file.
+   4. After collection, compute and print:
+
+      - **Distribution of steering angles** (histogram with 20 bins).
+      - **Fraction of stopped frames** (speed < 0.5 m/s).
+      - **Min/max/mean speed**.
 
    **Written analysis**
 
-   How does the lookahead distance affect convergence speed and
-   oscillation? What is the trade-off?
+   - Is the steering distribution balanced or skewed? What problem
+     does skew cause for training?
+   - Why should stopped frames be subsampled?
+   - Why should train/validation splits be done **by episode** rather
+     than by random frame?
 
    **Deliverable**
 
-   The script, trajectory plot, and written analysis (3--5 sentences).
+   The script, CSV file, steering histogram, and written analysis.
 
 
-.. dropdown:: Exercise 3 -- Stanley vs. Pure Pursuit
+.. dropdown:: Exercise 4 -- Simple Steering Network
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Compare Stanley and Pure Pursuit controllers on a curved path and
-   identify which has lower steady-state error.
+   Train a minimal behavior cloning model to predict steering angle
+   from camera images and test it in CARLA.
 
 
    .. raw:: html
@@ -123,45 +173,54 @@ longitudinal controllers, and MPC concepts.
 
    **Specification**
 
-   Create the file ``controller_comparison.py`` that performs the
-   following:
+   Create the file ``steer_net.py`` that implements the following:
 
-   1. Define a **circular arc** reference path with radius 20 m
-      (generate waypoints every 0.5 m over 180°).
-   2. Implement the **Stanley controller**:
+   1. Define a simple network using a pre-trained ResNet-18 backbone
+      with the final FC layer replaced to output a **single steering
+      value**:
 
-      .. math::
+      .. code-block:: python
 
-         \delta = \psi_e + \arctan\!\left(\frac{k \cdot e}{v}\right)
+         import torch.nn as nn
+         from torchvision import models
 
-      with :math:`k = 0.5`, :math:`v = 10` m/s.
+         class SteerNet(nn.Module):
+             def __init__(self):
+                 super().__init__()
+                 self.backbone = models.resnet18(pretrained=True)
+                 self.backbone.fc = nn.Linear(512, 1)
 
-   3. Implement **Pure Pursuit** with :math:`L_d = k_{pp} \cdot v`,
-      :math:`k_{pp} = 0.5`.
-   4. Simulate both controllers for **10 seconds** on the arc.
-   5. Plot on two subplots:
+             def forward(self, x):
+                 return self.backbone(x)
 
-      - **Cross-track error** over time (both controllers).
-      - **Steering angle** over time (both controllers).
+   2. Load the dataset from Exercise 3. Resize images to 224 × 224,
+      normalize using ImageNet statistics.
+   3. Split **80/20 by episode** into train/validation sets.
+   4. Train for **20 epochs** with MSE loss and Adam optimizer
+      (lr = 1e-4). Plot train and validation loss.
+   5. Report **MAE** (mean absolute error) for steering on the
+      validation set.
 
    **Written analysis**
 
-   Which controller has lower steady-state error on curves? Why?
+   Deploy the model in CARLA (feed camera images, apply predicted
+   steering). Does the vehicle stay in lane? For how many seconds?
+   Relate any failures to the distribution shift problem from L10.
 
    **Deliverable**
 
-   The script, comparison plots, and written analysis.
+   The script, training loss plot, MAE value, and written analysis.
 
 
-.. dropdown:: Exercise 4 -- PID Tuning and Anti-Windup
+.. dropdown:: Exercise 5 -- Attention Visualization
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Implement a PID longitudinal controller, observe integral windup,
-   and implement a clamping fix.
+   Visualize what a vision transformer attends to in driving images
+   and reason about task relevance.
 
 
    .. raw:: html
@@ -171,76 +230,30 @@ longitudinal controllers, and MPC concepts.
 
    **Specification**
 
-   Create the file ``pid_controller.py`` that implements a PID speed
-   controller:
+   Create the file ``attention_viz.py`` that performs the following:
 
-   .. math::
+   1. Load a pre-trained **CLIP ViT-B/16** model.
+   2. Capture two CARLA driving images:
 
-      u(t) = K_p \, e(t) + K_i \textstyle\int_0^t e(\tau)\,d\tau
-             + K_d \, \dot{e}(t)
+      - One under ``ClearNoon``.
+      - One under ``HardRainNoon``.
 
-   where :math:`e(t) = v_{\text{ref}} - v(t)`.
+   3. Pass each image through the model and extract **attention
+      weights** from the last transformer layer.
+   4. Reshape the CLS token's attention over patches to a 2D grid
+      and overlay it as a heatmap on the original image.
+   5. Save both visualizations side-by-side.
 
-   Use a simple 1D vehicle model:
-   :math:`v(t + \Delta t) = v(t) + u(t) \cdot \Delta t` (clamped to
-   :math:`[0, 50]` km/h).
+   **Written analysis**
 
-   1. Set :math:`K_p = 1.0,\; K_i = 0,\; K_d = 0`. Reference speed =
-      30 km/h. Simulate 10 s. **Plot speed vs. time**.
-   2. Add :math:`K_i = 0.1`. What changes?
-   3. Add :math:`K_d = 0.5`. What changes?
-   4. **Demonstrate windup**: set reference to 30 km/h for 5 s, then
-      drop to 10 km/h. Show the overshoot caused by accumulated
-      integral.
-   5. Implement **anti-windup clamping** (limit integral term to
-      :math:`\pm 1.0`) and repeat step 4. Show the improvement.
-
-   All five experiments should be plotted in a single 5-subplot figure.
+   - Does the model attend to **task-relevant regions** (road,
+     vehicles, traffic signs)?
+   - How does the attention pattern change between clear and rainy
+     conditions?
+   - What does this tell you about using pre-trained vision models
+     for driving?
 
    **Deliverable**
 
-   The script and 5-subplot figure.
-
-
-.. dropdown:: Exercise 5 -- MPC Conceptual Analysis
-   :icon: gear
-   :class-container: sd-border-primary
-   :class-title: sd-font-weight-bold
-
-   **Goal**
-
-   Understand MPC design choices by reasoning about horizon length,
-   cost weights, and real-time constraints.
-
-
-   .. raw:: html
-
-      <hr>
-
-
-   **Specification**
-
-   A linear MPC for lateral control uses:
-
-   - State: :math:`\mathbf{x} = [e, \dot{e}, \psi_e, \dot{\psi}_e]^T`
-   - Control: :math:`u = \delta` (steering angle)
-   - Horizon: :math:`N = 10`, :math:`\Delta t = 0.1` s
-
-   Answer the following:
-
-   1. What is the **prediction horizon** in seconds?
-   2. The cost is
-      :math:`J = \sum_{k=0}^{N} \mathbf{x}_k^T Q\,\mathbf{x}_k + \sum_{k=0}^{N-1} u_k^T R\,u_k`
-      with :math:`Q = \text{diag}(10, 1, 10, 1)` and :math:`R = [1]`.
-      Which state components are penalized most heavily?
-   3. If :math:`R` is increased to ``[100]``, what happens to steering
-      behavior (smoother or more aggressive)?
-   4. What is the advantage of MPC over Pure Pursuit for **obstacle
-      avoidance**?
-   5. A nonlinear MPC solver takes 25 ms per solve. At a 50 Hz control
-      rate, is this fast enough? What are two strategies to speed it
-      up?
-
-   **Deliverable**
-
-   Written answers (2--4 sentences per question).
+   The script, side-by-side attention heatmap image, and written
+   analysis (5--8 sentences).

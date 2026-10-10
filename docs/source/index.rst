@@ -105,7 +105,7 @@ navigation bar** to access the main sections:
 
       Assumed-knowledge pages to read *before* the lecture they support:
       development environment setup (before L1) and automotive
-      cybersecurity (before L14).
+      cybersecurity (before L13).
 
    .. grid-item-card:: Lectures
       :class-card: sd-border-secondary

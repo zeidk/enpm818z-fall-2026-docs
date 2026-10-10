@@ -46,7 +46,7 @@ templates_path = ["_templates"]
 #
 # L1 to L5 are published in full (L5 since 2026-10-10).
 #
-# L6 to L14 are hidden completely: they do not match the syllabus yet and
+# L6 to L13 are hidden completely: they do not match the syllabus yet and
 # open one at a time as their decks are finished. To reopen lecture N:
 #   1. remove N from HIDDEN_LECTURES below,
 #   2. restore its line in the toctree of lectures/index.rst,
@@ -55,7 +55,7 @@ templates_path = ["_templates"]
 #      pages that mention it.
 # The source files stay on disk.
 # ---------------------------------------------------------------------------
-HIDDEN_LECTURES = range(6, 15)
+HIDDEN_LECTURES = range(6, 14)
 
 exclude_patterns = [f"lectures/lecture{n}/**" for n in HIDDEN_LECTURES]
 
@@ -123,7 +123,10 @@ html_css_files = [
     "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css", "my.css"
 ]
 
+# sidebar-persist.js loads without `defer` so the stored sidebar state is
+# applied before the first paint (same as ENPM702).
 html_js_files = [
+    ("sidebar-persist.js", {"defer": None}),
     # Shape of the Read the Docs version menu; see the file's header.
     ("flyout-style.js", {"defer": "defer"}),
 ]

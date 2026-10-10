@@ -87,22 +87,22 @@ come first:
 - A **decoder** is a network that turns features into outputs.
 
 .. figure:: /_static/images/L5/waymo_stack.png
-   :alt: A block diagram. Cameras, LiDAR and radar feed the Sensor Fusion Encoder, labeled think fast, which fuses all three over time into objects, semantics and embeddings; it is highlighted green and labeled today. Cameras also feed the Driving VLM, labeled think slow, tagged L12. Both feed the World Decoder, which outputs behavior predictions, high-definition maps, trajectories for the vehicle and validation signals, tagged L9 and L10. Its trajectories go to an onboard validation layer.
+   :alt: A block diagram. Cameras, LiDAR and radar feed the Sensor Fusion Encoder, labeled think fast, which fuses all three over time into objects, semantics and embeddings; it is highlighted green and labeled today. Cameras also feed the Driving VLM, labeled think slow, tagged L11. Both feed the World Decoder, which outputs behavior predictions, high-definition maps, trajectories for the vehicle and validation signals, tagged L8 and L9. Its trajectories go to an onboard validation layer.
    :width: 90%
    :align: center
 
    Waymo's architecture, redrawn from Waymo's December 2025 post. Cameras,
    LiDAR and radar feed the **Sensor Fusion Encoder** ("think fast", today,
-   in green). Cameras also feed the **Driving VLM** ("think slow", L12). Both
-   feed the **World Decoder** (L9 and L10), and an **onboard validation
+   in green). Cameras also feed the **Driving VLM** ("think slow", L11). Both
+   feed the **World Decoder** (L8 and L9), and an **onboard validation
    layer** checks what it outputs.
 
 - Cameras, LiDAR and radar go into one learned block, the **Sensor Fusion
   Encoder**, the part that "thinks fast".
 - The **Driving VLM**, the part that "thinks slow", reads the cameras for
-  rare and complex scenes. That is L12.
+  rare and complex scenes. That is L11.
 - The **World Decoder** predicts what others will do and plans the AV's path:
-  L9 and L10. A separate validation layer checks the planned path.
+  L8 and L9. A separate validation layer checks the planned path.
 
 
 .. _l5-lec-waymo-post:
@@ -156,7 +156,7 @@ this lecture that teaches that box: 1 3D Detection, 2 Segmentation, 3 BEV and
 Occupancy, 4 Fusion, 5 Tracking.
 
 .. figure:: /_static/images/L5/perception_stack.png
-   :alt: A block diagram. Sensing, camera images, LiDAR point clouds and radar objects, feeds four parts. Obstacle segmentation and the occupancy grid map exchange data, and each sends its output to planning: obstacles and blind spots. A Detection group holds a 3D detector, tagged 1 and 3; camera 2D detection with projection fusion, tagged 2 and 4; and a radar pipeline. All three feed a multi-object tracker, tagged 5, then prediction, tagged L9, which sends dynamic objects to planning. The occupancy grid map is tagged 3. Traffic light recognition runs on its own and also feeds planning.
+   :alt: A block diagram. Sensing, camera images, LiDAR point clouds and radar objects, feeds four parts. Obstacle segmentation and the occupancy grid map exchange data, and each sends its output to planning: obstacles and blind spots. A Detection group holds a 3D detector, tagged 1 and 3; camera 2D detection with projection fusion, tagged 2 and 4; and a radar pipeline. All three feed a multi-object tracker, tagged 5, then prediction, tagged L8, which sends dynamic objects to planning. The occupancy grid map is tagged 3. Traffic light recognition runs on its own and also feeds planning.
    :width: 80%
    :align: center
 
@@ -165,7 +165,7 @@ Occupancy, 4 Fusion, 5 Tracking.
    obstacles and blind spots to planning. In the middle, the **Detection**
    group: a 3D detector (tags 1 and 3), camera 2D detection with projection
    fusion (tags 2 and 4) and a radar pipeline, all feeding the
-   **multi-object tracker** (tag 5), then **prediction** (L9). Traffic light
+   **multi-object tracker** (tag 5), then **prediction** (L8). Traffic light
    recognition feeds planning on its own.
 
 - **On the left,** obstacle segmentation picks the LiDAR points that belong
@@ -176,7 +176,7 @@ Occupancy, 4 Fusion, 5 Tracking.
   on a grid seen from above. **Camera detection with projection fusion**,
   sections 2 and 4: Autoware combines the LiDAR points with the camera's 2D
   detections or with its semantic segmentation. And **radar**.
-- All three feed one **multi-object tracker**, section 5. Prediction, L9,
+- All three feed one **multi-object tracker**, section 5. Prediction, L8,
   follows, and the objects go to planning.
 
 .. note::
@@ -205,15 +205,15 @@ and each part is one level.
    awareness.
 
 .. figure:: /_static/images/L5/sa_pipeline.png
-   :alt: L4's pipeline: Sensors (L2), Perception (L4, L5, highlighted), Prediction (L9), Planning (L10) and Control (L11), joined by arrows, with a curved arrow from Perception straight to Planning labeled drivable area, lanes, lights. Braces above: Level 1 perception and Level 2 comprehension over Perception; Level 3 projection over Prediction; a larger brace labeled Situation awareness over both. A dashed line separates them from Decision over Planning and Action over Control, labeled outside awareness.
+   :alt: L4's pipeline: Sensors (L2), Perception (L4, L5, highlighted), Prediction (L8), Planning (L9) and Control (L10), joined by arrows, with a curved arrow from Perception straight to Planning labeled drivable area, lanes, lights. Braces above: Level 1 perception and Level 2 comprehension over Perception; Level 3 projection over Prediction; a larger brace labeled Situation awareness over both. A dashed line separates them from Decision over Planning and Action over Control, labeled outside awareness.
    :width: 80%
    :align: center
 
    Endsley's levels over L4's pipeline. **Level 1** (perception) and **Level
    2** (comprehension) sit over Perception (L4, L5); **Level 3**
-   (projection) over Prediction (L9). Together they are **situation
+   (projection) over Prediction (L8). Together they are **situation
    awareness**. Past the dashed line, outside awareness: **Decision** over
-   Planning (L10) and **Action** over Control (L11). The curved arrow carries
+   Planning (L9) and **Action** over Control (L10). The curved arrow carries
    the drivable area, the lanes and the lights straight to planning.
 
 - **Level 1, perception:** what is around the AV and where. It sits over the
@@ -222,7 +222,7 @@ and each part is one level.
   doing. It starts in perception too: that is tracking, the last section
   today.
 - **Level 3, projection:** where each object will be in the next few
-  seconds. That is the prediction box, L9.
+  seconds. That is the prediction box, L8.
 
 **In the AV's terms,** for a car cutting in ahead (car B, next section):
 Level 1 is a car 12 m ahead and 2 m to the right. Level 2 is the same car as
@@ -231,7 +231,7 @@ in the next seconds.
 
 Endsley's model shows SA "as a stage separate from decision making and
 performance". So the dashed line is where awareness ends: planning is the
-decision (L10) and control is the action (L11). Planning and control use the
+decision (L9) and control is the action (L10). Planning and control use the
 picture; they are not part of it. A planner can only be as good as the
 picture it is given.
 
@@ -2498,7 +2498,7 @@ have** (map frame: :math:`x` along the road, :math:`y` left; positions chosen
 for this example):
 
 - C's message, *pedestrian 15 m ahead, 3 m left of me*, with C's own pose,
-  :math:`(100, 0)` facing :math:`+x`, from C's localization (L7);
+  :math:`(100, 0)` facing :math:`+x`, from C's localization (L6);
 - the AV's own position, :math:`(70, 0)`, from its localization.
 
 **Computed here:**
@@ -2609,7 +2609,7 @@ Tracking
   detection belongs to which filter. The hard part is not the filter; it is
   that decision.
 - **What it is for:** Level 2 of situation awareness: identity and velocity,
-  which prediction (L9) needs.
+  which prediction (L8) needs.
 
 .. admonition:: Definition: track
    :class: note
@@ -2710,7 +2710,7 @@ box continues which track? The tracker answers in four steps, on every frame.
   The pairing is where trackers fail, and managing the rest decides when a
   track starts and when it ends.
 - **The output:** confirmed tracks, each with an ID, a position and a
-  velocity, go to prediction (L9) and planning.
+  velocity, go to prediction (L8) and planning.
 
 **SORT**, "Simple Online and Realtime Tracking" (Bewley et al., 2016), is
 this loop on image boxes, with the Hungarian algorithm for the pairing, which
@@ -3099,10 +3099,10 @@ Next Class
      association with the NIS gate, and a lifecycle that keeps identity
      stable.
 
-- **L7, Localization and SLAM:** where the AV itself is. We needed that twice
+- **L6, Localization and SLAM:** where the AV itself is. We needed that twice
   today without saying so: the CSA example needed the sender's position, and
   the tracker's fixed frame needs the AV's.
-- **Level 3, projection,** where everyone will be in a few seconds, is L9,
+- **Level 3, projection,** where everyone will be in a few seconds, is L8,
   Prediction.
 
 **Before next class**

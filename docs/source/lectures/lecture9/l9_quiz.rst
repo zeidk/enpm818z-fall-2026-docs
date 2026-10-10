@@ -13,12 +13,11 @@ Quiz
    through this page is good preparation for one. Memorising the answers
    below is not.
 
-This quiz covers the key concepts from Lecture 9: Prediction &
-Behavior Modeling, including trajectory prediction approaches
-(physics-based, maneuver-based, interaction-aware, Transformer-
-based), scene encoding, multi-modal prediction metrics, FSM behavior
-planning, rule-based vs. learned decision-making, and practical
-decision-making in traffic.
+This quiz covers the key concepts from Lecture 9: Motion Planning,
+including the planning hierarchy, bicycle kinematic model,
+graph-based planners (Dijkstra, A*, Weighted A*), sampling-based
+planners (RRT, RRT*, PRM), lattice-based planning, collision
+detection, and diffusion-based planning.
 
 .. note::
 
@@ -41,327 +40,302 @@ Multiple Choice
 .. admonition:: Question 1
    :class: hint
 
-   At a busy intersection, an autonomous vehicle must decide
-   whether to proceed or yield. The minimum prediction horizon
-   it needs to reason about crossing agents is approximately:
+   In the three-tier autonomous vehicle planning hierarchy, which tier
+   is responsible for deciding whether the vehicle should change lanes
+   or yield to an oncoming vehicle?
 
-   A. 0.5 seconds
+   A. Route planning (Tier 1)
 
-   B. 1 second
+   B. Behavior planning (Tier 2)
 
-   C. 5--8 seconds
+   C. Motion planning (Tier 3)
 
-   D. 30 seconds
+   D. Trajectory planning (a separate fourth tier)
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- 5--8 seconds.
+   **B** -- Behavior planning (Tier 2).
 
-   A vehicle crossing at 50 km/h (14 m/s) takes roughly 3--5 s
-   to cross a 40--70 m intersection. The ego vehicle also needs
-   time to accelerate and clear the intersection. In total,
-   5--8 s of prediction is needed to safely evaluate whether
-   to proceed. Sub-second prediction is sufficient only for
-   emergency braking (collision imminent); it is far too short
-   for intersection negotiation.
+   Behavior planning operates at the intersection scale and decides
+   *how* the vehicle interacts with other agents -- lane-keeping,
+   lane-change, yield, stop. Route planning selects which roads to
+   use. Motion planning finds a collision-free geometric path within
+   the maneuver envelope defined by the behavior planner. Trajectory
+   planning (covered in L10) adds the time dimension to the path.
 
 
 .. admonition:: Question 2
    :class: hint
 
-   The Constant Turn Rate and Acceleration (CTRA) model predicts
-   agent trajectories using which measured quantities?
+   The bicycle kinematic model describes vehicle heading change as:
 
-   A. Position, heading, yaw rate, and longitudinal acceleration
+   .. math::
 
-   B. Position, velocity, jerk, and mass
+      \dot{\theta} = \frac{v}{L} \tan\delta
 
-   C. GPS coordinates and map-matched lane ID
+   If the wheelbase :math:`L = 2.7` m, speed :math:`v = 10` m/s,
+   and the steering angle :math:`\delta = 0.15` rad, what is
+   :math:`\dot{\theta}` (approximately)?
 
-   D. Optical flow from a front-facing camera
+   A. 0.055 rad/s
+
+   B. 0.55 rad/s
+
+   C. 5.5 rad/s
+
+   D. 0.0055 rad/s
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **A** -- Position, heading, yaw rate, and longitudinal
-   acceleration.
+   **B** -- Approximately 0.55 rad/s.
 
-   CTRA assumes constant yaw rate :math:`\omega` and constant
-   longitudinal acceleration :math:`a`, integrating these over
-   time to extrapolate the future position and heading. These
-   quantities can be measured directly from the IMU (yaw rate)
-   and from differentiated GPS or odometry (acceleration).
-   CTRA outperforms CV in curved motion but still fails when
-   agents change intent (e.g., braking at a stop sign).
+   .. math::
+
+      \dot{\theta} = \frac{10}{2.7} \tan(0.15) \approx
+      3.70 \times 0.1501 \approx 0.556 \text{ rad/s}
+
+   At this heading rate the vehicle completes roughly one full turn
+   every 11 seconds, consistent with a gentle highway curve at
+   36 km/h.
 
 
 .. admonition:: Question 3
    :class: hint
 
-   In maneuver-based prediction, the intent classification step
-   is limited because:
+   A* search is guaranteed to find the optimal path when:
 
-   A. Intent classifiers require GPU hardware not available
-      on embedded automotive platforms.
+   A. The heuristic overestimates the true cost-to-go by at most 10%.
 
-   B. The discrete maneuver set is hand-designed and cannot
-      cover all real-world behaviors; transitions between
-      maneuvers are abrupt.
+   B. The heuristic is admissible (never overestimates the true
+      cost-to-go).
 
-   C. Intent classification requires access to the agent's
-      internal state (acceleration pedal position).
+   C. The graph has no negative edge weights.
 
-   D. Classifiers require at least 10 seconds of agent history.
+   D. The goal node is expanded before any other node with higher
+      :math:`f`-value.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- The discrete maneuver set is hand-designed and
-   cannot cover all real-world behaviors; transitions are abrupt.
+   **B** -- The heuristic is admissible (never overestimates).
 
-   Any hand-crafted maneuver taxonomy (lane keep, lane change,
-   stop, etc.) is an approximation of the continuous space of
-   possible agent behaviors. Rare behaviors (abrupt U-turns,
-   cyclists entering the road from a sidewalk) fall outside
-   the predefined set. Additionally, the boundary between
-   maneuver classes produces a step-change in predicted
-   trajectory, which is physically implausible.
+   Admissibility ensures that whenever a node is expanded, its
+   :math:`g`-value is already optimal. An overestimating heuristic
+   can cause A* to expand the goal prematurely with a suboptimal
+   cost. Note: non-negative edge weights are required by Dijkstra
+   but A* inherits this requirement too; however, the critical
+   guarantee for *optimality specifically* is admissibility of
+   the heuristic.
 
 
 .. admonition:: Question 4
    :class: hint
 
-   MotionTransformer achieves interaction-aware prediction by:
+   Weighted A* with inflation factor :math:`\varepsilon = 3` finds a
+   path of cost 120. What is the tightest guarantee on the optimal
+   path cost?
 
-   A. Simulating all agent interactions using a physics engine
-      and sampling trajectories from the simulation.
+   A. The optimal cost is at least 40.
 
-   B. Using factorized multi-head self-attention over agent
-      and map tokens, allowing each agent to attend to all
-      other agents and road elements.
+   B. The optimal cost is at least 60.
 
-   C. Clustering agent histories into discrete motion modes
-      using k-means and fitting a linear model per cluster.
+   C. The optimal cost is at least 90.
 
-   D. Reusing the ego vehicle's MPC prediction model for
-      surrounding agents.
+   D. No guarantee can be made.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Using factorized multi-head self-attention over
-   agent and map tokens.
+   **A** -- The optimal cost is at least 40.
 
-   The Transformer's self-attention mechanism allows every
-   agent token to exchange information with every other agent
-   token and every map token in each layer. This naturally
-   captures social interactions (yielding, gap acceptance,
-   following) without explicitly modeling pairwise interactions.
-   Factorized attention reduces the :math:`O(N^2)` cost by
-   separating agent-to-agent and agent-to-map attention.
+   Weighted A* guarantees that the returned cost is at most
+   :math:`\varepsilon` times the optimal cost:
+
+   .. math::
+
+      \text{cost}_{returned} \leq \varepsilon \cdot \text{cost}^*
+      \implies 120 \leq 3 \cdot \text{cost}^*
+      \implies \text{cost}^* \geq 40
+
+   The optimal cost is therefore at least 40 (it could be anywhere
+   in :math:`[40, 120]`).
 
 
 .. admonition:: Question 5
    :class: hint
 
-   The MinADE_K metric evaluates trajectory prediction by:
+   What is the key property that makes RRT* asymptotically optimal
+   but plain RRT is not?
 
-   A. Computing the average displacement error of all K
-      predicted trajectories and averaging over K.
+   A. RRT* uses a bidirectional search from both start and goal.
 
-   B. Selecting the single best prediction (minimum ADE) among
-      the K predictions for each scenario.
+   B. RRT* rewires the tree to reassign parents when a cheaper
+      path to a node is found.
 
-   C. Computing the maximum displacement error across all K
-      predictions.
+   C. RRT* uses a grid-based heuristic instead of random sampling.
 
-   D. Evaluating the calibration of predicted probabilities
-      across K modes.
+   D. RRT* runs Dijkstra on the final tree to extract the path.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Selecting the single best prediction (minimum ADE)
-   among K predictions for each scenario.
+   **B** -- RRT* rewires the tree to reassign parents when a cheaper
+   path to a node is found.
 
-   MinADE_K (also written mADE@K) evaluates the oracle performance:
-   given K predicted trajectories, how well does the best one
-   match the ground truth? This rewards *diversity* -- a system
-   that covers many possible futures will score well even if
-   individual trajectories are not highly probable. Critics of
-   MinADE argue that it ignores probability calibration, which
-   is why mAP is increasingly used alongside it.
+   The two extra steps in RRT* (parent selection within a shrinking
+   radius and tree rewiring) allow the algorithm to continuously
+   improve path cost as more samples are added. Plain RRT only
+   adds edges and never removes or reassigns them, so the first
+   path found is never improved.
 
 
 .. admonition:: Question 6
    :class: hint
 
-   In a highway driving FSM, the transition
-   ``LANE_FOLLOW`` → ``LANE_CHANGE_LEFT`` should be gated on which
-   conditions?
+   A Probabilistic Road Map (PRM) is best described as:
 
-   A. Current speed > 100 km/h only.
+   A. A single-query planner that rebuilds the graph for every new
+      start/goal pair.
 
-   B. Lead vehicle speed is below reference speed AND the left
-      lane has a safe gap > minimum safe distance ahead and
-      behind the ego.
+   B. A multi-query planner that constructs a roadmap offline and
+      reuses it for many queries.
 
-   C. The left turn signal has been on for more than 3 seconds.
+   C. A planner that samples configurations online during execution
+      to react to dynamic obstacles.
 
-   D. The ego vehicle has been in ``LANE_FOLLOW`` for more
-      than 10 seconds.
+   D. An exact planner that guarantees finding the shortest path.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Lead vehicle below reference speed AND safe gap
-   in the left lane.
+   **B** -- A multi-query planner that constructs a roadmap offline
+   and reuses it for many queries.
 
-   Both conditions must hold: there must be a reason to change
-   lanes (blocked by a slow vehicle) and a safe opportunity
-   (gap in the target lane). Gating on speed alone would cause
-   unnecessary lane changes; gating on gap alone would change
-   lanes without motivation. The gap check uses predicted agent
-   positions (from the prediction module) to verify safety
-   for the duration of the lane-change maneuver.
+   PRM's two-phase design (offline construction + online query)
+   amortizes the sampling cost over many planning queries. This
+   makes it efficient for static or semi-static environments
+   where the same roadmap can be queried repeatedly (e.g., a
+   warehouse or structured parking garage).
 
 
 .. admonition:: Question 7
    :class: hint
 
-   Modern learned trajectory predictors (e.g., VectorNet) encode
-   the map and agent histories as **vectorized polylines** rather
-   than rasterized BEV images primarily because:
+   In lattice-based planning for autonomous vehicles, motion
+   primitives are:
 
-   A. Rasterized images cannot be processed by neural networks.
+   A. Computed online at every planning cycle using numerical
+      integration of the bicycle model.
 
-   B. Polylines are a sparse, structured representation that
-      preserves geometric relationships and is far more compute-
-      and memory-efficient than dense image rasters.
+   B. Pre-computed offline kinematically feasible maneuvers stored
+      in a lookup table.
 
-   C. Vectorized inputs remove the need for any map data.
+   C. Straight-line segments connecting adjacent grid cells,
+      ignoring vehicle kinematics.
 
-   D. Rasterization requires LiDAR, which is often unavailable.
+   D. Neural network outputs that map sensor data to control actions.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Polylines are a sparse, structured representation that
-   preserves geometric relationships and is far more compute- and
-   memory-efficient than dense image rasters.
+   **B** -- Pre-computed offline kinematically feasible maneuvers
+   stored in a lookup table.
 
-   Early predictors rendered the HD map and agent tracks into a
-   multi-channel BEV image processed by a CNN, which is wasteful
-   (most pixels are empty) and blurs precise geometry. VectorNet
-   instead represents lanes, crosswalks, and agent tracks as sets
-   of polylines encoded with a graph/attention network, keeping
-   exact coordinates and connectivity at a fraction of the cost.
+   The key advantage of lattice planning is that the expensive
+   kinematic computation (integrating the bicycle model, checking
+   curvature limits) is done once offline. At runtime, planning
+   reduces to pure graph search with O(1) edge lookups, enabling
+   real-time replanning at 20--50 Hz.
 
 
 .. admonition:: Question 8
    :class: hint
 
-   A predictor that outputs an **independent (marginal)** trajectory
-   distribution for each agent can be unsafe for planning because:
+   The Minkowski sum :math:`\mathcal{O} \oplus \mathcal{B}(d)` used
+   in collision detection safety margins:
 
-   A. Marginal predictions are always less accurate than a constant
-      velocity baseline.
+   A. Shrinks the obstacle by radius :math:`d` to create a
+      conservative free space.
 
-   B. The per-agent predictions may be mutually inconsistent -- e.g.,
-      two agents each predicted to occupy the same space, or both
-      predicted to yield to each other.
+   B. Inflates the obstacle boundary outward by radius :math:`d`,
+      equivalent to shrinking the robot to a point.
 
-   C. Marginal predictions cannot be evaluated with MinADE.
+   C. Computes the intersection of the obstacle with a circle of
+      radius :math:`d`.
 
-   D. Marginal predictions require joint LiDAR-camera fusion.
+   D. Rotates the obstacle by angle :math:`d` around its centroid.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- The per-agent predictions may be mutually inconsistent.
+   **B** -- Inflates the obstacle boundary outward by radius
+   :math:`d`.
 
-   Marginal prediction estimates each agent's future in isolation,
-   so the combination of most-likely modes across agents need not
-   form a physically consistent scene: two cars can both be predicted
-   into the same gap, or a "both yield" / "both go" deadlock can
-   appear. Scene-level (joint) prediction models the agents' futures
-   together, producing a self-consistent set of trajectories that a
-   planner can reason about safely.
+   The Minkowski sum with a disk inflates every point on the
+   obstacle boundary outward by :math:`d`. This is equivalent
+   to shrinking the robot to a point and planning in the inflated
+   configuration space -- a standard trick that reduces collision
+   checking to point-in-polygon tests. The safety margin encodes
+   both localization uncertainty and comfort distance.
 
 
 .. admonition:: Question 9
    :class: hint
 
-   The **gap acceptance** problem at an uncontrolled intersection
-   requires predicting:
+   DiffusionDrive (CVPR 2025) achieves real-time performance
+   compared to earlier diffusion planners primarily by:
 
-   A. The traffic light phase remaining time.
+   A. Using a larger neural network with more parameters.
 
-   B. The time gap available in the crossing traffic stream and
-      whether the ego can cross before the next vehicle arrives.
+   B. Running a truncated diffusion schedule starting partway
+      through the denoising chain, reducing denoising steps from
+      ~100 to ~10.
 
-   C. The number of lanes on the cross street.
+   C. Replacing the Transformer encoder with a simpler CNN.
 
-   D. The ego vehicle's braking distance at current speed.
+   D. Only planning for the next 1 second instead of 8 seconds.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- The time gap in the crossing traffic stream and
-   whether the ego can complete the crossing within that gap.
+   **B** -- Using a truncated diffusion schedule starting partway
+   through the denoising chain.
 
-   Gap acceptance is the decision of whether to enter a traffic
-   stream given a current gap. The ego must predict how long
-   the current gap will remain open (based on approaching
-   vehicle speed and distance) and compare it to the time
-   needed to cross (based on ego speed and intersection width).
-   Fixed-threshold rules work poorly because the required gap
-   size depends on ego speed, intersection geometry, and
-   approaching vehicle speed.
+   DiffusionDrive initializes from anchored Gaussian noise
+   (clustered around likely trajectory modes) rather than pure
+   noise, and runs the reverse diffusion process starting from
+   step :math:`T' \ll T`. This dramatically cuts the number of
+   network forward passes required at inference while maintaining
+   trajectory quality, enabling 45 FPS on a single GPU.
 
 
 .. admonition:: Question 10
    :class: hint
 
-   Multi-modal trajectory prediction outputs
-   :math:`K` trajectories with probabilities
-   :math:`\{(\hat{\tau}_k, p_k)\}_{k=1}^K`. A planner uses
-   these to:
+   Which planning algorithm is most appropriate for real-time motion
+   planning on a structured highway road network?
 
-   A. Execute the trajectory with the highest probability
-      :math:`k^* = \arg\max_k p_k` and ignore all others.
+   A. Plain RRT (fast first path)
 
-   B. Generate ego-trajectory candidates evaluated for safety
-      against all predicted agent modes, weighting risk by
-      mode probability.
+   B. PRM (multi-query roadmap)
 
-   C. Compute the average predicted trajectory weighted by
-      probabilities and plan against this mean trajectory.
+   C. Lattice-based planner in Frenet frame
 
-   D. Request more sensor data until prediction uncertainty
-      falls below a threshold.
+   D. Full RRT* (asymptotically optimal)
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Generate ego-trajectory candidates evaluated for
-   safety against all predicted agent modes, weighted by
-   probability.
+   **C** -- Lattice-based planner in Frenet frame.
 
-   Taking only the mode with highest probability ignores the
-   tail risk of other plausible behaviors. The correct approach
-   is to evaluate candidate ego-trajectories against all :math:`K`
-   agent modes and select the ego trajectory that minimizes
-   expected collision risk:
-
-   .. math::
-
-      \hat{\tau}_{\text{ego}} = \arg\min_\tau
-      \sum_k p_k \cdot \mathcal{R}(\tau, \hat{\tau}_k^{\text{agent}})
-
-   This ensures the ego plan is robust to the full distribution
-   of agent futures.
+   Highway driving is highly structured: lanes are well-defined,
+   maneuvers are limited, and replanning must occur at 10--50 Hz.
+   Lattice planners exploit this structure through pre-built
+   road-aligned motion primitives and fast graph search. RRT/RRT*
+   are designed for unstructured spaces and converge slowly. PRM
+   is a multi-query planner but its roadmap is not road-aligned.
 
 
 ----
@@ -373,110 +347,101 @@ True / False
 .. admonition:: Question 11
    :class: hint
 
-   **True or False:** Physics-based trajectory prediction models
-   such as the Constant Velocity (CV) model are accurate for
-   prediction horizons of 5--8 seconds on highway roads.
+   **True or False:** The bicycle model imposes a holonomic
+   constraint, meaning the vehicle can move freely in any direction
+   including sideways.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   CV and CTRA models are accurate for approximately 0.5--1 s
-   on straight roads, where the constant-motion assumption holds.
-   Over 5--8 s, agents frequently change speed, turn, or make
-   lane changes -- all of which violate the CV assumption.
-   Prediction error grows approximately linearly with horizon
-   for CV. At 5 s, CV errors of 10--20 m are common in
-   real traffic, making it unsuitable for intersection
-   negotiation or merge planning.
+   The bicycle model imposes a **nonholonomic** constraint:
+   :math:`\dot{x}\sin\theta - \dot{y}\cos\theta = 0`. This
+   prohibits lateral (sideways) motion. A nonholonomic constraint
+   restricts the instantaneously achievable velocities but not
+   necessarily the reachable configurations over time (the vehicle
+   can parallel-park using a sequence of forward/backward arcs).
 
 
 .. admonition:: Question 12
    :class: hint
 
-   **True or False:** The mAP (mean Average Precision) metric
-   for multi-modal prediction rewards both accurate trajectory
-   positions and well-calibrated probabilities.
+   **True or False:** Dijkstra's algorithm expands nodes in
+   increasing order of their true cost-to-come :math:`g(v)`.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **True**
 
-   mAP treats each predicted mode as a detection: a mode is a
-   true positive if its endpoint is within a distance threshold
-   of the ground truth AND its probability rank is consistent
-   with its precision-recall curve. Unlike MinADE, mAP jointly
-   penalizes both inaccurate trajectories and poor probability
-   estimates, making it a more complete evaluation metric for
-   probabilistic prediction.
+   Dijkstra maintains a min-priority queue keyed on :math:`g(v)`.
+   Each extraction yields the node with the smallest known
+   cost-to-come among unvisited nodes. This is exactly the
+   Bellman optimality condition: once a node is extracted, its
+   :math:`g`-value is optimal (assuming non-negative edge weights).
 
 
 .. admonition:: Question 13
    :class: hint
 
-   **True or False:** A finite state machine behavior planner
-   can, in principle, handle every possible traffic scenario
-   given a sufficiently large number of states and transitions.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **False**
-
-   While an FSM can be made arbitrarily complex, the number of
-   distinct traffic situations grows combinatorially with the
-   number of agents, their states, and environmental conditions.
-   In practice, FSMs are designed for the most common scenarios
-   and fail gracefully in edge cases that were not anticipated
-   during design. The fundamental issue is that traffic scenarios
-   exist on a continuous manifold, not a discrete state space
-   that FSMs naturally represent.
-
-
-.. admonition:: Question 14
-   :class: hint
-
-   **True or False:** A unimodal predictor trained to regress a
-   single trajectory with mean-squared-error loss tends to output
-   the *average* of several distinct possible futures, which can be
-   a trajectory no real agent would take.
+   **True or False:** RRT is probabilistically complete, meaning
+   that given infinite samples it will always find a path if one
+   exists.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **True**
 
-   MSE regression to a single output is minimized by the conditional
-   mean. When the true future is multi-modal (e.g., an agent will
-   either turn left or go straight), the mean of those modes points
-   "up the middle" -- straight into the median island or oncoming
-   lane. This mode-averaging pathology is the core motivation for
-   multi-modal prediction, which outputs several distinct trajectories
-   with probabilities instead of one averaged path.
+   RRT is probabilistically complete. As the number of random
+   samples :math:`N \to \infty`, the probability that the tree
+   fails to reach any reachable configuration goes to zero. This
+   follows from the density of the sampling distribution over
+   :math:`\mathcal{C}_{free}`. However, probabilistic completeness
+   does not guarantee path quality -- RRT finds *a* path, not
+   necessarily a *good* path.
 
 
-.. admonition:: Question 15
+.. admonition:: Question 14
    :class: hint
 
-   **True or False:** The Social Force Model (Helbing & Molnar)
-   is a learning-based prediction approach that uses neural
-   networks to model pedestrian interactions.
+   **True or False:** In diffusion-based planning, the reverse
+   (denoising) process starts from a trajectory drawn from the
+   dataset and gradually removes noise.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**
 
-   The Social Force Model is a **physics-based** approach that
-   uses hand-crafted attractive and repulsive force functions to
-   model pedestrian motion. It does not use neural networks.
-   Forces are computed analytically from relative positions and
-   velocities. While the model can be parameterized and fitted to
-   data, it is not a learning-based approach in the neural network
-   sense. Learning-based social interaction models (e.g.,
-   Social GAN, MotionTransformer) emerged much later.
+   The reverse process starts from **pure Gaussian noise**
+   :math:`\tau_T \sim \mathcal{N}(0, I)` (or, in DiffusionDrive,
+   from anchored noise near likely trajectory clusters). It is the
+   *forward* process that starts from a real trajectory and adds
+   noise. The reverse process is the generative (planning) process
+   that denoises from noise to a plausible trajectory.
+
+
+.. admonition:: Question 15
+   :class: hint
+
+   **True or False:** Inflating obstacle representations by a safety
+   margin :math:`d_{\text{safe}}` is equivalent to planning with a
+   point-mass robot in the inflated configuration space.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **True**
+
+   When all obstacles are inflated by the robot's radius (or
+   safety margin) via the Minkowski sum, the robot can be treated
+   as a point mass for collision checking purposes. Any path that
+   is collision-free for the point mass in the inflated space is
+   also collision-free for the full-size robot in the original
+   space. This simplification is used in virtually all practical
+   motion planners.
 
 
 ----
@@ -488,10 +453,10 @@ Essay Questions
 .. admonition:: Question 16
    :class: hint
 
-   **Compare physics-based, maneuver-based, and learned (Transformer)
-   trajectory prediction.** Describe the strengths and weaknesses of
-   each and the prediction horizon and scenario where each is most
-   appropriate.
+   **Compare RRT and A* as motion planners for an autonomous
+   vehicle navigating a structured urban environment.** Address
+   completeness, optimality, computational efficiency, and
+   suitability for real-time replanning.
 
    *(2-4 sentences)*
 
@@ -500,31 +465,29 @@ Essay Questions
 
    *Key points to include:*
 
-   - Physics-based (CV, CTRA): no training data, interpretable, and
-     accurate for very short horizons (0.5--1 s) and simple motion.
-     Weakness: assumes constant motion, so it fails during turns,
-     stops, and any intent change; unusable beyond ~2 s.
-   - Maneuver-based: classifies a discrete intent (lane keep, turn,
-     stop) then predicts a trajectory per maneuver. Strength: adds
-     semantic structure and multi-modality. Weakness: the hand-designed
-     maneuver set cannot cover all behaviors and produces abrupt
-     class-boundary transitions.
-   - Learned/Transformer (MotionTransformer, VectorNet): jointly
-     encodes agents and map with attention, producing interaction-aware,
-     multi-modal predictions accurate to 5--8 s. Strength: state of the
-     art in complex urban interaction. Weakness: needs large datasets,
-     is less interpretable, and can fail out of distribution.
-   - Practical takeaway: short-horizon safety fallbacks often use a
-     physics model, while the primary predictor for planning in urban
-     ODDs is a learned interaction-aware model.
+   - A* on a pre-built road graph is complete and optimal
+     (with an admissible heuristic) and runs in milliseconds
+     on sparse road graphs, making it well-suited for real-time
+     replanning in structured environments.
+   - RRT is probabilistically complete but not optimal; it
+     explores uniformly in all directions including off-road
+     areas, making it inefficient when the environment has
+     exploitable structure (lanes, intersections).
+   - For structured urban driving, A* (or lattice search) is
+     strongly preferred. RRT is better suited to unstructured
+     spaces (parking, off-road) where a road-graph abstraction
+     does not exist.
+   - Weighted A* with :math:`\varepsilon > 1` reduces the number
+     of expanded nodes at the cost of a bounded suboptimality,
+     making it the practical choice for real-time urban planning.
 
 
 .. admonition:: Question 17
    :class: hint
 
-   **Explain why single-trajectory prediction is insufficient for
-   autonomous driving and what multi-modal prediction provides.**
-   Contrast how MinADE_K and mAP evaluate a multi-modal predictor.
+   **Explain the concept of asymptotic optimality in RRT* and
+   why it matters for practical motion planning.** What is the
+   trade-off between RRT and RRT* in a time-constrained setting?
 
    *(2-4 sentences)*
 
@@ -533,31 +496,29 @@ Essay Questions
 
    *Key points to include:*
 
-   - A single predicted trajectory collapses genuinely ambiguous
-     futures (turn vs. straight, yield vs. go) into one path, and an
-     MSE-trained regressor averages those modes into an implausible
-     "middle" trajectory. Planning against a single wrong future is
-     unsafe.
-   - Multi-modal prediction outputs K trajectories with probabilities
-     :math:`\{(\hat{\tau}_k, p_k)\}`, each representing a distinct
-     behavioral hypothesis, so the planner can hedge against all
-     plausible agent intents.
-   - MinADE_K is an oracle metric: it scores only the best-matching of
-     the K modes, rewarding coverage/diversity but ignoring whether the
-     probabilities are calibrated.
-   - mAP treats each mode as a detection and jointly rewards accurate
-     endpoints and well-ranked probabilities, so it penalizes an
-     overconfident wrong mode. Reporting both gives a fuller picture:
-     MinADE for coverage, mAP for calibration.
+   - Asymptotic optimality means that as the number of samples
+     :math:`N \to \infty`, the cost of the RRT* path converges
+     to the true optimal cost. For any finite :math:`N`, RRT*
+     provides a path that is at least as good as RRT's.
+   - RRT* achieves this through the parent-selection and rewiring
+     steps that continuously improve the tree structure as new
+     samples are added.
+   - The trade-off: RRT* does more work per sample (neighbor
+     search within radius :math:`r_N`), so it runs slower than
+     RRT for a fixed time budget. In time-constrained scenarios
+     RRT might find a feasible path faster.
+   - In practice, RRT* is used for offline planning or as an
+     *anytime* algorithm: run it until the time budget expires
+     and return the best path found so far.
 
 
 .. admonition:: Question 18
    :class: hint
 
-   **Describe the MotionTransformer architecture for trajectory
-   prediction.** Explain how the attention mechanism enables
-   interaction-aware prediction and what the multi-modal output
-   represents.
+   **Describe how diffusion-based planners differ from classical
+   optimization-based motion planners.** What advantages do they
+   offer for complex multi-agent scenarios, and what are their
+   current limitations?
 
    *(2-4 sentences)*
 
@@ -566,24 +527,21 @@ Essay Questions
 
    *Key points to include:*
 
-   - MotionTransformer uses a two-stage Transformer architecture:
-     a global motion Transformer encodes all agents and map
-     polylines jointly using factorized self-attention; a local
-     motion Transformer decodes :math:`K` trajectory modes per
-     agent using a set of learnable motion query pairs.
-   - The self-attention mechanism allows every agent token to
-     attend to every other agent and every map element in each
-     layer. Attention weights implicitly represent how much
-     each agent's future depends on neighboring agents and road
-     geometry -- capturing merging, following, and yielding
-     interactions without explicit pairwise modeling.
-   - The multi-modal output :math:`\{(\hat{\tau}_k, p_k)\}` represents
-     :math:`K` plausible future trajectories and their probabilities.
-     Each mode corresponds to a different behavioral hypothesis
-     (e.g., turn left vs. go straight vs. stop), allowing the
-     planner to reason about the full distribution of possible
-     agent behaviors.
-   - MotionTransformer achieves state-of-the-art performance on
-     the Waymo Open Motion Dataset benchmark, demonstrating that
-     joint attention over all scene elements is a powerful
-     inductive bias for trajectory prediction.
+   - Classical optimization-based planners define an explicit
+     cost function (e.g., path length + smoothness + safety
+     margin) and solve a constrained optimization problem. They
+     are interpretable and can encode hard constraints but
+     struggle with multi-modal distributions over possible
+     futures.
+   - Diffusion planners learn a generative model of plausible
+     trajectories from expert data. The denoising process
+     implicitly captures the multi-modal distribution of human
+     driving behavior and can generate diverse, interaction-
+     consistent plans.
+   - Advantages: handles complex interactions without hand-crafted
+     cost functions; naturally multi-modal (can represent
+     uncertainty over which maneuver to take).
+   - Limitations: require large, high-quality training datasets;
+     inference is more expensive than classical planners;
+     safety guarantees are harder to formally prove; behavior
+     can be hard to interpret or correct when it fails.

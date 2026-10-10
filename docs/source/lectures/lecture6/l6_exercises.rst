@@ -11,20 +11,20 @@ Exercises
    work, which is the five in-class quizzes and the four group projects
    listed in the :doc:`syllabus </syllabus/index>`.
 
-This page contains take-home exercises that reinforce the concepts
-from Lecture 6. Exercises cover Kalman filter tracking, the Hungarian
-algorithm, multi-object tracker comparison, and tracking metrics.
+This page contains five take-home exercises that reinforce the concepts
+from Lecture 6. Exercises cover coordinate transforms, odometry drift,
+ICP registration, and SLAM evaluation.
 
 
-.. dropdown:: Exercise 1 -- Kalman Filter Tracking (Pen and Paper)
+.. dropdown:: Exercise 1 -- Coordinate Frame Transforms
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Work through two full Kalman filter predict-update cycles by hand
-   to build intuition for state estimation.
+   Practice converting between GNSS (geodetic) coordinates and local
+   ENU coordinates, and constructing SE(2) transformation matrices.
 
 
    .. raw:: html
@@ -34,45 +34,36 @@ algorithm, multi-object tracker comparison, and tracking metrics.
 
    **Specification**
 
-   A tracked vehicle has state
-   :math:`\mathbf{x} = [x, v_x]^T` (1D position and velocity).
+   A vehicle is at GNSS coordinates **(lat 38.9897, lon -76.9378,
+   alt 50 m)**. The local ENU origin is at **(lat 38.9900, lon
+   -76.9380, alt 50 m)**.
 
-   - Motion model:
-     :math:`F = \begin{bmatrix} 1 & \Delta t \\ 0 & 1 \end{bmatrix}`
-   - Measurement model: :math:`H = [1 \;\; 0]` (observe position only)
-   - Initial state: :math:`\mathbf{x}_0 = [0, 5]^T`
-   - Initial covariance:
-     :math:`P_0 = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}`
-   - Process noise:
-     :math:`Q = \begin{bmatrix} 0.1 & 0 \\ 0 & 0.1 \end{bmatrix}`
-   - Measurement noise: :math:`R = [2]`
-   - Time step: :math:`\Delta t = 1` s
+   1. Convert the vehicle's position to **ENU coordinates** using:
 
-   Perform **two full predict-update cycles** with measurements
-   :math:`z_1 = 4.5` m and :math:`z_2 = 10.2` m.
+      - :math:`\Delta E \approx \Delta\text{lon} \times \cos(\text{lat}) \times 111{,}320` m
+      - :math:`\Delta N \approx \Delta\text{lat} \times 110{,}540` m
 
-   For each cycle, show:
+   2. The vehicle's heading is **45° from North** (clockwise). Write
+      the **3 × 3 SE(2) homogeneous transformation matrix**
+      :math:`T_{\text{vehicle}}^{\text{ENU}}`.
 
-   1. **Predicted state** :math:`\hat{\mathbf{x}}^-` and
-      **predicted covariance** :math:`P^-`.
-   2. **Kalman gain** :math:`K`.
-   3. **Updated state** :math:`\hat{\mathbf{x}}^+` and
-      **updated covariance** :math:`P^+`.
+   3. A LiDAR point at ``(5, 2, 0)`` in the vehicle frame -- what are
+      its **ENU coordinates**?
 
    **Deliverable**
 
-   Complete hand calculations for both cycles (show all matrix
-   operations).
+   All conversions and matrix operations shown with numerical results.
 
 
-.. dropdown:: Exercise 2 -- Hungarian Algorithm
+.. dropdown:: Exercise 2 -- Odometry Drift Analysis
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Practice the detection-to-track association step used in SORT.
+   Quantify odometry drift rates and reason about their impact on
+   long-range navigation without GNSS.
 
 
    .. raw:: html
@@ -82,45 +73,35 @@ algorithm, multi-object tracker comparison, and tracking metrics.
 
    **Specification**
 
-   At time :math:`t`, three tracked objects have predicted positions:
+   A vehicle drives a 500 m loop and returns to the start. Three
+   odometry sources report the following final position errors:
 
-   - Track A: (10, 20)
-   - Track B: (30, 15)
-   - Track C: (50, 40)
+   - **Wheel odometry**: 12.5 m error
+   - **Visual odometry (stereo)**: 3.2 m error
+   - **LiDAR odometry**: 0.8 m error
 
-   Four new detections arrive:
-
-   - D1: (11, 21)
-   - D2: (52, 38)
-   - D3: (31, 14)
-   - D4: (70, 60)
-
-   1. Compute the **Euclidean distance cost matrix** (3 tracks ×
-      4 detections).
-   2. Apply a **gating threshold** of 10 m -- mark which assignments
-      are impossible.
-   3. Find the **optimal assignment** (by inspection or using
-      ``scipy.optimize.linear_sum_assignment``).
-   4. Which detection is **unmatched**? What should the tracker do
-      with it?
-   5. If Track C had no valid match (all distances > 10 m), how many
-      consecutive frames of no match before the track should be
-      **deleted**?
+   1. Compute the **drift rate** (% of distance traveled) for each.
+   2. If the vehicle must drive **10 km** without GNSS (tunnel + urban
+      canyon), what is the expected error from each source?
+   3. Name **two physical causes** of wheel odometry drift.
+   4. Would fusing wheel + LiDAR odometry help? Explain using the
+      concept of complementary information.
+   5. At what drift rate does localization become **unsafe for lane
+      keeping** (assume lane width = 3.7 m)?
 
    **Deliverable**
 
-   Cost matrix, gated matrix, optimal assignment, and written answers.
+   Drift rate table, projected 10 km errors, and written answers.
 
 
-.. dropdown:: Exercise 3 -- SORT vs. ByteTrack
+.. dropdown:: Exercise 3 -- ICP Registration
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Compare SORT and ByteTrack tracking performance in CARLA and
-   understand why the second association pass helps.
+   Understand and implement the ICP algorithm using Open3D.
 
 
    .. raw:: html
@@ -130,48 +111,42 @@ algorithm, multi-object tracker comparison, and tracking metrics.
 
    **Specification**
 
-   Create the file ``tracker_comparison.py`` that performs the
-   following:
+   Create the file ``icp_exercise.py`` that performs the following:
 
-   1. Spawn traffic in a busy intersection (Town03 or Town05, 30+
-      vehicles).
-   2. Implement a **basic SORT tracker** using the lecture code (Kalman
-      filter + Hungarian matching at confidence > 0.5).
-   3. Run for **200 frames** and count the number of **ID switches**.
-   4. Modify the tracker to implement **ByteTrack's two-pass
-      association**:
-
-      - First pass: match high-confidence detections (> 0.5).
-      - Second pass: match low-confidence detections (0.2--0.5) to
-        remaining unmatched tracks.
-
-   5. Run ByteTrack on the same 200 frames and count ID switches.
-   6. Print a comparison:
-
-      .. code-block:: text
-
-         SORT:      ID switches = ??
-         ByteTrack: ID switches = ??
+   1. Generate a synthetic **source point cloud**: a 10 m × 10 m
+      plane with 1000 random points and Gaussian noise
+      (:math:`\sigma = 0.02` m).
+   2. Create a **target point cloud** by applying a known
+      transformation to the source: translation ``(1.0, 0.5, 0.0)``
+      and rotation of ``5°`` about the z-axis.
+   3. Run ``o3d.pipelines.registration.registration_icp`` with
+      ``TransformationEstimationPointToPlane`` (estimate normals
+      first).
+   4. Print the **recovered transformation** and compare it to the
+      ground-truth transform.
+   5. Report the **fitness score** and **inlier RMSE**.
 
    **Written analysis**
 
-   Explain in 3--5 sentences **why** the second pass helps during
-   occlusions.
+   - What happens if you increase the rotation to 45°? Does ICP still
+     converge?
+   - Name two strategies to improve convergence for large initial
+     displacements.
 
    **Deliverable**
 
-   The script, comparison results, and written analysis.
+   The script, printed results, and written analysis.
 
 
-.. dropdown:: Exercise 4 -- Tracking Metrics Computation
+.. dropdown:: Exercise 4 -- SLAM Evaluation with EVO
    :icon: gear
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Compute MOTA from tracking results and reason about acceptable
-   performance thresholds.
+   Run a SLAM frontend in CARLA and evaluate trajectory accuracy
+   using standard metrics.
 
 
    .. raw:: html
@@ -181,64 +156,66 @@ algorithm, multi-object tracker comparison, and tracking metrics.
 
    **Specification**
 
-   Given the following tracking results over 5 frames:
+   1. Run the SLAM frontend from the lecture on a **60-second drive**
+      in Town03 (ICP-based scan matching).
+   2. Record the **ground-truth trajectory** from CARLA at each
+      timestep.
+   3. Save both trajectories in **TUM format**:
+      ``timestamp tx ty tz qx qy qz qw``.
+   4. Use the ``evo`` tool to compute:
 
-   .. list-table::
-      :widths: 12 16 16 20 20 16
-      :header-rows: 1
-      :class: compact-table
+      .. code-block:: console
 
-      * - Frame
-        - GT
-        - Matched
-        - Missed (FN)
-        - False pos (FP)
-        - ID switches
-      * - 1
-        - 4
-        - 3
-        - 1
-        - 1
-        - 0
-      * - 2
-        - 4
-        - 4
-        - 0
-        - 0
-        - 0
-      * - 3
-        - 5
-        - 3
-        - 2
-        - 2
-        - 1
-      * - 4
-        - 5
-        - 4
-        - 1
-        - 1
-        - 0
-      * - 5
-        - 4
-        - 4
-        - 0
-        - 0
-        - 1
+         evo_ape tum gt.txt est.txt -p --save_results ape.zip
+         evo_rpe tum gt.txt est.txt -p --save_results rpe.zip
 
-   1. Compute **MOTA** using:
+   5. Report: **mean APE**, **max APE**, **mean RPE**.
 
-      .. math::
+   **Written analysis**
 
-         \text{MOTA} = 1 - \frac{\sum(\text{FN} + \text{FP} + \text{IDSW})}{\sum \text{GT}}
-
-   2. Is this a good MOTA score? What value is typically considered
-      acceptable for autonomous driving?
-   3. Which frame has the worst performance? What might have caused
-      the spike in errors?
-   4. If you could improve only one component (reduce FN, reduce FP,
-      or reduce IDSW), which would have the largest impact on MOTA?
+   Is the drift accumulating **linearly** or **accelerating**? What
+   would a loop closure add to this pipeline?
 
    **Deliverable**
 
-   MOTA calculation with all intermediate sums shown, plus written
-   answers.
+   Both trajectory files, EVO output plots, metrics, and analysis.
+
+
+.. dropdown:: Exercise 5 -- Loop Closure Impact
+   :icon: gear
+   :class-container: sd-border-primary
+   :class-title: sd-font-weight-bold
+
+   **Goal**
+
+   Reason about the role of loop closure in SLAM and the dangers of
+   false loop closures.
+
+
+   .. raw:: html
+
+      <hr>
+
+
+   **Specification**
+
+   Consider a pose graph with 100 nodes (poses) connected by 99
+   sequential odometry edges.
+
+   1. Draw a simple **pose graph** with 5 nodes and 4 sequential
+      edges. Add a **loop closure edge** from node 5 back to node 1.
+   2. Before optimization, node 5 has drifted **2 m** from its true
+      position. After pose graph optimization, the correction is
+      distributed across all nodes. What is the **approximate
+      per-node correction** (assume uniform distribution)?
+   3. In the 100-node graph, if the accumulated drift at node 100 is
+      **5 m**, what is the per-node correction after a loop closure
+      from node 100 to node 1?
+   4. Why can a **single false loop closure** be catastrophic for the
+      entire map?
+   5. Name **two methods** used to verify loop closure candidates
+      before adding them to the pose graph.
+
+   **Deliverable**
+
+   Pose graph sketch, calculations, and written answers.

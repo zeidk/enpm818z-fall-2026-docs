@@ -41,28 +41,28 @@ slides are finished; the table shows the plan.
    * - L5
      - Perception II: 3D Detection, BEV, Fusion & Tracking
      - Situational awareness (Endsley's three levels); 3D detection (PointPillars, CenterPoint, nuScenes NDS); semantic segmentation of the road; Bird's-Eye View (IPM, Lift-Splat-Shoot, BEVFormer, temporal BEV); 3D occupancy; fusion architectures, camera-LiDAR frustum association and BEVFusion; cooperative situational awareness and V2X; multi-object tracking with the L3 Kalman filter, data association, track lifecycle and the Tempe case; how each is used in industry
-   * - L7
+   * - L6
      - Localization & SLAM
      - GNSS/RTK, dead reckoning, visual/LiDAR odometry, probabilistic localization (EKF from L3), SLAM frontend (ICP, feature extraction), SLAM backend (pose graphs, loop closure)
-   * - L8
+   * - L7
      - Navigation & Route Planning
      - Road network graphs, OpenDRIVE/Lanelet2 maps, HD maps, global route planning (Dijkstra, A*), lane-level routing, dynamic rerouting, CARLA GlobalRoutePlanner
-   * - L9
+   * - L8
      - Prediction & Behavior Modeling
      - Trajectory prediction (physics-based, maneuver-based, interaction-aware, Transformer-based), multi-modal prediction, behavior planning, FSM, rule-based vs learned decision-making
-   * - L10
+   * - L9
      - Motion Planning
-     - Planning hierarchy, vehicle kinematic models, A*, Dijkstra, RRT, PRM, lattice planners, collision detection, diffusion-based planning (consumes L9 predictions)
-   * - L11
+     - Planning hierarchy, vehicle kinematic models, A*, Dijkstra, RRT, PRM, lattice planners, collision detection, diffusion-based planning (consumes L8 predictions)
+   * - L10
      - Trajectory Generation & Control
      - Path vs. trajectory, polynomial and spline generation, optimization-based planning, MPC, Pure Pursuit, Stanley controller, real-time replanning
-   * - L12
+   * - L11
      - End-to-End Driving, VLA & Imitation Learning
      - UniAD, DriveTransformer, Vision-Language-Action (VLA) models, DriveVLM, modular vs. end-to-end debate, behavior cloning, distribution shift, DAgger
-   * - L13
+   * - L12
      - Simulation, Scenario-Based Testing & World Models
      - Scenario-based testing, functional/logical/concrete scenarios, OpenSCENARIO, ISO 34500 series, test pyramid (MIL/SIL/HIL/VIL), open vs. closed loop, re-simulation, CARLA driving score, world models (GAIA-1 to GAIA-4, Cosmos, Vista)
-   * - L14
+   * - L13
      - System Integration, Safety & Industry Outlook
      - AV system architecture, middleware, ISO 26262, SOTIF, UNECE GTR on ADS, V2X, industry trends, course wrap-up
 
@@ -80,7 +80,7 @@ slides are finished; the table shows the plan.
 ..
    Hidden until each deck is finished (see HIDDEN_LECTURES in conf.py).
    To reopen a lecture, move its line back into the toctree above.
-   lecture6/l6_index   (not in the current syllabus: L5 replaced it)
+   lecture6/l6_index
    lecture7/l7_index
    lecture8/l8_index
    lecture9/l9_index
@@ -88,4 +88,3 @@ slides are finished; the table shows the plan.
    lecture11/l11_index
    lecture12/l12_index
    lecture13/l13_index
-   lecture14/l14_index

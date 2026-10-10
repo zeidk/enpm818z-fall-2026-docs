@@ -67,7 +67,7 @@ Multiple Choice (Questions 1 to 21)
    Level 1, perception, is what is around the AV and where: 3D boxes, the
    road, the grid from above. Level 2, comprehension, is which object is
    which and what each one is doing. It starts in perception too, with
-   tracking. Level 3, projection, is prediction (L9). Planning (**C**) is
+   tracking. Level 3, projection, is prediction (L8). Planning (**C**) is
    the decision, which Endsley places outside awareness, as "a stage
    separate from decision making and performance". See
    :ref:`l5-lec-sa`.

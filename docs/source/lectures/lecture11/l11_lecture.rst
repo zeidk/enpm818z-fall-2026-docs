@@ -2,796 +2,792 @@
 Lecture
 ====================================================
 
-Path vs. Trajectory
-====================================================
 
-A **path** is a purely geometric object: a curve in configuration
-space parameterized by arc length or an arbitrary monotone
-parameter. It specifies *where* the vehicle goes but says nothing
-about *when* it gets there.
+The Fundamental Debate: Modular vs. End-to-End
+-----------------------------------------------
 
-A **trajectory** adds the time dimension by attaching a velocity
-(or time) profile to the path, specifying the vehicle's state
-at every point in time.
+The autonomous driving community has long debated two competing architectural
+philosophies for building a complete ADS stack.
 
-.. list-table:: Path vs. Trajectory
+.. tab-set::
+
+   .. tab-item:: Modular Pipeline
+
+      The **modular pipeline** decomposes the driving task into a sequence of
+      specialized subsystems:
+
+      1. **Perception** -- Detects and classifies objects, estimates 3-D bounding
+         boxes, segments the scene.
+      2. **Prediction** -- Forecasts future trajectories of agents.
+      3. **Planning** -- Generates a safe, comfortable trajectory for the ego
+         vehicle.
+      4. **Control** -- Converts the planned trajectory into actuator commands
+         (steering, throttle, brake).
+
+      Each module is developed and validated independently, with structured
+      intermediate representations (object lists, maps, trajectories) passed
+      between stages.
+
+   .. tab-item:: End-to-End
+
+      An **end-to-end** (E2E) system replaces the hand-engineered pipeline with
+      a single model (or tightly coupled set of models) that maps raw sensor
+      inputs directly to driving actions or waypoints.
+
+      - Sensors (cameras, LiDAR, radar) feed directly into a neural network.
+      - The network learns all intermediate representations implicitly.
+      - The output is typically a set of planned waypoints or direct actuator
+        commands.
+
+.. list-table:: Modular vs. End-to-End Trade-offs
+   :widths: 25 38 37
    :header-rows: 1
-   :widths: 20 40 40
-
-   * - Property
-     - Path
-     - Trajectory
-   * - Parameterization
-     - Arc length :math:`s`
-     - Time :math:`t`
-   * - Specifies position
-     - Yes
-     - Yes
-   * - Specifies velocity
-     - No
-     - Yes
-   * - Specifies acceleration
-     - No
-     - Yes (implicitly)
-   * - Feasibility check
-     - Kinematic (curvature)
-     - Kinematic + dynamic (accel limits)
-   * - Controller input
-     - Steering only
-     - Steering + throttle/brake
-
-Trajectory Requirements
------------------------
-
-A trajectory :math:`\tau(t) = (x(t), y(t), \theta(t), v(t))`
-must satisfy:
-
-- **Continuity:** The position curve must be at least :math:`C^2`
-  -- that is, continuous position (:math:`C^0`), continuous heading
-  (the first derivative), and continuous curvature (the second
-  derivative). A curvature discontinuity forces an instantaneous
-  steering-wheel jump, which is both infeasible and uncomfortable.
-  Trajectories built from quintic polynomials satisfy this at
-  segment boundaries by construction.
-- **Kinematic feasibility:** Curvature bounded by
-  :math:`|\kappa(t)| \leq \kappa_{\max}` everywhere.
-- **Dynamic feasibility:** Longitudinal acceleration bounded by
-  :math:`|a(t)| \leq a_{\max}` and lateral acceleration by
-  :math:`|a_\perp(t)| \leq a_{\perp,\max}`.
-- **Comfort:** Jerk (rate of change of acceleration) bounded
-  by :math:`|\dot{a}(t)| \leq j_{\max}`.
-- **Safety:** No collision with obstacles for all
-  :math:`t \in [0, T]`.
-
-.. admonition:: Comfort Metrics
-   :class: tip
-
-   Autonomous vehicle comfort standards typically require
-   lateral acceleration :math:`\leq 2\text{ m/s}^2` and
-   longitudinal jerk :math:`\leq 2\text{ m/s}^3` for a
-   smooth passenger experience.
-
-Polynomial Trajectory Generation
-====================================================
-
-Polynomial trajectories represent each state component as a
-polynomial in time, with coefficients chosen to satisfy boundary
-conditions.
-
-
-Quintic Polynomials
--------------------
-
-Formulation
-~~~~~~~~~~~
-
-A **quintic (5th-degree) polynomial** for a single coordinate
-:math:`q(t)`:
-
-.. math::
-
-   q(t) = a_0 + a_1 t + a_2 t^2 + a_3 t^3 + a_4 t^4 + a_5 t^5
-
-has 6 free coefficients. Given boundary conditions at
-:math:`t=0` and :math:`t=T`:
-
-.. math::
-
-   q(0) &= q_0, \quad \dot{q}(0) = \dot{q}_0, \quad
-   \ddot{q}(0) = \ddot{q}_0 \\
-   q(T) &= q_f, \quad \dot{q}(T) = \dot{q}_f, \quad
-   \ddot{q}(T) = \ddot{q}_f
-
-these six conditions uniquely determine the six coefficients
-by solving a linear system :math:`A\mathbf{a} = \mathbf{b}`:
-
-.. math::
-
-   \begin{bmatrix}
-   1 & 0 & 0 & 0 & 0 & 0 \\
-   0 & 1 & 0 & 0 & 0 & 0 \\
-   0 & 0 & 2 & 0 & 0 & 0 \\
-   1 & T & T^2 & T^3 & T^4 & T^5 \\
-   0 & 1 & 2T & 3T^2 & 4T^3 & 5T^4 \\
-   0 & 0 & 2 & 6T & 12T^2 & 20T^3
-   \end{bmatrix}
-   \begin{bmatrix} a_0 \\ a_1 \\ a_2 \\ a_3 \\ a_4 \\ a_5 \end{bmatrix}
-   =
-   \begin{bmatrix} q_0 \\ \dot{q}_0 \\ \ddot{q}_0 \\
-   q_f \\ \dot{q}_f \\ \ddot{q}_f \end{bmatrix}
-
-Quintic polynomials are the minimum degree that can match
-position, velocity, **and** acceleration at both endpoints,
-guaranteeing :math:`C^2` continuity between trajectory segments.
-
-Frenet-Frame Polynomial Planning
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-In highway driving, trajectories are planned in the **Frenet
-frame** :math:`(s, d)` where :math:`s` is longitudinal distance
-along the road centerline and :math:`d` is lateral offset.
-
-Separate quintic polynomials are fit for :math:`s(t)` and
-:math:`d(t)`, then the Frenet trajectory is converted back to
-Cartesian coordinates using the road geometry.
-
-**Candidate generation:** multiple trajectory candidates are
-generated by varying the terminal conditions
-:math:`(d_f, \dot{d}_f, T)` over a discrete grid. Each
-candidate is evaluated by a cost function:
-
-.. math::
-
-   J = w_s J_{\text{safety}} + w_c J_{\text{comfort}}
-     + w_e J_{\text{efficiency}}
-
-The lowest-cost collision-free candidate is selected.
-
-Spline-Based Trajectories
-====================================================
-
-Splines are piecewise polynomial curves that achieve smooth
-interpolation through a sequence of waypoints.
-
-
-Cubic Splines
--------------
-
-Natural Cubic Spline
-~~~~~~~~~~~~~~~~~~~~
-
-A **cubic spline** through waypoints
-:math:`(t_0, q_0), \ldots, (t_n, q_n)` consists of :math:`n`
-cubic polynomials :math:`S_i(t)` on each interval
-:math:`[t_i, t_{i+1}]`, subject to:
-
-- :math:`C^0`: :math:`S_i(t_{i+1}) = S_{i+1}(t_{i+1})`
-- :math:`C^1`: :math:`S_i'(t_{i+1}) = S_{i+1}'(t_{i+1})`
-- :math:`C^2`: :math:`S_i''(t_{i+1}) = S_{i+1}''(t_{i+1})`
-
-The resulting linear system is tridiagonal and solved in
-:math:`O(n)` time. The **natural spline** additionally sets
-:math:`S''(t_0) = S''(t_n) = 0`.
-
-Cubic splines minimize the bending energy:
-
-.. math::
-
-   \int_{t_0}^{t_n} \left[S''(t)\right]^2 dt
-
-making them the smoothest interpolant for a given set of
-waypoints.
-
-B-Splines
----------
-
-B-Spline Properties
-~~~~~~~~~~~~~~~~~~~
-
-**B-splines** are piecewise polynomials defined by a knot
-vector and control points. Unlike interpolating splines,
-B-splines are **approximating**: the curve passes near (but
-not necessarily through) the control points.
-
-Key properties for trajectory planning:
-
-- **Local support:** Moving one control point affects only
-  :math:`k+1` spans (where :math:`k` is the spline degree),
-  enabling efficient local editing.
-- **Convex hull property:** The curve lies within the convex
-  hull of its control points -- useful for conservative
-  collision checking.
-- **Continuity:** A degree-:math:`k` B-spline is
-  :math:`C^{k-1}` everywhere (and :math:`C^{k-p}` at a
-  knot of multiplicity :math:`p`).
-
-B-splines are widely used in AV systems for smooth lane
-centerline representation and trajectory reference generation.
-
-Optimization-Based Trajectory Planning
-====================================================
-
-Optimization-based planners formulate trajectory generation as a
-constrained optimization problem.
-
-Cost Function Design
---------------------
-
-A general trajectory optimization cost:
-
-.. math::
-
-   \min_{\tau} \; \int_0^T \left[
-     w_1 \|\dot{v}(t)\|^2
-     + w_2 \|\kappa(t)\|^2
-     + w_3 d_{\text{obs}}(\tau(t))^{-1}
-     + w_4 \|v(t) - v_{\text{ref}}(t)\|^2
-   \right] dt
-
-where the four terms penalize:
-
-1. Longitudinal jerk (comfort)
-2. Curvature (path smoothness)
-3. Proximity to obstacles (safety)
-4. Speed deviation from reference (efficiency)
-
-Constraints
------------
-
-Hard constraints ensure physical feasibility:
-
-- Kinematic: :math:`|\kappa(t)| \leq \kappa_{\max}`
-- Speed: :math:`v_{\min} \leq v(t) \leq v_{\max}`
-- Acceleration: :math:`|a(t)| \leq a_{\max}`
-- Collision: :math:`d_{\text{obs}}(\tau(t)) \geq d_{\min}`
-
-The resulting problem is a **nonlinear program (NLP)** for
-general cost functions, or a **quadratic program (QP)** when
-the cost is quadratic and constraints are linearized --
-the latter enables real-time solving.
-
-Model Predictive Control (MPC)
-====================================================
-
-MPC is the dominant trajectory-following framework in production
-autonomous vehicles, combining planning and control in a
-receding-horizon optimization loop.
-
-MPC Formulation
----------------
-
-At time :math:`t_k`, MPC solves:
-
-.. math::
-
-   \min_{u_0, \ldots, u_{N-1}} \quad
-   \sum_{i=0}^{N-1} \ell(x_i, u_i) + V_f(x_N)
-
-subject to:
-
-.. math::
-
-   x_{i+1} &= f(x_i, u_i), \quad i = 0, \ldots, N-1 \\
-   x_0 &= x_{\text{current}} \\
-   x_i &\in \mathcal{X}, \quad u_i \in \mathcal{U}
-
-where:
-
-- :math:`x_i = (x, y, \theta, v)_i` is the predicted state
-- :math:`u_i = (\delta, a)_i` is the control input
-  (steering, acceleration)
-- :math:`N` is the prediction horizon
-- :math:`\ell` is the stage cost (tracking error + control effort)
-- :math:`V_f` is the terminal cost
-- :math:`f` is the discrete-time bicycle model
-
-Receding Horizon Principle
---------------------------
-
-MPC applies only the **first control action** :math:`u_0^*`
-from the optimal sequence, then resolves the optimization at
-the next time step with updated state information.
-
-.. admonition:: Why Receding Horizon?
+   :class: compact-table
+
+   * - Dimension
+     - Modular Pipeline
+     - End-to-End
+   * - **Interpretability**
+     - High -- each module can be inspected
+     - Low -- internal representations are opaque
+   * - **Debuggability**
+     - Failures are localizable to a module
+     - Hard to attribute failures to causes
+   * - **Joint optimization**
+     - Absent -- each module optimized separately
+     - Full -- gradients flow across the entire stack
+   * - **Information loss**
+     - Present at each module boundary
+     - Minimal -- raw data preserved throughout
+   * - **Data requirements**
+     - Moderate per module
+     - Massive -- billions of labeled driving miles
+   * - **Validation**
+     - Module-level + integration testing
+     - Requires comprehensive scenario coverage
+   * - **Regulatory acceptance**
+     - Mature frameworks available
+     - Open research question
+
+
+Information Loss at Module Boundaries
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A key theoretical argument for end-to-end approaches is the **information loss
+problem**: when perception outputs a discretized object list, geometric
+uncertainty, rare edge cases, and subtle scene context that did not fit the
+output schema are permanently discarded before the planner ever sees them.
+
+.. admonition:: Example
    :class: note
 
-   Applying the full pre-computed sequence open-loop ignores
-   disturbances and model errors. By re-solving at every step,
-   MPC becomes a **feedback** controller: errors are corrected
-   before they accumulate. The optimization produces a plan,
-   but execution is always closed-loop.
-
-Prediction Horizon and Tuning
------------------------------
-
-.. list-table:: MPC Tuning Parameters
-   :header-rows: 1
-   :widths: 25 20 20 35
-
-   * - Parameter
-     - Typical value
-     - Effect if increased
-     - Trade-off
-   * - Prediction horizon :math:`N`
-     - 10--50 steps
-     - Better foresight
-     - Larger QP, slower solve
-   * - Control horizon :math:`M \leq N`
-     - :math:`N/2`
-     - More control freedom
-     - Larger QP
-   * - :math:`Q` (state cost weight)
-     - Diagonal matrix
-     - Tighter tracking
-     - More aggressive control
-   * - :math:`R` (control cost weight)
-     - Diagonal matrix
-     - Smoother inputs
-     - Larger tracking error
-
-Real-Time Solving
------------------
-
-For real-time AV control at 10--50 Hz:
-
-- **Linear MPC:** Linearize the bicycle model around the
-  reference trajectory. The resulting QP is solved in
-  milliseconds with active-set or interior-point solvers
-  (e.g., OSQP, qpOASES).
-- **Nonlinear MPC (NMPC):** Use the full nonlinear model.
-  Requires sequential quadratic programming (SQP) or
-  interior-point methods. Feasible at ~10 Hz with warm starting.
-- **Code generation:** Tools like ACADO, acados, or CasADi
-  generate C code for embedded MPC solvers running on
-  automotive ECUs.
-
-Pure Pursuit Controller
-====================================================
-
-Pure Pursuit is a geometric path-following controller that steers
-the vehicle toward a **lookahead point** on the reference path.
-
-Algorithm
----------
-
-1. Find the reference path point at lookahead distance :math:`L_d`
-   ahead of the rear axle.
-2. Compute the curvature :math:`\kappa` required to arc from the
-   current rear-axle position to the lookahead point.
-3. Command the steering angle that produces this curvature.
-
-The required curvature is:
-
-.. math::
-
-   \kappa = \frac{2 \sin\alpha}{L_d}
-
-where :math:`\alpha` is the angle between the vehicle heading
-and the line from the rear axle to the lookahead point.
-
-Converting to steering angle via the bicycle model:
-
-.. math::
-
-   \delta = \arctan\!\left(\frac{2 L \sin\alpha}{L_d}\right)
-
-Lookahead Distance
-------------------
-
-The lookahead distance :math:`L_d` is the key tuning parameter:
-
-- **Too small:** The controller chases the path point aggressively,
-  causing oscillation.
-- **Too large:** The controller cuts corners and tracks slowly.
-
-A common adaptive rule:
-
-.. math::
-
-   L_d = k_v \cdot v
-
-where :math:`k_v \approx 0.1`--:math:`0.3` s. This scales
-the lookahead with speed, giving consistent behavior across
-speed ranges.
-
-.. admonition:: Steady-State Error
-   :class: warning
-
-   Pure Pursuit has a **lateral steady-state error** at high
-   speed or high curvature because the lookahead geometry
-   approximates a circle, not the true path. This error is
-   proportional to :math:`L_d^2 / R` where :math:`R` is the
-   path radius.
-
-Stanley Controller
-====================================================
-
-The Stanley controller, originally developed for the DARPA
-Grand Challenge (Stanford Racing Team), combines heading error
-and cross-track error.
-
-Formulation
------------
-
-The steering command is:
-
-.. math::
-
-   \delta(t) = \psi_e(t) + \arctan\!\left(
-   \frac{k \cdot e(t)}{v(t)}\right)
-
-where:
-
-- :math:`\psi_e` is the **heading error** (angle between
-  vehicle heading and path tangent at the nearest point)
-- :math:`e` is the **cross-track error** (signed lateral
-  distance from the front axle to the nearest path point)
-- :math:`k` is a gain constant
-- :math:`v` is the vehicle speed
-
-Interpretation
---------------
-
-The two terms serve distinct roles:
-
-- :math:`\psi_e`: aligns the vehicle with the path tangent --
-  zero heading error implies zero steady-state cross-track error
-  asymptotically.
-- :math:`\arctan(k e / v)`: corrects the cross-track error
-  directly. The :math:`1/v` factor makes the correction
-  proportional to the time needed to travel a fixed distance,
-  providing speed-consistent response.
-
-.. admonition:: Stanley vs Pure Pursuit
-   :class: tip
-
-   **Accuracy.** Stanley drives cross-track error to zero even
-   under constant curvature; Pure Pursuit retains a residual
-   lateral offset that grows with curvature and lookahead.
-
-   **Stability.** The trade-off runs the other way. Stanley's
-   :math:`1/v` term means the corrective gain *grows* as speed
-   rises, so an un-gain-scheduled Stanley controller tends to
-   oscillate at highway speed -- the original DARPA application was
-   moderate-speed desert driving. Pure Pursuit with a
-   speed-scheduled lookahead (:math:`L_d = k_v v`) is inherently
-   damped at speed and is the more common highway choice.
-
-   **Practical guidance.** Use Pure Pursuit when robustness and
-   simplicity matter (and accept the corner-cutting); use Stanley
-   when tracking accuracy matters at low-to-moderate speed, and
-   gain-schedule :math:`k` with speed if you run it fast. Both are
-   superseded by MPC when you can afford the compute, because MPC
-   handles actuator limits and preview explicitly.
-
-PID Longitudinal Control
-====================================================
-
-Longitudinal speed control is typically handled by a PID controller
-tracking the reference speed profile :math:`v_{\text{ref}}(t)`.
-
-PID Formulation
----------------
-
-The speed error is:
-
-.. math::
-
-   e_v(t) = v_{\text{ref}}(t) - v(t)
-
-The PID control output (throttle/brake command :math:`u`):
-
-.. math::
-
-   u(t) = K_p e_v(t) + K_i \int_0^t e_v(\tau)\,d\tau
-        + K_d \dot{e}_v(t)
-
-In discrete time (sample period :math:`\Delta t`):
-
-.. math::
-
-   u_k = K_p e_k + K_i \sum_{j=0}^{k} e_j \Delta t
-       + K_d \frac{e_k - e_{k-1}}{\Delta t}
-
-**Gain tuning heuristics (Ziegler-Nichols):**
-
-.. list-table::
-   :header-rows: 1
-   :widths: 20 20 20 20
-
-   * - Controller
-     - :math:`K_p`
-     - :math:`K_i`
-     - :math:`K_d`
-   * - P only
-     - :math:`0.5 K_u`
-     - 0
-     - 0
-   * - PD
-     - :math:`0.8 K_u`
-     - 0
-     - :math:`K_p T_u / 8`
-   * - PID
-     - :math:`0.6 K_u`
-     - :math:`2K_p / T_u`
-     - :math:`K_p T_u / 8`
-
-where :math:`K_u` is the ultimate gain and :math:`T_u` the
-ultimate period at the stability boundary.
-
-Anti-Windup
------------
-
-Integrator **windup** occurs when the vehicle is at max throttle
-or max brake (actuator saturation) but the integrator continues
-to accumulate error, leading to large overshoot when the
-constraint is released.
-
-Anti-windup strategies:
-
-- **Clamping:** Freeze the integrator when the output is
-  saturated.
-- **Back-calculation:** Subtract a correction proportional to
-  the difference between the saturated and unsaturated output.
-
-.. code-block:: python
-
-   # Discrete PID with clamping anti-windup
-   def pid_step(e, e_prev, integral, dt, Kp, Ki, Kd,
-                u_min=-1.0, u_max=1.0):
-       u_unsat = Kp * e + Ki * integral + Kd * (e - e_prev) / dt
-       u = max(u_min, min(u_max, u_unsat))
-       if u == u_unsat:  # not saturated: update integral
-           integral += e * dt
-       return u, integral
-
-Controller Comparison
-====================================================
-
-.. list-table:: Lateral Controller Comparison
-   :header-rows: 1
-   :widths: 20 15 15 15 15 20
-
-   * - Controller
-     - Steady-state error
-     - Computation
-     - High-speed perf.
-     - Tuning effort
-     - Use case
-   * - Pure Pursuit
-     - Yes (curvature-dependent)
-     - O(1)
-     - Good with speed-scheduled :math:`L_d`
-     - Low (1 param)
-     - Highway, robust general-purpose tracking
-   * - Stanley
-     - No
-     - O(1)
-     - Needs gain scheduling (:math:`1/v` term)
-     - Low (1 gain)
-     - Low-to-moderate speed, accuracy-critical tracking
-   * - Linear MPC
-     - No
-     - O(N³) per solve
-     - Excellent
-     - High (Q, R, N)
-     - High-performance, comfort-critical
-   * - Nonlinear MPC
-     - No
-     - O(N³) per solve (NLP)
-     - Excellent
-     - High
-     - Precision parking, low-speed
-
-
-Emergency Maneuver Synthesis
-====================================================
-
-Emergency Stopping
-------------------
-
-When an obstacle is detected within the braking distance,
-the planner must generate an emergency stop trajectory:
-
-.. math::
-
-   v(t) = v_0 - a_{\max} t, \quad
-   d_{\text{stop}} = \frac{v_0^2}{2 a_{\max}}
-
-The stopping distance :math:`d_{\text{stop}}` must be less than
-the clearance to the obstacle. Typical :math:`a_{\max} = 6\text{ m/s}^2`
-for emergency braking.
-
-Emergency Lane Change
----------------------
-
-An emergency lane change to avoid a stationary obstacle:
-
-1. Generate candidate lateral trajectories to adjacent lanes
-   using quintic polynomials.
-2. Check each candidate for kinematic feasibility and collision
-   clearance.
-3. Select the feasible candidate with minimum lateral jerk.
-
-The maneuver must complete before the obstacle is reached:
-
-.. math::
-
-   T_{\text{maneuver}} \leq \frac{d_{\text{clearance}}}{v_{\text{ego}}}
-
-CARLA Implementation Exercise
-====================================================
-
-.. admonition:: Exercise: Lane Following and Obstacle Avoidance
-   :class: note
-
-   **Goal:** Implement a trajectory-following system in CARLA that
-   maintains a target speed while following a lane centerline
-   and braking for static obstacles.
-
-   **Tasks:**
-
-   1. **Reference extraction:** Use ``carla.Map.get_waypoint()``
-      to extract the lane centerline ahead of the ego vehicle
-      as a sequence of waypoints.
-
-   2. **Stanley lateral controller:** Implement the Stanley
-      controller using the ego vehicle's current pose and the
-      nearest waypoint as the cross-track reference.
-
-   3. **PID longitudinal controller:** Implement a PID speed
-      controller targeting :math:`v_{\text{ref}} = 30` km/h,
-      with emergency braking when an obstacle is detected within
-      :math:`d_{\text{stop}}`.
-
-   4. **Obstacle detection:** Use the CARLA ``LidarSensor`` or
-      bounding-box API to detect static actors within the
-      planned corridor.
-
-   5. **Integration:** Run the full control loop at 20 Hz.
-      Log cross-track error, heading error, and speed error
-      over a 60-second run.
-
-   **Starter code:**
-
-   .. warning::
-
-      Two details break most first attempts at this controller:
-
-      1. **Stanley is defined at the front axle**, not the vehicle
-         origin. ``vehicle.get_transform().location`` is the vehicle
-         centre -- you must project forward by half the wheelbase.
-         Using the centre degrades the controller's convergence
-         guarantee and produces persistent corner-cutting.
-      2. **CARLA uses a left-handed frame** (x forward, y to the
-         *right*, yaw positive clockwise when viewed from above). The
-         cross-track sign convention that works in a textbook
-         right-handed frame is inverted here. The code below derives
-         the sign from an explicit cross product and includes an
-         assertion you can use to check it empirically.
-
-   .. code-block:: python
-
-      import carla
-      import math
-
-      def get_front_axle(vehicle):
-          """Front-axle position: vehicle origin projected forward by L/2."""
-          tf = vehicle.get_transform()
-          # Wheelbase from the physics model rather than a hard-coded guess
-          phys = vehicle.get_physics_control()
-          front = phys.wheels[0].position   # cm, world frame
-          rear = phys.wheels[2].position
-          L = front.distance(rear) / 100.0  # -> metres
-          fwd = tf.get_forward_vector()
-          return carla.Location(
-              x=tf.location.x + fwd.x * L / 2.0,
-              y=tf.location.y + fwd.y * L / 2.0,
-              z=tf.location.z), L
-
-      def max_steer_rad(vehicle):
-          """Read the real steering limit instead of assuming 70 deg."""
-          phys = vehicle.get_physics_control()
-          return math.radians(phys.wheels[0].max_steer_angle)
-
-      def stanley_control(vehicle, waypoints, k=0.5, k_soft=1.0):
-          """Stanley lateral controller (front-axle reference, CARLA frame)."""
-          tf = vehicle.get_transform()
-          v = vehicle.get_velocity()
-          speed = math.sqrt(v.x**2 + v.y**2)
-
-          fx_loc, _ = get_front_axle(vehicle)
-
-          # Nearest path point TO THE FRONT AXLE (not the vehicle centre)
-          nearest = min(waypoints,
-              key=lambda wp: fx_loc.distance(wp.transform.location))
-
-          path_yaw = math.radians(nearest.transform.rotation.yaw)
-          tx = math.cos(path_yaw)          # path tangent
-          ty = math.sin(path_yaw)
-
-          # Vector from path point to front axle
-          dx = fx_loc.x - nearest.transform.location.x
-          dy = fx_loc.y - nearest.transform.location.y
-
-          # Signed cross-track error via 2-D cross product tangent x offset.
-          # In CARLA's left-handed frame this is positive when the vehicle
-          # is to the RIGHT of the path, so the steering correction below
-          # must push left -- hence the leading minus sign.
-          e = -(tx * dy - ty * dx)
-
-          # Heading error, wrapped to [-pi, pi]
-          ego_yaw = math.radians(tf.rotation.yaw)
-          psi_e = math.atan2(math.sin(path_yaw - ego_yaw),
-                             math.cos(path_yaw - ego_yaw))
-
-          # Stanley law; k_soft keeps the term finite at standstill
-          delta = psi_e + math.atan2(k * e, speed + k_soft)
-
-          return max(-1.0, min(1.0, delta / max_steer_rad(vehicle)))
-
-   .. admonition:: Verify the sign before you tune
-      :class: tip
-
-      Do not tune ``k`` until the sign is confirmed. Place the vehicle
-      deliberately about 1 m to the **right** of the lane centre,
-      stationary, and print ``e`` and ``delta``. You should see
-      ``e < 0`` and a **left** (negative) steer command driving the car
-      back to the centreline. If the car steers away from the path,
-      flip the sign on ``e`` -- do not compensate by negating ``k``,
-      which would also invert the heading term's interaction.
-
-Summary
-====================================================
+   A modular system that represents a pedestrian as a 3-D bounding box cannot
+   convey that the pedestrian is holding a ball that may roll into the road.
+   An end-to-end system working on raw images can, in principle, learn to
+   condition its plan on such subtle visual cues.
+
+
+UniAD: Planning-Oriented Autonomous Driving (CVPR 2023)
+-------------------------------------------------------
+
+UniAD was a landmark result that demonstrated that **unifying all driving tasks
+in a single end-to-end model** outperforms carefully tuned specialized modules
+on every sub-task.
+
+Architecture
+~~~~~~~~~~~~
+
+UniAD introduces a hierarchical query-based architecture built on a shared BEV
+backbone:
+
+.. code-block:: text
+
+   Camera inputs (multi-view)
+         |
+   BEV Feature Encoder (BEVFormer)
+         |
+   ┌─────┴──────────────────────────────────────────┐
+   │  TrackFormer   → Agent Tracking Queries        │
+   │  MapFormer     → Map Element Queries           │
+   │  MotionFormer  → Multi-modal Motion Queries    │
+   │  OccFormer     → Occupancy Grid Queries        │
+   │  Planner       → Ego Trajectory Waypoints      │
+   └────────────────────────────────────────────────┘
+
+Each downstream module receives **queries** -- learned embeddings that
+accumulate task-specific features from the shared BEV representation via
+cross-attention.
+
+Key Contributions
+~~~~~~~~~~~~~~~~~
 
 .. grid:: 1 2 2 2
    :gutter: 3
 
-   .. grid-item-card:: Generation
-      :class-card: sd-border-primary
+   .. grid-item-card:: Unified Query Propagation
+      :class-card: sd-border-info
 
-      - Path (geometry, arc length :math:`s`) vs trajectory (adds time)
-      - Quintic polynomials: 6 coefficients match position, velocity and
-        acceleration at both ends, giving :math:`C^2` joins
-      - Planned in the Frenet :math:`(s, d)` frame from **L10**: fit
-        :math:`s(t)` and :math:`d(t)` separately, sample terminal
-        conditions, score, pick the cheapest collision-free candidate
-      - Splines: cubic (interpolating, minimum bending energy) vs
-        B-spline (approximating, local support, convex hull)
+      Agent tracking queries flow downstream to the motion forecasting module,
+      which then informs occupancy prediction, which informs the planner. This
+      creates an explicit information flow that mimics the intuitive reasoning
+      chain a human driver uses.
 
-   .. grid-item-card:: Control
-      :class-card: sd-border-primary
+   .. grid-item-card:: Planning-Centric Loss
+      :class-card: sd-border-info
 
-      - Pure Pursuit: :math:`\delta = \arctan(2L\sin\alpha / L_d)`;
-        residual error, but damped at speed
-      - Stanley: :math:`\delta = \psi_e + \arctan(k e / v)`; zero
-        steady-state error, needs gain scheduling at speed
-      - PID longitudinal: always pair with anti-windup
-      - MPC: receding horizon, handles constraints and preview
-        explicitly; linear MPC solves a QP in milliseconds
+      All sub-task losses are co-optimized with a planning loss, so every
+      component is incentivized to produce representations that ultimately
+      improve the planned trajectory rather than just maximizing its own
+      metric in isolation.
 
-.. admonition:: Not covered here
-   :class: note
+   .. grid-item-card:: CVPR 2023 SOTA
+      :class-card: sd-border-info
 
-   Two production concerns sit just beyond this lecture and matter as
-   soon as you leave simulation:
+      UniAD achieved state-of-the-art results on nuScenes across tracking,
+      mapping, motion prediction, occupancy, and planning simultaneously --
+      the first single model to do so.
 
-   - **Actuator latency.** Real steering and brake actuators respond
-     with 100--300 ms of delay. Controllers compensate by predicting
-     the state forward by one dead time before computing the command;
-     MPC absorbs this naturally by shifting the reference.
-   - **Lateral dynamics.** Everything here is *kinematic* -- it assumes
-     no tire slip. Above roughly 0.4 g of lateral acceleration a
-     dynamic bicycle model with a linear tire model (cornering
-     stiffness, slip angles) is required.
+   .. grid-item-card:: Influence
+      :class-card: sd-border-info
 
-.. admonition:: Assignment Unlocked -- GP4: Planning & Control
+      UniAD became the foundation for a wave of follow-on work (SparseDrive,
+      DriveTransformer) and is widely cited as the model that proved the
+      end-to-end paradigm works at the systems level.
+
+Performance Snapshot
+~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 35 35 30
+   :header-rows: 1
+   :class: compact-table
+
+   * - Task
+     - Metric
+     - UniAD Result
+   * - 3-D Object Tracking
+     - AMOTA
+     - 0.359
+   * - Motion Forecasting
+     - minADE
+     - ~0.7 m
+   * - Occupancy Prediction
+     - IoU
+     - ~63% (near) / ~40% (far)
+   * - Planning
+     - Average L2 over 1/2/3 s
+     - ~1.0 m (rising to ~1.65 m at 3 s)
+
+.. warning::
+
+   **Check these against the paper before quoting them.** Reported
+   numbers for UniAD vary considerably between the original paper,
+   subsequent reproductions, and re-evaluations under corrected
+   protocols -- especially the planning L2 figures, which depend heavily
+   on whether ego status is fed to the model. Treat the table above as
+   indicative of magnitude, not as citable values.
+
+.. admonition:: Open-loop planning metrics are weaker evidence than they look
    :class: important
 
-   You now have the foundational knowledge from **L8, L10, and L11** to begin
-   **GP4: Planning & Control**. In GP4 you will implement A* path planning
-   on the CARLA waypoint graph, Pure Pursuit and PID controllers, and a
-   behavioral state machine -- closing the loop on a fully autonomous
-   driving pipeline.
+   Before accepting "UniAD achieves 1.0 m L2, therefore end-to-end
+   works," note the critique that followed. **AD-MLP** (Zhai et al.,
+   2023) and the paper *"Is Ego Status All You Need for Open-Loop
+   End-to-End Autonomous Driving?"* (Li et al., CVPR 2024) showed that a
+   trivial MLP fed **only the ego vehicle's own state** -- no camera
+   input at all -- matches or beats sophisticated E2E models on the
+   nuScenes open-loop L2 metric.
 
-   :doc:`Go to GP4 </assignments/gp4>`
+   The reason is that nuScenes driving is overwhelmingly "continue doing
+   what you were just doing." Extrapolating your own recent motion is
+   therefore a very strong baseline, and the metric rewards it. The
+   models may still be learning something real, but **this benchmark
+   cannot demonstrate it**.
+
+   The field's response has been to move toward closed-loop evaluation
+   (nuPlan, CARLA leaderboards, NAVSIM), where the policy's own actions
+   determine the states it subsequently sees, and compounding error --
+   the failure mode from behavior cloning later in this lecture --
+   actually shows up. When you read any planning result, the first
+   question is: **open-loop or closed-loop?**
+
+
+DriveTransformer (ICLR 2025)
+-----------------------------
+
+DriveTransformer extended the UniAD paradigm with a key architectural
+insight: **a single set of attention operations can simultaneously serve all
+driving tasks** rather than using separate specialized decoder heads.
+
+Shared Attention Mechanism
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In UniAD, each task head applies cross-attention to the BEV features
+independently. DriveTransformer instead defines **three unified token types**:
+
+- **Agent tokens** -- represent moving objects (vehicles, pedestrians).
+- **Map tokens** -- represent static scene elements (lanes, crosswalks).
+- **Ego token** -- represents the autonomous vehicle itself.
+
+All tokens attend to each other and to raw sensor features in a **single
+joint attention block**, repeated across multiple layers.
+
+.. admonition:: Why This Matters
+   :class: tip
+
+   By sharing attention computations across tasks, DriveTransformer eliminates
+   the redundant feature extraction that each separate head in UniAD performs.
+   This leads to a **3x throughput improvement** over UniAD at equivalent
+   performance -- a critical difference for real-time deployment where inference
+   must complete in under 50 ms.
+
+Throughput Comparison
+~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 35 30 35
+   :header-rows: 1
+   :class: compact-table
+
+   * - Model
+     - Relative throughput
+     - Planning quality
+   * - UniAD
+     - 1x (baseline)
+     - baseline
+   * - DriveTransformer
+     - ~3x
+     - comparable or slightly better
+
+.. note::
+
+   The throughput ratio is the meaningful claim here and is what the
+   paper argues for. Absolute FPS depends entirely on GPU, batch size,
+   resolution, and precision, so it is not quoted. Apply the open-loop
+   caveat above to the planning column as well.
+
+.. note::
+
+   DriveTransformer was accepted at ICLR 2025, and subsequent industrial
+   implementations have pushed throughput further with quantization and
+   hardware-specific optimization.
+
+
+Vision-Language-Action (VLA) Models
+------------------------------------
+
+The emergence of large language models (LLMs) and vision-language models
+(VLMs) has opened a new direction in autonomous driving: embedding
+**natural language reasoning** directly into the driving loop.
+
+What Is a VLA Model?
+~~~~~~~~~~~~~~~~~~~~~
+
+A **Vision-Language-Action (VLA)** model takes visual input (camera images,
+BEV features) and conditions its output on language -- either explicit
+text commands or implicit chain-of-thought reasoning -- before producing
+driving actions or waypoints.
+
+.. code-block:: text
+
+   [Camera images] + [Language context / CoT]
+            |
+   Vision-Language Model backbone (e.g., LLaVA, InternVL)
+            |
+   [Action decoder] → Waypoints / control signals
+
+Chain-of-Thought Reasoning for Driving
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Rather than directly regressing waypoints, VLA systems can generate an
+intermediate **textual reasoning trace** that makes their logic auditable:
+
+.. code-block:: text
+
+   "The pedestrian on the left is looking toward the road and is likely
+    to cross. The traffic light ahead is yellow. I should slow down
+    and prepare to stop at the crosswalk."
+    → [decelerate, target_speed=0, stop_distance=12m]
+
+This chain-of-thought approach offers several benefits:
+
+- The reasoning trace is **human-readable**, dramatically improving
+  interpretability over pure neural planners.
+- The model can be queried in natural language to **explain a past
+  decision** (important for incident investigation).
+- Language supervision provides a rich additional training signal beyond
+  imitation labels.
+
+NVIDIA Alpamayo
+~~~~~~~~~~~~~~~
+
+NVIDIA Alpamayo is a VLA model for driving released in 2025 as part of
+NVIDIA's DRIVE platform. Key features:
+
+- Built on a large vision-language backbone fine-tuned on driving data.
+- Produces **driving decisions conditioned on natural language scene
+  descriptions** generated by the model itself.
+- Integrated with NVIDIA's end-to-end DRIVE stack and evaluated in
+  CARLA and on-road in partnership with automotive OEMs.
+- Supports **free-form language commands** from the passenger or dispatcher
+  (e.g., "take the scenic route" or "avoid the highway").
+
+DriveVLM
+~~~~~~~~~
+
+DriveVLM (Tsinghua University with Li Auto, 2024) demonstrated that:
+
+- A VLM backbone can successfully ground visual driving scenes to language.
+- Chain-of-thought driving -- scene description, then analysis, then
+  hierarchical planning -- outperforms direct waypoint regression on rare
+  and complex scenarios where standard E2E models fail.
+- A **dual-system** design is what makes it practical: the slow VLM
+  reasons about the scene while a fast conventional planner runs at
+  control rate, because a large VLM cannot itself meet a 10 Hz deadline.
+
+.. note::
+
+   **Wayve** pursues a related but distinct line of work: LINGO-1 and
+   LINGO-2 add natural-language commentary and instruction-following to
+   their driving models. Do not conflate the two -- they are different
+   groups with different architectures.
+
+
+Tesla's End-to-End Approach
+----------------------------
+
+Tesla represents the most large-scale industrial deployment of end-to-end
+driving principles.
+
+The FSD v12 Architecture
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Starting with FSD v12 (2024), Tesla replaced its modular pipeline with a
+**fully neural, camera-only end-to-end system**:
+
+.. code-block:: text
+
+   8 Cameras (1280×960 @ 36 FPS each)
+         |
+   Video encoder (space-time transformers per camera)
+         |
+   BEV feature fusion (cross-camera attention)
+         |
+   Occupancy & flow prediction
+         |
+   Planning transformer (waypoint sequence)
+         |
+   Low-level PID / MPC controller
+         |
+   Steering, throttle, brake actuators
+
+Key characteristics:
+
+- **Camera-only** -- no LiDAR or radar. Tesla argues cameras suffice because
+  humans drive with eyes.
+- **End-to-end differentiable** -- gradients flow from control commands back
+  through the planner to the video encoder.
+- **Fleet learning** -- 8.3 billion supervised FSD miles as of early 2026,
+  continuously improving through shadow mode and human correction labels.
+
+.. admonition:: Scale as a Moat
+   :class: important
+
+   Tesla's fleet data advantage is structural. With millions of vehicles
+   collecting edge cases daily, the system receives training signal that
+   no simulation-only approach can easily replicate.
+
+
+NVIDIA's End-to-End Stack
+--------------------------
+
+NVIDIA's approach combines hardware (DRIVE Orin/Thor SoC) with a full
+software stack that incorporates end-to-end learning with reinforcement
+learning fine-tuning.
+
+Key Layers
+~~~~~~~~~~
+
+.. grid:: 1 2 2 2
+   :gutter: 3
+
+   .. grid-item-card:: Perception (NVIDIA Hydra-MDP)
+      :class-card: sd-border-primary
+
+      Multi-task BEV perception trained with a single unified decoder
+      for detection, segmentation, and occupancy.
+
+   .. grid-item-card:: World Model
+      :class-card: sd-border-primary
+
+      NVIDIA Cosmos generates synthetic training data and serves as a
+      differentiable environment for RL fine-tuning of the planner.
+
+   .. grid-item-card:: Planner (E2E + RL)
+      :class-card: sd-border-primary
+
+      A learned planner trained with imitation learning then refined
+      with reinforcement learning rewards (comfort, safety, progress).
+
+   .. grid-item-card:: DRIVE Thor SoC
+      :class-card: sd-border-primary
+
+      Up to 2000 TOPS of compute. Executes all E2E inference at the
+      latency required for real-time vehicle control.
+
+Reinforcement Learning Fine-Tuning
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Imitation learning alone inherits the distribution of human driving,
+including human mistakes and sub-optimal decisions. NVIDIA uses RL
+to optimize for **explicit reward functions** that humans cannot
+efficiently demonstrate:
+
+.. math::
+
+   \mathcal{R} = w_1 \cdot r_{\text{safety}} + w_2 \cdot r_{\text{comfort}} + w_3 \cdot r_{\text{progress}}
+
+where :math:`r_{\text{safety}}` penalizes proximity to obstacles and traffic
+violations, :math:`r_{\text{comfort}}` penalizes high jerk and acceleration,
+and :math:`r_{\text{progress}}` rewards making forward progress toward the
+destination.
+
+
+Advantages of End-to-End Driving
+----------------------------------
+
+.. grid:: 1 1 2 2
+   :gutter: 3
+
+   .. grid-item-card:: Joint Optimization
+      :class-card: sd-border-success
+
+      All components are optimized for the same ultimate objective (safe,
+      comfortable driving), eliminating the proxy-metric misalignment that
+      plagues modular pipelines.
+
+   .. grid-item-card:: No Information Loss
+      :class-card: sd-border-success
+
+      Raw sensor data flows through the entire computation graph. Features
+      relevant to planning that don't fit a predefined schema can still
+      influence the output.
+
+   .. grid-item-card:: Emergent Capabilities
+      :class-card: sd-border-success
+
+      E2E models trained at scale have demonstrated emergent abilities --
+      behaviors that appear without explicit programming, analogous to
+      emergent capabilities in large language models.
+
+   .. grid-item-card:: Architectural Simplicity
+      :class-card: sd-border-success
+
+      A single model (or small set of coupled models) replaces dozens of
+      specialized subsystems, reducing the engineering surface area for
+      integration bugs.
+
+
+Disadvantages and Open Challenges
+-----------------------------------
+
+.. admonition:: Black-Box Behavior
+   :class: warning
+
+   End-to-end models provide no interpretable intermediate representations.
+   When the system makes an error, it is extremely difficult to determine
+   whether the failure was due to perception, prediction, or planning -- or
+   some emergent interaction between them.
+
+.. admonition:: Massive Data Requirements
+   :class: warning
+
+   Training competitive E2E models requires hundreds of millions of labeled
+   driving frames. Labeling cost, data diversity (geography, weather, culture),
+   and long-tail coverage all remain significant challenges.
+
+.. admonition:: Validation Difficulty
+   :class: warning
+
+   ISO 26262 and SOTIF assume a modular decomposition where each component
+   can be tested in isolation. Validating a monolithic E2E system against
+   an ASIL-D safety argument is an open research problem with no settled
+   industry-wide methodology.
+
+.. admonition:: Distribution Shift
+   :class: warning
+
+   E2E systems trained on one geographic region or driving culture may
+   fail silently when deployed in a different environment, with no explicit
+   module to flag the out-of-distribution condition.
+
+Interpretability Research
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Researchers are actively developing methods to add interpretability to E2E
+systems without sacrificing performance:
+
+- **Attention visualization** -- Identifying which image regions most
+  influenced a particular action.
+- **Concept bottleneck models** -- Forcing the network to predict human-
+  interpretable concepts (e.g., "pedestrian present", "rain") as an
+  intermediate representation.
+- **Chain-of-thought supervision** (VLA models) -- Training the model to
+  produce textual reasoning before acting.
+
+
+The Role of Simulation in Training E2E Models
+----------------------------------------------
+
+End-to-end models are data-hungry, and real-world data collection is slow
+and expensive. Simulation plays a critical role in closing this gap.
+
+Data Generation at Scale
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 30 70
+   :class: compact-table
+
+   * - **Scenario diversity**
+     - Simulators (CARLA, Waymo Sim, NVIDIA Cosmos) can generate rare
+       events (jaywalking, debris on road, sensor degradation) that are
+       almost impossible to encounter at sufficient frequency in the real world.
+   * - **Automatic labeling**
+     - Ground-truth labels (depth, optical flow, 3-D boxes) are free in
+       simulation, eliminating human annotation cost.
+   * - **Perturbation testing**
+     - Systematic parameter sweeps (weather, traffic density, lighting) can
+       evaluate robustness.
+
+Sim-to-Real Gap
+~~~~~~~~~~~~~~~
+
+The fundamental limitation of simulation-based training is the **sim-to-real
+gap**: models trained in simulation may fail in the real world because the
+simulated sensor outputs, scene textures, and agent behavior distributions
+differ from reality.
+
+Mitigation strategies include:
+
+- **Domain randomization** -- Randomly varying simulation parameters during
+  training so the model learns features robust to environment variation.
+- **Generative world models** (L12) -- Using neural world models
+  trained on real data to generate photo-realistic synthetic data.
+- **Real + sim co-training** -- Mixing real and simulated data during training.
+
+.. code-block:: python
+
+   # Example: CARLA batch data collection for E2E training
+   import carla
+
+   client = carla.Client("localhost", 2000)
+   world = client.get_world()
+
+   # Randomize weather for domain randomization
+   weathers = [
+       carla.WeatherParameters.ClearNoon,
+       carla.WeatherParameters.HardRainNoon,
+       carla.WeatherParameters.WetCloudySunset,
+   ]
+   for weather in weathers:
+       world.set_weather(weather)
+       # collect_episode(world, duration_seconds=60)
+
+
+Imitation Learning
+------------------
+
+Imitation learning trains a policy to mimic expert (human driver)
+behavior from logged demonstrations. It is the most direct way to
+distil human driving skill into the kinds of end-to-end networks
+covered earlier in this lecture.
+
+Behavior Cloning
+~~~~~~~~~~~~~~~~
+
+**Behavior cloning (BC)** is the simplest imitation learning
+algorithm: treat demonstrations as a supervised learning dataset.
+
+Given a dataset of expert state-action pairs
+:math:`\mathcal{D} = \{(s_i, a_i^*)\}_{i=1}^{N}` collected
+from human drivers:
+
+.. math::
+
+   \min_\theta \; \mathbb{E}_{(s,a^*) \sim \mathcal{D}}
+   \left[ \mathcal{L}(\pi_\theta(s), a^*) \right]
+
+where :math:`\mathcal{L}` is a regression loss (e.g., MSE for
+continuous actions) or cross-entropy for discrete maneuver
+classification.
+
+**BC pipeline:**
+
+.. code-block:: text
+
+   1. Collect expert demonstrations: (obs_t, action_t) pairs
+   2. Train policy network: obs -> action
+   3. Deploy: at each step, feed current obs and execute action
+
+Distribution Shift: The Key Failure Mode
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The fundamental problem with behavior cloning is
+**distribution shift** (also called covariate shift).
+
+During training, the policy sees states from the expert's
+distribution :math:`d_{\pi^*}`. During deployment, the policy's
+own actions cause it to visit states in :math:`d_{\pi_\theta}`,
+which may be far from :math:`d_{\pi^*}`.
+
+**Compounding error:** Small deviations from the expert
+trajectory accumulate over time, driving the policy into
+states never seen during training. The policy has no
+supervision signal for recovery from these states.
+
+.. admonition:: Compounding Error Formula
+   :class: warning
+
+   For a policy with per-step error :math:`\epsilon`:
+
+   .. math::
+
+      \text{Total error after } T \text{ steps} = O(\epsilon T^2)
+
+   Errors compound **quadratically** in time horizon --
+   a fundamental limitation of open-loop behavior cloning.
+
+DAgger: Dataset Aggregation
+----------------------------
+
+DAgger (Ross et al., ICML 2011) addresses distribution shift
+by iteratively augmenting the training dataset with states
+visited by the learned policy.
+
+Algorithm
+~~~~~~~~~
+
+.. code-block:: text
+
+   Initialize: D = {} (empty dataset), pi_1 = any policy
+   For iteration i = 1, 2, ..., N:
+       1. Roll out policy pi_i in the environment
+          (or simulator) to collect trajectory states {s_t}
+       2. Query the expert at each visited state: a*_t = pi*(s_t)
+       3. Add {(s_t, a*_t)} to D
+       4. Train policy pi_{i+1} on the full aggregated D
+   Return: best pi_i on validation
+
+Why DAgger Works
+~~~~~~~~~~~~~~~~
+
+DAgger ensures the training distribution converges to the
+deployment distribution.
+
+- After :math:`n` iterations, the training dataset contains
+  states sampled from the policies
+  :math:`\pi_1, \pi_2, \ldots, \pi_n`.
+- As the policy improves, the states it visits converge toward
+  the expert's states.
+- In the limit, the training distribution matches the
+  deployment distribution and compounding errors vanish.
+
+**DAgger guarantees** (Ross et al., 2011): Under mild
+conditions, DAgger reduces the per-step regret to
+:math:`O(\epsilon)` (linear) compared to BC's
+:math:`O(\epsilon T^2)` (quadratic).
+
+Practical Considerations
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 70
+
+   * - Challenge
+     - Solution
+   * - Expert query cost
+     - Use simulator with scripted expert; reserve human feedback for hard cases
+   * - Safety during rollout
+     - Run in simulation (CARLA); use safety fallback controller
+   * - Dataset size
+     - Prioritize states with high policy uncertainty (active DAgger)
+   * - Convergence
+     - Monitor validation loss across iterations; stop when plateaued
+
+Where the Industry Is Heading
+------------------------------
+
+The tension between modular and end-to-end is resolving into a **spectrum**
+rather than a binary choice:
+
+.. grid:: 1 1 3 3
+   :gutter: 3
+
+   .. grid-item-card:: Fully Modular
+      :class-card: sd-border-secondary
+
+      Traditional approach. Each module developed independently. Mature
+      validation tooling. Used by Mobileye (RSS + modular stack).
+
+   .. grid-item-card:: Hybrid (Dominant today)
+      :class-card: sd-border-warning
+
+      E2E perception + learned planner, but with explicit safety monitors,
+      interpretable occupancy maps, and override logic. Used by Waymo's
+      current-generation stack and recent Baidu Apollo releases.
+
+   .. grid-item-card:: Fully E2E
+      :class-card: sd-border-success
+
+      Single neural model from pixels to actuators. Tesla FSD has been
+      end-to-end since v12 (and has iterated well past it); Wayve builds
+      on the same principle. Requires massive fleet data and novel
+      validation frameworks.
+
+.. note::
+
+   No major robotaxi operator runs a fully end-to-end system without any
+   engineered safety layer. The industry consensus in 2026 is that E2E
+   models excel at perception and scene understanding, while explicit safety
+   checks (collision avoidance, traffic law compliance) remain engineered
+   components layered on top.
+
+Summary
+--------
+
+.. grid:: 1 2 2 2
+   :gutter: 3
+
+   .. grid-item-card:: End-to-End Architectures
+      :class-card: sd-border-primary
+
+      - Modular vs E2E: interpretability and validation traded against
+        joint optimization and no information loss at boundaries
+      - UniAD: query propagation through tracking -> motion -> occupancy
+        -> planning, all co-optimized with a planning loss
+      - DriveTransformer: one shared attention block over agent, map and
+        ego tokens; ~3x throughput at comparable quality
+      - VLA: language as an intermediate representation, giving auditable
+        chain-of-thought reasoning (DriveVLM, and Wayve's LINGO line)
+
+   .. grid-item-card:: Imitation Learning
+      :class-card: sd-border-primary
+
+      - Behavior cloning is supervised learning on expert demonstrations
+      - Its failure mode is distribution shift: error compounds as
+        :math:`O(\epsilon T^2)` because the policy visits states the
+        expert never did
+      - DAgger fixes this by querying the expert **on states the learner
+        actually visits**, reducing the bound to linear
+      - Open-loop benchmarks flatter these methods; insist on closed-loop
+        evaluation before believing a planning result
+
+.. note::
+
+   **On the numbers in this lecture.** Nearly every quantitative claim
+   here comes from a fast-moving literature with inconsistent evaluation
+   protocols. The architectural ideas are durable; the leaderboard
+   positions are not. Cite the paper, state the benchmark, and say
+   whether it was open-loop.

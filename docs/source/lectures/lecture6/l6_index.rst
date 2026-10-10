@@ -1,37 +1,42 @@
-========================================================================
-L6: Perception III -- Tracking, Temporal Reasoning & Deep Fusion
-========================================================================
+====================================================
+L6: Localization & SLAM
+====================================================
 
 Overview
 --------
 
-This lecture completes the perception pipeline by linking single-frame
-detections into persistent object tracks and by fusing modalities with
-learned attention. It builds directly on the Kalman / EKF / UKF
-machinery taught in L3 (SORT and DeepSORT rest on those filters) and
-on the BEV representation from L5 (cross-attention and BEVFusion
-operate in BEV space). The lecture closes with a CARLA exercise
-implementing a basic SORT tracker on the detections produced by your
-L4 / L5 perception stack.
+Knowing **where the vehicle is** in the world with centimeter-level accuracy
+is a prerequisite for safe autonomous driving. This lecture covers the full
+spectrum of localization approaches -- from GNSS-based methods to dead
+reckoning, probabilistic filters, and map-based scan matching -- before
+introducing the Simultaneous Localization and Mapping (SLAM) problem, where
+the vehicle must build its own map while localizing within it. You will
+examine both the SLAM frontend (scan acquisition, feature extraction, ICP)
+and backend (pose graph optimization, loop closure), and survey modern LiDAR
+SLAM systems used in production AV stacks.
 
 Learning Objectives
 -------------------
 
 By the end of this lecture, you will be able to:
 
-- Formulate the multi-object tracking (MOT) problem and the
-  tracking-by-detection paradigm.
-- Describe the SORT, DeepSORT, and ByteTrack algorithms and their key
-  design choices, and connect SORT's state estimation to the Kalman
-  filter from L3.
-- Evaluate tracking performance using MOTA, MOTP, and IDF1 metrics.
-- Explain how temporal reasoning -- using sequences of frames --
-  improves perception beyond single-frame methods.
-- Describe how tracking integrates with the L4 (Detection) /
-  L5 (BEV + Occupancy + Segmentation) pipeline.
-- Explain cross-attention fusion of camera and LiDAR BEV features.
-- Describe BEVFusion as a representative modern deep-learning fusion
-  architecture and its trade-offs vs. classical fusion from L3.
+- Formulate the localization problem and describe the coordinate systems and
+  transformations used in AV systems.
+- Describe GNSS-based localization including GPS, RTK, and PPP, and their
+  accuracy limitations.
+- Explain wheel odometry, visual odometry, and LiDAR odometry as dead reckoning
+  methods, and characterize their drift properties.
+- Apply the Extended Kalman Filter and particle filter to probabilistic
+  localization with map observations.
+- Describe scan matching (ICP and variants) and HD map-based localization.
+- Formulate the SLAM problem as simultaneous state estimation and map building.
+- Explain the SLAM frontend components: scan acquisition, preprocessing,
+  feature extraction, ICP, and keyframe selection.
+- Explain the SLAM backend: pose graph construction, optimization, and loop
+  closure detection.
+- Identify evaluation metrics for SLAM and localization systems.
+- Describe modern LiDAR SLAM systems (LOAM, LeGO-LOAM) and their design
+  choices.
 
 .. admonition:: Materials in revision
    :class: note
@@ -43,19 +48,14 @@ By the end of this lecture, you will be able to:
 Next Steps
 ----------
 
-- The next lecture covers **Localization & SLAM**: GNSS / RTK, dead
-  reckoning, visual / LiDAR odometry, probabilistic localization with
-  EKF (built on L3), SLAM frontend (ICP, feature extraction), and
-  SLAM backend (pose graphs, loop closure).
-- Review the ByteTrack paper: Zhang et al. (2022) for an efficient,
-  highly accurate modern tracker used in production systems.
-- Explore the MOTChallenge benchmark to understand evaluation protocols.
-  The site's homepage and evaluation server are **offline**, but the datasets
-  and leaderboards remain published as a static archive: see
-  `MOT17 <https://motchallenge.net/data/MOT17/>`_ and
-  `MOT20 <https://motchallenge.net/data/MOT20/>`_, with results frozen as of
-  16 April 2026 at `MOT17 results <https://motchallenge.net/results/MOT17/>`_.
-  New submissions are no longer accepted.
-- (Follow-up content) The current Temporal Reasoning section can be
-  extended with transformer-based MOT (MOTR, TrackFormer) and video
-  transformer methods; this is on the v2 polish list.
+- The next lecture covers **L7: Navigation & Route Planning**: road networks
+  as directed graphs with lane-level topology (OpenDRIVE, Lanelet2), Dijkstra
+  and A* on those graphs, CARLA's ``GlobalRoutePlanner`` API, and how HD maps
+  encode the semantic road information that routing consumes. Motion planning
+  itself follows in L9.
+- Install and explore the ``open3d`` Python library for point cloud processing:
+  `https://www.open3d.org/ <https://www.open3d.org/>`_.
+- Review the LOAM paper: Zhang & Singh (2014) for the foundational LiDAR
+  odometry and mapping algorithm.
+- Explore the EVO trajectory evaluation tool:
+  `https://github.com/MichaelGrupp/evo <https://github.com/MichaelGrupp/evo>`_.
