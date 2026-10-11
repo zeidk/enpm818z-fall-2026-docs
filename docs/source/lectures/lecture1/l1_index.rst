@@ -23,8 +23,8 @@ installed before that lecture, so start the download this week.
 
    Development environment setup (Ubuntu, ROS 2, VS Code, Git, shell
    basics) is **pre-read material** and is not covered in lecture. Work
-   through
-   :doc:`Pre-Read: Development Environment </preread/dev-environment>`
+   through the
+   :doc:`Development Environment </preread/dev-environment>` pre-read
    before this class, then install CARLA with the
    :doc:`setup guide </carla/carla>`.
 

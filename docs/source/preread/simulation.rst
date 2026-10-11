@@ -1,5 +1,5 @@
 ====================================================
-Pre-Read: Simulation for Automated Driving
+Simulation for Automated Driving
 ====================================================
 
 .. admonition:: Read this after Lecture 2

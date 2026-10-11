@@ -1,5 +1,5 @@
 ====================================================
-Pre-Read: Automotive Cybersecurity
+Automotive Cybersecurity
 ====================================================
 
 .. admonition:: Read this before Lecture 13

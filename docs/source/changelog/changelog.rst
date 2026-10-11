@@ -5,10 +5,36 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.8.7: Teams of Three (2026-10-11)
+.. dropdown:: v2.9.0: SLAM Reading Pages (2026-10-11)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Pre-Read Material
+
+   - **New: SLAM with a LiDAR.** The SLAM problem, EKF-SLAM, FastSLAM and
+     grid maps, and graph SLAM solved by Gauss-Newton, with a LiDAR front
+     end and Scan Context loop detection. Every number is measured on a
+     simulated world or on the L6 drive.
+   - **New: Visual SLAM.** The camera model, ORB features, stereo depth,
+     PnP tracking, a bag of visual words and a robust back end, measured on
+     the L6 route recorded with a stereo camera.
+   - The pre-read titles no longer start with "Pre-Read:".
+
+   .. rubric:: Lectures
+
+   - **L6:** the SLAM section links to the two new reading pages.
+
+   .. rubric:: Projects
+
+   - **GP2:** the At a Glance box links to the starter code. Before copying
+     the starter, a warning shows how to check that none of its files
+     already exists in your package. The test command is explained part by
+     part.
+
+.. dropdown:: v2.8.7: Teams of Three (2026-10-11)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Syllabus and projects
 

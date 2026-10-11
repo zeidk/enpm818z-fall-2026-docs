@@ -1,5 +1,5 @@
 ====================================================
-Pre-Read: Development Environment
+Development Environment
 ====================================================
 
 .. admonition:: Read this before Lecture 1

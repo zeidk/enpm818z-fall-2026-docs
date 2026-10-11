@@ -32,6 +32,15 @@ That material lives here. **Each page states when to read it.** Most are read
      - Before GP2, Task 3
      - IoU, precision and recall, AP, mAP\@0.5 and mAP\@0.5:0.95, ID
        switches and MOTA, one step at a time. Builds on L4.
+   * - :doc:`SLAM with a LiDAR </preread/slam-lidar>`
+     - After L6
+     - The SLAM problem, EKF-SLAM, FastSLAM and grid maps, graph SLAM with
+       Gauss-Newton, a LiDAR front end and Scan Context, all measured on the
+       L6 drive.
+   * - :doc:`Visual SLAM </preread/slam-visual>`
+     - After L6
+     - Camera model, ORB, stereo depth, PnP tracking, a bag of visual words,
+       and a robust back end, on the L6 route recorded with a stereo camera.
    * - :doc:`Automotive Cybersecurity </preread/cybersecurity>`
      - Before L13
      - Attack surfaces, ISO/SAE 21434, and TARA. Supports the L13
@@ -45,4 +54,6 @@ That material lives here. **Each page states when to read it.** Most are read
    dev-environment
    simulation
    detector-grading
+   slam-lidar
+   slam-visual
    cybersecurity

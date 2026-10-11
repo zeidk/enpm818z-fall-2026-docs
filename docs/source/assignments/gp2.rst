@@ -64,6 +64,10 @@ GP2: Perception (YOLO vs. RT-DETR)
         - L3 (Kalman filter), L4 (detection and its grading), L5 (tracking)
       * - **Pre-read**
         - :doc:`/preread/detector-grading`: every score in GP2, step by step
+      * - **Starter code**
+        - `gp2_starter <https://github.com/rubixcubic/enpm818z-fall-2026-carla-ros/tree/main/gp2_starter>`__
+          in the course repository,
+          `enpm818z-fall-2026-carla-ros <https://github.com/rubixcubic/enpm818z-fall-2026-carla-ros>`__
       * - **Team Size**
         - 3 students, the GP1 team
       * - **Submission**
@@ -194,12 +198,31 @@ working in the same private repository, on a new branch.
 
 3. Copy the GP2 files into your package:
 
+   .. warning::
+
+      ``cp -r`` replaces a file of the same name without asking. None of the
+      GP2 files has the same name as a file of the GP1 starter, but you may
+      have added files of your own in GP1. **Before you copy,** check that
+      none of the GP2 files already exists in your package:
+
+      .. code-block:: bash
+
+         (cd ../enpm818z-fall-2026-carla-ros/gp2_starter/ads_pipeline && find . -type f -printf '%P\n') | while read -r f; do [ -e "ads_pipeline/$f" ] && echo "already exists: ads_pipeline/$f"; done
+
+      No output means the copy only adds files. If a line is printed, rename
+      or move your own file first, then copy. The GP2 files are:
+
+      - ``ads_pipeline/``: ``box_tracker.py``, ``detection_eval.py``,
+        ``detector_core.py``, ``detector_node.py``, ``gt_boxes.py``
+      - ``launch/``: ``perception_launch.py``
+      - ``test/``: ``test_gp2_detection_eval.py``, ``test_gp2_detector.py``,
+        ``test_gp2_ground_truth.py``, ``test_gp2_tracker.py``
+      - ``tools/``: ``check_coco.py``, ``grade.py``, ``record_gp2.py``,
+        ``replay_drive.py``, ``run_detector.py``, ``show_frame.py``
+
    .. code-block:: bash
 
       cp -r ../enpm818z-fall-2026-carla-ros/gp2_starter/ads_pipeline/. ads_pipeline/
-
-   None of the GP2 files has the same name as a GP1 file, so the copy adds
-   files and changes nothing you wrote.
 
 4. Install the Python packages that are not part of ROS 2:
 
@@ -335,6 +358,25 @@ Run the tests from the package root:
 .. code-block:: bash
 
    cd ~/enpm818z_ws/src/GP1_TeamX/ads_pipeline && python3 -m pytest test/ -k gp2 -v
+
+What each part does:
+
+- ``cd ~/enpm818z_ws/src/GP1_TeamX/ads_pipeline``: go to the package root,
+  the folder that holds ``test/``. Use your own repository's folder name
+  for ``GP1_TeamX``.
+- ``python3 -m pytest``: run pytest, the Python test runner, with the same
+  ``python3`` you run the code with.
+- ``test/``: collect the tests from every ``test_*.py`` file in ``test/``.
+- ``-k gp2``: keep only the tests whose name, or whose file's name,
+  contains ``gp2``. That keeps the 37 tests of the four ``test_gp2_*.py``
+  files (13 ground truth, 3 detector, 11 evaluation, 10 tracker) and skips
+  the 7 tests of GP1's ``test_lidar_projection.py``.
+- ``-v``: print one line per test, with ``PASSED`` or ``FAILED``.
+
+On the starter as provided, 36 of the 37 fail with ``NotImplementedError``:
+they test the functions you write. The one that passes,
+``test_launch_declares_every_parameter``, checks the launch file we provide.
+Each task's **Steps** name the test file that task must pass.
 
 
 .. _gp2-recording:

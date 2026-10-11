@@ -2068,6 +2068,14 @@ at the same time.
    around a block, and a wall seen at the start and again at the end shows
    up twice.
 
+.. tip::
+
+   Two reading pages go much further than this section, with every step
+   measured on our drive: :doc:`SLAM with a LiDAR </preread/slam-lidar>` (the
+   three families of SLAM, and the pose graph solved on the L6 drive) and
+   :doc:`Visual SLAM </preread/slam-visual>` (the same route recorded with a
+   stereo camera).
+
 
 .. _l6-lec-slam-front-back:
 

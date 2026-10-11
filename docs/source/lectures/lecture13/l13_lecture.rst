@@ -516,10 +516,10 @@ safety hazard, not just a data breach.
 
    The attack surfaces (sensor spoofing, communication attacks, backend
    compromise), the ISO/SAE 21434 lifecycle, and the TARA process are
-   covered on the
-   :doc:`Pre-Read: Automotive Cybersecurity </preread/cybersecurity>`
-   page. Read it before this lecture -- the integration discussion below
-   assumes it.
+   covered in the
+   :doc:`Automotive Cybersecurity </preread/cybersecurity>` pre-read.
+   Read it before this lecture: the integration discussion below assumes
+   it.
 
 The key architectural consequence for this lecture: **security controls
 consume the same latency budget as everything else**. Message
