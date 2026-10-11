@@ -121,6 +121,18 @@ Kabsch, Thrun et al., and Zhang and Scaramuzza.
          The IMU "typically consists of three orthogonally mounted gyroscopes
          and three accelerometers".
 
+      .. grid-item-card:: Who steers in CARLA
+         :link: https://carla.readthedocs.io/en/0.9.16/adv_traffic_manager/
+         :class-card: sd-border-secondary
+
+         **CARLA Team**
+
+         *Traffic Manager (CARLA 0.9.16).* Accessed 11 October 2026.
+
+         A PID controller "estimates the throttle, brake, and steering input
+         needed to reach a target value", from the simulation's state and the
+         map's waypoints.
+
       .. grid-item-card:: Real-time networks in Maryland
          :link: https://fig.net/resources/proceedings/fig_proceedings/fig2019/papers/ts05e/TS05E_gillins_heck_et_al_10077.pdf
          :class-card: sd-border-secondary

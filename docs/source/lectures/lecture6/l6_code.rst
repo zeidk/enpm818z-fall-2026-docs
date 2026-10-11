@@ -155,12 +155,18 @@ through the outage to the next fix, 401 m on.
 
 - **Left:** the road from above, the truth in black and dead reckoning in
   rust.
-- **Right:** not a map. It is the position error against the distance
-  driven since the last fix.
+- **Right, top:** not a map. The position error against the distance driven
+  since the last fix.
+- **Right, bottom:** the heading error against the same distance.
+- **Check boxes** (under the map): the errors we chose. Untick **gyro bias**
+  to subtract the 0.001 rad/s from every gyro reading; untick **wheels 0.5 %
+  fast** to divide every wheel reading by 1.005. Dead reckoning runs again
+  at once. What stays is the sensors' noise and CARLA's own gyro, which
+  reports a little more turning than the car makes in a corner.
 
-**What to look for:** where does the error start to grow fast? On a straight
-or in a turn? Think about the heading. The Dead Reckoning section of the
-lecture shows why a heading error matters most.
+**What to look for:** where does the heading error step up, on the straights
+or at the corners? Which chosen error, when removed, shrinks the position
+error most? The Dead Reckoning section of the lecture explains both.
 
 
 Part 3: The Fused Filter (``--part ekf``)
@@ -382,8 +388,8 @@ two laps, 916 m in 125.7 s; no GNSS from 250 m to 650 m along the route,
    *Reference:* started from the true pose at the last fix before the
    outage, dead reckoning is 2.69 m off after 100 m, 3.56 m after 200 m,
    8.24 m after 300 m, at worst 9.03 m (at 329 m), and 7.84 m at the end of
-   the outage. ``--part dr`` itself starts at the beginning of the drive, so
-   its curve is not the same one.
+   the outage. ``--part dr`` shows this same run with both check boxes
+   ticked.
 
 2. **The fused filter.** In ``--part ekf``, compare the APE of the eight
    runs. Which input lowers it most? During the outage, does the filter's

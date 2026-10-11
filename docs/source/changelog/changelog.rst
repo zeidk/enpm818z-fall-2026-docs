@@ -5,10 +5,19 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.7.0: Lectures Renumbered, 13 in Total (2026-10-10)
+.. dropdown:: v2.7.1: Lecture 6 in Preparation (2026-10-11)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **Lecture 6 (Localization & SLAM)** is being written. Its pages stay
+     hidden until its slides are final; nothing new to open yet.
+
+.. dropdown:: v2.7.0: Lectures Renumbered, 13 in Total (2026-10-10)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lecture numbers
 

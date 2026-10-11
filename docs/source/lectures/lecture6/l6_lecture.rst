@@ -426,6 +426,14 @@ The Route: Two Laps of a Downtown Block
   second lap;
 - the map: 18,661 points from the mapping pass.
 
+.. admonition:: Who steers?
+   :class: note
+
+   CARLA's Traffic Manager, from the simulator's own state and the map's
+   waypoints: a PID controller sets "the throttle, brake, and steering input"
+   (CARLA documentation, Traffic Manager). Our sensors are only recorded;
+   every localizer today runs on the recording.
+
 
 .. _l6-lec-gnss:
 
@@ -898,6 +906,34 @@ the old sideways error into an error along the road. That is why the error
 can drop at a corner and the paths cross.
 
 
+.. _l6-lec-handson-dr:
+
+Hands-On, Part 2: Dead Reckoning on Our Drive
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In the course's Python repo, folder ``lecture6``:
+
+.. code-block:: bash
+
+   python3 l6_handson.py --part dr     # wheels and gyro only
+
+The setup and the full commands are on :doc:`the Code page <l6_code>`.
+
+.. admonition:: What to look at
+   :class: hint
+
+   1. With both errors ticked, watch the heading error (bottom right). Where
+      does it step up: on the straights or at the corners?
+   2. Untick **gyro bias**. How much smaller is the worst position error?
+      Tick it again and untick **wheels 0.5 % fast**. Which error matters
+      more?
+   3. Untick both. The heading still ends off. What is left in the signals?
+
+Dead reckoning steers nothing here: CARLA drove the AV while the sensors were
+recorded (see The Route, above), and dead reckoning runs afterward, on the
+recording.
+
+
 .. _l6-lec-dr-summary:
 
 Where Dead Reckoning Leaves Us
@@ -1088,14 +1124,13 @@ These are all eight runs of the hands-on, one APE each.
 
 .. _l6-lec-handson1:
 
-Hands-On, Part 2: the Fused Filter on Our Drive
+Hands-On, Part 3: the Fused Filter on Our Drive
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the course's Python repo, folder ``lecture6``:
 
 .. code-block:: bash
 
-   python3 l6_handson.py --part dr     # dead reckoning only
    python3 l6_handson.py --part ekf    # the fused filter: 8 runs
 
 The setup and the full commands are on :doc:`the Code page <l6_code>`.
@@ -1103,15 +1138,13 @@ The setup and the full commands are on :doc:`the Code page <l6_code>`.
 .. admonition:: What to look at
    :class: hint
 
-   1. ``--part dr``: where does the error start to grow fast? On a straight
-      or in a turn? Think about the heading.
-   2. ``--part ekf``: tick and untick **GNSS outage**, **wheels** and **map
-      matching**. Each combination is one run of the filter, already
-      computed and saved as a results file, so you can switch instantly.
-   3. Watch two things: the **error** (blue) and the filter's **own**
+   1. Tick and untick **GNSS outage**, **wheels** and **map matching**.
+      Each combination is one run of the filter, already computed and saved
+      as a results file, so you can switch instantly.
+   2. Watch two things: the **error** (blue) and the filter's **own**
       :math:`1\sigma` (grey). In the outage, does the grey band grow as fast
       as the error? If it does, the filter is honest about not knowing.
-   4. Note the APE of each run. Which input lowers it most?
+   3. Note the APE of each run. Which input lowers it most?
 
 
 .. _l6-lec-check-fusion:
@@ -1471,7 +1504,7 @@ Matching fits with the filter from :ref:`l6-lec-ekf` in two ways.
 
 .. _l6-lec-handson2:
 
-Hands-On, Part 3: MCL and ICP on Our Drive
+Hands-On, Part 4: MCL and ICP on Our Drive
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
@@ -1859,7 +1892,7 @@ Next Class
 
 **Before next class**
 
-- Run the four hands-on parts (``dr``, ``ekf``, ``mcl`` and ``icp``) on
+- Run the hands-on parts (``gnss``, ``dr``, ``ekf``, ``mcl`` and ``icp``) on
   :doc:`the Code page <l6_code>`.
 - **Read the appendix** (:doc:`l6_appendix`) on ICP and the pose graph.
 
