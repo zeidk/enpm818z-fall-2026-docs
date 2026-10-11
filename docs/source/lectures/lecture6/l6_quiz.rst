@@ -175,7 +175,7 @@ Multiple Choice (Questions 1 to 22)
 
    **B**.
 
-   The base station sees the same satellites through nearly the same air as
+   The base station sees the same satellites through nearly the same atmosphere as
    a car nearby. Errors both share, like the satellite clocks and the
    atmosphere, cancel. RTK also measures the carrier wave, not only the
    timing code. The reference the lecture quotes gives "performances in the

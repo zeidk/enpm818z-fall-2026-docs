@@ -63,7 +63,24 @@ Kabsch, Thrun et al., and Zhang and Scaramuzza.
 
          RTK as "a differential GNSS technique" with "carrier measurements"
          and corrections from a base station; "performances in the range of
-         a few centimetres", "in the vicinity of a base station".
+         a few centimetres", "in the vicinity of a base station"; "the
+         ionospheric delay and the tropospheric delay" among the errors that
+         cancel; it "can be used for distances of up to 10 or 20
+         kilometres".
+
+      .. grid-item-card:: Multipath
+         :link: https://gssc.esa.int/navipedia/index.php/Multipath
+         :class-card: sd-border-secondary
+
+         **Sanz Subirana, J., Juan Zornoza, J. M., Hernández-Pajares, M.
+         (2011)**
+
+         *Multipath.* European Space Agency, Navipedia (Technical University
+         of Catalonia). Accessed 10 October 2026.
+
+         "The interference by multipath is generated when a signal arrives,
+         by different ways, at the antenna." "Its principal cause is the
+         antenna closeness to the reflecting structures".
 
       .. grid-item-card:: GPS and the other GNSS
          :link: https://www.gps.gov/other-global-navigation-satellite-systems-gnss
@@ -77,6 +94,18 @@ Kabsch, Thrun et al., and Zhang and Scaramuzza.
          GNSS is "a general term describing any satellite constellation"; GPS
          is "a U.S.-owned utility", "operated and maintained by the U.S. Space
          Force".
+
+      .. grid-item-card:: Where the IMU goes
+         :link: https://support-centre.racelogic.co.uk/automotive/imu/imu05-imu05s/ug/mounting/
+         :class-card: sd-border-secondary
+
+         **Racelogic (2026)**
+
+         *Mounting: IMU05/IMU05-S User Guide.* Racelogic Support Centre,
+         updated 21 September 2026. Accessed 10 October 2026.
+
+         On the roof "co-located with the GNSS antenna", or inside on the seat
+         rails; IMU and antenna "on the same rigid body".
 
       .. grid-item-card:: The IMU
          :link: https://arxiv.org/abs/2603.07143
@@ -104,7 +133,10 @@ Kabsch, Thrun et al., and Zhang and Scaramuzza.
 
          "In Maryland of the United States, three independent RTNs are
          available": Trimble KeyNetGPS, Topcon TopNET live and Leica
-         SmartNet.
+         SmartNet. A single base station "generally limits baseline lengths
+         to less than 20 km", because farther away "atmospheric delay errors
+         do not sufficiently cancel"; networks space their bases "every 70
+         km or less".
 
       .. grid-item-card:: NOAA CORS Network
          :link: https://geodesy.noaa.gov/CORS/

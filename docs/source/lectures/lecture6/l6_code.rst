@@ -86,11 +86,15 @@ Options
      - How far off the truth ICP starts: EAST meters east, NORTH meters
        north, DEG degrees of heading. Default ``1.5 -1.0 5``: 1.5 m east,
        1.0 m south and :math:`5^\circ` off.
+   * - ``--time T``
+     - ``gnss``
+     - Opens at T seconds instead of the start. The figures on this site use
+       ``--time 61.55``, the middle of the outage.
    * - ``--snapshot FILE``
      - all
      - Saves the figure as a PNG file instead of opening a window. ``ekf``
        saves its default run (outage on, wheels on, map matching off),
-       ``gnss`` saves the middle of the outage, and ``icp`` saves its last
+       ``gnss`` saves the start (or ``--time T``), and ``icp`` saves its last
        iteration.
    * - ``--html FILE``
      - all
@@ -106,16 +110,25 @@ Part 1: The GNSS Fixes (``--part gnss``)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The GNSS fixes as they arrive, against the true route. A fix comes once a
-second, then none for the outage. The window opens in the middle of the
-outage; drag the time slider to move through the drive.
+second, then none for the outage. The window opens at the start. **Play**
+runs the drive from start to finish, one second of driving per tick (about
+13 s in all); press it again to pause. **Step: +1 s** moves one second, one
+fix, at a time. Four panels:
 
-- **Left:** the road from above. The truth so far in black, the fixes so far
-  as blue dots, the AV now as a black dot, and the last fix circled. Inside
-  the outage, the title says how long since the last fix and how far the AV
-  drove since.
-- **Right:** not a map. Each fix's error, east and north, against time. The
-  dashed lines are the mean errors; the shaded band is the time from the last
-  fix before the outage to the first fix after it.
+- **Top left, the whole route:** the truth so far in black, the fixes so far
+  as blue dots, the **GNSS-only path** (the fixes joined in order: where the
+  AV would think it drove from GNSS alone), the last fix circled, and the AV,
+  drawn 3 times its size so it shows at this zoom. Inside the outage, the
+  title says how long since the last fix and how far the AV drove since.
+- **Top right, a close-up** 40 m across that follows the AV, at true size,
+  with a dashed 1.5 m circle (the noise we chose) around the last fix.
+- **Bottom left:** not a map. Each fix's error, east and north, against
+  time. The dashed lines are the mean errors; the shaded band is the time
+  from the last fix before the outage to the first fix after it.
+- **Bottom right:** the same errors as points, filling in as the fixes
+  arrive: blue so far, gray still to come, the newest circled. Their center
+  is the bias, their spread the noise, next to the bias and the 1.5 m we
+  chose.
 
 On our drive the script measures 72 fixes, a mean error of 0.36 m east and
 0.49 m south, and a spread of 1.47 m east and 1.49 m north. The errors we
@@ -123,9 +136,12 @@ chose were a bias of 0.5 m east and 0.3 m south and noise of 1.5 m: a mean of
 72 noisy fixes is only that close. From the last fix to the first fix after
 it: 55.0 s and 401 m.
 
+The AV is drawn with ``l6common.draw_av``: its base link (the middle of the
+rear axle) sits on the AV's position, turned to its heading.
+
 **What to look for:** the two laps cover the same road, so on the map the
-gap is hidden: the other lap's fixes fill it. The gap shows in time. Move the
-slider into the outage and watch the distance since the last fix grow.
+gap is hidden: the other lap's fixes fill it. The gap shows in time. Step
+into the outage and watch the distance since the last fix grow.
 
 
 Part 2: Dead Reckoning (``--part dr``)

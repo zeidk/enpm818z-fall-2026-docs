@@ -85,6 +85,8 @@ the pose in the map frame, :math:`x`, :math:`y` and the heading
    scan, map) go in; **one output** comes out: the pose in the map frame,
    :math:`x, y, \theta`, plus how sure it is, a covariance.
 
+.. _l6-lec-bound:
+
 **How good is good enough?** One published answer, for a passenger car, is
 from Reid et al. (2019):
 
@@ -253,15 +255,21 @@ Today we use **one** of the six: the gyroscope about :math:`z`, how fast the
 AV turns left or right.
 
 .. figure:: /_static/images/L6/imu_axes.png
-   :alt: A small box labeled IMU with three axes: x forward to the right, z up, and y left drawn going back into the page. On each axis a blue double-headed straight arrow marks an accelerometer, and a curved arrow around the axis marks a gyroscope; the curved arrow around z is green. A key reads: accelerometer, along the axis; gyroscope, turn rate about it; the one we use, about z.
-   :width: 45%
+   :alt: A product photo of a black IMU, the Memsense MS-IMU3050, its label printing small X, Y and Z axes. Three large axes leave its top face: x forward to the right, z up, and y left going back to the upper left. On each axis a blue double-headed straight arrow marks an accelerometer, and a curved arrow around the axis marks a gyroscope; the curved arrow around z is green. A key reads: accelerometer, along the axis; gyroscope, turn rate about it; the one we use, about z.
+   :width: 55%
    :align: center
 
-   The IMU's six sensors. On each axis, an **accelerometer** (straight blue
-   arrow) measures along it and a **gyroscope** (curved arrow) measures the
-   turn rate about it. :math:`y` (left) goes into the page: the AV is seen
-   from its right side. **Green:** the gyroscope about :math:`z`, the one we
-   use.
+   The IMU's six sensors, on a real unit. On each axis, an **accelerometer**
+   (straight blue arrow) measures along it and a **gyroscope** (curved arrow)
+   measures the turn rate about it. The unit prints its own axes on its
+   label: X, Y, and Z out of the top. Bolted with X forward, those are the
+   vehicle frame. **Green:** the gyroscope about :math:`z`, the one we use.
+
+**Where on the AV.** The IMU is bolted to the body, never loose, so it feels
+every turn the car makes. Test cars often put it "on the vehicle roof,
+co-located with the GNSS antenna", or inside: "Bolt the IMU to the seat rails
+and place the GNSS antenna on the roof directly above" (Racelogic IMU05 user
+guide). The IMU and the antenna "should be mounted on the same rigid body".
 
 
 .. _l6-lec-sensor-outputs:
@@ -467,23 +475,29 @@ In the course's Python repo, folder ``lecture6``:
    python3 l6_handson.py --part gnss   # the fixes as they arrive
 
 .. figure:: /_static/images/L6/handson_gnss.png
-   :alt: The hands-on window. Left, a top view of the route: the true path so far in black, the GNSS fixes so far as blue dots, the AV now as a black dot on the bottom side, and the last fix circled at the top. The title reads t = 62 s: no fix for 28 s; the AV drove 193 m since the last one. Right, each fix's error east in blue and north in rust against time, with dashed mean lines and a pink band from 34 to 89 seconds with no dots. Its title reads 72 fixes, mean +0.36 m east, -0.49 m north; spread 1.47 m east, 1.49 m north. A time slider runs along the bottom.
+   :alt: The hands-on window in four panels with two buttons at the bottom, Play and Step: +1 s, shown at 62 seconds. Top left, the whole route from above: the true path so far in black, the GNSS fixes so far as blue dots joined by a thin blue GNSS-only path, the last fix circled at the top, and the AV drawn as a small car three times its size; the title reads t = 62 s, no fix for 28 s, the AV drove 193 m since the last one. Top right, a close-up 40 meters across around the AV at true size, with no fixes nearby. Bottom left, each fix's error east in blue and north in rust against time, dashed mean lines, and a pink band from 34 to 89 seconds with no dots. Bottom right, every fix's error as a point: the fixes up to 62 seconds in blue with the newest circled, the later ones in gray; a dashed 1.5 meter circle around the chosen bias, a plus for the chosen bias at 0.5 east and 0.3 south, and a cross for the measured mean of all 72 at 0.36 east and 0.49 south. The legend sits to the right of that panel.
    :width: 95%
    :align: center
 
-   The window opens in the middle of the outage. **Left:** the fixes stop at
-   the circled one; the title says how long since the last fix and how far
-   the AV drove since. **Right:** each fix's error, east (blue) and north
-   (rust), with their means dashed.
+   The window at 62 s, in the middle of the outage. **Top left:** the whole
+   route; the fixes stop at the circled one, the thin blue line is the
+   GNSS-only path, and the AV is drawn 3 times its size. **Top right:** a
+   close-up 40 m across that follows the AV at true size; outside the outage
+   it shows a dashed 1.5 m circle (the noise we chose) around the newest
+   fix. **Bottom left:** each fix's error against time. **Bottom right:**
+   the errors as points, blue so far and gray still to come: their center
+   is the bias, their spread the noise.
 
 The two laps cover the same road, so on the map the gap is hidden: the other
-lap's fixes fill it. The gap shows in time. Drag the slider and watch the
-distance since the last fix grow.
+lap's fixes fill it. The gap shows in time. **Play** runs the drive from
+start to finish; **Step: +1 s** moves one second, one fix, at a time. Watch
+the distance since the last fix grow.
 
-1. Drag the slider into the outage. How far does the AV drive before the
+1. Press Play, or step into the outage. How far does the AV drive before the
    next fix?
-2. Compare the dashed means with the bias we chose (0.5 m east, 0.3 m
-   south).
+2. In the window's bottom right, the fixes fill in as they arrive. Where is
+   the center of the fixes' errors?
+   Compare it with the bias we chose (0.5 m east, 0.3 m south).
 
 The means come out close to the bias, not equal: a mean of a few dozen noisy
 fixes still carries noise. See :doc:`l6_code` for what each part shows.
@@ -508,7 +522,7 @@ RTK corrects the AV's GNSS with a second receiver nearby, in four steps.
 
 - The **base station** is a GNSS receiver fixed on a point whose position a
   surveyor measured. So it knows exactly where it is.
-- It sees the same satellites as the AV, through nearly the same air.
+- It sees the same satellites as the AV, through nearly the same atmosphere.
 
 .. important::
 
@@ -524,13 +538,13 @@ RTK, Step 2: the Base Measures Its Own Error
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/rtk_step2.png
-   :alt: A side view. A satellite at the top sends signals, drawn as dashed lines, to a base station on the left, a mast on a marker labeled base station on a surveyed point, and to the AV on the right, a car labeled the AV (rover), with an antenna. Below the base, a panel labeled seen from above, with arrows for east and north: a cross labeled true point and a blue dot labeled GNSS says, up and to the right of it, joined by a rust arrow labeled error.
+   :alt: A side view. A satellite at the top sends signals, drawn as dashed lines, to a base station on the left, a mast on a marker labeled base station on a surveyed point, and to the AV on the right, a car labeled the AV (rover), with an antenna. Below the base, a panel labeled seen from above, with arrows for east and north: a cross labeled true point and a blue dot labeled GNSS says, up and to the right of it, joined by a rust arrow; below them, in rust, error: 1.2 m east, 0.8 m north.
    :width: 60%
    :align: center
 
    **Seen from above,** at the base: the **true point** (cross) and where
    the base's GNSS puts it (blue dot). The **rust arrow** is the base's
-   error.
+   error, 1.2 m east and 0.8 m north.
 
 1. From the satellites, the base computes where it is. Like any receiver,
    it is off.
@@ -545,7 +559,7 @@ RTK, Step 3: the Base Sends Its Error to the AV
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/rtk_step3.png
-   :alt: A side view. A satellite at the top sends signals, drawn as dashed lines, to a base station on the left, a mast on a marker labeled base station on a surveyed point, and to the AV on the right, a car labeled the AV (rover), with an antenna. Below the base, a panel labeled seen from above, with arrows for east and north: a cross labeled true point and a blue dot labeled GNSS says, up and to the right of it, joined by a rust arrow labeled error. A green arrow from the base to the AV is labeled corrections: the base's error.
+   :alt: A side view. A satellite at the top sends signals, drawn as dashed lines, to a base station on the left, a mast on a marker labeled base station on a surveyed point, and to the AV on the right, a car labeled the AV (rover), with an antenna. Below the base, a panel labeled seen from above, with arrows for east and north: a cross labeled true point and a blue dot labeled GNSS says, up and to the right of it, joined by a rust arrow; below them, in rust, error: 1.2 m east, 0.8 m north. A green arrow from the base to the AV is labeled corrections: the base's error.
    :width: 60%
    :align: center
 
@@ -555,7 +569,7 @@ RTK, Step 3: the Base Sends Its Error to the AV
 - The base sends its error to every receiver nearby, as **corrections**.
   The AV receiving them is called a **rover**.
 - It only helps nearby, where the AV sees the same satellites through the
-  same air: RTK works "in the vicinity of a base station" (ESA Navipedia).
+  same atmosphere: RTK works "in the vicinity of a base station" (ESA Navipedia).
 - A real-time network uses many base stations and fills in the corrections
   between them (Gillins et al., 2019), so a rover is never far from one.
 
@@ -566,19 +580,20 @@ RTK, Step 4: the AV Subtracts the Base's Error
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/rtk_step4.png
-   :alt: A side view. A satellite at the top sends signals, drawn as dashed lines, to a base station on the left, a mast on a marker labeled base station on a surveyed point, and to the AV on the right, a car labeled the AV (rover), with an antenna. Below the base, a panel labeled seen from above, with arrows for east and north: a cross labeled true point and a blue dot labeled GNSS says, up and to the right of it, joined by a rust arrow labeled error. A green arrow from the base to the AV is labeled corrections: the base's error. Below the AV, a second panel seen from above: a cross labeled truth, a blue dot labeled raw fix up and to the right joined by a rust arrow, and a curved green arrow from the raw fix back to a green dot labeled corrected, almost on the cross.
+   :alt: A side view. A satellite at the top sends signals, drawn as dashed lines, to a base station on the left, a mast on a marker labeled base station on a surveyed point, and to the AV on the right, a car labeled the AV (rover), with an antenna. Below the base, a panel labeled seen from above, with arrows for east and north: a cross labeled true point and a blue dot labeled GNSS says, up and to the right of it, joined by a rust arrow; below them, in rust, error: 1.2 m east, 0.8 m north. A green arrow from the base to the AV is labeled corrections: the base's error. Below the AV, a second panel seen from above: a cross labeled truth, a blue dot up and to the right joined to it by a rust arrow and labeled raw fix: 1.3 m east, 0.7 m north, and a curved green arrow from the raw fix back to a green dot almost on the cross, labeled in green corrected: 0.1 m east, 0.1 m south.
    :width: 60%
    :align: center
 
    **Seen from above,** at the AV: the **truth** (cross), the AV's **raw
-   fix** (blue dot, rust arrow), and the **corrected** fix (green dot) after
-   the base's error is subtracted (curved green arrow).
+   fix** (blue dot, rust arrow), 1.3 m east and 0.7 m north, and the
+   **corrected** fix (green dot) after the base's error is subtracted
+   (curved green arrow), 0.1 m east and 0.1 m south.
 
 Numbers chosen for this example:
 
 1. The AV's raw fix: 1.3 m east and 0.7 m north of the truth.
 2. Most of that error is the one the base has, because both see the same
-   satellites through the same air. Subtract the base's error, 1.2 m east
+   satellites through the same atmosphere. Subtract the base's error, 1.2 m east
    and 0.8 m north.
 3. East: 1.3 minus 1.2 leaves 0.1 m east. North: 0.8 is 0.1 more than 0.7,
    so the fix ends 0.1 m south.
@@ -590,7 +605,8 @@ Numbers chosen for this example:
    Our example leaves 0.1 m. Real RTK leaves less: it also measures the
    satellite's radio wave itself, the **carrier**, far finer than the timing
    a plain receiver uses. Near a base that gives "a few centimetres" (ESA
-   Navipedia), inside our 0.29 m bound.
+   Navipedia), well inside the 0.29 m error bound for local streets from
+   :ref:`the start of the lecture <l6-lec-bound>` (Reid et al., 2019).
 
 .. tip::
 
@@ -606,23 +622,36 @@ What RTK Cannot Cancel
 So why not just buy RTK? Three reasons.
 
 .. figure:: /_static/images/L6/rtk_limits.png
-   :alt: Three side-view panels. Panel 1, a bounce at the AV: a satellite signal reaches the base station on the left directly, while the signal to the AV bounces off a tall glass tower first, drawn as a rust dashed line; caption base in the open, the bounce is at the AV only. Panel 2, no sky: the AV under a tunnel roof, the satellite's signals stop at the roof, marked with rust crosses; caption no satellites in view, no fix, with or without RTK. Panel 3, far from the base: the base on the left and the AV on the right, far apart, each under a different shaded patch of air; caption far apart, less of the error is shared.
+   :alt: Three side-view panels. Panel 1, a bounce at the AV: a satellite signal reaches the base station on the left directly, while the signal to the AV bounces off a tall glass tower first, drawn as a rust dashed line; caption base in the open, the bounce is at the AV only. Panel 2, no sky: the AV under a tunnel roof, the satellite's signals stop at the roof, marked with rust crosses; caption no satellites in view, no fix, with or without RTK. Panel 3, far from the base: the base on the left and the AV on the right, joined by a double arrow along the ground. Each one's signal crosses a different shaded patch, labeled atmosphere: the blue patch over the base is labeled delay 1, the rust patch over the AV delay 2; caption beyond 10 to 20 km: the delays differ.
    :width: 95%
    :align: center
 
    What RTK cannot cancel. **1:** the signal to the AV bounces off a glass
    tower; the base, in the open, does not see that bounce. **2:** under a
-   roof no satellite is in view. **3:** far apart, the base and the AV look
-   through different air. **Rust** marks an error.
+   roof no satellite is in view. **3:** far apart, the two signals cross
+   different parts of the atmosphere and are delayed differently. **Rust** marks an error.
 
-1. **A bounce at the AV.** The base station is in the open. A bounce off
-   the building next to the car happens at the car alone, so the correction
-   does not contain it. Multipath stays.
+1. **A bounce at the AV.** RTK subtracts the base's error, so it removes
+   only what the base and the AV share: the satellite clock, the orbit and
+   the two atmosphere delays (ESA Navipedia). Here the signal to the AV
+   bounces off the glass tower first. The bounced path is longer, so the
+   AV's distance to that satellite comes out too long. Multipath comes
+   mainly from an antenna close to reflecting structures (ESA Navipedia,
+   Multipath). The base stands in the open and gets the same signal
+   straight, so its error, and the correction it sends, has no bounce in
+   it. Subtracting leaves the bounce in the AV's fix: multipath stays.
 2. **No sky.** RTK still needs the satellites. Between tall
    buildings, in a tunnel or under a bridge, it stops like plain GNSS.
-3. **Far from the base.** The cancelling works "in the vicinity of a base
-   station" (Navipedia). Farther away, the two receivers look through
-   different air, and the shared part of the error shrinks.
+3. **Far from the base.** Each signal slows down as it crosses the
+   atmosphere. ESA's Navipedia lists two of these delays among the errors,
+   the ionospheric and the tropospheric delay, named after two layers of
+   the atmosphere. Near the base, the two signals cross nearly the same
+   atmosphere, so the delays are almost equal and the correction cancels
+   them. RTK "can be used for distances of up to 10 or 20 kilometres"
+   (Navipedia). A single base station is generally kept under 20 km,
+   because farther away the atmospheric delays do not cancel well enough;
+   real-time networks put a base station every 70 km or less (Gillins et
+   al., 2019).
 
 .. important::
 
@@ -1731,4 +1760,5 @@ Next Class
 .. rubric:: Image credits
 
 The vehicle icons in the figures on this page were created by Stone from the
-`Noun Project <https://thenounproject.com>`_.
+`Noun Project <https://thenounproject.com>`_. The IMU photo is a product image of the
+MS-IMU3050 by Memsense, an Inertial Labs company.
