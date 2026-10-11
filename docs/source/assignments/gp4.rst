@@ -2,10 +2,8 @@
 GP4: Planning & Control
 ====================================================
 
-.. card::
-   :class-card: sd-bg-dark sd-text-white sd-shadow-sm
-
-   **GP4 -- At a Glance**
+.. card:: GP4: At a Glance
+   :class-card: sd-shadow-sm
 
    .. list-table::
       :widths: 30 70

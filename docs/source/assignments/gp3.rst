@@ -2,10 +2,8 @@
 GP3: Fusion & Localization
 ====================================================
 
-.. card::
-   :class-card: sd-bg-dark sd-text-white sd-shadow-sm
-
-   **GP3 -- At a Glance**
+.. card:: GP3: At a Glance
+   :class-card: sd-shadow-sm
 
    .. list-table::
       :widths: 30 70

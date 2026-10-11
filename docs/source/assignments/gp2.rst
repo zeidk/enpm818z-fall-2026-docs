@@ -38,10 +38,8 @@ person really was, and score each detector against that.
 
 CARLA knows where everything is. That is what GP2 is built on.
 
-.. card::
-   :class-card: sd-bg-dark sd-text-white sd-shadow-sm
-
-   **GP2: At a Glance**
+.. card:: GP2: At a Glance
+   :class-card: sd-shadow-sm
 
    .. list-table::
       :widths: 30 70

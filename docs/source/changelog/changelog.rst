@@ -5,10 +5,19 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.8.4: GP2, Add the Instructor as a Collaborator (2026-10-11)
+.. dropdown:: v2.8.5: Project Summary Boxes Follow the Theme (2026-10-11)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Projects
+
+   - **GP1 and GP2:** the "At a Glance" box was dark in light mode. It now
+     follows the light and dark themes.
+
+.. dropdown:: v2.8.4: GP2, Add the Instructor as a Collaborator (2026-10-11)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Projects
 
