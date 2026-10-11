@@ -5,10 +5,19 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.7.3: GP2 Moves to Wednesday, October 14 (2026-10-11)
+.. dropdown:: v2.7.4: Projects in Preparation (2026-10-11)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Projects
+
+   - **GP3 and GP4** are being updated to match GP2. They stay hidden;
+     nothing new to open yet.
+
+.. dropdown:: v2.7.3: GP2 Moves to Wednesday, October 14 (2026-10-11)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Syllabus
 
