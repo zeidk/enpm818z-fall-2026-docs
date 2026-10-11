@@ -2,7 +2,7 @@
 Grading a Detector and a Tracker
 ====================================================
 
-.. admonition:: Read this before GP2, Task 3
+.. admonition:: Read this before you start GP2
    :class: important
 
    This page is **pre-read material** for :doc:`GP2 </assignments/gp2>`.
@@ -396,7 +396,7 @@ switches give :math:`1 - 260/1000 = 0.74`. MOTA can go below 0 when the
 tracker makes more errors than there are objects.
 
 .. figure:: /_static/images/GP2/gp2_track_timeline.png
-   :alt: Two timeline panels, YOLOv8s on top and RT-DETR-L below, for six actors of the clear demo drive: pedestrians 346, 286, 328 and 321 and vehicles 210 and 256, over about 23 seconds. A gray line shows the frames where each actor is in the ground truth; colored bars show when a confirmed track covers it, one color per track ID; black crosses mark ID switches. Pedestrian 328 is in the ground truth from about 1 to 3.5 seconds and again from 8.7 to 12.5 seconds. YOLOv8s: 7 switches, 5 of them on pedestrian 321 between 4 and 8 seconds, whose bar is broken into many pieces; it covers pedestrian 328 only from 10 seconds. RT-DETR-L: 3 switches, one each on pedestrians 346 and 328 and vehicle 210; it covers pedestrian 328 briefly near 3 seconds and again from 10 seconds with a new color.
+   :alt: Two timeline panels, YOLOv8s on top and RT-DETR-L below, for six actors of the clear demo drive: pedestrians 346, 286, 328 and 321 and vehicles 210 and 256, over about 23 seconds. A gray line shows the frames where each actor is in the ground truth; colored bars show when a confirmed track covers it, one color per track ID; black crosses mark ID switches. Pedestrian 328 is in the ground truth from about 1 to 3.5 seconds and again from 8.7 to 12.5 seconds. YOLOv8s: 7 switches, 6 of them on pedestrian 321 between 4 and 8 seconds, whose bar is broken into many pieces, and 1 on pedestrian 286 near 17 seconds; it covers pedestrian 328 only from 10 seconds. RT-DETR-L: 3 switches, one each on pedestrians 346 and 328 and vehicle 210; it covers pedestrian 328 briefly near 3 seconds and again from 10 seconds with a new color.
    :align: center
    :width: 100%
 

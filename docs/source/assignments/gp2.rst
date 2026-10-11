@@ -46,7 +46,8 @@ GP2: Perception (YOLO vs. RT-DETR)
    test: drive the route by day and by night, know where every car and every
    person really was, and score each detector against that.
 
-   CARLA knows where everything is. That is what GP2 is built on.
+   CARLA knows where everything is, so GP2 can grade each detector against
+   it.
 
 .. card:: GP2: At a Glance
    :class-card: sd-shadow-sm
@@ -228,9 +229,12 @@ working in the same private repository, on a new branch.
 
    .. code-block:: bash
 
-      pip install ultralytics pycocotools scipy
+      python3 -m pip install --user --break-system-packages ultralytics pycocotools scipy
 
-   We used Ultralytics 8.3.227. Ultralytics downloads the weights,
+   ``--user`` installs the packages in your home folder, where ROS 2's
+   ``python3`` finds them. On Ubuntu 24.04, a plain ``pip install`` refuses
+   to install outside a virtual environment; ``--break-system-packages``
+   lets it. We used Ultralytics 8.3.227. Ultralytics downloads the weights,
    ``yolov8s.pt`` and ``rtdetr-l.pt``, the first time you load each model.
 
 5. Add the detector node to ``setup.py``, in ``console_scripts``:
@@ -281,9 +285,14 @@ GP2 adds these files to your GP1 repository, on the ``gp2`` branch:
    │       ├── clear_results.json     # Tasks 3 and 4
    │       ├── night_results.json     # Tasks 3 and 4
    │       └── coco_check.txt         # Task 3
+   ├── README.md                      # with your AI disclosure
    └── gp2_report.pdf                 # Task 5
 
 Do not commit ``recordings/`` or the ``.pt`` weight files.
+
+``results/`` sits at the repository root, next to ``ads_pipeline/``. You run
+every command from the package root, ``ads_pipeline/``, so from there the
+results folder is ``../results/``.
 
 What the starter contains
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -353,7 +362,13 @@ What the starter contains
    team of three can start three of them on day one, one person each, and
    the first to finish takes the fourth.
 
-Run the tests from the package root:
+Run the tests from the package root, in a terminal where ROS 2 is sourced
+(Jazzy shown; use your distribution's name). The detector tests import ROS 2
+packages:
+
+.. code-block:: bash
+
+   source /opt/ros/jazzy/setup.bash
 
 .. code-block:: bash
 
@@ -373,9 +388,11 @@ What each part does:
   the 7 tests of GP1's ``test_lidar_projection.py``.
 - ``-v``: print one line per test, with ``PASSED`` or ``FAILED``.
 
-On the starter as provided, 36 of the 37 fail with ``NotImplementedError``:
-they test the functions you write. The one that passes,
-``test_launch_declares_every_parameter``, checks the launch file we provide.
+On the starter as provided, with ROS 2 sourced, 36 of the 37 fail with
+``NotImplementedError``: they test the functions you write. The one that
+passes, ``test_launch_declares_every_parameter``, checks the launch file we
+provide. Without ROS 2 sourced, the ROS 2 tests are skipped instead, and a
+skipped test is not a passed one.
 Each task's **Steps** name the test file that task must pass.
 
 
@@ -392,7 +409,10 @@ work only on these recordings: GP2 needs no CARLA.
 1. Download your team's archive, ``team_X_drives.tar``, where ``X`` is your
    team number on Canvas (``team_3_drives.tar`` for Team3), and the file
    ``SHA256SUMS`` from the same folder (link on Canvas), into
-   ``~/Downloads``.
+   ``~/Downloads``. Download the two files one at a time, not the whole
+   folder: Google Drive would first pack the whole folder into one large
+   zip. Google warns that it cannot scan large files for viruses; that is
+   normal for files this size.
 2. Check that the download is complete. The line for your archive must end
    in ``OK``:
 
@@ -409,7 +429,9 @@ work only on these recordings: GP2 needs no CARLA.
 
       cd ~/enpm818z_ws/src/GP1_TeamX/ads_pipeline && tar xf ~/Downloads/team_X_drives.tar
 
-4. Add ``recordings/`` to ``.gitignore``. The team archives are 1.1 GB to
+4. Add ``recordings/`` and ``*.pt`` to ``.gitignore``. Ultralytics saves
+   the weights it downloads in the folder you run it from, the package
+   root. The team archives are 1.1 GB to
    2.8 GB, depending on your camera's image size.
 
 .. figure:: /_static/images/GP2/gp2_scene_day_night.png
@@ -586,8 +608,9 @@ Tasks
 
          python3 -m pytest test/test_gp2_ground_truth.py -v
 
-   2. Run the grader on a drive. Before your Task 3 works, it stops after
-      writing ``gt.json``; that is enough for now:
+   2. Run the grader on a drive. Until your Task 3 and Task 4 code works,
+      it stops with a ``NotImplementedError`` right after it writes
+      ``gt.json``. That is expected, and ``gt.json`` is all Task 1 needs:
 
       .. code-block:: bash
 
@@ -597,17 +620,17 @@ Tasks
 
       .. code-block:: bash
 
-         python3 tools/show_frame.py --rec recordings/clear --frames 50 300 550 --out results/gp2/overlays
+         python3 tools/show_frame.py --rec recordings/clear --frames 50 300 550 --out ../results/gp2/overlays
 
       .. code-block:: bash
 
-         python3 tools/show_frame.py --rec recordings/night --frames 50 300 550 --out results/gp2/overlays
+         python3 tools/show_frame.py --rec recordings/night --frames 50 300 550 --out ../results/gp2/overlays
 
    **Deliverables:**
 
    - Make every test in ``test/test_gp2_ground_truth.py`` pass.
    - Save three frames of each drive with the ground truth drawn, in
-     ``results/gp2/overlays/``.
+     ``results/gp2/overlays/`` (the commands above do it).
    - In the report, show one frame where your ground truth is wrong or open
      to argument, and explain why. Cases we saw: two cars close together
      merged into one box, and a car seen through a fence.
@@ -747,6 +770,12 @@ Tasks
       Both fit; RT-DETR-L uses about half of the budget by itself
       (:math:`26.5 / 50 = 53\%`).
 
+   .. note::
+
+      **No NVIDIA GPU?** Add ``--device cpu`` to ``run_detector.py`` and
+      ``device:=cpu`` to the launch command, and say in the report that your
+      times are CPU times.
+
    .. warning::
 
       **Anything else on the GPU ruins the measurement.** With CARLA
@@ -756,9 +785,12 @@ Tasks
    **Deliverables:**
 
    - Make every test in ``test/test_gp2_detector.py`` pass.
-   - Save one frame of ``/perception/annotated_image`` for each model,
-     ``results/gp2/node_yolo.png`` and ``results/gp2/node_detr.png``, and
-     save the ``ros2 topic hz`` output in ``results/gp2/node_hz.txt``.
+   - Save one frame of ``/perception/annotated_image`` for each model, as
+     ``results/gp2/node_yolo.png`` and ``results/gp2/node_detr.png``
+     (``rqt_image_view`` has a save button).
+   - For each model, let ``ros2 topic hz`` run for about 10 s, stop it with
+     Ctrl+C, and paste its output in ``results/gp2/node_hz.txt``, under the
+     model's name.
    - In the report, give each model's median time per image on each drive,
      and say how you measured it: the GPU, plugged in or on battery, and the
      method.
@@ -823,7 +855,22 @@ Tasks
 
          python3 -m pytest test/test_gp2_detection_eval.py -v
 
-   2. Grade the clear drive:
+   2. Check your mAP against pycocotools, the code COCO publishes for its
+      own benchmark, on the same boxes. It needs ``gt.json`` (Task 1) and
+      the detection files of Task 2, Step 2, nothing else. For example,
+      YOLOv8s on the clear drive:
+
+      .. code-block:: bash
+
+         python3 tools/check_coco.py --rec recordings/clear --model yolo
+
+      Do it for both models (``--model yolo``, ``--model detr``) and both
+      drives. **The two must agree within 0.005.** Our solution agreed to
+      all four decimals it prints. A bigger gap means a bug in your
+      matching or your AP.
+
+   3. Grade both drives once your Task 4 tracker works too: ``grade.py``
+      runs it on the same detections. The clear drive:
 
       .. code-block:: bash
 
@@ -835,25 +882,12 @@ Tasks
 
          python3 tools/grade.py --rec recordings/night
 
-   3. Check your mAP against pycocotools, the code COCO publishes for its
-      own benchmark, on the same boxes. For example, YOLOv8s on the clear
-      drive:
-
-      .. code-block:: bash
-
-         python3 tools/check_coco.py --rec recordings/clear --model yolo
-
-      Do it for both models (``--model yolo``, ``--model detr``) and both
-      drives. **The two must agree within 0.005.** Our solution agreed to
-      all four decimals it prints. A bigger gap means a bug in your
-      matching or your AP.
-
    **Deliverables:**
 
    - Make every test in ``test/test_gp2_detection_eval.py`` pass.
-   - Copy the ``results.json`` that ``grade.py`` writes in each drive's
-     folder to ``results/gp2/clear_results.json`` and
-     ``results/gp2/night_results.json``.
+   - ``results/gp2/clear_results.json`` and
+     ``results/gp2/night_results.json``: copied at the end of Task 4, Step
+     3, because the same file holds the tracking numbers.
    - Save the four ``check_coco.py`` lines (two models, two drives) in
      ``results/gp2/coco_check.txt``.
    - In the report, give a table of AP\@0.5 per class, mAP\@0.5 and
@@ -873,9 +907,9 @@ Tasks
 
       - **Class code to start from:** L5's tracking demo,
         `l5_tracking_demo/tracker_core.py <https://github.com/rubixcubic/enpm818z-fall-2026-carla-ros/blob/main/l5_tracking_demo/l5_tracking_demo/tracker_core.py>`__.
-        Its ``KalmanCV`` (`lines 38 to 92 <https://github.com/rubixcubic/enpm818z-fall-2026-carla-ros/blob/main/l5_tracking_demo/l5_tracking_demo/tracker_core.py#L38-L92>`__)
+        Its ``KalmanCV`` (`lines 38 to 88 <https://github.com/rubixcubic/enpm818z-fall-2026-carla-ros/blob/main/l5_tracking_demo/l5_tracking_demo/tracker_core.py#L38-L88>`__)
         is a constant-velocity Kalman filter on a position in meters, and
-        its ``associate_gnn`` (`lines 119 to 138 <https://github.com/rubixcubic/enpm818z-fall-2026-carla-ros/blob/main/l5_tracking_demo/l5_tracking_demo/tracker_core.py#L119-L138>`__)
+        its ``associate_gnn`` (`lines 119 to 133 <https://github.com/rubixcubic/enpm818z-fall-2026-carla-ros/blob/main/l5_tracking_demo/l5_tracking_demo/tracker_core.py#L119-L133>`__)
         pairs tracks and detections with the Hungarian algorithm. Yours
         works on a box in pixels, with an IoU cost instead of a distance.
       - **The equations:** L3's Kalman filter (predict, then update).
@@ -943,7 +977,7 @@ Tasks
      in a simpler way than the paper does.
 
    .. figure:: /_static/images/GP2/gp2_track_timeline.png
-      :alt: Two timeline panels, YOLOv8s on top and RT-DETR-L below, for six actors of the clear demo drive: pedestrians 346, 286, 328 and 321 and vehicles 210 and 256, over about 23 seconds. A gray line shows the frames where each actor is in the ground truth; colored bars show when a confirmed track covers it, one color per track ID; black crosses mark ID switches. YOLOv8s: 7 switches, 5 of them on pedestrian 321 between 4 and 8 seconds, whose bar is broken into many pieces. RT-DETR-L: 3 switches, one each on pedestrians 346 and 328 and vehicle 210.
+      :alt: Two timeline panels, YOLOv8s on top and RT-DETR-L below, for six actors of the clear demo drive: pedestrians 346, 286, 328 and 321 and vehicles 210 and 256, over about 23 seconds. A gray line shows the frames where each actor is in the ground truth; colored bars show when a confirmed track covers it, one color per track ID; black crosses mark ID switches. YOLOv8s: 7 switches, 6 of them on pedestrian 321 between 4 and 8 seconds, whose bar is broken into many pieces, and 1 on pedestrian 286 near 17 seconds. RT-DETR-L: 3 switches, one each on pedestrians 346 and 328 and vehicle 210.
       :align: center
       :width: 100%
 
@@ -976,7 +1010,17 @@ Tasks
          python3 tools/grade.py --rec recordings/clear --conf 0.3
 
       then ``--conf 0.5`` and ``--conf 0.7``, and the same on the night
-      drive.
+      drive. Each run overwrites ``results.json``. So finish by running
+      your chosen cut on each drive, then copy the two files, from the
+      package root:
+
+      .. code-block:: bash
+
+         cp recordings/clear/results.json ../results/gp2/clear_results.json
+
+      .. code-block:: bash
+
+         cp recordings/night/results.json ../results/gp2/night_results.json
 
    **Choosing the cut is a trade-off.** A low cut gives the tracker more
    boxes: fewer misses, but more false and flickering boxes, so more ID
@@ -1175,27 +1219,36 @@ Submission Checklist
    **Ground truth (Task 1)**
 
    - [ ] Your team's drives unpacked in ``recordings/``, 600 frames each.
-   - [ ] Overlays show boxes on the actors, by day and by night.
+   - [ ] Overlays show boxes on the actors, by day and by night, saved in
+         ``results/gp2/overlays/``.
 
    **Detector (Task 2)**
 
-   - [ ] ``ros2 launch ads_pipeline perception_launch.py model_type:=detr``
+   - [ ] ``ros2 launch ads_pipeline perception_launch.py model_type:=detr weights:=rtdetr-l.pt``
          starts RT-DETR-L (the log line says ``detr``).
    - [ ] ``/perception/detections`` publishes while ``replay_drive.py``
          plays a drive.
    - [ ] Times measured with nothing else on the GPU.
+   - [ ] ``results/gp2/node_yolo.png``, ``node_detr.png`` and
+         ``node_hz.txt`` saved.
 
    **Grading and tracking (Tasks 3 and 4)**
 
-   - [ ] ``check_coco.py`` agrees within 0.005 for both models and drives.
+   - [ ] ``check_coco.py`` agrees within 0.005 for both models and drives,
+         and its four lines are in ``results/gp2/coco_check.txt``.
+   - [ ] ``results/gp2/clear_results.json`` and ``night_results.json``
+         copied after the run at your chosen cut.
    - [ ] The truth row is in your report, next to both models.
 
    **Repository**
 
    - [ ] No recordings or weights committed.
+   - [ ] AI use disclosed in ``README.md``, two or three sentences per
+         member.
    - [ ] ``rubixcubic`` added as a collaborator on the private repository.
    - [ ] Commit tagged ``gp2-final`` and pushed.
    - [ ] ``gp2_report.pdf`` submitted on Canvas.
+   - [ ] Peer evaluation emailed within 48 hours (see :ref:`peer-evaluation`).
 
 
 Grading Rubric
@@ -1250,8 +1303,8 @@ Common Mistakes
      and changes the score.
    - **Reading mAP\@0.5 as a confidence.** The 0.5 is the IoU threshold.
      AP already averages over every confidence cut.
-   - **Timing with something else on the GPU.** See Task 2: the time grows
-     many times over.
+   - **Timing with something else on the GPU.** See Task 2: with CARLA
+     running, our YOLOv8s median went from about 15 ms to 271 ms.
    - **Using another team's drives.** Your drives are recorded with your
      rig, and graders check your numbers against them.
    - **Every COCO class counted.** A traffic light is not a vehicle. Keep

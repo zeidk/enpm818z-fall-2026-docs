@@ -10,7 +10,7 @@ Syllabus
 
    The authoritative, printable syllabus is the PDF distributed on
    ELMS-Canvas. This page mirrors it. If the two ever disagree, the
-   Canvas PDF governs -- please report the discrepancy.
+   Canvas PDF governs. Please report the discrepancy.
 
 Prerequisites
 -------------
@@ -38,7 +38,7 @@ Prerequisites
 
    Several lectures open with a "recap from ENPM673" note. The material
    these notes refer to is developed from first principles anyway where
-   the course depends on it -- most importantly the Kalman filter, which
+   the course depends on it, most importantly the Kalman filter, which
    is built up in full in :doc:`L3 </lectures/lecture3/l3_index>`. You
    will not be left without it. Do, however, review CNN fundamentals
    before L4 and camera calibration before L2.
@@ -70,7 +70,7 @@ Course and Instructor
 
    **There is no TA this semester.** Everything routes to the instructor, so
    give setup problems a head start rather than a deadline. Post environment
-   problems where classmates can see them -- someone else has almost certainly
+   problems where classmates can see them: someone else has almost certainly
    hit the same thing. Email replies within 24 hours where possible; use email
    for academic and personal concerns, not for due dates and point values
    already in this syllabus.
@@ -106,7 +106,7 @@ These six numbers add up to your grade. There is nothing else.
      - 15.0%
    * - Quizzes (5, equally weighted)
      - 20.0%
-     - --
+     - not part of it
    * - **Total**
      - **100%**
      - **100%**
@@ -511,25 +511,25 @@ ratings.
 
 .. [1] Goldfinch, J. and Raeside, R. (1990). Development of a peer
    assessment technique for obtaining individual marks on a group project.
-   *Assessment & Evaluation in Higher Education*, 15(3), 210--231.
+   *Assessment & Evaluation in Higher Education*, 15(3), 210 to 231.
 .. [2] Conway, R., Kember, D., Sivan, A. and Wu, M. (1993). Peer assessment
    of an individual's contribution to a group project. *Assessment &
-   Evaluation in Higher Education*, 18(1), 45--56.
+   Evaluation in Higher Education*, 18(1), 45 to 56.
    https://doi.org/10.1080/0260293930180104
 .. [3] Kaufman, D. B., Felder, R. M. and Fuller, H. (2000). Accounting for
    individual effort in cooperative learning teams. *Journal of Engineering
-   Education*, 89(2), 133--140.
+   Education*, 89(2), 133 to 140.
    https://doi.org/10.1002/j.2168-9830.2000.tb00507.x
 .. [4] Ohland, M. W., Loughry, M. L., Woehr, D. J., Bullard, L. G., Felder,
    R. M., Finelli, C. J., Layton, R. A., Pomeranz, H. R. and Schmucker,
    D. G. (2012). The Comprehensive Assessment of Team Member Effectiveness:
    development of a behaviorally anchored rating scale for self and peer
    evaluation. *Academy of Management Learning & Education*, 11(4),
-   609--630. See also https://info.catme.org/instructor-faq/what-is-the-adjustment-factor/
+   609 to 630. See also https://info.catme.org/instructor-faq/what-is-the-adjustment-factor/
 .. [5] Freeman, M. and McKenzie, J. (2002). SPARK, a confidential web-based
    template for self and peer assessment of student teamwork: benefits of
    evaluating across different subjects. *British Journal of Educational
-   Technology*, 33(5), 551--569. https://doi.org/10.1111/1467-8535.00291
+   Technology*, 33(5), 551 to 569. https://doi.org/10.1111/1467-8535.00291
 
 
 The Team Charter
@@ -600,7 +600,7 @@ Academic Integrity and Generative AI
    \*Disclosure carries no penalty. **Undisclosed use is a violation of the
    Code of Academic Integrity.**
 
-**Permitted, with disclosure** -- on group projects and the final report:
+**Permitted, with disclosure** on group projects and the final report:
 explaining concepts and papers; interpreting error messages and stack traces;
 reviewing code you have **already written**; suggesting debugging strategies;
 generating small illustrative examples.
@@ -745,7 +745,7 @@ Final Project: Building an ADS Pipeline
 ----------------------------------------
 
 The course grade is built around a single **final project** consisting of
-four cumulative group projects (GP1--GP4) plus a final report. Each GP
+four cumulative group projects (GP1 to GP4) plus a final report. Each GP
 extends the ROS 2 package from the previous one, so that by GP4 your team
 has a working ADS pipeline. **One package, extended four times.**
 
@@ -755,8 +755,8 @@ adjustment period closes. The setup milestone before it is individual.
 .. important::
 
    Starting from GP2, every project builds on your previous submission.
-   You will extend -- not replace -- the ``ads_pipeline`` ROS 2 package
-   your team created in GP1.
+   You will extend the ``ads_pipeline`` ROS 2 package your team created
+   in GP1, not replace it.
 
 .. list-table::
    :header-rows: 1
@@ -799,7 +799,7 @@ adjustment period closes. The setup milestone before it is individual.
      - Week 12
      - Week 15
      - 12.0%
-     - Integration of GP1--GP4 + evaluation on unseen scenarios + report.
+     - Integration of GP1 to GP4 + evaluation on unseen scenarios + report.
 
 - The final report spec is published in **Week 12**, at the same time as GP4,
   so you can write it as you go instead of starting it in Week 14.

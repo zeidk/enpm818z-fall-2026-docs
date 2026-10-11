@@ -5,10 +5,40 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.9.0: SLAM Reading Pages (2026-10-11)
+.. dropdown:: v2.9.1: GP2 Fixes from a Full Check (2026-10-11)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Projects
+
+   - **GP2, commands:** the RT-DETR-L check in the submission checklist
+     loads ``rtdetr-l.pt``. Results go to ``../results/gp2/`` from the
+     package root, where the folder tree puts them. The install uses
+     ``python3 -m pip install --user --break-system-packages``.
+   - **GP2, tests and grading:** source ROS 2 before the tests. Task 3
+     checks with ``check_coco.py`` first; ``grade.py`` also runs the Task 4
+     tracker, so it comes once Task 4 works. Run your chosen confidence cut
+     last, then copy ``results.json``.
+   - **GP2, smaller fixes:** ``*.pt`` in ``.gitignore``, how to record
+     ``node_hz.txt``, a CPU note, the Google Drive download tips, a fuller
+     submission checklist, ``README.md`` in the folder tree, two L5 line
+     ranges, and the ID-switch count in a figure's description.
+   - **GP1:** the folder name uses your team number (``GP1_Team3``), and
+     the rig table says which rig each team has (Team1 has rig A, up to
+     Team5 with rig E).
+   - **Projects page:** GP1 and GP2 are posted.
+
+   .. rubric:: Syllabus and site
+
+   - Ranges and pauses written with words instead of dashes, in the
+     syllabus and the projects page. No date changed.
+   - The tooltips of the top bar icons are readable in dark mode.
+   - The GP2 pre-read is marked "read before you start GP2".
+
+.. dropdown:: v2.9.0: SLAM Reading Pages (2026-10-11)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Pre-Read Material
 

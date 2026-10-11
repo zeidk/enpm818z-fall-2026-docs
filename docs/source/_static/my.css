@@ -22,6 +22,14 @@ html[data-theme="dark"] {
   --bs-emphasis-color: #fff;
   --bs-emphasis-color-rgb: 255, 255, 255;
 }
+/* Bootstrap's tooltips (the navbar icons) take their background from
+   --bs-emphasis-color, now white in dark mode, and their text from
+   --bs-body-bg, which stays white because the page never sets
+   data-bs-theme. White on white: give the text the theme's dark page
+   color. */
+html[data-theme="dark"] .tooltip {
+  --bs-tooltip-color: var(--pst-color-background);
+}
 
 /* Before the theme's JS stamps data-theme, honour the OS preference so
    the tables are never briefly unreadable on first paint. */

@@ -29,7 +29,7 @@ That material lives here. **Each page states when to read it.** Most are read
        done in production, and the landscape beyond CARLA. Read once L2 has
        shown you a simulator, and before GP1. Returned to in L12.
    * - :doc:`Grading a Detector and a Tracker </preread/detector-grading>`
-     - Before GP2, Task 3
+     - Before GP2
      - IoU, precision and recall, AP, mAP\@0.5 and mAP\@0.5:0.95, ID
        switches and MOTA, one step at a time. Builds on L4.
    * - :doc:`SLAM with a LiDAR </preread/slam-lidar>`

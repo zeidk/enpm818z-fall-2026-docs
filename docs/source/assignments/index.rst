@@ -9,8 +9,8 @@ The final project is the capstone experience of ENPM818Z, where you will
 design, implement, and deploy a complete **automated driving system (ADS)**
 pipeline in the CARLA simulator. Working in teams of 3 students, you will
 build a system that perceives its environment, localizes itself, plans a
-path, and controls a vehicle -- progressing from raw sensor data to
-autonomous driving.
+path, and controls a vehicle, from raw sensor data to autonomous
+driving.
 
 The project spans **12 weeks** through a sequence of progressive group
 projects, each building on the previous one. By the last group project,
@@ -20,7 +20,7 @@ evaluates the complete system on challenging, unseen scenarios.
 .. note::
 
    Group projects are posted one at a time as the semester progresses.
-   **GP1 is currently posted.** Later projects will appear here when
+   **GP1 and GP2 are posted.** Later projects will appear here when
    they open. See the syllabus for the full schedule and weights.
 
 
@@ -55,7 +55,7 @@ split between the group projects (**85%**) and the Final Report
 .. note::
 
    The Final Report is weighted separately at **15% of the final
-   project grade** -- see :ref:`final-report` below.
+   project grade**: see :ref:`final-report` below.
 
 
 Pipeline Progression
@@ -78,8 +78,8 @@ Each group project extends the ROS 2 package from the previous one:
 .. important::
 
    After GP1, every project builds on your previous submission. You will
-   extend -- not replace -- the ``ads_pipeline`` ROS 2 package your team
-   creates in GP1.
+   extend the ``ads_pipeline`` ROS 2 package your team creates in GP1,
+   not replace it.
 
 
 Learning Objectives
@@ -126,15 +126,15 @@ Team Formation
 
 .. _final-report:
 
-Final Report (Weeks 14--15)
----------------------------
+Final Report (Weeks 14 and 15)
+------------------------------
 
 **Weight:** 15% of the final project grade.
 
 After the last group project is complete, your team will evaluate the
 full pipeline on **instructor-provided scenarios** not seen during
 development and submit a final report. There are no classes during
-Weeks 14--15.
+Weeks 14 and 15.
 
 .. list-table::
    :widths: 30 70
@@ -156,11 +156,11 @@ Weeks 14--15.
 
 **Final Deliverables:**
 
-1. **Integrated ADS pipeline** -- All group-project nodes running end-to-end.
-2. **Evaluation results** -- Quantitative metrics on all 5 scenarios.
-3. **Written report (8--10 pages)** -- Architecture, design decisions,
+1. **Integrated ADS pipeline:** all group-project nodes running end-to-end.
+2. **Evaluation results:** quantitative metrics on all 5 scenarios.
+3. **Written report (8 to 10 pages):** architecture, design decisions,
    results, failure analysis, lessons learned.
-4. **Peer evaluation** -- Individual contribution assessment.
+4. **Peer evaluation:** individual contribution assessment.
 
 Integrate and refine the modular pipeline from the group projects. Add
 improvements: enhanced behavioral planner (intersections, yielding),

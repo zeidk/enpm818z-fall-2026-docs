@@ -208,7 +208,8 @@ node imports from, and the starter you copy.
    cp -r enpm818z-fall-2026-carla-ros/gp1_starter/ads_pipeline GP1_TeamX/
    cd GP1_TeamX && git init
 
-Use your own team letter in place of ``X``. That name is what the folder
+Use your own team number from Canvas in place of ``X`` (``GP1_Team3``
+for Team3). That name is what the folder
 structure and the submission checklist expect.
 
 The copy under ``gp1_starter/`` in the course repository carries a
@@ -300,8 +301,9 @@ Your Team's Sensor Configuration
 
 .. danger::
 
-   **Every team has a different sensor rig.** Find your team letter below
-   and use those values in ``carla_config.yaml``. They are not suggestions.
+   **Every team has a different sensor rig.** Find your team's rig letter
+   below (Team1 has rig A, Team2 rig B, and so on to Team5 with rig E) and
+   use those values in ``carla_config.yaml``. They are not suggestions.
 
    The extrinsic transform in Task 5 is determined entirely by this
    geometry, so **each team's answer is a different matrix**, and the number
@@ -1299,7 +1301,7 @@ Tasks
 
    Report, for each of the three runs, the **number of points that land on
    the image**. Also report your **4x4 extrinsic matrix**, printed to three
-   decimal places, and the team letter it was built from. That matrix is
+   decimal places, and the rig letter it was built from. That matrix is
    what the grader recomputes from :ref:`gp1-team-config`.
 
    Then answer this in a short paragraph:
