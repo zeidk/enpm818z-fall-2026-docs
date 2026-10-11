@@ -380,6 +380,98 @@ Kabsch, Thrun et al., and Zhang and Scaramuzza.
          each weighted by how sure it is. Also cited in the appendix on
          pose-graph least squares.
 
+      .. grid-item-card:: SLAM front end and back end
+         :link: https://doi.org/10.1109/TRO.2016.2624754
+         :class-card: sd-border-secondary
+
+         **Cadena, C., Carlone, L., Carrillo, H., Latif, Y., Scaramuzza, D.,
+         Neira, J., Reid, I. and Leonard, J. J. (2016)**
+
+         "Past, Present, and Future of Simultaneous Localization and Mapping."
+         *IEEE Transactions on Robotics*, 32(6), 1309 to 1332.
+
+         "The front-end abstracts sensor data into models that are amenable for
+         estimation, while the back-end performs inference".
+
+      .. grid-item-card:: LOAM
+         :link: https://doi.org/10.15607/RSS.2014.X.007
+         :class-card: sd-border-secondary
+
+         **Zhang, J. and Singh, S. (2014)**
+
+         "LOAM: Lidar Odometry and Mapping in Real-time." *Robotics: Science
+         and Systems*.
+
+         Feature points "on sharp edges and planar surfaces"; a LiDAR's
+         "insensitivity to ambient lighting and optical texture".
+
+      .. grid-item-card:: Cartographer
+         :link: https://doi.org/10.1109/ICRA.2016.7487258
+         :class-card: sd-border-secondary
+
+         **Hess, W., Kohler, D., Rapp, H. and Andor, D. (2016)**
+
+         "Real-Time Loop Closure in 2D LIDAR SLAM." *IEEE ICRA*, 1271 to 1278.
+
+         Scans matched into submaps; loop closures found in the background.
+
+      .. grid-item-card:: ORB-SLAM
+         :link: https://doi.org/10.1109/TRO.2015.2463671
+         :class-card: sd-border-secondary
+
+         **Mur-Artal, R., Montiel, J. M. M. and Tardós, J. D. (2015)**
+
+         "ORB-SLAM: A Versatile and Accurate Monocular SLAM System." *IEEE
+         Transactions on Robotics*, 31(5), 1147 to 1163.
+
+         ORB features; "depth cannot be recovered from a single image".
+
+      .. grid-item-card:: ORB-SLAM3
+         :link: https://doi.org/10.1109/TRO.2021.3075644
+         :class-card: sd-border-secondary
+
+         **Campos, C., Elvira, R., Gómez Rodríguez, J. J., Montiel, J. M. M.
+         and Tardós, J. D. (2021)**
+
+         "ORB-SLAM3." *IEEE Transactions on Robotics*, 37(6), 1874 to 1890.
+
+         Pure monocular SLAM: "scale is unknown"; an IMU makes it observable.
+
+      .. grid-item-card:: DBoW2
+         :link: https://doi.org/10.1109/TRO.2012.2197158
+         :class-card: sd-border-secondary
+
+         **Gálvez-López, D. and Tardós, J. D. (2012)**
+
+         "Bags of Binary Words for Fast Place Recognition in Image Sequences."
+         *IEEE Transactions on Robotics*, 28(5), 1188 to 1197.
+
+         "If they are similar enough, a loop closure is detected."
+
+      .. grid-item-card:: Scan Context
+         :link: https://doi.org/10.1109/IROS.2018.8593953
+         :class-card: sd-border-secondary
+
+         **Kim, G. and Kim, A. (2018)**
+
+         "Scan Context: Egocentric Spatial Descriptor for Place Recognition
+         Within 3D Point Cloud Map." *IEEE/RSJ IROS*, 4802 to 4809.
+
+         A descriptor of one LiDAR scan that "provides candidates for
+         loop-closure".
+
+      .. grid-item-card:: Degeneracy
+         :link: https://doi.org/10.1109/ICRA.2016.7487211
+         :class-card: sd-border-secondary
+
+         **Zhang, J., Kaess, M. and Singh, S. (2016)**
+
+         "On Degeneracy of Optimization-based State Estimation Problems."
+         *IEEE ICRA*, 809 to 816.
+
+         "Scarcity of texture features for vision sensors and lack of
+         geometrical structures for range sensors."
+
 
 .. dropdown:: Going Further Only
    :class-container: sd-border-secondary

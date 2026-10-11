@@ -2069,6 +2069,29 @@ at the same time.
    up twice.
 
 
+.. _l6-lec-slam-front-back:
+
+SLAM Has Two Parts: a Front End and a Back End
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. admonition:: Definition: front end and back end of SLAM
+   :class: note
+
+   "The front-end abstracts sensor data into models that are amenable for
+   estimation, while the back-end performs inference on the abstracted data
+   produced by the front-end" (Cadena et al., 2016).
+
+- **Front end:** turns raw scans or images into edges of the pose graph: the
+  motion between poses in a row (odometry), and loop closures when a place is
+  seen again. It also decides which measurement belongs to which point of the
+  map: the **data association**.
+- **Back end:** solves the pose graph, the next sections. It works the same
+  way whatever sensor made the edges.
+
+So a LiDAR SLAM and a visual SLAM differ in the front end; their back ends
+can be the same (later in this section).
+
+
 .. _l6-lec-pose-graph:
 
 A Pose Graph: Poses as Nodes, Measured Motions as Edges
@@ -2161,6 +2184,97 @@ share of the gap in proportion to its variance** :math:`\sigma^2`.
 
    See "The least squares, written out" in :doc:`Going Further
    <l6_appendix>`.
+
+
+.. _l6-lec-slam-compare:
+
+LiDAR SLAM and Visual SLAM: Different Front Ends, One Back End
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 18 41 41
+   :header-rows: 1
+   :class: compact-table
+
+   * -
+     - **LiDAR SLAM**
+     - **Visual SLAM**
+   * - Measures
+     - distances to surfaces, in meters
+     - images; one image has no depth (Mur-Artal et al., 2015)
+   * - Front end
+     - matches scans (ICP, NDT), or edge and plane points (LOAM; Zhang and
+       Singh, 2014)
+     - tracks feature points from image to image (ORB features; Campos et
+       al., 2021)
+   * - Map
+     - a point cloud
+     - 3-D feature points, sparse
+   * - Scale
+     - in meters, from the ranges
+     - one camera: "scale is unknown"; stereo or an IMU gives meters (Campos
+       et al., 2021)
+   * - Loop closure
+     - a scan descriptor (Scan Context; Kim and Kim, 2018), then ICP
+     - a bag of visual words (DBoW2; Gálvez-López and Tardós, 2012)
+   * - Weak when
+     - flat ground and one wall: no hold along the road (Zhang, Kaess and
+       Singh, 2016)
+     - dark, texture-less, facing the sun (Zhang, Kaess and Singh, 2016)
+   * - Examples
+     - LOAM, Cartographer (Hess et al., 2016)
+     - ORB-SLAM3
+
+A LiDAR is insensitive "to ambient lighting and optical texture" (Zhang and
+Singh, 2014). A camera sees appearance: "two rooms may look identical for a
+2D laser scanner [...] while a camera may discern them from appearance cues"
+(Cadena et al., 2016).
+
+
+.. _l6-lec-slam-lidar:
+
+LiDAR SLAM on Our Drive: the Drift, and the Loop Closure That Finds It
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L6/lidar_odometry.png
+   :alt: A top view of lap 1 of the route. The black truth starts and ends at a dot labeled start. The green LiDAR odometry path, scan to scan, follows it but drifts outward on the left and bottom sides and ends below and left of the start; a red dashed line joins the two ends, labeled after 458 m: 6.08 m off.
+   :width: 75%
+   :align: center
+
+   Lap 1: the truth (black) and the LiDAR odometry, scan to scan (green). The
+   red dashed line is the gap where the loop should close.
+
+1. **Odometry:** ICP between each scan and the one before (1 m gate,
+   chosen); 1,256 scans at 10 Hz, 461 points each (median).
+2. **Drift, measured:** 6.08 m and :math:`0.78^\circ` off after lap 1
+   (458 m); 11.26 m after the whole drive (916 m).
+3. **Loop closure:** lap 1 ends 2.97 m from the start. ICP from the
+   odometry's guess ends 7.57 m off, a wrong minimum. From "same place", as
+   place recognition would propose, it ends 0.11 m and :math:`0.05^\circ`
+   off.
+4. **Back end:** that edge would let the pose graph share out the 6.08 m, as
+   in the sections above. We did not run that solve here.
+
+
+.. _l6-lec-slam-visual:
+
+Visual SLAM, Step by Step: ORB-SLAM
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Our drive has no camera recording, so this section has no measured numbers.
+
+1. **Feature points** in each image: ORB, "oriented multi-scale FAST corners
+   with a 256 bits descriptor" (Mur-Artal et al., 2015).
+2. **Track** them from image to image. How they move gives the camera's
+   motion and the points' 3-D positions: the odometry edges. With one camera,
+   "depth cannot be recovered from a single image" (Mur-Artal et al., 2015),
+   so the map has no scale until stereo or an IMU adds one (Campos et al.,
+   2021).
+3. **Keyframes:** keep some images and their 3-D points: that is the map.
+4. **Loop closure:** turn each keyframe into a bag of visual words and look
+   up the most similar one; "if they are similar enough, a loop closure is
+   detected" (Gálvez-López and Tardós, 2012).
+5. **Back end:** the same graph optimization as for LiDAR.
 
 
 .. _l6-lec-fleet-map:
