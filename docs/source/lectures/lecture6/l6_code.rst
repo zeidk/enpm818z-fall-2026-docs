@@ -113,7 +113,7 @@ The GNSS fixes as they arrive, against the true route. A fix comes once a
 second, then none for the outage. The window opens at the start. **Play**
 runs the drive from start to finish, one second of driving per tick (about
 13 s in all); press it again to pause. **Step: +1 s** moves one second, one
-fix, at a time. Four panels:
+fix, at a time. **Reset** stops and goes back to the start. Four panels:
 
 - **Top left, the whole route:** the truth so far in black, the fixes so far
   as blue dots, the **GNSS-only path** (the fixes joined in order: where the

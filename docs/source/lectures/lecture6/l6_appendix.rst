@@ -37,6 +37,64 @@ Going Further
        error.
 
 
+The Error Bound
+---------------
+
+This section continues the Introduction of the :doc:`lecture <l6_lecture>`:
+where Reid et al. (2019) get 0.29 m.
+
+
+The 0.33 m in a Turn, and the Heading's Share
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Symbols: lane center radius :math:`r`, lane width :math:`w`; car width
+:math:`w_v` and length :math:`l_v`; the box around the car is :math:`x` wide
+and :math:`y` long. The paper's equations:
+
+.. math::
+
+   \Big(\frac{y}{2}\Big)^2 + \Big(r - \frac{w}{2} + x\Big)^2
+   = \Big(r + \frac{w}{2}\Big)^2, \qquad
+   \text{room: } \frac{x - w_v}{2} \text{ sideways}, \quad
+   \frac{y - l_v}{2} \text{ along the road}
+
+1. With :math:`r = 20` m, :math:`w = 3.0` m, :math:`w_v = 2.1` m and
+   :math:`l_v = 5.8` m, we solve for equal room both ways: 0.328 m (box
+   2.76 m by 6.46 m). The paper reads 0.33 m off its Figure 14.
+2. The heading's share (the paper's equation 17, the same angle error
+   :math:`\delta` about every axis):
+   :math:`\delta_{\mathrm{lat}} + (\delta_{\mathrm{lon}} + \delta_{\mathrm{vert}} + l_v/2)\,\delta \le 0.33`
+   m. Here :math:`\delta_{\mathrm{lat}}`, :math:`\delta_{\mathrm{lon}}` and
+   :math:`\delta_{\mathrm{vert}}` are the allowed position errors sideways,
+   along the road and up.
+3. With :math:`\delta = 0.5^\circ = 0.00873` rad,
+   :math:`\delta_{\mathrm{lon}} = 0.29` m and the paper's
+   :math:`\delta_{\mathrm{vert}} = 1.40` m:
+   :math:`(0.29 + 1.40 + 2.90) \times 0.00873 = 0.040` m.
+4. :math:`\delta_{\mathrm{lat}} = 0.33 - 0.04 = 0.29` m.
+
+
+Once in :math:`10^8` Hours, and the 95% Value
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**The rate** (Reid et al., 2019):
+
+1. The target: road travel as safe as commercial aviation, a hundred times
+   safer than today.
+2. The paper splits that over the AV's systems and gives localization
+   :math:`10^{-9}` failures per mile.
+3. At 10 to 85 miles per hour, :math:`10^{-9}` per mile is :math:`10^{-8}`
+   to :math:`8.5 \times 10^{-8}` per hour. The paper uses :math:`10^{-8}` per
+   hour.
+
+**The 95% value**, if the errors were Gaussian (the paper's assumption for
+this step):
+
+1. Missing at most :math:`10^{-8}` of the time is about :math:`5.73\sigma`;
+   95% is :math:`1.96\sigma`.
+2. :math:`0.29 \times 1.96 / 5.73 = 0.099`, so 0.10 m.
+
+
 RTK
 ---
 

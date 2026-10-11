@@ -45,6 +45,73 @@ pose, every object from L5 gets a place on the map too: we only add the two
 arrows.
 
 
+.. _l6-lec-bound:
+
+Step 1: How Much Room the Lane Leaves the AV
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Before any method, a target: how far off may the AV's position be? We take
+one published answer, Reid et al. (2019). They start from one goal: "to keep
+the vehicle in its respective lane". So the answer comes from two sizes, the
+lane and the car.
+
+.. figure:: /_static/images/L6/bound_lane.png
+   :alt: Two top views of a lane 3.0 meters wide, to scale, with the AV drawn 2.1 meters wide and 5.8 meters long, driving to the right. Panel 1, straight road: rust arrows between the car's sides and the lane edges, each labeled 0.45 m, and the lane width labeled lane 3.0 m. Panel 2, a turn of radius 20 meters: the lane bends upward in the middle; a rust dashed box around the car, 0.33 m larger on every side, touches the inner edge at its middle and the outer edge at its two far corners, marked with rust dots; rust arrows labeled 0.33 m below the car and in front of it.
+   :width: 95%
+   :align: center
+
+   The lane and the car, to scale. **1:** on a straight road, 0.45 m of room
+   on each side. **2:** in a turn of radius 20 m, the dashed box (the car
+   with 0.33 m of error each way) touches the outer edge at its corners.
+
+1. A local-street lane: 3.0 m wide. The largest passenger car: 2.1 m wide
+   and 5.8 m long (US standards, in the paper).
+2. Straight road: :math:`(3.0 - 2.1) / 2 = 0.45` m of room on each side. Off
+   by more, and the AV can think it is in its lane while a wheel is on the
+   line.
+3. A turn of radius 20 m: the car is long and straight, and the lane bends.
+   The dashed box is everywhere the car could be if its position is off by
+   up to 0.33 m in any direction. Its far corners just touch the outer edge,
+   and its middle touches the inner edge. So in the turn the room is 0.33 m,
+   sideways and along the road.
+
+.. tip::
+
+   See "The Error Bound" in :doc:`l6_appendix` for the formulas.
+
+
+.. _l6-lec-bound-2:
+
+Step 2: the Heading Takes a Share, 0.29 m Is Left
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L6/bound_heading.png
+   :alt: A top view of the same car between two lane edges. A gray dashed outline shows the car pointing straight along the lane; the AV drawing is turned a few degrees about its center. An orange line and arc at the center mark the angle, labeled heading error, drawn at 8 degrees; the paper allows 0.5 degrees. A rust arrow at the front corner, labeled the front swings sideways, points toward the lane edge.
+   :width: 75%
+   :align: center
+
+   A heading error turns the AV, so its front swings sideways. The angle is
+   drawn at 8 degrees so it shows; the paper allows 0.5 degrees.
+
+1. The localizer also reports a heading. A heading error turns the AV, so
+   its front swings sideways. The paper allows 0.5 degrees: by its formula,
+   that uses 0.04 m of the 0.33 m.
+2. :math:`0.33 - 0.04 = 0.29` m is left for the position error.
+
+.. admonition:: Definition: error bound (the paper's alert limit)
+   :class: note
+
+   "The allowable maximum position error of the vehicle to ensure it is
+   within the lane" (Reid et al., 2019). The error may pass it at most once
+   in :math:`10^8` hours of driving. On a local street: 0.29 m, with 95% of
+   errors within 0.10 m.
+
+The paper picks that rate to make driving a hundred times safer than today,
+as safe as commercial flying. On a freeway the lanes are wider and the curves
+gentler, and the same steps give 0.57 m sideways. Today we stay on local
+streets: **0.29 m**. We compare every method against it.
+
+
 .. _l6-lec-pose-twice:
 
 We Needed the AV's Pose Twice Already
@@ -85,21 +152,8 @@ the pose in the map frame, :math:`x`, :math:`y` and the heading
    scan, map) go in; **one output** comes out: the pose in the map frame,
    :math:`x, y, \theta`, plus how sure it is, a covariance.
 
-.. _l6-lec-bound:
-
-**How good is good enough?** One published answer, for a passenger car, is
-from Reid et al. (2019):
-
-- Local streets: "lateral and longitudinal error bounds of 0.29 m (0.10 m,
-  95%)". Lateral means sideways; longitudinal means along the road.
-- Freeways: "a required lateral error bound of 0.57 m (0.20 m, 95%)".
-
-The **bound** is the error the AV must stay inside almost always. The paper
-derives it at a failure rate of :math:`10^{-8}` per hour of driving: the
-error goes past the bound less than once in 100 million hours of driving.
-
-Keep **0.29 m** in mind. It is how far the car may be from where it thinks
-it is, on a local street. Today we compare every method against that number.
+**The target:** the pose within the 0.29 m error bound of a local street,
+from :ref:`the first two sections <l6-lec-bound>` (Reid et al., 2019).
 
 
 .. _l6-lec-frames:
@@ -475,7 +529,7 @@ In the course's Python repo, folder ``lecture6``:
    python3 l6_handson.py --part gnss   # the fixes as they arrive
 
 .. figure:: /_static/images/L6/handson_gnss.png
-   :alt: The hands-on window in four panels with two buttons at the bottom, Play and Step: +1 s, shown at 62 seconds. Top left, the whole route from above: the true path so far in black, the GNSS fixes so far as blue dots joined by a thin blue GNSS-only path, the last fix circled at the top, and the AV drawn as a small car three times its size; the title reads t = 62 s, no fix for 28 s, the AV drove 193 m since the last one. Top right, a close-up 40 meters across around the AV at true size, with no fixes nearby. Bottom left, each fix's error east in blue and north in rust against time, dashed mean lines, and a pink band from 34 to 89 seconds with no dots. Bottom right, every fix's error as a point: the fixes up to 62 seconds in blue with the newest circled, the later ones in gray; a dashed 1.5 meter circle around the chosen bias, a plus for the chosen bias at 0.5 east and 0.3 south, and a cross for the measured mean of all 72 at 0.36 east and 0.49 south. The legend sits to the right of that panel.
+   :alt: The hands-on window in four panels with three buttons at the bottom, Play, Step: +1 s and Reset, shown at 62 seconds. Top left, the whole route from above: the true path so far in black, the GNSS fixes so far as blue dots joined by a thin blue GNSS-only path, the last fix circled at the top, and the AV drawn as a small car three times its size; the title reads t = 62 s, no fix for 28 s, the AV drove 193 m since the last one. Top right, a close-up 40 meters across around the AV at true size, with no fixes nearby. Bottom left, each fix's error east in blue and north in rust against time, dashed mean lines, and a pink band from 34 to 89 seconds with no dots. Bottom right, every fix's error as a point: the fixes up to 62 seconds in blue with the newest circled, the later ones in gray; a dashed 1.5 meter circle around the chosen bias, a plus for the chosen bias at 0.5 east and 0.3 south, and a cross for the measured mean of all 72 at 0.36 east and 0.49 south. The legend sits to the right of that panel.
    :width: 95%
    :align: center
 
@@ -490,7 +544,8 @@ In the course's Python repo, folder ``lecture6``:
 
 The two laps cover the same road, so on the map the gap is hidden: the other
 lap's fixes fill it. The gap shows in time. **Play** runs the drive from
-start to finish; **Step: +1 s** moves one second, one fix, at a time. Watch
+start to finish; **Step: +1 s** moves one second, one fix, at a time;
+**Reset** goes back to the start. Watch
 the distance since the last fix grow.
 
 1. Press Play, or step into the outage. How far does the AV drive before the
@@ -616,17 +671,18 @@ Numbers chosen for this example:
 
 .. _l6-lec-rtk-limits:
 
-What RTK Cannot Cancel
-~~~~~~~~~~~~~~~~~~~~~~
+What the AV Cannot Correct with RTK
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-So why not just buy RTK? Three reasons.
+So why not just buy RTK? Remember who corrects: the AV, by subtracting the
+base's error in step 4. Three problems survive that subtraction.
 
 .. figure:: /_static/images/L6/rtk_limits.png
    :alt: Three side-view panels. Panel 1, a bounce at the AV: a satellite signal reaches the base station on the left directly, while the signal to the AV bounces off a tall glass tower first, drawn as a rust dashed line; caption base in the open, the bounce is at the AV only. Panel 2, no sky: the AV under a tunnel roof, the satellite's signals stop at the roof, marked with rust crosses; caption no satellites in view, no fix, with or without RTK. Panel 3, far from the base: the base on the left and the AV on the right, joined by a double arrow along the ground. Each one's signal crosses a different shaded patch, labeled atmosphere: the blue patch over the base is labeled delay 1, the rust patch over the AV delay 2; caption beyond 10 to 20 km: the delays differ.
    :width: 95%
    :align: center
 
-   What RTK cannot cancel. **1:** the signal to the AV bounces off a glass
+   What the AV cannot correct with RTK. **1:** the signal to the AV bounces off a glass
    tower; the base, in the open, does not see that bounce. **2:** under a
    roof no satellite is in view. **3:** far apart, the two signals cross
    different parts of the atmosphere and are delayed differently. **Rust** marks an error.
@@ -702,9 +758,29 @@ When GNSS stops, the car still knows how fast it goes and how fast it turns.
    turned. The wheels measure the speed :math:`v`; the gyro measures the
    turn rate :math:`\omega`, in rad/s.
 
+That is the whole method. It is also the predict step of every filter today.
+
+
+.. _l6-lec-dr-step:
+
+One Dead-Reckoning Step: Move Along the Heading, Then Turn
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L6/dr_step.png
+   :alt: A top view with the map frame at the bottom left, x east and y north. The AV at its position, labeled now: x, y, theta, faces 30 degrees above east; an orange arc from a dashed east line marks theta. A green arrow labeled v delta t runs from the AV along its heading to a second AV, labeled after delta t. Two dashed green arrows split that move: one east, labeled x plus-equals v cos theta delta t, then one north, labeled y plus-equals v sin theta delta t. The second AV is turned further left; an orange arc from the old heading, labeled theta plus-equals omega delta t, shows the turn. A gray note says one step, drawn far longer than 0.05 s.
+   :width: 80%
+   :align: center
+
+   One step, drawn much longer than 0.05 s so it shows. **Green:** the move,
+   :math:`v\,\Delta t` along the heading, split into its east and north
+   parts. **Orange:** the angles, the heading :math:`\theta` and the turn
+   :math:`\omega\,\Delta t`.
+
 Every :math:`\Delta t` seconds (0.05 s on our drive), the car moves
-:math:`v\,\Delta t` meters in the direction it faces, then turns by
-:math:`\omega\,\Delta t`:
+:math:`v\,\Delta t` meters in the direction it faces, the green arrow.
+Split along the map's axes, that is :math:`v\cos\theta\,\Delta t` east and
+:math:`v\sin\theta\,\Delta t` north, the two dashed arrows. Then it turns
+by :math:`\omega\,\Delta t`, and the next step moves along the new heading:
 
 .. math::
 
@@ -712,16 +788,17 @@ Every :math:`\Delta t` seconds (0.05 s on our drive), the car moves
    y \mathrel{+}= v\sin\theta\,\Delta t, \qquad
    \theta \mathrel{+}= \omega\,\Delta t
 
-That is the whole method. It is also the predict step of every filter today.
-
 
 .. _l6-lec-heading:
 
 A Heading Error Grows with Every Meter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Which error hurts dead reckoning most? The heading. Suppose the AV believes
-it faces :math:`1^\circ` off its true heading, and drives straight. How far
+Which error hurts dead reckoning most? The heading. How can the AV be wrong
+about where it faces? Without GNSS, its heading is its last heading plus
+every turn the gyro reported, so the gyro's small errors add up. On our
+drive it was :math:`6.0^\circ` off by the end of the outage (measured).
+Suppose it is :math:`1^\circ` off, and the AV drives straight. How far
 sideways is it after 100 m?
 
 1. :math:`1^\circ = 0.01745` rad, and :math:`\sin 1^\circ = 0.01745`.
@@ -751,23 +828,23 @@ same amount every meter.
 A Gyro Bias Makes the Heading Error Itself Grow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Our gyro has a bias: it reports 0.001 rad/s of turning when the car goes
-straight. That looks tiny. Chosen for this example: speed
-:math:`v = 10` m/s, gyro bias :math:`b = 0.001` rad/s (our drive's), the car
-driving straight.
+The AV drives straight at :math:`v = 10` m/s (chosen). Its gyro reports
+:math:`b = 0.001` rad/s of turning that is not there (our drive's bias).
+That looks tiny.
 
-1. The heading error is no longer fixed. It grows: :math:`b\,t` after
-   :math:`t` seconds. After 30 s it is 0.03 rad, :math:`1.7^\circ`.
-2. The car drifts sideways at :math:`v` times the heading error, so the
-   sideways speed grows too.
-3. Adding up a speed that grows steadily gives
+1. The heading error grows with time: :math:`b\,t` after :math:`t` seconds.
+   After 30 s it is 0.03 rad, :math:`1.7^\circ`.
+2. The AV drifts sideways at :math:`v` times the heading error, so the drift
+   speeds up.
+3. Added up, the sideways error after 30 s is
 
    .. math::
 
       \text{sideways error} \approx \frac{v\,b\,t^2}{2}
       = \frac{10 \times 0.001 \times 30^2}{2} = 4.5 \text{ m}
 
-The program that integrates step by step gets 4.54 m.
+A program that follows the AV in 0.05 s steps gets 4.54 m, the same. After
+60 s it gets 18.08 m: twice the time gives four times the error.
 
 .. figure:: /_static/images/L6/bias_growth.png
    :alt: A graph of sideways error in meters against time since the last fix, 0 to 60 seconds. A rust curve, integrated step by step for a car driving straight with a biased gyro, bends upward through dots labeled 0.52 meters at 10 seconds, 4.54 at 30 and 18.08 at 60. A dotted black curve, v b t squared over 2, lies on top of it.
@@ -812,7 +889,37 @@ gyro only through the 400 m without GNSS.
   But the trend is clear: 2.7 m after 100 m, 8.2 m after 300 m, against a
   bound of 0.29 m.
 
-Dead reckoning bridges a short gap, never a long one.
+**Why the corners matter.** Over each 90 degree corner, CARLA's gyro reports
+a little more turning than the car made: 0.3 to 1.1 degrees extra
+(measured). So the heading error steps up at each corner, from 0 to 6
+degrees by the end of the outage, and the straight after a corner drifts
+faster: 80 m at 5 degrees puts about 7 m on the error. A corner also turns
+the old sideways error into an error along the road. That is why the error
+can drop at a corner and the paths cross.
+
+
+.. _l6-lec-dr-summary:
+
+Where Dead Reckoning Leaves Us
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. admonition:: Summary: dead reckoning
+   :class: tip
+
+   - **A way to localize without the sky:** from the last known pose, add
+     up the wheels' speed and the gyro's turn rate. Smooth, 20 times a
+     second.
+   - **Its errors only add up.** A heading error grows the sideways error
+     with every meter (:math:`1^\circ`: 1.75 m after 100 m); a gyro bias
+     makes it grow with time squared; on our drive, each corner added
+     heading error.
+   - **On our drive:** 2.69 m after 100 m and 9.03 m at worst, 31 times the
+     0.29 m bound (:math:`9.03 / 0.29 = 31`).
+   - **So:** good for a short gap (16.6 m at :math:`1^\circ`), never alone
+     for long.
+
+**Next:** keep dead reckoning between fixes, and let each GNSS fix pull it
+back: L3's extended Kalman filter.
 
 
 .. _l6-lec-ekf:

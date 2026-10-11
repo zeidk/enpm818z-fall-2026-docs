@@ -990,6 +990,14 @@ E
       epochs is one remedy for overfitting.
       :doc:`L4 </lectures/lecture4/l4_index>`
 
+   Error Bound
+      "The allowable maximum position error of the vehicle to ensure it is
+      within the lane" (Reid et al., 2019), which the paper calls the alert
+      limit. The error may pass it at most once in :math:`10^8` hours of
+      driving. On a local street: 0.29 m, from a 3.0 m lane, a car 2.1 m
+      wide and 5.8 m long, and 0.5 degrees of heading error. See Alert
+      Limit. L6
+
    Estimate
       The filter's best guess of the state, written with a hat,
       :math:`\hat{\mathbf{x}}` (x-hat). The hat always means "our best
