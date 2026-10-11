@@ -5,10 +5,26 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.7.2: Lecture 6 in Preparation, Continued (2026-10-11)
+.. dropdown:: v2.7.3: GP2 Moves to Wednesday, October 14 (2026-10-11)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Syllabus
+
+   - **GP2 is posted on Wednesday, October 14 (Week 7)**, not with GP1's
+     deadline on October 11. It is still due on Thursday, October 29.
+   - **GP2 trains no models.** It compares the two pretrained detectors
+     from L4, YOLOv8s and RT-DETR-L, on your own CARLA drives. The project
+     table and the hardware note now say so.
+
+   .. rubric:: Lectures
+
+   - **Lecture 4:** the "This week" box gives the new GP2 date.
+
+.. dropdown:: v2.7.2: Lecture 6 in Preparation, Continued (2026-10-11)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 
