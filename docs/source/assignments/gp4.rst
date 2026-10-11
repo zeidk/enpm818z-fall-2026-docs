@@ -545,6 +545,7 @@ Your submission must follow this exact directory layout:
    │   │   ├── __init__.py
    │   │   ├── sensor_manager.py        # GP1
    │   │   ├── detector_node.py         # GP2
+   │   │   ├── detector_core.py         # GP2
    │   │   ├── fusion_node.py           # GP3
    │   │   ├── localization_node.py     # GP3
    │   │   ├── planner_node.py          # NEW
@@ -555,7 +556,6 @@ Your submission must follow this exact directory layout:
    │   │   └── traffic_light_detector.py # Provided (copied here)
    │   ├── config/
    │   │   ├── carla_config.yaml        # From GP3
-   │   │   ├── detector_config.yaml     # From GP2
    │   │   ├── ekf_config.yaml          # From GP3
    │   │   ├── planner_config.yaml      # NEW
    │   │   └── controller_config.yaml   # NEW
@@ -565,7 +565,6 @@ Your submission must follow this exact directory layout:
    │   │   ├── fusion_launch.py         # GP3
    │   │   ├── planning_launch.py       # NEW
    │   │   └── full_pipeline_launch.py  # NEW -- launches everything
-   │   ├── models/                      # GP2 (YOLO/DETR weights)
    │   ├── scenarios/
    │   │   ├── town01_route.yaml        # Provided
    │   │   └── town03_route.yaml        # Provided

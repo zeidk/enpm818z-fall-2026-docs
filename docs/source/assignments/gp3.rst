@@ -523,19 +523,18 @@ Your submission must follow this exact directory layout:
    │   │   ├── __init__.py
    │   │   ├── sensor_manager.py     # From GP1
    │   │   ├── detector_node.py      # From GP2
+   │   │   ├── detector_core.py      # From GP2
    │   │   ├── fusion_node.py        # NEW
    │   │   ├── localization_node.py  # NEW
    │   │   ├── ekf_template.py       # Provided (copied here)
    │   │   └── fusion_utils.py       # Provided (copied here)
    │   ├── config/
    │   │   ├── carla_config.yaml     # Updated with fusion params
-   │   │   ├── detector_config.yaml  # From GP2
    │   │   └── ekf_config.yaml       # NEW
    │   ├── launch/
    │   │   ├── sensors_launch.py     # From GP1
    │   │   ├── perception_launch.py  # From GP2
    │   │   └── fusion_launch.py      # NEW
-   │   ├── models/                   # From GP2 (YOLO/DETR weights)
    │   ├── package.xml
    │   └── setup.py
    ├── evaluation/
