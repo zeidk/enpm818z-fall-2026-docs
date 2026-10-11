@@ -16,7 +16,7 @@ GP3: Fusion & Localization
       * - **Lectures**
         - L3, L5 and L6
       * - **Team Size**
-        - 4 students
+        - 3 students
       * - **Submission**
         - Canvas + GitHub repository link
 

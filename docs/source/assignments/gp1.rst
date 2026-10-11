@@ -26,7 +26,7 @@ GP1: Sensor Suite & Data Pipeline
       * - **Lectures**
         - L1 and L2
       * - **Team Size**
-        - 4 students
+        - 3 students
       * - **Submission**
         - Canvas + GitHub repository link
 
@@ -1421,13 +1421,13 @@ one stubborn bug, without anyone working the night before the deadline.
      - Nothing scheduled
      - 0 h
 
-That is roughly **43 person-hours**, or about 11 hours each across three
-weeks for a team of four.
+That is roughly **35 person-hours** (:math:`3 + 14 + 8 + 6 + 4`), or about
+12 hours each across three weeks for a team of three (:math:`35 / 3 = 11.7`).
 
 .. tip::
 
    **Split the work by sensor, not by task.** Tasks 2 to 4 all touch the
-   same node, so four people editing it in sequence will spend more time
+   same node, so three people editing it in sequence will spend more time
    merging than coding. One person per sensor group, working in parallel
    behind the conversion helpers, avoids that.
 

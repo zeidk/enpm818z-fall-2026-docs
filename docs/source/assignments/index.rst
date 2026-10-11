@@ -7,7 +7,7 @@ Overview
 
 The final project is the capstone experience of ENPM818Z, where you will
 design, implement, and deploy a complete **automated driving system (ADS)**
-pipeline in the CARLA simulator. Working in teams of 4 students, you will
+pipeline in the CARLA simulator. Working in teams of 3 students, you will
 build a system that perceives its environment, localizes itself, plans a
 path, and controls a vehicle -- progressing from raw sensor data to
 autonomous driving.
@@ -105,9 +105,9 @@ By completing the final project, you will be able to:
 Team Formation
 --------------
 
-**Timeline**: Form teams by end of **Week 2**.
+**Timeline**: Form teams in **Week 3**.
 
-**Team Size**: 4 students per team.
+**Team Size**: 3 students per team.
 
 **Process**:
 

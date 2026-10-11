@@ -16,7 +16,7 @@ GP4: Planning & Control
       * - **Lectures**
         - L7 to L10
       * - **Team Size**
-        - 4 students
+        - 3 students
       * - **Submission**
         - Canvas + GitHub repository link
 

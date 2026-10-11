@@ -142,6 +142,25 @@ div.admonition.tools {
   --pst-icon-admonition-default: "\f0ad";   /* wrench */
 }
 
+/* "The Situation" story box at the top of a project page (GP2 on).
+ * Indigo, with an open book, in both themes. */
+:root {
+  --enpm-indigo:    #3949ab;
+  --enpm-indigo-bg: #e8eaf6;
+}
+
+html[data-theme="dark"] {
+  --enpm-indigo:    #9fa8da;
+  --enpm-indigo-bg: #1d2142;
+}
+
+.admonition.story,
+div.admonition.story {
+  --pst-color-info:              var(--enpm-indigo);
+  --pst-color-info-bg:           var(--enpm-indigo-bg);
+  --pst-icon-admonition-default: "\f518";   /* book-open */
+}
+
 /* ------------------------------------------------------------
  * Wider content column
  *

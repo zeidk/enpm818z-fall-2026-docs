@@ -749,7 +749,7 @@ four cumulative group projects (GP1--GP4) plus a final report. Each GP
 extends the ROS 2 package from the previous one, so that by GP4 your team
 has a working ADS pipeline. **One package, extended four times.**
 
-Teams consist of **4 students**, formed in **Week 3** after the schedule
+Teams consist of **3 students**, formed in **Week 3** after the schedule
 adjustment period closes. The setup milestone before it is individual.
 
 .. important::

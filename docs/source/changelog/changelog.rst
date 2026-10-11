@@ -5,10 +5,23 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.8.6: GP2 Opening Image (2026-10-11)
+.. dropdown:: v2.8.7: Teams of Three (2026-10-11)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Syllabus and projects
+
+   - **Teams have 3 students**, not 4: the syllabus, the projects page and
+     GP1 to GP4 now say so. Teams form in Week 3.
+   - **GP1:** the suggested schedule's total is 35 person-hours, the sum of
+     its steps, about 12 hours each for a team of three.
+   - **GP2:** how a team of three splits the four coding tasks, and "The
+     Situation" now sits in one box.
+
+.. dropdown:: v2.8.6: GP2 Opening Image (2026-10-11)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Projects
 
