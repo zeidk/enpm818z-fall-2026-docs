@@ -5,10 +5,20 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.8.3: GP2, Your Archive's Name (2026-10-11)
+.. dropdown:: v2.8.4: GP2, Add the Instructor as a Collaborator (2026-10-11)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Projects
+
+   - **GP2, Submission:** add the instructor, GitHub user ``rubixcubic``, as
+     a collaborator on your private repository. It is now a step of its own
+     and an item on the checklist.
+
+.. dropdown:: v2.8.3: GP2, Your Archive's Name (2026-10-11)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Projects
 

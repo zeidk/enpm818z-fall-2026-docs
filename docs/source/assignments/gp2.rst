@@ -1098,12 +1098,14 @@ Submission
 
    **Submission Instructions**
 
-   1. Push the ``gp2`` branch to your team's private repository. The
-      instructor, ``rubixcubic``, is already a collaborator from GP1.
-   2. Tag the submission commit: ``git tag gp2-final && git push --tags``.
-   3. Submit the repository link and ``gp2_report.pdf`` on Canvas by the
+   1. Push the ``gp2`` branch to your team's private repository.
+   2. Add the instructor, GitHub user ``rubixcubic``, as a collaborator on
+      the repository (Settings > Collaborators). The repository is private,
+      so without this the grader cannot see or grade your work.
+   3. Tag the submission commit: ``git tag gp2-final && git push --tags``.
+   4. Submit the repository link and ``gp2_report.pdf`` on Canvas by the
       deadline.
-   4. Email your peer evaluation within 48 hours (see
+   5. Email your peer evaluation within 48 hours (see
       :ref:`peer-evaluation`).
 
 
@@ -1139,6 +1141,7 @@ Submission Checklist
    **Repository**
 
    - [ ] No recordings or weights committed.
+   - [ ] ``rubixcubic`` added as a collaborator on the private repository.
    - [ ] Commit tagged ``gp2-final`` and pushed.
    - [ ] ``gp2_report.pdf`` submitted on Canvas.
 
