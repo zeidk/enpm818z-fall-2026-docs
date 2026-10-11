@@ -5,10 +5,19 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.8.5: Project Summary Boxes Follow the Theme (2026-10-11)
+.. dropdown:: v2.8.6: GP2 Opening Image (2026-10-11)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Projects
+
+   - **GP2:** an opening image, as on GP1: the night street, the
+     perception lead's three questions, and the two detectors' boxes.
+
+.. dropdown:: v2.8.5: Project Summary Boxes Follow the Theme (2026-10-11)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Projects
 
