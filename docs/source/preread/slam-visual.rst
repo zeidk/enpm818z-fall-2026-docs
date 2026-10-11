@@ -36,7 +36,9 @@ KITTI, the best-known driving dataset, uses "a baseline of roughly 54 cm"
 (Geiger, Lenz and Urtasun, 2012). **Every number on this page was measured
 on this recording** with our own Python code, using OpenCV for the image
 steps. The code is ours; the methods are the ones the cited papers
-describe, sometimes simplified, and the page says where.
+describe, sometimes simplified, and the page says where. It is in the course
+repository, in `lecture6/slam <https://github.com/rubixcubic/enpm818z-fall-2026-carla-python/tree/main/lecture6/slam>`__, with the recorder: record the
+route once with CARLA, then run it and you get the same numbers.
 
 
 The Camera Model

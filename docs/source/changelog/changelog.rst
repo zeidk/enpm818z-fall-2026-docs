@@ -5,10 +5,20 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.9.1: GP2 Fixes from a Full Check (2026-10-11)
+.. dropdown:: v2.9.2: SLAM Pages Link Their Code (2026-10-11)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Pre-Read Material
+
+   - **SLAM with a LiDAR** and **Visual SLAM** link to the code that
+     measured them, ``lecture6/slam`` in the course's Python repository.
+     Run it and you get the same numbers.
+
+.. dropdown:: v2.9.1: GP2 Fixes from a Full Check (2026-10-11)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Projects
 

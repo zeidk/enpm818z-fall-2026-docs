@@ -24,8 +24,12 @@ SLAM with a LiDAR
   pose of every scan.
 
 The code that measured them is ours, written in Python with NumPy and
-SciPy. The solve times quoted below are from one desktop PC and tell you
-how the costs compare, not what a real-time system needs.
+SciPy. The code for the L6 drive is in the course repository, in
+`lecture6/slam <https://github.com/rubixcubic/enpm818z-fall-2026-carla-python/tree/main/lecture6/slam>`__: run it and you get the same numbers, then change
+a value and see what happens. The EKF-SLAM and FastSLAM simulation is not
+published: GP3 asks you to build an EKF yourself. The solve times quoted
+below are from one desktop PC and tell you how the costs compare, not what a
+real-time system needs.
 
 
 What SLAM Is
