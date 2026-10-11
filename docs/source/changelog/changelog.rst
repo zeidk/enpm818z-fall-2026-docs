@@ -5,10 +5,20 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.8.1: Quiz Answers Hidden Until You Open Them (2026-10-11)
+.. dropdown:: v2.8.2: GP2, Check Your Download (2026-10-11)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Projects
+
+   - **GP2, Your Team's Drives:** a new step checks that your archive
+     downloaded completely (``SHA256SUMS``, in the same folder as the
+     archives). The page now gives the archive sizes: 1.1 GB to 3.2 GB.
+
+.. dropdown:: v2.8.1: Quiz Answers Hidden Until You Open Them (2026-10-11)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Quizzes
 

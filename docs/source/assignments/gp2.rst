@@ -339,16 +339,25 @@ seen through **your team's GP1 camera rig**. We recorded them for you. You
 work only on these recordings: GP2 needs no CARLA.
 
 1. Download your team's archive, ``team_X_drives.tar`` (link on Canvas),
-   into ``~/Downloads``.
-2. Unpack it in your package root. It creates ``recordings/clear`` and
+   and the file ``SHA256SUMS`` from the same folder, into ``~/Downloads``.
+2. Check that the download is complete. The line for your archive must end
+   in ``OK``:
+
+   .. code-block:: bash
+
+      cd ~/Downloads && sha256sum -c --ignore-missing SHA256SUMS
+
+   Anything else (``FAILED``, or no line for your archive) means the
+   download stopped early: download the archive again.
+3. Unpack it in your package root. It creates ``recordings/clear`` and
    ``recordings/night``:
 
    .. code-block:: bash
 
       cd ~/enpm818z_ws/src/GP1_TeamX/ads_pipeline && tar xf ~/Downloads/team_X_drives.tar
 
-3. Add ``recordings/`` to ``.gitignore``. On the demo rig (1280 x 720) the
-   two drives take 1.5 GB; a larger image takes more.
+4. Add ``recordings/`` to ``.gitignore``. The team archives are 1.1 GB to
+   3.2 GB, depending on your camera's image size.
 
 .. figure:: /_static/images/GP2/gp2_scene_day_night.png
    :alt: Two views from a camera behind and above the demo car, a dark blue sedan driving on a two-lane road between trees and rocks, at the same moment of two drives, t = 20.0 s. Left, ClearNoon: bright daylight; a man in a yellow jacket walks on the left sidewalk, a man in a gray shirt and a smaller person on the right sidewalk, cars far ahead, and a 90 speed sign on the right. Right, ClearNight: the same scene in the dark, lit by a few street lamps; the people and the far cars are much harder to see.
