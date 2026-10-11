@@ -122,6 +122,26 @@ div.admonition.plain-english {
   --pst-icon-admonition-default: "\f0eb";   /* lightbulb */
 }
 
+/* "Tools for this task" boxes on the project pages (GP2 on):
+ * what each task gives you, what you write with, and the class code
+ * to reuse. Teal, with a wrench, in both themes. */
+:root {
+  --enpm-teal:    #00796b;
+  --enpm-teal-bg: #e0f2f1;
+}
+
+html[data-theme="dark"] {
+  --enpm-teal:    #4db6ac;
+  --enpm-teal-bg: #0f2e2b;
+}
+
+.admonition.tools,
+div.admonition.tools {
+  --pst-color-info:              var(--enpm-teal);
+  --pst-color-info-bg:           var(--enpm-teal-bg);
+  --pst-icon-admonition-default: "\f0ad";   /* wrench */
+}
+
 /* ------------------------------------------------------------
  * Wider content column
  *

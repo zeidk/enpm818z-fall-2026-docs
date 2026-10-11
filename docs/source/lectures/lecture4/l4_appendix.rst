@@ -885,7 +885,7 @@ newest model family, released in January 2026.
    :class: compact-table
 
    * - **YOLO26**
-     - **mAP@0.5:0.95**
+     - **mAP\@0.5:0.95**
      - **Weights**
      - **Time, T4 TensorRT**
    * - n (nano)

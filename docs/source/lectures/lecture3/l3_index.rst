@@ -67,7 +67,7 @@ reading that is wildly off.
    measurement belongs to which object) and the Tempe crash (Uber, 2018) are
    L5. Monte Carlo Localization, which is the
    particle filter applied to localization, is
-   L6.
+   :doc:`L6 </lectures/lecture6/l6_index>`.
 
 .. admonition:: This week
    :class: warning

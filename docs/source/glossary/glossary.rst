@@ -207,7 +207,7 @@ A
       example, chosen distances of 0.3, 0.4, 1.2 and 0.5 m give an RMSE
       of 0.70 m, against a plain average of 0.60 m: squaring weighs the
       one bad step more. Only a run with ground truth, such as a CARLA
-      drive, can be scored this way. L6
+      drive, can be scored this way. :doc:`L6 </lectures/lecture6/l6_index>`
 
    Accuracy
       How close a measurement is to the true value. Strictly (ISO
@@ -253,7 +253,7 @@ A
       al., 2018). For a car on a local street, L6 takes the 0.29 m bound
       of Reid et al. (2019). If the protection level is above the alert
       limit, the localizer warns: the pose cannot be used for lane-level
-      driving now. See Protection Level. L6
+      driving now. See Protection Level. :doc:`L6 </lectures/lecture6/l6_index>`
 
    Anchor Box
       A preset box shape that a detector adjusts to fit each object.
@@ -288,7 +288,7 @@ A
       recall, the line keeps the best precision at that recall or
       beyond. In L4's example (3 people, 5 detections ranked by
       confidence), AP = 0.333 + 0.333 + 0.250 = 0.917. The average of
-      AP over all classes is mAP. Papers often write mAP@0.5:0.95
+      AP over all classes is mAP. Papers often write mAP\@0.5:0.95
       simply as "AP". :doc:`L4 </lectures/lecture4/l4_index>`
 
    ASIL
@@ -787,7 +787,7 @@ D
    Dead Reckoning
       Estimating current position by integrating motion measurements
       (wheel odometry, IMU) from a known prior pose. Accumulates drift
-      over time without external corrections. :doc:`L3 </lectures/lecture3/l3_index>` · L6
+      over time without external corrections. :doc:`L3 </lectures/lecture3/l3_index>` · :doc:`L6 </lectures/lecture6/l6_index>`
 
    Decoder
       The half of a transformer that writes the output. Each layer has
@@ -966,7 +966,7 @@ E
 
    EKF
       Extended Kalman Filter. See Extended Kalman Filter. :doc:`L3 </lectures/lecture3/l3_index>` ·
-      L6
+      :doc:`L6 </lectures/lecture6/l6_index>`
 
    Embedding
       Turning each piece of the input into a vector of :math:`D`
@@ -996,7 +996,7 @@ E
       limit. The error may pass it at most once in :math:`10^8` hours of
       driving. On a local street: 0.29 m, from a 3.0 m lane, a car 2.1 m
       wide and 5.8 m long, and 0.5 degrees of heading error. See Alert
-      Limit. L6
+      Limit. :doc:`L6 </lectures/lecture6/l6_index>`
 
    Estimate
       The filter's best guess of the state, written with a hat,
@@ -1029,7 +1029,7 @@ E
       mode is a feedback loop: a poor estimate gives a wrong tangent,
       which gives a worse estimate (divergence). It is the filter GP3
       uses, to fuse GNSS fixes with IMU and wheel-speed data.
-      :doc:`L3 </lectures/lecture3/l3_index>` · L6
+      :doc:`L3 </lectures/lecture3/l3_index>` · :doc:`L6 </lectures/lecture6/l6_index>`
 
    Extrinsic Calibration
       The rigid transform describing where one sensor sits relative to
@@ -1062,7 +1062,7 @@ F
       full of parked trucks the map does not have matches badly, and the
       filter drops a pose that was right. The cost: the filter coasts on
       dead reckoning a little longer. An overconfident filter makes false
-      alarms. Contrast Missed Fault. L6
+      alarms. Contrast Missed Fault. :doc:`L6 </lectures/lecture6/l6_index>`
 
    False Negative (FN)
       A ground-truth object that no detection matched. Many false
@@ -1239,14 +1239,14 @@ G
    GNSS
       Global Navigation Satellite System. Provides absolute position
       (latitude, longitude, altitude). Includes GPS (US), GLONASS
-      (Russia), Galileo (EU), BeiDou (China). :doc:`L2 </lectures/lecture2/l2_index>` · L6
+      (Russia), Galileo (EU), BeiDou (China). :doc:`L2 </lectures/lecture2/l2_index>` · :doc:`L6 </lectures/lecture6/l6_index>`
 
    GNSS Outage
       A stretch with no GNSS fixes. Tall buildings hide most satellites,
       and with too few in view the receiver gives a poor fix, or none.
       The AV knows: the fixes stop. Contrast Multipath, where a wrong fix
       looks normal. L6's recorded drive has no fixes for 400 m (34.2 s to
-      89.0 s), which stands in for a street between tall buildings. L6
+      89.0 s), which stands in for a street between tall buildings. :doc:`L6 </lectures/lecture6/l6_index>`
 
    Gradient
       How much one number changes when another changes a little. In
@@ -1278,7 +1278,7 @@ G
    Gyro
       Short for gyroscope: one of the IMU's six sensors. It measures how
       fast the AV turns about one axis, in radians per second. L6 uses the
-      gyro about the vertical axis; its output is the yaw rate. See IMU. L6
+      gyro about the vertical axis; its output is the yaw rate. See IMU. :doc:`L6 </lectures/lecture6/l6_index>`
 
    GUM
       Guide to the Expression of Uncertainty in Measurement, JCGM
@@ -1322,7 +1322,7 @@ H
       In the L3 tunnel, it is what turns "I see an exit sign" into "I am
       here" (the sign match). :doc:`L2 </lectures/lecture2/l2_index>` ·
       :doc:`L3 </lectures/lecture3/l3_index>` ·
-      L6 ·
+      :doc:`L6 </lectures/lecture6/l6_index>` ·
       L7
 
    Head (Detection)
@@ -1365,7 +1365,7 @@ I
       Iterative Closest Point. An algorithm for aligning two point clouds
       by iteratively finding closest-point correspondences and minimizing
       the alignment error. Core algorithm for scan matching in SLAM and
-      LiDAR odometry. L6
+      LiDAR odometry. :doc:`L6 </lectures/lecture6/l6_index>`
 
    IDF1
       Identity F1 Score. A tracking evaluation metric computed as the F1
@@ -1375,7 +1375,7 @@ I
    IMU
       Inertial Measurement Unit. Measures linear acceleration
       (accelerometers) and angular velocity (gyroscopes) at high
-      frequency (>100 Hz). Suffers from drift over time. :doc:`L2 </lectures/lecture2/l2_index>` · L6
+      frequency (>100 Hz). Suffers from drift over time. :doc:`L2 </lectures/lecture2/l2_index>` · :doc:`L6 </lectures/lecture6/l6_index>`
 
    Innovation
       The surprise: the reading the filter got minus the reading it
@@ -1405,7 +1405,7 @@ I
       ability of the system to provide timely warnings to users when the
       system should not be used" (Zhu et al., 2018). It has two halves:
       be right, and when you might be wrong, say so in time. See Alert
-      Limit and Protection Level. L6
+      Limit and Protection Level. :doc:`L6 </lectures/lecture6/l6_index>`
 
    Intermediate Fusion
       Combining learned features from each sensor. The network can learn
@@ -1507,7 +1507,7 @@ K
       1960). Foundation of IMU and GNSS fusion and the state-update step
       inside SORT and DeepSORT. :doc:`L3 </lectures/lecture3/l3_index>`
       · :doc:`L5 </lectures/lecture5/l5_index>` ·
-      L6
+      :doc:`L6 </lectures/lecture6/l6_index>`
 
    Kalman Gain
       :math:`K`, the fraction of the surprise the filter acts on: the
@@ -1528,7 +1528,7 @@ K
       a 700 m tunnel with 23 identical lights 25 m apart. In L6 the car
       is already localized when it is suddenly moved, say towed: MCL
       must then recover from a confident wrong belief.
-      :doc:`L3 </lectures/lecture3/l3_index>` · L6
+      :doc:`L3 </lectures/lecture3/l3_index>` · :doc:`L6 </lectures/lecture6/l6_index>`
 
 
 .. _glossary-l:
@@ -1594,7 +1594,7 @@ L
    LiDAR Odometry
       Estimating ego-motion by matching consecutive LiDAR scans using
       algorithms like ICP or feature-based methods (LOAM). More robust
-      than visual odometry in low-light and textureless environments. L6
+      than visual odometry in low-light and textureless environments. :doc:`L6 </lectures/lecture6/l6_index>`
 
    Lift-Splat-Shoot (LSS)
       A camera-only BEV method (Philion and Fidler, NeurIPS 2020) in three
@@ -1620,7 +1620,7 @@ L
       space, far from any wall, is unlikely. The score is a bell curve in
       the distance to the nearest map point, plus a small constant, so a
       point that hits a parked car the map lacks does not zero the weight
-      of a good particle. L6
+      of a good particle. :doc:`L6 </lectures/lecture6/l6_index>`
 
    Linearization
       Replacing a curved model by a straight line, its tangent at the
@@ -1635,7 +1635,7 @@ L
    LOAM
       LiDAR Odometry and Mapping. A foundational LiDAR SLAM system that
       separates high-frequency odometry (edge and planar feature matching)
-      from low-frequency mapping for real-time operation. L6
+      from low-frequency mapping for real-time operation. :doc:`L6 </lectures/lecture6/l6_index>`
 
    Localization (Detection)
       Given an image :math:`W` pixels wide and :math:`H` high and one
@@ -1650,7 +1650,7 @@ L
    Localization Pass
       The second of L6's two drives on one route. It drives the route
       again, and every method must find the pose from its sensors alone,
-      never from the true pose. See Mapping Pass. L6
+      never from the true pose. See Mapping Pass. :doc:`L6 </lectures/lecture6/l6_index>`
 
    Logical Scenario
       A :term:`Functional Scenario` with its parameters named and given
@@ -1671,7 +1671,7 @@ L
       Detection of a previously visited location during SLAM, used to
       correct accumulated drift by adding a constraint in the pose graph.
       Methods include scan context, visual bag-of-words, and neural
-      descriptors. L6
+      descriptors. :doc:`L6 </lectures/lecture6/l6_index>`
 
    Loss
       A number :math:`L` that measures how wrong a network's output is.
@@ -1710,7 +1710,7 @@ M
 
    mAP
       Mean Average Precision. The primary metric for evaluating object
-      detectors. mAP@0.5 uses a single IoU threshold; mAP@0.5:0.95
+      detectors. mAP\@0.5 uses a single IoU threshold; mAP\@0.5:0.95
       averages across thresholds for stricter evaluation. :doc:`L4 </lectures/lecture4/l4_index>` · :doc:`L5 </lectures/lecture5/l5_index>`
 
    Map Frame
@@ -1720,13 +1720,13 @@ M
       positions over V2X. Readings taken at different times,
       or by different AVs, line up only in a frame that does not move, so
       the AV's pose is given in it. CARLA's :math:`y` points the other way,
-      so L6's recorded drive flips it. Contrast Vehicle Frame. L6
+      so L6's recorded drive flips it. Contrast Vehicle Frame. :doc:`L6 </lectures/lecture6/l6_index>`
 
    Mapping Pass
       The first of L6's two drives on one route: the car records LiDAR
       scans at known poses, and the scans become the map. In CARLA the
       poses are the true ones; a fleet does the same with a surveyed
-      mapping car. See Localization Pass. L6
+      mapping car. See Localization Pass. :doc:`L6 </lectures/lecture6/l6_index>`
 
    Mask R-CNN
       An instance segmentation model (He et al., 2017) that extends Faster
@@ -1765,7 +1765,7 @@ M
       Monte Carlo Localization. A particle filter-based localization
       algorithm that represents the robot's belief as a set of weighted
       samples. AMCL (Adaptive MCL) dynamically adjusts particle count.
-      Standard localization algorithm in ROS. :doc:`L3 </lectures/lecture3/l3_index>` · L6
+      Standard localization algorithm in ROS. :doc:`L3 </lectures/lecture3/l3_index>` · :doc:`L6 </lectures/lecture6/l6_index>`
 
    Mean
       The average of a set of readings, written with the Greek letter
@@ -1822,7 +1822,7 @@ M
       filter's covariance :math:`P` is large. So the innovation covariance
       :math:`S` is large too, the NIS stays small, and the filter moves
       3 m the wrong way. An underconfident filter misses faults. Contrast
-      False Alarm (Integrity). L6
+      False Alarm (Integrity). :doc:`L6 </lectures/lecture6/l6_index>`
 
    Modality
       A kind of sensing rather than a piece of hardware. Two cameras are
@@ -1902,7 +1902,7 @@ M
       entirely normal, which makes it more dangerous than a lost fix.
       RTK cannot cancel it: the bounce happens at the car alone, so the
       base station's correction does not contain it.
-      :doc:`L2 </lectures/lecture2/l2_index>` · L6
+      :doc:`L2 </lectures/lecture2/l2_index>` · :doc:`L6 </lectures/lecture6/l6_index>`
 
 .. _glossary-n:
 
@@ -1936,7 +1936,7 @@ N
       Normal Distributions Transform. A point cloud registration method
       that represents clouds as a grid of Gaussian distributions.
       Used in Autoware for LiDAR-based localization. Faster than ICP
-      for large-scale matching. L6
+      for large-scale matching. :doc:`L6 </lectures/lecture6/l6_index>`
 
    NIS
       Normalized innovation squared,
@@ -2125,7 +2125,7 @@ P
       weigh (by the likelihood), and resample. Use it when the belief
       has several peaks and the state is small; it scales badly as the
       state grows. :doc:`L3 </lectures/lecture3/l3_index>` ·
-      L6
+      :doc:`L6 </lectures/lecture6/l6_index>`
 
    Patch
       A small square of the image, cut on a fixed grid: in ViT,
@@ -2172,7 +2172,7 @@ P
       vehicle frame's origin sits in the map frame, and :math:`\theta`,
       the angle from the map's :math:`x` axis to the AV's :math:`x` axis,
       counterclockwise. A localizer returns the pose and how sure it is,
-      a covariance. L6
+      a covariance. :doc:`L6 </lectures/lecture6/l6_index>`
 
    Pose Graph
       The graph that graph-based SLAM keeps. Each node is one pose of
@@ -2182,12 +2182,12 @@ P
       new scan and an old one from the same place: the motion between two
       poses far apart in time. Solving the graph finds the poses that
       disagree least with all edges, each weighted by how sure it is
-      (Grisetti et al., 2010). See Pose Graph Optimization. L6
+      (Grisetti et al., 2010). See Pose Graph Optimization. :doc:`L6 </lectures/lecture6/l6_index>`
 
    Pose Graph Optimization
       The SLAM backend formulation that represents the robot trajectory
       as a graph of poses (nodes) and relative constraints (edges), then
-      optimizes all poses jointly to minimize constraint errors. L6
+      optimizes all poses jointly to minimize constraint errors. :doc:`L6 </lectures/lecture6/l6_index>`
 
    Position Embedding
       A learned vector for each token position, added to the token, so
@@ -2250,7 +2250,7 @@ P
       number is smaller than or equal to the target integrity risk" (Zhu
       et al., 2018). The localizer computes it from its own covariance
       and error models. If it is above the alert limit, the localizer
-      warns. See Alert Limit. L6
+      warns. See Alert Limit. :doc:`L6 </lectures/lecture6/l6_index>`
 
    Pure Pursuit
       A geometric path-following controller that steers the vehicle toward
@@ -2463,11 +2463,11 @@ R
       only the timing code, and reaches "a few centimetres" near a base
       station. It cannot cancel errors at the car alone, such as
       multipath; it stops when the sky is blocked; and farther from the
-      base, less of the error is shared. L6
+      base, less of the error is shared. :doc:`L6 </lectures/lecture6/l6_index>`
 
    RTK-GPS
       Real-time kinematic GPS. See RTK, the name L6 uses: the technique
-      works with any GNSS, not only GPS. L6
+      works with any GNSS, not only GPS. :doc:`L6 </lectures/lecture6/l6_index>`
 
 
 .. _glossary-s:
@@ -2507,7 +2507,7 @@ S
       Aligning a new LiDAR scan to a previous scan or map by finding the
       rigid transformation that minimizes inter-point distance. Algorithms
       include ICP, NDT, and feature-based variants. It is the workhorse of
-      LiDAR localization and SLAM. L6
+      LiDAR localization and SLAM. :doc:`L6 </lectures/lecture6/l6_index>`
 
    Safety Case
       A written argument that a system is acceptably safe in a given context,
@@ -2616,7 +2616,7 @@ S
       map of an unknown environment while simultaneously tracking the
       agent's pose within it. Comprises a frontend (scan matching,
       feature extraction) and backend (pose graph optimization, loop
-      closure). L6
+      closure). :doc:`L6 </lectures/lecture6/l6_index>`
 
    Softmax
       Turns raw scores :math:`s_1, \dots, s_K`, one per class, into numbers
@@ -2979,7 +2979,7 @@ V
       A frame fixed to the AV: :math:`x` forward, :math:`y` to the left.
       It is used to describe what the sensors measure, relative to the AV
       (the LiDAR says "a wall 8 meters to my left", not "a wall at 120 meters
-      north"), and to steer and set the speed. Contrast Map Frame. L6
+      north"), and to steer and set the speed. Contrast Map Frame. :doc:`L6 </lectures/lecture6/l6_index>`
 
    Vehicle-in-the-Loop (VIL)
       A test level in which a real vehicle on a rig or test pad is fed
@@ -3006,11 +3006,11 @@ V
       Estimating camera ego-motion by tracking visual features across
       consecutive frames. Methods include feature-based (ORB-SLAM) and
       direct (DSO) approaches. Provides drift-prone but high-frequency
-      relative pose updates. L6
+      relative pose updates. :doc:`L6 </lectures/lecture6/l6_index>`
 
    Visual SLAM
       Visual odometry plus a map of the features it saw, so a place seen
-      again can correct the drift. L6
+      again can correct the drift. :doc:`L6 </lectures/lecture6/l6_index>`
 
    VLA Model
       Vision-Language-Action model. A multimodal architecture that

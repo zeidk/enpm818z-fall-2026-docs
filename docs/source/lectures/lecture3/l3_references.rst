@@ -113,7 +113,7 @@ lecture's bibliography that no slide cites.
 
          The particle filter applied to robot localization (particle filter
          appendix). Monte Carlo Localization itself is
-         L6.
+         :doc:`L6 </lectures/lecture6/l6_index>`.
 
 
 .. dropdown:: Checking the Covariance

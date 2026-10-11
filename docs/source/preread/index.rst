@@ -28,6 +28,10 @@ That material lives here. **Each page states when to read it.** Most are read
      - Why the industry simulates, what simulation cannot tell you, how it is
        done in production, and the landscape beyond CARLA. Read once L2 has
        shown you a simulator, and before GP1. Returned to in L12.
+   * - :doc:`Grading a Detector and a Tracker </preread/detector-grading>`
+     - Before GP2, Task 3
+     - IoU, precision and recall, AP, mAP\@0.5 and mAP\@0.5:0.95, ID
+       switches and MOTA, one step at a time. Builds on L4.
    * - :doc:`Automotive Cybersecurity </preread/cybersecurity>`
      - Before L13
      - Attack surfaces, ISO/SAE 21434, and TARA. Supports the L13
@@ -40,4 +44,5 @@ That material lives here. **Each page states when to read it.** Most are read
 
    dev-environment
    simulation
+   detector-grading
    cybersecurity

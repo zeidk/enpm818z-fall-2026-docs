@@ -46,6 +46,11 @@ split between the group projects (**85%**) and the Final Report
      - 15%
      - 3 weeks, due Sun, Oct 11
      - L1 and L2
+   * - GP2: Perception (YOLO vs. RT-DETR)
+     - 40
+     - 40%
+     - 2 weeks, due Thu, Oct 29
+     - L3, L4 and L5
 
 .. note::
 
@@ -210,8 +215,8 @@ Support Resources
    :titlesonly:
 
    gp1
+   gp2
 
-.. GP2--GP4 are hidden (see exclude_patterns in conf.py). Re-add here to publish:
-..    gp2
+.. GP3 and GP4 are hidden (see exclude_patterns in conf.py). Re-add here to publish:
 ..    gp3
 ..    gp4

@@ -290,7 +290,7 @@ Multiple Choice (Questions 1 to 22)
 .. admonition:: Question 10
    :class: hint
 
-   YOLOv8s scores mAP@0.5:0.95 = 44.9 on COCO. Which description is right?
+   YOLOv8s scores mAP\@0.5:0.95 = 44.9 on COCO. Which description is right?
 
    A. 44.9 percent of the boxes are right at IoU 0.5.
 
@@ -308,7 +308,7 @@ Multiple Choice (Questions 1 to 22)
 
    **B**.
 
-   mAP@0.5:0.95 is stricter than mAP@0.5. A box with IoU 0.574, like the one
+   mAP\@0.5:0.95 is stricter than mAP\@0.5. A box with IoU 0.574, like the one
    on the IoU slide, counts as right only at 0.50 and 0.55: 2 of the 10
    thresholds. Papers write this number simply as "AP". It is computed at a
    confidence cut of 0.001, the Ultralytics validation default, because it

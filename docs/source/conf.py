@@ -44,9 +44,9 @@ templates_path = ["_templates"]
 # ---------------------------------------------------------------------------
 # What is published.
 #
-# L1 to L5 are published in full (L5 since 2026-10-10).
+# L1 to L6 are published in full (L5 since 2026-10-10, L6 since 2026-10-11).
 #
-# L6 to L13 are hidden completely: they do not match the syllabus yet and
+# L7 to L13 are hidden completely: they do not match the syllabus yet and
 # open one at a time as their decks are finished. To reopen lecture N:
 #   1. remove N from HIDDEN_LECTURES below,
 #   2. restore its line in the toctree of lectures/index.rst,
@@ -55,13 +55,14 @@ templates_path = ["_templates"]
 #      pages that mention it.
 # The source files stay on disk.
 # ---------------------------------------------------------------------------
-HIDDEN_LECTURES = range(6, 14)
+HIDDEN_LECTURES = range(7, 14)
 
 exclude_patterns = [f"lectures/lecture{n}/**" for n in HIDDEN_LECTURES]
 
-# GP2--GP4 are held back until they are posted. Remove an entry here (and
-# restore its toctree line in assignments/index.rst) to publish it.
-exclude_patterns += [f"assignments/gp{n}.rst" for n in range(2, 5)]
+# GP3 and GP4 are held back until they are posted (GP2 since 2026-10-11).
+# Remove an entry here (and restore its toctree line in
+# assignments/index.rst) to publish it.
+exclude_patterns += [f"assignments/gp{n}.rst" for n in range(3, 5)]
 
 # ---------------------------------------------------------------------------
 # PyData Sphinx Theme

@@ -5,10 +5,34 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.7.4: Projects in Preparation (2026-10-11)
+.. dropdown:: v2.8.0: Lecture 6 and GP2 Published (2026-10-11)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **Lecture 6 (Localization & SLAM)** is published: lecture notes, Going
+     Further, the hands-on code page, quiz, exercises and references. The
+     glossary's Lecture 6 terms now link to it.
+   - **Lecture 4 and the glossary:** "mAP\@0.5" showed as an email link; it
+     is plain text again.
+
+   .. rubric:: Projects
+
+   - **GP2: Perception (YOLO vs. RT-DETR)** is posted. You grade the two
+     pretrained detectors on your team's own recorded drives, by day and by
+     night, and track their detections in the image.
+
+   .. rubric:: Pre-read
+
+   - **New: Grading a Detector and a Tracker.** IoU, precision and recall,
+     AP, mAP\@0.5 and mAP\@0.5:0.95, ID switches and MOTA, one step at a
+     time. Read it before GP2, Task 3.
+
+.. dropdown:: v2.7.4: Projects in Preparation (2026-10-11)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Projects
 

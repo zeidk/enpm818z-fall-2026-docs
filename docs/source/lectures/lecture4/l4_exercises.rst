@@ -232,7 +232,7 @@ with ``compare_detectors.py`` from the course code.
 
    1. Compute each box's area, the overlap, the **union** (the area covered
       by either box) and the **IoU**. Say in words what the IoU means.
-   2. mAP@0.5:0.95 counts a detection as right at 10 IoU thresholds, 0.50,
+   2. mAP\@0.5:0.95 counts a detection as right at 10 IoU thresholds, 0.50,
       0.55, up to 0.95, one at a time. At how many of them is this detection
       right?
    3. A separate example, chosen for this exercise: two boxes, each
@@ -297,7 +297,7 @@ with ``compare_detectors.py`` from the course code.
       1 tell you?
    9. If no box at all had matched the third person, what is the highest
       recall the detector could reach, at any cut?
-   10. YOLOv8s scores **mAP@0.5:0.95 = 44.9** on COCO's validation images.
+   10. YOLOv8s scores **mAP\@0.5:0.95 = 44.9** on COCO's validation images.
        Explain the two averages behind that number. Then explain why the
        published number is computed at a confidence cut of 0.001, and what
        happens to your mAP if you evaluate at 0.25.
@@ -324,8 +324,8 @@ with ``compare_detectors.py`` from the course code.
 
       Question 2: :math:`0.574 \ge 0.50` and :math:`0.574 \ge 0.55`, but
       :math:`0.574 < 0.60`. It is right at **2 of the 10** thresholds. That
-      is why mAP@0.5:0.95 rewards boxes that fit tightly, and why it comes
-      out lower than mAP@0.5.
+      is why mAP\@0.5:0.95 rewards boxes that fit tightly, and why it comes
+      out lower than mAP\@0.5.
 
       Question 3: overlap :math:`5 \times 10 = 50`; union
       :math:`100 + 100 - 50 = 150`; IoU :math:`= 50/150 = 0.333`. It is below

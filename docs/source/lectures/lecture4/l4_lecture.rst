@@ -1504,19 +1504,19 @@ computed.
    example: 0.917.
 2. **All classes:** average their APs, the **mean** AP. COCO has 80 classes,
    so 80 APs, one per class, are averaged into one number.
-3. **How strict "right" is:** mAP@0.5 counts a box as right at IoU
+3. **How strict "right" is:** mAP\@0.5 counts a box as right at IoU
    :math:`\ge 0.5`, a loose fit.
-4. **mAP@0.5:0.95**, the COCO standard: steps 1 and 2 at 10 IoU thresholds,
+4. **mAP\@0.5:0.95**, the COCO standard: steps 1 and 2 at 10 IoU thresholds,
    0.50, 0.55, ..., 0.95, averaged. Our IoU example's box (0.574) is right at
    0.50 and 0.55 only: 2 of 10. So this mAP rewards boxes that fit tightly.
 
-.. admonition:: YOLOv8s: mAP@0.5:0.95 = 44.9
+.. admonition:: YOLOv8s: mAP\@0.5:0.95 = 44.9
    :class: tip
 
    On COCO's validation images
    (`Ultralytics <https://docs.ultralytics.com/models/yolov8/>`__): averaged
    over 80 classes and 10 thresholds, the area under the line is 0.449.
-   Papers write mAP@0.5:0.95 simply as "AP", so Ultralytics' 44.9 is what a
+   Papers write mAP\@0.5:0.95 simply as "AP", so Ultralytics' 44.9 is what a
    paper calls 44.9 AP. On your own data, report both mAPs.
 
 .. warning::
@@ -1806,7 +1806,7 @@ This line is the man in the light-colored jacket, from YOLOv8s's box: center
    metrics = model.val()           # mAP, precision, recall
 
 A few lines of Python: import the library, load the pretrained weights, train
-on your data, and validate, which prints mAP@0.5, mAP@0.5:0.95, precision and
+on your data, and validate, which prints mAP\@0.5, mAP\@0.5:0.95, precision and
 recall. ``data.yaml`` lists where your images are and the names of your
 classes. Fifty **epochs** means fifty passes over the training images.
 
