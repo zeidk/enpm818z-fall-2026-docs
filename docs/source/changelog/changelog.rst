@@ -5,10 +5,20 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.8.0: Lecture 6 and GP2 Published (2026-10-11)
+.. dropdown:: v2.8.1: Quiz Answers Hidden Until You Open Them (2026-10-11)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Quizzes
+
+   - **Lectures 3 to 6:** the correct option of a multiple-choice question
+     was printed in bold, so the answer showed before you opened its box.
+     All options now look the same; the answer is only in the box.
+
+.. dropdown:: v2.8.0: Lecture 6 and GP2 Published (2026-10-11)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

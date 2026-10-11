@@ -43,9 +43,9 @@ Multiple Choice (Questions 1 to 22)
 
    A. It steers the AV and controls its speed.
 
-   B. **It turns raw sensor data into a description of the world that the
+   B. It turns raw sensor data into a description of the world that the
       rest of the AV can act on: which objects are around, where they are,
-      and where the AV may drive.**
+      and where the AV may drive.
 
    C. It plans the AV's path through an intersection.
 
@@ -74,9 +74,9 @@ Multiple Choice (Questions 1 to 22)
 
    B. One box around the most important object, with no class.
 
-   C. **A set of detections, each a class, a confidence from 0 to 1 and a
+   C. A set of detections, each a class, a confidence from 0 to 1 and a
       box given by its top-left and bottom-right corners in pixels. The
-      number of detections changes from image to image.**
+      number of detections changes from image to image.
 
    D. A fixed list of 80 detections, one per COCO class, in a set order.
 
@@ -101,8 +101,8 @@ Multiple Choice (Questions 1 to 22)
 
    A. That the label is right 61.6 percent of the time
 
-   B. **The share of the total score that went to "police van": its
-      confidence, which is not the chance of being right**
+   B. The share of the total score that went to "police van": its
+      confidence, which is not the chance of being right
 
    C. That the image is 61.6 percent covered by the van
 
@@ -134,7 +134,7 @@ Multiple Choice (Questions 1 to 22)
 
    B. 271.3
 
-   C. **414.7**
+   C. 414.7
 
    D. :math:`-414.7`
 
@@ -161,7 +161,7 @@ Multiple Choice (Questions 1 to 22)
 
    A. One map of :math:`480 \times 640`
 
-   B. **32 maps, each** :math:`240 \times 320` **features**
+   B. 32 maps, each :math:`240 \times 320` features
 
    C. 32 maps, each :math:`478 \times 638`
 
@@ -186,9 +186,9 @@ Multiple Choice (Questions 1 to 22)
 
    A. It turns the image into feature maps.
 
-   B. **It mixes the feature maps of different sizes: a coarse map's cells
+   B. It mixes the feature maps of different sizes: a coarse map's cells
       respond to whole objects like the bus, a fine map's cells mark exactly
-      where its edges are.**
+      where its edges are.
 
    C. It produces the classes and boxes.
 
@@ -215,7 +215,7 @@ Multiple Choice (Questions 1 to 22)
 
    A. 0.729
 
-   B. **0.574**
+   B. 0.574
 
    C. 0.365
 
@@ -242,7 +242,7 @@ Multiple Choice (Questions 1 to 22)
 
    A. Precision 1.00, recall 0.60
 
-   B. **Precision 0.60, recall 1.00**
+   B. Precision 0.60, recall 1.00
 
    C. Precision 0.67, recall 0.67
 
@@ -270,7 +270,7 @@ Multiple Choice (Questions 1 to 22)
 
    B. 0.750
 
-   C. **0.917**
+   C. 0.917
 
    D. 1.000
 
@@ -294,9 +294,9 @@ Multiple Choice (Questions 1 to 22)
 
    A. 44.9 percent of the boxes are right at IoU 0.5.
 
-   B. **The AP of each of COCO's 80 classes, averaged, at each of 10 IoU
+   B. The AP of each of COCO's 80 classes, averaged, at each of 10 IoU
       thresholds from 0.50 to 0.95 in steps of 0.05, averaged again: the
-      area under the line is 0.449 on average.**
+      area under the line is 0.449 on average.
 
    C. The model finds 44.9 percent of the objects with confidence above
       0.95.
@@ -323,8 +323,8 @@ Multiple Choice (Questions 1 to 22)
 
    A. It uses a transformer encoder.
 
-   B. **It predicts classes and boxes in one pass, from every cell of its
-      feature maps, with no step that first proposes regions.**
+   B. It predicts classes and boxes in one pass, from every cell of its
+      feature maps, with no step that first proposes regions.
 
    C. It looks at only one object per image.
 
@@ -352,7 +352,7 @@ Multiple Choice (Questions 1 to 22)
 
    A. (50.0, 902.4) to (246.4, 399.3)
 
-   B. **(50.0, 399.3) to (246.4, 902.4)**
+   B. (50.0, 399.3) to (246.4, 902.4)
 
    C. (220.0, 950.7) to (23.6, 447.6)
 
@@ -382,9 +382,9 @@ Multiple Choice (Questions 1 to 22)
 
    B. Because each of the three grids predicts every object three times.
 
-   C. **Because training teaches the 10 cells that fit each object best to
-      predict it** (``tal_topk=10``), **so on a new image each object comes
-      out about ten times.**
+   C. Because training teaches the 10 cells that fit each object best to
+      predict it (``tal_topk=10``), so on a new image each object comes
+      out about ten times.
 
    D. Because NMS has already run once.
 
@@ -408,9 +408,9 @@ Multiple Choice (Questions 1 to 22)
 
    A. To make NMS faster.
 
-   B. **Because a pedestrian stepping out from behind a parked car overlaps
+   B. Because a pedestrian stepping out from behind a parked car overlaps
       the car's box, and the car's box, often the more confident one, would
-      delete the pedestrian.**
+      delete the pedestrian.
 
    C. Because boxes of different classes never overlap.
 
@@ -439,7 +439,7 @@ Multiple Choice (Questions 1 to 22)
 
    B. ``person 0.1817 0.6035 0.2402 0.4630``
 
-   C. **Class 0, then 0.1817 0.6035 0.2402 0.4630**
+   C. Class 0, then 0.1817 0.6035 0.2402 0.4630
 
    D. ``0 0.0616 0.3720 0.3019 0.8350``
 
@@ -467,7 +467,7 @@ Multiple Choice (Questions 1 to 22)
 
    B. 0.625, 0.625, -0.25
 
-   C. **0.422, 0.422, 0.157**
+   C. 0.422, 0.422, 0.157
 
    D. 0.5, 0.5, 0
 
@@ -496,10 +496,10 @@ Multiple Choice (Questions 1 to 22)
    A. :math:`Q` holds what each token passes on, :math:`V` what it looks
       for.
 
-   B. **Each row of** :math:`QK^\top` **scores one token's query against
-      every key; dividing by** :math:`\sqrt{d}` **keeps the scores from
+   B. Each row of :math:`QK^\top` scores one token's query against
+      every key; dividing by :math:`\sqrt{d}` keeps the scores from
       growing with the vector length; softmax turns them into positive
-      weights that add to 1; the weights then average the values.**
+      weights that add to 1; the weights then average the values.
 
    C. :math:`\sqrt{d}` is the number of tokens, so the result is an average
       over tokens.
@@ -528,9 +528,9 @@ Multiple Choice (Questions 1 to 22)
 
    B. To mark which token is the class token.
 
-   C. **Because the encoder layers treat the tokens as a set: shuffle them
+   C. Because the encoder layers treat the tokens as a set: shuffle them
       and every output is the same, only shuffled. Without position, a patch
-      would mean the same at the top of the image as at the bottom.**
+      would mean the same at the top of the image as at the bottom.
 
    D. To scale the pixel values to 0 to 1.
 
@@ -555,7 +555,7 @@ Multiple Choice (Questions 1 to 22)
 
    A. Query 1 for the person and query 4 for the bus, total 0.9
 
-   B. **Query 2 for the person and query 1 for the bus, total 0.6**
+   B. Query 2 for the person and query 1 for the bus, total 0.6
 
    C. Query 1 for both, total 0.5
 
@@ -586,8 +586,8 @@ Multiple Choice (Questions 1 to 22)
 
    B. It replaced the transformer with a CNN.
 
-   C. **Its encoder runs attention only inside the coarsest map (stride 32),
-      and convolutions mix the three map sizes.**
+   C. Its encoder runs attention only inside the coarsest map (stride 32),
+      and convolutions mix the three map sizes.
 
    D. It cut the number of queries to 10.
 
@@ -615,7 +615,7 @@ Multiple Choice (Questions 1 to 22)
 
    B. 30 percent
 
-   C. **60 percent**
+   C. 60 percent
 
    D. 167 percent: it does not fit
 
@@ -642,9 +642,9 @@ Multiple Choice (Questions 1 to 22)
 
    B. Use 0.75 for both models, because it removes the wrong boxes.
 
-   C. **The same cut means different things for different models: choose it
+   C. The same cut means different things for different models: choose it
       per model, on validation data, and for an AV lean low, because a
-      missed person costs more than a phantom object.**
+      missed person costs more than a phantom object.
 
    D. The cut does not matter, because mAP is computed at 0.001.
 

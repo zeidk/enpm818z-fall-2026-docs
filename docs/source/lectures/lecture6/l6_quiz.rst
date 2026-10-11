@@ -50,8 +50,8 @@ Multiple Choice (Questions 1 to 22)
 
    A. The angle from the AV's :math:`x` axis to the nearest wall.
 
-   B. **The angle from the map's** :math:`x` **axis (east) to the AV's**
-      :math:`x` **axis (forward), counterclockwise.**
+   B. The angle from the map's :math:`x` axis (east) to the AV's
+      :math:`x` axis (forward), counterclockwise.
 
    C. The steering angle of the front wheels.
 
@@ -82,8 +82,8 @@ Multiple Choice (Questions 1 to 22)
 
    B. The error of an RTK receiver near its base station.
 
-   C. **The error the AV must stay inside almost always: the paper derives it
-      at a failure rate of** :math:`10^{-8}` **per hour of driving.**
+   C. The error the AV must stay inside almost always: the paper derives it
+      at a failure rate of :math:`10^{-8}` per hour of driving.
 
    D. The width of a lane marking.
 
@@ -109,8 +109,8 @@ Multiple Choice (Questions 1 to 22)
 
    B. A blocked sky gives fixes that look normal and are meters off.
 
-   C. **A blocked sky stops the fixes, and the AV knows. Multipath gives a
-      fix that looks normal and is meters off, and the AV does not know.**
+   C. A blocked sky stops the fixes, and the AV knows. Multipath gives a
+      fix that looks normal and is meters off, and the AV does not know.
 
    D. Multipath is noise, so averaging a few fixes removes it.
 
@@ -138,7 +138,7 @@ Multiple Choice (Questions 1 to 22)
 
    B. About 1.5 times too far off.
 
-   C. **About 6 times too far off:** :math:`1.77 / 0.29 = 6.1`.
+   C. About 6 times too far off: :math:`1.77 / 0.29 = 6.1`.
 
    D. About 12 times too far off.
 
@@ -162,9 +162,9 @@ Multiple Choice (Questions 1 to 22)
 
    A. It relays the satellite signals to the car through a cable.
 
-   B. **It sits on a surveyed point, so it knows its own error. It sends that
+   B. It sits on a surveyed point, so it knows its own error. It sends that
       error to the car nearby as a correction, and the errors both receivers
-      share cancel.**
+      share cancel.
 
    C. It measures the car's position with its own LiDAR.
 
@@ -195,8 +195,8 @@ Multiple Choice (Questions 1 to 22)
 
    B. Yes: the fixes keep coming, so the sky is clear.
 
-   C. **Not necessarily: multipath at the car is not in the base station's
-      correction, so a normal-looking fix can be meters off.**
+   C. Not necessarily: multipath at the car is not in the base station's
+      correction, so a normal-looking fix can be meters off.
 
    D. No: RTK stops working as soon as the AV moves.
 
@@ -225,7 +225,7 @@ Multiple Choice (Questions 1 to 22)
 
    A. 0.5 m east.
 
-   B. **0.5 m north:** :math:`x` **does not change.**
+   B. 0.5 m north: :math:`x` does not change.
 
    C. 10 m north.
 
@@ -254,7 +254,7 @@ Multiple Choice (Questions 1 to 22)
 
    B. 1.75 m
 
-   C. **3.49 m**
+   C. 3.49 m
 
    D. 200 m
 
@@ -282,7 +282,7 @@ Multiple Choice (Questions 1 to 22)
 
    A. 4.0 m
 
-   B. **8.0 m**
+   B. 8.0 m
 
    C. 2.8 m
 
@@ -310,8 +310,8 @@ Multiple Choice (Questions 1 to 22)
 
    A. Under 0.29 m all the way: wheels and gyro are enough.
 
-   B. **2.69 m after 100 m, a worst of 9.03 m at 329 m, and 7.84 m at the
-      end of the outage.**
+   B. 2.69 m after 100 m, a worst of 9.03 m at 329 m, and 7.84 m at the
+      end of the outage.
 
    C. An error that grows smoothly with the square of the distance.
 
@@ -339,7 +339,7 @@ Multiple Choice (Questions 1 to 22)
 
    B. It stays the same; only the state changes.
 
-   C. **It grows at every predict step and shrinks at every update.**
+   C. It grows at every predict step and shrinks at every update.
 
    D. It shrinks at every step.
 
@@ -365,7 +365,7 @@ Multiple Choice (Questions 1 to 22)
 
    A. The filter is honest: the error is inside :math:`3\sigma`.
 
-   B. **The filter is overconfident: the real error is 2.4 times its own**
+   B. The filter is overconfident: the real error is 2.4 times its own
       :math:`1\sigma` (:math:`9.50 / 3.93`).
 
    C. The filter is underconfident: it thinks it is worse than it is.
@@ -395,7 +395,7 @@ Multiple Choice (Questions 1 to 22)
 
    B. 0.28 m
 
-   C. **0.53 m**
+   C. 0.53 m
 
    D. 1.00 m
 
@@ -424,7 +424,7 @@ Multiple Choice (Questions 1 to 22)
 
    B. The wheels.
 
-   C. **Map matching: through the outage, 4.99 m becomes 0.52 m.**
+   C. Map matching: through the outage, 4.99 m becomes 0.52 m.
 
    D. None: all eight runs score about the same.
 
@@ -448,9 +448,9 @@ Multiple Choice (Questions 1 to 22)
 
    A. Every particle moves with the wheels and the gyro.
 
-   B. **For each particle, the scan is placed where that particle says the
+   B. For each particle, the scan is placed where that particle says the
       car is, and each scan point is scored by how close it lands to the
-      map.**
+      map.
 
    C. Heavy particles are copied and light ones dropped.
 
@@ -480,8 +480,8 @@ Multiple Choice (Questions 1 to 22)
 
    B. 2000 particles are too few for any box.
 
-   C. **A plain box turned half a turn looks the same, so the scan cannot
-      tell the two poses apart. The pillar makes them look different.**
+   C. A plain box turned half a turn looks the same, so the scan cannot
+      tell the two poses apart. The pillar makes them look different.
 
    D. The pillar blocks the LiDAR, so fewer particles survive.
 
@@ -505,10 +505,10 @@ Multiple Choice (Questions 1 to 22)
    A. Because the rotation formula is only approximate, and each round makes
       it more accurate.
 
-   B. **If we knew which map point each scan point hit, the best pose would
+   B. If we knew which map point each scan point hit, the best pose would
       be one formula; if we knew the pose, we would know the pairs. We know
       neither, so ICP guesses the pairs from the nearest points, solves,
-      moves the scan, and guesses again.**
+      moves the scan, and guesses again.
 
    C. Because the map changes between iterations.
 
@@ -570,7 +570,7 @@ Multiple Choice (Questions 1 to 22)
 
    B. (1, 6)
 
-   C. **(5, 3)**
+   C. (5, 3)
 
    D. (3, 4)
 
@@ -595,10 +595,10 @@ Multiple Choice (Questions 1 to 22)
 
    A. The map is wrong in that part of the town.
 
-   B. **One match is rejected and the next is dropped. With no wheels and
-      no GNSS, nothing measures the speed, so the filter's position**
-      :math:`\sigma` **passes 2 m, the limit chosen for starting ICP, and ICP
-      stops. The filter coasts on the gyro alone, 65.6 m off at its worst.**
+   B. One match is rejected and the next is dropped. With no wheels and
+      no GNSS, nothing measures the speed, so the filter's position
+      :math:`\sigma` passes 2 m, the limit chosen for starting ICP, and ICP
+      stops. The filter coasts on the gyro alone, 65.6 m off at its worst.
 
    C. ICP needs more than one scan per second.
 
@@ -626,8 +626,8 @@ Multiple Choice (Questions 1 to 22)
 
    A. 9.21, because a pose is a position.
 
-   B. **11.34, because a pose reports three numbers:** :math:`x`, :math:`y`
-      **and** :math:`\theta`.
+   B. 11.34, because a pose reports three numbers: :math:`x`, :math:`y`
+      and :math:`\theta`.
 
    C. 3, the NIS an honest filter averages for a pose.
 
@@ -654,7 +654,7 @@ Multiple Choice (Questions 1 to 22)
 
    A. When the protection level is below the alert limit.
 
-   B. **When the protection level is above the alert limit.**
+   B. When the protection level is above the alert limit.
 
    C. When the APE is above 0.29 m.
 

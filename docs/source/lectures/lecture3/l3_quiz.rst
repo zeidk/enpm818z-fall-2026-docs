@@ -48,7 +48,7 @@ Multiple Choice (Questions 1 to 21)
 
    B. (153.0, 2.5) m
 
-   C. **(53.0, 2.5) m**
+   C. (53.0, 2.5) m
 
    D. (103.0, 52.5) m
 
@@ -75,8 +75,8 @@ Multiple Choice (Questions 1 to 21)
 
    A. Because squaring makes the arithmetic easier
 
-   B. **Because the six distances add up to 0.0 m: plus and minus cancel, so
-      their plain average says nothing about the spread**
+   B. Because the six distances add up to 0.0 m: plus and minus cancel, so
+      their plain average says nothing about the spread
 
    C. Because the result then has the same unit as the readings, meters
 
@@ -103,7 +103,7 @@ Multiple Choice (Questions 1 to 21)
 
    A. 2.437 m, because variance and standard deviation are the same number
 
-   B. **1.56 m, because the square root brings the spread back to meters**
+   B. 1.56 m, because the square root brings the spread back to meters
 
    C. 0.41 m, because the variance is divided by the six readings once more
 
@@ -132,8 +132,8 @@ Multiple Choice (Questions 1 to 21)
 
    A. A and B are equally good, because their :math:`\sigma` is the same
 
-   B. **B has a bias of about 3.2 m: noise alone moves the average of six
-      readings by only about 0.64 m**
+   B. B has a bias of about 3.2 m: noise alone moves the average of six
+      readings by only about 0.64 m
 
    C. B's offset is noise, and averaging more readings will remove it
 
@@ -165,7 +165,7 @@ Multiple Choice (Questions 1 to 21)
 
    B. The standard deviation :math:`\sigma_x`
 
-   C. **The covariance** :math:`\operatorname{Cov}(x, y)`
+   C. The covariance :math:`\operatorname{Cov}(x, y)`
 
    D. The number of readings
 
@@ -193,7 +193,7 @@ Multiple Choice (Questions 1 to 21)
 
    B. :math:`K = 0.2`, 50.6 m
 
-   C. **K = 0.8, 52.4 m**
+   C. K = 0.8, 52.4 m
 
    D. :math:`K = 1`, 53.0 m
 
@@ -220,7 +220,7 @@ Multiple Choice (Questions 1 to 21)
 
    B. 1.0 m, the better of the two
 
-   C. **0.89 m, smaller than both**
+   C. 0.89 m, smaller than both
 
    D. 2.24 m, the square root of 4 + 1
 
@@ -248,8 +248,8 @@ Multiple Choice (Questions 1 to 21)
 
    A. The filter reports ±0.89 m, and the real error is also 0.89 m
 
-   B. **The filter reports ±0.89 m while the real error is 2 m, and the
-      surprise cannot show it**
+   B. The filter reports ±0.89 m while the real error is 2 m, and the
+      surprise cannot show it
 
    C. The surprise grows to 5 m, so the filter detects the map error
 
@@ -278,7 +278,7 @@ Multiple Choice (Questions 1 to 21)
 
    A. Because the sign match measures it indirectly
 
-   B. **Because the motion model needs it to predict the next position**
+   B. Because the motion model needs it to predict the next position
 
    C. Because the planner ignores position
 
@@ -308,9 +308,9 @@ Multiple Choice (Questions 1 to 21)
 
    A. Because :math:`\mathbf{w}` is too small to matter
 
-   B. **Because** :math:`\mathbf{w}` **is drawn from a bell curve centered
+   B. Because :math:`\mathbf{w}` is drawn from a bell curve centered
       on 0, so its best single guess is 0; its size still enters the
-      uncertainty as + Q**
+      uncertainty as + Q
 
    C. Because the IMU removes all motion error
 
@@ -339,7 +339,7 @@ Multiple Choice (Questions 1 to 21)
 
    A. :math:`Q` alone
 
-   B. **FPFᵀ: each step leaks the speed error into the position**
+   B. FPFᵀ: each step leaks the speed error into the position
 
    C. :math:`R`, the sign match's noise
 
@@ -368,8 +368,8 @@ Multiple Choice (Questions 1 to 21)
 
    A. A 4 by 4 identity, because every state number is measured
 
-   B. **A 2 by 4 matrix that keeps** :math:`p_x` **and** :math:`p_y` **and
-      drops the velocity**
+   B. A 2 by 4 matrix that keeps :math:`p_x` and :math:`p_y` and
+      drops the velocity
 
    C. A 4 by 2 matrix that turns the reading into a state
 
@@ -401,7 +401,7 @@ Multiple Choice (Questions 1 to 21)
 
    B. 0.26 m
 
-   C. **0.48 m, 65% of the 0.74 m surprise**
+   C. 0.48 m, 65% of the 0.74 m surprise
 
    D. 0 m, because the reading lies inside the 2σ circle
 
@@ -427,8 +427,8 @@ Multiple Choice (Questions 1 to 21)
 
    A. Because the sign match also reports speed
 
-   B. **Because predict tied speed to position (correlation +0.79), so a
-      position surprise also corrects the speed**
+   B. Because predict tied speed to position (correlation +0.79), so a
+      position surprise also corrects the speed
 
    C. Because of a rounding error
 
@@ -460,8 +460,8 @@ Multiple Choice (Questions 1 to 21)
 
    B. The filter is underconfident: its band is too wide
 
-   C. **The filter is overconfident: its band is thin while the error is
-      five times larger**
+   C. The filter is overconfident: its band is thin while the error is
+      five times larger
 
    D. The filter ignores the signs and drifts with the IMU
 
@@ -487,7 +487,7 @@ Multiple Choice (Questions 1 to 21)
 
    A. The bell curve; the particle filter
 
-   B. **Linear models; the EKF**
+   B. Linear models; the EKF
 
    C. No bias; a larger :math:`Q`
 
@@ -519,8 +519,8 @@ Multiple Choice (Questions 1 to 21)
 
    B. The spread is too small; raise :math:`Q`
 
-   C. **The mean lands between the lights, where the honest belief is
-      zero; the particle filter carries many candidate states at once**
+   C. The mean lands between the lights, where the honest belief is
+      zero; the particle filter carries many candidate states at once
 
    D. The lights make the model nonlinear; use the EKF
 
@@ -548,9 +548,9 @@ Multiple Choice (Questions 1 to 21)
    B. Both the estimate and :math:`P` go through the real :math:`f` and
       :math:`h`
 
-   C. **The estimate goes through the real** :math:`f` **and** :math:`h`;
-      :math:`P` **goes through the Jacobians** :math:`F_k`, :math:`H_k`
-      **(and** :math:`Q_k` **)**
+   C. The estimate goes through the real :math:`f` and :math:`h`;
+      :math:`P` goes through the Jacobians :math:`F_k`, :math:`H_k`
+      (and :math:`Q_k` )
 
    D. :math:`P` goes through :math:`f` and the estimate through
       :math:`F_k`
@@ -579,7 +579,7 @@ Multiple Choice (Questions 1 to 21)
 
    A. 16.00 m, exactly on the truth
 
-   B. **14.77 m, 1.23 m short of the truth**
+   B. 14.77 m, 1.23 m short of the truth
 
    C. 15.98 m, almost on the truth
 
@@ -609,8 +609,8 @@ Multiple Choice (Questions 1 to 21)
 
    B. The EKF, with Jacobians derived by hand
 
-   C. **The UKF: it moves a few chosen possible states through the real
-      model, 2n + 1 = 7 runs per step for x, y, θ, and needs no slopes**
+   C. The UKF: it moves a few chosen possible states through the real
+      model, 2n + 1 = 7 runs per step for x, y, θ, and needs no slopes
 
    D. The particle filter, because it is the cheapest
 
@@ -642,7 +642,7 @@ Multiple Choice (Questions 1 to 21)
 
    B. It is underconfident, because 1.39 is below 2
 
-   C. **It is honest: 1.39 lies inside the band chance allows**
+   C. It is honest: 1.39 lies inside the band chance allows
 
    D. Nothing, because the NIS needs ground truth
 

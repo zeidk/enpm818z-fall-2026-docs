@@ -51,8 +51,8 @@ Multiple Choice (Questions 1 to 21)
 
    A. 3D detection, because it gives positions in meters.
 
-   B. **Tracking, because it says which object is which from one frame to
-      the next, and how fast each one moves.**
+   B. Tracking, because it says which object is which from one frame to
+      the next, and how fast each one moves.
 
    C. Planning, because it decides what the AV does next.
 
@@ -81,8 +81,8 @@ Multiple Choice (Questions 1 to 21)
    A. The four pixel corners of the box, the class, the confidence and the
       frame number.
 
-   B. **The center** :math:`(x, y, z)` **in meters in the AV's frame, the
-      length, width and height, and the heading** :math:`\theta`.
+   B. The center :math:`(x, y, z)` in meters in the AV's frame, the
+      length, width and height, and the heading :math:`\theta`.
 
    C. The center :math:`(x, y)`, the speed :math:`(v_x, v_y)`, the class,
       the confidence and the time stamp.
@@ -113,7 +113,7 @@ Multiple Choice (Questions 1 to 21)
 
    B. 0.70 m
 
-   C. **1.70 m**
+   C. 1.70 m
 
    D. 2.00 m
 
@@ -143,7 +143,7 @@ Multiple Choice (Questions 1 to 21)
 
    B. 19
 
-   C. **2 or 3**
+   C. 2 or 3
 
    D. 64
 
@@ -170,8 +170,8 @@ Multiple Choice (Questions 1 to 21)
 
    B. To give each point a class from the camera.
 
-   C. **To turn an unordered list of points into a 2D grid seen from above,
-      so the 2D CNNs of L4 can read it.**
+   C. To turn an unordered list of points into a 2D grid seen from above,
+      so the 2D CNNs of L4 can read it.
 
    D. To keep the full detail in height, which voxels lose.
 
@@ -197,9 +197,9 @@ Multiple Choice (Questions 1 to 21)
    A. The cell with the most LiDAR points; the network reads the class
       there.
 
-   B. **A cell whose value is higher than all its neighbors. It is the
+   B. A cell whose value is higher than all its neighbors. It is the
       object's center, and the network reads the size, the heading and the
-      velocity at that cell.**
+      velocity at that cell.
 
    C. The preset box that best matches the points; the network corrects it
       to the 7 numbers.
@@ -229,8 +229,8 @@ Multiple Choice (Questions 1 to 21)
 
    B. One mask per person, each with its own id.
 
-   C. **A grid the size of the image with one class number per pixel:
-      921,600 numbers. Two people side by side get the same class.**
+   C. A grid the size of the image with one class number per pixel:
+      921,600 numbers. Two people side by side get the same class.
 
    D. A list of the classes present in the image, with no positions.
 
@@ -259,7 +259,7 @@ Multiple Choice (Questions 1 to 21)
 
    B. 19.2
 
-   C. **0.38**
+   C. 0.38
 
    D. 23
 
@@ -289,7 +289,7 @@ Multiple Choice (Questions 1 to 21)
 
    C. (124, 97)
 
-   D. **(123, 96)**
+   D. (123, 96)
 
 .. dropdown:: Answer
    :class-container: sd-border-success
@@ -315,7 +315,7 @@ Multiple Choice (Questions 1 to 21)
 
    B. At 5 m, half the distance.
 
-   C. **At 20 m, twice too far.**
+   C. At 20 m, twice too far.
 
    D. Infinitely far.
 
@@ -344,9 +344,9 @@ Multiple Choice (Questions 1 to 21)
 
    B. It looks the depth up in the LiDAR sweep.
 
-   C. **A CNN gives the pixel a feature and a probability for each depth
+   C. A CNN gives the pixel a feature and a probability for each depth
       bin along its ray, both set by training, and spreads the feature over
-      the bins, weighted by those probabilities.**
+      the bins, weighted by those probabilities.
 
    D. It throws the pixel away unless its depth is known.
 
@@ -370,8 +370,8 @@ Multiple Choice (Questions 1 to 21)
 
    A. A box around the branch, with the class "branch".
 
-   B. **Voxels marked occupied where the branch is, even though it has no
-      class.**
+   B. Voxels marked occupied where the branch is, even though it has no
+      class.
 
    C. Nothing: an object with no class is invisible to occupancy too.
 
@@ -397,7 +397,7 @@ Multiple Choice (Questions 1 to 21)
    In which fusion design is each LiDAR point on car B paired with the
    camera pixel it lands on, and one network reads the pairs?
 
-   A. **Early fusion**
+   A. Early fusion
 
    B. Intermediate fusion
 
@@ -428,7 +428,7 @@ Multiple Choice (Questions 1 to 21)
 
    B. At the learned features, in the BEV cells.
 
-   C. **At the finished answers: late fusion.**
+   C. At the finished answers: late fusion.
 
    D. It cannot be fused with anything.
 
@@ -457,7 +457,7 @@ Multiple Choice (Questions 1 to 21)
 
    B. (236.7, 37.9)
 
-   C. **(876.7, 397.9)**
+   C. (876.7, 397.9)
 
    D. (876.7, 322.1)
 
@@ -487,8 +487,8 @@ Multiple Choice (Questions 1 to 21)
 
    A. Because the LiDAR's range is measured to 1 m.
 
-   B. **Because the LiDAR sees only the two faces turned toward the AV, so
-      the average of the points sits toward the AV.**
+   B. Because the LiDAR sees only the two faces turned toward the AV, so
+      the average of the points sits toward the AV.
 
    C. Because the camera box is too small.
 
@@ -520,7 +520,7 @@ Multiple Choice (Questions 1 to 21)
 
    B. 30 m ahead and 3 m left
 
-   C. **45 m ahead and 3 m left**
+   C. 45 m ahead and 3 m left
 
    D. 115 m ahead and 3 m left
 
@@ -547,7 +547,7 @@ Multiple Choice (Questions 1 to 21)
 
    A. (12.0, -2.0)
 
-   B. **(12.35, -1.80)**
+   B. (12.35, -1.80)
 
    C. (15.46, 0.00)
 
@@ -578,8 +578,8 @@ Multiple Choice (Questions 1 to 21)
 
    B. Car B's only: it is the better-known track.
 
-   C. **The new track's only:** :math:`\varepsilon = 0.44`, **against 400
-      for car B.**
+   C. The new track's only: :math:`\varepsilon = 0.44`, against 400
+      for car B.
 
    D. Neither: 2 m is always outside the gate.
 
@@ -608,9 +608,9 @@ Multiple Choice (Questions 1 to 21)
 
    B. GNN blends every detection in the gate, weighted by probability.
 
-   C. **NN gives each track in turn its nearest free detection, so its
+   C. NN gives each track in turn its nearest free detection, so its
       answer depends on which track goes first; GNN picks the pairing with
-      the lowest total distance over the whole frame, with no order effect.**
+      the lowest total distance over the whole frame, with no order effect.
 
    D. GNN needs no gate.
 
@@ -634,10 +634,10 @@ Multiple Choice (Questions 1 to 21)
 
    A. Deletes her track on the first miss.
 
-   B. **Moves her track on its prediction alone, as Coasting. Her
+   B. Moves her track on its prediction alone, as Coasting. Her
       uncertainty and gate grow every frame, and the planner is still told.
       After 1 s with no detection (our tracker's setting), the track is
-      deleted.**
+      deleted.
 
    C. Keeps her track Confirmed, with the same uncertainty, until she
       reappears.
