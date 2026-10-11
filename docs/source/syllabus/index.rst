@@ -114,8 +114,8 @@ These six numbers add up to your grade. There is nothing else.
 - The four group projects plus the final report make up **80%** of the course.
   The right-hand column expresses the same weights as shares of that 80%,
   which is where the odd decimals come from.
-- **GP2 alone is more than a quarter of your grade.** It is the project that
-  trains models -- start it early.
+- **GP2 alone is more than a quarter of your grade,** and it has two weeks.
+  Start it the day it is posted.
 - **There is no final exam.** The final report is the capstone assessment, and
   there is no presentation.
 
@@ -675,12 +675,12 @@ all other Thursdays meet as scheduled. Dates below are given as MM/DD.
      - Perception II: 3D Detection, BEV, Fusion & Tracking
      - L5
      - | :quiz:`Quiz 2`
-       | :assignment:`GP1 due, GP2 posted (Sun, Oct 11)`
+       | :assignment:`GP1 due (Sun, Oct 11)`
    * - 10/15
      - 7
      - Localization & SLAM
      - L6
-     -
+     - :assignment:`GP2 posted (Wed, Oct 14)`
    * - 10/22
      - 8
      - Navigation & Route Planning
@@ -780,10 +780,11 @@ adjustment period closes. The setup milestone before it is individual.
      - 10.2%
      - CARLA sensor suite + ROS 2 package foundation.
    * - GP2: Perception (YOLO vs. RT-DETR)
-     - Week 6
+     - Week 7
      - Week 9
      - 27.2%
-     - Trained YOLO + RT-DETR models, deployed as a ROS 2 node.
+     - YOLOv8s and RT-DETR-L graded and tracked on your own drives,
+       deployed as a ROS 2 node.
    * - GP3: Fusion & Localization
      - Week 9
      - Week 12
@@ -868,7 +869,7 @@ Hardware Requirements
    * - Storage
      - 150 GB free
 
-- CARLA runs a game engine, and your training runs on the same machine.
+- CARLA runs a game engine, and your detectors run on the same machine.
 - **A virtual machine will not be adequate.**
 - CARLA 0.9.16 is native on Ubuntu 22.04 only; on 24.04 the server runs in
   Docker.
@@ -876,7 +877,6 @@ Hardware Requirements
 .. warning::
 
    **If your GPU is marginal, the instructor needs to know in Week 1, not in
-   October.** GP2 trains two detectors. A reference training recipe with
-   expected wall-clock time on the minimum spec is published with the
-   assignment, so you can tell within a day whether your hardware is the
-   problem.
+   October.** GP2 runs two detectors on your own CARLA drives and times
+   them. The GP2 page gives the times we measured, so you can tell within a
+   day whether your hardware is the problem.

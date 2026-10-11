@@ -74,9 +74,10 @@ A live demo then runs both detectors side by side on a CARLA frame.
 .. admonition:: This week
    :class: warning
 
-   - **Next week (week 6):** Quiz 2. **GP1 is due, and GP2 is posted, on
-     Sunday, October 11.** GP2's two detectors are YOLOv8s and RT-DETR-L,
-     which is why every example in this lecture uses them.
+   - **Next week (week 6):** Quiz 2, and **GP1 is due on Sunday, October
+     11.** GP2 is posted on Wednesday, October 14. Its two detectors are
+     YOLOv8s and RT-DETR-L, which is why every example in this lecture uses
+     them.
    - **Perception is two lectures now:** L4 this week and L5 next week. The
      old third perception lecture was folded into them.
 
