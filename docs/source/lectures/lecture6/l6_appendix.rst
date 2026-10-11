@@ -172,16 +172,19 @@ Its SVD, from the figure generator, rounded:
 When the Rotation Is Not Unique
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:math:`S`'s second number, 1.394 in our example, measures how much the pairs
-spread in a second direction. **If it is 0, the rotation is not unique.**
+With the pairs fixed, the 2-D rotation
+:math:`\alpha = \operatorname{atan2}(H_{12} - H_{21},\ H_{11} + H_{22})` is
+**not unique only when both arguments are 0**. A second singular value of 0
+alone is not enough: :math:`H = \begin{pmatrix} 0 & 2 \\ 0 & 0 \end{pmatrix}`
+has :math:`S = (2, 0)` and still gives one rotation, :math:`90^\circ`.
 
-- **All points on one line** (a single straight wall): sliding along the
-  wall, or turning about it, fits as well. The course code stops with an
-  error in that case instead of returning a rotation.
-- **Fewer than 3 points in 2-D,** or points that are not centered when
-  :math:`H` is built: the same problem. An example where the second number
-  is 0 cannot teach Step 4, so the lecture's example uses three centered
-  points that are not on one line.
+- **All points on one line** (a single straight wall): for fixed pairs the
+  rotation can still be found. The trouble is the pairing: shifted along the
+  wall, each scan point finds an equally near map point, so ICP cannot tell
+  how far along the wall the AV is. The course code stops with an error when
+  the second singular value is near 0, to be safe.
+- The lecture's example uses three centered points that are not on one line,
+  so nothing in it depends on this case.
 
 .. admonition:: On the road
    :class: important

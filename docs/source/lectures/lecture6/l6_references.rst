@@ -225,6 +225,87 @@ Kabsch, Thrun et al., and Zhang and Scaramuzza.
          Iterative closest point: guess the pairs from the nearest points,
          solve, move, guess again.
 
+      .. grid-item-card:: Random particles for relocalization
+         :link: https://rse-lab.cs.washington.edu/papers/sampling-aaai-99.pdf
+         :class-card: sd-border-secondary
+
+         **Fox, D., Burgard, W., Dellaert, F. and Thrun, S. (1999)**
+
+         "Monte Carlo Localization: Efficient Position Estimation for Mobile
+         Robots." *AAAI-99*, 343 to 349.
+
+         "The added samples are essential for relocalization in the rare event
+         that the robot loses track of its position."
+
+      .. grid-item-card:: Robust MCL
+         :link: https://doi.org/10.1016/S0004-3702(01)00069-8
+         :class-card: sd-border-secondary
+
+         **Thrun, S., Fox, D., Burgard, W. and Dellaert, F. (2001)**
+
+         "Robust Monte Carlo Localization for Mobile Robots." *Artificial
+         Intelligence*, 128(1 to 2), 99 to 141.
+
+         Adding random samples and similar fixes are "mathematically
+         questionable".
+
+      .. grid-item-card:: KLD sampling
+         :link: https://doi.org/10.1177/0278364903022012001
+         :class-card: sd-border-secondary
+
+         **Fox, D. (2003)**
+
+         "Adapting the Sample Size in Particle Filters Through KLD-Sampling."
+         *The International Journal of Robotics Research*, 22(12), 985 to 1003.
+
+         "A small number of samples if the density is focused", a large number
+         when the samples must cover a large part of the space.
+
+      .. grid-item-card:: The k-d tree
+         :link: https://doi.org/10.1145/361002.361007
+         :class-card: sd-border-secondary
+
+         **Bentley, J. L. (1975)**
+
+         "Multidimensional Binary Search Trees Used for Associative
+         Searching." *Communications of the ACM*, 18(9), 509 to 517.
+
+         The k-d tree: split on one key per level, the keys taken in turn.
+
+      .. grid-item-card:: Nearest neighbors in log N
+         :link: https://doi.org/10.1145/355744.355745
+         :class-card: sd-border-secondary
+
+         **Friedman, J. H., Bentley, J. L. and Finkel, R. A. (1977)**
+
+         "An Algorithm for Finding Best Matches in Logarithmic Expected Time."
+         *ACM Transactions on Mathematical Software*, 3(3), 209 to 226.
+
+         "The expected computation to perform each search is proportional to
+         logN."
+
+      .. grid-item-card:: Point to plane
+         :link: https://doi.org/10.1109/ROBOT.1991.132043
+         :class-card: sd-border-secondary
+
+         **Chen, Y. and Medioni, G. (1991)**
+
+         "Object Modeling by Registration of Multiple Range Images." *IEEE
+         ICRA*, 2724 to 2729.
+
+         "We minimize the distance from points to planes."
+
+      .. grid-item-card:: Point to line
+         :link: https://doi.org/10.1109/ROBOT.2008.4543181
+         :class-card: sd-border-secondary
+
+         **Censi, A. (2008)**
+
+         "An ICP Variant Using a Point-to-Line Metric." *IEEE ICRA*, 19 to 25.
+
+         "PLICP is more precise, and requires less iterations. However, it is
+         less robust to very large initial displacement errors."
+
       .. grid-item-card:: Autoware's NDT scan matcher
          :link: https://autowarefoundation.github.io/autoware_core/main/localization/autoware_ndt_scan_matcher/
          :class-card: sd-border-secondary

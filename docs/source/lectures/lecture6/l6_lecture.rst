@@ -978,16 +978,19 @@ Fusion in the EKF
      - **Good at**
      - **Bad at**
    * - GNSS
-     - position, with no drift
-     - noisy; biased; stops between tall buildings
+     - where the AV is: each fix is measured anew, so its error does not grow
+     - each fix is meters off (noise, bias); no fix between tall buildings
    * - Wheels and gyro
-     - smooth, 20 times a second
-     - drift: grows with distance and time
+     - how the AV moved since the last step, 20 times a second, with no jumps
+       and no sky
+     - errors add up: the position error grows with distance and time
 
-GNSS gives the position with no drift: a fix now is as good as a fix an hour
-ago. But it is noisy, it can be biased, and it stops. The wheels and the gyro
-are smooth and come 20 times a second, but they drift, and the last section
-showed how fast. Each one is good where the other is bad. L3 gave us the tool
+GNSS says where the AV is, and each fix is measured anew, so its error does
+not grow: a fix now is as good as a fix an hour ago. But each fix is meters
+off, and between tall buildings there is none. The wheels and the gyro say
+how the AV moved since the last step, 20 times a second, with no jumps and
+no sky needed. But their errors add up, and the last section showed how
+fast. Each one is good where the other is bad. L3 gave us the tool
 that combines them: the Kalman filter, and for a car that turns, the
 **extended Kalman filter** (EKF).
 
@@ -1028,18 +1031,23 @@ how sure it is of each of those numbers (L3).
 The Fused Filter in the Outage: Its Error, and Its Own 1σ
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. figure:: /_static/images/L6/ekf_runs.png
-   :alt: Two graphs side by side of meters against time, 0 to 125 seconds, with the outage from 34 to 89 seconds shaded pink. Left, GNSS plus wheels plus gyro: the blue position error stays near 1 to 3 meters, climbs in the outage to peaks near 9 and 9.5 meters, and drops to under 1 meter after the first fix; the grey band of the filter's own 1 sigma grows in the outage only to about 4 meters. Right, with map matching added: after the first few seconds, where it reaches about 2.5 meters, the green error stays mostly under 0.5 meters with short bumps to about 1 meter, outage or not; the grey band stays near 0.2 meters.
-   :width: 100%
+.. figure:: /_static/images/L6/ekf_run_nomap.png
+   :alt: A graph of meters against time, 0 to 125 seconds, the outage from 34 to 89 seconds shaded pink, titled GNSS plus wheels plus gyro. The blue position error stays near 1 to 3 meters, climbs in the outage to peaks near 9 and 9.5 meters, and drops to under 1 meter at the first fix; the grey band of the filter's own 1 sigma grows in the outage only to about 4 meters.
+   :width: 70%
    :align: center
 
-   The fused filter on our drive. **Pink:** the outage. **Blue or green:**
-   the real position error. **Grey:** the filter's own :math:`1\sigma`.
-   **Left,** GNSS with wheels and gyro: the error climbs to about 9.5 m in
-   the outage while the grey band grows only to about 4 m. **Right,** with
-   map matching added: after the first few seconds (up to about 2.5 m), the
-   error stays mostly under 0.5 m, with short bumps to about 1 m, outage or
-   not.
+   GNSS, wheels and gyro. **Pink:** the outage. **Blue:** the real position
+   error. **Grey:** the filter's own :math:`1\sigma`. The error climbs to
+   about 9.5 m in the outage while the grey band grows only to about 4 m.
+
+.. figure:: /_static/images/L6/ekf_run_map.png
+   :alt: A graph of meters against time, 0 to 125 seconds, the outage shaded pink, titled GNSS plus wheels plus gyro plus map matching. The green error starts near 2.5 meters for the first few seconds, then stays mostly under 0.5 meters with short bumps to about 1 meter, outage or not; the grey band stays near 0.2 meters.
+   :width: 70%
+   :align: center
+
+   With map matching added (note the smaller scale). **Green:** the real
+   position error. After the first few seconds (up to about 2.5 m), it stays
+   mostly under 0.5 m, with short bumps to about 1 m, outage or not.
 
 The grey band is how big the filter thinks its error is: its own
 :math:`1\sigma`, :math:`\sqrt{\sigma_x^2 + \sigma_y^2}`, taken from
@@ -1057,9 +1065,11 @@ The grey band is how big the filter thinks its error is: its own
   :math:`K`. One second after the first fix, the error is back to 0.60 m.
   This is L3's sawtooth, with one long tooth.
 
-**Right, with map matching** (the subject of :ref:`l6-lec-map`): in the
-outage, the worst error is 1.06 m, and the error looks the same outside the
-outage. It stays near a quarter meter most of the time.
+**With map matching** (the subject of :ref:`l6-lec-map`): each LiDAR scan
+matched to the map corrects the pose, outage or not. In the outage, the worst
+error is 1.06 m, and the error looks the same outside the outage. Its
+:math:`1\sigma` there is 0.22 m, too small as well:
+:math:`1.06 / 0.22 = 4.8`.
 
 
 .. _l6-lec-ape:
@@ -1072,20 +1082,26 @@ To compare runs we need one number per run.
 .. admonition:: Definition: absolute pose error, APE (position part)
    :class: note
 
-   At each time step, the distance from the estimated position to the true
-   one. A run is summarized by the **RMSE** (root mean square error) of
-   those distances: square them, average, take the root (Sturm et al.,
-   2012).
+   At each time step :math:`k`, the distance :math:`e_k` from the estimated
+   position to the true one. A run of :math:`N` steps is summarized by the
+   **RMSE** (root mean square error) of those distances (Sturm et al.,
+   2012):
 
-**Worked example** (4 time steps, distances chosen for the example): 0.3,
-0.4, 1.2 and 0.5 m.
+   .. math::
 
-1. Square: 0.09, 0.16, 1.44, 0.25.
-2. Average: :math:`(0.09 + 0.16 + 1.44 + 0.25)/4 = 1.94/4 = 0.485`.
-3. Root: :math:`\sqrt{0.485} = 0.70` m.
+      \mathrm{APE}_{\mathrm{RMSE}} = \sqrt{\frac{1}{N}\sum_{k=1}^{N} e_k^2}
 
-The plain average is 0.60 m. The RMSE is larger, because squaring weighs the
-one bad step (1.2 m) more. For a car, one bad moment matters more than many
+**Worked example** (:math:`N = 4` steps, distances chosen for the example):
+0.3, 0.4, 1.2 and 0.5 m.
+
+1. Square each distance, so big errors count more: 0.09, 0.16, 1.44, 0.25.
+2. Average them: :math:`(0.09 + 0.16 + 1.44 + 0.25)/4 = 1.94/4 = 0.485`.
+3. Take the root, back to meters: :math:`\sqrt{0.485} = 0.70` m.
+
+**0.70 m** is the run's typical distance from the truth, with the bad step
+weighing more: the plain average is 0.60 m, and the RMSE is larger because
+squaring weighs the one bad step (1.2 m) more. Against the 0.29 m bound,
+such a run would fail. For a car, one bad moment matters more than many
 good ones, so that is the weighting we want.
 
 We can compute APE only because CARLA knows the truth. A real car cannot.
@@ -1231,6 +1247,95 @@ wall, is unlikely.
    See "The likelihood field" in :doc:`Going Further <l6_appendix>`.
 
 
+.. _l6-lec-mcl-eq:
+
+MCL, Written Out: the Steps as Equations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:math:`N` particles :math:`\mathbf{x}^{(i)} = (x, y, \theta)`, :math:`i = 1, \dots, N`,
+each with a weight :math:`w^{(i)}`, as in L3 (Dellaert et al., 1999). Our code,
+``mcl.py``:
+
+1. **Start:** :math:`N = 2000` particles within 20 m of the first GNSS fix,
+   any heading; :math:`w^{(i)} = 1/N`.
+2. **Predict:** one dead-reckoning step per particle, each with its own noise
+   on the speed and the turn rate (next section).
+3. **Weigh:** :math:`w^{(i)} \leftarrow w^{(i)}\, p(\mathbf{z} \mid \mathbf{x}^{(i)}, m)`:
+   the scan :math:`\mathbf{z}` placed at the particle's pose, scored against
+   the map :math:`m` (60 scan points, each with the likelihood field).
+4. **Normalize:** :math:`w^{(i)} \leftarrow w^{(i)} / \sum_j w^{(j)}`.
+5. **Estimate:** :math:`\hat{\mathbf{x}} = \sum_i w^{(i)}\, \mathbf{x}^{(i)}` (the
+   heading averaged as an angle).
+6. **Resample** when :math:`N_\text{eff} = 1 / \sum_i \big(w^{(i)}\big)^2 < N/2`
+   (L3's test), then :math:`w^{(i)} = 1/N`.
+
+
+.. _l6-lec-mcl-predict:
+
+MCL, Step 1: Predict, and the Particles Spread
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L6/mcl_predict_spread.png
+   :alt: A top view of a straight stretch of the route, x east from 52 to 87 meters, y north near minus 25 meters. A black dot labeled start and the black true path running east. Three green clouds of particles along the path: after 1 second a small oval labeled spread 0.33 m, after 3 seconds a round cloud labeled spread 0.79 m, after 5 seconds a larger cloud labeled spread 1.26 m.
+   :width: 95%
+   :align: center
+
+   Predict only, no scans: 2000 particles from one pose spread as they move.
+
+**Chosen:** 2000 particles, all on the true pose 8 s into the drive; no scans.
+Each step adds noise to the wheels' speed and the gyro's turn rate, drawn per
+particle, so that the spread grows with time
+(:math:`\sigma_v = 0.3` m/√s, :math:`\sigma_\omega = 0.03` rad/√s).
+**Measured spread:** 0.33 m after 1 s, 0.79 m after 3 s, 1.26 m after 5 s.
+The spread is where the AV may be; the next scan shrinks it.
+
+
+.. _l6-lec-mcl-weigh:
+
+MCL, Step 2: Weigh Each Particle by How Well Its Scan Fits the Map
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L6/mcl_weigh_example.png
+   :alt: Three panels, particle A, B and C, each with a green wall along the bottom labeled map: a wall and three rust scan points above it. A: the points are 0.1, 0.2 and 0.1 meters from the wall, scores 0.929, 0.916 and 0.929. B: 0.8, 1.0 and 0.6 meters, scores 0.687, 0.579 and 0.785. C: 2.0, 3.5 and 2.5 meters, scores 0.155, 0.033 and 0.073.
+   :width: 95%
+   :align: center
+
+   Three particles, three scan points each, a wall as the map. Distances chosen.
+
+Each scan point :math:`d` meters from the map scores
+:math:`p(d) = 0.9\,e^{-d^2/2} + 0.1/3` (beyond 3 m only :math:`0.1/3 = 0.033`;
+see the likelihood field in :doc:`Going Further <l6_appendix>`).
+
+1. Multiply each particle's scores: A = 0.790, B = 0.312, C = 0.0004.
+2. Divide by their sum, 1.103: weights A = 0.716, B = 0.283, C = 0.0003.
+
+
+.. _l6-lec-mcl-resample:
+
+MCL, Step 3: Resample When a Few Particles Carry the Weight
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L6/mcl_resample.png
+   :alt: A bar from 0 to 1 cut into five segments, one per particle, as wide as its weight: A 0.05, B 0.05, C 0.60, D 0.25, E 0.05. Five rust arrows point down at 0.024, 0.224, 0.424, 0.624 and 0.824, labeled pointers: r = 0.12, then every 1/5. The first lands in A, the next three in C, the last in D.
+   :width: 90%
+   :align: center
+
+   Low-variance resampling: one random start, then pointers 1/5 apart.
+
+Five particles, weights chosen. **When:**
+:math:`N_\text{eff} = 1/\sum w^2 = 1/(3 \times 0.05^2 + 0.60^2 + 0.25^2) = 1/0.43 = 2.33`,
+under :math:`5/2`: resample.
+
+1. Draw one random start :math:`r` (here 0.12), then put pointers at
+   :math:`(r + k)/5`, :math:`k = 0, \dots, 4`: 0.024, 0.224, 0.424, 0.624,
+   0.824.
+2. Copy the particle under each pointer: A once, C three times, D once. B
+   and E are dropped.
+
+One random number for all five pointers: the copies follow the weights
+closely. This is the systematic resampling of L3.
+
+
 .. _l6-lec-mcl-symmetry:
 
 When Two Places Look the Same, MCL Can Pick the Wrong One
@@ -1295,6 +1400,46 @@ Unlike the box, the street is not symmetric: the central building, the poles
 and the side streets make each place look different.
 
 
+.. _l6-lec-mcl-count:
+
+How Many Particles: 200 against 2000 on Our Drive
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L6/mcl_particle_count.png
+   :alt: A dot plot of median error after the first 10 seconds, 0 to 0.9 meters, one ring per seed. 2000 particles: 0.20, 0.21, 0.27, 0.28 and 0.34 meters. 200 particles: 0.29, 0.29, 0.37, 0.70 and 0.78 meters. A red vertical line at 0.29 m is labeled 0.29 m bound.
+   :width: 80%
+   :align: center
+
+   Median error after the first 10 s, one ring per seed, seeds 0 to 4.
+
+**Measured** (seeds 0 to 4, the hands-on's start): every run finds the car,
+but 200 particles sit thinner around the true pose, so their mean wanders
+more. More particles cost more time per scan. KLD sampling picks the number
+at each step so the error stays under a bound: "a small number of samples if
+the density is focused" and "a large number" when the particles must cover a
+wide area (Fox, 2003).
+
+
+.. _l6-lec-mcl-lost:
+
+When MCL Loses the Car: Add Random Particles
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If no particle is near the true pose, resampling cannot create one: MCL
+stays lost. This is the **kidnapped robot** problem.
+
+- **The fix:** after each step, replace a few particles with random poses.
+  "The added samples are essential for relocalization in the rare event that
+  the robot loses track of its position" (Fox et al., 1999). How many is a
+  design choice: the paper says "a small number".
+- **The cost:** the authors call such fixes "mathematically questionable";
+  they no longer converge to the true answer as :math:`N` grows (Thrun et
+  al., 2001).
+- **Our code** adds none: MCL runs only from a cold start (the 20 m circle).
+  The failed run later in this section shows why a lost AV needs a wide
+  search.
+
+
 .. _l6-lec-icp:
 
 Scan Matching: Slide the Scan onto the Map
@@ -1328,10 +1473,105 @@ The first pairs are partly wrong, but the move brings the scan closer, so
 the next pairs are better. ICP stops when the fit stops improving.
 
 
+.. _l6-lec-icp-objective:
+
+What ICP Minimizes: the Distance of Every Pair
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L6/icp_objective.png
+   :alt: An L-shaped wall drawn as green squares, the map points q, along the x axis and the y axis. Rust dots, the scan points moved by R and t, sit a little off the wall, turned and shifted. A black line joins each scan point to its nearest map point; one is labeled e_i: one pair's distance.
+   :width: 70%
+   :align: center
+
+   An L-shaped wall (map points) and a scan turned and shifted off it. Chosen.
+
+ICP looks for the rotation :math:`R` and the shift :math:`t` that put the scan
+on the map (Besl and McKay, 1992):
+
+.. math::
+
+   E(R, t) = \sum_i e_i^2, \qquad e_i = \lVert R\,p_i + t - q_i \rVert
+
+:math:`p_i`: a scan point, in the vehicle frame. :math:`q_i`: the map point
+paired with it, in the map frame. :math:`e_i`: their distance once the scan
+is moved. The smaller :math:`E`, the better the scan sits on the map. The pose
+that gives the smallest :math:`E` is the AV's pose.
+
+
+.. _l6-lec-icp-start:
+
+Before the Loop: the Starting Guess Decides Where ICP Ends
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L6/icp_start.png
+   :alt: Two panels of the map around the middle scan of our drive, green map points. Grey dots: the scan at the starting guess; rust dots: the scan where ICP stops. Left, start 5.0 m and 15 degrees off: the rust scan lies on the green walls; title ends 0.10 m off. Right, start 7.2 m and 20 degrees off: the rust scan lies along a wrong line, off the walls; title ends 7.09 m off.
+   :width: 95%
+   :align: center
+
+   Two starting guesses on the middle scan of our drive. Grey: the scan at the start; rust: where ICP stops.
+
+ICP only goes downhill from where it starts: it "converges monotonically to
+the nearest local minimum" (Besl and McKay, 1992). **Measured on the middle
+scan:** starts 1.8, 3.6 and 5.0 m off (:math:`5^\circ`, :math:`10^\circ`,
+:math:`15^\circ`) end within 0.10 m; 7.2 m and :math:`20^\circ` off ends
+7.09 m off. The filter's pose is the starting guess.
+
+
+.. _l6-lec-icp-pairs:
+
+ICP Step 1: Pair Each Scan Point with Its Nearest Map Point
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L6/icp_pairs.png
+   :alt: The map around the middle scan, green points, and the scan at the 5 degree start, rust points. A thin black line joins most scan points to their nearest map point; a few long red dashed lines, at the top left and near a pole, are pairs 3 m or longer. Legend: pair kept (under 3 m): 495; pair dropped (3 m or more): 7.
+   :width: 70%
+   :align: center
+
+   The pairs at the first round from the 5 degree start: kept (black) and dropped (red, dashed).
+
+1. For each scan point, find the nearest map point: that is its pair.
+2. Drop pairs 3 m or longer (our gate, chosen): a scan point with nothing
+   near it in the map would pull the fit the wrong way.
+
+**Measured,** at the :math:`5^\circ` start: 502 scan points; 495 pairs kept,
+7 dropped. Checking every map point:
+:math:`502 \times 18{,}661 = 9{,}367{,}822` distances per round. A k-d tree
+checks far fewer (next section).
+
+
+.. _l6-lec-kd-tree:
+
+Finding the Nearest Point Fast: the k-d Tree
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L6/kd_tree.png
+   :alt: Eight green points on a 10 by 10 meter square, cut into cells by grey lines: solid lines split on x, dashed lines split on y. A blue star labeled query at (7.5, 5) with a dotted circle of radius 1.80 m through the nearest point (9, 6). Rust rings mark the five points whose distance was checked: (6, 9), (7, 2), (9, 6), (4, 7) and (5, 4). Legend: distance checked: 5 of 8 points.
+   :width: 60%
+   :align: center
+
+   A k-d tree on eight points (chosen) and the search for one query.
+
+**Build** (Bentley, 1975): split the points at the median :math:`x`, then each
+half at its median :math:`y`, and so on. Points chosen.
+
+**Search** for the query :math:`(7.5, 5)`:
+
+1. Go down: :math:`(6, 9)` splits on :math:`x`, :math:`7.5 > 6`, go right;
+   :math:`(7, 2)` splits on :math:`y`, :math:`5 > 2`, go up; reach
+   :math:`(9, 6)`: best so far, 1.80 m.
+2. Go back up: the circle of 1.80 m crosses the line :math:`x = 6`, so the
+   left side may hold a closer point. Check :math:`(4, 7)` and
+   :math:`(5, 4)`: both farther.
+3. Answer :math:`(9, 6)`, after 5 of 8 distances.
+
+For a big map the gain is large: the expected cost of a search "is
+proportional to log N" (Friedman, Bentley and Finkel, 1977).
+
+
 .. _l6-lec-icp-steps13:
 
-ICP by Hand, Steps 1 to 3: Centroids, then the Cross-Covariance H
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ICP Step 2, Solved by Hand: Centroids, then the Cross-Covariance H
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Here is one ICP fit by hand: Step 2 of the loop, the solve. Three scan points
 :math:`p_i` and three map points :math:`q_i`, numbers chosen for the example,
@@ -1379,7 +1619,7 @@ up with the map's.
 
 .. _l6-lec-icp-steps45:
 
-ICP by Hand, Steps 4 and 5: the Rotation, then the Shift
+ICP Step 2, Solved by Hand: the Rotation, then the Shift
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 4. **Rotation.** In general you take the SVD of :math:`H`, as the appendix
@@ -1421,10 +1661,32 @@ repeats until the fit stops improving.
    <l6_appendix>`.
 
 
+.. _l6-lec-icp-general:
+
+ICP Step 2 in General: the Five Formulas
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For pairs :math:`(p_i, q_i)` with weights :math:`w_i` (ICP uses
+:math:`w_i = 1`), as in ``icp.py``:
+
+1. Centroids: :math:`\bar p = \sum_i w_i\, p_i \,/ \sum_i w_i`,
+   :math:`\bar q = \sum_i w_i\, q_i \,/ \sum_i w_i`.
+2. Center: :math:`p_i' = p_i - \bar p`, :math:`q_i' = q_i - \bar q`.
+   Centering removes the shift, so the rotation can be found alone.
+3. Cross-covariance: :math:`H = \sum_i w_i\, p_i'\, q_i'^{\top}`, a
+   :math:`2 \times 2` matrix.
+4. Rotation: from the SVD :math:`H = U S V^\top`,
+   :math:`R = V \operatorname{diag}(1, d)\, U^\top` with
+   :math:`d = \det(V U^\top)`, so that :math:`R` turns and never mirrors
+   (Kabsch, 1976). In 2-D the same :math:`R` is the angle
+   :math:`\alpha = \operatorname{atan2}(H_{12} - H_{21},\ H_{11} + H_{22})`.
+5. Shift: :math:`t = \bar q - R\,\bar p`.
+
+
 .. _l6-lec-icp-drive:
 
-ICP on One Scan of Our Drive
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ICP Step 3: Move the Scan, Repeat, Stop: One Scan of Our Drive
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This is ICP on one real scan from the middle of the drive. We start it off
 the truth on purpose.
@@ -1442,10 +1704,64 @@ truth.
    angle. **After iteration 1:** closer, still crossing. **After iteration
    28:** the scan's walls and poles lie on the map's.
 
-**Measured:** 28 iterations. The RMSE of the pairs goes from 1.32 m to
+Move the scan by :math:`(R, t)`, pair again, solve again. **Stop** when the
+RMSE of the pairs, :math:`\sqrt{\tfrac{1}{n}\sum e_i^2}`, or the correction
+itself changes by less than :math:`10^{-6}`, or after 30 rounds (our code's
+choices).
+
+**Measured:** 28 rounds. The RMSE of the pairs goes from 1.32 m to
 0.06 m, and the final pose is 0.02 m and :math:`0.02^\circ` from the truth.
 That is the kind of update the filter gets once a second in the "map
 matching" runs.
+
+
+.. _l6-lec-icp-code:
+
+ICP in Our Code: the Whole Loop
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``icp.py``, the function the hands-on runs (abridged: the history it keeps for
+the plots is left out):
+
+.. code-block:: python
+
+   def icp(source, target, R0, t0, max_iter=30, tol=1e-6, max_dist=2.0):
+       R, t = R0, t0
+       tree = cKDTree(target)                       # the k-d tree, built once
+       for _ in range(max_iter):
+           moved = apply(R, t, source)              # the scan at the current pose
+           dist, idx = tree.query(moved)            # step 1: nearest map point
+           keep = dist < max_dist                   # drop far pairs
+           # step 2: the best rotation and shift for the kept pairs
+           dR, dt, _ = best_rigid_transform(moved[keep], target[idx[keep]])
+           R, t = dR @ R, dR @ t + dt               # step 3: add the correction
+           rmse = np.sqrt(np.mean(dist[keep] ** 2))
+           # stop when the correction or the change in rmse is below tol
+       return R, t
+
+The lecture and the hands-on call it with ``max_dist=3.0``.
+
+
+.. _l6-lec-icp-metrics:
+
+Other Distances to Minimize: Point to Line
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L6/icp_metrics.png
+   :alt: A straight wall drawn as a green dashed line with green map points 1 m apart. One rust scan point above it, at x 3.45 and 0.6 m up. A black line to the nearest map point at x = 3, labeled point to point 0.75 m; a red vertical line to the wall, labeled point to line 0.60 m.
+   :width: 80%
+   :align: center
+
+   The same scan point measured two ways.
+
+- **Point to point** (our ICP): the distance to the nearest map point,
+  0.75 m here. Map points are samples of the wall, so the error has a part
+  that is only the gap between samples.
+- **Point to line** (2-D) or **point to plane** (3-D): the distance to the
+  surface through the map points, 0.60 m. A point can slide along a wall
+  freely (Chen and Medioni, 1991). Censi's point-to-line ICP "requires less
+  iterations", but "is less robust to very large initial displacement
+  errors" (Censi, 2008).
 
 
 .. _l6-lec-failed-run:
