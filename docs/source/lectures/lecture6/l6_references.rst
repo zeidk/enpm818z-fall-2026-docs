@@ -2,227 +2,308 @@
 References
 ====================================================
 
+These are the sources the L6 slides cite, grouped by topic, in the order the
+slides first cite each group. A source cited in several sections is listed
+once, where the slides first cite it. Every entry of the lecture's
+bibliography is cited by a slide. Three of them are cited only in the
+appendix (:doc:`l6_appendix`), and they have their own group at the end:
+Kabsch, Thrun et al., and Zhang and Scaramuzza.
 
-.. dropdown:: Localization Fundamentals
+.. tip::
+
+   Two to read first: Reid et al. (2019) for the accuracy requirement, and
+   the tutorial by Grisetti et al. (2010) for the pose graph.
+
+
+.. dropdown:: Localization Requirements
    :class-container: sd-border-secondary
    :open:
 
+   The Introduction: how good a localizer must be. The same bound returns in
+   Dead Reckoning and as the alert limit in Integrity.
+
    .. grid:: 1 1 2 2
       :gutter: 2
+
+      .. grid-item-card:: Localization requirements
+         :link: https://doi.org/10.4271/12-02-03-0012
+         :class-card: sd-border-secondary
+
+         **Reid, T. G. R., Houts, S. E., Cammarata, R., Mills, G., Agarwal,
+         S., Vora, A. and Pandey, G. (2019)**
+
+         "Localization Requirements for Autonomous Vehicles." *SAE
+         International Journal of Connected and Automated Vehicles*, 2(3),
+         173 to 190. doi:10.4271/12-02-03-0012. arXiv:1906.01061.
+
+         For a passenger car on local streets, "lateral and longitudinal
+         error bounds of 0.29 m (0.10 m, 95%)"; on freeways, "a required
+         lateral error bound of 0.57 m (0.20 m, 95%)", derived at a failure
+         rate of :math:`10^{-8}` per hour of driving.
+
+
+.. dropdown:: GNSS and RTK
+   :class-container: sd-border-secondary
+   :open:
+
+   What RTK is, how close it gets, where it works, and who provides it in
+   Maryland. Also cited in the appendix on RTK.
+
+   .. grid:: 1 1 2 2
+      :gutter: 2
+
+      .. grid-item-card:: RTK
+         :link: https://gssc.esa.int/navipedia/index.php/Real_Time_Kinematics
+         :class-card: sd-border-secondary
+
+         **GMV (2011)**
+
+         *Real Time Kinematics.* European Space Agency, Navipedia. Accessed
+         10 October 2026.
+
+         RTK as "a differential GNSS technique" with "carrier measurements"
+         and corrections from a base station; "performances in the range of
+         a few centimetres", "in the vicinity of a base station".
+
+      .. grid-item-card:: GPS and the other GNSS
+         :link: https://www.gps.gov/other-global-navigation-satellite-systems-gnss
+         :class-card: sd-border-secondary
+
+         **U.S. Government, GPS.gov**
+
+         *Other Global Navigation Satellite Systems (GNSS)* and the GPS.gov home
+         page (https://www.gps.gov/). Accessed 10 October 2026.
+
+         GNSS is "a general term describing any satellite constellation"; GPS
+         is "a U.S.-owned utility", "operated and maintained by the U.S. Space
+         Force".
+
+      .. grid-item-card:: The IMU
+         :link: https://arxiv.org/abs/2603.07143
+         :class-card: sd-border-secondary
+
+         **Berkane, S. (2026)**
+
+         *Tutorial on Aided Inertial Navigation Systems: A Modern Treatment
+         Using Lie-Group Theoretical Methods.* Technical report
+         LaRSA-TR-2026-01, Robotics and Autonomous Systems Laboratory,
+         Université du Québec en Outaouais. arXiv:2603.07143, version 2.
+
+         The IMU "typically consists of three orthogonally mounted gyroscopes
+         and three accelerometers".
+
+      .. grid-item-card:: Real-time networks in Maryland
+         :link: https://fig.net/resources/proceedings/fig_proceedings/fig2019/papers/ts05e/TS05E_gillins_heck_et_al_10077.pdf
+         :class-card: sd-border-secondary
+
+         **Gillins, D., Heck, J., Scott, G., Jordan, K., Hippenstiel, R.
+         (2019)**
+
+         *Accuracy of GNSS Observations from Three Real-Time Networks in
+         Maryland, USA.* FIG Working Week 2019, Hanoi, Vietnam, paper 10077.
+
+         "In Maryland of the United States, three independent RTNs are
+         available": Trimble KeyNetGPS, Topcon TopNET live and Leica
+         SmartNet.
+
+      .. grid-item-card:: NOAA CORS Network
+         :link: https://geodesy.noaa.gov/CORS/
+         :class-card: sd-border-secondary
+
+         **NOAA National Geodetic Survey**
+
+         *The NOAA CORS Network (NCN).* Accessed 10 October 2026. Station
+         map: https://arcg.is/18fWq8.
+
+         Reference stations whose GNSS data improve the precision of
+         positions after the fact.
+
+
+.. dropdown:: Fusion in the EKF
+   :class-container: sd-border-secondary
+   :open:
+
+   One number to score a whole run. Also cited in the appendix on APE and
+   RPE.
+
+   .. grid:: 1 1 2 2
+      :gutter: 2
+
+      .. grid-item-card:: APE and RPE
+         :link: https://doi.org/10.1109/IROS.2012.6385773
+         :class-card: sd-border-secondary
+
+         **Sturm, J., Engelhard, N., Endres, F., Burgard, W. and Cremers, D.
+         (2012)**
+
+         "A Benchmark for the Evaluation of RGB-D SLAM Systems."
+         *Proceedings of the IEEE/RSJ International Conference on
+         Intelligent Robots and Systems (IROS)*, 573 to 580.
+         doi:10.1109/IROS.2012.6385773.
+
+         The absolute pose error (APE) summarized by the RMSE; in the
+         appendix, the relative pose error (RPE) as the drift.
+
+
+.. dropdown:: Against a Map
+   :class-container: sd-border-secondary
+   :open:
+
+   Matching the LiDAR scan to a map: MCL, ICP, and the scan matcher a real
+   stack runs.
+
+   .. grid:: 1 1 2 2
+      :gutter: 2
+
+      .. grid-item-card:: Monte Carlo localization
+         :link: https://doi.org/10.1109/ROBOT.1999.772544
+         :class-card: sd-border-secondary
+
+         **Dellaert, F., Fox, D., Burgard, W. and Thrun, S. (1999)**
+
+         "Monte Carlo Localization for Mobile Robots." *Proceedings of the
+         IEEE International Conference on Robotics and Automation (ICRA)*,
+         1322 to 1328. doi:10.1109/ROBOT.1999.772544.
+
+         MCL: each particle is one guess of the pose; predict, weigh,
+         resample.
+
+      .. grid-item-card:: ICP
+         :link: https://doi.org/10.1109/34.121791
+         :class-card: sd-border-secondary
+
+         **Besl, P. J. and McKay, N. D. (1992)**
+
+         "A Method for Registration of 3-D Shapes." *IEEE Transactions on
+         Pattern Analysis and Machine Intelligence*, 14(2), 239 to 256.
+         doi:10.1109/34.121791.
+
+         Iterative closest point: guess the pairs from the nearest points,
+         solve, move, guess again.
+
+      .. grid-item-card:: Autoware's NDT scan matcher
+         :link: https://autowarefoundation.github.io/autoware_core/main/localization/autoware_ndt_scan_matcher/
+         :class-card: sd-border-secondary
+
+         **Autoware Foundation**
+
+         *Autoware Core: autoware_ndt_scan_matcher.* Accessed 10 October
+         2026. The package moved from Autoware Universe to Autoware Core.
+
+         "A package for position estimation using the NDT scan matching
+         method", and "the Monte Carlo method" to "estimate initial
+         position": MCL to start, scan matching to follow.
+
+      .. grid-item-card:: NDT
+         :link: https://doi.org/10.1109/IROS.2003.1249285
+         :class-card: sd-border-secondary
+
+         **Biber, P. and Strasser, W. (2003)**
+
+         "The Normal Distributions Transform: A New Approach to Laser Scan
+         Matching." *Proceedings of the IEEE/RSJ International Conference on
+         Intelligent Robots and Systems (IROS)*, 3, 2743 to 2748.
+         doi:10.1109/IROS.2003.1249285.
+
+         The map as cells, each with a mean and a covariance; a pose scored
+         by how likely each scan point is under its cell's ellipse. Also
+         cited in the appendix on NDT.
+
+
+.. dropdown:: Integrity
+   :class-container: sd-border-secondary
+   :open:
+
+   How the AV checks its pose without knowing the truth.
+
+   .. grid:: 1 1 2 2
+      :gutter: 2
+
+      .. grid-item-card:: GNSS integrity
+         :link: https://doi.org/10.1109/TITS.2017.2766768
+         :class-card: sd-border-secondary
+
+         **Zhu, N., Marais, J., Bétaille, D. and Berbineau, M. (2018)**
+
+         "GNSS Position Integrity in Urban Environments: A Review of
+         Literature." *IEEE Transactions on Intelligent Transportation
+         Systems*, 19(9), 2762 to 2778. doi:10.1109/TITS.2017.2766768.
+
+         The definitions of integrity, the alert limit and the protection
+         level.
+
+
+.. dropdown:: SLAM
+   :class-container: sd-border-secondary
+   :open:
+
+   Building the map and finding the pose at the same time.
+
+   .. grid:: 1 1 2 2
+      :gutter: 2
+
+      .. grid-item-card:: Graph-based SLAM
+         :link: https://doi.org/10.1109/MITS.2010.939925
+         :class-card: sd-border-secondary
+
+         **Grisetti, G., Kümmerle, R., Stachniss, C. and Burgard, W. (2010)**
+
+         "A Tutorial on Graph-Based SLAM." *IEEE Intelligent Transportation
+         Systems Magazine*, 2(4), 31 to 43. doi:10.1109/MITS.2010.939925.
+
+         The pose graph: find the poses that disagree least with all edges,
+         each weighted by how sure it is. Also cited in the appendix on
+         pose-graph least squares.
+
+
+.. dropdown:: Going Further Only
+   :class-container: sd-border-secondary
+   :open:
+
+   Sources cited only in the appendix, :doc:`l6_appendix`.
+
+   .. grid:: 1 1 2 2
+      :gutter: 2
+
+      .. grid-item-card:: The best rotation
+         :link: https://doi.org/10.1107/S0567739476001873
+         :class-card: sd-border-secondary
+
+         **Kabsch, W. (1976)**
+
+         "A Solution for the Best Rotation to Relate Two Sets of Vectors."
+         *Acta Crystallographica Section A*, 32(5), 922 to 923.
+         doi:10.1107/S0567739476001873.
+
+         The rotation from the SVD of :math:`H`, in 2-D or 3-D, with the
+         check that turns a mirror image back into a rotation.
 
       .. grid-item-card:: Probabilistic Robotics
-         :link: https://probabilistic-robotics.org/
          :class-card: sd-border-secondary
 
-         **Thrun, Burgard & Fox (2005)**
+         **Thrun, S., Burgard, W. and Fox, D. (2005)**
 
-         The definitive reference for probabilistic localization and SLAM.
-         Chapters 4-7 cover EKF localization, particle filter, and SLAM.
+         *Probabilistic Robotics.* Intelligent Robotics and Autonomous
+         Agents. MIT Press, Cambridge, MA. ISBN 978-0-262-20162-9.
 
-      .. grid-item-card:: State Estimation for Robotics
-         :link: https://www.cambridge.org/core/books/state-estimation-for-robotics/
+         The likelihood field (Sec. 6.4) that the course's MCL code adapts.
+
+      .. grid-item-card:: Trajectory evaluation
+         :link: https://doi.org/10.1109/IROS.2018.8593941
          :class-card: sd-border-secondary
 
-         **Barfoot (2017)**
+         **Zhang, Z. and Scaramuzza, D. (2018)**
 
-         Rigorous treatment of state estimation using Lie groups (SE(3)),
-         Kalman filters, and factor graphs. Graduate-level reference.
+         "A Tutorial on Quantitative Trajectory Evaluation for
+         Visual(-Inertial) Odometry." *Proceedings of the IEEE/RSJ
+         International Conference on Intelligent Robots and Systems (IROS)*,
+         7244 to 7251. doi:10.1109/IROS.2018.8593941.
 
-      .. grid-item-card:: Monte Carlo Localization
-         :link: https://papers.nips.cc/paper/1998/hash/c88d8d0a6097754525e02c2246d8d27f-Abstract.html
-         :class-card: sd-border-secondary
+         Why a system with no global reference is scored by the relative
+         error.
 
-         **Dellaert et al. (1999)**
 
-         Original MCL paper. Landmark paper introducing particle filter
-         localization for mobile robots.
+.. rubric:: Image credits
 
-      .. grid-item-card:: AMCL (ROS)
-         :link: https://wiki.ros.org/amcl
-         :class-card: sd-border-secondary
-
-         **ROS Navigation Stack**
-
-         Adaptive Monte Carlo Localization implementation. Standard
-         localization package for ROS-based robots.
-
-
-.. dropdown:: Scan Matching and ICP
-   :class-container: sd-border-secondary
-
-   .. grid:: 1 1 2 2
-      :gutter: 2
-
-      .. grid-item-card:: ICP (Besl & McKay, 1992)
-         :link: https://ieeexplore.ieee.org/document/121791
-         :class-card: sd-border-secondary
-
-         **Besl & McKay, TPAMI 1992**
-
-         Original point-to-point ICP paper. Foundation of all scan
-         matching approaches.
-
-      .. grid-item-card:: Point-to-Plane ICP
-         :link: https://www.cs.princeton.edu/~smr/papers/icpstability.pdf
-         :class-card: sd-border-secondary
-
-         **Chen & Medioni, 1992 / Low, 2004**
-
-         Point-to-plane variant with faster convergence on planar surfaces.
-
-      .. grid-item-card:: NDT (Normal Distributions Transform)
-         :link: https://ieeexplore.ieee.org/document/1249285
-         :class-card: sd-border-secondary
-
-         **Biber & Strasser, IROS 2003**
-
-         NDT represents the target as a grid of Gaussians. Robust to
-         outliers; used in Autoware for LiDAR localization.
-
-      .. grid-item-card:: GICP
-         :link: https://journals.sagepub.com/doi/10.1177/0278364910388359
-         :class-card: sd-border-secondary
-
-         **Segal et al., RSS 2009**
-
-         Generalized ICP: maximum-likelihood formulation treating both
-         clouds as Gaussian distributions.
-
-      .. grid-item-card:: Open3D
-         :link: http://www.open3d.org/
-         :class-card: sd-border-secondary
-
-         **Zhou, Park & Koltun (2018)**
-
-         Open-source library for 3D data processing. Includes ICP,
-         RANSAC, point cloud visualization, and mesh tools.
-
-         +++
-
-         - `ICP Tutorial <http://www.open3d.org/docs/release/tutorial/pipelines/icp_registration.html>`_
-
-
-.. dropdown:: LiDAR SLAM Systems
-   :class-container: sd-border-secondary
-
-   .. grid:: 1 1 2 2
-      :gutter: 2
-
-      .. grid-item-card:: LOAM
-         :link: https://www.ri.cmu.edu/pub_files/2014/7/Ji_LidarMapping_RSS2014_v8.pdf
-         :class-card: sd-border-secondary
-
-         **Zhang & Singh, RSS 2014**
-
-         LiDAR Odometry and Mapping. Feature-based LiDAR SLAM. Seminal
-         paper achieving top results on KITTI at publication.
-
-      .. grid-item-card:: LeGO-LOAM
-         :link: https://github.com/RobustFieldAutonomyLab/LeGO-LOAM
-         :class-card: sd-border-secondary
-
-         **Shan & Englot, IROS 2018**
-
-         Lightweight and Ground-Optimized LOAM. Adds explicit ground
-         segmentation and pose graph backend with loop closure.
-
-         +++
-
-         - `LeGO-LOAM on GitHub <https://github.com/RobustFieldAutonomyLab/LeGO-LOAM>`_
-
-      .. grid-item-card:: LIO-SAM
-         :link: https://arxiv.org/abs/2007.00258
-         :class-card: sd-border-secondary
-
-         **Shan et al., IROS 2020**
-
-         Tightly-coupled LiDAR-IMU SLAM via factor graph smoothing.
-         Current state-of-the-art for outdoor LiDAR SLAM.
-
-         +++
-
-         - `LIO-SAM on GitHub <https://github.com/TixiaoShan/LIO-SAM>`_
-
-      .. grid-item-card:: KISS-ICP
-         :link: https://arxiv.org/abs/2209.15397
-         :class-card: sd-border-secondary
-
-         **Vizzo et al., RA-L 2023**
-
-         Simple adaptive threshold ICP achieving competitive accuracy
-         with minimal complexity. Winner of multiple SLAM benchmarks.
-
-         +++
-
-         - `KISS-ICP on GitHub <https://github.com/PRBonn/kiss-icp>`_
-
-
-.. dropdown:: SLAM Backends and Factor Graphs
-   :class-container: sd-border-secondary
-
-   .. grid:: 1 1 2 2
-      :gutter: 2
-
-      .. grid-item-card:: g2o
-         :link: https://github.com/RainerKuemmerle/g2o
-         :class-card: sd-border-secondary
-
-         **Kümmerle et al., ICRA 2011**
-
-         General framework for graph-based nonlinear optimization.
-         Standard backend for 2D and 3D SLAM pose graphs.
-
-      .. grid-item-card:: GTSAM
-         :link: https://gtsam.org/
-         :class-card: sd-border-secondary
-
-         **Dellaert & GTSAM Contributors**
-
-         Georgia Tech Smoothing and Mapping library. Factor graph
-         framework supporting IMU, GPS, LiDAR, and visual factors.
-
-         +++
-
-         - `Python API <https://gtsam.org/docs/python.html>`_
-
-      .. grid-item-card:: Scan Context
-         :link: https://arxiv.org/abs/2109.13494
-         :class-card: sd-border-secondary
-
-         **Kim & Kim, IROS 2018 / TITS 2021**
-
-         Compact global descriptor for LiDAR-based place recognition.
-         Rotation-invariant and efficient for large-scale retrieval.
-
-
-.. dropdown:: Datasets and Evaluation
-   :class-container: sd-border-secondary
-
-   .. grid:: 1 1 2 2
-      :gutter: 2
-
-      .. grid-item-card:: KITTI Odometry Benchmark
-         :link: https://www.cvlibs.net/datasets/kitti/eval_odometry.php
-         :class-card: sd-border-secondary
-
-         **Geiger et al., IJRR 2013**
-
-         Standard LiDAR SLAM evaluation benchmark with 22 sequences.
-
-      .. grid-item-card:: EVO Trajectory Evaluation
-         :link: https://github.com/MichaelGrupp/evo
-         :class-card: sd-border-secondary
-
-         **Grupp (2017)**
-
-         Python tool for evaluating SLAM trajectories (APE, RPE).
-         Supports TUM, KITTI, EuRoC, and ROS bag formats.
-
-      .. grid-item-card:: MulRan Dataset
-         :link: https://sites.google.com/view/mulran-pr/
-         :class-card: sd-border-secondary
-
-         **Kim et al., ICRA 2020**
-
-         Multi-experience range dataset for place recognition evaluation
-         across seasons and conditions.
+The vehicle icons in the lecture's figures were created by Stone from the
+`Noun Project <https://thenounproject.com>`_.

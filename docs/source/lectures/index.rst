@@ -43,7 +43,7 @@ slides are finished; the table shows the plan.
      - Situational awareness (Endsley's three levels); 3D detection (PointPillars, CenterPoint, nuScenes NDS); semantic segmentation of the road; Bird's-Eye View (IPM, Lift-Splat-Shoot, BEVFormer, temporal BEV); 3D occupancy; fusion architectures, camera-LiDAR frustum association and BEVFusion; cooperative situational awareness and V2X; multi-object tracking with the L3 Kalman filter, data association, track lifecycle and the Tempe case; how each is used in industry
    * - L6
      - Localization & SLAM
-     - GNSS/RTK, dead reckoning, visual/LiDAR odometry, probabilistic localization (EKF from L3), SLAM frontend (ICP, feature extraction), SLAM backend (pose graphs, loop closure)
+     - GNSS and RTK, dead reckoning and its drift, fusion in L3's EKF, absolute pose error (APE), Monte Carlo localization (MCL), ICP scan matching (NDT named), integrity (NIS, protection level), SLAM (pose graph, loop closure), on one recorded CARLA drive
    * - L7
      - Navigation & Route Planning
      - Road network graphs, OpenDRIVE/Lanelet2 maps, HD maps, global route planning (Dijkstra, A*), lane-level routing, dynamic rerouting, CARLA GlobalRoutePlanner

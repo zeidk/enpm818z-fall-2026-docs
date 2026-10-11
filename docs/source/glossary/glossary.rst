@@ -200,6 +200,15 @@ A
 
 .. glossary::
 
+   Absolute Pose Error (APE)
+      At each time step, the distance from the estimated position to the
+      true one (its position part). A run is summarized by the RMSE of
+      those distances: square them, average, take the root. In L6's
+      example, chosen distances of 0.3, 0.4, 1.2 and 0.5 m give an RMSE
+      of 0.70 m, against a plain average of 0.60 m: squaring weighs the
+      one bad step more. Only a run with ground truth, such as a CARLA
+      drive, can be scored this way. L6
+
    Accuracy
       How close a measurement is to the true value. Strictly (ISO
       5725-1), accuracy means both at once: small bias (good trueness)
@@ -238,6 +247,13 @@ A
       brakes to avoid or mitigate a collision. Despite taking control of the
       vehicle it is classified as **SAE Level 0**, because the human never
       stops performing the DDT. :doc:`L1 </lectures/lecture1/l1_lecture>`
+
+   Alert Limit
+      "The largest position error allowable for safe operation" (Zhu et
+      al., 2018). For a car on a local street, L6 takes the 0.29 m bound
+      of Reid et al. (2019). If the protection level is above the alert
+      limit, the localizer warns: the pose cannot be used for lane-level
+      driving now. See Protection Level. L6
 
    Anchor Box
       A preset box shape that a detector adjusts to fit each object.
@@ -1033,6 +1049,13 @@ F
       few-seconds reacquisition of situational awareness it demands is a
       human-factors problem rather than a software one. :doc:`L1 </lectures/lecture1/l1_lecture>`
 
+   False Alarm (Integrity)
+      A good update that the NIS gate rejects. In L6's example, a scan
+      full of parked trucks the map does not have matches badly, and the
+      filter drops a pose that was right. The cost: the filter coasts on
+      dead reckoning a little longer. An overconfident filter makes false
+      alarms. Contrast Missed Fault. L6
+
    False Negative (FN)
       A ground-truth object that no detection matched. Many false
       negatives mean low recall: on an AV, a missed pedestrian.
@@ -1210,6 +1233,13 @@ G
       (latitude, longitude, altitude). Includes GPS (US), GLONASS
       (Russia), Galileo (EU), BeiDou (China). :doc:`L2 </lectures/lecture2/l2_index>` · L6
 
+   GNSS Outage
+      A stretch with no GNSS fixes. Tall buildings hide most satellites,
+      and with too few in view the receiver gives a poor fix, or none.
+      The AV knows: the fixes stop. Contrast Multipath, where a wrong fix
+      looks normal. L6's recorded drive has no fixes for 400 m (34.2 s to
+      89.0 s), which stands in for a street between tall buildings. L6
+
    Gradient
       How much one number changes when another changes a little. In
       training, the gradient :math:`\partial L / \partial w` says, for each
@@ -1236,6 +1266,11 @@ G
       :doc:`L2 </lectures/lecture2/l2_index>` · :doc:`L3
       </lectures/lecture3/l3_index>` ·
       :doc:`L4 </lectures/lecture4/l4_index>`
+
+   Gyro
+      Short for gyroscope: one of the IMU's six sensors. It measures how
+      fast the AV turns about one axis, in radians per second. L6 uses the
+      gyro about the vertical axis; its output is the yaw rate. See IMU. L6
 
    GUM
       Guide to the Expression of Uncertainty in Measurement, JCGM
@@ -1356,6 +1391,14 @@ I
       pixel-level mask, distinguishing individual instances of the same
       class (e.g., car #1 vs. car #2). :doc:`L5 </lectures/lecture5/l5_index>`
 
+   Integrity
+      "A measure of trust that can be placed in the correctness of the
+      information supplied by a navigation system", including "the
+      ability of the system to provide timely warnings to users when the
+      system should not be used" (Zhu et al., 2018). It has two halves:
+      be right, and when you might be wrong, say so in time. See Alert
+      Limit and Protection Level. L6
+
    Intermediate Fusion
       Combining learned features from each sensor. The network can learn
       which sensor to trust in which conditions, at the cost of needing
@@ -1474,8 +1517,10 @@ K
       where it is. Its belief has several peaks, which makes it a
       particle filter problem, not a Kalman filter one. The L3 particle
       filter hands-on is a version of it: the AV's computer restarts in
-      a 700 m tunnel with 23 identical lights 25 m apart.
-      :doc:`L3 </lectures/lecture3/l3_index>`
+      a 700 m tunnel with 23 identical lights 25 m apart. In L6 the car
+      is already localized when it is suddenly moved, say towed: MCL
+      must then recover from a confident wrong belief.
+      :doc:`L3 </lectures/lecture3/l3_index>` · L6
 
 
 .. _glossary-l:
@@ -1561,6 +1606,14 @@ L
       :math:`\exp(-(\mathbf{z} - h(\mathbf{x}))^2 / 2\sigma^2)`.
       :doc:`L3 </lectures/lecture3/l3_index>`
 
+   Likelihood Field
+      MCL's score for one scan point, placed in the map where a particle
+      says the car is. A point on a wall is likely; a point in empty
+      space, far from any wall, is unlikely. The score is a bell curve in
+      the distance to the nearest map point, plus a small constant, so a
+      point that hits a parked car the map lacks does not zero the weight
+      of a good particle. L6
+
    Linearization
       Replacing a curved model by a straight line, its tangent at the
       current estimate, so that the Kalman equations apply. The EKF
@@ -1585,6 +1638,11 @@ L
       :math:`x` to the right and :math:`y` down. Not the same as
       working out where the AV is.
       :doc:`L4 </lectures/lecture4/l4_index>`
+
+   Localization Pass
+      The second of L6's two drives on one route. It drives the route
+      again, and every method must find the pose from its sensors alone,
+      never from the true pose. See Mapping Pass. L6
 
    Logical Scenario
       A :term:`Functional Scenario` with its parameters named and given
@@ -1646,6 +1704,21 @@ M
       Mean Average Precision. The primary metric for evaluating object
       detectors. mAP@0.5 uses a single IoU threshold; mAP@0.5:0.95
       averages across thresholds for stricter evaluation. :doc:`L4 </lectures/lecture4/l4_index>` · :doc:`L5 </lectures/lecture5/l5_index>`
+
+   Map Frame
+      A frame fixed to the ground: :math:`x` east, :math:`y` north, in
+      meters, from a chosen origin. It is used to store the HD map, place
+      GNSS fixes, plan the route, keep tracked objects over time and share
+      positions over V2X. Readings taken at different times,
+      or by different AVs, line up only in a frame that does not move, so
+      the AV's pose is given in it. CARLA's :math:`y` points the other way,
+      so L6's recorded drive flips it. Contrast Vehicle Frame. L6
+
+   Mapping Pass
+      The first of L6's two drives on one route: the car records LiDAR
+      scans at known poses, and the scans become the map. In CARLA the
+      poses are the true ones; a fleet does the same with a surveyed
+      mapping car. See Localization Pass. L6
 
    Mask R-CNN
       An instance segmentation model (He et al., 2017) that extends Faster
@@ -1735,6 +1808,14 @@ M
       0.408 on CARLA over three runs.
       :doc:`L5 </lectures/lecture5/l5_index>`
 
+   Missed Fault
+      A bad update that the NIS gate accepts. In L6's example (numbers
+      chosen), a multipath fix 3 m off arrives after the outage, while the
+      filter's covariance :math:`P` is large. So the innovation covariance
+      :math:`S` is large too, the NIS stays small, and the filter moves
+      3 m the wrong way. An underconfident filter misses faults. Contrast
+      False Alarm (Integrity). L6
+
    Modality
       A kind of sensing rather than a piece of hardware. Two cameras are
       one modality; a camera and a radar are two. Complementarity is a
@@ -1811,7 +1892,9 @@ M
       rather than directly, so the receiver places the vehicle several
       meters from its true position. The fix arrives on time and looks
       entirely normal, which makes it more dangerous than a lost fix.
-      :doc:`L2 </lectures/lecture2/l2_index>`
+      RTK cannot cancel it: the bounce happens at the car alone, so the
+      base station's correction does not contain it.
+      :doc:`L2 </lectures/lecture2/l2_index>` · L6
 
 .. _glossary-n:
 
@@ -2076,6 +2159,23 @@ P
       still lands on the car's pixels and gets the class "car".
       :doc:`L5 </lectures/lecture5/l5_index>`
 
+   Pose
+      Where the AV is in the world: :math:`(x, y, \theta)`, where the
+      vehicle frame's origin sits in the map frame, and :math:`\theta`,
+      the angle from the map's :math:`x` axis to the AV's :math:`x` axis,
+      counterclockwise. A localizer returns the pose and how sure it is,
+      a covariance. L6
+
+   Pose Graph
+      The graph that graph-based SLAM keeps. Each node is one pose of
+      the AV, kept with the scan taken there. An odometry edge is the
+      measured motion between two poses in a row, from the wheels, the
+      gyro or scan matching. A loop closure edge comes from ICP between a
+      new scan and an old one from the same place: the motion between two
+      poses far apart in time. Solving the graph finds the poses that
+      disagree least with all edges, each weighted by how sure it is
+      (Grisetti et al., 2010). See Pose Graph Optimization. L6
+
    Pose Graph Optimization
       The SLAM backend formulation that represents the robot trajectory
       as a graph of poses (nodes) and relative constraints (edges), then
@@ -2135,6 +2235,14 @@ P
       the acceleration the IMU gets wrong. Too small a :math:`Q` is the
       usual cause of an overconfident filter.
       :doc:`L3 </lectures/lecture3/l3_index>`
+
+   Protection Level
+      "A statistical error bound computed so as to guarantee that the
+      probability of the absolute position error exceeding the said
+      number is smaller than or equal to the target integrity risk" (Zhu
+      et al., 2018). The localizer computes it from its own covariance
+      and error models. If it is above the alert limit, the localizer
+      warns. See Alert Limit. L6
 
    Pure Pursuit
       A geometric path-following controller that steers the vehicle toward
@@ -2338,10 +2446,20 @@ R
       hybrid encoder that achieves real-time speed competitive with YOLO
       while maintaining the NMS-free architecture. :doc:`L4 </lectures/lecture4/l4_index>`
 
+   RTK
+      Real-time kinematic: "a differential GNSS technique" (Navipedia).
+      A base station on a surveyed point knows its own error and sends it
+      to the rover, the receiver on the car, which subtracts it. The
+      errors both receivers share, such as the satellite clocks and the
+      atmosphere, cancel. RTK also measures the carrier wave itself, not
+      only the timing code, and reaches "a few centimetres" near a base
+      station. It cannot cancel errors at the car alone, such as
+      multipath; it stops when the sky is blocked; and farther from the
+      base, less of the error is shared. L6
+
    RTK-GPS
-      Real-Time Kinematic GPS. A GNSS technique using carrier-phase
-      measurements and a nearby base station to achieve centimeter-level
-      positioning accuracy. Essential for high-precision AV localization. L6
+      Real-time kinematic GPS. See RTK, the name L6 uses: the technique
+      works with any GNSS, not only GPS. L6
 
 
 .. _glossary-s:
@@ -2849,6 +2967,12 @@ V
       pedestrian). Enables cooperative perception and situational
       awareness. L13
 
+   Vehicle Frame
+      A frame fixed to the AV: :math:`x` forward, :math:`y` to the left.
+      It is used to describe what the sensors measure, relative to the AV
+      (the LiDAR says "a wall 8 meters to my left", not "a wall at 120 meters
+      north"), and to steer and set the speed. Contrast Map Frame. L6
+
    Vehicle-in-the-Loop (VIL)
       A test level in which a real vehicle on a rig or test pad is fed
       synthetic objects, combining real dynamics and actuation with injected
@@ -2875,6 +2999,10 @@ V
       consecutive frames. Methods include feature-based (ORB-SLAM) and
       direct (DSO) approaches. Provides drift-prone but high-frequency
       relative pose updates. L6
+
+   Visual SLAM
+      Visual odometry plus a map of the features it saw, so a place seen
+      again can correct the drift. L6
 
    VLA Model
       Vision-Language-Action model. A multimodal architecture that

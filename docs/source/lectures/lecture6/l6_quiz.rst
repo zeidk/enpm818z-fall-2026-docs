@@ -10,522 +10,992 @@ Quiz
    The graded quizzes are the **five in-class quizzes** listed in the
    :doc:`syllabus </syllabus/index>`. Those are closed-notes, given at the
    start of class, and they **use different questions from these**. Working
-   through this page is good preparation for one. Memorising the answers
+   through this page is good preparation for one. Memorizing the answers
    below is not.
 
-This quiz covers the key concepts from Lecture 6: Localization & SLAM.
-Topics include the localization problem, coordinate frames, GNSS/RTK,
-dead reckoning (wheel/visual/LiDAR odometry), probabilistic localization
-(EKF, MCL), scan matching (ICP), HD map localization, SLAM formulation,
-SLAM frontend and backend, loop closure, evaluation metrics, and modern
-LiDAR SLAM systems.
+This quiz covers Lecture 6: the AV's pose in the map frame and the accuracy it
+needs, GNSS in a city and RTK, dead reckoning and its drift, fusion in the EKF
+and the absolute pose error (APE), Monte Carlo localization (MCL), ICP scan
+matching, integrity with the NIS gate and the protection level, and SLAM with a
+pose graph and a loop closure. Every question can be answered from the slides
+shown in class. Nothing on this page needs the appendix.
 
 .. note::
 
    **Instructions:**
 
-   - Answer all questions to the best of your ability.
    - Multiple choice questions have exactly one correct answer.
-   - True/False questions require you to determine if the statement is correct.
-   - Essay questions require short written responses (2-4 sentences).
+   - True or false questions ask whether the statement holds as stated in
+     the lecture.
+   - Short answer questions want two to four sentences.
    - Click the dropdown after each question to reveal the answer.
+   - The recorded drive is the lecture's running example: 916 m in CARLA's
+     Town10HD_Opt, two laps, with no GNSS from 250 m to 650 m along the
+     route. Its sensor errors were all chosen for the drive: GNSS noise
+     :math:`\sigma = 1.5` m with a bias of 0.5 m east and 0.3 m south,
+     wheels 0.5% fast, gyro bias 0.001 rad/s.
 
 
 ----
 
 
-Multiple Choice (Questions 1-10)
-=================================
+Multiple Choice (Questions 1 to 22)
+===================================
 
 .. admonition:: Question 1
    :class: hint
 
-   What is the typical horizontal accuracy of standard civilian GPS without
-   any corrections, and why is this insufficient for autonomous driving
-   lane-keeping?
+   The localizer hands the AV's pose :math:`(x, y, \theta)` to the rest of
+   the stack. What does :math:`\theta` measure?
 
-   A. 1-5 mm; unnecessary precision wastes compute.
+   A. The angle from the AV's :math:`x` axis to the nearest wall.
 
-   B. 1-5 m; lane widths are approximately 3-4 m, requiring <20 cm for
-      reliable lane-level localization.
+   B. **The angle from the map's** :math:`x` **axis (east) to the AV's**
+      :math:`x` **axis (forward), counterclockwise.**
 
-   C. 10-50 m; cannot distinguish even road segments.
+   C. The steering angle of the front wheels.
 
-   D. 1-5 cm; sufficient for all AV applications.
+   D. The angle from north to the AV's :math:`y` axis, clockwise.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- 1-5 m; lane widths are approximately 3-4 m, requiring <20 cm
-   for reliable lane-level localization.
+   **B**.
 
-   Standard GPS (civilian L1 signal) achieves 1-5 m accuracy under good
-   conditions, degrading further in urban canyons due to multipath. With
-   lane widths of ~3.5 m, a 5 m position error means the vehicle cannot
-   determine which lane it is in, let alone where within the lane. RTK-GPS
-   or LiDAR scan matching is required for lane-level localization.
+   The map frame is fixed to the ground: :math:`x` east, :math:`y` north, in
+   meters from a chosen origin. The vehicle frame is fixed to the AV:
+   :math:`x` forward, :math:`y` left. The pose says where the vehicle frame's
+   origin sits in the map frame, and :math:`\theta` is the angle between the
+   two :math:`x` axes, counterclockwise. CARLA's :math:`y` points right; the
+   recorded drive flips it, so both frames turn counterclockwise. See the
+   Introduction in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 2
    :class: hint
 
-   **RTK-GPS** achieves centimeter-level accuracy by:
+   The lecture quotes Reid and co-authors (2019) for a passenger car on local
+   streets: "lateral and longitudinal error bounds of 0.29 m (0.10 m, 95%)".
+   What does the 0.29 m bound mean?
 
-   A. Using more satellites simultaneously than standard GPS.
+   A. The average error of a good localizer.
 
-   B. Applying corrections computed by a nearby base station at a precisely
-      known location, enabling carrier-phase integer ambiguity resolution.
+   B. The error of an RTK receiver near its base station.
 
-   C. Operating at a higher signal frequency (L5 band) than standard GPS.
+   C. **The error the AV must stay inside almost always: the paper derives it
+      at a failure rate of** :math:`10^{-8}` **per hour of driving.**
 
-   D. Averaging position estimates over multiple minutes to reduce noise.
+   D. The width of a lane marking.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Applying corrections computed by a nearby base station at a
-   precisely known location, enabling carrier-phase integer ambiguity
-   resolution.
+   **C**.
 
-   RTK stands for Real-Time Kinematic. The base station measures carrier-
-   phase signals from GPS satellites and, knowing its exact position,
-   computes the residual errors. These corrections are broadcast to the
-   rover. By resolving the integer ambiguity in the carrier phase (wavelength
-   ~19 cm for L1), the rover achieves 1-2 cm horizontal accuracy.
+   The bound is the error the car may have, sideways and along the road,
+   and still be safe on a local street. The paper sets it so that the error
+   goes past it less than once in 100 million hours of driving. On freeways
+   the sideways bound is 0.57 m. The lecture compares every method against
+   0.29 m. See the Introduction in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 3
    :class: hint
 
-   Which dead reckoning method has the **lowest positional drift** per unit
-   distance traveled?
+   In a city, GNSS fails in two ways: a blocked sky and multipath. Which
+   statement is right?
 
-   A. Wheel odometry
+   A. Both failures stop the fixes, so the AV always knows.
 
-   B. Monocular visual odometry
+   B. A blocked sky gives fixes that look normal and are meters off.
 
-   C. LiDAR odometry
+   C. **A blocked sky stops the fixes, and the AV knows. Multipath gives a
+      fix that looks normal and is meters off, and the AV does not know.**
 
-   D. IMU integration (without external corrections)
+   D. Multipath is noise, so averaging a few fixes removes it.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- LiDAR odometry
+   **C**.
 
-   LiDAR odometry (e.g., LOAM) achieves ~0.1-0.5% drift per distance
-   traveled by directly measuring 3D geometry via scan matching. Wheel
-   odometry drifts 1-5% due to wheel slip and terrain. Stereo visual
-   odometry drifts 0.5-1%. IMU integration diverges within seconds due to
-   gyroscope and accelerometer bias accumulation.
+   With too few satellites in view, the receiver gives a poor fix or none:
+   an outage, and the fixes stop. In multipath, the signal bounces off a
+   building before it reaches the antenna. The path is longer than the
+   straight line, so the receiver computes the wrong position, and the fix
+   looks normal. Multipath is a bias that comes and goes as the AV drives,
+   and you cannot average a bias away (L3), so **D** is wrong. See GNSS and
+   RTK in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 4
    :class: hint
 
-   In **Iterative Closest Point (ICP)**, what is the role of the
-   **correspondence step**?
+   Over the drive's 72 GNSS fixes, the measured median error is 1.77 m. How
+   does that compare with the local-street bound of 0.29 m?
 
-   A. Compute the SVD of the cross-covariance matrix to find the optimal
-      rotation and translation.
+   A. It is inside the bound.
 
-   B. For each point in the source cloud, find its nearest neighbor in the
-      target cloud to establish point pairs for optimization.
+   B. About 1.5 times too far off.
 
-   C. Apply motion distortion correction to each scan point using IMU data.
+   C. **About 6 times too far off:** :math:`1.77 / 0.29 = 6.1`.
 
-   D. Select keyframes by comparing the distance traveled since the last
-      keyframe.
+   D. About 12 times too far off.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- For each point in the source cloud, find its nearest neighbor
-   in the target cloud to establish point pairs for optimization.
+   **C**.
 
-   ICP alternates between two steps: (1) correspondence -- find nearest
-   neighbors between current aligned source and target to form point pairs
-   (p_i, q_i); (2) minimize -- solve for the rigid transform T that minimizes
-   sum||q_i - T*p_i||^2 using SVD. The process repeats until convergence
-   (translation/rotation change below threshold).
+   :math:`1.77 / 0.29 = 6.1`. Half the fixes are within 1.77 m, 95 percent
+   within 3.39 m, and the worst is 5.44 m off. **D** uses the 95 percent
+   value: :math:`3.39 / 0.29 = 11.7`. Plain GNSS cannot keep a car in its
+   lane. The errors come from the noise and bias chosen for the drive: 1.5 m
+   of noise in each direction and a fixed bias of about half a meter. See
+   GNSS and RTK in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 5
    :class: hint
 
-   **Monte Carlo Localization (MCL/AMCL)** has an advantage over EKF
-   localization because it can:
+   What does RTK's base station do?
 
-   A. Run faster than EKF on embedded hardware.
+   A. It relays the satellite signals to the car through a cable.
 
-   B. Handle global localization (no initial pose given) and recovery from
-      the "kidnapped robot" problem, which EKF cannot.
+   B. **It sits on a surveyed point, so it knows its own error. It sends that
+      error to the car nearby as a correction, and the errors both receivers
+      share cancel.**
 
-   C. Use fewer parameters than EKF.
+   C. It measures the car's position with its own LiDAR.
 
-   D. Provide a closed-form analytical solution to the posterior distribution.
+   D. It replaces the satellites in a tunnel.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Handle global localization (no initial pose given) and recovery
-   from the "kidnapped robot" problem, which EKF cannot.
+   **B**.
 
-   EKF maintains a single Gaussian estimate of pose -- if the initialization
-   is wrong or the vehicle is suddenly teleported (kidnapped), the single
-   Gaussian cannot represent multiple hypotheses. MCL represents the belief
-   as N particles spread across the entire map, naturally supporting multiple
-   hypotheses. As measurements arrive, particles in wrong locations get low
-   weight and die off; correct particles survive.
+   The base station sees the same satellites through nearly the same air as
+   a car nearby. Errors both share, like the satellite clocks and the
+   atmosphere, cancel. RTK also measures the carrier wave, not only the
+   timing code. The reference the lecture quotes gives "performances in the
+   range of a few centimetres", "in the vicinity of a base station". See
+   GNSS and RTK in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 6
    :class: hint
 
-   In the SLAM pose graph, what does a **loop closure edge** represent?
+   An RTK receiver reports a fix 2 cm from the truth in an open parking lot.
+   The AV then drives into a street lined with glass towers, and the fixes
+   keep coming, each one looking normal. Is the AV still within a few
+   centimeters?
 
-   A. A constraint between consecutive keyframes from scan-to-scan ICP.
+   A. Yes: RTK cancels every error.
 
-   B. A constraint between two non-consecutive keyframes that were identified
-      as the same location (the vehicle revisited a prior area), verified
-      by ICP.
+   B. Yes: the fixes keep coming, so the sky is clear.
 
-   C. A GPS measurement at a specific keyframe position.
+   C. **Not necessarily: multipath at the car is not in the base station's
+      correction, so a normal-looking fix can be meters off.**
 
-   D. The initial pose prior used to anchor the first node.
+   D. No: RTK stops working as soon as the AV moves.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- A constraint between two non-consecutive keyframes that were
-   identified as the same location (the vehicle revisited a prior area),
-   verified by ICP.
+   **C**.
 
-   Loop closure edges connect keyframe i to keyframe j (where j >> i+1) when
-   place recognition detects that the current scan matches a previous keyframe.
-   The relative transform is computed by ICP and added as a long-range edge.
-   During pose graph optimization, this edge pulls the two distant keyframes
-   into alignment, distributing the accumulated drift correction across the
-   entire trajectory.
+   The base station is in the open. A bounce off the glass next to the car
+   happens at the car alone, so the correction does not contain it. Fixes
+   that keep coming only say the sky is not fully blocked. To notice a bad
+   fix, the AV needs a second, independent source (the Integrity section).
+   See GNSS and RTK in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 7
    :class: hint
 
-   **LOAM** (LiDAR Odometry and Mapping) achieves high-accuracy odometry by:
+   Dead reckoning updates the pose every :math:`\Delta t` with
+   :math:`x \mathrel{+}= v\cos\theta\,\Delta t`,
+   :math:`y \mathrel{+}= v\sin\theta\,\Delta t` and
+   :math:`\theta \mathrel{+}= \omega\,\Delta t`. The AV drives north
+   (:math:`\theta = 90^\circ`) at :math:`v = 10` m/s (chosen for this
+   question), and :math:`\Delta t = 0.05` s, as on the drive. How far does
+   one step move it?
 
-   A. Using a particle filter to track the vehicle pose.
+   A. 0.5 m east.
 
-   B. Matching edge features (high curvature points) and planar features
-      (low curvature points) between scans using point-to-edge and
-      point-to-plane distance minimization.
+   B. **0.5 m north:** :math:`x` **does not change.**
 
-   C. Aligning raw LiDAR point clouds using standard point-to-point ICP.
+   C. 10 m north.
 
-   D. Fusing LiDAR with GPS measurements via a Kalman filter.
+   D. 0.35 m east and 0.35 m north.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Matching edge features (high curvature points) and planar features
-   (low curvature points) between scans using point-to-edge and point-to-plane
-   distance minimization.
+   **B**.
 
-   LOAM extracts features based on local curvature: high curvature → edge
-   features (on sharp corners and poles); low curvature → planar features
-   (on flat walls and ground). Matching edge-to-edge and plane-to-plane
-   (rather than arbitrary point-to-point) is more discriminative and produces
-   better-constrained, more accurate scan matching results.
+   :math:`\cos 90^\circ = 0` and :math:`\sin 90^\circ = 1`, so :math:`x`
+   grows by 0 and :math:`y` by :math:`10 \times 1 \times 0.05 = 0.5` m.
+   :math:`y` points north in the map frame. **C** forgets :math:`\Delta t`.
+   The wheels give :math:`v` and the gyro gives :math:`\omega`. The same rule
+   is the predict step of every filter in the lecture. See Dead Reckoning in
+   :doc:`l6_lecture`.
 
 
 .. admonition:: Question 8
    :class: hint
 
-   The **Absolute Pose Error (APE)** metric measures:
+   The AV believes it faces :math:`2^\circ` off its true heading and drives
+   straight. How far sideways is it after 100 m?
 
-   A. The drift rate per meter of trajectory (local accuracy).
+   A. 0.35 m
 
-   B. The RMSE between estimated and ground-truth poses over the full
-      trajectory (global accuracy).
+   B. 1.75 m
 
-   C. The number of loop closures detected per kilometer.
+   C. **3.49 m**
 
-   D. The processing time per LiDAR scan.
+   D. 200 m
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- The RMSE between estimated and ground-truth poses over the full
-   trajectory (global accuracy).
+   **C**.
 
-   APE aligns the estimated trajectory to the ground truth (removing
-   global gauge freedom) and then measures the RMSE of pose errors at
-   each timestep. It reflects the overall quality of the map and the
-   effectiveness of loop closure. Relative Pose Error (RPE) measures
-   drift over fixed intervals -- a complementary local accuracy metric.
+   Sideways error :math:`= d \sin(\text{heading error})`, and
+   :math:`\sin 2^\circ = 0.0349`, so :math:`100 \times 0.0349 = 3.49` m.
+   **B** is the lecture's :math:`1^\circ` case:
+   :math:`100 \times 0.01745 = 1.75` m. To stay under 0.29 m at
+   :math:`2^\circ`, the AV can drive :math:`0.29 / 0.0349 = 8.3` m. A fixed
+   heading error grows the sideways error by the same amount every meter.
+   See Dead Reckoning in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 9
    :class: hint
 
-   Why is **motion distortion correction** necessary for LiDAR scans in a
-   moving vehicle?
+   With a gyro bias :math:`b`, the AV driving straight at speed :math:`v`
+   drifts sideways by about :math:`v\,b\,t^2/2`. With the lecture's
+   :math:`v = 10` m/s and :math:`b = 0.001` rad/s, the drift after 20 s is
+   2.0 m. What is it after 40 s?
 
-   A. LiDAR sensors have a calibration error that must be corrected offline.
+   A. 4.0 m
 
-   B. A spinning LiDAR scan takes 50-100 ms to complete; during this time the
-      vehicle moves, so each point is captured at a different vehicle pose.
-      Without correction, the scan appears sheared/distorted.
+   B. **8.0 m**
 
-   C. LiDAR returns require temperature correction to compute accurate ranges.
+   C. 2.8 m
 
-   D. Multiple LiDAR returns from the same surface must be averaged.
+   D. 40 m
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- A spinning LiDAR scan takes 50-100 ms to complete; during this
-   time the vehicle moves, so each point is captured at a different vehicle
-   pose. Without correction, the scan appears sheared/distorted.
+   **B**.
 
-   At 50 km/h, a vehicle moves ~1.4 m during a 100 ms scan. Points at the
-   start of the scan are displaced ~1.4 m relative to the end-of-scan points.
-   IMU data (100-1000 Hz) is interpolated to compute the vehicle pose at
-   each point's acquisition time, and each point is transformed to the
-   common reference pose (e.g., scan start or scan center).
+   :math:`10 \times 0.001 \times 40^2 / 2 = 8.0` m. Twice the time, four
+   times the error, because the heading error itself grows (:math:`b\,t`),
+   so the sideways speed grows too. **A** treats the drift as growing in
+   step with time, the way a fixed heading error grows with distance. The
+   lecture's example gives 4.5 m after 30 s from the formula, and 4.54 m
+   from a program that integrates step by step. See Dead Reckoning in
+   :doc:`l6_lecture`.
 
 
 .. admonition:: Question 10
    :class: hint
 
-   **LIO-SAM** improves on LOAM by:
+   On the drive, dead reckoning starts from the true pose at the last fix and
+   runs through the 400 m without GNSS. What does the lecture measure?
 
-   A. Removing the need for LiDAR entirely, using cameras and IMU.
+   A. Under 0.29 m all the way: wheels and gyro are enough.
 
-   B. Tightly coupling IMU pre-integration with LiDAR scan matching in a
-      unified factor graph (GTSAM), enabling accurate real-time SLAM with
-      GPS and loop closure.
+   B. **2.69 m after 100 m, a worst of 9.03 m at 329 m, and 7.84 m at the
+      end of the outage.**
 
-   C. Using neural network-based scan matching instead of ICP.
+   C. An error that grows smoothly with the square of the distance.
 
-   D. Operating at 100 Hz by reducing scan resolution.
+   D. 0 m, because it starts from the true pose.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Tightly coupling IMU pre-integration with LiDAR scan matching
-   in a unified factor graph (GTSAM), enabling accurate real-time SLAM with
-   GPS and loop closure.
+   **B**.
 
-   LIO-SAM adds three key improvements over LOAM: (1) tight IMU integration
-   via pre-integration factors for high-frequency motion estimates, (2) a
-   full factor graph backend (GTSAM) that jointly optimizes IMU, LiDAR, GPS,
-   and loop closure constraints, and (3) efficient sliding window map
-   representation. This makes it robust to aggressive motions and suitable
-   for long-duration outdoor mapping.
+   The error is 3.56 m after 200 m, and it does not grow smoothly (**C**):
+   at some corners the two paths cross again. The trend is clear, though:
+   meters of error against a bound of 0.29 m. Even the best start, the true
+   pose, does not stop the drift (**D**). Dead reckoning bridges a short
+   gap, never a long one. See Dead Reckoning in :doc:`l6_lecture`.
 
-
-----
-
-
-True or False (Questions 11-15)
-================================
 
 .. admonition:: Question 11
    :class: hint
 
-   **True or False:** Dead reckoning methods like wheel odometry produce
-   position estimates with bounded error -- the error does not grow
-   indefinitely over time.
+   The fused filter keeps a state :math:`(x, y, \theta, v)` and its
+   covariance :math:`P`. What happens to :math:`P` in each step?
+
+   A. It grows at an update and shrinks at a predict.
+
+   B. It stays the same; only the state changes.
+
+   C. **It grows at every predict step and shrinks at every update.**
+
+   D. It shrinks at every step.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **C**.
 
-   Dead reckoning error is **unbounded** -- it accumulates over time (or
-   distance traveled) through integration. Systematic errors (e.g., slight
-   wheel diameter miscalibration) cause the error to grow linearly with
-   distance; random noise causes it to grow as a random walk (proportional
-   to sqrt of distance). Without external corrections (GPS, scan matching,
-   landmarks), any dead reckoning method will eventually lose track of
-   the vehicle's true position.
+   Predict, every 0.05 s, moves the state with the dead-reckoning rule. The
+   filter cannot check that step, so it is less sure: :math:`P` grows.
+   Update, when a reading arrives, moves the state by a fraction :math:`K`
+   of the surprise (L3), and :math:`P` shrinks. On the drive, the wheels
+   update about :math:`v` every 0.05 s, and GNSS updates :math:`x` and
+   :math:`y` once a second. See Fusion in the EKF in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 12
    :class: hint
 
-   **True or False:** In the SLAM problem, the vehicle must have a pre-built
-   map of the environment before it can operate.
+   In the outage, the fused filter (GNSS, wheels and gyro, no map) reaches a
+   real error of 9.50 m at its worst moment. Its own :math:`1\sigma` there is
+   3.93 m. What does that say?
+
+   A. The filter is honest: the error is inside :math:`3\sigma`.
+
+   B. **The filter is overconfident: the real error is 2.4 times its own**
+      :math:`1\sigma` (:math:`9.50 / 3.93`).
+
+   C. The filter is underconfident: it thinks it is worse than it is.
+
+   D. Nothing: :math:`1\sigma` and the error measure different things.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **B**.
 
-   SLAM (Simultaneous Localization and Mapping) is specifically designed
-   for operation WITHOUT a prior map. The vehicle builds the map from scratch
-   using sensor observations while simultaneously estimating its own position
-   within that growing map. This is in contrast to map-based localization
-   (e.g., HD map matching), which requires a pre-built map.
+   :math:`P` grows in the outage, as it should: the band widens from 0.75 m
+   before the outage to 3.93 m. But the error grows faster. The filter is less
+   sure, but not unsure enough. One reason the lecture gives: its model has
+   no gyro bias, and the drive has one. See Fusion in the EKF in
+   :doc:`l6_lecture`.
 
 
 .. admonition:: Question 13
    :class: hint
 
-   **True or False:** Loop closure detection can reduce the accumulated
-   drift in a SLAM trajectory even if the loop closure occurs only once
-   at the very end of a long mission.
+   The APE of a run is the RMSE of the distances from the estimated
+   position to the true one. A run of four time steps has distances 0.2,
+   0.2, 0.2 and 1.0 m (chosen for this question). What is its APE?
+
+   A. 0.40 m
+
+   B. 0.28 m
+
+   C. **0.53 m**
+
+   D. 1.00 m
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **True**
+   **C**.
 
-   A single loop closure edge in the pose graph, added at the end of a long
-   trajectory, creates a constraint between the start and end of the loop.
-   Pose graph optimization distributes this correction across all
-   intermediate poses in the loop, reducing the drift from meters to
-   centimeters throughout the entire trajectory. This is the power of global
-   backend optimization -- it retroactively corrects the entire history.
+   1. Square: 0.04, 0.04, 0.04, 1.00.
+   2. Average: :math:`1.12 / 4 = 0.28`.
+   3. Root: :math:`\sqrt{0.28} = 0.53` m.
+
+   **A** is the plain average, 0.40 m. **B** forgets the root. The RMSE is
+   larger than the average because squaring weighs the one bad step more.
+   For a car, one bad moment matters more than many good ones. See Fusion in
+   the EKF in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 14
    :class: hint
 
-   **True or False:** Point-to-plane ICP is generally faster to converge
-   than standard point-to-point ICP when matching planar surfaces.
+   The hands-on compares eight runs of the filter by their APE. Which input
+   lowers the APE the most?
+
+   A. GNSS through the outage.
+
+   B. The wheels.
+
+   C. **Map matching: through the outage, 4.99 m becomes 0.52 m.**
+
+   D. None: all eight runs score about the same.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **True**
+   **C**.
 
-   Point-to-plane ICP minimizes the distance from each source point to the
-   tangent plane at the corresponding target point (using surface normals).
-   This objective provides a more accurate gradient for optimization near
-   flat surfaces -- the most common geometry in man-made environments.
-   Empirically, point-to-plane converges in ~5-10 iterations vs. ~30-50 for
-   point-to-point, on typical urban LiDAR scans.
+   With wheels and the outage, 4.99 m without the map and 0.52 m with it.
+   With GNSS all the way, 1.28 m becomes 0.47 m. The wheels matter less in
+   APE here: without them the outage run scores 4.58 m against 4.99 m, but
+   its worst moment is worse, 12.4 m against 9.5 m. One run with the map
+   fails: outage, no wheels, map, 27.66 m. See Fusion in the EKF in
+   :doc:`l6_lecture`.
 
 
 .. admonition:: Question 15
    :class: hint
 
-   **True or False:** HD map-based localization suffers from accumulated
-   drift over long drives because it integrates odometry without correction.
+   In Monte Carlo localization (MCL), what happens in the **weigh** step?
+
+   A. Every particle moves with the wheels and the gyro.
+
+   B. **For each particle, the scan is placed where that particle says the
+      car is, and each scan point is scored by how close it lands to the
+      map.**
+
+   C. Heavy particles are copied and light ones dropped.
+
+   D. The particle with the most weight becomes the only particle.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **B**.
 
-   HD map-based localization does NOT accumulate drift. The HD map provides
-   a globally consistent reference frame. At each step, the current sensor
-   scan is matched against the global HD map to compute a position correction
-   -- this measurement-to-map comparison anchors the pose estimate to the
-   global frame. The limitation of HD maps is not drift but rather their
-   cost to create, maintain, and update when the environment changes.
+   MCL is L3's particle filter given a map. Each particle is one guess of the
+   pose :math:`(x, y, \theta)`. **A** is predict (plus a little random
+   noise), **C** is resample. The scoring uses a likelihood field: a scan
+   point on a wall is likely, a point in empty space is not. The estimate is
+   the weighted mean of the particles, and their spread is how sure MCL is.
+   See Against a Map in :doc:`l6_lecture`.
 
-
-----
-
-
-Essay Questions (Questions 16-18)
-===================================
 
 .. admonition:: Question 16
    :class: hint
 
-   **Explain the SLAM frontend and backend** as a two-stage processing
-   pipeline. What does each stage produce, and why must they work together
-   for accurate long-range mapping?
+   In a chosen 20 m by 10 m box, MCL starts with 2000 particles anywhere,
+   with any heading. Over 20 runs, 9 end on the mirror pose. With one small
+   pillar near a corner, 0 do. Why?
 
-   *(2-4 sentences)*
+   A. The pillar adds more scan points, so MCL runs faster.
 
-.. dropdown:: Answer Guidelines
+   B. 2000 particles are too few for any box.
+
+   C. **A plain box turned half a turn looks the same, so the scan cannot
+      tell the two poses apart. The pillar makes them look different.**
+
+   D. The pillar blocks the LiDAR, so fewer particles survive.
+
+.. dropdown:: Answer
    :class-container: sd-border-success
 
-   *Key points to include:*
+   **C**.
 
-   - Frontend: processes raw LiDAR scans in real time to produce a local
-     odometry estimate (incremental pose changes) and detects potential
-     loop closure candidates. It includes preprocessing (motion distortion,
-     downsampling), feature extraction, ICP scan matching, and keyframe
-     selection. Frontend must run faster than the sensor rate (>10 Hz for
-     a 10 Hz LiDAR).
-   - Backend: receives keyframes and their relative pose constraints from
-     the frontend and solves a global pose graph optimization problem to
-     find the maximum-likelihood trajectory. When loop closures are added,
-     the backend redistributes drift corrections across the entire history.
-   - Why both are needed: the frontend provides the real-time incremental
-     estimates and detects loop candidates; but without the backend's global
-     optimization, drift accumulates indefinitely. Without the frontend's
-     real-time operation, the backend has no input. Together they achieve
-     real-time, globally consistent mapping.
-   - Example: after 500 m, the frontend has 5 m of drift. One loop closure
-     detected by the frontend triggers backend optimization, reducing APE
-     to <5 cm across the entire 500 m trajectory.
+   The plain box has two poses that see the same walls: the true one and the
+   one opposite it through the box's center. MCL picks one of them. On real
+   roads, a long street of identical blocks looks the same in many places.
+   MCL needs something distinctive, or a rough GNSS fix to rule out the
+   look-alikes. See Against a Map in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 17
    :class: hint
 
-   **Describe why loop closure is critical for SLAM** and how place
-   recognition enables it. What happens to the map quality if loop
-   closure fails?
+   Why does ICP, iterative closest point, have to iterate?
 
-   *(2-4 sentences)*
+   A. Because the rotation formula is only approximate, and each round makes
+      it more accurate.
 
-.. dropdown:: Answer Guidelines
+   B. **If we knew which map point each scan point hit, the best pose would
+      be one formula; if we knew the pose, we would know the pairs. We know
+      neither, so ICP guesses the pairs from the nearest points, solves,
+      moves the scan, and guesses again.**
+
+   C. Because the map changes between iterations.
+
+   D. Because each iteration adds one more scan.
+
+.. dropdown:: Answer
    :class-container: sd-border-success
 
-   *Key points to include:*
+   **B**.
 
-   - SLAM odometry (frontend) accumulates drift -- typically 0.1-0.5% of
-     distance for LiDAR SLAM. Over 1 km, this means 1-5 m of accumulated
-     error. Without correction, the map shows the start and end of a loop
-     as two separate locations (map "split"), making the map inconsistent.
-   - Loop closure detects that the vehicle is revisiting a known location
-     by comparing the current scan's global descriptor (Scan Context,
-     FPFH) against all stored keyframe descriptors. When a match is found,
-     ICP verifies the relative transform.
-   - The verified loop closure edge is added to the pose graph. Backend
-     optimization distributes the correction: all keyframes in the loop
-     are adjusted to make the loop geometrically consistent.
-   - Without loop closure: maps of large environments (>100 m) are
-     unusable for localization because the start and end of a revisited
-     area appear at different locations. The map cannot be used for
-     place recognition in future operations.
+   The first pairs are partly wrong, but the move brings the scan closer, so
+   the next pairs are better. ICP stops when the fit stops improving. On one
+   scan of the drive, started :math:`5^\circ` off, 1.5 m east and 1.0 m
+   south of the truth (chosen), it took 28 iterations. The RMSE of the pairs
+   fell from 1.32 m to 0.06 m, and the final pose was 0.02 m from the truth.
+   See Against a Map in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 18
    :class: hint
 
-   **Compare GNSS-based localization and LiDAR scan matching** as
-   localization methods for autonomous driving. In what environments does
-   each perform best, and how do production AV systems combine them?
+   In 2-D, ICP's rotation has a short form:
+   :math:`\alpha = \operatorname{atan2}(H_{12} - H_{21},\ H_{11} + H_{22})`.
+   A cross-covariance comes out as
+   :math:`H = \begin{pmatrix} -4 & 5 \\ -1 & -2 \end{pmatrix}` (chosen for
+   this question). What is :math:`\alpha`?
 
-   *(2-4 sentences)*
+   A. :math:`-45^\circ`
 
-.. dropdown:: Answer Guidelines
+   B. :math:`45^\circ`
+
+   C. :math:`\mathbf{135^\circ}`
+
+   D. :math:`90^\circ`
+
+.. dropdown:: Answer
    :class-container: sd-border-success
 
-   *Key points to include:*
+   **C**.
 
-   - GNSS (especially RTK): provides global, drift-free localization but
-     fails in urban canyons (multipath), tunnels, and underground areas.
-     Accuracy: 1-2 cm (RTK) under open sky; degrades to meters or loss
-     of fix in dense urban environments. No map required.
-   - LiDAR scan matching: provides high-accuracy local positioning (0.1-0.5%
-     drift for odometry; centimeter-level for map-based matching against
-     HD maps) but requires a pre-built map and accumulates drift without
-     loop closure. Works in tunnels, indoor parking, urban canyons.
-   - Production systems (Waymo, Cruise, Mobileye): use a tight EKF/factor
-     graph fusion of GNSS, LiDAR scan matching against HD maps, and IMU.
-     GNSS provides the global anchor; LiDAR provides accuracy in GNSS-denied
-     environments; IMU fills short gaps at high frequency.
-   - The HD map acts as the "long-term memory" -- accumulated drift from
-     LiDAR odometry is corrected at each map feature observation, providing
-     globally consistent, centimeter-accurate localization in all covered
-     environments.
+   :math:`H_{12} - H_{21} = 5 - (-1) = 6` and
+   :math:`H_{11} + H_{22} = -4 + (-2) = -6`. atan2 takes the first number as
+   the up part and the second as the right part. The point 6 up and 6 to the
+   left lies at :math:`135^\circ`, so
+   :math:`\operatorname{atan2}(6, -6) = 135^\circ`. **A** is the plain arc
+   tangent of :math:`6 / (-6) = -1`, which loses the quadrant: that is why
+   the formula uses atan2. See Against a Map in :doc:`l6_lecture`.
+
+
+.. admonition:: Question 19
+   :class: hint
+
+   An ICP fit finds the rotation :math:`R = \begin{pmatrix} 0 & -1 \\ 1 & 0
+   \end{pmatrix}` (a quarter turn counterclockwise). The scan's centroid is
+   :math:`\bar p = (1, 2)` and the map's is :math:`\bar q = (3, 4)` (both
+   chosen for this question). What is the shift :math:`t = \bar q - R\,\bar p`?
+
+   A. (2, 2)
+
+   B. (1, 6)
+
+   C. **(5, 3)**
+
+   D. (3, 4)
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **C**.
+
+   :math:`R\,\bar p = (0 \times 1 - 1 \times 2,\ 1 \times 1 + 0 \times 2) =
+   (-2, 1)`, so :math:`t = (3 - (-2),\ 4 - 1) = (5, 3)`. **A** forgets to
+   rotate :math:`\bar p` first: :math:`\bar q - \bar p`. **D** is right only
+   when the scan's centroid is the origin, as in the lecture's example,
+   where :math:`t = (2, 1) = \bar q`. See Against a Map in
+   :doc:`l6_lecture`.
+
+
+.. admonition:: Question 20
+   :class: hint
+
+   The run "outage, no wheels, map matching" scores 27.66 m APE. For ten
+   seconds every ICP pose is accepted. What goes wrong after that?
+
+   A. The map is wrong in that part of the town.
+
+   B. **One match is rejected and the next is dropped. With no wheels and
+      no GNSS, nothing measures the speed, so the filter's position**
+      :math:`\sigma` **passes 2 m, the limit chosen for starting ICP, and ICP
+      stops. The filter coasts on the gyro alone, 65.6 m off at its worst.**
+
+   C. ICP needs more than one scan per second.
+
+   D. The NIS gate rejects every GNSS fix.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **B**.
+
+   At 45 s the NIS gate rejects one match. At 46 s the fit fails its quality
+   check and is dropped. At 46.5 s :math:`\sigma` passes 2 m, and ICP stops.
+   GNSS returns at 89.0 s and pulls the filter back. ICP keeps the AV
+   localized only while it has a good starting guess. Once lost, the AV needs
+   a method that searches widely: MCL, as Autoware does to "estimate initial
+   position". See Against a Map in :doc:`l6_lecture`.
+
+
+.. admonition:: Question 21
+   :class: hint
+
+   A filter accepts an update only if its NIS :math:`\varepsilon` is under
+   the 0.99 bound for the number of values the update reports. Which bound
+   applies to a matched pose from ICP?
+
+   A. 9.21, because a pose is a position.
+
+   B. **11.34, because a pose reports three numbers:** :math:`x`, :math:`y`
+      **and** :math:`\theta`.
+
+   C. 3, the NIS an honest filter averages for a pose.
+
+   D. 0.99.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **B**.
+
+   Both bounds come from the chi-square distribution at 0.99: 9.21 for 2
+   numbers (a GNSS fix, :math:`x` and :math:`y`) and 11.34 for 3 numbers.
+   **C** is the expected average, about 1 per number, not the gate. On the
+   drive, with the outage, wheels and map: GNSS averages 2.12 over 68 fixes
+   with 1 above 9.21, and the map averages 2.50 over 118 poses with 0 above
+   11.34. See Integrity in :doc:`l6_lecture`.
+
+
+.. admonition:: Question 22
+   :class: hint
+
+   The lecture defines an alert limit and a protection level. When must the
+   localizer warn that its pose cannot be used for lane-level driving?
+
+   A. When the protection level is below the alert limit.
+
+   B. **When the protection level is above the alert limit.**
+
+   C. When the APE is above 0.29 m.
+
+   D. When one GNSS fix is above the NIS gate.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **B**.
+
+   The alert limit is "the largest position error allowable for safe
+   operation"; for a car on a local street, Reid's 0.29 m. The protection
+   level is a bound the localizer computes from its own covariance and error
+   models, so that the true error goes past it only with a tiny, chosen
+   probability. If that bound is above the alert limit, the pose may be too
+   far off, so the localizer warns. **C** needs the truth, which a real car
+   never has. See Integrity in :doc:`l6_lecture`.
+
+
+----
+
+
+True or False (Questions 23 to 33)
+==================================
+
+.. admonition:: Question 23
+   :class: hint
+
+   Of all the sensors in the lecture, GNSS is the only one that says where
+   the AV is on Earth with no map and no starting point.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **True.**
+
+   A receiver times the signals from several satellites and solves for its
+   position. Dead reckoning needs a starting pose, and MCL and ICP need a
+   map. See GNSS and RTK in :doc:`l6_lecture`.
+
+
+.. admonition:: Question 24
+   :class: hint
+
+   RTK cancels multipath at the car, because the base station sees the same
+   satellites.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False.**
+
+   RTK cancels errors the base station and the car share. A bounce off the
+   building next to the car happens at the car alone, so the correction does
+   not contain it. RTK also stops when the sky is blocked, and it works only
+   near a base station. See GNSS and RTK in :doc:`l6_lecture`.
+
+
+.. admonition:: Question 25
+   :class: hint
+
+   A fixed heading error makes the sideways error grow with the square of
+   the distance driven.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False.**
+
+   A fixed heading error grows the sideways error by the same amount every
+   meter: :math:`d \sin(\text{heading error})`, a straight line on the
+   lecture's graph. A gyro **bias** makes the heading error itself grow, and
+   then the sideways error grows with the square of **time**:
+   :math:`v\,b\,t^2/2`. See Dead Reckoning in :doc:`l6_lecture`.
+
+
+.. admonition:: Question 26
+   :class: hint
+
+   At the first GNSS fix after the 400 m outage, the filter's gain
+   :math:`K` is small, so the filter moves only a little toward the fix.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False.**
+
+   :math:`P` grew at every predict step of the outage, so at the first fix
+   :math:`K` is **large**: the filter trusts its own position little and
+   moves most of the way to the fix. :math:`P` drops in one step. On the
+   drive, the error is back to 0.60 m one second after the first fix: L3's
+   sawtooth, with one long tooth. See Fusion in the EKF in
+   :doc:`l6_lecture`.
+
+
+.. admonition:: Question 27
+   :class: hint
+
+   The APE of a run, the RMSE of its distances, is never smaller than the
+   plain average of those distances.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **True.**
+
+   Squaring weighs large distances more, so the RMSE is at least the average.
+   The two are equal only when every distance is the same. In the lecture's
+   example, 0.3, 0.4, 1.2 and 0.5 m give an RMSE of 0.70 m against an
+   average of 0.60 m. See Fusion in the EKF in :doc:`l6_lecture`.
+
+
+.. admonition:: Question 28
+   :class: hint
+
+   MCL's estimate is the single particle with the highest weight.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False.**
+
+   The estimate is the **weighted mean** of the particles, and their spread
+   is how sure MCL is. On the drive, 2000 particles start within 20 m of the
+   first GNSS fix with any heading. The error is first under 1 m at the 5th
+   scan, 2.0 s in; after 10 s the median error is 0.20 m and the worst
+   0.95 m. See Against a Map in :doc:`l6_lecture`.
+
+
+.. admonition:: Question 29
+   :class: hint
+
+   In the hands-on, ICP started 7.2 m and :math:`20^\circ` off the truth
+   still lands on the right walls.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False.**
+
+   Started 5 m and :math:`15^\circ` off, ICP lands within 0.10 m of the
+   truth. Started 7.2 m and :math:`20^\circ` off, it ends 7 m off, on the
+   wrong walls. ICP needs a starting guess close to the truth, and the
+   filter's own pose is that guess. See Against a Map in :doc:`l6_lecture`
+   and :doc:`l6_code`.
+
+
+.. admonition:: Question 30
+   :class: hint
+
+   An NIS that averages well below the expected value (below 2 for a GNSS
+   fix) means the filter is overconfident.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False.**
+
+   NIS below what is expected means the surprises are smaller than the filter
+   predicted: it overestimates its error, so it is **underconfident**. That
+   is the safe side. On the drive the map poses average 2.50 against 3
+   expected: the filter slightly overestimates the map's error. An
+   overconfident filter has an NIS that is too large. See Integrity in
+   :doc:`l6_lecture` and :doc:`/lectures/lecture3/l3_lecture`.
+
+
+.. admonition:: Question 31
+   :class: hint
+
+   On the drive, 1 GNSS fix out of 68 is above the 9.21 bound. That alone
+   shows the filter is broken.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False.**
+
+   At 0.99, an honest filter puts about 1 update in 100 above the line. Over
+   68 fixes that is :math:`0.01 \times 68 = 0.68` expected, so one is
+   normal. The GNSS average, 2.12 against an expected 2, also says the filter
+   is honest about GNSS. See Integrity in :doc:`l6_lecture`.
+
+
+.. admonition:: Question 32
+   :class: hint
+
+   In a pose graph with one loop, the loop closure edge, measured by ICP and
+   sure, takes most of the correction.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False.**
+
+   Each edge takes a share of the gap in proportion to its variance
+   :math:`\sigma^2`. In the lecture's example, each odometry edge
+   (:math:`\sigma = 0.5` m) takes :math:`0.25 / 0.51 = 0.49` of the gap and
+   the loop (:math:`\sigma = 0.1` m) only :math:`0.01 / 0.51 = 0.02`. The
+   sure edge barely bends. See SLAM in :doc:`l6_lecture`.
+
+
+.. admonition:: Question 33
+   :class: hint
+
+   Autoware's localizer uses NDT scan matching, and starts with the Monte
+   Carlo method to estimate the initial position.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **True.**
+
+   The lecture quotes Autoware: "a package for position estimation using the
+   NDT scan matching method", and it uses "the Monte Carlo method" to
+   "estimate initial position". MCL finds the car once, scan matching
+   follows it. See Against a Map in :doc:`l6_lecture`.
+
+
+----
+
+
+Short Answer (Questions 34 to 39)
+=================================
+
+.. admonition:: Question 34
+   :class: hint
+
+   Dead reckoning drifts. Explain, with the lecture's numbers, why a heading
+   error matters more than a speed error, and why a gyro bias is worse than a
+   fixed heading error.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   A speed error stretches the path along the road: the wheels read 0.5% fast,
+   so after 400 m the AV is :math:`0.005 \times 400 = 2.0` m off along the
+   road. A heading error pushes it sideways: :math:`1^\circ` gives
+   :math:`100 \times 0.01745 = 1.75` m after 100 m, and the 0.29 m bound is
+   gone after 16.6 m.
+
+   A gyro bias makes the heading error itself grow, :math:`b\,t`, so the
+   sideways error grows with the square of time: :math:`v\,b\,t^2/2`, 4.5 m
+   after 30 s at 10 m/s with :math:`b = 0.001` rad/s. Twice the time, four
+   times the error. Dead reckoning bridges only short gaps.
+
+
+.. admonition:: Question 35
+   :class: hint
+
+   During the outage, the fused filter's error reaches 9.50 m while its own
+   :math:`1\sigma` is 3.93 m. Explain what goes on in the filter, and what
+   happens at the first fix after the outage.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   With no position update, the filter only predicts, so :math:`P` grows and
+   the band widens from 0.75 m to 3.93 m. The real error grows faster, 2.4
+   times the band: the filter is overconfident. One reason is that its model
+   has no gyro bias, and the drive has one.
+
+   At the first fix, :math:`P` is large, so :math:`K` is large: the filter
+   moves most of the way to the fix, and :math:`P` drops in one step. One
+   second later the error is 0.60 m.
+
+
+.. admonition:: Question 36
+   :class: hint
+
+   MCL and ICP both match a scan to the map. Say what each one is good at,
+   and how a real stack such as Autoware uses the two together.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   MCL tries thousands of guesses spread over a wide area, so it can find the
+   car from a poor start: on the drive, from a 20 m circle with any heading,
+   it is under 1 m after 2.0 s. It can pick a look-alike place when the map
+   is symmetric.
+
+   ICP takes one guess and improves it, and it is precise: 0.02 m from the
+   truth on one scan. But it needs a starting guess close to the truth, or it
+   slides into the wrong fit. So MCL finds the car once, and scan matching
+   follows it, its pose sent to the filter as one more update. Autoware
+   follows this pattern, with NDT as its scan matcher.
+
+
+.. admonition:: Question 37
+   :class: hint
+
+   A filter's NIS gate makes two kinds of mistake. Name them, give the
+   lecture's example of each, and say which kind of filter makes each one.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   A false alarm rejects a good update: a scan full of parked trucks the map
+   does not have matches badly, and the filter drops a pose that was right.
+   The cost is a little more dead reckoning. A missed fault accepts a bad
+   update: a multipath fix 3 m off (chosen) arrives after the outage, when
+   :math:`P`, and so :math:`S`, is large, so :math:`\varepsilon` stays small
+   and the filter moves 3 m the wrong way.
+
+   An overconfident filter makes false alarms; an underconfident one misses
+   faults. That is why the filter must be honest.
+
+
+.. admonition:: Question 38
+   :class: hint
+
+   Why does the lecture want two independent sources of position, such as
+   GNSS and map matching, for integrity?
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   A real car never knows the truth, so it cannot compute its own error. GNSS
+   and map matching fail for different reasons: GNSS under a blocked sky or
+   with multipath, map matching where the map is wrong or one place looks
+   like another.
+
+   If they agree, both are likely right. If they disagree, the AV at least
+   knows that one is wrong and can warn. What the car does then is L13.
+
+
+.. admonition:: Question 39
+   :class: hint
+
+   Explain how a loop closure corrects a drifted trajectory in a pose graph,
+   and why fleets build their maps offline.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   The AV comes back to a place it has seen, and ICP between the new scan and
+   the old one measures the motion between two poses far apart in time. Added
+   around the loop, the edges should sum to zero; the drift leaves a gap,
+   0.71 m in the lecture's example. Solving the graph spreads that gap over
+   the edges in proportion to their variances, so the unsure odometry edges
+   take most of it and the sure loop closure barely bends.
+
+   A fleet solves this once, offline, over many mapping drives, with time and
+   people to check the result. The AV on the road then localizes against a
+   fixed map, a smaller problem that is easier to check.
