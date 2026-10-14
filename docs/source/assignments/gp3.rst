@@ -10,9 +10,10 @@ GP3: Fusion & Localization
       :class: compact-table
 
       * - **Duration**
-        - 3 weeks (Week 8 -- Week 11)
+        - 3 weeks: posted **Thursday, October 29**, due **Thursday,
+          November 19**
       * - **Weight**
-        - 25 points (25% of final project)
+        - 17.0% of the course grade (21.25% of the project grade)
       * - **Lectures**
         - L3, L5 and L6
       * - **Team Size**
@@ -33,9 +34,9 @@ IMU measurements to provide a reliable estimate of the vehicle's pose.
 
 By the end of GP3, your pipeline will output:
 
-- ``/perception/fused_objects`` -- 3D bounding box detections with class labels and confidence.
-- ``/localization/pose`` -- EKF-estimated vehicle pose (position + heading).
-- ``/localization/odom`` -- Odometry message for downstream planning.
+- ``/perception/fused_objects``: 3D bounding box detections with class labels and confidence.
+- ``/localization/pose``: EKF-estimated vehicle pose (position + heading).
+- ``/localization/odom``: Odometry message for downstream planning.
 
 These two outputs serve as the primary inputs for GP4 (Planning & Control).
 
@@ -65,7 +66,7 @@ Provided Resources
 
 The following files are provided by the instructor on Canvas and the
 course GitHub repository. **Do not re-implement these utilities from
-scratch** -- integrate them into your package.
+scratch**: integrate them into your package.
 
 .. list-table::
    :header-rows: 1
@@ -101,9 +102,9 @@ scratch** -- integrate them into your package.
 Tasks
 -----
 
-GP3 is worth **100 internal points** (scaled to 25% of the project grade).
+GP3 is worth **100 internal points** (scaled to 21.25% of the project grade).
 Complete all four tasks. The bonus task (Task 4) can push your score above
-100, but total project weight is capped at 25 points.
+100, but GP3 never counts for more than its 21.25% of the project grade.
 
 .. dropdown:: Task 1: Camera-LiDAR Fusion Node (30 pts)
    :icon: gear
@@ -115,14 +116,14 @@ Complete all four tasks. The bonus task (Task 4) can push your score above
 
    **Subscriptions:**
 
-   - ``/perception/detections`` -- ``vision_msgs/Detection2DArray`` (from GP2 YOLO or DETR node)
-   - ``/carla/lidar/points`` -- ``sensor_msgs/PointCloud2``
+   - ``/perception/detections``: ``vision_msgs/Detection2DArray`` (from GP2 YOLO or DETR node)
+   - ``/carla/lidar/points``: ``sensor_msgs/PointCloud2``
 
    **Publications:**
 
-   - ``/perception/fused_objects`` -- ``vision_msgs/Detection3DArray``
+   - ``/perception/fused_objects``: ``vision_msgs/Detection3DArray``
 
-   **Algorithm -- Frustum-Based Association:**
+   **Algorithm: Frustum-Based Association**
 
    1. For each 2D bounding box ``(u_min, v_min, u_max, v_max)`` in the
       detection array, use the camera intrinsic matrix ``K`` to back-project
@@ -244,7 +245,7 @@ Complete all four tasks. The bonus task (Task 4) can push your score above
    where ``(x, y)`` is position in the map frame, ``theta`` is heading
    (radians), and ``v`` is forward speed (m/s).
 
-   **Prediction Step -- Bicycle Model:**
+   **Prediction Step: Bicycle Model**
 
    Given IMU angular velocity ``omega`` (rad/s) and elapsed time ``dt``:
 
@@ -259,7 +260,7 @@ Complete all four tasks. The bonus task (Task 4) can push your score above
 
    The Jacobian ``F`` linearizes this around the current state estimate.
 
-   **Update Step -- GNSS Measurement:**
+   **Update Step: GNSS Measurement**
 
    GNSS provides ``(lat, lon)`` which must be converted to local Cartesian
    ``(x_gps, y_gps)`` using a fixed reference origin. The measurement
@@ -272,13 +273,13 @@ Complete all four tasks. The bonus task (Task 4) can push your score above
 
    **Subscriptions:**
 
-   - ``/carla/imu/data`` -- ``sensor_msgs/Imu``
-   - ``/carla/gnss/fix`` -- ``sensor_msgs/NavSatFix``
+   - ``/carla/imu/data``: ``sensor_msgs/Imu``
+   - ``/carla/gnss/fix``: ``sensor_msgs/NavSatFix``
 
    **Publications:**
 
-   - ``/localization/pose`` -- ``geometry_msgs/PoseStamped``
-   - ``/localization/odom`` -- ``nav_msgs/Odometry``
+   - ``/localization/pose``: ``geometry_msgs/PoseStamped``
+   - ``/localization/odom``: ``nav_msgs/Odometry``
 
    **Parameters (configurable via** ``ekf_config.yaml`` **):**
 
@@ -364,7 +365,7 @@ Complete all four tasks. The bonus task (Task 4) can push your score above
 
    Quantitatively evaluate both the fusion and localization components.
 
-   **3.1 -- Fusion Evaluation**
+   **3.1 Fusion Evaluation**
 
    Use ``ground_truth_logger.py`` (provided) to record CARLA ground-truth
    3D object positions at each timestep. Compare against your
@@ -392,7 +393,7 @@ Complete all four tasks. The bonus task (Task 4) can push your score above
                     for f, g in zip(fused_positions, gt_positions)]
           return np.mean(errors), np.std(errors)
 
-   **3.2 -- Localization Evaluation**
+   **3.2 Localization Evaluation**
 
    Use the provided ``evaluate_localization.py`` script:
 
@@ -410,7 +411,7 @@ Complete all four tasks. The bonus task (Task 4) can push your score above
    - **RPE (Relative Pose Error):** Mean error over fixed-length sub-segments.
    - Trajectory overlay plot and error-over-time plot.
 
-   **3.3 -- Multi-Town Testing**
+   **3.3 Multi-Town Testing**
 
    Run your full GP3 pipeline (sensors + detection + fusion + EKF) in at
    least **two CARLA towns** with different road layouts and conditions
@@ -423,7 +424,7 @@ Complete all four tasks. The bonus task (Task 4) can push your score above
       submission under ``evaluation/``. The grader will re-run
       ``evaluate_localization.py`` to verify your reported numbers.
 
-.. dropdown:: Task 4: LiDAR Odometry -- Bonus (10 pts)
+.. dropdown:: Task 4: LiDAR Odometry, Bonus (10 pts)
    :icon: gear
    :class-container: sd-border-primary
 
@@ -472,34 +473,34 @@ Complete all four tasks. The bonus task (Task 4) can push your score above
    :icon: gear
    :class-container: sd-border-primary
 
-   Write a **4--5 page technical report** (PDF, double-column preferred)
-   covering the following sections. Use your own words -- do not copy
+   Write a **4 to 5 page technical report** (PDF, double-column preferred)
+   covering the following sections. Use your own words: do not copy
    template text.
 
    **Required Sections:**
 
-   1. **Architecture Diagram** -- Draw the full ROS 2 node and topic graph
+   1. **Architecture Diagram:** draw the full ROS 2 node and topic graph
       for your GP3 pipeline. Show all nodes (from GP1, GP2, and GP3),
       all topics, and data flow directions. Tools: ``rqt_graph``, draw.io,
       or PlantUML.
 
-   2. **EKF Formulation** -- Present the mathematical formulation:
+   2. **EKF Formulation:** present the mathematical formulation:
       state vector definition, process model ``f(x, u)``, Jacobian ``F``,
       measurement model ``h(x)``, Jacobian ``H``, and noise matrices ``Q``
       and ``R``. Show the full predict/update equations.
 
-   3. **Quantitative Results** -- Tables and plots:
+   3. **Quantitative Results:** the following tables and plots.
 
       - Fusion: mean 3D position error per class (Town01, Town05)
       - Localization: APE and RPE (Town01, Town05)
       - EKF trajectory overlay plot
 
-   4. **Error Analysis** -- When does fusion fail? (Occlusion? Long range?
+   4. **Error Analysis:** when does fusion fail? (Occlusion? Long range?
       Adverse weather?) When does the EKF drift? (Sharp turns? GNSS outage?)
       Support your analysis with specific timestamped examples from your
       evaluation data.
 
-   5. **Conclusion** -- Key lessons learned and identified improvements.
+   5. **Conclusion:** key lessons learned and identified improvements.
 
    .. tip::
 
@@ -555,9 +556,9 @@ Submission
    Submit a single ``.zip`` archive named ``GP3_TeamX.zip`` (replace ``X``
    with your team number) to **Canvas** by the deadline.
 
-   - **Deadline:** End of Week 11 (see Canvas for exact date/time)
+   - **Deadline:** Thursday, November 19, Week 12 (see Canvas for the exact time)
    - **Late policy:** 10% deduction per day, maximum 3 days late
-   - **One submission per team** -- designate one member to submit
+   - **One submission per team:** designate one member to submit
    - Include **all** evaluation files, plots, and ``report.pdf`` inside the archive
    - Your ``ads_pipeline`` package must build cleanly with
      ``colcon build --packages-select ads_pipeline``
@@ -568,7 +569,7 @@ Submission
 Submission Checklist
 --------------------
 
-.. admonition:: Before You Submit -- Check Every Item
+.. admonition:: Before You Submit: Check Every Item
    :class: tip
 
    - [ ] ``fusion_node.py`` runs and publishes ``/perception/fused_objects``
@@ -580,7 +581,7 @@ Submission Checklist
          ``evaluation/ekf_trajectory/``
    - [ ] Evaluation plots are present in ``evaluation/plots/``
    - [ ] Results tested in at least 2 CARLA towns
-   - [ ] ``report.pdf`` is present, 4--5 pages, includes architecture diagram
+   - [ ] ``report.pdf`` is present, 4 to 5 pages, includes architecture diagram
          and EKF formulation
    - [ ] ``colcon build`` succeeds with no errors
    - [ ] Folder is named ``GP3_TeamX/`` (correct team number)
@@ -621,7 +622,7 @@ Grading Rubric
      - Architecture diagram shows all nodes and topics; EKF formulation
        section includes ``f``, ``F``, ``h``, ``H``, ``Q``, ``R``;
        quantitative tables match submitted CSVs; error analysis discusses
-       specific failure cases; 4--5 pages.
+       specific failure cases; 4 to 5 pages.
    * - LiDAR Odometry (Bonus)
      - +10
      - ICP scan matching implemented and publishing delta poses; second
@@ -663,8 +664,8 @@ Common Mistakes
      files result in zero points for the evaluation component.
 
    - **Copying EKF code without understanding it.** You must be able to
-     explain every line of your EKF during office hours or the final
-     presentation. The template is a scaffold -- the math is yours to fill in.
+     explain every line of your EKF during office hours. The template is a
+     scaffold: the math is yours to fill in.
 
 
 Tips for Success
@@ -694,14 +695,14 @@ Tips for Success
 
 .. tip::
 
-   **Divide the work clearly.** A natural split: one member on
-   ``fusion_node.py``, one on ``localization_node.py``, one on
-   evaluation scripts and plots, one on the report. All members
+   **Divide the work clearly.** A natural split for three: one member
+   on ``fusion_node.py``, one on ``localization_node.py``, one on the
+   evaluation scripts and plots. Share the report. All members
    should understand all components before submission.
 
 .. tip::
 
    **Test in Town05 early.** Town05 has more complex intersections and
    varying road widths than Town01. EKF drift tends to be larger in
-   Town05 due to sharper turns -- leave time to retune ``Q`` before the
+   Town05 due to sharper turns: leave time to retune ``Q`` before the
    deadline.
