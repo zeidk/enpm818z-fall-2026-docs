@@ -221,8 +221,8 @@ invest your effort in making the end-to-end integration robust.
    - ``/planning/path``: ``nav_msgs/Path``
    - ``/localization/pose``: ``geometry_msgs/PoseStamped``
    - ``/behavior/state``: ``std_msgs/String`` (from behavior node)
-   - ``/behavior/target_speed``: ``std_msgs/Float32`` (speed setpoint
-     for the PID, from behavior node)
+   - ``/behavior/target_speed``: ``geometry_msgs/TwistStamped`` (speed
+     setpoint for the PID in ``twist.linear.x``, m/s, from behavior node)
 
    **Publications:**
 
@@ -359,7 +359,11 @@ invest your effort in making the end-to-end integration robust.
    **Publications:**
 
    - ``/behavior/state``: ``std_msgs/String`` (current FSM state name)
-   - ``/behavior/target_speed``: ``std_msgs/Float32`` (speed setpoint for controller)
+   - ``/behavior/target_speed``: ``geometry_msgs/TwistStamped`` (speed
+     setpoint for the controller in ``twist.linear.x``, m/s). Set
+     ``header.stamp`` to the stamp of the ``/perception/fused_objects``
+     message the decision used, not the time you publish, so the
+     controller can tell how old the decision is.
 
    **Transition rule:** when more than one condition holds, the safer
    state wins: ``EMERGENCY_STOP``, then ``STOP``, then
