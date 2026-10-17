@@ -5,10 +5,29 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.9.2: SLAM Pages Link Their Code (2026-10-11)
+.. dropdown:: v2.10.0: Lecture 6 Matches the Slides (2026-10-17)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lecture 6
+
+   - **Lecture, appendix, quiz, exercises, code and references** follow
+     the final slides: scan registration with ICP and a k-d tree, ICP's
+     second step in six named steps, four ways to score a scan and which
+     one an AV uses when, scenes that cannot pin down the pose, and the
+     pose graph built in Python. The pose graph example uses sigmas of
+     0.5 m and 0.3 m, as on the slides.
+   - Mentions of the removed NIS plot are gone. Figures are the slides'
+     current ones.
+
+   .. rubric:: Schedule
+
+   - Lecture 7 is now called **Route Planning**.
+
+.. dropdown:: v2.9.2: SLAM Pages Link Their Code (2026-10-11)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Pre-Read Material
 

@@ -11,11 +11,12 @@ Exercises
    work, which is the five in-class quizzes and the four group projects
    listed in the :doc:`syllabus </syllabus/index>`.
 
-Six take-home exercises built on the Lecture 6 slides shown in class, and on
-the same recorded CARLA drive. Exercises 1 to 5 are paper and arithmetic: dead
-reckoning and its drift, the absolute pose error (APE) and the eight runs, one
-ICP fit by hand, the NIS gate, and a pose graph with one loop. Exercise 6 runs
-four of the five parts of the hands-on in :doc:`l6_code`.
+Six take-home exercises built on the Lecture 6 notes, :doc:`l6_lecture`, and
+on the same recorded CARLA drive. They use only the lecture, never
+:doc:`Going Further <l6_appendix>`. Exercises 1 to 5 are paper and arithmetic:
+dead reckoning and its drift, the absolute pose error (APE) and the eight runs,
+ICP's step 2 by hand, weighing and resampling in MCL, and a pose graph with one
+loop. Exercise 6 runs the hands-on in :doc:`l6_code`.
 
 .. note::
 
@@ -76,7 +77,7 @@ four of the five parts of the hands-on in :doc:`l6_code`.
    2. Convert :math:`1.5^\circ` to radians, and compute its sine.
    3. How far sideways is the AV after 50 m, 100 m and 200 m?
    4. How far can it drive before it leaves the local-street bound of
-      0.29 m? And the freeway's sideways bound of 0.57 m?
+      0.29 m?
    5. What is the largest heading error that keeps the AV under 0.29 m after
       100 m?
 
@@ -105,9 +106,10 @@ four of the five parts of the hands-on in :doc:`l6_code`.
    9. The wheels read 0.5% fast. How far off along the road does that put
       dead reckoning after the 400 m outage?
    10. The outage lasts 54.8 s. How large does the drive's gyro bias,
-       0.001 rad/s, make the heading error by its end? Compute
-       :math:`v\,b\,t^2/2` with the drive's mean speed, 7.3 m/s, and compare
-       it with the measured worst error, 9.03 m.
+       0.001 rad/s, make the heading error by its end? Compare it with the
+       measured heading error at the end of the outage, :math:`6.0^\circ`.
+       Then compute :math:`v\,b\,t^2/2` with the drive's mean speed,
+       7.3 m/s, and compare it with the measured worst error, 9.03 m.
 
    .. raw:: html
 
@@ -154,8 +156,7 @@ four of the five parts of the hands-on in :doc:`l6_code`.
       Twice the distance, twice the error: a straight line, as in the
       lecture's graph.
 
-      Question 4: :math:`0.29 / 0.02618 = 11.1` m on a local street, and
-      :math:`0.57 / 0.02618 = 21.8` m on a freeway. The budget is gone in
+      Question 4: :math:`0.29 / 0.02618 = 11.1` m. The bound is used up in
       less than a block.
 
       Question 5: :math:`\sin(\text{heading error}) = 0.29 / 100 = 0.0029`,
@@ -181,9 +182,9 @@ four of the five parts of the hands-on in :doc:`l6_code`.
            - 0.08 rad, :math:`4.58^\circ`
            - :math:`15 \times 0.002 \times 40^2 / 2 = 24.0` m
 
-      Twice the time, four times the error. A program that integrates the
-      same straight drive in steps of 0.05 s gives 1.51 m, 6.01 m and
-      24.02 m: the formula is close.
+      Twice the time, four times the error. A program that applies the
+      lecture's rule to the same straight drive every 0.05 s (move, then
+      turn) gives 1.49 m, 5.98 m and 23.96 m: the formula is close.
 
       Question 8: set :math:`v\,b\,t^2/2 = 0.29`, so
       :math:`t^2 = 2 \times 0.29 / (15 \times 0.002) = 0.58 / 0.03 = 19.3`
@@ -194,12 +195,15 @@ four of the five parts of the hands-on in :doc:`l6_code`.
       AV out of its lane.
 
       Question 10: :math:`0.001 \times 54.8 = 0.0548` rad, :math:`3.14^\circ`.
-      The formula gives :math:`7.3 \times 0.001 \times 54.8^2 / 2 = 11.0` m,
-      against 9.03 m measured. The formula assumes a straight road at a
-      constant speed. The route turns, and the lecture's plot shows the two
-      paths crossing again at some corners, so the measured error does not
-      follow the formula. Both say the same thing: meters of error, against
-      a bound of 0.29 m.
+      The measured :math:`6.0^\circ` is about twice that: the lecture says
+      CARLA's own gyro reads a little more turning than the AV makes in a
+      turn, so most of the heading error comes at the corners. The formula
+      gives :math:`7.3 \times 0.001 \times 54.8^2 / 2 = 11.0` m, against
+      9.03 m measured. The formula assumes a straight road at a constant
+      speed. The route turns, and after a corner the old sideways error
+      points along the new road, so the two paths can cross and the measured
+      error does not follow the formula. Both say the same thing: meters of
+      error, against a bound of 0.29 m.
 
       For the sentences: a speed error stretches the path along the road,
       and grows only with the distance. A heading error pushes the AV
@@ -242,10 +246,11 @@ four of the five parts of the hands-on in :doc:`l6_code`.
 
    **Part B. The eight runs**
 
-   The hands-on ran the fused filter eight times on the drive: with the GNSS
-   outage or with GNSS always, with or without the wheels, with or without
-   map matching. The table gives each run's APE and its worst error, from
-   :doc:`l6_code`.
+   The lecture ran the fused filter eight times on the drive: with the GNSS
+   outage or with GNSS always, with or without the wheel speed, with or
+   without map matching. The table gives each run's APE, as on the slides,
+   and its worst error, as the title of the hands-on window prints it
+   (:doc:`l6_code`).
 
    .. list-table::
       :widths: 18 18 16 24 24
@@ -281,7 +286,7 @@ four of the five parts of the hands-on in :doc:`l6_code`.
         - yes
         - no
         - 1.28
-        - 2.62
+        - 2.61
       * - always
         - yes
         - yes
@@ -307,7 +312,7 @@ four of the five parts of the hands-on in :doc:`l6_code`.
       map do to the APE, and to the worst error?
    7. The run "outage, no wheels, map" has the worst APE of the eight.
       Explain why, with the lecture's timeline of that run.
-   8. Why can we compute APE on the drive, and why can a real car not?
+   8. Why can we compute APE on the drive, and why can a real AV not?
 
    .. raw:: html
 
@@ -357,29 +362,33 @@ four of the five parts of the hands-on in :doc:`l6_code`.
       worst error rises from 5.93 m to 6.81 m. Again, one number per run
       does not tell the whole story.
 
-      Question 7: for ten seconds of the outage, 35 s to 44 s, ICP gives one
-      pose per second, all accepted. At 45 s the NIS gate rejects one match,
-      and at 46 s the next fit fails its quality check and is dropped. With
-      no wheels and no GNSS, nothing measures the speed, so at 46.5 s the
-      filter's position :math:`\sigma` passes 2 m, the limit chosen for
-      starting ICP, and ICP stops. The filter coasts on the gyro alone and
-      is 65.6 m off at 79.2 s, until GNSS returns at 89.0 s. ICP keeps the
-      AV localized only while it has a good starting guess.
+      Question 7: from 35 s to 44 s of the outage, ICP matches the scan to
+      the map every second, the match passes the checks, and the filter uses
+      it. At 45 s a match is thrown out: it puts the AV too far from where
+      the filter expected it. At 46 s the next one is thrown out too: the
+      scan does not line up well with the map. With no wheel speed and no
+      GNSS, nothing tells the filter how far the AV moves, so from 46.5 s it
+      is too unsure to give ICP a good start, and ICP is no longer run. The
+      filter knows only how the AV turns and is 65.6 m off at 79.2 s, until
+      GNSS returns at 89.0 s. ICP keeps the AV located only while it starts
+      from a good guess.
 
       Question 8: APE needs the true position at every step. CARLA knows it;
-      a real car never does. That is the Integrity section's problem: the
-      car has to judge its pose without the truth.
+      a real AV never does. On the road the AV has to judge its pose without
+      the truth, for example by comparing GNSS with map matching and by
+      checking each match against the filter's prediction.
 
 
-.. dropdown:: Exercise 3. One ICP Fit by Hand
+.. dropdown:: Exercise 3. ICP Step 2 by Hand
    :icon: number
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Run Step 2 of the ICP loop, the best rotation and shift for a set of
-   pairs, with the five steps of the lecture, on new numbers.
+   Run step 2 of the ICP loop, the best turn and shift for a set of pairs,
+   with the six steps of the lecture's slide "ICP step 2 in general", on new
+   numbers.
 
    .. raw:: html
 
@@ -409,27 +418,26 @@ four of the five parts of the hands-on in :doc:`l6_code`.
         - (-5, -5)
         - (4, -8)
 
-   The scan points are centered (their centroid is the origin) and they are
-   not on one line, as in the lecture's example. The cross-covariance is
-   :math:`H = \sum_i p_i'\,q_i'^{\top}`, so :math:`H_{11} = \sum p_x' q_x'`,
-   :math:`H_{12} = \sum p_x' q_y'`, :math:`H_{21} = \sum p_y' q_x'` and
-   :math:`H_{22} = \sum p_y' q_y'`.
+   The scan points are not on one line. Step 3 builds
+   :math:`H = \sum_i p_i'\,q_i'^{\top}`, a :math:`2 \times 2` matrix, so
+   :math:`H_{11} = \sum p_x' q_x'`, :math:`H_{12} = \sum p_x' q_y'`,
+   :math:`H_{21} = \sum p_y' q_x'` and :math:`H_{22} = \sum p_y' q_y'`.
 
    .. raw:: html
 
       <hr>
 
-   **Part A. The five steps**
+   **Part A. The six steps**
 
    1. **Centroids:** compute :math:`\bar p` and :math:`\bar q`.
    2. **Center:** compute :math:`p_i' = p_i - \bar p` and
       :math:`q_i' = q_i - \bar q`.
-   3. **Cross-covariance:** compute the four entries of :math:`H`, each as a
-      sum over the three pairs.
-   4. **Rotation:** compute
-      :math:`\alpha = \operatorname{atan2}(H_{12} - H_{21},\ H_{11} + H_{22})`
-      and write :math:`R`.
-   5. **Shift:** compute :math:`t = \bar q - R\,\bar p`.
+   3. **Compare:** compute the four entries of :math:`H`, each as a sum
+      over the three pairs.
+   4. **Angle:** compute
+      :math:`\alpha = \operatorname{atan2}(H_{12} - H_{21},\ H_{11} + H_{22})`.
+   5. **Turn:** write the rotation matrix :math:`R` of that angle.
+   6. **Shift:** compute :math:`t = \bar q - R\,\bar p`.
 
    .. raw:: html
 
@@ -437,8 +445,8 @@ four of the five parts of the hands-on in :doc:`l6_code`.
 
    **Part B. Check and read the answer**
 
-   6. Move all three scan points with :math:`R\,p_i + t`. Where do they land?
-   7. The scan points are in the vehicle frame. What pose
+   7. Move all three scan points with :math:`R\,p_i + t`. Where do they land?
+   8. The scan points are in the vehicle frame. What pose
       :math:`(x, y, \theta)` of the AV puts this scan on top of the map?
 
    .. raw:: html
@@ -447,11 +455,11 @@ four of the five parts of the hands-on in :doc:`l6_code`.
 
    **Part C. Two variations**
 
-   8. Add :math:`(1, 1)` to every scan point, keep the map points, and redo
-      the five steps. What changes, and what does not?
-   9. Suppose you build :math:`H` the wrong way round,
-      :math:`\sum_i q_i'\,p_i'^{\top}`. What angle does the short form give,
-      and what does that rotation do?
+   9. Add :math:`(1, 1)` to every scan point, keep the map points, and redo
+      the six steps. What changes, and what does not?
+   10. Suppose you build :math:`H` the wrong way round,
+       :math:`\sum_i q_i'\,p_i'^{\top}`. What angle does step 4 give, and
+       what does that rotation do?
 
    .. raw:: html
 
@@ -459,8 +467,8 @@ four of the five parts of the hands-on in :doc:`l6_code`.
 
    **Deliverable**
 
-   The five steps with the arithmetic, the three moved points, the AV's
-   pose, and a sentence each for questions 8 and 9.
+   The six steps with the arithmetic, the three moved points, the AV's
+   pose, and a sentence each for questions 9 and 10.
 
    .. dropdown:: Guidance
       :color: success
@@ -490,17 +498,19 @@ four of the five parts of the hands-on in :doc:`l6_code`.
 
       Question 4: :math:`H_{12} - H_{21} = 55 - (-25) = 80` and
       :math:`H_{11} + H_{22} = 10 + 50 = 60`, so
-      :math:`\alpha = \operatorname{atan2}(80, 60) = 53.13^\circ`. The two
-      numbers are 80 and 60, and :math:`\sqrt{80^2 + 60^2} = 100`, so
+      :math:`\alpha = \operatorname{atan2}(80, 60) = 53.13^\circ`.
+
+      Question 5: the two numbers are 80 and 60, and
+      :math:`\sqrt{80^2 + 60^2} = 100`, so
       :math:`\cos\alpha = 60/100 = 0.6` and :math:`\sin\alpha = 80/100 = 0.8`:
 
       .. math::
 
          R = \begin{pmatrix} 0.6 & -0.8 \\ 0.8 & 0.6 \end{pmatrix}
 
-      Question 5: :math:`t = (3, -1) - R\,(0, 0) = (3, -1)`.
+      Question 6: :math:`t = (3, -1) - R\,(0, 0) = (3, -1)`.
 
-      Question 6:
+      Question 7:
 
       - :math:`R\,p_1 = (0.6 \times 5,\ 0.8 \times 5) = (3, 4)`, plus
         :math:`t`: :math:`(6, 3) = q_1`.
@@ -510,23 +520,23 @@ four of the five parts of the hands-on in :doc:`l6_code`.
         :math:`(4, -8) = q_3`.
 
       All three land on their map points. The pairs were built from an exact
-      rotation and shift, so the fit is perfect. On the car the pairs come
+      rotation and shift, so the fit is perfect. On the AV the pairs come
       from nearest neighbors, so they are partly wrong at first, and the loop
       repeats.
 
-      Question 7: :math:`R` and :math:`t` move points from the vehicle frame
+      Question 8: :math:`R` and :math:`t` move points from the vehicle frame
       into the map frame, so they are the AV's pose: :math:`x = 3` m,
       :math:`y = -1` m, :math:`\theta = 53.13^\circ`.
 
-      Question 8: :math:`\bar p` becomes :math:`(1, 1)`, but the centered
+      Question 9: :math:`\bar p` becomes :math:`(1, 1)`, but the centered
       points :math:`p_i'` are the same as before, so :math:`H` and
       :math:`\alpha = 53.13^\circ` do not change. The shift does:
       :math:`R\,\bar p = (0.6 - 0.8,\ 0.8 + 0.6) = (-0.2, 1.4)`, so
-      :math:`t = (3 - (-0.2),\ -1 - 1.4) = (3.2, -2.4)`. Centering in Step 2
-      keeps the rotation separate from the shift; Step 5 then puts the shift
+      :math:`t = (3 - (-0.2),\ -1 - 1.4) = (3.2, -2.4)`. Centering in step 2
+      keeps the turn separate from the shift; step 6 then puts the shift
       back.
 
-      Question 9: the swapped matrix is :math:`H` turned over its diagonal,
+      Question 10: the swapped matrix is :math:`H` turned over its diagonal,
       so :math:`H_{12}` and :math:`H_{21}` trade places:
       :math:`\operatorname{atan2}(-25 - 55,\ 60) = \operatorname{atan2}(-80,
       60) = -53.13^\circ`. That rotation turns the map onto the scan, the
@@ -534,15 +544,15 @@ four of the five parts of the hands-on in :doc:`l6_code`.
       matters.
 
 
-.. dropdown:: Exercise 4. The NIS Gate
+.. dropdown:: Exercise 4. Weigh and Resample in MCL
    :icon: number
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Decide by hand whether the filter accepts an update, with the 0.99
-   bounds of the lecture, and see both kinds of mistake the gate makes.
+   Run MCL's weigh, normalize and resample steps by hand on four particles,
+   with the lecture's score and its rule for when to resample.
 
    .. raw:: html
 
@@ -550,81 +560,91 @@ four of the five parts of the hands-on in :doc:`l6_code`.
 
    **Specification**
 
-   L3's test: :math:`\varepsilon = \boldsymbol{\nu}^\top S^{-1}
-   \boldsymbol{\nu}`, where :math:`\boldsymbol{\nu}` is the surprise (the
-   reading minus what the state predicts) and :math:`S` is the surprise the
-   filter expects. In this exercise :math:`S` is given, and its numbers do
-   not affect each other (chosen for this exercise), with a standard
-   deviation :math:`\sigma` for each number. Then :math:`\varepsilon` is a
-   sum with one term per number, the one-number form of L3,
-   :math:`\nu^2/S`, added up:
+   Each scan point is placed in the map frame with a particle's pose and
+   scored by the lecture's likelihood field, with our code's values:
 
    .. math::
 
-      \varepsilon = \Big(\frac{\nu_1}{\sigma_1}\Big)^2 +
-                    \Big(\frac{\nu_2}{\sigma_2}\Big)^2 + \dots
+      p(d) = 0.9\, e^{-d^2/2} + 0.1/3
 
-   Reject the update if :math:`\varepsilon` is above **9.21** for a GNSS fix
-   (2 numbers, :math:`x` and :math:`y`) or above **11.34** for a matched
-   pose (3 numbers, :math:`x`, :math:`y` and :math:`\theta`): the
-   chi-square 0.99 bounds.
+   where :math:`d` is the distance from the scan point to the nearest map
+   point. Past :math:`d_\text{max} = 3` m, the first term is 0, so the score
+   is only :math:`0.1/3 = 0.033`.
 
-   .. raw:: html
+   Four particles A, B, C and D start with equal weights. One scan of three
+   points gives these distances (all chosen for this exercise):
 
-      <hr>
+   .. list-table::
+      :widths: 25 25 25 25
+      :header-rows: 1
+      :class: compact-table
 
-   **Part A. One GNSS fix, two moments**
+      * - **Particle**
+        - **Point 1 (m)**
+        - **Point 2 (m)**
+        - **Point 3 (m)**
+      * - A
+        - 0.2
+        - 0.0
+        - 0.4
+      * - B
+        - 0.8
+        - 1.1
+        - 0.6
+      * - C
+        - 1.5
+        - 2.2
+        - 3.4
+      * - D
+        - 0.5
+        - 0.7
+        - 0.9
 
-   A fix arrives 2.0 m east and 1.5 m south of the filter's predicted
-   position: :math:`\boldsymbol{\nu} = (2.0, -1.5)` m (chosen for this
-   exercise).
-
-   1. How far is the fix from the prediction?
-   2. Before the outage, the filter expects :math:`\sigma = 0.8` m in
-      :math:`x` and in :math:`y`. Compute :math:`\varepsilon`. Accept or
-      reject?
-   3. Just after the outage, :math:`P` is large and the filter expects
-      :math:`\sigma = 3.0` m in each. Same fix: compute :math:`\varepsilon`.
-      Accept or reject?
-   4. With equal :math:`\sigma` in :math:`x` and :math:`y`, the gate is a
-      circle of radius :math:`\sqrt{9.21}\,\sigma = 3.03\,\sigma`. Compute it
-      for both moments.
-   5. Suppose the fix of question 3 is multipath, 2.5 m off. Which mistake
-      has the gate made?
-
-   .. raw:: html
-
-      <hr>
-
-   **Part B. Two matched poses**
-
-   ICP's pose arrives with :math:`\sigma = 0.2` m in :math:`x` and in
-   :math:`y`, and :math:`1.0^\circ` in :math:`\theta` (chosen for this
-   exercise).
-
-   6. Pose 1: :math:`\boldsymbol{\nu} = (0.4 \text{ m},\ -0.3 \text{ m},\
-      2.0^\circ)`. Compute :math:`\varepsilon`. Accept or reject?
-   7. A programmer uses 9.21 for every update. What happens to pose 1, and
-      which mistake is that?
-   8. Pose 2: :math:`\boldsymbol{\nu} = (0.1 \text{ m},\ 0.1 \text{ m},\
-      4.0^\circ)`. Compute :math:`\varepsilon`. Accept or reject? Which
-      number causes it?
+   Our code resamples only when
+   :math:`N_\text{eff} = 1 / \sum_i w_i^2` is below :math:`N/2`, and it
+   resamples by the lecture's systematic method: :math:`N` pointers at
+   :math:`(r + k)/N`, :math:`k = 0, \dots, N-1`, on a bar where the weights
+   lie end to end.
 
    .. raw:: html
 
       <hr>
 
-   **Part C. The drive's NIS**
+   **Part A. The first scan**
 
-   On the run with the outage, wheels and map, the lecture measured: GNSS,
-   mean NIS 2.12 over 68 fixes, 1 above 9.21; map poses, mean NIS 2.50 over
-   118 poses, 0 above 11.34.
+   1. Score every point. Which point scores only the floor, and why?
+   2. Multiply each particle's three scores.
+   3. Normalize: divide each product by their sum.
+   4. Compute :math:`N_\text{eff}`. Does MCL resample after this scan?
 
-   9. What mean does an honest filter give for each source?
-   10. At 0.99, how many updates of each source do you expect above the
-       bound, on average? Compare with what was measured.
-   11. Is the filter honest about each source? Which side is the map on, and
-       is that the safe side?
+   .. raw:: html
+
+      <hr>
+
+   **Part B. The second scan**
+
+   The AV drives on, and the next scan gives each particle the same three
+   distances as before (chosen for this exercise, to keep the arithmetic
+   short).
+
+   5. Multiply each weight from question 3 by the particle's product from
+      question 2, and normalize again.
+   6. Compute :math:`N_\text{eff}`. Does MCL resample now?
+   7. Resample with the random start :math:`r = 0.3` (chosen for this
+      exercise). Where are the four pointers, and how many copies does each
+      particle get? Compare with :math:`N` times each weight.
+
+   .. raw:: html
+
+      <hr>
+
+   **Part C. Why the floor**
+
+   8. A parked car that the map does not have stands next to the AV. A's
+      third point hits it and lands 3.5 m from the nearest map point, so A's
+      distances are 0.2, 0.0 and 3.5 m. Compute A's product with the floor,
+      and without it (score :math:`0.9\,e^{-d^2/2}` up to 3 m, 0 past it).
+      What does one such point do to a good particle without the floor?
 
    .. raw:: html
 
@@ -632,55 +652,89 @@ four of the five parts of the hands-on in :doc:`l6_code`.
 
    **Deliverable**
 
-   Every :math:`\varepsilon` with its arithmetic and its verdict, the two
-   gate radii, and two sentences for Part C.
+   The table of scores, the weights after each scan, both
+   :math:`N_\text{eff}` with their verdicts, the copies after resampling,
+   and a sentence on what the floor is for.
 
    .. dropdown:: Guidance
       :color: success
 
-      Question 1: :math:`\sqrt{2.0^2 + 1.5^2} = \sqrt{6.25} = 2.5` m.
+      Question 1: the scores, rounded to 4 decimals:
 
-      Question 2: :math:`(2.0/0.8)^2 + (1.5/0.8)^2 = 6.25 + 3.52 = 9.77`.
-      Above 9.21: **reject**.
+      .. list-table::
+         :widths: 20 20 20 20 20
+         :header-rows: 1
+         :class: compact-table
 
-      Question 3: :math:`(2.0/3.0)^2 + (1.5/3.0)^2 = 0.44 + 0.25 = 0.69`.
-      Far below 9.21: **accept**. The same 2.5 m is a large surprise for a
-      filter that expects 0.8 m, and a small one for a filter that expects
-      3.0 m.
+         * - **Particle**
+           - **Point 1**
+           - **Point 2**
+           - **Point 3**
+           - **Product**
+         * - A
+           - 0.9155
+           - 0.9333
+           - 0.8641
+           - 0.7384
+         * - B
+           - 0.6869
+           - 0.5248
+           - 0.7851
+           - 0.2830
+         * - C
+           - 0.3255
+           - 0.1134
+           - 0.0333
+           - 0.0012
+         * - D
+           - 0.8276
+           - 0.7378
+           - 0.6336
+           - 0.3869
 
-      Question 4: :math:`3.03 \times 0.8 = 2.43` m before the outage, and
-      :math:`3.03 \times 3.0 = 9.10` m just after it. The fix, 2.5 m off,
-      is just outside the first circle and well inside the second.
+      For example, A's first point:
+      :math:`0.9 \times e^{-0.2^2/2} + 0.0333 = 0.9 \times 0.9802 + 0.0333
+      = 0.9155`. C's third point, 3.4 m away, is past 3 m, so it scores only
+      the floor, 0.0333.
 
-      Question 5: a **missed fault**: a bad update accepted. After the
-      outage :math:`P` is large, so :math:`S` is large, and
-      :math:`\varepsilon` stays small. The filter moves toward a fix that is
-      2.5 m wrong, as in the lecture's example of a multipath fix 3 m off.
+      Question 2: the last column of the table.
 
-      Question 6: :math:`(0.4/0.2)^2 + (0.3/0.2)^2 + (2.0/1.0)^2 = 4 + 2.25
-      + 4 = 10.25`. Below 11.34: **accept**.
+      Question 3: the sum is
+      :math:`0.7384 + 0.2830 + 0.0012 + 0.3869 = 1.4095`. Weights:
+      A :math:`0.7384 / 1.4095 = 0.524`, B 0.201, C 0.001, D 0.274.
 
-      Question 7: 10.25 is above 9.21, so the pose is rejected. If the pose
-      was right, that is a **false alarm**: a good update rejected. The cost
-      is that the filter coasts on dead reckoning a little longer. A pose
-      reports 3 numbers, so its bound is 11.34.
+      Question 4:
 
-      Question 8: :math:`(0.1/0.2)^2 + (0.1/0.2)^2 + (4.0/1.0)^2 = 0.25 +
-      0.25 + 16 = 16.5`. Above 11.34: **reject**. The position fits; the
-      heading is 4 standard deviations off and alone gives 16.
+      1. Square each weight: 0.2744, 0.0403, 0.0000, 0.0753.
+      2. Add them: 0.3901.
+      3. :math:`N_\text{eff} = 1 / 0.3901 = 2.56`.
+      4. The cutoff is :math:`N/2 = 4/2 = 2`. 2.56 is above it: no
+         resampling yet. The weights carry over to the next scan.
 
-      Question 9: about 1 per number: 2 for a GNSS fix, 3 for a pose.
+      Question 5: products of weight and score: A
+      :math:`0.524 \times 0.7384 = 0.3868`, B 0.0568, C 0.0000, D 0.1062.
+      Their sum is 0.5498, so the weights are A 0.704, B 0.103, C 0.000,
+      D 0.193.
 
-      Question 10: about 1 in 100 honest updates lands above the bound:
-      :math:`0.01 \times 68 = 0.68` GNSS fixes and
-      :math:`0.01 \times 118 = 1.18` map poses. Measured: 1 and 0, both close
-      to what an honest filter gives.
+      Question 6: :math:`0.704^2 + 0.103^2 + 0.000^2 + 0.193^2 = 0.495 +
+      0.011 + 0.000 + 0.037 = 0.543`, so :math:`N_\text{eff} = 1/0.543 =
+      1.84`. That is below 2: MCL resamples.
 
-      Question 11: GNSS, 2.12 against 2: honest. The map, 2.50 against 3: a
-      little below, so the filter slightly overestimates the map's error. It
-      is a little underconfident about the map, which is the safe side. An
-      overconfident filter would make false alarms; an underconfident one
-      misses faults.
+      Question 7: the pointers are at :math:`0.3/4 = 0.075`,
+      :math:`1.3/4 = 0.325`, :math:`2.3/4 = 0.575` and
+      :math:`3.3/4 = 0.825`. On the bar, A covers 0 to 0.704, B 0.704 to
+      0.807, C a sliver at 0.807, and D 0.807 to 1. The first three pointers
+      land in A, the last in D: A gets 3 copies, D 1, B and C none. On
+      average a particle gets :math:`N` times its weight: A 2.81, B 0.41,
+      C 0.00, D 0.77. The random start rounds these to whole copies, and here
+      B, with 0.41, gets none. After resampling every weight is
+      :math:`1/4` again.
+
+      Question 8: with the floor, A's scores are 0.9155, 0.9333 and 0.0333,
+      and the product is 0.0285, about 26 times smaller than its 0.7384
+      before. Without the floor the third score is 0, so the product is 0: one
+      point that hits something the map lacks wipes out the best particle,
+      whatever its other points say. The floor keeps that from happening.
 
 
 .. dropdown:: Exercise 5. A Pose Graph with One Loop
@@ -814,7 +868,7 @@ four of the five parts of the hands-on in :doc:`l6_code`.
 
    **Goal**
 
-   Run the lecture's four hands-on parts and compare what you see with the
+   Run the lecture's hands-on parts and compare what you see with the
    slides: dead reckoning, the fused filter's eight runs, MCL and ICP.
 
    .. raw:: html
@@ -834,10 +888,16 @@ four of the five parts of the hands-on in :doc:`l6_code`.
 
    **Part A. Dead reckoning:** ``python3 l6_handson.py --part dr``
 
-   1. This part runs dead reckoning over the whole drive, from the true pose
-      at the start. Find the stretch where the error grows fastest. Is it on
-      a straight or in a turn? Explain it with the heading error, not the
-      speed error.
+   This part runs dead reckoning through the outage, from the true pose at
+   the last fix. Two check boxes hold the errors we chose: **gyro bias** and
+   **wheels 0.5 % fast**.
+
+   1. With both ticked, watch the heading error (bottom right). Where does
+      it step up: on the straights or at the corners?
+   2. Untick **gyro bias**. How much smaller is the worst position error?
+      Tick it again and untick **wheels 0.5 % fast**. Which error matters
+      more?
+   3. Untick both. The heading still ends off. What is left in the signals?
 
    .. raw:: html
 
@@ -845,12 +905,13 @@ four of the five parts of the hands-on in :doc:`l6_code`.
 
    **Part B. The fused filter:** ``python3 l6_handson.py --part ekf``
 
-   2. Tick and untick **GNSS outage**, **wheels** and **map matching**, and
+   4. Tick and untick **GNSS outage**, **wheels** and **map matching**, and
       write down the APE of each of the eight runs. Compare with Exercise 2.
-   3. In the outage, with wheels and no map, does the filter's own
-      :math:`1\sigma` (grey) grow as fast as its error (blue)?
-   4. Open the run "outage, no wheels, map" and its NIS plot. Where does it
-      lose the map?
+   5. In the outage, with wheels and no map, does the filter's own
+      :math:`1\sigma` (the shaded band) grow as fast as its error (the blue
+      line)?
+   6. Open the run "outage, no wheels, map". When does its error start to
+      grow, how large does it get, and when does it come back?
 
    .. raw:: html
 
@@ -858,11 +919,17 @@ four of the five parts of the hands-on in :doc:`l6_code`.
 
    **Part C. MCL:** ``python3 l6_handson.py --part mcl``
 
-   5. How long until the particles' spread is under 1 m? Where does the
-      error rise again, and what does the LiDAR see there?
-   6. Run ``--particles 200`` with ``--seed`` 0 to 4. How many runs find the
-      car? Compare the median error after the first 10 s with 2000
-      particles on the same seeds.
+   MCL computes for about 12 s before its window opens, and prints a line to
+   say so.
+
+   7. How long until the error is under 1 m? Watch the spread too: is a
+      small spread the same as a small error?
+   8. Run ``--particles 200`` with ``--seed`` 0 to 4, then 2000 particles
+      with the same seeds. Does every run find the AV? How fast?
+   9. Run ``--kidnap 40 0 10`` with seeds 0 to 4: at 40 s every particle
+      jumps 10 m north. Does MCL find the AV again? Then ``--kidnap 40 0 30``.
+      Then add ``--random 20`` and ``--random 100`` to the first: do random
+      particles help?
 
    .. raw:: html
 
@@ -870,11 +937,10 @@ four of the five parts of the hands-on in :doc:`l6_code`.
 
    **Part D. ICP:** ``python3 l6_handson.py --part icp``
 
-   7. Drag the slider. How many iterations until the RMSE stops falling?
-      Which walls pull the scan into place first?
-   8. Run ``--icp-start`` with ``3 -2 10``, ``4 -3 15`` and ``6 -4 20`` (east
-      and north offsets in meters, then degrees). How far off is each start?
-      Which ones still land on the walls?
+   10. Drag the slider. How many iterations until the RMSE stops falling?
+   11. Run ``--icp-start`` with ``3 -2 10``, ``4 -3 15`` and ``6 -4 20`` (east
+       and north offsets in meters, then degrees). How far off is each start?
+       Which ones still land on the walls?
 
    .. raw:: html
 
@@ -891,50 +957,87 @@ four of the five parts of the hands-on in :doc:`l6_code`.
       The reference numbers come from the shipped drive and the default
       seed, 818, unless a seed is named (see :doc:`l6_code`).
 
-      Question 1: ``--part dr`` starts dead reckoning from the true pose at
-      the last fix before the outage, as the lecture does, and runs it to the
-      next fix, 401 m on. The error is 2.69 m after 100 m, 3.56 m after 200 m,
-      8.24 m after 300 m, at worst 9.03 m (at 329 m), and 7.84 m at the next
-      fix. It grows fastest from 250 m to 300 m, from 4.59 m to 8.24 m, on the
-      straight middle street: the true heading turns less than one degree
-      there, and the estimated heading is about :math:`5^\circ` off. On a
-      straight, a heading error pushes the AV sideways by the same amount
-      every meter: :math:`50 \times \sin 5^\circ = 4.4` m in 50 m. The
-      wheels' 0.5% only stretches the path along the road.
+      Question 1: at the corners. The heading error ends at
+      :math:`+6.0^\circ`; while the gyro reads a turn (faster than 0.1 rad/s,
+      about a third of the outage), it grows by :math:`5.8^\circ`, and on the
+      straights by :math:`0.15^\circ`. The position error is 2.69 m after
+      100 m, at worst 9.03 m (at 329 m), and 7.84 m at the next fix, 401 m
+      on.
 
-      Question 2: the table of Exercise 2: 4.99, 0.52, 4.58 and 27.66 m with
+      Question 2: without the gyro bias, the worst error is 4.33 m instead
+      of 9.03 m, and the heading ends :math:`+2.8^\circ` off. Without the
+      wheel error (gyro bias back on), the worst error is 9.24 m, a little
+      larger than with it. The gyro bias matters far more: the wheel error
+      only stretches the path along the road.
+
+      Question 3: with neither error, the worst error is 4.49 m, and the
+      heading still ends :math:`+2.8^\circ` off. What is left is the
+      sensors' noise and CARLA's own gyro, which reports a little more
+      turning than the AV makes in a corner.
+
+      Question 4: the table of Exercise 2: 4.99, 0.52, 4.58 and 27.66 m with
       the outage; 1.28, 0.47, 1.97 and 1.38 m with GNSS always. The map
-      lowers the APE most.
+      lowers the APE most. The window's title rounds two of them the other
+      way, 0.51 and 27.67 m: the stored values are 0.515 and 27.665 m.
 
-      Question 3: no. With wheels and no map, the filter's :math:`1\sigma`
+      Question 5: no. With wheels and no map, the filter's :math:`1\sigma`
       is 3.93 m at the outage's worst moment, where the real error is
-      9.50 m: the filter is overconfident.
+      9.50 m, and the error stays above the band the whole outage: the
+      filter is overconfident.
 
-      Question 4: the NIS gate rejects one map match at 45 s, the next fit
-      is dropped at 46 s, and from 46.5 s the filter's :math:`\sigma` is
-      above the 2 m limit for starting ICP. The run stays lost until GNSS
-      returns at 89.0 s (Exercise 2, question 7).
+      Question 6: ICP is used from 35 s to 44 s. Two matches are thrown out at 45 s and 46 s, and from 46.5 s ICP
+      is no longer run. The error grows to 65.6 m at about 79.2 s, the worst
+      of all eight runs, and GNSS brings it back at 89.0 s (Exercise 2,
+      question 7).
 
-      Question 5: with the default seed, the error is first under 1 m at
-      the 5th scan, 2.0 s in. After 10 s the median error is 0.20 m and the
-      worst 0.95 m. Where the error rises again, count the walls and poles
-      in the scan: MCL can place the car only where the scan has something
-      distinctive to match, as the box with and without its pillar showed.
+      Question 7: the error is first under 1 m at the 5th scan, 2.0 s after
+      the first scan. After the first 10 s its median is 0.20 m and its worst
+      0.95 m. The spread is under 0.31 m from the first scan on, even while
+      the error is 3.06 m: the first scan already puts almost all the weight on
+      very few particles. A small spread says the particles agree, not that
+      they are on the AV.
 
-      Question 6: all five runs find the car with 200 particles, and all
-      five with 2000. Median error after the first 10 s, seeds 0 to 4: 0.29,
-      0.78, 0.29, 0.37 and 0.70 m with 200 particles; 0.28, 0.21, 0.27, 0.20
-      and 0.34 m with 2000. Fewer particles cover the start more thinly, so
-      the answer is less precise.
+      Question 8: every run finds the AV in the end, but not equally fast.
+      With 200 particles, seeds 1 and 4 stay 5 to 10 m off until 64.0 s and
+      60.5 s. With 2000, every run is within 2 m of the AV by 33.5 s. After
+      70 s, all ten runs reach 0.80 to 1.11 m at worst, with 200 or 2000:
+      more particles help to find the AV, not once it is found.
 
-      Question 7: the default start is :math:`5^\circ` off, 1.5 m east and
+      Question 9: seconds after the jump until the error is first under 1 m,
+      seeds 0 to 4:
+
+      .. list-table::
+         :widths: 45 55
+         :header-rows: 1
+         :class: compact-table
+
+         * - **Run**
+           - **Seeds 0 to 4**
+         * - ``--kidnap 40 0 10``
+           - 21.6, 16.6, 16.6, 45.1, 10.6
+         * - ``--kidnap 40 0 30``
+           - never, 72.1, never, never, never
+         * - ``--kidnap 40 0 10 --random 20``
+           - 4.6, never, 21.1, 6.1, never
+         * - ``--kidnap 40 0 10 --random 100``
+           - 3.6, 11.1, 2.6, 1.6, 10.1
+
+      A 10 m jump heals by itself on this drive; a 30 m jump mostly does
+      not. Random particles can speed the return, but with 20 per scan two
+      runs never come back: seed 1 ends 29.8 m off and seed 4 73.4 m off.
+      From 50 s of the drive on, their median error is 101 m and 64 m while
+      their median spread is 0.38 m and 0.28 m, as the lecture says.
+
+      Question 10: the default start is :math:`5^\circ` off, 1.5 m east and
       1.0 m south. ICP takes 28 iterations; the RMSE of the pairs falls from
       1.32 m to 0.06 m, and the final pose is 0.02 m and :math:`0.02^\circ`
       from the truth.
 
-      Question 8: ``3 -2 10`` starts :math:`\sqrt{3^2 + 2^2} = 3.6` m and
+      Question 11: ``3 -2 10`` starts :math:`\sqrt{3^2 + 2^2} = 3.6` m and
       :math:`10^\circ` off; ``4 -3 15`` starts 5 m and :math:`15^\circ` off;
-      ``6 -4 20`` starts 7.2 m and :math:`20^\circ` off. The first two land
-      within 0.10 m of the truth. The last ends 7.09 m off, on the wrong
-      walls. ICP needs a good starting guess, which is why the filter's own
-      pose starts it, and why a lost AV needs MCL.
+      ``6 -4 20`` starts 7.2 m and :math:`20^\circ` off. All three stop at
+      the 30-round limit. The first ends 0.02 m off and the second 0.10 m
+      off. The last ends 7.09 m and :math:`16.6^\circ` off, on the wrong
+      walls, with an RMSE still at 1.53 m. ICP needs a good starting guess,
+      which is why the filter's own pose starts it, and why a lost AV needs
+      MCL.

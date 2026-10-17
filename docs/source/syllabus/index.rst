@@ -683,7 +683,7 @@ all other Thursdays meet as scheduled. Dates below are given as MM/DD.
      - :assignment:`GP2 posted (Wed, Oct 14)`
    * - 10/22
      - 8
-     - Navigation & Route Planning
+     - Route Planning
      - L7
      -
    * - 10/29

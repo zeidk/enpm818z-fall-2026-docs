@@ -13,8 +13,8 @@ Quiz
    through this page is good preparation for one. Memorising the answers
    below is not.
 
-This quiz covers the key concepts from Lecture 7: Navigation & Route
-Planning. Topics include the navigation vs. motion planning distinction,
+This quiz covers the key concepts from Lecture 7: Route Planning.
+Topics include the navigation vs. motion planning distinction,
 road network graph representation, OpenDRIVE and Lanelet2 map formats,
 HD maps, multi-objective cost functions, Dijkstra and A* on road graphs,
 lane-level routing, dynamic rerouting, CARLA's GlobalRoutePlanner, and

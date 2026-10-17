@@ -91,9 +91,9 @@ course GitHub repository. Integrate them into your package as-is.
        Wraps the CARLA Python API for ROS 2 compatibility.
    * - ``carla_vehicle_control.py``
      - Helper node that subscribes to a custom
-       ``VehicleCmd`` message (throttle, brake, steer)
-       and converts it to ``carla_msgs/CarlaEgoVehicleControl``
-       for the CARLA ROS bridge.
+       ``VehicleCmd`` message (throttle, brake, steer) on
+       ``/control/vehicle_cmd`` and converts it to
+       ``carla_msgs/CarlaEgoVehicleControl`` for the CARLA ROS bridge.
    * - ``traffic_light_detector.py``
      - ROS 2 node that reads the current traffic light state
        directly from the CARLA API (ground truth) and publishes
@@ -143,10 +143,12 @@ invest your effort in making the end-to-end integration robust.
 
    **A* on the CARLA Waypoint Graph:**
 
-   The CARLA world exposes a waypoint graph: each waypoint has
-   ``get_next(distance)`` returning successor waypoints. Represent the
-   graph as an adjacency list and run A* with Euclidean distance as the
-   heuristic.
+   The CARLA world exposes a waypoint graph: a waypoint's
+   ``next(distance)`` (``carla.Waypoint.next``) returns its successor
+   waypoints, and the provided ``get_next_waypoint(wp, distance)`` wraps
+   it. Represent the graph as an adjacency list and run A* with an
+   admissible heuristic of your choice: the straight-line distance to the
+   goal is one (L7).
 
    .. code-block:: python
 
@@ -169,6 +171,22 @@ invest your effort in making the end-to-end integration robust.
           difference.
           """
           raise NotImplementedError("GP4: astar_waypoints")
+
+   .. important::
+
+      **CARLA's own route planner is a checker, not your planner.** A CARLA
+      install includes ``GlobalRoutePlanner``
+      (``PythonAPI/carla/agents/navigation/global_route_planner.py``),
+      which builds a graph from ``get_topology()`` and runs A*. You may use
+      it only in your tests, to compare your routes with its routes; report
+      the comparison. ``planner_node.py`` and the files it imports must not
+      import ``agents.navigation``: the grade is for your own
+      ``astar_waypoints``. CARLA's planner counts waypoints: an edge costs
+      the number of waypoints sampled along it (about its length divided
+      by the sampling resolution), and a lane change costs 0. Compare
+      with distance costs and the same resolution. A route clearly longer
+      than CARLA's on the same start and goal points to an inadmissible
+      heuristic or a missing edge.
 
    **Re-Planning Triggers:**
 
@@ -226,8 +244,10 @@ invest your effort in making the end-to-end integration robust.
 
    **Publications:**
 
-   - ``/carla/ego_vehicle/vehicle_control_cmd``: ``carla_msgs/CarlaEgoVehicleControl``
-     (via ``carla_vehicle_control.py`` helper)
+   - ``/control/vehicle_cmd``: ``VehicleCmd`` (throttle, brake, steer).
+     The provided ``carla_vehicle_control.py`` converts it and publishes
+     ``carla_msgs/CarlaEgoVehicleControl`` on
+     ``/carla/ego_vehicle/vehicle_control_cmd``.
 
    **Pure Pursuit: Lateral Control**
 
@@ -656,7 +676,8 @@ Grading Rubric
      - Criteria
    * - Path Planner
      - 30
-     - A* correctly implemented on CARLA waypoint graph; path
+     - A* correctly implemented on CARLA waypoint graph, with no import
+       of ``agents.navigation`` in the planner; path
        published as ``nav_msgs/Path``; re-planning triggers work
        (obstacle on path and deviation > 2 m); goal specified
        via parameter; planner does not crash on no-path scenarios.
@@ -690,7 +711,7 @@ Common Mistakes
 
    - **Calling CARLA API from a ROS callback thread.** The CARLA Python
      client is not thread-safe. All ``world.get_actors()``,
-     ``waypoint.get_next()``, and similar calls must happen in the
+     ``waypoint.next()``, and similar calls must happen in the
      main thread (timer callbacks), not inside subscriber callbacks.
      Use a shared-memory queue to pass data between callbacks and
      the planner timer.

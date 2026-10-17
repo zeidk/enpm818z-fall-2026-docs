@@ -835,7 +835,7 @@ autonomous driving stack:
      - GNSS/RTK, dead reckoning, visual and LiDAR odometry, MCL/AMCL,
        ICP, pose-graph optimization, loop closure
    * - L7
-     - Navigation & Route Planning
+     - Route Planning
      - Road-network graphs, OpenDRIVE and Lanelet2, HD maps,
        Dijkstra and A*, lane-level routing, dynamic rerouting
    * - L8

@@ -13,12 +13,13 @@ Quiz
    through this page is good preparation for one. Memorizing the answers
    below is not.
 
-This quiz covers Lecture 6: the AV's pose in the map frame and the accuracy it
-needs, GNSS in a city and RTK, dead reckoning and its drift, fusion in the EKF
-and the absolute pose error (APE), Monte Carlo localization (MCL), ICP scan
-matching, integrity with the NIS gate and the protection level, and SLAM with a
-pose graph and a loop closure. Every question can be answered from the slides
-shown in class. Nothing on this page needs the appendix.
+This quiz covers Lecture 6: the AV's pose in the map frame and the error bound
+it must meet, GNSS in a city and RTK, dead reckoning and its drift, fusion in
+the EKF and the absolute pose error (APE), Monte Carlo localization (MCL), ICP
+scan registration and how a match goes into the filter, and SLAM with a pose
+graph and a loop closure. Every question can be answered from the lecture
+notes, :doc:`l6_lecture`. Nothing on this page needs
+:doc:`Going Further <l6_appendix>`.
 
 .. note::
 
@@ -63,27 +64,27 @@ Multiple Choice (Questions 1 to 22)
    **B**.
 
    The map frame is fixed to the ground: :math:`x` east, :math:`y` north, in
-   meters from a chosen origin. The vehicle frame is fixed to the AV:
-   :math:`x` forward, :math:`y` left. The pose says where the vehicle frame's
-   origin sits in the map frame, and :math:`\theta` is the angle between the
-   two :math:`x` axes, counterclockwise. CARLA's :math:`y` points right; the
-   recorded drive flips it, so both frames turn counterclockwise. See the
-   Introduction in :doc:`l6_lecture`.
+   meters from a chosen origin. The vehicle frame is fixed to the AV, with
+   its origin at the middle of the rear axle: :math:`x` forward, :math:`y`
+   left. The pose says where the vehicle frame's origin sits in the map
+   frame, and :math:`\theta` is the angle from the map's :math:`x` axis to
+   the AV's :math:`x` axis, counterclockwise. See the Introduction in
+   :doc:`l6_lecture`.
 
 
 .. admonition:: Question 2
    :class: hint
 
-   The lecture quotes Reid and co-authors (2019) for a passenger car on local
-   streets: "lateral and longitudinal error bounds of 0.29 m (0.10 m, 95%)".
-   What does the 0.29 m bound mean?
+   The lecture scores every method against an error bound of 0.29 m for a
+   passenger car on a local street (Reid et al., 2019). What does that bound
+   mean?
 
    A. The average error of a good localizer.
 
    B. The error of an RTK receiver near its base station.
 
-   C. The error the AV must stay inside almost always: the paper derives it
-      at a failure rate of :math:`10^{-8}` per hour of driving.
+   C. The largest position error that still keeps the AV in its lane. The
+      error may pass it at most once in :math:`10^8` hours of driving.
 
    D. The width of a lane marking.
 
@@ -92,11 +93,14 @@ Multiple Choice (Questions 1 to 22)
 
    **C**.
 
-   The bound is the error the car may have, sideways and along the road,
-   and still be safe on a local street. The paper sets it so that the error
-   goes past it less than once in 100 million hours of driving. On freeways
-   the sideways bound is 0.57 m. The lecture compares every method against
-   0.29 m. See the Introduction in :doc:`l6_lecture`.
+   The paper defines it as "the allowable maximum position error of the
+   vehicle to ensure it is within the lane". The lecture builds it in two
+   steps. A 3.0 m lane and a 2.1 m wide car leave
+   :math:`(3.0 - 2.1)/2 = 0.45` m on each side on a straight road, but only
+   0.33 m in a turn of radius 20 m. A heading error of :math:`0.5^\circ`
+   uses 0.04 m of that, so :math:`0.33 - 0.04 = 0.29` m is left for the
+   position error. It is a limit for every moment, not an average, so
+   **A** is wrong. See the Introduction in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 3
@@ -121,11 +125,11 @@ Multiple Choice (Questions 1 to 22)
 
    With too few satellites in view, the receiver gives a poor fix or none:
    an outage, and the fixes stop. In multipath, the signal bounces off a
-   building before it reaches the antenna. The path is longer than the
-   straight line, so the receiver computes the wrong position, and the fix
-   looks normal. Multipath is a bias that comes and goes as the AV drives,
-   and you cannot average a bias away (L3), so **D** is wrong. See GNSS and
-   RTK in :doc:`l6_lecture`.
+   building before it reaches the antenna. The path is longer, so the
+   receiver puts the AV in the wrong place, and the fix looks normal. Noise
+   you can average away; a bias you cannot. Multipath is a bias that comes
+   and goes as the AV drives, so **D** is wrong. See GNSS and RTK in
+   :doc:`l6_lecture`.
 
 
 .. admonition:: Question 4
@@ -150,9 +154,8 @@ Multiple Choice (Questions 1 to 22)
    :math:`1.77 / 0.29 = 6.1`. Half the fixes are within 1.77 m, 95 percent
    within 3.39 m, and the worst is 5.44 m off. **D** uses the 95 percent
    value: :math:`3.39 / 0.29 = 11.7`. Plain GNSS cannot keep a car in its
-   lane. The errors come from the noise and bias chosen for the drive: 1.5 m
-   of noise in each direction and a fixed bias of about half a meter. See
-   GNSS and RTK in :doc:`l6_lecture`.
+   lane. These errors are the noise and bias chosen for the drive: CARLA
+   simulates no multipath. See GNSS and RTK in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 5
@@ -160,13 +163,13 @@ Multiple Choice (Questions 1 to 22)
 
    What does RTK's base station do?
 
-   A. It relays the satellite signals to the car through a cable.
+   A. It relays the satellite signals to the AV through a cable.
 
-   B. It sits on a surveyed point, so it knows its own error. It sends that
-      error to the car nearby as a correction, and the errors both receivers
-      share cancel.
+   B. It sits on a surveyed point, so it can work out its own GNSS error.
+      It sends that error to receivers nearby as corrections, and the AV
+      subtracts it from its own fix.
 
-   C. It measures the car's position with its own LiDAR.
+   C. It measures the AV's position with its own LiDAR.
 
    D. It replaces the satellites in a tunnel.
 
@@ -175,12 +178,15 @@ Multiple Choice (Questions 1 to 22)
 
    **B**.
 
-   The base station sees the same satellites through nearly the same atmosphere as
-   a car nearby. Errors both share, like the satellite clocks and the
-   atmosphere, cancel. RTK also measures the carrier wave, not only the
-   timing code. The reference the lecture quotes gives "performances in the
-   range of a few centimetres", "in the vicinity of a base station". See
-   GNSS and RTK in :doc:`l6_lecture`.
+   The base computes where it is from the satellites and compares that with
+   the surveyed point: the difference is its error. Near the base, the AV's
+   signals cross nearly the same air, so they are slowed by nearly the same
+   amount, and the AV's fix has nearly the same error. In the lecture's
+   example (numbers chosen), the base's error is 1.2 m east and 0.8 m north,
+   the AV's raw fix is 1.3 m east and 0.7 m north, and the corrected fix is
+   0.1 m east and 0.1 m south: :math:`\sqrt{0.1^2 + 0.1^2} = 0.14` m left
+   over. Timing the carrier wave as well brings RTK to "a few centimetres"
+   near a base. See GNSS and RTK in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 6
@@ -195,7 +201,7 @@ Multiple Choice (Questions 1 to 22)
 
    B. Yes: the fixes keep coming, so the sky is clear.
 
-   C. Not necessarily: multipath at the car is not in the base station's
+   C. Not necessarily: a bounce at the AV is not in the base station's
       correction, so a normal-looking fix can be meters off.
 
    D. No: RTK stops working as soon as the AV moves.
@@ -205,11 +211,12 @@ Multiple Choice (Questions 1 to 22)
 
    **C**.
 
-   The base station is in the open. A bounce off the glass next to the car
-   happens at the car alone, so the correction does not contain it. Fixes
-   that keep coming only say the sky is not fully blocked. To notice a bad
-   fix, the AV needs a second, independent source (the Integrity section).
-   See GNSS and RTK in :doc:`l6_lecture`.
+   The base is in the open and has no bounce, so its correction holds none
+   to subtract. Fixes that keep coming only say the sky is not fully
+   blocked. That is why the lecture keeps GNSS and adds a second source
+   beside it: one that keeps working without satellites and that, compared
+   with GNSS, shows when a fix is wrong. See GNSS and RTK in
+   :doc:`l6_lecture`.
 
 
 .. admonition:: Question 7
@@ -240,8 +247,8 @@ Multiple Choice (Questions 1 to 22)
    grows by 0 and :math:`y` by :math:`10 \times 1 \times 0.05 = 0.5` m.
    :math:`y` points north in the map frame. **C** forgets :math:`\Delta t`.
    The wheels give :math:`v` and the gyro gives :math:`\omega`. The same rule
-   is the predict step of every filter in the lecture. See Dead Reckoning in
-   :doc:`l6_lecture`.
+   moves the pose forward between readings in the EKF and in MCL. See Dead
+   Reckoning in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 8
@@ -310,8 +317,7 @@ Multiple Choice (Questions 1 to 22)
 
    A. Under 0.29 m all the way: wheels and gyro are enough.
 
-   B. 2.69 m after 100 m, a worst of 9.03 m at 329 m, and 7.84 m at the
-      end of the outage.
+   B. 2.69 m after 100 m, and a worst of 9.03 m at 329 m.
 
    C. An error that grows smoothly with the square of the distance.
 
@@ -322,11 +328,14 @@ Multiple Choice (Questions 1 to 22)
 
    **B**.
 
-   The error is 3.56 m after 200 m, and it does not grow smoothly (**C**):
-   at some corners the two paths cross again. The trend is clear, though:
-   meters of error against a bound of 0.29 m. Even the best start, the true
-   pose, does not stop the drift (**D**). Dead reckoning bridges a short
-   gap, never a long one. See Dead Reckoning in :doc:`l6_lecture`.
+   The worst error is :math:`9.03 / 0.29 = 31` times the bound. The error
+   does not grow smoothly (**C**). CARLA's own gyro reads a little more
+   turning than the AV makes in a turn, so most of the :math:`6.0^\circ`
+   heading error comes at the corners, and the next straight drifts faster.
+   After a corner, the old sideways error points along the new road, so the
+   two paths can cross. Even the best start, the true pose, does not stop
+   the drift (**D**). Dead reckoning is good for a short gap, never alone for
+   long. See Dead Reckoning in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 11
@@ -350,10 +359,11 @@ Multiple Choice (Questions 1 to 22)
 
    Predict, every 0.05 s, moves the state with the dead-reckoning rule. The
    filter cannot check that step, so it is less sure: :math:`P` grows.
-   Update, when a reading arrives, moves the state by a fraction :math:`K`
-   of the surprise (L3), and :math:`P` shrinks. On the drive, the wheels
-   update about :math:`v` every 0.05 s, and GNSS updates :math:`x` and
-   :math:`y` once a second. See Fusion in the EKF in :doc:`l6_lecture`.
+   Update, when a reading arrives, compares the reading with what the state
+   predicts (the innovation) and moves the state by a fraction :math:`K` of
+   it, and :math:`P` shrinks. On the drive, the wheels give a reading of
+   :math:`v` every 0.05 s, and GNSS gives :math:`x` and :math:`y` once a
+   second. See Fusion in the EKF in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 12
@@ -363,7 +373,8 @@ Multiple Choice (Questions 1 to 22)
    real error of 9.50 m at its worst moment. Its own :math:`1\sigma` there is
    3.93 m. What does that say?
 
-   A. The filter is honest: the error is inside :math:`3\sigma`.
+   A. The filter knows its error well: the error stays inside its own
+      :math:`1\sigma` band.
 
    B. The filter is overconfident: the real error is 2.4 times its own
       :math:`1\sigma` (:math:`9.50 / 3.93`).
@@ -377,10 +388,10 @@ Multiple Choice (Questions 1 to 22)
 
    **B**.
 
-   :math:`P` grows in the outage, as it should: the band widens from 0.75 m
-   before the outage to 3.93 m. But the error grows faster. The filter is less
-   sure, but not unsure enough. One reason the lecture gives: its model has
-   no gyro bias, and the drive has one. See Fusion in the EKF in
+   :math:`1\sigma` is the error the filter expects. Its band grows in the
+   outage, as it should, because only predict steps run. But the real error
+   is 2.4 times larger and stays above the band the whole outage: the filter
+   believes it is closer to the truth than it is. See Fusion in the EKF in
    :doc:`l6_lecture`.
 
 
@@ -405,26 +416,26 @@ Multiple Choice (Questions 1 to 22)
    **C**.
 
    1. Square: 0.04, 0.04, 0.04, 1.00.
-   2. Average: :math:`1.12 / 4 = 0.28`.
+   2. Add: 1.12. Divide by 4: :math:`1.12 / 4 = 0.28`.
    3. Root: :math:`\sqrt{0.28} = 0.53` m.
 
    **A** is the plain average, 0.40 m. **B** forgets the root. The RMSE is
-   larger than the average because squaring weighs the one bad step more.
-   For a car, one bad moment matters more than many good ones. See Fusion in
-   the EKF in :doc:`l6_lecture`.
+   larger than the average because squaring makes the one bad step count
+   more. See Fusion in the EKF in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 14
    :class: hint
 
-   The hands-on compares eight runs of the filter by their APE. Which input
+   The lecture compares eight runs of the filter by their APE. Which input
    lowers the APE the most?
 
    A. GNSS through the outage.
 
    B. The wheels.
 
-   C. Map matching: through the outage, 4.99 m becomes 0.52 m.
+   C. Map matching: through the outage, with wheel speed read, 4.99 m
+      becomes 0.52 m.
 
    D. None: all eight runs score about the same.
 
@@ -433,12 +444,13 @@ Multiple Choice (Questions 1 to 22)
 
    **C**.
 
-   With wheels and the outage, 4.99 m without the map and 0.52 m with it.
-   With GNSS all the way, 1.28 m becomes 0.47 m. The wheels matter less in
-   APE here: without them the outage run scores 4.58 m against 4.99 m, but
-   its worst moment is worse, 12.4 m against 9.5 m. One run with the map
-   fails: outage, no wheels, map, 27.66 m. See Fusion in the EKF in
-   :doc:`l6_lecture`.
+   With wheel speed read and the outage, 4.99 m without the map and 0.52 m
+   with it. With GNSS always, 1.28 m becomes 0.47 m. The wheels matter less
+   here: in the outage without the map, the run without wheel speed scores
+   4.58 m, only :math:`4.99 - 4.58 = 0.41` m from the run with it, because
+   without GNSS or a map neither run can correct its drift. One run with the
+   map gets lost: outage, no wheel speed, map, 27.66 m. See Fusion in the
+   EKF in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 15
@@ -448,9 +460,9 @@ Multiple Choice (Questions 1 to 22)
 
    A. Every particle moves with the wheels and the gyro.
 
-   B. For each particle, the scan is placed where that particle says the
-      car is, and each scan point is scored by how close it lands to the
-      map.
+   B. For each particle, the scan is placed as if the AV stood at that
+      particle's pose, and each scan point is scored by how close it lands
+      to the map.
 
    C. Heavy particles are copied and light ones dropped.
 
@@ -461,27 +473,28 @@ Multiple Choice (Questions 1 to 22)
 
    **B**.
 
-   MCL is L3's particle filter given a map. Each particle is one guess of the
-   pose :math:`(x, y, \theta)`. **A** is predict (plus a little random
-   noise), **C** is resample. The scoring uses a likelihood field: a scan
-   point on a wall is likely, a point in empty space is not. The estimate is
-   the weighted mean of the particles, and their spread is how sure MCL is.
-   See Against a Map in :doc:`l6_lecture`.
+   Each particle is one guess of the pose :math:`(x, y, \theta)`. MCL takes
+   no new scan for a particle: it turns and shifts the one real scan with
+   that particle's pose. A point that lands on a map point (:math:`d = 0`)
+   scores 0.93, the highest; past 3 m it scores 0.033. **A** is predict
+   (plus a little random noise), **C** is resample. See Against a Map in
+   :doc:`l6_lecture`.
 
 
 .. admonition:: Question 16
    :class: hint
 
-   In a chosen 20 m by 10 m box, MCL starts with 2000 particles anywhere,
+   In a chosen 20 m by 10 m room, MCL starts with 2000 particles anywhere,
    with any heading. Over 20 runs, 9 end on the mirror pose. With one small
-   pillar near a corner, 0 do. Why?
+   pillar in the room, 0 do. Why?
 
    A. The pillar adds more scan points, so MCL runs faster.
 
-   B. 2000 particles are too few for any box.
+   B. 2000 particles are too few for any room.
 
-   C. A plain box turned half a turn looks the same, so the scan cannot
-      tell the two poses apart. The pillar makes them look different.
+   C. A plain room turned half a turn looks the same, so the scan fits the
+      mirror pose as well as the true one. The pillar makes the two poses
+      look different.
 
    D. The pillar blocks the LiDAR, so fewer particles survive.
 
@@ -490,11 +503,12 @@ Multiple Choice (Questions 1 to 22)
 
    **C**.
 
-   The plain box has two poses that see the same walls: the true one and the
-   one opposite it through the box's center. MCL picks one of them. On real
-   roads, a long street of identical blocks looks the same in many places.
-   MCL needs something distinctive, or a rough GNSS fix to rule out the
-   look-alikes. See Against a Map in :doc:`l6_lecture`.
+   In the plain room, more scans or random particles cannot undo a wrong
+   choice, because every scan fits the mirror pose too. Only the true pose
+   sees the pillar where the map has it. Without a pillar, MCL needs
+   information from outside the map: with the particles placed around a
+   GNSS fix, 0 of 20 runs end on the mirror. See Against a Map in
+   :doc:`l6_lecture`.
 
 
 .. admonition:: Question 17
@@ -519,20 +533,20 @@ Multiple Choice (Questions 1 to 22)
 
    **B**.
 
-   The first pairs are partly wrong, but the move brings the scan closer, so
-   the next pairs are better. ICP stops when the fit stops improving. On one
-   scan of the drive, started :math:`5^\circ` off, 1.5 m east and 1.0 m
-   south of the truth (chosen), it took 28 iterations. The RMSE of the pairs
-   fell from 1.32 m to 0.06 m, and the final pose was 0.02 m from the truth.
-   See Against a Map in :doc:`l6_lecture`.
+   The first pairs are partly wrong, so one move goes only part of the way,
+   but the next pairs are better. On one scan of the drive, started
+   :math:`5^\circ`, 1.5 m east and 1.0 m south off the truth (chosen), ICP
+   took 28 rounds. The RMSE of the pairs fell from 1.32 m to 0.06 m, and the
+   final pose was 0.02 m from the truth. See Against a Map in
+   :doc:`l6_lecture`.
 
 
 .. admonition:: Question 18
    :class: hint
 
-   In 2-D, ICP's rotation has a short form:
+   In 2-D, step 4 of ICP's step 2 gives the angle as
    :math:`\alpha = \operatorname{atan2}(H_{12} - H_{21},\ H_{11} + H_{22})`.
-   A cross-covariance comes out as
+   A matrix comes out as
    :math:`H = \begin{pmatrix} -4 & 5 \\ -1 & -2 \end{pmatrix}` (chosen for
    this question). What is :math:`\alpha`?
 
@@ -540,7 +554,7 @@ Multiple Choice (Questions 1 to 22)
 
    B. :math:`45^\circ`
 
-   C. :math:`\mathbf{135^\circ}`
+   C. :math:`135^\circ`
 
    D. :math:`90^\circ`
 
@@ -555,7 +569,8 @@ Multiple Choice (Questions 1 to 22)
    left lies at :math:`135^\circ`, so
    :math:`\operatorname{atan2}(6, -6) = 135^\circ`. **A** is the plain arc
    tangent of :math:`6 / (-6) = -1`, which loses the quadrant: that is why
-   the formula uses atan2. See Against a Map in :doc:`l6_lecture`.
+   the formula uses atan2. See "ICP step 2 in general" in
+   :doc:`l6_lecture`.
 
 
 .. admonition:: Question 19
@@ -581,97 +596,102 @@ Multiple Choice (Questions 1 to 22)
 
    :math:`R\,\bar p = (0 \times 1 - 1 \times 2,\ 1 \times 1 + 0 \times 2) =
    (-2, 1)`, so :math:`t = (3 - (-2),\ 4 - 1) = (5, 3)`. **A** forgets to
-   rotate :math:`\bar p` first: :math:`\bar q - \bar p`. **D** is right only
-   when the scan's centroid is the origin, as in the lecture's example,
-   where :math:`t = (2, 1) = \bar q`. See Against a Map in
-   :doc:`l6_lecture`.
+   turn :math:`\bar p` first: :math:`\bar q - \bar p`. **D** would be right
+   only if the scan's centroid were the origin, so that
+   :math:`R\,\bar p = (0, 0)`. Step 6 puts the turned scan centroid on the
+   map centroid. See "ICP step 2 in general" in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 20
    :class: hint
 
-   The run "outage, no wheels, map matching" scores 27.66 m APE. For ten
-   seconds every ICP pose is accepted. What goes wrong after that?
+   The run "GNSS outage, no wheel speed, map matching" scores 27.66 m APE.
+   From 35 s to 44 s every ICP match is used. What goes wrong after that?
 
    A. The map is wrong in that part of the town.
 
-   B. One match is rejected and the next is dropped. With no wheels and
-      no GNSS, nothing measures the speed, so the filter's position
-      :math:`\sigma` passes 2 m, the limit chosen for starting ICP, and ICP
-      stops. The filter coasts on the gyro alone, 65.6 m off at its worst.
+   B. Two matches in a row are thrown out. With no wheel speed and no GNSS,
+      nothing tells the filter how far the AV moves, so it grows too unsure
+      to give ICP a good start, and ICP is no longer run. The filter knows
+      only how the AV turns, and it ends up 65.6 m off.
 
    C. ICP needs more than one scan per second.
 
-   D. The NIS gate rejects every GNSS fix.
+   D. The filter throws out every GNSS fix.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **B**.
 
-   At 45 s the NIS gate rejects one match. At 46 s the fit fails its quality
-   check and is dropped. At 46.5 s :math:`\sigma` passes 2 m, and ICP stops.
-   GNSS returns at 89.0 s and pulls the filter back. ICP keeps the AV
-   localized only while it has a good starting guess. Once lost, the AV needs
-   a method that searches widely: MCL, as Autoware does to "estimate initial
-   position". See Against a Map in :doc:`l6_lecture`.
+   At 45 s a match is thrown out because it puts the AV too far from where
+   the filter expected it. At 46 s the next one is thrown out because the
+   scan does not line up well with the map. From 46.5 s the filter is too
+   unsure to start ICP. It is 65.6 m off at 79.2 s, and GNSS brings it back
+   at 89.0 s. ICP keeps the AV located only while it starts from a good
+   guess. To find itself again, the AV needs a method that searches widely:
+   MCL. See Against a Map in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 21
    :class: hint
 
-   A filter accepts an update only if its NIS :math:`\varepsilon` is under
-   the 0.99 bound for the number of values the update reports. Which bound
-   applies to a matched pose from ICP?
+   MCL has :math:`N = 4` particles with weights 0.4, 0.3, 0.2 and 0.1
+   (chosen for this question). Our code resamples only when
+   :math:`N_\text{eff} = 1 / \sum_i w_i^2` is below :math:`N/2`. What is
+   :math:`N_\text{eff}`, and does MCL resample?
 
-   A. 9.21, because a pose is a position.
+   A. :math:`N_\text{eff} = 1.0`: resample.
 
-   B. 11.34, because a pose reports three numbers: :math:`x`, :math:`y`
-      and :math:`\theta`.
+   B. :math:`N_\text{eff} = 3.33`: do not resample.
 
-   C. 3, the NIS an honest filter averages for a pose.
+   C. :math:`N_\text{eff} = 0.30`: resample.
 
-   D. 0.99.
+   D. :math:`N_\text{eff} = 4`: do not resample.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **B**.
 
-   Both bounds come from the chi-square distribution at 0.99: 9.21 for 2
-   numbers (a GNSS fix, :math:`x` and :math:`y`) and 11.34 for 3 numbers.
-   **C** is the expected average, about 1 per number, not the gate. On the
-   drive, with the outage, wheels and map: GNSS averages 2.12 over 68 fixes
-   with 1 above 9.21, and the map averages 2.50 over 118 poses with 0 above
-   11.34. See Integrity in :doc:`l6_lecture`.
+   1. Square each weight: 0.16, 0.09, 0.04, 0.01.
+   2. Add them: 0.30.
+   3. :math:`N_\text{eff} = 1 / 0.30 = 3.33`.
+   4. The cutoff is :math:`N/2 = 4/2 = 2`. 3.33 is above it, so MCL does not
+      resample.
+
+   **C** forgets to take 1 over the sum. **D** would need four equal
+   weights. When the weights are this even, resampling would drop guesses
+   almost at random. See Against a Map in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 22
    :class: hint
 
-   The lecture defines an alert limit and a protection level. When must the
-   localizer warn that its pose cannot be used for lane-level driving?
+   ICP runs in a long tunnel with straight walls on both sides. Which part
+   of the pose can the scan not pin down?
 
-   A. When the protection level is below the alert limit.
+   A. The heading.
 
-   B. When the protection level is above the alert limit.
+   B. The distance to the walls.
 
-   C. When the APE is above 0.29 m.
+   C. The position along the tunnel.
 
-   D. When one GNSS fix is above the NIS gate.
+   D. None: ICP always fixes all three.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B**.
+   **C**.
 
-   The alert limit is "the largest position error allowable for safe
-   operation"; for a car on a local street, Reid's 0.29 m. The protection
-   level is a bound the localizer computes from its own covariance and error
-   models, so that the true error goes past it only with a tiny, chosen
-   probability. If that bound is above the alert limit, the pose may be too
-   far off, so the localizer warns. **C** needs the truth, which a real car
-   never has. See Integrity in :doc:`l6_lecture`.
+   One meter further along the tunnel, the AV sees the same walls at the
+   same distance, so the scan cannot tell how far along it is. The lecture's
+   number for this scene, a corridor, is 0.000: one direction where moving
+   the AV does not change the scan at all. ICP still gives a position along
+   the road, and nothing warns that this part is a guess. The fix: keep
+   ICP's distance to the walls and its heading, and take the position along
+   the road from the EKF's prediction. A corner (0.297) has no such problem.
+   See Against a Map in :doc:`l6_lecture`.
 
 
 ----
@@ -699,7 +719,7 @@ True or False (Questions 23 to 33)
 .. admonition:: Question 24
    :class: hint
 
-   RTK cancels multipath at the car, because the base station sees the same
+   RTK cancels multipath at the AV, because the base station sees the same
    satellites.
 
 .. dropdown:: Answer
@@ -707,10 +727,10 @@ True or False (Questions 23 to 33)
 
    **False.**
 
-   RTK cancels errors the base station and the car share. A bounce off the
-   building next to the car happens at the car alone, so the correction does
-   not contain it. RTK also stops when the sky is blocked, and it works only
-   near a base station. See GNSS and RTK in :doc:`l6_lecture`.
+   The base, in the open, has no bounce, so its correction holds none to
+   subtract. RTK also stops when the sky is blocked, and it is used only up
+   to 10 or 20 km from the base: farther away, the two atmospheric delays
+   differ. See GNSS and RTK in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 25
@@ -743,11 +763,10 @@ True or False (Questions 23 to 33)
    **False.**
 
    :math:`P` grew at every predict step of the outage, so at the first fix
-   :math:`K` is **large**: the filter trusts its own position little and
-   moves most of the way to the fix. :math:`P` drops in one step. On the
-   drive, the error is back to 0.60 m one second after the first fix: L3's
-   sawtooth, with one long tooth. See Fusion in the EKF in
-   :doc:`l6_lecture`.
+   :math:`P` is large next to the fix's noise and :math:`K` is near 1: the
+   filter moves most of the way to the fix, and :math:`P` shrinks. On the
+   drive, the error is 0.60 m one second after the first fix. See Fusion in
+   the EKF in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 27
@@ -761,10 +780,11 @@ True or False (Questions 23 to 33)
 
    **True.**
 
-   Squaring weighs large distances more, so the RMSE is at least the average.
-   The two are equal only when every distance is the same. In the lecture's
-   example, 0.3, 0.4, 1.2 and 0.5 m give an RMSE of 0.70 m against an
-   average of 0.60 m. See Fusion in the EKF in :doc:`l6_lecture`.
+   Squaring makes large distances count more, so the RMSE is at least the
+   average. The two are equal only when every distance is the same. In the
+   lecture's example, 0.3, 0.4, 1.2 and 0.5 m give an RMSE of 0.70 m
+   against an average of 0.60 m. See Fusion in the EKF in
+   :doc:`l6_lecture`.
 
 
 .. admonition:: Question 28
@@ -777,65 +797,68 @@ True or False (Questions 23 to 33)
 
    **False.**
 
-   The estimate is the **weighted mean** of the particles, and their spread
-   is how sure MCL is. On the drive, 2000 particles start within 20 m of the
-   first GNSS fix with any heading. The error is first under 1 m at the 5th
-   scan, 2.0 s in; after 10 s the median error is 0.20 m and the worst
-   0.95 m. See Against a Map in :doc:`l6_lecture`.
+   The estimate is the **weighted mean** of the particles,
+   :math:`\hat{\mathbf{x}} = \sum_i w^{(i)}\,\mathbf{x}^{(i)}`, with the
+   heading averaged as an angle. On the drive, 2000 particles start within
+   20 m of the first GNSS fix (2.05 m from the AV), with any heading. The
+   estimate is 3.06 m off at scan 1, 1.66 m at scan 4 (1.5 s) and 0.02 m at
+   scan 16 (7.5 s). See Against a Map in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 29
    :class: hint
 
-   In the hands-on, ICP started 7.2 m and :math:`20^\circ` off the truth
-   still lands on the right walls.
+   In the lecture's made-up scene, ICP started 4 m from the AV and not
+   turned always ends on the AV, whichever way the start is off.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False.**
 
-   Started 5 m and :math:`15^\circ` off, ICP lands within 0.10 m of the
-   truth. Started 7.2 m and :math:`20^\circ` off, it ends 7 m off, on the
-   wrong walls. ICP needs a starting guess close to the truth, and the
-   filter's own pose is that guess. See Against a Map in :doc:`l6_lecture`
-   and :doc:`l6_code`.
+   Started 4 m ahead of the AV, ICP ends 0.10 m off after 18 rounds.
+   Started 4 m to the AV's right, the same distance, it stops after 13
+   rounds 7.55 m off and turned :math:`18^\circ`, on the wrong walls, with
+   only 90 of its 126 points paired. ICP starts from the filter's pose, so
+   the filter must keep it close. See Against a Map in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 30
    :class: hint
 
-   An NIS that averages well below the expected value (below 2 for a GNSS
-   fix) means the filter is overconfident.
+   Once MCL has found the AV on the drive (after 70 s), 2000 particles keep
+   the error much lower than 200 particles do.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False.**
 
-   NIS below what is expected means the surprises are smaller than the filter
-   predicted: it overestimates its error, so it is **underconfident**. That
-   is the safe side. On the drive the map poses average 2.50 against 3
-   expected: the filter slightly overestimates the map's error. An
-   overconfident filter has an NIS that is too large. See Integrity in
-   :doc:`l6_lecture` and :doc:`/lectures/lecture3/l3_lecture`.
+   After 70 s, all ten runs (five with 200, five with 2000) rise and fall at
+   the same moments of the drive, to 0.80 to 1.11 m at worst. The peaks come
+   from the drive, not from the number of particles. More particles help
+   while the AV could be anywhere: with 2000, every run is within 2 m of the
+   AV by 33.5 s; with 200, two runs stay 5 to 10 m off until 60.5 and
+   64.0 s. See Against a Map in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 31
    :class: hint
 
-   On the drive, 1 GNSS fix out of 68 is above the 9.21 bound. That alone
-   shows the filter is broken.
+   A k-d tree search finds the same nearest map point as checking every map
+   point, but measures fewer distances.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False.**
+   **True.**
 
-   At 0.99, an honest filter puts about 1 update in 100 above the line. Over
-   68 fixes that is :math:`0.01 \times 68 = 0.68` expected, so one is
-   normal. The GNSS average, 2.12 against an expected 2, also says the filter
-   is honest about GNSS. See Integrity in :doc:`l6_lecture`.
+   The search skips a side of a line only when the line is farther from the
+   query than the best distance found so far, so no closer point can sit
+   there. In the lecture's example, the query :math:`(7.5, 5)` finds
+   :math:`(9, 6)`, 1.80 m away, after 5 of the 8 distances. Checking every
+   point finds the same :math:`(9, 6)`. See Against a Map in
+   :doc:`l6_lecture`.
 
 
 .. admonition:: Question 32
@@ -850,27 +873,33 @@ True or False (Questions 23 to 33)
    **False.**
 
    Each edge takes a share of the gap in proportion to its variance
-   :math:`\sigma^2`. In the lecture's example, each odometry edge
-   (:math:`\sigma = 0.5` m) takes :math:`0.25 / 0.51 = 0.49` of the gap and
-   the loop (:math:`\sigma = 0.1` m) only :math:`0.01 / 0.51 = 0.02`. The
-   sure edge barely bends. See SLAM in :doc:`l6_lecture`.
+   :math:`\sigma^2`. In the lecture's example (chosen), the edges have
+   :math:`\sigma` = 0.5 m (:math:`p_1` to :math:`p_2`), 0.3 m (:math:`p_2`
+   to :math:`p_3`) and 0.1 m (the loop closure):
+
+   1. Variances: 0.25, 0.09 and 0.01, together 0.35.
+   2. Shares of the 0.71 m gap: :math:`0.25/0.35 = 71\%`, 0.51 m;
+      :math:`0.09/0.35 = 26\%`, 0.18 m; :math:`0.01/0.35 = 3\%`, 0.02 m for
+      the loop closure.
+
+   The sure edge barely bends. See SLAM in :doc:`l6_lecture`.
 
 
 .. admonition:: Question 33
    :class: hint
 
-   Autoware's localizer uses NDT scan matching, and starts with the Monte
-   Carlo method to estimate the initial position.
+   Autoware uses MCL to estimate the AV's initial position, and NDT scan
+   matching to keep estimating the position after that.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **True.**
 
-   The lecture quotes Autoware: "a package for position estimation using the
-   NDT scan matching method", and it uses "the Monte Carlo method" to
-   "estimate initial position". MCL finds the car once, scan matching
-   follows it. See Against a Map in :doc:`l6_lecture`.
+   The lecture quotes Autoware: MCL to "estimate initial position", then
+   NDT "for position estimation". MCL finds the AV from a wide search; scan
+   matching follows it from a good start. See Against a Map in
+   :doc:`l6_lecture`.
 
 
 ----
@@ -889,11 +918,11 @@ Short Answer (Questions 34 to 39)
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   A speed error stretches the path along the road: the wheels read 0.5% fast,
-   so after 400 m the AV is :math:`0.005 \times 400 = 2.0` m off along the
-   road. A heading error pushes it sideways: :math:`1^\circ` gives
-   :math:`100 \times 0.01745 = 1.75` m after 100 m, and the 0.29 m bound is
-   gone after 16.6 m.
+   A speed error stretches the path along the road: the wheels read 0.5%
+   fast, so after 400 m the AV is :math:`0.005 \times 400 = 2.0` m off along
+   the road, still in its lane. A heading error pushes it sideways:
+   :math:`1^\circ` gives :math:`100 \times 0.01745 = 1.75` m after 100 m,
+   and the 0.29 m bound is used up after 16.6 m.
 
    A gyro bias makes the heading error itself grow, :math:`b\,t`, so the
    sideways error grows with the square of time: :math:`v\,b\,t^2/2`, 4.5 m
@@ -911,14 +940,15 @@ Short Answer (Questions 34 to 39)
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   With no position update, the filter only predicts, so :math:`P` grows and
-   the band widens from 0.75 m to 3.93 m. The real error grows faster, 2.4
-   times the band: the filter is overconfident. One reason is that its model
-   has no gyro bias, and the drive has one.
+   With no fix, the filter has only the wheels and the gyro: it predicts
+   with the dead-reckoning rule, and :math:`P` grows at every step, so its
+   :math:`1\sigma` grows. The real error grows faster, 2.4 times its
+   :math:`1\sigma` at the worst moment, and stays above the band the whole
+   outage: the filter is overconfident.
 
-   At the first fix, :math:`P` is large, so :math:`K` is large: the filter
-   moves most of the way to the fix, and :math:`P` drops in one step. One
-   second later the error is 0.60 m.
+   At the first fix, :math:`P` is large next to the fix's noise, so
+   :math:`K` is near 1: the filter moves most of the way to the fix, and
+   :math:`P` shrinks. One second later the error is 0.60 m.
 
 
 .. admonition:: Question 36
@@ -930,54 +960,59 @@ Short Answer (Questions 34 to 39)
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   MCL tries thousands of guesses spread over a wide area, so it can find the
-   car from a poor start: on the drive, from a 20 m circle with any heading,
-   it is under 1 m after 2.0 s. It can pick a look-alike place when the map
-   is symmetric.
+   MCL weighs thousands of guesses spread over a wide area, so it can find
+   the AV from a rough start: on the drive, from a 20 m circle around a GNSS
+   fix with any heading, it is 0.02 m off by scan 16, 7.5 s in. It can pick
+   a look-alike place when the map looks the same in two places.
 
-   ICP takes one guess and improves it, and it is precise: 0.02 m from the
-   truth on one scan. But it needs a starting guess close to the truth, or it
-   slides into the wrong fit. So MCL finds the car once, and scan matching
-   follows it, its pose sent to the filter as one more update. Autoware
-   follows this pattern, with NDT as its scan matcher.
+   ICP takes one guess and moves it until the scan lies on the map, and it
+   is precise: 0.02 m from the truth on one scan. But it needs a start close
+   to the truth: from 4 m to the side, it stopped 7.55 m off. So MCL finds
+   the AV, and scan matching follows it, its pose sent to the filter as one
+   more update. Autoware uses MCL to "estimate initial position" and NDT
+   after that.
 
 
 .. admonition:: Question 37
    :class: hint
 
-   A filter's NIS gate makes two kinds of mistake. Name them, give the
-   lecture's example of each, and say which kind of filter makes each one.
+   The lecture's best run (GNSS always, wheel speed read, map matching)
+   scores 0.47 m APE. Give the lecture's two reasons it misses the 0.29 m
+   bound, with its numbers.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   A false alarm rejects a good update: a scan full of parked trucks the map
-   does not have matches badly, and the filter drops a pose that was right.
-   The cost is a little more dead reckoning. A missed fault accepts a bad
-   update: a multipath fix 3 m off (chosen) arrives after the outage, when
-   :math:`P`, and so :math:`S`, is large, so :math:`\varepsilon` stays small
-   and the filter moves 3 m the wrong way.
+   It starts meters off: the filter starts at 4.05 s from a GNSS fix, and
+   map matching needs a good first guess, so the first match comes only at
+   8.0 s. Until then the error is 0.6 to 2.4 m. Scored only from 8.0 s on,
+   the run gets 0.38 m, still above the bound.
 
-   An overconfident filter makes false alarms; an underconfident one misses
-   faults. That is why the filter must be honest.
+   It drifts between map matches: a match comes about once a second and
+   brings the pose to about 0.2 m from the truth, and in the second until
+   the next one the pose drifts again, most in turns. The bound is a limit
+   for every step, not an average: about one step in three is above
+   0.29 m.
 
 
 .. admonition:: Question 38
    :class: hint
 
-   Why does the lecture want two independent sources of position, such as
-   GNSS and map matching, for integrity?
+   Why does the lecture keep GNSS and add a second source of position, such
+   as map matching, beside it?
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   A real car never knows the truth, so it cannot compute its own error. GNSS
-   and map matching fail for different reasons: GNSS under a blocked sky or
-   with multipath, map matching where the map is wrong or one place looks
-   like another.
+   GNSS stops when the sky is blocked, and with multipath it gives a fix
+   that looks normal and is meters off, which RTK cannot correct. So the
+   AV needs a source that keeps working without satellites and that,
+   compared with GNSS, shows when a fix is wrong.
 
-   If they agree, both are likely right. If they disagree, the AV at least
-   knows that one is wrong and can warn. What the car does then is L13.
+   Map matching fails for other reasons: a look-alike place, a scene that
+   is blind along the road, or a start too far off. Before a match is used,
+   the filter checks it against its own prediction, and if the check fails,
+   the AV searches wider with MCL.
 
 
 .. admonition:: Question 39
@@ -990,12 +1025,13 @@ Short Answer (Questions 34 to 39)
    :class-container: sd-border-success
 
    The AV comes back to a place it has seen, and ICP between the new scan and
-   the old one measures the motion between two poses far apart in time. Added
-   around the loop, the edges should sum to zero; the drift leaves a gap,
-   0.71 m in the lecture's example. Solving the graph spreads that gap over
-   the edges in proportion to their variances, so the unsure odometry edges
-   take most of it and the sure loop closure barely bends.
+   the old one measures where the new pose sits from the old one. Following
+   the measured motions around the loop should lead back to the start; the
+   drift leaves a gap, 0.71 m in the lecture's example. Solving the graph
+   spreads that gap over the edges in proportion to their variances, so the
+   unsure odometry edges take most of it and the sure loop closure barely
+   bends. The whole path is corrected, not only the last pose.
 
-   A fleet solves this once, offline, over many mapping drives, with time and
-   people to check the result. The AV on the road then localizes against a
-   fixed map, a smaller problem that is easier to check.
+   A fleet solves this once, offline, over its mapping drives, with time to
+   check the result. The AV on the road then localizes against a fixed map,
+   which keeps the online problem small and checkable.

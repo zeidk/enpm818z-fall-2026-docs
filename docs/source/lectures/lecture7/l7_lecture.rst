@@ -282,51 +282,10 @@ Dijkstra's Algorithm on Road Graphs
 Dijkstra's algorithm finds the shortest path from a start node to all
 other nodes in a weighted graph with non-negative edge costs.
 
-.. code-block:: python
+.. note::
 
-   import heapq
-
-   def dijkstra(graph, start_id, goal_id):
-       """
-       Find shortest path on a road network graph.
-
-       Args:
-           graph: dict of {node_id: [(neighbor_id, cost), ...]}
-           start_id: starting waypoint ID
-           goal_id: goal waypoint ID
-
-       Returns:
-           path: list of waypoint keys from start to goal
-           total_cost: total path cost
-           expanded: number of nodes expanded (for comparison with A*)
-       """
-       dist = {start_id: 0.0}
-       prev = {}
-       pq = [(0.0, start_id)]
-       expanded = 0
-
-       while pq:
-           d, u = heapq.heappop(pq)
-           if u == goal_id:
-               break
-           if d > dist.get(u, float('inf')):
-               continue
-           expanded += 1
-           for v, cost in graph.get(u, []):     # .get: u may be a dead end
-               new_dist = d + cost
-               if new_dist < dist.get(v, float('inf')):
-                   dist[v] = new_dist
-                   prev[v] = u
-                   heapq.heappush(pq, (new_dist, v))
-
-       # Reconstruct path
-       path = []
-       node = goal_id
-       while node in prev:
-           path.append(node)
-           node = prev[node]
-       path.append(start_id)
-       return path[::-1], dist.get(goal_id, float('inf')), expanded
+   This code is not given here: GP4 Task 1 asks you to write the search,
+   the graph and how a waypoint expands into its neighbors yourself.
 
 **Complexity:** :math:`O((|V| + |E|) \log |V|)` with a binary heap.
 Road networks are sparse (:math:`|E| \approx 3|V|`), so this is
@@ -351,54 +310,10 @@ optimization:
 
    h(n) = \frac{\| \text{pos}(n) - \text{pos}(\text{goal}) \|_2}{v_{\max}}
 
-.. code-block:: python
+.. note::
 
-   import numpy as np
-
-   def astar_road(graph, start_id, goal_id, positions, v_max=None):
-       """A* search on a road network graph.
-
-       The heuristic MUST be in the same units as the edge costs, or it
-       is not admissible and A* loses its optimality guarantee:
-
-         * edge cost = distance (m)  ->  h = Euclidean distance (m)
-         * edge cost = time (s)      ->  h = distance / v_max (s)
-
-       Pass v_max (in m/s) for a time-weighted graph; leave it None for
-       a distance-weighted one.
-       """
-
-       def heuristic(node_id):
-           d = np.linalg.norm(positions[node_id] - positions[goal_id])
-           return d / v_max if v_max else d
-
-       dist = {start_id: 0.0}
-       prev = {}
-       pq = [(heuristic(start_id), 0.0, start_id)]
-       expanded = 0
-
-       while pq:
-           _, g, u = heapq.heappop(pq)
-           if u == goal_id:
-               break
-           if g > dist.get(u, float('inf')):
-               continue
-           expanded += 1
-           for v, cost in graph.get(u, []):
-               new_g = g + cost
-               if new_g < dist.get(v, float('inf')):
-                   dist[v] = new_g
-                   prev[v] = u
-                   f = new_g + heuristic(v)
-                   heapq.heappush(pq, (f, new_g, v))
-
-       path = []
-       node = goal_id
-       while node in prev:
-           path.append(node)
-           node = prev[node]
-       path.append(start_id)
-       return path[::-1], dist.get(goal_id, float('inf')), expanded
+   This code is not given here: GP4 Task 1 asks you to write the search,
+   the graph and how a waypoint expands into its neighbors yourself.
 
 .. note::
 
@@ -590,78 +505,10 @@ Building a Custom Road Graph
 For custom cost functions or research purposes, you can build your own
 graph from CARLA's waypoint API:
 
-.. code-block:: python
+.. note::
 
-   S_QUANT = 1.0    # metres; must be <= resolution
-
-   def wp_key(wp):
-       """Stable, hashable identity for a CARLA waypoint.
-
-       CRITICAL: `wp.s` is a float, and generate_waypoints() and
-       wp.next() do NOT return bit-identical values for the same road
-       position. Keying on the raw float makes every
-       `next_key in waypoint_map` test fail, so the graph ends up with
-       zero edges -- a silent failure that later looks like
-       "no route found".
-
-       Quantizing `s` to a coarse grid makes both APIs agree.
-       """
-       return (wp.road_id, wp.section_id, wp.lane_id,
-               int(round(wp.s / S_QUANT)))
-
-   def build_road_graph(carla_map, resolution=2.0, lane_change_penalty=5.0):
-       """
-       Build a road network graph from CARLA waypoints.
-
-       Returns:
-           graph: dict {wp_key: [(neighbor_key, cost), ...]}
-           waypoint_map: dict {wp_key: carla.Waypoint}
-       """
-       waypoints = carla_map.generate_waypoints(resolution)
-       waypoint_map = {wp_key(wp): wp for wp in waypoints}
-       graph = {k: [] for k in waypoint_map}
-
-       for key, wp in waypoint_map.items():
-           # Lane follow: next waypoints along the lane
-           for next_wp in wp.next(resolution):
-               nkey = wp_key(next_wp)
-               if nkey in waypoint_map:
-                   dist = wp.transform.location.distance(
-                       next_wp.transform.location)
-                   graph[key].append((nkey, dist))
-
-           # Lane changes (if permitted)
-           left_wp = wp.get_left_lane()
-           if (left_wp is not None and
-                   left_wp.lane_type == carla.LaneType.Driving and
-                   str(wp.lane_change) in ['Left', 'Both']):
-               lkey = wp_key(left_wp)
-               if lkey in waypoint_map:
-                   # Lane change cost = distance + penalty
-                   dist = wp.transform.location.distance(
-                       left_wp.transform.location)
-                   graph[key].append((lkey, dist + lane_change_penalty))
-
-           right_wp = wp.get_right_lane()
-           if (right_wp is not None and
-                   right_wp.lane_type == carla.LaneType.Driving and
-                   str(wp.lane_change) in ['Right', 'Both']):
-               rkey = wp_key(right_wp)
-               if rkey in waypoint_map:
-                   dist = wp.transform.location.distance(
-                       right_wp.transform.location)
-                   graph[key].append((rkey, dist + lane_change_penalty))
-
-       return graph, waypoint_map
-
-   graph, wp_map = build_road_graph(carla_map, resolution=2.0)
-   n_edges = sum(len(v) for v in graph.values())
-   print(f"Graph: {len(graph)} nodes, {n_edges} edges")
-
-   # Fail loudly now rather than "finding no route" ten minutes later
-   assert n_edges > 0, (
-       "No edges built. Check that S_QUANT <= resolution and that "
-       "wp_key() quantizes `s` instead of using the raw float.")
+   This code is not given here: GP4 Task 1 asks you to write the search,
+   the graph and how a waypoint expands into its neighbors yourself.
 
 
 From Route to Reference Path
@@ -804,62 +651,10 @@ Task 1: Compute and Visualize a Global Route
 Task 2: Build a Road Graph and Compare Routes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: python
+.. note::
 
-   # Build the road graph
-   graph, wp_map = build_road_graph(carla_map, resolution=2.0)
-   print(f"Road graph: {len(graph)} nodes")
-
-   # Find nearest waypoints to start and goal
-   def find_nearest_wp(wp_map, location):
-       min_dist = float('inf')
-       nearest_id = None
-       for wp_id, wp in wp_map.items():
-           dist = wp.transform.location.distance(location)
-           if dist < min_dist:
-               min_dist = dist
-               nearest_id = wp_id
-       return nearest_id
-
-   start_id = find_nearest_wp(wp_map, start)
-   goal_id = find_nearest_wp(wp_map, goal)
-
-   # --- Dijkstra vs A* on the SAME distance-weighted graph ---
-   # Both are optimal, so they return the same-cost path. What differs
-   # is HOW MUCH OF THE GRAPH each had to explore. That is the point of
-   # the comparison -- not the route.
-   path_d, cost_d, expanded_d = dijkstra(graph, start_id, goal_id)
-   print(f"Dijkstra: {len(path_d)} wp, cost={cost_d:.1f}, "
-         f"expanded={expanded_d}")
-
-   positions = {k: np.array([wp.transform.location.x,
-                             wp.transform.location.y])
-                for k, wp in wp_map.items()}
-
-   path_a, cost_a, expanded_a = astar_road(graph, start_id, goal_id,
-                                           positions)
-   print(f"A*:       {len(path_a)} wp, cost={cost_a:.1f}, "
-         f"expanded={expanded_a}")
-   print(f"A* explored {100 * expanded_a / expanded_d:.0f}% "
-         f"as many nodes as Dijkstra")
-
-   # --- Now a genuinely different objective: fastest TIME ---
-   # To compare shortest-distance against fastest-time you must change
-   # the EDGE COSTS, not just the search algorithm. Rebuild the graph
-   # with cost = length / speed_limit and re-run.
-   def to_time_graph(graph, wp_map, default_kmh=30.0):
-       tgraph = {}
-       for key, edges in graph.items():
-           tgraph[key] = []
-           for nkey, dist in edges:
-               v = default_kmh / 3.6            # m/s; use posted limit
-               tgraph[key].append((nkey, dist / v))
-       return tgraph
-
-   time_graph = to_time_graph(graph, wp_map)
-   path_t, cost_t, _ = astar_road(time_graph, start_id, goal_id,
-                                  positions, v_max=50.0 / 3.6)
-   print(f"Fastest-time route: {len(path_t)} wp, {cost_t:.1f} s")
+   This code is not given here: GP4 Task 1 asks you to write the search,
+   the graph and how a waypoint expands into its neighbors yourself.
 
 
 Task 3: Route-Following Autonomous Agent

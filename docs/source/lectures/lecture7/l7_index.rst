@@ -1,6 +1,6 @@
-====================================================
-L7: Navigation & Route Planning
-====================================================
+==================
+L7: Route Planning
+==================
 
 Overview
 --------
@@ -61,3 +61,9 @@ Next Steps
   waypoint API and the OpenDRIVE discussion.
 - Review the `Lanelet2 <https://github.com/fzi-forschungszentrum-informatik/Lanelet2>`_
   map format to see how lane-level topology is represented in production.
+
+
+.. toctree::
+   :hidden:
+
+   l7_search_steps

@@ -51,7 +51,7 @@ After completing GP3, you will be able to:
 - Cluster LiDAR point clouds and match clusters to 2D detections.
 - Derive and implement the Extended Kalman Filter prediction and update
   steps for a nonlinear vehicle motion model.
-- Fuse GNSS position fixes with IMU angular velocity and wheel speed
+- Fuse GNSS position fixes with the IMU's angular velocity (yaw rate)
   using configurable noise covariance matrices.
 - Evaluate localization accuracy using Absolute Pose Error (APE) and
   Relative Pose Error (RPE).
@@ -103,7 +103,7 @@ Tasks
 -----
 
 GP3 is worth **100 internal points** (scaled to 21.25% of the project grade).
-Complete all four tasks. The bonus task (Task 4) can push your score above
+Complete Tasks 1, 2, 3 and 5. Task 4 is a bonus: it can push your score above
 100, but GP3 never counts for more than its 21.25% of the project grade.
 
 .. dropdown:: Task 1: Camera-LiDAR Fusion Node (30 pts)
@@ -132,8 +132,10 @@ Complete all four tasks. The bonus task (Task 4) can push your score above
       to transform the frustum into LiDAR frame.
    3. Retain all LiDAR points whose ``(u, v)`` projection falls within the
       bounding box **and** whose range is within ``[min_range, max_range]``.
-   4. Run DBSCAN clustering on the retained points. Select the largest
-      cluster as the associated object.
+   4. Run DBSCAN clustering on the retained points. Select the cluster
+      closest to the camera as the associated object: points behind the
+      object (a wall, the road) fall in the same frustum and can form a
+      larger cluster. State your DBSCAN settings in the report.
    5. Compute the 3D centroid of the cluster. Publish as ``Detection3D``
       with ``results[0].hypothesis.class_id`` and
       ``results[0].hypothesis.score`` copied from the 2D detection.
@@ -143,7 +145,8 @@ Complete all four tasks. The bonus task (Task 4) can push your score above
    - If no LiDAR points fall within the frustum (occlusion, range limit,
      sensor dropout), publish the detection with ``bbox.center.position.z = -1``
      as a sentinel value and log a ``WARN`` message.
-   - If multiple clusters are found, pick the cluster closest to the camera.
+   - If two detections select the same cluster (overlapping boxes), give
+     it to one of them and state your rule in the report.
    - The node must work with both YOLO and DETR detection outputs from GP2
      without modification (both use ``Detection2DArray``).
 
@@ -155,12 +158,12 @@ Complete all four tasks. The bonus task (Task 4) can push your score above
 
       def associate_lidar_to_detection(detection, cloud_array, K, T_cl,
                                        min_range=1.0, max_range=50.0):
-          """Decide which LiDAR cluster belongs to which camera detection.
+          """The 3D centroid of the LiDAR cluster that belongs to one detection.
 
-          YOU WRITE THIS. L3 gives you the pieces: gate first with a
-          chi-square threshold, score with Mahalanobis distance rather than
-          Euclidean, and solve the frame as a whole rather than greedily.
-          Say in the report which method you used and why.
+          YOU WRITE THIS, following steps 3 to 5 above: keep the points
+          inside the box's frustum and range, cluster them, take the
+          cluster closest to the camera, and return its centroid. Return
+          None when no point falls inside the frustum.
           """
           raise NotImplementedError("GP3: associate_lidar_to_detection")
 
@@ -245,9 +248,11 @@ Complete all four tasks. The bonus task (Task 4) can push your score above
    where ``(x, y)`` is position in the map frame, ``theta`` is heading
    (radians), and ``v`` is forward speed (m/s).
 
-   **Prediction Step: Bicycle Model**
+   **Prediction Step: Motion Model**
 
-   Given IMU angular velocity ``omega`` (rad/s) and elapsed time ``dt``:
+   The heading turns at the IMU's yaw rate ``omega`` (rad/s), and the
+   speed stays constant over the step. Given ``omega`` and the elapsed
+   time ``dt``:
 
    .. math::
 
@@ -307,7 +312,7 @@ Complete all four tasks. The bonus task (Task 4) can push your score above
       import numpy as np
 
       class VehicleEKF(EKFBase):
-          """Concrete EKF for bicycle model + GNSS update."""
+          """Concrete EKF: yaw-rate motion model + GNSS update."""
 
           def __init__(self, Q, R):
               # State: [x, y, theta, v]
@@ -319,8 +324,8 @@ Complete all four tasks. The bonus task (Task 4) can push your score above
               """Non-linear process model. u = [omega], the IMU yaw rate.
 
               YOU WRITE THIS. State is [x, y, theta, v]. Advance it one step of
-              dt under a bicycle model, taking velocity as constant across the
-              step. Returns a (4,) array.
+              dt under the motion model above, taking velocity as constant
+              across the step. Returns a (4,) array.
               """
               raise NotImplementedError("GP3: f")
           def F_jacobian(self, x, u, dt):
@@ -607,7 +612,7 @@ Grading Rubric
        on average for vehicles.
    * - EKF Localization
      - 35
-     - State vector correct; prediction step uses bicycle model; Jacobian
+     - State vector correct; prediction step uses the motion model; Jacobian
        ``F`` analytically derived; GNSS update step implemented; ``Q``
        and ``R`` configurable via parameters; heading normalization
        applied; APE < 2.0 m in Town01 straight roads.
