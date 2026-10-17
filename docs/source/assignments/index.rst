@@ -42,15 +42,15 @@ split between the group projects (**85%**) and the Final Report
      - Duration
      - Lectures
    * - GP1: Sensor Suite & Data Pipeline
-     - 15
+     - 100
      - 15%
      - 3 weeks, due Sun, Oct 11
      - L1 and L2
    * - GP2: Perception (YOLO vs. RT-DETR)
-     - 40
+     - 100
      - 40%
      - 2 weeks, due Thu, Oct 29
-     - L3, L4 and L5
+     - L2 to L5
 
 .. note::
 
@@ -194,7 +194,7 @@ Academic Integrity
    Violations will be treated as academic dishonesty.
 
 **Peer Reviews**: Required for every GP. Your individual grade is
-**60% project grade + 40% peer review score**. The form, how to email it,
+**60% team grade for the project + 40% peer review score**. The form, how to email it,
 and how the score is computed are in :ref:`peer-evaluation`.
 
 

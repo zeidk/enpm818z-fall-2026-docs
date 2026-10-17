@@ -46,9 +46,6 @@ GP2: Perception (YOLO vs. RT-DETR)
    test: drive the route by day and by night, know where every car and every
    person really was, and score each detector against that.
 
-   CARLA knows where everything is, so GP2 can grade each detector against
-   it.
-
 .. card:: GP2: At a Glance
    :class-card: sd-shadow-sm
 
@@ -60,9 +57,11 @@ GP2: Perception (YOLO vs. RT-DETR)
         - 2 weeks: posted **Wednesday, October 14**, due **Thursday,
           October 29**
       * - **Weight**
-        - 27.2% of the course grade (34.0% of the project grade)
+        - 40% of the group-project grade: 34.0% of the final project grade, 27.2% of
+          the course grade
       * - **Lectures**
-        - L3 (Kalman filter), L4 (detection and its grading), L5 (tracking)
+        - L2 (projection), L3 (Kalman filter), L4 (detection and its grading), L5
+          (tracking)
       * - **Pre-read**
         - :doc:`/preread/detector-grading`: every score in GP2, step by step
       * - **Starter code**
@@ -98,7 +97,7 @@ Overview
 
 GP2 answers the perception lead's three questions with numbers from your
 own drives. Both models stay as they are: COCO-pretrained, as in L4. **GP2
-trains nothing.** The work is in measuring them fairly.
+trains nothing.**
 
 .. figure:: /_static/images/GP2/gp2_pipeline.png
    :alt: A diagram in two parts. Top, Offline: grade both detectors on your two drives. Your team's two drives, given, clear and night, feed two data boxes. The camera image goes to Task 2, YOLOv8s and RT-DETR-L. The depth image, semantic image, camera pose, K and the actors' 3D boxes go to Task 1, ground truth. Both tasks feed a box of files, detections_yolo.json, detections_detr.json and gt.json, which feeds Task 3, AP and mAP, and Task 4, the tracker with ID switches and MOTA. Both feed Task 5, the report: which detector? Bottom, Live: the same detector code as a ROS 2 node. replay_drive.py plays a drive as a camera on /carla/camera/rgb/image to Task 2's detector_node, which uses detector_core and publishes /perception/detections as a Detection2DArray, read by GP3's fusion.
@@ -110,15 +109,15 @@ trains nothing.** The work is in measuring them fairly.
    ROS 2 node that GP3 will read, fed here by a drive played as a camera.
    Each task has its own color.
 
-1. **Ground truth (Task 1).** You cannot grade a detector without knowing
-   where the objects really are. CARLA knows every vehicle's and every
+1. **Ground truth (Task 1).** CARLA knows every vehicle's and every
    person's 3D box. Task 1 turns those 3D boxes into the 2D boxes your
    camera would see.
 2. **The detectors (Task 2).** Both models behind one function, run on
    every recorded image and timed, and the same function inside a ROS 2
    node.
 3. **Grading (Task 3).** AP and mAP for each model, by day and by night,
-   exactly as L4's appendix defines them, checked against COCO's own code.
+   as L4's appendix defines them, without COCO's limit of 100 boxes per image,
+   checked against COCO's own code.
 4. **Tracking (Task 4).** A detector that is right in most frames can
    still make a tracker lose a person's ID. Task 4 builds an image tracker
    in the style of SORT (L5) and counts how often that happens.
@@ -152,9 +151,8 @@ trains nothing.** The work is in measuring them fairly.
 .. important::
 
    **Every team's numbers are different.** Your ground truth comes from your
-   GP1 camera rig: its position, pitch, image size and field of view. Two
-   teams that run the same code on the same traffic still get different
-   boxes and different scores. The figures on this page come from a **demo
+   GP1 camera rig: its position, pitch, image size and field of view. The
+   figures on this page come from a **demo
    rig** that no team has (the GP1 starter's placeholder: camera 1.5 m
    forward, 1.6 m up, no pitch, 1280 x 720, 90 deg).
 
@@ -467,8 +465,8 @@ work only on these recordings: GP2 needs no CARLA.
        the 8 corners of every vehicle's and pedestrian's 3D box within
        80 m, parked cars included, each with its CARLA ID.
 
-``gt_boxes.load_frame`` reads all four for you. Task 1 needs every one of
-them; the detectors need only ``rgb``.
+``gt_boxes.load_frame`` reads the depth, semantic and meta files for you and
+gives the image's path. Task 1 needs all four; the detectors need only ``rgb``.
 
 **How we recorded them** (``tools/record_gp2.py``, in the starter so you
 can read it; you do not need to run it):
@@ -508,8 +506,8 @@ Tasks
    .. admonition:: Tools for this task
       :class: tools
 
-      **You write the projection yourself,** in NumPy. No library call does
-      it for you; it is the same calculation as L2 and GP1 Task 5.
+      **You write the projection yourself,** in NumPy: it is the same
+      calculation as L2 and GP1 Task 5.
 
       - **Class code to start from:** L2's ``project()`` in
         `lecture2/lidar_to_camera.py <https://github.com/rubixcubic/enpm818z-fall-2026-carla-python/blob/main/lecture2/lidar_to_camera.py#L90-L127>`__
@@ -568,11 +566,11 @@ Tasks
       green box with IoU 0.955 and the orange box with IoU 0.672.
 
    **Why the second step matters.** In the figure, the detector is right.
-   Graded against the orange box, it looks only half right. On the demo
+   Graded against orange boxes, the same detections score lower. On the demo
    drive by day, orange boxes as the answer key give RT-DETR-L an
    mAP\@0.5 of 0.608 and YOLOv8s 0.566. Green boxes, on the same
-   detections, give 0.895 and 0.765. The detectors did not change; the
-   answer key did. :doc:`/preread/detector-grading` explains IoU and mAP\@0.5.
+   detections, give 0.895 and 0.765. :doc:`/preread/detector-grading`
+   explains IoU and mAP\@0.5.
 
    **What you write,** in ``gt_boxes.py``:
 
@@ -731,14 +729,16 @@ Tasks
          python3 tools/run_detector.py --rec recordings/night --model detr --weights rtdetr-l.pt
 
    3. Run the node live, on a drive played as a camera. Build and source
-      your workspace, then start the detector, here RT-DETR-L:
+      your workspace, then start the detector from the package root, where
+      ``run_detector.py`` saved the weights, here RT-DETR-L:
 
       .. code-block:: bash
 
          ros2 launch ads_pipeline perception_launch.py model_type:=detr weights:=rtdetr-l.pt
 
       In a second terminal, play the night drive on your GP1 camera's topic,
-      20 images a second, from the package root:
+      20 images a second, from the package root (add ``--topic <name>`` if
+      your GP1 camera does not publish on ``/carla/camera/rgb/image``):
 
       .. code-block:: bash
 
@@ -758,8 +758,7 @@ Tasks
 
    **Measuring the time.** ``run_detector.py`` times each call to your
    ``predict``, with the image already in memory, and reports the median
-   over the drive after two warm-up calls. L4 asks you to say how a time
-   was measured: the GPU, plugged in or on battery, and the method.
+   over the drive after two warm-up calls.
 
    .. figure:: /_static/images/GP2/gp2_latency.png
       :alt: A horizontal bar chart of the median time per image on the demo drives, with a dashed line at the 50 ms budget for 20 Hz. YOLOv8s clear 14.1 ms, YOLOv8s night 11.6 ms, RT-DETR-L clear 26.5 ms, RT-DETR-L night 26.6 ms. The axis label says RTX 4060 laptop GPU, plugged in, CARLA closed.
@@ -820,8 +819,7 @@ Tasks
         ``tools/check_coco.py`` compares your mAP with pycocotools
         (``pip install pycocotools``).
 
-   **Read** :doc:`/preread/detector-grading` **first.** It explains each step with
-   figures and worked examples. In short:
+   **Read** :doc:`/preread/detector-grading` **first.** In short:
 
    - A detection is **right** (a true positive) when it overlaps an
      unclaimed object of its class with IoU at least :math:`t`, the IoU
@@ -1022,7 +1020,7 @@ Tasks
 
          cp recordings/night/results.json ../results/gp2/night_results.json
 
-   **Choosing the cut is a trade-off.** A low cut gives the tracker more
+   A low cut gives the tracker more
    boxes: fewer misses, but more false and flickering boxes, so more ID
    switches. A high cut gives fewer switches but more misses. On the demo
    drive by day:
@@ -1100,8 +1098,8 @@ What the Demo Drive Gave
 ------------------------
 
 These are our results on the demo rig, with the reference solution, so you
-know what a working pipeline looks like. Your rig gives different numbers.
-Do not copy these into your report.
+know what a working pipeline looks like. Do not copy these into your
+report.
 
 .. list-table::
    :widths: 22 13 13 13 13 13 13
@@ -1150,8 +1148,7 @@ all four printed decimals on all four rows.
 
 On a test drive with another rig, the answers changed: by day at cut 0.5,
 RT-DETR-L gave about three times as many ID switches as YOLOv8s, and at
-night YOLOv8s had the higher mAP\@0.5. The rig changes the answer, which
-is why each team measures its own.
+night YOLOv8s had the higher mAP\@0.5.
 
 
 Suggested Schedule
@@ -1224,8 +1221,8 @@ Submission Checklist
 
    **Detector (Task 2)**
 
-   - [ ] ``ros2 launch ads_pipeline perception_launch.py model_type:=detr weights:=rtdetr-l.pt``
-         starts RT-DETR-L (the log line says ``detr``).
+   - [ ] ``ros2 launch ads_pipeline perception_launch.py model_type:=detr weights:=rtdetr-l.pt``,
+         run from the package root, starts RT-DETR-L (the log line says ``detr``).
    - [ ] ``/perception/detections`` publishes while ``replay_drive.py``
          plays a drive.
    - [ ] Times measured with nothing else on the GPU.
@@ -1254,7 +1251,8 @@ Submission Checklist
 Grading Rubric
 --------------
 
-Total: **100 points**, scaled to 34.0% of the project grade.
+Total: **100 points**, scaled to 40% of the group-project grade (34.0% of the final
+project grade).
 
 .. list-table::
    :widths: 30 12 58
@@ -1289,7 +1287,7 @@ Total: **100 points**, scaled to 34.0% of the project grade.
 
 .. note::
 
-   **Individual grade** = 60% project grade + 40% peer review score, as for
+   **Individual grade** = 60% team grade for GP2 + 40% peer review score, as for
    every project (:ref:`peer-evaluation`).
 
 

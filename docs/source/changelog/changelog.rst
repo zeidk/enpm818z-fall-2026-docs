@@ -5,10 +5,34 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.10.0: Lecture 6 Matches the Slides (2026-10-17)
+.. dropdown:: v2.10.1: GP2 Fixes from a Full Check (2026-10-17)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Projects
+
+   - **GP2, weight:** GP2 is graded out of 100 points and counts for 40% of
+     the group-project grade, which is 34.0% of the final project grade and
+     27.2% of the course grade. The Projects page now lists 100 points for
+     GP1 and GP2; the weights did not change.
+   - **GP2, individual grade:** 60% team grade for GP2 plus 40% peer review
+     score, as before; the page now says "team grade" where it said "project
+     grade".
+   - **GP2, lectures:** L2 (projection) is listed with L3, L4 and L5.
+   - **GP2, Task 2:** start ``ros2 launch`` from the package root, where the
+     weights are; ``replay_drive.py`` takes ``--topic <name>`` if your GP1
+     camera does not publish on ``/carla/camera/rgb/image``.
+   - **GP2, Task 3:** the AP and mAP follow L4's appendix without COCO's
+     limit of 100 boxes per image, as ``check_coco.py`` already did.
+   - **GP2, data:** ``gt_boxes.load_frame`` reads the depth, semantic and
+     meta files and gives the image's path.
+   - **GP2, wording:** shorter in a few places; no task, point or date
+     changed.
+
+.. dropdown:: v2.10.0: Lecture 6 Matches the Slides (2026-10-17)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lecture 6
 
