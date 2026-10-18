@@ -565,6 +565,12 @@ L2: Sensor Technologies & Calibration
       the outgoing sweep, which yields range and Doppler velocity
       together. :doc:`L2 </lectures/lecture2/l2_index>`
 
+   Fusion Architecture
+      The strategy for combining data from multiple sensors. Three main
+      types: early fusion (raw data), intermediate/mid-level fusion
+      (features), and late fusion (detection outputs).
+      :doc:`L2 </lectures/lecture2/l2_index>`
+
    GNSS
       Global Navigation Satellite System. Provides absolute position
       (latitude, longitude, altitude). Includes GPS (US), GLONASS
@@ -2065,6 +2071,13 @@ L5: Perception II, 3D Detection, BEV, Fusion & Tracking
       features in a shared BEV space using learned attention-weighted
       aggregation. :doc:`L5 </lectures/lecture5/l5_index>`
 
+   Cross-Attention Fusion
+      A deep learning fusion approach that uses transformer cross-attention
+      mechanisms to learn how features from one sensor modality should
+      attend to features from another (e.g., camera features attending to
+      LiDAR features in BEVFusion).
+      :doc:`L5 </lectures/lecture5/l5_index>`
+
    Data Association
       The problem of deciding which incoming measurement corresponds to
       which existing track (or that it is a new object or clutter).
@@ -2916,6 +2929,12 @@ L13 (not yet published)
 
 .. glossary::
 
+   ByteTrack
+      A multi-object tracking method (Zhang et al., 2022) that recovers
+      occluded objects by performing a second association pass using
+      low-confidence detections that other trackers would discard.
+      L13
+
    C-V2X
       Cellular Vehicle-to-Everything. A 3GPP-based V2X communication
       standard (LTE-V2X, NR-V2X/5G) that leverages cellular infrastructure
@@ -2940,6 +2959,18 @@ L13 (not yet published)
       Failure Mode and Effects Analysis. A systematic method for
       identifying potential failure modes in a system, assessing their
       impact, and designing mitigations (e.g., sensor redundancy). L13
+
+   HOTA
+      Higher Order Tracking Accuracy. A tracking evaluation metric that
+      balances detection quality and association quality equally via
+      their geometric mean, addressing biases in MOTA and IDF1.
+      L13
+
+   IDF1
+      Identity F1 Score. A tracking evaluation metric computed as the F1
+      score of correct identity assignments. Emphasizes consistent ID
+      maintenance over raw detection accuracy.
+      L13
 
    QoS
       Quality of Service. Configurable DDS policies governing message
@@ -2969,32 +3000,6 @@ Other Terms
 ===========
 
 .. glossary::
-
-   ByteTrack
-      A multi-object tracking method (Zhang et al., 2022) that recovers
-      occluded objects by performing a second association pass using
-      low-confidence detections that other trackers would discard.
-
-   Cross-Attention Fusion
-      A deep learning fusion approach that uses transformer cross-attention
-      mechanisms to learn how features from one sensor modality should
-      attend to features from another (e.g., camera features attending to
-      LiDAR features in BEVFusion).
-
-   Fusion Architecture
-      The strategy for combining data from multiple sensors. Three main
-      types: early fusion (raw data), intermediate/mid-level fusion
-      (features), and late fusion (detection outputs).
-
-   HOTA
-      Higher Order Tracking Accuracy. A tracking evaluation metric that
-      balances detection quality and association quality equally via
-      their geometric mean, addressing biases in MOTA and IDF1.
-
-   IDF1
-      Identity F1 Score. A tracking evaluation metric computed as the F1
-      score of correct identity assignments. Emphasizes consistent ID
-      maintenance over raw detection accuracy.
 
    MOTP
       Multi-Object Tracking Precision. The average overlap (IoU) between
