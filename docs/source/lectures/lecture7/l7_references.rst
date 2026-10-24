@@ -5,9 +5,9 @@ References
 These are the sources the L7 slides cite, grouped by the lecture's sections,
 in the order the slides first cite each source. A source cited in several
 sections is listed once, where the slides first cite it. The sections Lane
-Changes, Edge Costs, At Scale and Re-planning cite no new source. Fourteen
-sources are cited only in the appendix (:doc:`l7_appendix`); they have their
-own group at the end.
+Changes, At Scale and Re-planning cite no new source. Sixteen sources are
+cited only in the appendix (:doc:`l7_appendix`); they have their own group at
+the end.
 
 .. dropdown:: Introduction
    :class-container: sd-border-secondary
@@ -182,8 +182,8 @@ own group at the end.
    :class-container: sd-border-secondary
    :open:
 
-   What an HD map is, holds and is used for, where AV maps come from and when
-   they change, and the OpenDRIVE file read from a map file to a graph.
+   What an HD map is and holds, when an AV's map is loaded and when it
+   changes, and the OpenDRIVE file read from a map file to a graph.
 
    .. grid:: 1 1 2 2
       :gutter: 2
@@ -202,9 +202,10 @@ own group at the end.
 
          "Centimetre-level positional accuracy and the availability of
          lane-level geometric and semantic information are the essential
-         features found in most HD maps". The "six distinct layers", the
-         tasks a map helps with ("maps can offer an unlimited range"), and
-         the problems of building and keeping HD maps.
+         features found in most HD maps", and the "six distinct layers".
+         Also cited in the appendix, for the tasks a map helps with ("maps
+         can offer an unlimited range") and the problems of building and
+         keeping HD maps.
 
       .. grid-item-card:: HERE HD Live Map
          :link: https://www.mathworks.com/help/driving/ug/here-hd-live-map-layers.html
@@ -228,22 +229,11 @@ own group at the end.
          *The Waymo Driver Handbook: How our highly-detailed maps help unlock
          new locations for autonomous driving.* Accessed 17 October 2026.
 
-         "Our team starts by manually driving our sensor equipped vehicles
-         down each street, so our custom lidar can paint a 3D picture". The
-         car carries its map on board, compares sensor data "with its
+         The car carries its map on board, compares sensor data "with its
          on-board map", reroutes when a road changed, and tells the fleet.
-
-      .. grid-item-card:: Mobileye REM
-         :link: https://www.mobileye.com/technology/rem/
-         :class-card: sd-border-secondary
-
-         **Mobileye (2026)**
-
-         *REM: Road Experience Management.* Accessed 17 October 2026.
-
-         Maps from cameras on customers' cars: "Millions of
-         Mobileye-equipped ADAS vehicles sending data to the cloud in small
-         data packets (10kb/km)".
+         Also cited in the appendix: "our team starts by manually driving
+         our sensor equipped vehicles down each street, so our custom lidar
+         can paint a 3D picture".
 
       .. grid-item-card:: CARLA's maps and waypoints
          :link: https://carla.readthedocs.io/en/0.9.16/core_map/
@@ -323,35 +313,31 @@ own group at the end.
          ``carla.Osm2Odr.convert()`` turns the text of an ``.osm`` file into
          OpenDRIVE text.
 
-      .. grid-item-card:: The geometry element
-         :link: https://publications.pages.asam.net/standards/ASAM_OpenDRIVE/ASAM_OpenDRIVE_Specification/v1.9.0/specification/09_geometries/09_02_road_reference_line.html
+.. dropdown:: Edge Costs
+   :class-container: sd-border-secondary
+   :open:
+
+   The radius of a turn, read from the map file.
+
+   .. grid:: 1 1 2 2
+      :gutter: 2
+
+      .. grid-item-card:: Arcs and spirals
+         :link: https://publications.pages.asam.net/standards/ASAM_OpenDRIVE/ASAM_OpenDRIVE_Specification/v1.9.0/specification/09_geometries/09_05_arc.html
          :class-card: sd-border-secondary
 
          **ASAM e.V. (2026)**
 
-         *ASAM OpenDRIVE 1.9.0 Specification, Section 9.2: Road reference
-         line.* Table 18, attributes of the geometry element. Accessed 22
-         October 2026.
+         *ASAM OpenDRIVE 1.9.0 Specification, Section 9: Geometries.*
+         Sections 9.4 Spiral and 9.5 Arc. Accessed 22 October 2026.
 
-         The definitions of a ``<geometry>`` element's attributes, read on
-         road 25: ``s``, "s-coordinate of start position"; ``x`` and ``y``,
-         the start position; ``hdg``, "Start orientation (inertial
-         heading)"; ``length``, "Length of the element's reference line".
-
-      .. grid-item-card:: Junctions
-         :link: https://publications.pages.asam.net/standards/ASAM_OpenDRIVE/ASAM_OpenDRIVE_Specification/v1.9.0/specification/12_junctions/12_04_connecting_roads.html
-         :class-card: sd-border-secondary
-
-         **ASAM e.V. (2026)**
-
-         *ASAM OpenDRIVE 1.9.0 Specification, Sections 12.2 and 12.4: Common
-         junctions, Connecting roads.* Tables 56, 61 and 62: attributes of
-         connection and laneLink. Accessed 22 October 2026.
-
-         The definitions of a junction's connection, read on junction 332:
-         ``incomingRoad``, "ID of the incoming road"; ``connectingRoad``, "ID
-         of the connecting road"; ``contactPoint``; and the ``laneLink``
-         attributes ``from`` and ``to``.
+         An ``arc`` is a reference line "with constant curvature", and
+         "Positive curvature: left curve (counter-clockwise motion)": read on
+         road 312, our trip's right turn at intersection 1. Also cited in the
+         appendix: a negative curvature is a "right curve (clockwise
+         motion)", and a spiral's curvature changes "linear from the start to
+         the end", so a line can lead into an arc "without causing leaps in
+         the curvature".
 
 
 .. dropdown:: Search
@@ -418,8 +404,9 @@ own group at the end.
    :open:
 
    Sources cited only in the appendix, :doc:`l7_appendix`: route words in
-   other stacks, the map in the AV's architecture, map formats and Lanelet2,
-   curves in OpenDRIVE, and routing a whole country.
+   other stacks, where AV maps come from, the map in the AV's architecture,
+   map formats and Lanelet2, the geometry and junction elements of
+   OpenDRIVE, and routing a whole country.
 
    .. grid:: 1 1 2 2
       :gutter: 2
@@ -505,6 +492,18 @@ own group at the end.
          simulator" that generates new video for training and testing. The
          slides cite no architecture published by Tesla itself.
 
+      .. grid-item-card:: Mobileye REM
+         :link: https://www.mobileye.com/technology/rem/
+         :class-card: sd-border-secondary
+
+         **Mobileye (2026)**
+
+         *REM: Road Experience Management.* Accessed 17 October 2026.
+
+         Maps from cameras on customers' cars: "Millions of
+         Mobileye-equipped ADAS vehicles sending data to the cloud in small
+         data packets (10kb/km)".
+
       .. grid-item-card:: A Lanelet2 map file
          :link: https://github.com/fzi-forschungszentrum-informatik/Lanelet2/blob/master/lanelet2_maps/res/mapping_example.osm
          :class-card: sd-border-secondary
@@ -567,18 +566,35 @@ own group at the end.
          Lanelet2 builds a map from lanelets: each lane by its two borders,
          instead of an offset from a road's reference line.
 
-      .. grid-item-card:: Arcs and spirals
-         :link: https://publications.pages.asam.net/standards/ASAM_OpenDRIVE/ASAM_OpenDRIVE_Specification/v1.9.0/specification/09_geometries/09_05_arc.html
+      .. grid-item-card:: The geometry element
+         :link: https://publications.pages.asam.net/standards/ASAM_OpenDRIVE/ASAM_OpenDRIVE_Specification/v1.9.0/specification/09_geometries/09_02_road_reference_line.html
          :class-card: sd-border-secondary
 
          **ASAM e.V. (2026)**
 
-         *ASAM OpenDRIVE 1.9.0 Specification, Section 9: Geometries.*
-         Sections 9.4 Spiral and 9.5 Arc. Accessed 22 October 2026.
+         *ASAM OpenDRIVE 1.9.0 Specification, Section 9.2: Road reference
+         line.* Table 18, attributes of the geometry element. Accessed 22
+         October 2026.
 
-         A negative curvature is a "right curve (clockwise motion)". A
-         spiral's curvature changes "linear from the start to the end", so a
-         line can lead into an arc "without causing leaps in the curvature".
+         The definitions of a ``<geometry>`` element's attributes, read on
+         road 25: ``s``, "s-coordinate of start position"; ``x`` and ``y``,
+         the start position; ``hdg``, "Start orientation (inertial
+         heading)"; ``length``, "Length of the element's reference line".
+
+      .. grid-item-card:: Junctions
+         :link: https://publications.pages.asam.net/standards/ASAM_OpenDRIVE/ASAM_OpenDRIVE_Specification/v1.9.0/specification/12_junctions/12_04_connecting_roads.html
+         :class-card: sd-border-secondary
+
+         **ASAM e.V. (2026)**
+
+         *ASAM OpenDRIVE 1.9.0 Specification, Sections 12.2 and 12.4: Common
+         junctions, Connecting roads.* Tables 56, 61 and 62: attributes of
+         connection and laneLink. Accessed 22 October 2026.
+
+         The definitions of a junction's connection, read on junction 332:
+         ``incomingRoad``, "ID of the incoming road"; ``connectingRoad``, "ID
+         of the connecting road"; ``contactPoint``; and the ``laneLink``
+         attributes ``from`` and ``to``.
 
       .. grid-item-card:: Contraction hierarchies
          :link: https://doi.org/10.1007/978-3-540-68552-4_24

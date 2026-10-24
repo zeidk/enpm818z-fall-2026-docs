@@ -15,9 +15,10 @@ Quiz
 
 This quiz covers Lecture 7: the terms of route planning (road, carriageway,
 lane, route, path, trajectory), the trip in Town01, HD maps and their layers,
-reading the map file ``Town01.xodr``, segments and the waypoint graph,
-junctions and the traffic rules they put in the graph, the intersection
-graph, lane changes in Town03, edge costs and the top speed in a turn, routes
+reading the map file ``Town01.xodr``, the pipeline from the map file to a
+weighted graph, segments and the waypoint graph, junctions and the traffic
+rules they put in the graph, the toy graph, lane changes in Town03, edge
+costs and the top speed in a turn, the radius of a turn, routes
 under three costs, GP4's re-planning triggers and hysteresis, and turning the
 route into maneuvers. Every question can be answered from the lecture notes,
 :doc:`l7_lecture`. Nothing on this page needs
@@ -170,32 +171,34 @@ Multiple Choice (Questions 1 to 14)
 .. admonition:: Question 5
    :class: hint
 
-   Road 25's ``<geometry>`` element has ``hdg="-1.572"``. The heading
-   ``hdg`` is in radians, measured counterclockwise from east. Which way
-   does road 25's reference line point?
+   In the lecture's pipeline from the map file to a weighted graph, a fork
+   (a thick bar) after the waypoint graph splits the flow into a branch
+   marked [by hand] and a branch marked [GP4]. Which statement matches the
+   lecture?
 
-   A. North.
+   A. GP4's planner searches the toy graph, because the waypoint graph is too
+      large.
 
-   B. East.
+   B. The toy graph is for searches followed by hand. GP4 searches the full
+      waypoint graph, with lane change edges and edge costs added.
 
-   C. South.
+   C. The toy graph is the waypoint graph with lane change edges added.
 
-   D. West.
+   D. At the fork, the flow takes one branch or the other, never both.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C**.
+   **B**.
 
-   1. In degrees: −1.572 × 180 / π = −90.07°.
-   2. A negative angle turns clockwise from east, and a quarter turn
-      clockwise from east points south.
-
-   The geometry starts at (156.07, −11.02) and runs 35.18 m, so it ends at
-   :math:`y = -11.02 + 35.18 \sin(-90.07^\circ) = -46.20` m, at junction
-   332. Lanes are numbered from the reference line: lane 1 on its left
-   drives north, and lane −1 on its right drives south. See Map to Graph in
-   :doc:`l7_lecture`.
+   The waypoint graph has 3107 nodes, too many to follow a search by hand.
+   So the branch marked [by hand] keeps only S, G and seven intersections:
+   the toy graph. That branch ends at a circled X, because GP4 never uses
+   it. The branch marked [GP4] adds lane change edges where the map allows
+   them (the routing graph) and then gives every edge a cost (the weighted
+   graph). **C** describes the routing graph, not the toy graph. **D**
+   describes a choice (a diamond): at a fork, the flow splits and both
+   branches run. See Map to Graph in :doc:`l7_lecture`.
 
 
 .. admonition:: Question 6
@@ -246,7 +249,7 @@ Multiple Choice (Questions 1 to 14)
    A. Road 333 leads into road 25.
 
    B. From road 25's lane −1, the AV may drive on into lane −1 of road 333,
-      a short road inside the junction that begins where road 25 ends.
+      a short road inside the junction.
 
    C. Roads 25 and 333 are two names for the same road.
 
@@ -257,26 +260,25 @@ Multiple Choice (Questions 1 to 14)
 
    **B**.
 
-   ``incomingRoad`` is the road that leads into the junction, 25.
-   ``connectingRoad`` is the path across the junction, road 333, the right
-   turn. ``contactPoint="start"`` says road 333 begins where road 25 ends,
-   so traffic drives it from its :math:`s = 0`. ``laneLink`` joins road
-   25's lane −1 (driving south) to road 333's lane −1. Connection 3 does the
-   same for road 339, the left turn. Together they give the split at the
-   end of road 25's lane −1 its two edges. See Map to Graph in
+   ``laneLink from="-1" to="-1"``: road 25's lane −1 (driving south)
+   continues in lane −1 of road 333, the right turn. In the lecture's
+   listing, connection 3 does the same for road 339, the left turn. These
+   short roads inside the junction are the two ways out of the split at
+   intersection 5, so together the two connections give that split its two
+   edges. **A** reverses the direction. See Map to Graph in
    :doc:`l7_lecture`.
 
 
 .. admonition:: Question 8
    :class: hint
 
-   On the intersection graph, our route costs
-   41 + 75 + 64 + 53 + 40 = 273 m. On the waypoint graph, the same route is
-   260.6 m long. Why is the intersection graph 12.4 m longer?
+   On the toy graph, our route costs 41 + 75 + 64 + 53 + 40 = 273 m. On
+   the waypoint graph, the same route is 260.6 m long. Why is the toy graph
+   12.4 m longer?
 
-   A. The intersection graph measures straight lines between its nodes.
+   A. The toy graph measures straight lines between its nodes.
 
-   B. The intersection graph measures to each intersection's center, and
+   B. The toy graph measures to each intersection's center, and
       the lanes cut through the turns.
 
    C. The waypoint graph's route skips intersection 3.
@@ -288,7 +290,7 @@ Multiple Choice (Questions 1 to 14)
 
    **B**.
 
-   Each node of the intersection graph sits at the center of CARLA's
+   Each node of the toy graph sits at the center of CARLA's
    rectangle around an intersection. An AV that turns does not drive
    through that center: its lane cuts the corner, so the waypoint graph
    gives a shorter length. 273 − 260.6 = 12.4 m. **A** is wrong: the edge
@@ -332,29 +334,32 @@ Multiple Choice (Questions 1 to 14)
 
    The top speed in a curve of radius :math:`r` is
    :math:`\sqrt{a_{\mathrm{lat}}\, r}`, with
-   :math:`a_{\mathrm{lat}} = 2.0` m/s² (chosen for the lecture). Town01's
-   24 right-turn lanes have a median radius of 7.2 m, from the map. What is
-   the AV's top speed in that turn?
+   :math:`a_{\mathrm{lat}} = 2.0` m/s² (chosen for the lecture). On the
+   trip's right turn at intersection 1, road 312, the lecture reads the
+   radius of the lane's center from two waypoints: 5.65 m. What speed does
+   the AV plan there? Town01's speed limit is 11.18 m/s.
 
-   A. 3.79 m/s
+   A. 3.36 m/s
 
-   B. 14.4 m/s
+   B. 11.30 m/s
 
    C. 11.18 m/s
 
-   D. 2.68 m/s
+   D. 2.38 m/s
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **A**.
 
-   :math:`\sqrt{2.0 \times 7.2} = \sqrt{14.4} = 3.79` m/s. **B** forgets
-   the square root. **C** is the speed limit, which caps the speed only
-   where the curve is wider than :math:`11.18^2 / 2.0 = 62.5` m. **D** drops
-   :math:`a_{\mathrm{lat}}`: :math:`\sqrt{7.2} = 2.68`. A meter of this turn
-   takes 11.18 / 3.79 = 2.9 times as long as a straight meter at the limit.
-   See Edge Costs in :doc:`l7_lecture`.
+   :math:`\sqrt{2.0 \times 5.65} = \sqrt{11.3} = 3.36` m/s. That is below
+   the speed limit, so the AV plans 3.36 m/s. **B** forgets the square root
+   (2.0 × 5.65 = 11.30). **C** is the speed limit, which is too fast for
+   this turn. **D** drops :math:`a_{\mathrm{lat}}`: :math:`\sqrt{5.65} =
+   2.38`. The map file gives nearly the same radius: the reference line's
+   second arc has curvature 0.1304 per meter, so 1 / 0.1304 = 7.67 m, and
+   the lane's center is 2.0 m closer to the arcs' center:
+   7.67 − 2.00 = 5.67 m. See Edge Costs in :doc:`l7_lecture`.
 
 
 .. admonition:: Question 11
@@ -443,9 +448,9 @@ Multiple Choice (Questions 1 to 14)
    Trigger 2 compares the pose the localizer reports with the path, and
    2.3 m is more than 2.0 m, so it fires. The new start still lands on the
    AV's own lane, because it must face the way the AV drives, but the
-   search is wasted. Waiting for 2 checks in a row (2 is chosen) is
-   hysteresis again: a rule that waits before it acts. **D** makes the
-   trigger fire even more often. See Re-planning in :doc:`l7_lecture`.
+   search is wasted. The planner should re-plan only when the deviation
+   shows on 2 checks in a row (2 is chosen). **D** makes the trigger fire
+   even more often. See Re-planning in :doc:`l7_lecture`.
 
 
 .. admonition:: Question 14
@@ -473,8 +478,7 @@ Multiple Choice (Questions 1 to 14)
    20° is less than 30°, so the intersection is labeled straight on. Our
    route has four maneuvers: turn right at 1, turn right at 3, turn left at
    5 and turn right at 6. Between intersections, the AV follows its lane.
-   The next lectures' planners (L8, L9) need these maneuvers besides the
-   waypoints. See Maneuvers in :doc:`l7_lecture`.
+   L9's motion planning needs these maneuvers besides the waypoints. See Maneuvers in :doc:`l7_lecture`.
 
 
 ----
@@ -531,10 +535,10 @@ True or False (Questions 15 to 18)
    **False.**
 
    ``Both`` says an AV in lane −1 may move right, into lane −2, or left,
-   into the center lane. But the center lane, lane 1, has no waypoints
-   (``generate_waypoints`` skips it), so our graph has no node there. Our
-   graph adds a lane change edge only between lanes that drive the same
-   way, so the move into the center lane gets no edge. See Lane Changes in
+   into the center lane: the map allows that move (the dashed purple arrow
+   in the lecture's figure). But the center lane, lane 1, has no waypoints
+   (``generate_waypoints`` skips it), so our graph has no node there and no
+   edge for the move. See Lane Changes in
    :doc:`l7_lecture`.
 
 
@@ -566,7 +570,7 @@ Short Answer (Questions 19 to 20)
    :class: hint
 
    The street between S and intersection 1 has two lanes, one each way. Why
-   does the intersection graph give S only one edge, S to 1, and no edge
+   does the toy graph give S only one edge, S to 1, and no edge
    from 1 back to S?
 
 .. dropdown:: Answer
@@ -575,8 +579,7 @@ Short Answer (Questions 19 to 20)
    S is a point in the westbound lane. The AV starts there facing west, so
    it can only drive toward 1. A route back to S would have to arrive in
    the westbound lane from the east, through the intersection at the
-   street's other end, and that intersection is not in the intersection
-   graph.
+   street's other end, and that intersection is not in the toy graph.
 
    In the waypoint graph, the two lanes are separate chains of nodes, and
    every edge points the way its lane drives. So the one-way start comes
@@ -595,10 +598,11 @@ Short Answer (Questions 19 to 20)
    The travel-time cost of an edge is its length divided by the AV's speed
    on it, worked out from the map before the drive. On a straight lane, the
    speed is the limit, 11.18 m/s. In a turn, it is at most
-   :math:`\sqrt{2.0\, r}`: 3.79 m/s in the median right turn and 4.80 m/s in
-   the median left turn. So a meter of the median right turn takes 2.9
-   times as long as a straight meter, and a meter of the median left turn
-   2.3 times.
+   :math:`\sqrt{2.0\, r}`: 4.80 m/s in the median left turn
+   (:math:`r` = 11.5 m), and 3.36 m/s in the trip's right turn at
+   intersection 1 (:math:`r` = 5.65 m). A meter of the median left turn
+   takes 1 / 4.80 = 0.21 s, against 1 / 11.18 = 0.09 s on a straight lane:
+   about 11.18 / 4.80 = 2.3 times as long.
 
    The distance route, through 1, 3, 5 and 6, is 260.6 m and takes 31.0 s.
    The travel-time route, through 1, 3, 4 and 6, is 266.9 m and takes

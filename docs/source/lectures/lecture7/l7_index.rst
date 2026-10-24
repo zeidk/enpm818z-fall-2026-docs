@@ -17,13 +17,18 @@ that line: the shortest route the AV can drive turns four times and is
 
 - **Map to graph.** What an HD map (high-definition map) holds, then Town01's
   own map file, ``Town01.xodr``, in the OpenDRIVE format CARLA uses. CARLA
-  cuts each lane into segments, and a waypoint every 2 m, joined in driving
-  order, makes the routing graph: 3107 nodes and 3143 edges.
+  cuts each lane into segments, 124 in Town01, and a waypoint every 2 m,
+  joined in driving order, makes the waypoint graph: 3107 nodes and 3143
+  edges. A toy graph of nine nodes, cut from the same streets, is small
+  enough to search by hand; GP4 searches the full graph.
 - **Lane changes.** In Town03, many roads have two lanes the same way, and the
-  lane decides the turn. The graph gets a third kind of edge, the lane change.
+  lane decides the turn. The graph gets a third kind of edge, the lane change,
+  and becomes the routing graph.
 - **Edge costs.** Distance, travel time, or distance plus a penalty for each
-  left turn. Travel time picks a route 6.3 m longer but 3.3 s faster than
-  distance does.
+  left turn. For travel time, the planner caps the speed in a turn from the
+  turn's radius, read from the map before the drive: 5.65 m on the trip's
+  right turn at intersection 1, so 3.36 m/s. Travel time picks a route 6.3 m
+  longer but 3.3 s faster than distance does.
 - **Search.** Dijkstra and A* from the planning course, recapped in
   :doc:`Going Further <l7_appendix>`. On Town01's full graph, both find the
   same 260.6 m route, but A* takes 196 nodes on the way and Dijkstra 543.
@@ -56,12 +61,14 @@ Lecture Materials
 
 - :doc:`l7_lecture`: the notes, following the slides shown in class.
 - :doc:`Going Further <l7_appendix>`: the deck's appendix (route words in
-  other stacks, path and trajectory, the map in the AV's architecture, map
-  formats and Lanelet2, lanes and curves in OpenDRIVE, waiting at traffic
-  lights, the Dijkstra and A* recap with its heuristics, and the searches on
-  Town01's full graph).
-- :doc:`l7_search_steps`: every step of both searches on the intersection
-  graph.
+  other stacks, path and trajectory, uses, sources and risks of HD maps, the
+  map in the AV's architecture, map formats and Lanelet2, the OpenStreetMap
+  conversion in Python, the geometry element, lanes and curves in OpenDRIVE,
+  Town01's 160 waypoint pairs, the junction element, the top speed in
+  Town01's turns, waiting at traffic lights, the three costs in code, the
+  Dijkstra and A* recap with its heuristics, and the searches on Town01's
+  full graph).
+- :doc:`l7_search_steps`: every step of both searches on the toy graph.
 - :doc:`l7_code`: the hands-on, five parts on the trip (``map``, ``graph``,
   ``costs``, ``search`` and ``replan``).
 - :doc:`l7_exercises`, :doc:`l7_quiz` and :doc:`l7_references`.

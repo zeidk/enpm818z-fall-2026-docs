@@ -15,7 +15,7 @@ The lectures in ENPM818Z follow a progressive structure, starting with the auton
 Schedule
 --------
 
-L1 to L5 are open. The later lectures open here one at a time, as their
+L1 to L6 are open. The later lectures open here one at a time, as their
 slides are finished; the table shows the plan.
 
 .. list-table::
@@ -46,10 +46,10 @@ slides are finished; the table shows the plan.
      - GNSS and RTK, dead reckoning and its drift, fusion in L3's EKF, absolute pose error (APE), Monte Carlo localization (MCL), scan registration with ICP and a k-d tree, four ways to score a scan (point to point, point to line, GICP, NDT), scenes that cannot pin down the pose, checking a match before it is fused, SLAM (pose graph, loop closure), on one recorded CARLA drive
    * - L7
      - Route Planning
-     - Route, path and trajectory; HD maps; the OpenDRIVE map file read with carla.Map; from the map file to a routing graph (segments, junctions, traffic rules in the graph's shape); lane change edges in Town03; edge costs (distance, travel time with the top speed in turns, a left-turn penalty); Dijkstra and A* recapped; re-planning on GP4's two triggers, with hysteresis; maneuvers and CARLA's GlobalRoutePlanner; on one Town01 trip
+     - Route, path and trajectory; HD maps; the OpenDRIVE map file read with carla.Map; the pipeline from the map file to a weighted graph (segments, the waypoint graph, junctions and traffic rules in the graph's shape, a toy graph to search by hand); lane change edges and the routing graph in Town03; edge costs (distance, travel time with the top speed in turns, from the turn's radius in the map file and from the waypoints, a left-turn penalty); Dijkstra and A* recapped; re-planning on GP4's two triggers, with hysteresis; maneuvers and CARLA's GlobalRoutePlanner; on one Town01 trip
    * - L8
      - Prediction & Behavior Modeling
-     - Trajectory prediction (physics-based, maneuver-based, interaction-aware, Transformer-based), multi-modal prediction, behavior planning, FSM, rule-based vs learned decision-making
+     - What the planner needs from prediction and how far ahead to look; physics models (CV, CTRV, CTRA) and their error against the horizon; ADE, FDE, the miss rate and checking a 95% region; several futures (multimodal prediction, minADE, minFDE); the map's lanes as candidate paths with Bayes' rule; intent, the Intelligent Driver Model (IDM) and gap acceptance; learned predictors (VectorNet, MultiPath, MTR) in the appendix; on one Town01 junction
    * - L9
      - Motion Planning
      - Planning hierarchy, vehicle kinematic models, A*, Dijkstra, RRT, PRM, lattice planners, collision detection, diffusion-based planning (consumes L8 predictions)

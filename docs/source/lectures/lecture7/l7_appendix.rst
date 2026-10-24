@@ -26,20 +26,29 @@ Going Further
    * - :ref:`l7-app-sec-motion`
      - The formal definitions of a path and a trajectory, on our trip.
    * - :ref:`l7-app-sec-hdmaps`
-     - Where the map fits in the AV's architecture, and the scene model at
-       Waymo and Tesla.
+     - What an HD map is used for, where the map fits in the AV's
+       architecture, the scene model at Waymo and Tesla, where an AV's map
+       comes from, and what can go wrong with an HD map.
    * - :ref:`l7-app-sec-formats`
      - The HD map formats in use, the lanelet, Lanelet2, and OpenDRIVE
        against Lanelet2.
+   * - :ref:`l7-app-sec-osm`
+     - The conversion from an OpenStreetMap export to a CARLA map, in
+       Python.
    * - :ref:`l7-app-sec-opendrive`
-     - How ``Town01.xodr`` stores a road's lanes and draws a curve, and road
-       333's turn worked step by step.
+     - The geometry element of ``Town01.xodr`` read attribute by attribute,
+       how the file stores a road's lanes and draws a curve, and road 333's
+       turn worked step by step.
+   * - :ref:`l7-app-sec-segments`
+     - Town01's 160 waypoint pairs, counted, and a junction element read
+       attribute by attribute.
    * - :ref:`l7-app-sec-costs`
-     - The expected wait at a traffic light, as a cost.
+     - The top speed in all of Town01's turns, the expected wait at a traffic
+       light as a cost, and the three costs in code.
    * - :ref:`l7-app-sec-searches`
      - Dijkstra and A* in words, why costs must not be negative, admissible
-       and consistent heuristics, and the two searches compared on the
-       intersection graph.
+       and consistent heuristics, and the two searches compared on the toy
+       graph.
    * - :ref:`l7-app-sec-scale`
      - Both searches on Town01's full waypoint graph, GP4's node limit, and
        how a navigation service routes a whole country.
@@ -59,8 +68,7 @@ Introduction of the :doc:`lecture <l7_lecture>`.
 Route, Lane and Navigation in Other Stacks
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The same words mean different things in different software stacks. A stack
-is the full set of programs that drive the AV.
+A **stack** is the full set of programs that drive the AV.
 
 - **A route need not name the lane.** Autoware's older design page says its
   route "doesn't explicitly indicate which specific lanes to take" (Autoware
@@ -70,7 +78,7 @@ is the full set of programs that drive the AV.
 - **"Navigation" is wider in robotics.** ROS 2's Nav2 "provides perception,
   planning, control, localization, visualization, behaviors, and much more"
   (Nav2 project, Nav2 documentation). In Nav2, navigation is the whole
-  stack, not one module.
+  stack.
 
 .. note::
 
@@ -107,9 +115,8 @@ Path
    :class: note
 
    A continuous function :math:`\sigma(\alpha)\colon [0, 1] \to X`, where
-   :math:`X` is the configuration space of the vehicle. Paden et al. write
-   :math:`\Sigma(X)` for "the set of all continuous functions
-   :math:`[0, 1] \to X`" (Paden et al., 2016).
+   :math:`X` is the configuration space of the vehicle (Paden et al.,
+   2016).
 
 A configuration is a position :math:`x`, :math:`y` in meters and a heading
 :math:`\theta`. The configuration space :math:`X` is the set of all
@@ -167,8 +174,48 @@ turn. L10 follows a trajectory, and GP4 Task 2 asks you to.
 HD Maps
 -------
 
-This section continues the slide "What an HD map is used for" in the HD Map
-part of the :doc:`lecture <l7_lecture>`'s Map to Graph section.
+This section continues the slide "HD map layers" in the HD Map part of the
+:doc:`lecture <l7_lecture>`'s Map to Graph section.
+
+
+.. _l7-app-map-uses:
+
+What an HD Map Is Used For
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Elghazaly et al. (2023) list these uses:
+
+.. list-table::
+   :widths: 20 58 22
+   :header-rows: 1
+   :class: compact-table
+
+   * - **Task**
+     - **How the map helps**
+     - **In this course**
+   * - Localization
+     - "matching map data with collected sensor data in real-time"
+     - L6
+   * - Perception
+     - "improving the accuracy and reliability of perception"
+     - L4, L5
+   * - Routing
+     - "the calculation of efficient, feasible and safe routes"
+     - L7
+   * - Prediction
+     - "predict the likely paths and movements of other road users"
+     - L8
+   * - Motion planning
+     - "the planning of feasible and collision-free trajectories that
+       respect traffic rules"
+     - L9
+
+.. note::
+
+   A map covers places the sensors cannot see: "maps can offer an unlimited
+   range", which helps "especially in occluded zones" (Elghazaly et al.,
+   2023). For example, the map still shows the lane behind a parked truck
+   that hides it from the LiDAR.
 
 
 .. _l7-app-map-arch:
@@ -206,17 +253,69 @@ The Scene Model at Waymo and Tesla
   encoders feed a "World Decoder", which uses these inputs "to predict other
   road users behaviors, produce high-definition maps, generate trajectories
   for the vehicle, and signals for trajectory validation" (Waymo, 2025).
-  Waymo says this "provides significant benefits over the pure end-to-end or
-  modular approaches".
 - **Tesla**, as reported from a 2025 talk: one end-to-end neural network
   that learns from video, maps and kinematic data (Humanoids Daily, 2025).
   We cite no architecture published by Tesla itself.
 
 .. note::
 
-   "World model" has two meanings. Here, it is the AV's picture of the scene
-   now. Tesla's "neural world simulator" is a model that generates new video
+   "World model" has two meanings. In the scene model above, it is the AV's
+   picture of the scene now. Tesla's "neural world simulator" is a model that generates new video
    of the world for training and testing (Humanoids Daily, 2025).
+
+
+.. _l7-app-map-sources:
+
+Where an AV's Map Comes From
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Someone has to make these maps first. There are four ways:
+
+.. list-table::
+   :widths: 22 20 58
+   :header-rows: 1
+   :class: compact-table
+
+   * - **Source**
+     - **Example**
+     - **How it is made**
+   * - Survey cars with LiDAR
+     - Waymo
+     - "our team starts by manually driving our sensor equipped vehicles down
+       each street, so our custom lidar can paint a 3D picture" (Waymo, 2020)
+   * - Cameras on customers' cars
+     - Mobileye REM (Road Experience Management)
+     - "Millions of Mobileye-equipped ADAS vehicles sending data to the cloud
+       in small data packets (10kb/km)" (Mobileye, REM)
+   * - Shipped with the simulator
+     - CARLA, ``Town01.xodr``
+     - holds the geometric and connectivity layers and part of the semantic
+       layer
+   * - Volunteers' street map
+     - OpenStreetMap
+     - streets drawn by volunteers; CARLA converts it to OpenDRIVE (in the
+       lecture's Map to Graph section)
+
+
+.. _l7-app-map-wrong:
+
+What Can Go Wrong with an HD Map
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Elghazaly et al. (2023) list the problems of building and keeping HD maps:
+
+- **Out of date:** the road changes, "such as construction sites, road
+  blockages, and modifications of road connections". "Errors in HD maps
+  could lead to severe damage due to inappropriate decisions taken by the
+  system."
+- **Cost:** each mapping vehicle carries "an expensive suite of mapping
+  devices with high-precision sensors".
+- **Time and data:** collection is "time-consuming and labour-intensive",
+  and mapping vehicles "generate large quantities of data".
+- **No standard:** "there is no common agreement on how mapping data are
+  represented".
+- **Privacy:** maps "often contain sensitive information, such as the
+  locations of buildings and infrastructure".
 
 
 .. _l7-app-sec-formats:
@@ -265,9 +364,9 @@ HD Map Formats in Practice
 
 .. note::
 
-   Text files are common in simulation and for exchanging maps. Apollo loads
-   a binary file first; NDS.Live sends tiles and updates "only what needs
-   updating" (NDS Association, NDS.Live).
+   OpenDRIVE and Lanelet2 are XML text; Apollo loads a binary file first,
+   and NDS.Live updates "only what needs updating" (NDS Association,
+   NDS.Live).
 
 
 .. _l7-app-lanelet-def:
@@ -298,9 +397,9 @@ primitives). A **linestring** is "an ordered list of points with linear
 interpolation in between" (FZI, Lanelet2 primitives): the points are joined
 by straight lines.
 
-**In Town01:** road 25's southbound lane as a lanelet. **1** is its left
-border, the road's reference line. **2** is its right border, 4.0 m west.
-**3** is the drivable area. The road is straight, so each border is two
+**In Town01:** road 25's southbound lane as a lanelet. Seen by an AV
+driving south, its left border **1** is the road's reference line, its right
+border **2** is 4.0 m west, and **3** is the drivable area. The road is straight, so each border is two
 points.
 
 
@@ -313,16 +412,13 @@ Autoware's map "must be in Lanelet2 format, with additional modifications
 required by Autoware" (Autoware Foundation, Map, components). **Lanelet2**
 (Poggenhans et al., 2018) builds a map from lanelets: it stores each lane by
 its two borders, instead of as an offset from a road's reference line.
-
-- "Regulatory elements are a generic way to express traffic rules. They are
-  referenced by Lanelets or areas for which they apply" (FZI, Lanelet2
-  primitives).
+"Regulatory elements are a generic way to express traffic rules. They are
+referenced by Lanelets or areas for which they apply" (FZI, Lanelet2
+primitives).
 
 .. note::
 
-   Either way, routing needs the same thing from the map: which lane follows
-   which, and how long each one is. The rest of the lecture uses OpenDRIVE
-   through CARLA.
+   The rest of the lecture uses OpenDRIVE through CARLA.
 
 
 .. _l7-app-lanelet:
@@ -359,6 +455,47 @@ OpenDRIVE against Lanelet2
    "this lane leads to that one" as edges, and a cost per edge.
 
 
+.. _l7-app-sec-osm:
+
+OpenStreetMap
+-------------
+
+This section continues the slide "A map of your own, from OpenStreetMap" in
+the From Map File to Graph part of the :doc:`lecture <l7_lecture>`'s Map to
+Graph section.
+
+
+.. _l7-app-osm-code:
+
+From Your .osm File to a Map, in Python
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   osm = open("maps/umd_engineering.osm").read()
+   settings = carla.Osm2OdrSettings()
+   settings.proj_string = ("+proj=tmerc +lat_0=38.99 +lon_0=-76.939"
+                           " +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m")
+   settings.center_map = False      # keep its origin
+   settings.use_offsets = False
+   xodr = carla.Osm2Odr.convert(osm, settings)  # OpenDRIVE text
+   m = carla.Map("campus", xodr)    # a map object
+
+``proj_string`` sets how latitude and longitude become meters: x = 0, y = 0
+is at latitude 38.99, longitude −76.939. With ``center_map`` on, the
+converter would move the origin to the center of the road map, and
+``use_offsets`` would shift it too. Both stay off, so the origin stays where
+``proj_string`` puts it.
+
+In class we run this code on the copy of the ``.osm`` file in the course
+package, not on the file you just exported. ``osm_to_map.py``, in the folder
+``lecture7``, does it for any export:
+
+.. code-block:: bash
+
+   python3 osm_to_map.py <location of map.osm>
+
+
 .. _l7-app-sec-opendrive:
 
 OpenDRIVE
@@ -367,6 +504,44 @@ OpenDRIVE
 This section continues the slide "One road in Town01.xodr" in the From Map
 File to Graph part of the :doc:`lecture <l7_lecture>`'s Map to Graph
 section.
+
+
+.. _l7-app-odr-geometry:
+
+Reading a Geometry Element
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Road 25's ``<geometry>`` (**4** in the lecture's listing) draws its
+**reference line**, the line the file draws the road along. Lanes are
+numbered from it: 1 on its left (driving north here), −1 on its right
+(driving south).
+
+.. list-table::
+   :widths: 14 40 46
+   :header-rows: 1
+   :class: compact-table
+
+   * - **Attribute**
+     - **ASAM's definition** (ASAM, Road reference line)
+     - **Road 25**
+   * - ``s``
+     - "s-coordinate of start position" (m)
+     - 0: the piece starts where the road starts; :math:`s` is the distance
+       along the reference line
+   * - ``x``, ``y``
+     - "Start position (x inertial)", "(y inertial)" (m)
+     - (156.07, −11.02), in the map frame: :math:`x` east, :math:`y` north
+   * - ``hdg``
+     - "Start orientation (inertial heading)" (rad)
+     - −1.572 rad, measured counterclockwise from east
+   * - ``length``
+     - "Length of the element's reference line" (m)
+     - 35.18
+
+1. The heading in degrees: −1.572 × 180 / π = −90.07°, so the line points
+   south.
+2. The end, 35.18 m later: x = 156.07 + 35.18 cos(−90.07°) = 156.03 m and
+   y = −11.02 + 35.18 sin(−90.07°) = −46.20 m. That point is junction 332.
 
 
 .. _l7-app-odr-lanes:
@@ -465,10 +640,80 @@ From the file: two arcs, each 6.45 m long, with curvature −0.1216 per meter
 
 .. note::
 
-   The lecture's Edge Costs section needs the radius of each turn to set the
-   AV's speed in it. There, the radius comes from the waypoints (7.2 m, the
-   median radius over the edges of Town01's right turns). This section shows
-   where the curve itself comes from.
+   The lecture's Edge Costs section does the same for road 312, our trip's
+   right turn at intersection 1: 7.67 − 2.00 = 5.67 m.
+
+
+.. _l7-app-sec-segments:
+
+Segments and Junctions
+----------------------
+
+This section continues the slides "CARLA cuts every lane at the
+intersections" and "A junction lists which lane leads to which" in the From
+Map File to Graph part of the :doc:`lecture <l7_lecture>`'s Map to Graph
+section.
+
+
+.. _l7-app-pairs:
+
+Town01's 160 Waypoint Pairs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``get_topology()`` returns 160 pairs of waypoints for Town01, one pair per
+segment and way out. Counted from the map:
+
+1. Outside the intersections: 26 roads with one lane each way, so 26 × 2 =
+   52 lanes.
+2. 36 of those lanes end where the AV can go two ways, so each is listed
+   twice, once for each lane it leads into: 52 + 36 = 88 pairs. Segment
+   **1** of the lecture's slide "CARLA cuts every lane at the intersections"
+   is one of them.
+3. Through the intersections: 72 segments, 24 left turns, 24 right turns and
+   24 straight on. So 88 + 72 = 160 pairs, for 52 + 72 = 124 segments.
+
+
+.. _l7-app-junction-el:
+
+Reading a Junction Element
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Here is junction 332's first connection, attribute by attribute, as ASAM
+OpenDRIVE defines them (ASAM, Junctions and connecting roads):
+
+.. list-table::
+   :widths: 22 32 46
+   :header-rows: 1
+   :class: compact-table
+
+   * - **Attribute**
+     - **ASAM's definition**
+     - **In junction 332**
+   * - ``junction id``
+     - the junction's ID
+     - 332; the roads inside it say ``junction="332"``
+   * - ``connection id``
+     - "Unique ID within the junction"
+     - 0
+   * - ``incomingRoad``
+     - "ID of the incoming road"
+     - 25: the road that leads into the junction
+   * - ``connectingRoad``
+     - "ID of the connecting road": a path across the junction
+     - 333: a short road inside the junction, the right turn
+   * - ``contactPoint``
+     - "Contact point on the @connectingRoad"
+     - ``start``: road 333 begins where road 25 ends, so traffic drives it
+       from its :math:`s = 0`
+   * - ``laneLink from``
+     - "ID of the incoming lane"
+     - −1: road 25's lane −1, driving south
+   * - ``laneLink to``
+     - "ID of the connection lane"
+     - −1: road 333's lane −1
+
+So, from road 25's lane −1, the AV may drive on into lane −1 of road 333,
+the right turn. Connection 3 does the same for road 339, the left turn.
 
 
 .. _l7-app-sec-costs:
@@ -476,8 +721,44 @@ From the file: two arcs, each 6.45 m long, with curvature −0.1216 per meter
 Edge Costs
 ----------
 
-This section continues the slide "Routes under three costs" in the Edge
-Costs section of the :doc:`lecture <l7_lecture>`.
+This section continues the slides "The radius from the waypoints" and
+"Routes under three costs" in the Edge Costs section of the
+:doc:`lecture <l7_lecture>`.
+
+
+.. _l7-app-turn-speed:
+
+Top Speed in Town01's Turns
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L7/turn_speed.png
+   :alt: A graph, not a map: top speed in meters per second against the curve's radius in meters, 0 to 90. A solid dark curve rises from 0 and becomes flat at about 11.2 meters per second from a radius of about 62 meters on. Dots on it: tag 1 at radius 7.2 and speed 3.8, tag 2 at radius 11.5 and speed 4.8, tag 3 where it becomes flat. Tag 4 points at the flat part. A dotted gray line marks 11.18 meters per second across the graph, and a dashed gray curve, tag 5, keeps rising above the flat part.
+   :width: 75%
+   :align: center
+
+   A graph, not a map: the top speed (m/s) against the curve's radius
+   :math:`r` (m). **1** and **2** the median right and left turns. **3**
+   :math:`\sqrt{2.0\, r}` meets the speed limit at
+   :math:`r = 11.18^2 / 2.0 = 62.5` m. **4** the speed limit, above 62.5 m.
+   **5** :math:`\sqrt{2.0\, r}` alone (dashed).
+
+1. The limit on sideways acceleration: :math:`a_{\mathrm{lat}} = 2.0` m/s²,
+   chosen for this example.
+2. **1** In Town01's 24 right-turn lanes, the median edge radius is 7.2 m:
+   √(2.0 × 7.2) = √14.4 = 3.79 m/s.
+3. **2** In its 24 left-turn lanes, it is 11.5 m: √(2.0 × 11.5) = √23 =
+   4.80 m/s.
+4. On a straight lane, the AV drives at the speed limit, 11.18 m/s.
+
+The solid line is the top speed: the lower of :math:`\sqrt{2.0\, r}` and the
+speed limit (dotted).
+
+.. note::
+
+   **Travel time of an edge:** its length divided by the lower of the speed
+   limit and the curve's top speed. A meter of the median left turn takes
+   11.18 / 4.80 = 2.3 times as long as a straight meter; a meter of the
+   median right turn, 11.18 / 3.79 = 2.9 times.
 
 
 .. _l7-app-lights:
@@ -502,6 +783,35 @@ through a light can add the time the AV expects to wait there.
    reads the light's state on ``/traffic/light_state``.
 
 
+.. _l7-app-costcode:
+
+The Three Costs in Code
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The costs in the lecture's Edge Costs section were computed this way, for
+all 3143 edges at once: edge ``i`` goes from node ``ef[i]`` to node
+``et[i]`` and is ``el[i]`` meters long.
+
+.. code-block:: python
+
+   turn = np.radians(wrap_deg(yaw[et] - yaw[ef]))  # rad
+   kappa = np.abs(turn) / el          # curvature: 1 / radius
+   kappa = np.maximum(kappa, 1e-12)   # never exactly 0
+   v = np.minimum(v_limit, np.sqrt(a_lat / kappa))  # m/s
+   cost_distance = el                           # 1. meters
+   cost_time = el / v                           # 2. seconds
+   cost_left = el + np.where(is_left, P, 0.0)   # 3. meters
+
+- ``yaw`` holds each node's heading in degrees, and ``wrap_deg`` brings a
+  change of heading into −180 to 180 degrees.
+- ``v_limit`` is the speed limit, 11.18 m/s (25 mph); ``a_lat`` is
+  2.0 m/s² and ``P`` is 30 m, both chosen.
+- A straight edge has ``kappa`` 0. ``np.maximum`` keeps the division finite,
+  so the speed limit sets ``v``.
+- ``is_left`` is true on the first edge of each left turn, so a left turn
+  adds ``P`` once.
+
+
 .. _l7-app-sec-searches:
 
 Searches
@@ -510,11 +820,10 @@ Searches
 This section is the recap that the :doc:`lecture <l7_lecture>`'s Search
 section points to. You know Dijkstra and A* from the planning course, so
 their recap is here, in words and numbers. Every
-step of both searches on the intersection graph is on
-:doc:`l7_search_steps`.
+step of both searches on the toy graph is on :doc:`l7_search_steps`.
 
-**S** is the trip's start node and **G** its goal node. The **intersection
-graph** has S, G and seven intersections, 1 to 7, as its nodes, and the roads
+**S** is the trip's start node and **G** its goal node. The **toy graph**
+has S, G and seven intersections, 1 to 7, as its nodes, and the roads
 between them as edges, each with its length in meters. It is drawn in
 :ref:`l7-steps-toy`.
 
@@ -524,8 +833,7 @@ between them as edges, each with its length in meters. It is drawn in
 Dijkstra and A*
 ~~~~~~~~~~~~~~~
 
-Both searches build routes out from S, cheapest first, until they reach G.
-One term first:
+Both searches build routes out from S until they reach G.
 
 .. admonition:: Definition: heuristic, :math:`h(n)`
    :class: note
@@ -555,7 +863,7 @@ With :math:`h = 0` at every node, A* is Dijkstra.
 Edge Costs Must Not Be Negative
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Dijkstra finds the cheapest route only if no edge cost is negative.
+Dijkstra is sure to find the cheapest route if no edge cost is negative.
 
 .. figure:: /_static/images/L7/negative_edge.png
    :alt: Three nodes S, A and B. An arrow from S to A labeled 2, an arrow from S to B labeled 5, and an arrow from B to A labeled minus 4.
@@ -589,8 +897,8 @@ breaks that.
 An Admissible Heuristic Never Overestimates
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Whether A* still finds the cheapest route depends on :math:`h`. A* finds it
-only if its :math:`h` never guesses too high:
+Whether A* still finds the cheapest route depends on :math:`h`. A* is sure
+to find the cheapest route if its :math:`h` never guesses too high:
 
 .. admonition:: Definition: admissible heuristic
    :class: note
@@ -607,8 +915,8 @@ reach G another way first. :ref:`l7-app-overestimate` below shows this with
 :math:`h(5) = 150`.
 
 **The straight line is admissible for distance:** every road from :math:`n`
-to G is at least as long as the straight line between them. On the
-intersection graph:
+to G is at least as long as the straight line between them. On the toy
+graph:
 
 .. list-table::
    :widths: 28 8 8 8 8 8 8 8 8 8
@@ -656,11 +964,10 @@ cheapest route is 41 + 75 + 64 + 53 + 40 = 273, so 142 is well below it.
 
 .. _l7-app-compare:
 
-Dijkstra against A* on the Intersection Graph
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Dijkstra against A* on the Toy Graph
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Both searches, on the intersection graph from S to G (every step is on
-:doc:`l7_search_steps`):
+Every step of both searches is on :doc:`l7_search_steps`.
 
 .. list-table::
    :widths: 30 35 35
@@ -718,8 +1025,7 @@ is: :math:`f` = 180 + 150 = 330 instead of 180 + 66 = 246.
      - 6
 
 With node 5 at :math:`f` = 330, A* takes node 4 (:math:`f` = 276) first and
-takes G through 4 at 277, before A* takes node 5: a route 4 m longer, also
-after taking six nodes.
+takes G through 4 at 277, before it takes node 5: a route 4 m longer.
 
 .. note::
 
@@ -813,12 +1119,12 @@ Admissible and Consistent
   from :math:`n` to the goal.
 - With a consistent :math:`h`, a node A* takes has its final :math:`g`, as
   in Dijkstra; with an :math:`h` that is only admissible, A* may have to
-  reopen a node it took.
+  take a node again.
 - The straight line is consistent: the straight line from :math:`n` to G is
   no longer than the road from :math:`n` to :math:`m` plus the straight line
   from :math:`m` to G.
 
-On the intersection graph (rounded meters), the tightest edges are 4 to 6,
+On the toy graph (rounded meters), the tightest edges are 4 to 6,
 where 105 ≤ 66 + 40 = 106, and 6 to G, where 40 ≤ 40 + 0. Every other edge
 has more room.
 
@@ -863,7 +1169,7 @@ Dijkstra's.
 Travel Time and GP4's Node Limit
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-With travel-time costs, and :math:`h` in seconds or in meters:
+Each search for our trip, with distance or travel-time costs:
 
 .. list-table::
    :widths: 28 32 20 20
@@ -942,6 +1248,16 @@ cites:
 - Paden, B., Čáp, M., Yong, S. Z., Yershov, D. and Frazzoli, E. (2016). "A
   Survey of Motion Planning and Control Techniques for Self-Driving Urban
   Vehicles." *IEEE Transactions on Intelligent Vehicles*, 1(1), 33 to 55.
+- Elghazaly, G., Frank, R., Harvey, S. and Safko, S. (2023).
+  "High-Definition Maps: Comprehensive Survey, Challenges, and Future
+  Perspectives." *IEEE Open Journal of Intelligent Transportation Systems*,
+  4, 527 to 550. doi:10.1109/OJITS.2023.3295502.
+- Waymo (2020). `The Waymo Driver Handbook: How our highly-detailed maps
+  help unlock new locations for autonomous driving
+  <https://waymo.com/blog/2020/09/the-waymo-driver-handbook-mapping/>`_.
+  Accessed 2026-10-17.
+- Mobileye (2026). `REM: Road Experience Management
+  <https://www.mobileye.com/technology/rem/>`_. Accessed 2026-10-17.
 - Ulbrich, S., Reschka, A., Rieken, J., Ernst, S., Bagschik, G., Dierkes,
   F., Nolte, M. and Maurer, M. (2017). "Towards a Functional System
   Architecture for Automated Vehicles." arXiv:1703.08557.
@@ -963,6 +1279,15 @@ cites:
 - ASAM e.V. (2026). `ASAM OpenDRIVE
   <https://www.asam.net/standards/detail/opendrive/>`_. Accessed
   2026-10-14.
+- ASAM e.V. (2026). `ASAM OpenDRIVE 1.9.0 Specification, Section 9.2: Road
+  reference line
+  <https://publications.pages.asam.net/standards/ASAM_OpenDRIVE/ASAM_OpenDRIVE_Specification/v1.9.0/specification/09_geometries/09_02_road_reference_line.html>`_
+  (Table 18, attributes of the geometry element). Accessed 2026-10-22.
+- ASAM e.V. (2026). `ASAM OpenDRIVE 1.9.0 Specification, Sections 12.2 and
+  12.4: Common junctions, Connecting roads
+  <https://publications.pages.asam.net/standards/ASAM_OpenDRIVE/ASAM_OpenDRIVE_Specification/v1.9.0/specification/12_junctions/12_04_connecting_roads.html>`_
+  (Tables 56, 61 and 62: attributes of connection and laneLink). Accessed
+  2026-10-22.
 - ASAM e.V. (2026). `ASAM OpenDRIVE 1.9.0 Specification, Section 9:
   Geometries
   <https://publications.pages.asam.net/standards/ASAM_OpenDRIVE/ASAM_OpenDRIVE_Specification/v1.9.0/specification/09_geometries/09_05_arc.html>`_

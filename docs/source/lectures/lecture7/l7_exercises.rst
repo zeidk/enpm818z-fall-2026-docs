@@ -11,20 +11,24 @@ Exercises
    work, which is the five in-class quizzes and the four group projects
    listed in the :doc:`syllabus </syllabus/index>`.
 
-Eight take-home exercises built on the Lecture 7 notes, :doc:`l7_lecture`, and
-on the lecture's trip in Town01. They use only the lecture, never
-:doc:`Going Further <l7_appendix>`. Exercises 1 and 2 read the map file:
-one road and one junction. Exercise 3 counts Town01's graph. Exercise 4 works
-through lane changes in Town03. Exercises 5 and 6 compute edge costs and
-compare routes under three costs. Exercise 7 runs GP4's re-planning triggers
-and hysteresis by hand, and Exercise 8 follows the route and labels its
-maneuvers. Three exercises end with a check in the lecture's hands-on window.
+Nine exercises built on the Lecture 7 notes, :doc:`l7_lecture`, and on the
+lecture's trip in Town01. They use only the lecture, never
+:doc:`Going Further <l7_appendix>`. Exercise 1 is the in-class exercise:
+find our start in the map file. Exercises 2 and 3 read the map file: one
+road and one junction. Exercise 4 counts Town01's graph. Exercise 5 works
+through lane changes in Town03. Exercises 6 and 7 compute edge costs, with
+the radius of a turn, and compare routes under three costs. Exercise 8 runs
+GP4's re-planning triggers and hysteresis by hand, and Exercise 9 follows
+the route and labels its maneuvers. Three exercises use the lecture's
+hands-on window.
 
 .. note::
 
-   Every exercise can be done with a calculator. The hands-on checks need
-   ``l7_handson.py`` from folder ``lecture7`` of the course's Python
-   repository, and no CARLA server.
+   Every exercise except Exercise 1 can be done with a calculator. The
+   hands-on parts need ``l7_handson.py`` from folder ``lecture7`` of the
+   course's Python repository, and no CARLA server. Its ``map`` part, used
+   in Exercise 1, also needs CARLA's Python package
+   (``pip install carla==0.9.16``).
 
    **The map frame** is L6's: :math:`x` east and :math:`y` north, in meters.
    CARLA's own :math:`y` points south, so the lecture flips its sign.
@@ -40,7 +44,71 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
    Task 1.
 
 
-.. dropdown:: Exercise 1. Reading Road 25 in Town01.xodr
+.. dropdown:: Exercise 1. In Class: Find Our Start in the Map File
+   :icon: number
+   :class-container: sd-border-primary
+   :class-title: sd-font-weight-bold
+
+   **Goal**
+
+   Find the trip's start, S, in ``Town01.xodr``: its road, its lane and its
+   distance along the road, and the junction the AV reaches first. This is
+   the in-class exercise of the lecture's carla.Map part.
+
+   .. raw:: html
+
+      <hr>
+
+   **Specification**
+
+   Run ``python3 l7_handson.py --part map`` in the folder ``lecture7`` of
+   the course's Python repository (no CARLA server), or follow the steps on
+   the screen in class. S is at :math:`x = 133.6`, :math:`y = -129.4` m, the
+   middle of the AV's rear axle, and the AV faces west. :math:`s` is the
+   distance along a road's reference line, the line the file draws the road
+   along. A road starts at its ``predecessor`` (:math:`s = 0`) and ends at
+   its ``successor``.
+
+   .. raw:: html
+
+      <hr>
+
+   **Steps**
+
+   1. Type our start, :math:`x = 133.6`, :math:`y = -129.4`, in the
+      **x, y** box and press Enter. The window prints its road, its lane and
+      :math:`s`.
+   2. Open ``Town01.xodr`` at the line it prints. Read the road's length,
+      its speed limit, and the junction at each end (``predecessor``,
+      ``successor``).
+   3. Lane 1 lies left of the road's reference line, so it drives against
+      :math:`s`. **Question:** which junction does the AV reach first, the
+      predecessor or the successor, and which intersection of our route is
+      it?
+
+   .. raw:: html
+
+      <hr>
+
+   **Deliverable**
+
+   The road, lane and :math:`s` of S; the road's length, speed limit and
+   two junctions; and the answer to the question in step 3, with its reason.
+
+   .. dropdown:: Answer
+      :color: success
+
+      1. S is on **road 4, lane 1**, at :math:`s` = 32.2 m.
+      2. Road 4 starts at line 407 of ``Town01.xodr``. It is 224.22 m long,
+         its speed limit is 25 mph, its predecessor is junction 306, and its
+         successor is junction 278.
+      3. Lane 1 drives against :math:`s`, from the successor's end toward
+         :math:`s = 0`. So, driving against :math:`s`, the AV meets the
+         **predecessor first: junction 306**. That is intersection 1, where
+         our route makes its first turn, a right turn, 41 m west of S.
+
+
+.. dropdown:: Exercise 2. Reading Road 25 in Town01.xodr
    :icon: number
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
@@ -82,12 +150,10 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
        ...
       </road>
 
-   In ASAM OpenDRIVE, ``s`` is the distance along the reference line, the
-   line the file draws the road along. ``x`` and ``y`` are the start of the
-   geometry in the map frame, ``hdg`` is its start heading in radians,
-   counterclockwise from east, and ``length`` is the length of its reference
-   line. The road starts at its predecessor (:math:`s = 0`) and ends at its
-   successor. One mile per hour is 0.44704 m/s.
+   ``s`` is the distance along the reference line, the line the file draws
+   the road along. The road starts at its predecessor (:math:`s = 0`) and
+   ends at its successor. As the lecture's figure of road 25 shows, its
+   reference line points south. One mile per hour is 0.44704 m/s.
 
    .. raw:: html
 
@@ -103,12 +169,9 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
 
       <hr>
 
-   **Part B. The geometry**
+   **Part B. The reference line**
 
-   4. Convert ``hdg`` to degrees. Which way does the reference line point?
-   5. Compute the end of the geometry, 35.18 m from its start. Which
-      junction is there?
-   6. The geometry holds ``<line/>``. What shape is the road?
+   4. The geometry holds ``<line/>``. What shape is the road?
 
    .. raw:: html
 
@@ -119,12 +182,12 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
    Lane 1 lies on the left of the reference line, and lane −1 on its right,
    looking the way the line points. Each lane is 4.0 m wide.
 
-   7. Which lane drives north, and which drives south?
-   8. Which junction does an AV in lane −1 reach first? An AV in lane 1?
-   9. Our route drives road 25 from intersection 5 to intersection 6. Which
+   5. Which lane drives north, and which drives south?
+   6. Which junction does an AV in lane −1 reach first? An AV in lane 1?
+   7. Our route drives road 25 from intersection 5 to intersection 6. Which
       lane does it use?
-   10. At the speed limit, how long does the AV need to drive road 25 from
-       end to end?
+   8. At the speed limit, how long does the AV need to drive road 25 from
+      end to end?
 
    .. raw:: html
 
@@ -132,7 +195,7 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
 
    **Deliverable**
 
-   The answers to questions 1 to 10, each with its arithmetic or the
+   The answers to questions 1 to 8, each with its arithmetic or the
    attribute it comes from.
 
    .. dropdown:: Guidance
@@ -147,42 +210,26 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
 
       Question 3: 25 × 0.44704 = 11.18 m/s.
 
-      Question 4:
-
-      1. −1.572 × 180 / π = −90.07°.
-      2. A negative heading turns clockwise from east. About a quarter turn
-         clockwise from east is south: the line points south.
-
-      Question 5:
-
-      1. :math:`x = 156.07 + 35.18 \cos(-90.07^\circ) = 156.03` m with these
-         rounded numbers. The lecture gives 156.02 m: the listing's numbers
-         are rounded, so the last digit can differ.
-      2. :math:`y = -11.02 + 35.18 \sin(-90.07^\circ) = -46.20` m.
-
-      The line runs 35.18 m south, and its end is at junction 332, the
-      successor.
-
-      Question 6: one straight piece. ``<line/>`` is a straight line, so
+      Question 4: one straight piece. ``<line/>`` is a straight line, so
       the whole 35.18 m of road 25 is straight.
 
-      Question 7: the line points south. Looking south, the left is east, so
+      Question 5: the line points south. Looking south, the left is east, so
       lane 1, on the east side, drives north. Lane −1, on the west side,
       drives south.
 
-      Question 8: lane −1 drives with :math:`s`, from the start to the end,
+      Question 6: lane −1 drives with :math:`s`, from the start to the end,
       so an AV in it reaches junction 332 first. Lane 1 drives against
       :math:`s`, so an AV in it reaches the predecessor first: junction 54.
 
-      Question 9: intersection 5 is junction 332, at the south end, and
+      Question 7: intersection 5 is junction 332, at the south end, and
       intersection 6 is junction 54, at the north end. The route drives
       north, so it uses lane 1.
 
-      Question 10: the road is straight, so the speed limit sets the speed:
+      Question 8: the road is straight, so the speed limit sets the speed:
       35.18 / 11.18 = 3.15 s.
 
 
-.. dropdown:: Exercise 2. Reading a Junction Element
+.. dropdown:: Exercise 3. Junction 332 in Town01.xodr
    :icon: number
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
@@ -219,11 +266,11 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
        </connection>
         ...
 
-   ASAM OpenDRIVE defines ``incomingRoad`` as the "ID of the incoming road",
-   ``connectingRoad`` as the "ID of the connecting road", ``contactPoint`` as
-   the "Contact point on the @connectingRoad", and ``laneLink`` ``from`` and
-   ``to`` as the "ID of the incoming lane" and the "ID of the connection
-   lane".
+   As the lecture reads it, ``laneLink from="-1" to="-1"`` says that road
+   25's lane −1 (driving south) continues in lane −1 of road 333, the right
+   turn, or of road 339, the left turn. Roads 333 and 339 are short roads
+   inside the junction. Only the connections the file lists become edges of
+   the graph.
 
    .. raw:: html
 
@@ -232,8 +279,7 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
    **Part A. One connection**
 
    1. Say in one sentence what connection 0 allows.
-   2. What does ``contactPoint="start"`` tell you about road 333?
-   3. Road 333 is the right turn and road 339 the left turn. An AV that
+   2. Road 333 is the right turn and road 339 the left turn. An AV that
       leaves road 25 by road 333 drives south first. In which direction
       does it leave the junction?
 
@@ -243,13 +289,13 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
 
    **Part B. The graph**
 
-   4. Connections 0 and 3 start from the same lane. What do they become in
+   3. Connections 0 and 3 start from the same lane. What do they become in
       the waypoint graph? Name the node they leave from, and say how many
       edges leave it.
-   5. Does our trip use connection 0 or 3 at intersection 5? Use the route
+   4. Does our trip use connection 0 or 3 at intersection 5? Use the route
       of the lecture: it comes east on road 9's lane −1 and turns left,
       through road 334, onto road 25.
-   6. The junction lists no connection from road 25's lane −1 into road
+   5. The junction lists no connection from road 25's lane −1 into road
       25's lane 1. What does that mean for every search on this graph?
 
    .. raw:: html
@@ -258,7 +304,7 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
 
    **Deliverable**
 
-   A sentence for each of questions 1 to 6.
+   A sentence for each of questions 1 to 5.
 
    .. dropdown:: Guidance
       :color: success
@@ -266,30 +312,27 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
       Question 1: from road 25's lane −1, driving south, the AV may drive on
       into lane −1 of road 333, a short road inside the junction.
 
-      Question 2: road 333 begins where road 25 ends, so traffic drives road
-      333 from its :math:`s = 0`.
-
-      Question 3: west. An AV driving south that turns right ends up driving
+      Question 2: west. An AV driving south that turns right ends up driving
       west, as the lecture's figure of intersection 5 shows.
 
-      Question 4: they become the two edges out of a split. The node is the
+      Question 3: they become the two edges out of a split. The node is the
       last waypoint of road 25's lane −1, where the lane meets the
       intersection. One edge leads into road 333's lane −1 (the right turn)
       and one into road 339's lane −1 (the left turn). Every node that is
       not a split has one edge out.
 
-      Question 5: neither. Both connections leave road 25's lane −1, which
+      Question 4: neither. Both connections leave road 25's lane −1, which
       drives south, away from intersection 6. Our route enters junction 332
       from road 9 and leaves it on road 25's lane 1, driving north, so it
       uses the connection for road 334.
 
-      Question 6: only the connections the file lists become edges. With no
+      Question 5: only the connections the file lists become edges. With no
       connection for the U-turn, there is no edge for it, so no search can
       return it, whatever cost it uses. ``Town01.xodr`` has 0 U-turn
       connections.
 
 
-.. dropdown:: Exercise 3. Counting Town01's Graph
+.. dropdown:: Exercise 4. Counting Town01's Graph
    :icon: number
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
@@ -309,10 +352,9 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
 
    - 26 roads run between intersections, each with one lane each way. There
      are 12 T-intersections, with 3 roads into each.
-   - ``get_topology()`` returns a segment as a pair of waypoints, one pair
-     per segment and way out: 160 pairs. A segment is one lane of one road,
-     in driving order. Through the intersections there are 24 left turns,
-     24 right turns and 24 straight on.
+   - A segment is one lane between two cuts at the intersections. Town01 has
+     124. At a split, a lane meets an intersection and the AV can go two
+     ways, each through a short road inside the intersection.
    - ``generate_waypoints(2.0)`` returns 3266 waypoints.
    - The waypoint graph has 3107 nodes and 3143 edges. All its edges
      together are 6400.4 m long, and the median edge is 2.00 m (shortest
@@ -322,15 +364,13 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
 
       <hr>
 
-   **Part A. The 160 pairs**
+   **Part A. Lanes, splits and segments**
 
    1. How many lanes run outside the intersections?
-   2. How many of those lanes end at a split, where the AV can go two ways?
-   3. Each of those lanes is listed once for each lane it leads into. How
-      many pairs do the lanes outside the intersections give?
-   4. How many segments run through the intersections? Check your answer
-      against the 24 + 24 + 24 turns.
-   5. Add up the pairs and the segments.
+   2. How many splits does Town01 have?
+   3. Each split leads two ways, each through one short road inside the
+      intersection. How many segments run through the intersections? Check
+      your answer against the 124 segments.
 
    .. raw:: html
 
@@ -338,10 +378,10 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
 
    **Part B. The waypoint graph**
 
-   6. Explain the 3143 edges from the 3107 nodes.
-   7. The graph has fewer nodes than ``generate_waypoints`` returns. How many
+   4. Explain the 3143 edges from the 3107 nodes.
+   5. The graph has fewer nodes than ``generate_waypoints`` returns. How many
       fewer, and why?
-   8. Compute the mean edge length and compare it with the median.
+   6. Compute the mean edge length and compare it with the median.
 
    .. raw:: html
 
@@ -352,7 +392,7 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
    Run ``python3 l7_handson.py --part graph`` and click node 224 at
    intersection 3 (it is amber).
 
-   9. How many successors does the box list, and how long is each edge?
+   7. How many successors does the box list, and how long is each edge?
       Why is the node amber?
 
    .. raw:: html
@@ -361,7 +401,7 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
 
    **Deliverable**
 
-   The counts with their arithmetic, a sentence each for questions 6 and 7,
+   The counts with their arithmetic, a sentence each for questions 4 and 5,
    and the box's numbers for node 224.
 
    .. dropdown:: Guidance
@@ -369,35 +409,29 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
 
       Question 1: 26 × 2 = 52 lanes.
 
-      Question 2: 12 × 3 = 36 lanes, one for each road into each
-      intersection. These are the 36 splits.
+      Question 2: 12 × 3 = 36 splits, one for each road into each
+      intersection.
 
-      Question 3: each of the 36 lanes is listed twice, so 36 pairs are
-      added to the 52: 52 + 36 = 88 pairs. Road 9's eastbound lane, from
-      intersection 3 to intersection 5, is one of them.
+      Question 3: 36 × 2 = 72 segments through the intersections. With the
+      52 lanes outside them, 52 + 72 = 124 segments, the lecture's count.
 
-      Question 4: each of the 36 splits leads into 2 short roads, so
-      36 × 2 = 72 segments. That matches 24 + 24 + 24 = 72.
-
-      Question 5: 88 + 72 = 160 pairs, for 52 + 72 = 124 segments.
-
-      Question 6: every node has one edge out, and each of the 36 splits has
+      Question 4: every node has one edge out, and each of the 36 splits has
       a second one: 3107 + 36 = 3143.
 
-      Question 7: 3266 − 3107 = 159 fewer. Where a lane ends and a single
+      Question 5: 3266 − 3107 = 159 fewer. Where a lane ends and a single
       lane continues, the graph keeps one node, not two. At a split, each
       way out starts with its own node.
 
-      Question 8: 6400.4 / 3143 = 2.04 m, close to the 2.00 m median, as you
+      Question 6: 6400.4 / 3143 = 2.04 m, close to the 2.00 m median, as you
       expect with a waypoint every 2 m. The edges range from 1.38 m to
       4.03 m.
 
-      Question 9: two successors, node 225 and node 2934, each 2.00 m ahead
+      Question 7: two successors, node 225 and node 2934, each 2.00 m ahead
       and at one point (ringed in the window): straight on and a right turn,
       which part about 7 m on. The node is amber because it is a split.
 
 
-.. dropdown:: Exercise 4. Lane Changes on Town03's Road 4
+.. dropdown:: Exercise 5. Lane Changes on Town03's Road 4
    :icon: number
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
@@ -442,7 +476,8 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
         - ``Left``
 
    Our graph adds a lane change edge only between lanes that drive the same
-   way. Before junction 238, the left lane goes left or straight on, and the
+   way, where the waypoint's ``lane_change`` field allows it, and only
+   between lanes that have waypoints. Before junction 238, the left lane goes left or straight on, and the
    right lane goes right or straight on.
 
    .. raw:: html
@@ -531,9 +566,9 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
 
       Question 3: four kinds: lane −2 to lane −1, lane −1 to lane −2, lane 2
       to lane 3 and lane 3 to lane 2. The move from lane −1 into the center
-      lane is allowed but gets no edge: the center lane has no waypoints, so
-      the graph has no node there, and it does not drive one way with lane
-      −1.
+      lane is allowed (the dashed purple arrow in the lecture's figure), but
+      it gets no edge: the center lane has no waypoints, so the graph has no
+      node there.
 
       Question 4:
 
@@ -558,16 +593,16 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
       intersection.
 
 
-.. dropdown:: Exercise 5. Top Speed and Travel Time
+.. dropdown:: Exercise 6. Top Speed and Travel Time
    :icon: number
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Compute the travel-time cost of edges, straight and in turns, with the
-   lecture's top speed in a curve, and run the lecture's cost code by hand
-   on one edge.
+   Compute the travel-time cost of edges, straight and in turns: read a
+   turn's radius from the map file and from two waypoints, and turn it into
+   a top speed.
 
    .. raw:: html
 
@@ -576,28 +611,20 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
    **Specification**
 
    The travel-time cost of an edge :math:`\ell` meters long is
-   :math:`\ell / v` seconds. The speed :math:`v` is the lower of the speed
-   limit and the curve's top speed :math:`\sqrt{a_{\mathrm{lat}}\, r}`, where
-   :math:`r` is the radius of the circle the lane follows and
+   :math:`\ell / v` seconds, with :math:`v` worked out from the map before
+   the drive. In a curve, :math:`v` is the lower of the speed limit and the
+   top speed :math:`\sqrt{a_{\mathrm{lat}}\, r}`, where :math:`r` is the
+   radius of the circle the lane follows and
    :math:`a_{\mathrm{lat}} = 2.0` m/s² (chosen for the lecture). Town01's
-   speed limit is 25 mph, 11.18 m/s. The lecture computes the three costs
-   for all 3143 edges with this code:
+   speed limit is 25 mph, 11.18 m/s.
 
-   .. code-block:: python
-
-      turn = np.radians(wrap_deg(yaw[et] - yaw[ef]))  # rad
-      kappa = np.abs(turn) / el          # curvature: 1 / radius
-      kappa = np.maximum(kappa, 1e-12)   # never exactly 0
-      v = np.minimum(v_limit, np.sqrt(a_lat / kappa))  # m/s
-      cost_distance = el                           # 1. meters
-      cost_time = el / v                           # 2. seconds
-      cost_left = el + np.where(is_left, P, 0.0)   # 3. meters
-
-   Edge ``i`` goes from node ``ef[i]`` to node ``et[i]`` and is ``el[i]``
-   meters long. ``yaw`` holds each node's heading in degrees, and
-   ``wrap_deg`` brings a change of heading into −180 to 180 degrees.
-   ``v_limit`` is 11.18 m/s, ``a_lat`` is 2.0 m/s² and ``P`` is 30 m.
-   ``is_left`` is true on the first edge of each left turn.
+   From the lecture: Town01's left-turn lanes have a median radius of
+   11.5 m (from the map). Road 312, the trip's right turn at intersection 1,
+   draws its reference line as a line, an arc of curvature 0.1046 per meter,
+   an arc of curvature 0.1304 per meter, and a line. Its only lane, lane 1,
+   is 4.0 m wide and lies inside the curve. Between two neighboring
+   waypoints, the heading turns by :math:`\Delta\theta` radians over the
+   edge's length :math:`\ell`, so :math:`r = \ell / \Delta\theta`.
 
    .. raw:: html
 
@@ -606,49 +633,54 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
    **Part A. Straight edges**
 
    1. A 100 m straight edge has a 25 mph limit. Compute its travel time.
-      Then compute it with a 15 mph limit (1 mph = 0.44704 m/s). How much
-      longer is it?
+      Then compute it with a 15 mph limit (chosen for the lecture;
+      1 mph = 0.44704 m/s). How much longer is it?
 
    .. raw:: html
 
       <hr>
 
-   **Part B. Turns**
+   **Part B. The left turn**
 
-   2. At which radius does :math:`\sqrt{2.0\, r}` reach the speed limit?
-   3. Town01's 24 right-turn lanes have a median radius of 7.2 m, and its 24
-      left-turn lanes a median of 11.5 m (both from the map). Compute the top
-      speed in each.
-   4. How many times as long as a straight meter does a meter of each turn
-      take?
-
-   .. raw:: html
-
-      <hr>
-
-   **Part C. The code on one edge**
-
-   An edge is 2.00 m long, and the heading turns 15° from its first node to
-   its second (chosen for this exercise).
-
-   5. Compute ``turn``, ``kappa``, the radius and ``v``.
-   6. Compute the three costs, first for an edge in the middle of a left
-      turn, then for the first edge of a left turn.
-   7. On a straight edge, ``turn`` is 0. What do ``kappa`` and ``v`` become,
-      and why does the code need ``np.maximum``?
+   2. Compute the top speed in the median left turn.
+   3. At the speed limit, what would the acceleration toward the center be
+      in that turn? How many times :math:`a_{\mathrm{lat}}` is it?
+   4. Compute the travel time of one meter of the turn and of one meter of a
+      straight lane. How many times as long does the turn take?
 
    .. raw:: html
 
       <hr>
 
-   **Part D. Hands-on check**
+   **Part C. The radius from the map file**
+
+   5. Compute the radius of road 312's reference line in its second arc,
+      then the radius of its lane's center. Compute the top speed there.
+   6. Redo question 5 for the first arc, of curvature 0.1046 per meter.
+
+   .. raw:: html
+
+      <hr>
+
+   **Part D. The radius from the waypoints**
+
+   7. Two neighboring waypoints are 2.00 m apart, and the heading turns 15°
+      between them (both chosen for this exercise). Compute the radius and
+      the top speed.
+
+   .. raw:: html
+
+      <hr>
+
+   **Part E. Hands-on check**
 
    Run ``python3 l7_handson.py --part costs`` and click the edge the lecture
    clicks, near :math:`x = 146` m, :math:`y = -59` m.
 
    8. The box lists edges 0 and 31, which leave node 0. Write down their
       three costs. Check the travel time with the speed limit. Why does edge
-      31 cost 32.00 m with the penalty?
+      31 cost 32.00 m with the penalty (:math:`P` = 30 m, chosen for the
+      lecture)?
 
    .. raw:: html
 
@@ -656,8 +688,8 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
 
    **Deliverable**
 
-   The travel times of Part A, the speeds and ratios of Part B, the values of
-   Part C in numbered steps, and the box's numbers for Part D.
+   The travel times of Part A, the numbered steps of Parts B to D, and the
+   box's numbers for Part E.
 
    .. dropdown:: Guidance
       :color: success
@@ -667,40 +699,41 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
       1. 15 mph is 15 × 0.44704 = 6.71 m/s.
       2. At 11.18 m/s: 100 / 11.18 = 8.9 s.
       3. At 6.71 m/s: 100 / 6.71 = 14.9 s.
-      4. The slower limit costs 6.0 s more. The speed limit is not a cost by
-         itself, but it sets :math:`v` in :math:`\ell / v`.
+      4. The slower limit costs 6.0 s more.
 
-      Question 2: set :math:`\sqrt{2.0\, r} = 11.18`, so
-      :math:`r = 11.18^2 / 2.0 = 62.5` m. In a curve wider than that, the
-      speed limit caps the speed.
+      Question 2: √(2.0 × 11.5) = √23 = 4.80 m/s, below the speed limit, so
+      the planner uses 4.80 m/s.
 
-      Question 3:
+      Question 3: 11.18 × 11.18 / 11.5 = 10.87 m/s², which is
+      10.87 / 2.0 = 5.4 times :math:`a_{\mathrm{lat}}`. Too fast for this
+      turn.
 
-      - Right turn: :math:`\sqrt{2.0 \times 7.2} = \sqrt{14.4} = 3.79` m/s.
-      - Left turn: :math:`\sqrt{2.0 \times 11.5} = \sqrt{23} = 4.80` m/s.
-
-      Question 4: the median right turn takes 11.18 / 3.79 = 2.9 times as
-      long as a straight meter, and the median left turn 11.18 / 4.80 = 2.3
-      times.
+      Question 4: 1 / 4.80 = 0.21 s in the turn, against 1 / 11.18 = 0.09 s
+      on a straight lane: about 11.18 / 4.80 = 2.3 times as long.
 
       Question 5:
 
-      1. ``turn`` = 15 × π / 180 = 0.2618 rad.
-      2. ``kappa`` = 0.2618 / 2.00 = 0.1309 per meter.
-      3. The radius is 1 / 0.1309 = 7.64 m.
-      4. :math:`\sqrt{2.0 / 0.1309} = \sqrt{15.28} = 3.91` m/s, below the
-         limit, so ``v`` = 3.91 m/s.
+      1. The reference line: :math:`r` = 1 / 0.1304 = 7.67 m.
+      2. The lane's center is 4.0 / 2 = 2.0 m closer to the arcs' center:
+         7.67 − 2.00 = 5.67 m.
+      3. √(2.0 × 5.67) = √11.34 = 3.37 m/s, below the speed limit.
 
-      Question 6: for an edge in the middle of the turn, ``cost_distance``
-      is 2.00 m, ``cost_time`` is 2.00 / 3.91 = 0.512 s, and ``cost_left``
-      is 2.00 m, because ``is_left`` is false. For the first edge of a left
-      turn, ``cost_left`` is 2.00 + 30 = 32.00 m. A left turn adds ``P``
-      once.
+      The lecture gets 5.65 m from two waypoints in this arc, and 3.36 m/s.
 
-      Question 7: ``np.abs(turn) / el`` is 0, and ``np.maximum`` raises it
-      to 1e-12. Then :math:`\sqrt{2.0 / 10^{-12}} = 1.41 \times 10^6` m/s,
-      and ``np.minimum`` picks the limit, 11.18 m/s. Without
-      ``np.maximum``, the code would divide by 0.
+      Question 6:
+
+      1. The reference line: :math:`r` = 1 / 0.1046 = 9.56 m.
+      2. The lane's center: 9.56 − 2.00 = 7.56 m.
+      3. √(2.0 × 7.56) = √15.12 = 3.89 m/s.
+
+      The first arc bends less, so the AV may drive a little faster there.
+
+      Question 7:
+
+      1. 15° is 15 × π / 180 = 0.2618 rad.
+      2. :math:`r` = 2.00 / 0.2618 = 7.64 m.
+      3. √(2.0 × 7.64) = √15.28 = 3.91 m/s, below the speed limit. The edge
+         costs 2.00 / 3.91 = 0.512 s.
 
       Question 8: both edges cost 2.00 m and 0.179 s. They leave node 0
       along the same first 2 m, where the heading does not change yet, so
@@ -708,14 +741,14 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
       a left turn, so its penalty cost is 2.00 + 30 = 32.00 m.
 
 
-.. dropdown:: Exercise 6. Routes Under Three Costs
+.. dropdown:: Exercise 7. Routes Under Three Costs
    :icon: number
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   List the routes of the intersection graph by hand, compare the two
+   List the routes of the toy graph by hand, compare the two
    routes the lecture found under three costs, and find the penalty that
    switches the route.
 
@@ -725,7 +758,7 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
 
    **Specification**
 
-   The intersection graph has the nodes S, G and intersections 1 to 7. Its
+   The toy graph has the nodes S, G and intersections 1 to 7. Its
    edges, with their lengths in whole meters along the lane: S to 1, 41
    (one way, from S); 1 to 2, 67; 1 to 3, 75; 3 to 4, 55; 3 to 5, 64; 4 to
    6, 66; 5 to 6, 53; 5 to 7, 179; 6 to G, 40 (one way, into G). The other
@@ -763,7 +796,7 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
 
       <hr>
 
-   **Part A. The intersection graph by hand**
+   **Part A. The toy graph by hand**
 
    1. List every route from S to G that visits no node twice. Why can a
       route not go through 2 or 7?
@@ -789,7 +822,7 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
       does the search pick?
    7. Above which :math:`P` does the search pick the route through 4? Check
       your answer with :math:`P = 5` m (chosen for this exercise).
-   8. On the intersection graph, above which :math:`P` would the route
+   8. On the toy graph, above which :math:`P` would the route
       through 4 win? Why does it differ from question 7?
 
    .. raw:: html
@@ -824,8 +857,8 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
       266.9 / 27.7 = 9.6 m/s.
 
       Question 5: the route through 4 makes two turns, against four for the
-      route through 5, and each turn caps the speed (Exercise 5: a meter of
-      the median right turn takes 2.9 times as long as a straight meter). So
+      route through 5, and each turn caps the speed (Exercise 6: a meter of
+      the median left turn takes 2.3 times as long as a straight meter). So
       more of its length is driven at the speed limit.
 
       Question 6: through 5, 260.6 + 30 = 290.6 m. Through 4, 266.9 m, with
@@ -838,13 +871,13 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
 
       Question 8: 273 + :math:`P` against 277, so above 4 m. The value of
       :math:`P` that switches the route is the difference in length between
-      the two routes on the graph that is searched. The intersection graph
+      the two routes on the graph that is searched. The toy graph
       measures to each intersection's center, and the lanes cut through the
       turns, so its lengths differ from the waypoint graph's. A search uses
       one cost on one graph; in GP4 you choose the cost.
 
 
-.. dropdown:: Exercise 7. Re-planning Triggers and Hysteresis
+.. dropdown:: Exercise 8. Re-planning Triggers and Hysteresis
    :icon: number
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
@@ -907,7 +940,7 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
    is 178.9 m long. The old route had 172.6 m left.
 
    5. How long is the detour? How far along the old 260.6 m route is the AV?
-   6. The travel-time route of Exercise 6 also goes through 1, 3, 4 and 6,
+   6. The travel-time route of Exercise 7 also goes through 1, 3, 4 and 6,
       and is 266.9 m long. Compare its length after the AV's position with
       the new route. Why is the detour also 6.3 m?
 
@@ -1018,7 +1051,7 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
       half second.
 
 
-.. dropdown:: Exercise 8. Following the Route, and Its Maneuvers
+.. dropdown:: Exercise 9. Following the Route, and Its Maneuvers
    :icon: number
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
@@ -1120,8 +1153,7 @@ maneuvers. Three exercises end with a check in the lecture's hands-on window.
          still turn right at 3, 99.7 − 80.0 = 19.7 m ahead.
 
       Question 5: trigger 2, which measures the AV's base link to the
-      nearest waypoint of the path. A navigation app shows the same three
-      things: where you are, how far is left, and the next turn.
+      nearest waypoint of the path.
 
       Question 6: about 43.6 / 2.0 = 21.8, so about 22 waypoints, at 2.0 m,
       and about 43.6 / 1.0 = 43.6, so about 44, at 1.0 m. Either way, the

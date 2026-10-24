@@ -10,580 +10,553 @@ Quiz
    The graded quizzes are the **five in-class quizzes** listed in the
    :doc:`syllabus </syllabus/index>`. Those are closed-notes, given at the
    start of class, and they **use different questions from these**. Working
-   through this page is good preparation for one. Memorising the answers
+   through this page is good preparation for one. Memorizing the answers
    below is not.
 
-This quiz covers the key concepts from Lecture 8: Prediction &
-Behavior Modeling, including trajectory prediction approaches
-(physics-based, maneuver-based, interaction-aware, Transformer-
-based), scene encoding, multi-modal prediction metrics, FSM behavior
-planning, rule-based vs. learned decision-making, and practical
-decision-making in traffic.
+This quiz covers Lecture 8: what a planner needs from prediction and how far
+ahead it must look, the physics models (CV, CTRV, CTRA) and why their error
+grows, ADE, FDE and the miss rate, CV's 95% region and its honesty check,
+several futures with minADE and minFDE, the map's lanes as candidate paths
+with Bayes' rule, intent, the Intelligent Driver Model (IDM), and gap
+acceptance. Every question can be answered from the lecture notes,
+:doc:`l8_lecture`. Nothing on this page needs
+:doc:`Going Further <l8_appendix>`.
 
 .. note::
 
    **Instructions:**
 
-   - Answer all questions to the best of your ability.
    - Multiple choice questions have exactly one correct answer.
-   - True/False questions require you to determine if the statement
-     is correct.
-   - Essay questions require short written responses (2-4 sentences).
+   - True or false questions ask whether the statement holds as stated in
+     the lecture.
+   - Short answer questions want two to four sentences.
    - Click the dropdown after each question to reveal the answer.
+   - The lecture's scene is a T-junction of CARLA's Town01. The AV drives
+     east at 8 m/s, straight on. Car A, on the other lane, drives west and
+     brakes for a left turn across the AV's lane. Car B follows car A and
+     goes straight on. :math:`t` = 0 is now; the predictions reach 5 s
+     ahead. The motion is simulated, and every speed and braking in it was
+     chosen for the lecture. The map frame has :math:`x` east and :math:`y`
+     north, in meters.
 
 
 ----
 
 
-Multiple Choice
-===============
+Multiple Choice (Questions 1 to 14)
+===================================
 
 .. admonition:: Question 1
    :class: hint
 
-   At a busy intersection, an autonomous vehicle must decide
-   whether to proceed or yield. The minimum prediction horizon
-   it needs to reason about crossing agents is approximately:
+   L5's tracker already predicts each road user with constant velocity.
+   Why does the planner need more than that?
 
-   A. 0.5 seconds
+   A. The tracker's prediction uses the wrong units.
 
-   B. 1 second
+   B. The tracker predicts one step, 0.1 s ahead, and the next detection
+      corrects it. The planner needs where the road user will be 1 to 5 s
+      ahead, and nothing corrects those predictions until they happen.
 
-   C. 5--8 seconds
+   C. The tracker does not know the road user's velocity.
 
-   D. 30 seconds
+   D. The planner needs the road user's position now, which the tracker
+      does not give.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- 5--8 seconds.
+   **B**.
 
-   A vehicle crossing at 50 km/h (14 m/s) takes roughly 3--5 s
-   to cross a 40--70 m intersection. The ego vehicle also needs
-   time to accelerate and clear the intersection. In total,
-   5--8 s of prediction is needed to safely evaluate whether
-   to proceed. Sub-second prediction is sufficient only for
-   emergency braking (collision imminent); it is far too short
-   for intersection negotiation.
+   The tracker's state is :math:`[\,p_x,\ p_y,\ v_x,\ v_y\,]`, so it knows
+   the velocity (**C** is wrong), and it gives the position now (**D** is
+   wrong). Its one constant-velocity step only says where to look among the
+   next detections, and a new detection then corrects it. The planner needs
+   many steps, and constant velocity has no turn in it. See the
+   Introduction in :doc:`l8_lecture`.
 
 
 .. admonition:: Question 2
    :class: hint
 
-   The Constant Turn Rate and Acceleration (CTRA) model predicts
-   agent trajectories using which measured quantities?
+   The AV drives at 8 m/s. Reacting takes 0.5 s, and the AV then brakes at
+   3 m/s² (both chosen in the lecture). At least how far ahead in time
+   must the prediction reach?
 
-   A. Position, heading, yaw rate, and longitudinal acceleration
+   A. 2.67 s
 
-   B. Position, velocity, jerk, and mass
+   B. 3.17 s
 
-   C. GPS coordinates and map-matched lane ID
+   C. 5 s
 
-   D. Optical flow from a front-facing camera
+   D. 14.67 s
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **A** -- Position, heading, yaw rate, and longitudinal
-   acceleration.
+   **B**.
 
-   CTRA assumes constant yaw rate :math:`\omega` and constant
-   longitudinal acceleration :math:`a`, integrating these over
-   time to extrapolate the future position and heading. These
-   quantities can be measured directly from the IMU (yaw rate)
-   and from differentiated GPS or odometry (acceleration).
-   CTRA outperforms CV in curved motion but still fails when
-   agents change intent (e.g., braking at a stop sign).
+   1. Reacting: 0.5 s.
+   2. Braking: 8 / 3 = 2.67 s.
+   3. In all: 0.5 + 2.67 = 3.17 s.
+
+   **A** leaves out the reaction time. **C** is the horizon the lecture
+   chose, which covers the 3.17 s with room to slow down gently. **D** is
+   the distance, 4.0 + 10.67 = 14.67 m, not a time. See the Introduction in
+   :doc:`l8_lecture`.
 
 
 .. admonition:: Question 3
    :class: hint
 
-   In maneuver-based prediction, the intent classification step
-   is limited because:
+   From the fit, car A is at :math:`x_0` = 174.59 m, :math:`y_0` = 1.98 m,
+   with :math:`v_x` = −5.985 m/s and :math:`v_y` = −0.194 m/s. Where does
+   constant velocity (CV) put car A at :math:`h` = 2 s?
 
-   A. Intent classifiers require GPU hardware not available
-      on embedded automotive platforms.
+   A. (162.62, 1.59) m
 
-   B. The discrete maneuver set is hand-designed and cannot
-      cover all real-world behaviors; transitions between
-      maneuvers are abrupt.
+   B. (168.60, 1.79) m
 
-   C. Intent classification requires access to the agent's
-      internal state (acceleration pedal position).
+   C. (186.56, 2.37) m
 
-   D. Classifiers require at least 10 seconds of agent history.
+   D. (156.64, 1.40) m
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- The discrete maneuver set is hand-designed and
-   cannot cover all real-world behaviors; transitions are abrupt.
+   **A**.
 
-   Any hand-crafted maneuver taxonomy (lane keep, lane change,
-   stop, etc.) is an approximation of the continuous space of
-   possible agent behaviors. Rare behaviors (abrupt U-turns,
-   cyclists entering the road from a sidewalk) fall outside
-   the predefined set. Additionally, the boundary between
-   maneuver classes produces a step-change in predicted
-   trajectory, which is physically implausible.
+   1. :math:`x` = 174.59 − 2 × 5.985 = 174.59 − 11.97 = 162.62 m.
+   2. :math:`y` = 1.98 − 2 × 0.194 = 1.98 − 0.388 = 1.59 m.
+
+   **B** is :math:`h` = 1 s and **D** is :math:`h` = 3 s. **C** adds the
+   velocity instead of using its sign: the velocity points west and a little
+   south. See Physics Models in :doc:`l8_lecture`.
 
 
 .. admonition:: Question 4
    :class: hint
 
-   MotionTransformer achieves interaction-aware prediction by:
+   At :math:`t` = 0 the fit gives car A a speed of 5.99 m/s and a turn rate
+   of 0.049 rad/s, while A really drives straight. What does the lecture
+   say about that turn rate?
 
-   A. Simulating all agent interactions using a physics engine
-      and sampling trajectories from the simulation.
+   A. It shows that A has started its left turn, on a circle of radius
+      14.7 m.
 
-   B. Using factorized multi-head self-attention over agent
-      and map tokens, allowing each agent to attend to all
-      other agents and road elements.
+   B. It gives a circle of radius 5.99 / 0.049 = 122 m, nearly straight.
+      It comes from the 0.05 m errors in the track: a turn rate read from
+      1.5 s of track is noisy.
 
-   C. Clustering agent histories into discrete motion modes
-      using k-means and fitting a linear model per cluster.
+   C. It is exact, because the fit uses 16 positions.
 
-   D. Reusing the ego vehicle's MPC prediction model for
-      surrounding agents.
+   D. It makes CTRV divide by zero, so CTRV cannot be used at all.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Using factorized multi-head self-attention over
-   agent and map tokens.
+   **B**.
 
-   The Transformer's self-attention mechanism allows every
-   agent token to exchange information with every other agent
-   token and every map token in each layer. This naturally
-   captures social interactions (yielding, gap acceptance,
-   following) without explicitly modeling pairwise interactions.
-   Factorized attention reduces the :math:`O(N^2)` cost by
-   separating agent-to-agent and agent-to-map attention.
+   The truth is 0 rad/s: A drives straight at :math:`t` = 0. The 14.7 m in
+   **A** is the radius of the lane's left turn, which A has not started.
+   **D** confuses this case with a turn rate near 0, where CTRV's formula
+   divides by almost 0 and code switches to CV; 0.049 rad/s gives a large
+   radius, not a division by zero. See Physics Models in
+   :doc:`l8_lecture`.
 
 
 .. admonition:: Question 5
    :class: hint
 
-   The MinADE_K metric evaluates trajectory prediction by:
+   Car A's CV prediction has errors of 0.52, 1.50, 2.58, 6.01 and 12.35 m
+   at 1, 2, 3, 4 and 5 s. Using only these five whole seconds, what is the
+   ADE?
 
-   A. Computing the average displacement error of all K
-      predicted trajectories and averaging over K.
+   A. 2.58 m
 
-   B. Selecting the single best prediction (minimum ADE) among
-      the K predictions for each scenario.
+   B. 4.59 m
 
-   C. Computing the maximum displacement error across all K
-      predictions.
+   C. 12.35 m
 
-   D. Evaluating the calibration of predicted probabilities
-      across K modes.
+   D. 22.96 m
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Selecting the single best prediction (minimum ADE)
-   among K predictions for each scenario.
+   **B**.
 
-   MinADE_K (also written mADE@K) evaluates the oracle performance:
-   given K predicted trajectories, how well does the best one
-   match the ground truth? This rewards *diversity* -- a system
-   that covers many possible futures will score well even if
-   individual trajectories are not highly probable. Critics of
-   MinADE argue that it ignores probability calibration, which
-   is why mAP is increasingly used alongside it.
+   1. Sum: 0.52 + 1.50 + 2.58 + 6.01 + 12.35 = 22.96 m.
+   2. ADE, the average: 22.96 / 5 = 4.59 m.
+
+   **C** is the FDE, the error at the last time. **D** is the sum, not the
+   average. Over all 50 predicted times (every 0.1 s), the lecture's ADE is
+   3.37 m. See Scoring in :doc:`l8_lecture`.
 
 
 .. admonition:: Question 6
    :class: hint
 
-   In a highway driving FSM, the transition
-   ``LANE_FOLLOW`` → ``LANE_CHANGE_LEFT`` should be gated on which
-   conditions?
+   A predictor gives car A two modes. The left turn ends 1.88 m from the
+   truth; straight on ends 13.06 m from it. With Argoverse 2's 2.0 m
+   threshold, what are the minFDE and the verdict?
 
-   A. Current speed > 100 km/h only.
+   A. minFDE 7.47 m, a miss.
 
-   B. Lead vehicle speed is below reference speed AND the left
-      lane has a safe gap > minimum safe distance ahead and
-      behind the ego.
+   B. minFDE 13.06 m, a miss.
 
-   C. The left turn signal has been on for more than 3 seconds.
+   C. minFDE 1.88 m, not a miss.
 
-   D. The ego vehicle has been in ``LANE_FOLLOW`` for more
-      than 10 seconds.
+   D. minFDE 1.88 m, a miss, because one mode ends more than 2 m away.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Lead vehicle below reference speed AND safe gap
-   in the left lane.
+   **C**.
 
-   Both conditions must hold: there must be a reason to change
-   lanes (blocked by a slow vehicle) and a safe opportunity
-   (gap in the target lane). Gating on speed alone would cause
-   unnecessary lane changes; gating on gap alone would change
-   lanes without motivation. The gap check uses predicted agent
-   positions (from the prediction module) to verify safety
-   for the duration of the lane-change maneuver.
+   minFDE is the smaller of the two endpoint errors, 1.88 m. It is under
+   2.0 m, so the prediction is not a miss. With several modes, a miss means
+   that **no** mode ends within 2 m (**D** has the rule backward). **A**
+   averages the two modes; minFDE takes the best one. See Several Futures in
+   :doc:`l8_lecture`.
 
 
 .. admonition:: Question 7
    :class: hint
 
-   Modern learned trajectory predictors (e.g., VectorNet) encode
-   the map and agent histories as **vectorized polylines** rather
-   than rasterized BEV images primarily because:
+   At :math:`h` = 3 s, CV's standard deviation of car A's position is
+   :math:`\sigma` = 1.50 m per axis, and CV's error is 2.58 m. Is the truth
+   inside CV's 95% region?
 
-   A. Rasterized images cannot be processed by neural networks.
+   A. Yes: the radius is 2.45 × 1.50 = 3.68 m, and 2.58 m is less.
 
-   B. Polylines are a sparse, structured representation that
-      preserves geometric relationships and is far more compute-
-      and memory-efficient than dense image rasters.
+   B. No: the radius is 1.50 m, and 2.58 m is more.
 
-   C. Vectorized inputs remove the need for any map data.
+   C. No: the radius is 1.50 / 2.45 = 0.61 m.
 
-   D. Rasterization requires LiDAR, which is often unavailable.
+   D. Yes, always: a 95% region holds the truth 95% of the time.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Polylines are a sparse, structured representation that
-   preserves geometric relationships and is far more compute- and
-   memory-efficient than dense image rasters.
+   **A**.
 
-   Early predictors rendered the HD map and agent tracks into a
-   multi-channel BEV image processed by a CNN, which is wasteful
-   (most pixels are empty) and blurs precise geometry. VectorNet
-   instead represents lanes, crosswalks, and agent tracks as sets
-   of polylines encoded with a graph/attention network, keeping
-   exact coordinates and connectivity at a fraction of the cost.
+   The 95% radius is 2.45 × :math:`\sigma`. With :math:`\sigma` = 1.50 m,
+   that is 3.68 m, and the truth is 2.58 m away, so it is inside. **B**
+   uses one :math:`\sigma` as the radius. **D** confuses a promise about
+   many predictions with a guarantee for one: at 4 and 5 s, car A's truth
+   is outside its region. See Scoring in :doc:`l8_lecture`.
 
 
 .. admonition:: Question 8
    :class: hint
 
-   A predictor that outputs an **independent (marginal)** trajectory
-   distribution for each agent can be unsafe for planning because:
+   On the test set with no turn ahead, CV's 95% region held the truth 81.1,
+   85.2 and 81.1% of the time at 1, 3 and 5 s. What does that say?
 
-   A. Marginal predictions are always less accurate than a constant
-      velocity baseline.
+   A. The region is too large: CV is not sure enough.
 
-   B. The per-agent predictions may be mutually inconsistent -- e.g.,
-      two agents each predicted to occupy the same space, or both
-      predicted to yield to each other.
+   B. The region is honest: 81 to 85% is close enough to 95%.
 
-   C. Marginal predictions cannot be evaluated with MinADE.
+   C. The region is a little too small: CV is a little too sure.
 
-   D. Marginal predictions require joint LiDAR-camera fusion.
+   D. Nothing: the region can only be checked on turns.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- The per-agent predictions may be mutually inconsistent.
+   **C**.
 
-   Marginal prediction estimates each agent's future in isolation,
-   so the combination of most-likely modes across agents need not
-   form a physically consistent scene: two cars can both be predicted
-   into the same gap, or a "both yield" / "both go" deadlock can
-   appear. Scene-level (joint) prediction models the agents' futures
-   together, producing a self-consistent set of trajectories that a
-   planner can reason about safely.
+   A 95% region must hold the truth 95% of the time. Holding it less often
+   means the region is too small for the real errors: the predictor claims
+   more certainty than it has. With a turn ahead it is far too sure: 42.8,
+   15.3 and 4.8%. The region only covers a slightly wrong speed and knows
+   nothing about a turn. See Scoring in :doc:`l8_lecture`.
 
 
 .. admonition:: Question 9
    :class: hint
 
-   The **gap acceptance** problem at an uncontrolled intersection
-   requires predicting:
+   Why do predictors give several futures instead of one?
 
-   A. The traffic light phase remaining time.
+   A. A single answer trained for the smallest mean squared error tends to
+      the average of the futures. Between a left turn and straight on, that
+      average leads where no lane goes.
 
-   B. The time gap available in the crossing traffic stream and
-      whether the ego can cross before the next vehicle arrives.
+   B. Several futures always have a smaller FDE than one.
 
-   C. The number of lanes on the cross street.
+   C. The planner cannot read a single trajectory.
 
-   D. The ego vehicle's braking distance at current speed.
+   D. Benchmarks forbid a single trajectory.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- The time gap in the crossing traffic stream and
-   whether the ego can complete the crossing within that gap.
+   **A**.
 
-   Gap acceptance is the decision of whether to enter a traffic
-   stream given a current gap. The ego must predict how long
-   the current gap will remain open (based on approaching
-   vehicle speed and distance) and compare it to the time
-   needed to cross (based on ego speed and intersection width).
-   Fixed-threshold rules work poorly because the required gap
-   size depends on ego speed, intersection geometry, and
-   approaching vehicle speed.
+   For car A, the point-by-point average of the two futures ends at 5 s
+   7.21 m from each, toward the junction's corner. No lane leads there, and
+   its FDE is 5.92 m, a miss, while the left-turn future alone is off by
+   1.88 m. **B** is not a rule: a mode can be far off (straight on ends
+   13.06 m away). See Several Futures in :doc:`l8_lecture`.
 
 
 .. admonition:: Question 10
    :class: hint
 
-   Multi-modal trajectory prediction outputs
-   :math:`K` trajectories with probabilities
-   :math:`\{(\hat{\tau}_k, p_k)\}_{k=1}^K`. A planner uses
-   these to:
+   The speed likelihoods of car A's two paths are 0.872 (left) and 0.132
+   (straight on), as in the lecture. Suppose the prior for the left turn
+   were 0.2 and for straight on 0.8 (chosen for this question: few drivers
+   turn here). What is P(left)?
 
-   A. Execute the trajectory with the highest probability
-      :math:`k^* = \arg\max_k p_k` and ignore all others.
+   A. 0.87
 
-   B. Generate ego-trajectory candidates evaluated for safety
-      against all predicted agent modes, weighting risk by
-      mode probability.
+   B. 0.62
 
-   C. Compute the average predicted trajectory weighted by
-      probabilities and plan against this mean trajectory.
+   C. 0.17
 
-   D. Request more sensor data until prediction uncertainty
-      falls below a threshold.
+   D. 0.20
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Generate ego-trajectory candidates evaluated for
-   safety against all predicted agent modes, weighted by
-   probability.
+   **B**.
 
-   Taking only the mode with highest probability ignores the
-   tail risk of other plausible behaviors. The correct approach
-   is to evaluate candidate ego-trajectories against all :math:`K`
-   agent modes and select the ego trajectory that minimizes
-   expected collision risk:
+   1. Left: 0.2 × 0.872 = 0.1744. Straight on: 0.8 × 0.132 = 0.1056.
+   2. Sum: 0.1744 + 0.1056 = 0.2800.
+   3. P(left) = 0.1744 / 0.2800 = 0.62.
 
-   .. math::
+   **A** is the lecture's answer with equal priors, where the two 0.5
+   priors cancel. **C** forgets to divide by the sum, and **D** ignores the
+   evidence. A's slowing down still pulls P(left) from 0.2 up to 0.62. See
+   Using the Map in :doc:`l8_lecture`.
 
-      \hat{\tau}_{\text{ego}} = \arg\min_\tau
-      \sum_k p_k \cdot \mathcal{R}(\tau, \hat{\tau}_k^{\text{agent}})
-
-   This ensures the ego plan is robust to the full distribution
-   of agent futures.
-
-
-----
-
-
-True / False
-============
 
 .. admonition:: Question 11
    :class: hint
 
-   **True or False:** Physics-based trajectory prediction models
-   such as the Constant Velocity (CV) model are accurate for
-   prediction horizons of 5--8 seconds on highway roads.
+   The lecture's map-aware predictor takes a turn at the speed that gives a
+   sideways acceleration of 2.0 m/s² (chosen). For a turn of radius 8.0 m
+   (chosen for this question), what turn speed does it expect?
+
+   A. 16.0 m/s
+
+   B. 5.42 m/s
+
+   C. 4.0 m/s
+
+   D. 2.83 m/s
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **C**.
 
-   CV and CTRA models are accurate for approximately 0.5--1 s
-   on straight roads, where the constant-motion assumption holds.
-   Over 5--8 s, agents frequently change speed, turn, or make
-   lane changes -- all of which violate the CV assumption.
-   Prediction error grows approximately linearly with horizon
-   for CV. At 5 s, CV errors of 10--20 m are common in
-   real traffic, making it unsuitable for intersection
-   negotiation or merge planning.
+   The turn speed is :math:`v = \sqrt{a \times r}`, with :math:`a` the
+   sideways acceleration and :math:`r` the radius:
+   :math:`\sqrt{2.0 \times 8.0} = \sqrt{16} = 4.0` m/s. **A** forgets the
+   square root. **B** is the lecture's turn speed for A's turn, of radius
+   14.7 m. **D** is :math:`\sqrt{8.0}`, without the acceleration. See Using
+   the Map in :doc:`l8_lecture`.
 
 
 .. admonition:: Question 12
    :class: hint
 
-   **True or False:** The mAP (mean Average Precision) metric
-   for multi-modal prediction rewards both accurate trajectory
-   positions and well-calibrated probabilities.
+   In the IDM by hand, car B wants a gap :math:`s^*` = 20.64 m, and
+   :math:`1 - (v/v_0)^4` = 0.447, with :math:`a_{\max}` = 0.73 m/s².
+   Suppose the gap to car A were :math:`s` = 15.0 m instead of 22.25 m
+   (chosen for this question), with everything else the same. What is B's
+   acceleration?
+
+   A. −0.30 m/s²
+
+   B. +0.33 m/s²
+
+   C. −1.06 m/s²
+
+   D. −1.45 m/s²
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **True**
+   **C**.
 
-   mAP treats each predicted mode as a detection: a mode is a
-   true positive if its endpoint is within a distance threshold
-   of the ground truth AND its probability rank is consistent
-   with its precision-recall curve. Unlike MinADE, mAP jointly
-   penalizes both inaccurate trajectories and poor probability
-   estimates, making it a more complete evaluation metric for
-   probabilistic prediction.
+   1. :math:`(s^*/s)^2` = (20.64 / 15.0)² = 1.376² = 1.893.
+   2. :math:`a` = 0.73 × (0.447 − 1.893) = 0.73 × (−1.446) = −1.06 m/s².
+
+   B brakes harder than in the lecture (−0.30 m/s², **A**), because the gap
+   is smaller than the gap it wants. **B** is the free-road term alone,
+   0.73 × 0.447. **D** forgets to multiply by :math:`a_{\max}`. See Other
+   Drivers in :doc:`l8_lecture`.
 
 
 .. admonition:: Question 13
    :class: hint
 
-   **True or False:** A finite state machine behavior planner
-   can, in principle, handle every possible traffic scenario
-   given a sufficiently large number of states and transitions.
+   In run 1, when car A is 6 m before the junction, the AV is 6.0 s from
+   the crossing. Suppose the AV started 16 m closer instead (chosen for this
+   question), still at 8 m/s. With a critical headway of 4.1 s, what does
+   A do?
+
+   A. It turns, because the gap is 6.0 s.
+
+   B. It turns, because the gap is 4.0 s and that is close enough.
+
+   C. It waits, because the gap is 6.0 − 16 / 8 = 4.0 s, below 4.1 s.
+
+   D. It waits, because the gap is 2.0 s.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **C**.
 
-   While an FSM can be made arbitrarily complex, the number of
-   distinct traffic situations grows combinatorially with the
-   number of agents, their states, and environmental conditions.
-   In practice, FSMs are designed for the most common scenarios
-   and fail gracefully in edge cases that were not anticipated
-   during design. The fundamental issue is that traffic scenarios
-   exist on a continuous manifold, not a discrete state space
-   that FSMs naturally represent.
+   1. 16 m at 8 m/s is 16 / 8 = 2.0 s less.
+   2. Gap: 6.0 − 2.0 = 4.0 s.
+   3. 4.0 s is below 4.1 s, so A waits for the AV to pass.
+
+   **D** takes the 2.0 s change for the gap. The lecture makes the same
+   point for run 2: an AV that slowed by 1 s would give A a 4.0 s gap, and
+   A would still wait. See Other Drivers in :doc:`l8_lecture`.
 
 
 .. admonition:: Question 14
    :class: hint
 
-   **True or False:** A unimodal predictor trained to regress a
-   single trajectory with mean-squared-error loss tends to output
-   the *average* of several distinct possible futures, which can be
-   a trajectory no real agent would take.
+   The left-turn mode (probability 0.87) puts car A in the AV's lane from
+   :math:`t` = 3.2 to 4.0 s. The AV, at 8 m/s, reaches the crossing at
+   :math:`t` = 6.08 s. What does the lecture's planner do?
+
+   A. It brakes hard now, because the left turn is likely.
+
+   B. It keeps its speed: it arrives after A has left the lane. A plan that
+      reached the crossing near :math:`t` = 4 s would have to slow down.
+
+   C. It ignores the left turn, because A is in the other lane now.
+
+   D. It changes lanes.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **True**
+   **B**.
 
-   MSE regression to a single output is minimized by the conditional
-   mean. When the true future is multi-modal (e.g., an agent will
-   either turn left or go straight), the mean of those modes points
-   "up the middle" -- straight into the median island or oncoming
-   lane. This mode-averaging pathology is the core motivation for
-   multi-modal prediction, which outputs several distinct trajectories
-   with probabilities instead of one averaged path.
+   The planner keeps the AV away from the crossing while a likely mode puts
+   A there. 6.08 s is after 4.0 s, so the AV can keep its speed. **C** is
+   the check of today's positions only, which finds A in the AV's lane only
+   at :math:`t` = 3.4 s. See Several Futures in :doc:`l8_lecture`.
 
+
+True or False (Questions 15 to 18)
+==================================
 
 .. admonition:: Question 15
    :class: hint
 
-   **True or False:** The Social Force Model (Helbing & Molnar)
-   is a learning-based prediction approach that uses neural
-   networks to model pedestrian interactions.
+   **True or false:** with no turn ahead, CTRA uses more terms than CV, so
+   on the lecture's test set its mean error at 5 s is smaller than CV's.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **False.**
 
-   The Social Force Model is a **physics-based** approach that
-   uses hand-crafted attractive and repulsive force functions to
-   model pedestrian motion. It does not use neural networks.
-   Forces are computed analytically from relative positions and
-   velocities. While the model can be parameterized and fitted to
-   data, it is not a learning-based approach in the neural network
-   sense. Learning-based social interaction models (e.g.,
-   Social GAN, MotionTransformer) emerged much later.
+   With no turn, CTRA's mean error at 5 s is 16.13 m and CV's is 4.01 m.
+   Each extra term (CTRV's turn rate, CTRA's braking) is read from a noisy
+   track, and that noise is carried 5 s ahead. See "Why the error grows, and
+   why more terms do not help" in :doc:`l8_lecture`.
 
-
-----
-
-
-Essay Questions
-===============
 
 .. admonition:: Question 16
    :class: hint
 
-   **Compare physics-based, maneuver-based, and learned (Transformer)
-   trajectory prediction.** Describe the strengths and weaknesses of
-   each and the prediction horizon and scenario where each is most
-   appropriate.
+   **True or false:** a predictor that gives six modes spread over every
+   lane and speed has a very good minFDE, so it is the best for the planner.
 
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
+.. dropdown:: Answer
    :class-container: sd-border-success
 
-   *Key points to include:*
+   **False.**
 
-   - Physics-based (CV, CTRA): no training data, interpretable, and
-     accurate for very short horizons (0.5--1 s) and simple motion.
-     Weakness: assumes constant motion, so it fails during turns,
-     stops, and any intent change; unusable beyond ~2 s.
-   - Maneuver-based: classifies a discrete intent (lane keep, turn,
-     stop) then predicts a trajectory per maneuver. Strength: adds
-     semantic structure and multi-modality. Weakness: the hand-designed
-     maneuver set cannot cover all behaviors and produces abrupt
-     class-boundary transitions.
-   - Learned/Transformer (MotionTransformer, VectorNet): jointly
-     encodes agents and map with attention, producing interaction-aware,
-     multi-modal predictions accurate to 5--8 s. Strength: state of the
-     art in complex urban interaction. Weakness: needs large datasets,
-     is less interpretable, and can fail out of distribution.
-   - Practical takeaway: short-horizon safety fallbacks often use a
-     physics model, while the primary predictor for planning in urban
-     ODDs is a learned interaction-aware model.
+   One of six spread modes lands near the truth whatever the road user
+   does, so minFDE looks very good. But the AV must keep clear of every mode
+   it takes seriously, and six spread modes leave it little room. A score
+   that uses the probabilities catches this: Waymo's mAP, or the lecture's
+   check, the probability given to the true future. See Several Futures in
+   :doc:`l8_lecture`.
 
 
 .. admonition:: Question 17
    :class: hint
 
-   **Explain why single-trajectory prediction is insufficient for
-   autonomous driving and what multi-modal prediction provides.**
-   Contrast how MinADE_K and mAP evaluate a multi-modal predictor.
+   **True or false:** at :math:`t` = 0, car A's offset from the lane's
+   center and its heading cannot tell the left-turn lane from the
+   straight-on lane.
 
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
+.. dropdown:: Answer
    :class-container: sd-border-success
 
-   *Key points to include:*
+   **True.**
 
-   - A single predicted trajectory collapses genuinely ambiguous
-     futures (turn vs. straight, yield vs. go) into one path, and an
-     MSE-trained regressor averages those modes into an implausible
-     "middle" trajectory. Planning against a single wrong future is
-     unsafe.
-   - Multi-modal prediction outputs K trajectories with probabilities
-     :math:`\{(\hat{\tau}_k, p_k)\}`, each representing a distinct
-     behavioral hypothesis, so the planner can hedge against all
-     plausible agent intents.
-   - MinADE_K is an oracle metric: it scores only the best-matching of
-     the K modes, rewarding coverage/diversity but ignoring whether the
-     probabilities are calibrated.
-   - mAP treats each mode as a detection and jointly rewards accurate
-     endpoints and well-ranked probabilities, so it penalizes an
-     overconfident wrong mode. Reporting both gives a fuller picture:
-     MinADE for coverage, mAP for calibration.
+   Before the junction, the two lanes are one: A is 0.07 m from the center
+   and 1.86° off the heading of both, so the heading and offset likelihoods
+   are the same for both (0.973 and 0.995). Only A's speed tells them apart
+   so far: 5.99 m/s, against 6.51 m/s expected for the left turn and
+   8.00 m/s for straight on. See Using the Map in :doc:`l8_lecture`.
 
 
 .. admonition:: Question 18
    :class: hint
 
-   **Describe the MotionTransformer architecture for trajectory
-   prediction.** Explain how the attention mechanism enables
-   interaction-aware prediction and what the multi-modal output
-   represents.
+   **True or false:** in run 2, car A waits because its track up to
+   :math:`t` = 0 shows it braking harder than in run 1.
 
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
+.. dropdown:: Answer
    :class-container: sd-border-success
 
-   *Key points to include:*
+   **False.**
 
-   - MotionTransformer uses a two-stage Transformer architecture:
-     a global motion Transformer encodes all agents and map
-     polylines jointly using factorized self-attention; a local
-     motion Transformer decodes :math:`K` trajectory modes per
-     agent using a set of learnable motion query pairs.
-   - The self-attention mechanism allows every agent token to
-     attend to every other agent and every map element in each
-     layer. Attention weights implicitly represent how much
-     each agent's future depends on neighboring agents and road
-     geometry -- capturing merging, following, and yielding
-     interactions without explicit pairwise modeling.
-   - The multi-modal output :math:`\{(\hat{\tau}_k, p_k)\}` represents
-     :math:`K` plausible future trajectories and their probabilities.
-     Each mode corresponds to a different behavioral hypothesis
-     (e.g., turn left vs. go straight vs. stop), allowing the
-     planner to reason about the full distribution of possible
-     agent behaviors.
-   - MotionTransformer achieves state-of-the-art performance on
-     the Waymo Open Motion Dataset benchmark, demonstrating that
-     joint attention over all scene elements is a powerful
-     inductive bias for trajectory prediction.
+   A's track up to :math:`t` = 0 is the same in both runs. Only the AV
+   starts 24 m closer, so A's gap is 6.0 − 24 / 8 = 3.0 s, below 4.1 s, and
+   A waits. What A does next depends on where the AV is: the AV's motion is
+   an input to A's prediction. See Other Drivers in :doc:`l8_lecture`.
+
+
+Short Answer (Questions 19 to 20)
+=================================
+
+.. admonition:: Question 19
+   :class: hint
+
+   In the Tempe crash of March 2018, the ADS detected the pedestrian
+   5.6 s before impact. Why did it never predict her path?
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   A prediction is built from the track's history. The NTSB report says
+   that when perception changed the class of an object, the system "no
+   longer considered the tracking history of that object when generating a
+   new trajectory". With the history thrown away at every new class, the
+   system had no path for her across the road. It saw an emergency only when she was in the vehicle's path, 1.2 s
+   before impact. See the Introduction in :doc:`l8_lecture`.
+
+
+.. admonition:: Question 20
+   :class: hint
+
+   Explain why predicting car B needs car A's prediction, and why
+   predicting car A needs the AV's plan. Use the lecture's numbers.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   Car B follows A: A brakes for its turn, so B must slow too, until A
+   leaves its lane. CV keeps B at 7.76 m/s and ends 3.55 m off; the IDM,
+   following A's most likely future, ends 0.92 m off. Car A turns across
+   the AV's lane only with a gap of at least 4.1 s. In run 1 the gap is
+   6.0 s and A turns; in run 2, with the AV 24 m closer, it is 3.0 s and A
+   waits. Ignoring the AV, the left mode ends 18.31 m off; with the gap
+   rule, 0.86 m. So the AV's own plan changes what A does, and planners
+   either alternate (predict, plan, predict again) or solve both together.
+   See Other Drivers in :doc:`l8_lecture`.

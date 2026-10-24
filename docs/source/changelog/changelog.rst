@@ -5,10 +5,47 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.11.0: Lecture 7 Pages Follow the Slides (2026-10-24)
+.. dropdown:: v2.12.0: Lectures 7 and 8 Follow the Reviewed Slides (2026-10-24)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lecture 7
+
+   - **All pages** follow the reviewed slides: the pipeline from the map
+     file now splits into the toy graph, searched by hand, and the routing
+     graph GP4 uses; Town01 has 124 segments; the turn speed comes with a
+     worked example and three slides on reading a curve's radius, from the
+     map file and from the waypoints. Eight detail slides moved to Going
+     Further. The quiz and exercises use only the lecture's main content,
+     and a new first exercise finds the trip's start in the map file. These
+     pages stay hidden until Lecture 7 is published.
+
+   .. rubric:: Lecture 8
+
+   - **Lecture, Going Further, code, quiz, exercises and references** are
+     rewritten from the slides: one Town01 junction and three road users,
+     physics models, scoring a prediction, several futures, the map's lanes
+     with Bayes' rule, and drivers who react to each other. These pages
+     stay hidden until Lecture 8 is published.
+
+   .. rubric:: Lectures
+
+   - **Schedule:** the Key Concepts for L7 and L8 list what each lecture
+     now covers. L1 to L6 are open.
+
+   .. rubric:: Glossary
+
+   - **L7 (not yet published):** Toy Graph, Waypoint Graph and Weighted
+     Graph are new; Routing Graph now means the waypoint graph with lane
+     change edges.
+   - **L8 (not yet published):** 17 terms from the slides, among them ADE,
+     FDE, minADE, minFDE, miss rate, CTRV, the Intelligent Driver Model and
+     critical headway.
+
+.. dropdown:: v2.11.0: Lecture 7 Pages Follow the Slides (2026-10-24)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lecture 7
 

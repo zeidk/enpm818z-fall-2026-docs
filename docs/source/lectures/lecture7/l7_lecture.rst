@@ -11,19 +11,24 @@ Lecture
 
    - route, lane and navigation in other AV stacks;
    - the full definitions of path and trajectory;
-   - where the map fits in the AV's architecture, and the scene model at
-     Waymo and Tesla;
+   - what an HD map is used for, where an AV's map comes from, what can go
+     wrong with an HD map, where the map fits in the AV's architecture, and
+     the scene model at Waymo and Tesla;
    - HD map formats: Lanelet, Lanelet2, and OpenDRIVE against Lanelet2;
-   - a road's lanes and curves in OpenDRIVE, with road 333's turn step by
-     step;
-   - how traffic lights add waiting time to an edge cost;
+   - the OpenStreetMap conversion in Python;
+   - OpenDRIVE: the geometry element, a road's lanes and curves, with road
+     333's turn step by step;
+   - Town01's 160 waypoint pairs, counted, and the junction element read
+     attribute by attribute;
+   - the top speed in all of Town01's turns, how traffic lights add waiting
+     time to an edge cost, and the three costs in code;
    - the recap of Dijkstra and A*: edge costs that are not negative,
      admissible and consistent heuristics, and a heuristic in seconds for
      travel time;
    - route planning at scale: our trip on the waypoint graph, GP4's node
      limit, and routing a whole country.
 
-   Dijkstra and A* on the intersection graph, one step at a time, are on
+   Dijkstra and A* on the toy graph, one step at a time, are on
    :doc:`the search steps page <l7_search_steps>`. The hands-on commands are
    on :doc:`the Code page <l7_code>`. The papers and pages cited below are
    listed in full on :doc:`the References page <l7_references>`.
@@ -76,7 +81,8 @@ at the bottom right says what each kind of line means.
   the set of all configurations. A configuration is a position :math:`x`,
   :math:`y` in meters and a heading :math:`\theta`. A path :math:`\sigma`
   gives one configuration for each number from 0 (start) to 1 (goal). A
-  trajectory :math:`\pi` gives one for each time from 0 to :math:`T`.
+  trajectory :math:`\pi` gives one for each time from 0 (start) to
+  :math:`T` (arrival at the goal).
 
 The next slides define the road terms, then route and route planning, one per
 slide. The three motion terms share one slide; their full definitions are in
@@ -256,8 +262,7 @@ A *static* map is made before the drive, like ``Town01.xodr``.
 end, the route is **9 lanes** and **260.6 m**: 5 lanes along the streets,
 and 1 lane through each of the four marked intersections. The AV turns right
 at 1, right at 3, left at 5 and right at 6. The numbers 1, 3, 5 and 6 are
-our own names for these intersections; the intersection graph uses them
-later. The map file calls them junctions 306, 171, 332 and 54.
+our own names for these intersections; the toy graph uses them later. The map file calls them junctions 306, 171, 332 and 54.
 
 The planner hands the route on as **waypoints** along those lanes, one about
 every 2 m, 130 in all. GP4 Task 1 asks you to write the planner that
@@ -349,8 +354,6 @@ drives, a short stretch ahead at a time: that is L9.
 Route Planning
 ~~~~~~~~~~~~~~
 
-The last term puts the others together.
-
 .. admonition:: Definition: Route planning
    :class: note
 
@@ -377,7 +380,7 @@ Each part of the definition is a section of this lecture:
 
 You know Dijkstra and A* from the planning course, so Search and At Scale
 are recapped in :doc:`Going Further <l7_appendix>`. Both searches on the
-intersection graph, one step at a time, are on :doc:`the search steps page
+toy graph, one step at a time, are on :doc:`the search steps page
 <l7_search_steps>`.
 
 
@@ -513,8 +516,6 @@ Team, Python API reference).
 The Trip in Town01
 ~~~~~~~~~~~~~~~~~~
 
-One trip runs through the whole lecture.
-
 .. figure:: /_static/images/L7/trip_overview.png
    :alt: A top view of all of Town01's lanes in light gray: an outer loop about 400 meters wide and 330 meters tall with a grid of streets inside. Tag 1, the start, sits on a horizontal street in the middle left, near x 134 and y minus 129 meters, with a black arrow pointing west. The intersection 41 meters west of it, near x 93, is circled, and a two-headed line below the street between them is labeled 41 m. Tag 2, the goal, sits on the top street near x 196 and y minus 2 meters, with an arrow pointing east. The intersection 40 meters west of it, near x 157, is circled, with a two-headed line labeled 40 m. Axes: x east and y north, in meters.
    :width: 75%
@@ -540,8 +541,6 @@ is a different one.
 
 What the AV Knows, and What It Must Produce
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Before the AV drives that trip, here is what it has and what it lacks.
 
 .. figure:: /_static/images/L7/trip_line_vs_route.png
    :alt: A top view of part of Town01, x from 60 to 215 meters east, y from minus 150 to 22 meters north, lanes in light gray. Tag 1, the start, on a lower street near x 134; tag 2, the goal, on the top street near x 196. A dashed black straight line joins them, tag 3; it crosses blocks where there are no lanes. A thick blue line, the route, follows the lanes: west, north, east, north and east, turning four times.
@@ -581,38 +580,71 @@ graph. We start with the map itself: what an HD map is, what it holds, and
 how real AV stacks make and update one. Then we come back to Town01's own map
 file.
 
+
+.. _l7-lec-pipeline:
+
+From the Map File to Edge Costs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This diagram is the plan for the next three sections: Map to Graph, Lane
+Changes and Edge Costs.
+
 .. figure:: /_static/images/L7/map_pipeline.png
-   :alt: A UML activity diagram in two rows. It starts at a black dot, then a diamond, a choice. For your own area, the flow goes down to the object .osm file (OpenStreetMap), into the action Osm2Odr.convert(), and into the object map file (.xodr). For Town01, which comes with CARLA, the flow goes straight to the map file. The map file flows into the action carla.Map(name, text), which flows into the object carla.Map. Row 2: carla.Map flows into the object segments, then the action sample every 2 m, join in driving order, the object waypoint graph, the action keep S, G and 7 intersections, and the object intersection graph.
+   :alt: A UML activity diagram in three rows. It starts at a black dot, then a diamond, a choice. For your own area, the flow goes down to the object .osm file (OpenStreetMap), into the action Osm2Odr.convert(), and into the object map file (.xodr). For Town01, which comes with CARLA, the flow goes straight to the map file. The map file flows into the action carla.Map(name, text), which flows into the object carla.Map. Row 2: carla.Map flows, through its method get_topology(), into the object segments, then the action sample every 2 m, join in driving order, the object waypoint graph, and a fork, a thick black bar, where the flow splits in two and both branches run. The branch marked [by hand] goes to the action keep S, G and 7 intersections, the object toy graph, and a flow final node, a circle with an X: that branch ends there. Row 3, from the fork, the branch marked [GP4]: the action add lane change edges where lane_change allows, the object routing graph, the action give every edge a cost, the object weighted graph, and the end of the activity, a ringed dot.
    :width: 95%
    :align: center
 
-   The plan for this section, from a map file to the intersection graph.
-   **Top row:** a choice (diamond); for your own area, an ``.osm`` file from
-   OpenStreetMap goes through ``Osm2Odr.convert()`` to a map file; for
-   Town01, the map file comes with CARLA. ``carla.Map(name, text)`` reads the
-   map file into a ``carla.Map``. **Bottom row:** segments, then "sample
-   every 2 m, join in driving order", the waypoint graph, then "keep S, G and
-   7 intersections", the intersection graph.
+   From a map file to a weighted graph, in three rows. **Top row:** a
+   choice (diamond); for your own area, an ``.osm`` file from OpenStreetMap
+   goes through ``Osm2Odr.convert()`` to a map file; for Town01, the map
+   file comes with CARLA. ``carla.Map(name, text)`` reads the map file into
+   a ``carla.Map``. **Middle row:** through ``get_topology()``, the
+   segments; "sample every 2 m, join in driving order"; the waypoint graph;
+   then a fork (thick black bar). The branch marked [by hand] keeps S, G and
+   7 intersections, makes the toy graph and ends at a circled X. **Bottom
+   row:** the branch marked [GP4] adds lane change edges where
+   ``lane_change`` allows (the routing graph), then gives every edge a cost
+   (the weighted graph), and the activity ends at the ringed dot.
 
 The figure is a UML activity diagram (Object Management Group, 2017). The
 black dot is the start. The diamond is a choice, with each branch's condition
 in [brackets]. A rounded box is a step the code runs; a plain box is the
-data that step makes. Arrows give the order. Read the top row, then the
-bottom row:
+data that step makes. A thick bar is a **fork**: the flow splits there, and
+both branches run. A circled X ends one branch, and the ringed dot ends the
+whole activity.
+
+The font says who does each step. CARLA's own code and objects are in
+``typewriter``: ``carla.Map`` reads the file, and its method
+``get_topology()`` gives the segments. Plain words are our code, which you
+write in GP4.
+
+- A **segment** is one lane between two cuts at the intersections. Town01
+  has 124.
+- The **waypoint graph** has a node every 2 m along each segment and an edge
+  to the next node: 3107 nodes and 3143 edges in Town01.
+- A **lane change edge** joins two lanes that drive the same way, where the
+  waypoint's ``lane_change`` field allows it. Town01 has none.
+- The **weighted graph** puts a cost, a number, on every edge.
+
+Read the diagram row by row:
 
 - **Top row.** Town01's map file, a ``.xodr`` file, comes with CARLA. For
   your own area, you export an ``.osm`` file from OpenStreetMap, and
   ``Osm2Odr.convert()`` turns it into a ``.xodr``. Either way,
   ``carla.Map`` reads the text and gives us a ``carla.Map`` object.
-- **Bottom row.** The ``carla.Map`` gives us its segments when we call its
-  method ``get_topology()``. We put a waypoint every 2 m along them and join
-  them in driving order: that is the waypoint graph, 3107 nodes for Town01.
-  For the examples by hand, we keep only S, G and seven intersections: the
-  intersection graph.
+- **Middle row.** A segment is one lane, cut where it meets an intersection.
+  We put a waypoint every 2 m along each segment and join them in driving
+  order: that is the waypoint graph, 3107 nodes. Then comes the fork, and
+  both branches run. For the examples by hand, we keep only S, G and seven
+  intersections: the toy graph. That branch ends at the circled X, because
+  GP4 never uses it.
+- **Bottom row,** the GP4 branch from the fork. Where two lanes drive the
+  same way and the map allows it, we add a lane change edge between them.
+  Town01 has none, so we use Town03 for that. Then every edge gets a
+  number, its cost, and the search adds those numbers up.
 
-Each box is explained when its step comes up. Before each step, the diagram
-is shown again with that step outlined in yellow. The file format,
-OpenDRIVE, comes with the first step.
+Before each step, the diagram is shown again with that step outlined in
+yellow.
 
 
 .. _l7-lec-hdmap:
@@ -634,16 +666,12 @@ HD Map
   of a lane: on road 25, 4.0 m apart.
 - **Semantic:** what things are and the rules they carry, such as a traffic
   light, or road 25's speed limit, 25 mph.
-- There is no single standard: "there are no clear guidelines or a standard
-  of what information constitutes an HD map" (Elghazaly et al., 2023).
 
 
 .. _l7-lec-hdmap-look:
 
 What an HD Map Looks Like
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Here are two HD maps of the kind the definition describes.
 
 .. figure:: /_static/images/L7/hdmap_examples.png
    :alt: Two point-cloud maps side by side, each a 3D view from above at an angle, white and gray dots on black. Left: a long two-lane road with buildings and trees beside it, a circular loop at its left end and an oval loop at the upper right; green lines mark the lane borders and center lines along the road. Right: a rounded-rectangle test track with three lanes drawn in green, two crossings marked with dark blue stripes near its right end, and poles and trees around it; small viewer controls show in the top corners.
@@ -726,83 +754,12 @@ combination of sensors, such as GPS, IMU, LiDARs, and cameras". The other
 layers are then "extracted from" the base map (Elghazaly et al., 2023). At
 the end of this subsection we ask whether ``Town01.xodr`` is an HD map.
 
-
-.. _l7-lec-hdmap-uses:
-
-What an HD Map Is Used For
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Elghazaly et al. (2023) list these uses:
-
-.. list-table::
-   :widths: 20 58 22
-   :header-rows: 1
-   :class: compact-table
-
-   * - **Task**
-     - **How the map helps**
-     - **In this course**
-   * - Localization
-     - "matching map data with collected sensor data in real-time"
-     - L6
-   * - Perception
-     - "improving the accuracy and reliability of perception"
-     - L4, L5
-   * - Routing
-     - "the calculation of efficient, feasible and safe routes"
-     - L7, today
-   * - Prediction
-     - "predict the likely paths and movements of other road users"
-     - L8
-   * - Motion planning
-     - "the planning of feasible and collision-free trajectories that
-       respect traffic rules"
-     - L9
-
-.. note::
-
-   A map covers places the sensors cannot see: "maps can offer an unlimited
-   range", which helps "especially in occluded zones" (Elghazaly et al.,
-   2023). For example, the map still shows the lane behind a parked truck
-   that hides it from the LiDAR.
-
 .. tip::
 
-   See *Where the map fits in the AV's architecture* and *The scene model at
-   Waymo and Tesla* in :doc:`Going Further <l7_appendix>`.
-
-
-.. _l7-lec-hdmap-sources:
-
-Where an AV's Map Comes From
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Someone has to make these maps first. There are four ways:
-
-.. list-table::
-   :widths: 22 20 58
-   :header-rows: 1
-   :class: compact-table
-
-   * - **Source**
-     - **Example**
-     - **How it is made**
-   * - Survey cars with lidar
-     - Waymo
-     - "our team starts by manually driving our sensor equipped vehicles down
-       each street, so our custom lidar can paint a 3D picture" (Waymo, 2020)
-   * - Cameras on customers' cars
-     - Mobileye REM (Road Experience Management)
-     - "Millions of Mobileye-equipped ADAS vehicles sending data to the cloud
-       in small data packets (10kb/km)" (Mobileye, REM)
-   * - Shipped with the simulator
-     - CARLA, ``Town01.xodr``
-     - comes with the town; holds the geometric, semantic and connectivity
-       layers
-   * - Volunteers' street map
-     - OpenStreetMap
-     - streets drawn by volunteers; CARLA converts it to OpenDRIVE (later
-       today)
+   See *What an HD map is used for*, *Where the map fits in the AV's
+   architecture*, *The scene model at Waymo and Tesla*, *Where an AV's map
+   comes from* and *What can go wrong with an HD map* in :doc:`Going Further
+   <l7_appendix>`.
 
 
 .. _l7-lec-hdmap-loading:
@@ -851,27 +808,6 @@ Every AV loads its map before the trip. What happens during the trip differs.
 
    See *HD map formats in practice*, *Lanelet* and *Lanelet2* in
    :doc:`Going Further <l7_appendix>`.
-
-
-.. _l7-lec-hdmap-problems:
-
-What Can Go Wrong with an HD Map
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Elghazaly et al. (2023) list the problems of building and keeping HD maps:
-
-- **Out of date:** the road changes, "such as construction sites, road
-  blockages, and modifications of road connections". "Errors in HD maps
-  could lead to severe damage due to inappropriate decisions taken by the
-  system."
-- **Cost:** each mapping vehicle carries "an expensive suite of mapping
-  devices with high-precision sensors".
-- **Time and data:** collection is "time-consuming and labour-intensive",
-  and mapping vehicles "generate large quantities of data".
-- **No standard:** "there is no common agreement on how mapping data are
-  represented".
-- **Privacy:** maps "often contain sensitive information, such as the
-  locations of buildings and infrastructure".
 
 
 .. _l7-lec-hdmap-town01:
@@ -925,11 +861,11 @@ From Map File to Graph
 
 .. note::
 
-   The parts that follow walk through the pipeline at the start of
-   :ref:`l7-lec-map-to-graph`, one step at a time: the ``.osm`` file, the map
-   file, ``carla.Map``, the segments, the waypoint graph and the intersection
-   graph. Before each step, the diagram is shown again with that step
-   outlined in yellow.
+   The parts that follow walk through the pipeline of
+   :ref:`l7-lec-pipeline`, one step at a time: the ``.osm`` file, the map
+   file, ``carla.Map``, the segments, the waypoint graph and the toy graph.
+   Before each step, the diagram is shown again with that step outlined in
+   yellow.
 
 
 .. _l7-lec-osm:
@@ -938,16 +874,15 @@ A Map from OpenStreetMap
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L7/map_pipeline_osm.png
-   :alt: A UML activity diagram in two rows. It starts at a black dot, then a diamond, a choice. For your own area, the flow goes down to the object .osm file (OpenStreetMap), into the action Osm2Odr.convert(), and into the object map file (.xodr). For Town01, which comes with CARLA, the flow goes straight to the map file. The map file flows into the action carla.Map(name, text), which flows into the object carla.Map. Row 2: carla.Map flows into the object segments, then the action sample every 2 m, join in driving order, the object waypoint graph, the action keep S, G and 7 intersections, and the object intersection graph. The object .osm file and the action Osm2Odr.convert() are outlined in yellow.
+   :alt: A UML activity diagram in three rows. It starts at a black dot, then a diamond, a choice. For your own area, the flow goes down to the object .osm file (OpenStreetMap), into the action Osm2Odr.convert(), and into the object map file (.xodr). For Town01, which comes with CARLA, the flow goes straight to the map file. The map file flows into the action carla.Map(name, text), which flows into the object carla.Map. Row 2: carla.Map flows, through its method get_topology(), into the object segments, then the action sample every 2 m, join in driving order, the object waypoint graph, and a fork, a thick black bar, where the flow splits in two and both branches run. The branch marked [by hand] goes to the action keep S, G and 7 intersections, the object toy graph, and a flow final node, a circle with an X: that branch ends there. Row 3, from the fork, the branch marked [GP4]: the action add lane change edges where lane_change allows, the object routing graph, the action give every edge a cost, the object weighted graph, and the end of the activity, a ringed dot. The object .osm file and the action Osm2Odr.convert() are outlined in yellow.
    :width: 90%
    :align: center
 
    The pipeline, with the ``.osm`` file (OpenStreetMap) and
    ``Osm2Odr.convert()`` outlined in yellow.
 
-First, where a map file comes from when you map an area yourself. You export
-its streets from OpenStreetMap as an ``.osm`` file, and
-``Osm2Odr.convert()`` turns it into a map file.
+At the choice, a map of your own area starts as an ``.osm`` file exported
+from OpenStreetMap, and ``Osm2Odr.convert()`` turns it into a map file.
 
 **OpenDRIVE** is the map format CARLA uses: "a common base for describing
 road networks with extensible markup language (XML) syntax, using the file
@@ -973,48 +908,20 @@ A Map of Your Own, from OpenStreetMap
    <https://www.openstreetmap.org/export#map=16/38.99000/-76.93900>`__:
    your browser saves it as ``map.osm``.
 2. ``carla.Osm2Odr.convert()`` turns the ``.osm`` text into OpenDRIVE text
-   (CARLA Team, Generate maps with OpenStreetMap). The code is in the next
-   part.
+   (CARLA Team, Generate maps with OpenStreetMap). The code is in
+   :doc:`Going Further <l7_appendix>`.
 3. Read it with `carla.Map
    <https://carla.readthedocs.io/en/0.9.16/python_api/#carla.Map>`__: it
    builds the roads, lanes and waypoints from that text.
 
 In the figure, **1** is the Kim building, and each line is the center of a
-lane. The point :math:`(0, 0)` is at latitude 38.99, longitude −76.939. The
-map has 314 roads, 46 intersections and 9144 waypoints at 2 m.
+lane. The point (0, 0) is at latitude 38.99, longitude −76.939. The map has
+314 roads, 46 intersections and 9144 waypoints at 2 m.
 
+.. tip::
 
-.. _l7-lec-osm-python:
-
-From Your .osm File to a Map, in Python
-"""""""""""""""""""""""""""""""""""""""
-
-The steps of the last part, in Python:
-
-.. code-block:: python
-
-   osm = open("maps/umd_engineering.osm").read()
-   settings = carla.Osm2OdrSettings()
-   settings.proj_string = ("+proj=tmerc +lat_0=38.99 +lon_0=-76.939"
-                           " +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m")
-   settings.center_map = False      # keep its origin
-   settings.use_offsets = False
-   xodr = carla.Osm2Odr.convert(osm, settings)  # OpenDRIVE text
-   m = carla.Map("campus", xodr)    # a map object
-
-``proj_string`` sets how latitude and longitude become meters: :math:`x = 0`,
-:math:`y = 0` is at latitude 38.99, longitude −76.939. With ``center_map``
-on, the converter would move the origin to the center of the road map. With
-``use_offsets`` on, it would shift the origin by an offset. Both stay off, so
-the origin stays where ``proj_string`` puts it.
-
-In class we run this code on the copy of the ``.osm`` file in the course
-package, not on the file you just exported. ``osm_to_map.py``, in the folder
-``lecture7``, does it for any export:
-
-.. code-block:: bash
-
-   python3 osm_to_map.py <location of map.osm>
+   See *From your .osm file to a map, in Python* in :doc:`Going Further
+   <l7_appendix>` for the conversion, in Python.
 
 
 .. _l7-lec-mapfile:
@@ -1023,14 +930,15 @@ The Map File
 ^^^^^^^^^^^^
 
 .. figure:: /_static/images/L7/map_pipeline_file.png
-   :alt: A UML activity diagram in two rows. It starts at a black dot, then a diamond, a choice. For your own area, the flow goes down to the object .osm file (OpenStreetMap), into the action Osm2Odr.convert(), and into the object map file (.xodr). For Town01, which comes with CARLA, the flow goes straight to the map file. The map file flows into the action carla.Map(name, text), which flows into the object carla.Map. Row 2: carla.Map flows into the object segments, then the action sample every 2 m, join in driving order, the object waypoint graph, the action keep S, G and 7 intersections, and the object intersection graph. The object map file (.xodr) is outlined in yellow.
+   :alt: A UML activity diagram in three rows. It starts at a black dot, then a diamond, a choice. For your own area, the flow goes down to the object .osm file (OpenStreetMap), into the action Osm2Odr.convert(), and into the object map file (.xodr). For Town01, which comes with CARLA, the flow goes straight to the map file. The map file flows into the action carla.Map(name, text), which flows into the object carla.Map. Row 2: carla.Map flows, through its method get_topology(), into the object segments, then the action sample every 2 m, join in driving order, the object waypoint graph, and a fork, a thick black bar, where the flow splits in two and both branches run. The branch marked [by hand] goes to the action keep S, G and 7 intersections, the object toy graph, and a flow final node, a circle with an X: that branch ends there. Row 3, from the fork, the branch marked [GP4]: the action add lane change edges where lane_change allows, the object routing graph, the action give every edge a cost, the object weighted graph, and the end of the activity, a ringed dot. The object map file (.xodr) is outlined in yellow.
    :width: 90%
    :align: center
 
    The pipeline, with the map file (``.xodr``) outlined in yellow.
 
-Next, the map file the rest of today uses: ``Town01.xodr``, which comes with
-CARLA. We read one road of it.
+Both branches of the choice end at a map file: one converted from
+OpenStreetMap, or one that comes with CARLA. The rest of today uses
+``Town01.xodr``. We read one road of it.
 
 
 .. _l7-lec-odr-road:
@@ -1073,56 +981,21 @@ The highlighted lines are the four parts explained below the listing:
 2. **Its ends:** junction 54 at the start, junction 332 at the end.
 3. **Its type,** ``town``, and its speed limit: 25 mph = 25 × 0.44704 =
    11.18 m/s.
-4. **Its reference line,** the line the file draws the road along (next
-   part): here one straight piece, ``<line/>``.
+4. **Its reference line,** the line the file draws the road along (read in
+   :doc:`Going Further <l7_appendix>`): here one straight piece,
+   ``<line/>``.
 
 The listing cuts two more things:
 
-- **Its lanes:** one 4.0 m driving lane on each side of the line (next
-  part).
+- **Its lanes:** one 4.0 m driving lane on each side of the line (see
+  :doc:`Going Further <l7_appendix>`).
 - **A junction** lists which lane leads to which (later in this section).
 
 .. tip::
 
-   See *A road's lanes in Town01.xodr*, *How the map draws a curve* and
-   *Road 333's turn, step by step* in :doc:`Going Further <l7_appendix>`.
-
-
-.. _l7-lec-odr-geometry:
-
-Reading a Geometry Element
-""""""""""""""""""""""""""
-
-Road 25's ``<geometry>`` (**4**) draws its **reference line**, the line the
-file draws the road along. Lanes are numbered from it: 1 on its left
-(driving north here), −1 on its right (driving south).
-
-.. list-table::
-   :widths: 14 40 46
-   :header-rows: 1
-   :class: compact-table
-
-   * - **Attribute**
-     - **ASAM's definition** (ASAM, Road reference line)
-     - **Road 25**
-   * - ``s``
-     - "s-coordinate of start position" (m)
-     - 0: the piece starts where the road starts; :math:`s` is the distance
-       along the reference line
-   * - ``x``, ``y``
-     - "Start position (x inertial)", "(y inertial)" (m)
-     - (156.07, −11.02), in the map frame: :math:`x` east, :math:`y` north
-   * - ``hdg``
-     - "Start orientation (inertial heading)" (rad)
-     - −1.572 rad, measured counterclockwise from east
-   * - ``length``
-     - "Length of the element's reference line" (m)
-     - 35.18
-
-1. The heading in degrees: −1.572 × 180 / π = −90.07°, so the line points
-   south.
-2. The end, 35.18 m later: x = 156.07 + 35.18 cos(−90.07°) = 156.02 m and
-   y = −11.02 + 35.18 sin(−90.07°) = −46.20 m. That point is junction 332.
+   See *Reading a geometry element*, *A road's lanes in Town01.xodr*, *How
+   the map draws a curve* and *Road 333's turn, step by step* in
+   :doc:`Going Further <l7_appendix>`.
 
 
 .. _l7-lec-carla-map:
@@ -1131,16 +1004,16 @@ carla.Map
 ^^^^^^^^^
 
 .. figure:: /_static/images/L7/map_pipeline_map.png
-   :alt: A UML activity diagram in two rows. It starts at a black dot, then a diamond, a choice. For your own area, the flow goes down to the object .osm file (OpenStreetMap), into the action Osm2Odr.convert(), and into the object map file (.xodr). For Town01, which comes with CARLA, the flow goes straight to the map file. The map file flows into the action carla.Map(name, text), which flows into the object carla.Map. Row 2: carla.Map flows into the object segments, then the action sample every 2 m, join in driving order, the object waypoint graph, the action keep S, G and 7 intersections, and the object intersection graph. The action carla.Map(name, text) and the object carla.Map are outlined in yellow.
+   :alt: A UML activity diagram in three rows. It starts at a black dot, then a diamond, a choice. For your own area, the flow goes down to the object .osm file (OpenStreetMap), into the action Osm2Odr.convert(), and into the object map file (.xodr). For Town01, which comes with CARLA, the flow goes straight to the map file. The map file flows into the action carla.Map(name, text), which flows into the object carla.Map. Row 2: carla.Map flows, through its method get_topology(), into the object segments, then the action sample every 2 m, join in driving order, the object waypoint graph, and a fork, a thick black bar, where the flow splits in two and both branches run. The branch marked [by hand] goes to the action keep S, G and 7 intersections, the object toy graph, and a flow final node, a circle with an X: that branch ends there. Row 3, from the fork, the branch marked [GP4]: the action add lane change edges where lane_change allows, the object routing graph, the action give every edge a cost, the object weighted graph, and the end of the activity, a ringed dot. The action carla.Map(name, text) and the object carla.Map are outlined in yellow.
    :width: 90%
    :align: center
 
    The pipeline, with ``carla.Map(name, text)`` and the ``carla.Map`` object
    outlined in yellow.
 
-Next, reading the map file in Python. ``carla.Map(name, text)`` takes a name
-you choose and the text of the map file. It builds a map object we can ask
-questions, with no CARLA server.
+Once we have the map file, ``carla.Map(name, text)`` reads it in Python. It
+takes a name you choose and the text of the map file, and builds a map
+object we can ask questions, with no CARLA server.
 
 
 .. _l7-lec-read-map:
@@ -1161,7 +1034,7 @@ Run it there with ``python3 read_map.py``.
    text = open("maps/Town01.xodr").read()
    m = carla.Map("Town01", text)      # no server needed
    wps = m.generate_waypoints(2.0)    # every 2 m, every lane
-   segs = m.get_topology()            # (start, end) of each segment
+   segs = m.get_topology()            # (start, end) waypoint pairs
 
 .. list-table::
    :widths: 70 30
@@ -1172,7 +1045,7 @@ Run it there with ``python3 read_map.py``.
      - **Count**
    * - waypoints at 2 m, ``len(wps)``
      - 3266
-   * - (start, end) waypoint pairs (next part), ``len(segs)``
+   * - (start, end) waypoint pairs (see Segments below), ``len(segs)``
      - 160
    * - traffic lights, ``<signal>`` of type 1000001 in the file
      - 36
@@ -1184,7 +1057,7 @@ Hands-On: the Map File
 """"""""""""""""""""""
 
 ``python3 l7_handson.py --part map``, in the folder ``lecture7``, opens
-``Town01.xodr`` in a window, with no CARLA server. :doc:`The Code page
+``Town01.xodr`` in a window. :doc:`The Code page
 <l7_code>` and the folder's `README
 <https://github.com/rubixcubic/enpm818z-fall-2026-carla-python/tree/main/lecture7>`__
 give the setup and the commands.
@@ -1227,8 +1100,12 @@ Run ``python3 l7_handson.py --part map``, or follow on the screen.
 2. Open ``Town01.xodr`` at the line it prints. Read the road's length, its
    speed limit, and the junction at each end (``predecessor``,
    ``successor``).
-3. Lane 1 lies left of the road's reference line, and the file marks it
-   backward, so it drives against :math:`s`, the distance along that line.
+3. Lane 1 lies left of the road's reference line, so it drives against
+   :math:`s`, the distance along that line. **Question:** which junction
+   does the AV reach first, the predecessor or the successor, and which
+   intersection of our route is it?
+
+The answer is in :doc:`Exercise 1 on the Exercises page <l7_exercises>`.
 
 
 .. _l7-lec-segments:
@@ -1237,14 +1114,15 @@ Segments
 ^^^^^^^^
 
 .. figure:: /_static/images/L7/map_pipeline_segments.png
-   :alt: A UML activity diagram in two rows. It starts at a black dot, then a diamond, a choice. For your own area, the flow goes down to the object .osm file (OpenStreetMap), into the action Osm2Odr.convert(), and into the object map file (.xodr). For Town01, which comes with CARLA, the flow goes straight to the map file. The map file flows into the action carla.Map(name, text), which flows into the object carla.Map. Row 2: carla.Map flows into the object segments, then the action sample every 2 m, join in driving order, the object waypoint graph, the action keep S, G and 7 intersections, and the object intersection graph. The object segments is outlined in yellow.
+   :alt: A UML activity diagram in three rows. It starts at a black dot, then a diamond, a choice. For your own area, the flow goes down to the object .osm file (OpenStreetMap), into the action Osm2Odr.convert(), and into the object map file (.xodr). For Town01, which comes with CARLA, the flow goes straight to the map file. The map file flows into the action carla.Map(name, text), which flows into the object carla.Map. Row 2: carla.Map flows, through its method get_topology(), into the object segments, then the action sample every 2 m, join in driving order, the object waypoint graph, and a fork, a thick black bar, where the flow splits in two and both branches run. The branch marked [by hand] goes to the action keep S, G and 7 intersections, the object toy graph, and a flow final node, a circle with an X: that branch ends there. Row 3, from the fork, the branch marked [GP4]: the action add lane change edges where lane_change allows, the object routing graph, the action give every edge a cost, the object weighted graph, and the end of the activity, a ringed dot. The object segments is outlined in yellow.
    :width: 90%
    :align: center
 
    The pipeline, with the segments outlined in yellow.
 
-Next, cutting the map into pieces a graph can use. The map's method
-``get_topology()`` returns every lane of every road as a segment.
+After ``carla.Map`` has built the map object, its method
+``get_topology()`` cuts the map into pieces a graph can use: it returns
+every lane of every road as a segment.
 
 
 .. _l7-lec-segments-cut:
@@ -1280,22 +1158,10 @@ lanes there, and where the file starts a new road.
 - **2:** road 334, a short road inside intersection 5 that makes the left
   turn: the next segment, which starts where **1** ends.
 
+.. tip::
 
-.. _l7-lec-segments-count:
-
-Town01's 160 Waypoint Pairs
-"""""""""""""""""""""""""""
-
-``get_topology()`` returns 160 pairs of waypoints for Town01, one pair per
-segment and way out. Counted from the map:
-
-1. Outside the intersections: 26 roads with one lane each way, so 26 × 2 =
-   52 lanes.
-2. 36 of those lanes end where the AV can go two ways, so each is listed
-   twice, once for each lane it leads into: 52 + 36 = 88 pairs. Segment
-   **1** of the last figure is one of them.
-3. Through the intersections: 72 segments, 24 left turns, 24 right turns and
-   24 straight on. So 88 + 72 = 160 pairs, for 52 + 72 = 124 segments.
+   See *Town01's 160 waypoint pairs* in :doc:`Going Further <l7_appendix>`,
+   counted from the map.
 
 
 .. _l7-lec-wpgraph:
@@ -1304,15 +1170,15 @@ The Waypoint Graph
 ^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L7/map_pipeline_wpgraph.png
-   :alt: A UML activity diagram in two rows. It starts at a black dot, then a diamond, a choice. For your own area, the flow goes down to the object .osm file (OpenStreetMap), into the action Osm2Odr.convert(), and into the object map file (.xodr). For Town01, which comes with CARLA, the flow goes straight to the map file. The map file flows into the action carla.Map(name, text), which flows into the object carla.Map. Row 2: carla.Map flows into the object segments, then the action sample every 2 m, join in driving order, the object waypoint graph, the action keep S, G and 7 intersections, and the object intersection graph. The action sample every 2 m, join in driving order and the object waypoint graph are outlined in yellow.
+   :alt: A UML activity diagram in three rows. It starts at a black dot, then a diamond, a choice. For your own area, the flow goes down to the object .osm file (OpenStreetMap), into the action Osm2Odr.convert(), and into the object map file (.xodr). For Town01, which comes with CARLA, the flow goes straight to the map file. The map file flows into the action carla.Map(name, text), which flows into the object carla.Map. Row 2: carla.Map flows, through its method get_topology(), into the object segments, then the action sample every 2 m, join in driving order, the object waypoint graph, and a fork, a thick black bar, where the flow splits in two and both branches run. The branch marked [by hand] goes to the action keep S, G and 7 intersections, the object toy graph, and a flow final node, a circle with an X: that branch ends there. Row 3, from the fork, the branch marked [GP4]: the action add lane change edges where lane_change allows, the object routing graph, the action give every edge a cost, the object weighted graph, and the end of the activity, a ringed dot. The action sample every 2 m, join in driving order and the object waypoint graph are outlined in yellow.
    :width: 90%
    :align: center
 
    The pipeline, with "sample every 2 m, join in driving order" and the
    waypoint graph outlined in yellow.
 
-Next, building the graph a search runs on: a waypoint every 2 m along each
-segment, joined in driving order.
+On CARLA's segments, we place a waypoint every 2 m and join the waypoints
+in driving order: the waypoint graph.
 
 .. admonition:: Definition: Waypoint
    :class: note
@@ -1382,7 +1248,7 @@ intersections with 3 roads into each.
 A Junction Lists Which Lane Leads to Which
 """"""""""""""""""""""""""""""""""""""""""
 
-The file says which lanes those two edges lead to:
+The file says which lanes the split's two edges lead to:
 
 .. code-block:: xml
 
@@ -1405,55 +1271,16 @@ The file says which lanes those two edges lead to:
 This is junction 332, at the south end of road 25. The listing shows two of
 its connections, from the file:
 
-- Road 25's lane −1 (driving south) goes on into road 333 or road 339: the
-  two ways out of the split in the last figure.
-- ``laneLink from="-1" to="-1"``: lane −1 of road 25 continues in lane −1 of
-  road 333, the right turn, or of road 339, the left turn. Roads 333 and 339
-  are short roads inside the junction.
+- ``laneLink from="-1" to="-1"``: road 25's lane −1 (driving south)
+  continues in lane −1 of road 333, the right turn, or of road 339, the left
+  turn. These short roads inside the junction are the two ways out of the
+  split at intersection 5.
 - ``name`` is a text label; our code uses the ``id``.
 
+.. tip::
 
-.. _l7-lec-odr-junction-read:
-
-Reading a Junction Element
-""""""""""""""""""""""""""
-
-Here is junction 332's first connection, attribute by attribute, as ASAM
-OpenDRIVE defines them (ASAM, Junctions and connecting roads):
-
-.. list-table::
-   :widths: 22 32 46
-   :header-rows: 1
-   :class: compact-table
-
-   * - **Attribute**
-     - **ASAM's definition**
-     - **In junction 332**
-   * - ``junction id``
-     - the junction's ID
-     - 332; the roads inside it say ``junction="332"``
-   * - ``connection id``
-     - "Unique ID within the junction"
-     - 0
-   * - ``incomingRoad``
-     - "ID of the incoming road"
-     - 25: the road that leads into the junction
-   * - ``connectingRoad``
-     - "ID of the connecting road": a path across the junction
-     - 333: a short road inside the junction, the right turn
-   * - ``contactPoint``
-     - "Contact point on the @connectingRoad"
-     - ``start``: road 333 begins where road 25 ends, so traffic drives it
-       from its :math:`s = 0`
-   * - ``laneLink from``
-     - "ID of the incoming lane"
-     - −1: road 25's lane −1, driving south
-   * - ``laneLink to``
-     - "ID of the connection lane"
-     - −1: road 333's lane −1
-
-So, from road 25's lane −1, the AV may drive on into lane −1 of road 333,
-the right turn. Connection 3 does the same for road 339, the left turn.
+   See *Reading a junction element* in :doc:`Going Further <l7_appendix>`,
+   attribute by attribute.
 
 
 .. _l7-lec-rules-shape:
@@ -1465,7 +1292,7 @@ Only the connections the file lists become edges, so the traffic rules are
 in the graph.
 
 .. figure:: /_static/images/L7/t_movements.png
-   :alt: A top view in meters of intersection 306 in Town01, x from 76 to 114 meters east: two lanes running north and south on the left and two lanes to the east, with gray arrows showing each lane's driving direction. Six dark paths cross the intersection, each ending in an arrowhead. Tag 1: the two straight paths, solid lines, one south in the left lane and one north in the right lane. Tag 2: the two right turns, dashed, from the south into the east road and from the east road north. Tag 3: the two left turns, dotted, from the north into the east road and from the east road south. Tag 4: a faint gray dashed U-turn arc between the two north-south lanes below the intersection, with no arrowhead, crossed out with a dark x.
+   :alt: A top view in meters of intersection 1 of our route, junction 306 in Town01, x from 76 to 114 meters east: two lanes running north and south on the left and two lanes to the east, with gray arrows showing each lane's driving direction. Six dark paths cross the intersection, each ending in an arrowhead. Tag 1: the two straight paths, solid lines, one south in the left lane and one north in the right lane. Tag 2: the two right turns, dashed, from the south into the east road and from the east road north. Tag 3: the two left turns, dotted, from the north into the east road and from the east road south. Tag 4: a faint gray dashed U-turn arc between the two north-south lanes below the intersection, with no arrowhead, crossed out with a dark x.
    :width: 60%
    :align: center
 
@@ -1476,11 +1303,11 @@ in the graph.
 
 - This is intersection 1 on our route. The gray arrows show each lane's
   driving direction, and its edges point only that way.
-- There are six ways through, one ``connection`` each in the file: **1**
-  straight on (solid), **2** right turns (dashed), **3** left turns
-  (dotted), two of each.
-- **4:** a U-turn has no connection, so it has no edge, and no search can
-  return it. ``Town01.xodr`` has 0 U-turn connections.
+- There are six ways through for vehicles, one ``connection`` each in the
+  file: **1** straight on (solid), **2** right turns (dashed), **3** left
+  turns (dotted), two of each.
+- **4:** ``Town01.xodr`` has 0 U-turn connections, so there is no U-turn
+  edge, and no search can return one.
 
 
 .. _l7-lec-town01-graph:
@@ -1516,7 +1343,7 @@ that meet share a node.
    Where a lane ends and a single lane continues, the graph keeps one node,
    not two: 3266 − 3107 = 159 fewer nodes than ``generate_waypoints`` gives.
    At a split, each way out starts with its own node (see the hands-on
-   next). After that, we search a nine-node graph by hand.
+   next).
 
 
 .. _l7-lec-handson-graph:
@@ -1553,33 +1380,36 @@ and 3143 edges. :doc:`The Code page <l7_code>` has the commands.
 
 .. _l7-lec-toy:
 
-The Intersection Graph
-^^^^^^^^^^^^^^^^^^^^^^
+The Toy Graph
+^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L7/map_pipeline_toy.png
-   :alt: A UML activity diagram in two rows. It starts at a black dot, then a diamond, a choice. For your own area, the flow goes down to the object .osm file (OpenStreetMap), into the action Osm2Odr.convert(), and into the object map file (.xodr). For Town01, which comes with CARLA, the flow goes straight to the map file. The map file flows into the action carla.Map(name, text), which flows into the object carla.Map. Row 2: carla.Map flows into the object segments, then the action sample every 2 m, join in driving order, the object waypoint graph, the action keep S, G and 7 intersections, and the object intersection graph. The action keep S, G and 7 intersections and the object intersection graph are outlined in yellow.
+   :alt: A UML activity diagram in three rows. It starts at a black dot, then a diamond, a choice. For your own area, the flow goes down to the object .osm file (OpenStreetMap), into the action Osm2Odr.convert(), and into the object map file (.xodr). For Town01, which comes with CARLA, the flow goes straight to the map file. The map file flows into the action carla.Map(name, text), which flows into the object carla.Map. Row 2: carla.Map flows, through its method get_topology(), into the object segments, then the action sample every 2 m, join in driving order, the object waypoint graph, and a fork, a thick black bar, where the flow splits in two and both branches run. The branch marked [by hand] goes to the action keep S, G and 7 intersections, the object toy graph, and a flow final node, a circle with an X: that branch ends there. Row 3, from the fork, the branch marked [GP4]: the action add lane change edges where lane_change allows, the object routing graph, the action give every edge a cost, the object weighted graph, and the end of the activity, a ringed dot. The action keep S, G and 7 intersections and the object toy graph are outlined in yellow.
    :width: 90%
    :align: center
 
-   The pipeline, with "keep S, G and 7 intersections" and the intersection
-   graph outlined in yellow.
+   The pipeline, with "keep S, G and 7 intersections" and the toy graph
+   outlined in yellow.
 
-Last, the **intersection graph**: S, G and seven intersections of the same
-streets, joined by the roads between them. It is small enough to search by
-hand.
+The waypoint graph has 3107 nodes, too many to follow a search by hand. So
+the branch marked [by hand] draws a small graph of the same streets, the
+**toy graph**. Its nodes are S (the trip's start), G (its goal) and seven
+intersections. Its edges are the roads between them, each with its length.
+In :doc:`Going Further <l7_appendix>`, Dijkstra and A* run on it step by
+step. GP4 searches the full waypoint graph instead.
 
 
 .. _l7-lec-toy-map:
 
-The Intersection Graph on the Map
-"""""""""""""""""""""""""""""""""
+The Toy Graph on the Map
+""""""""""""""""""""""""
 
 .. figure:: /_static/images/L7/toy_on_map.png
-   :alt: Town01's lanes in light gray, with the intersection graph drawn over them: nine white circles labeled S, 1 to 7 and G, joined by straight black lines. S sits on a street east of node 1. Node 1 has node 2 below it and node 3 above it; node 3 joins node 4 above and node 5 to the right; nodes 4 and 5 both join node 6, which joins G to its right; node 5 also joins node 7 far to the east.
+   :alt: Town01's lanes in light gray, with the toy graph drawn over them: nine white circles labeled S, 1 to 7 and G, joined by straight black lines. S sits on a street east of node 1. Node 1 has node 2 below it and node 3 above it; node 3 joins node 4 above and node 5 to the right; nodes 4 and 5 both join node 6, which joins G to its right; node 5 also joins node 7 far to the east.
    :width: 70%
    :align: center
 
-   The intersection graph drawn over Town01's lanes (light gray): nine
+   The toy graph drawn over Town01's lanes (light gray): nine
    nodes, S, 1 to 7 and G, joined by straight black lines. S lies east of
    1; 2 is below 1 and 3 above it; 3 joins 4 and 5; 4 and 5 both join 6,
    which joins G; 5 also joins 7, far to the east.
@@ -1595,30 +1425,27 @@ The Intersection Graph on the Map
 
 .. _l7-lec-toy-lengths:
 
-Edge Lengths in the Intersection Graph
-""""""""""""""""""""""""""""""""""""""
+Edge Lengths in the Toy Graph
+"""""""""""""""""""""""""""""
 
-Each edge of the intersection graph needs a cost. Here, the cost is its
-length.
+Each edge of the toy graph needs a cost. Here, the cost is its length.
 
 .. figure:: /_static/images/L7/toy_base.png
-   :alt: The intersection graph alone, to scale, nodes as white circles. Edge lengths in meters beside each edge: S to 1, 41, with an arrow from S to 1; 1 to 2, 67; 1 to 3, 75; 3 to 4, 55; 3 to 5, 64; 4 to 6, 66; 5 to 6, 53; 5 to 7, 179; 6 to G, 40, with an arrow from 6 to G.
+   :alt: The toy graph alone, to scale, nodes as white circles. Edge lengths in meters beside each edge: S to 1, 41, with an arrow from S to 1; 1 to 2, 67; 1 to 3, 75; 3 to 4, 55; 3 to 5, 64; 4 to 6, 66; 5 to 6, 53; 5 to 7, 179; 6 to G, 40, with an arrow from 6 to G.
    :width: 65%
    :align: center
 
-   The intersection graph alone, to scale, with each edge's length in
+   The toy graph alone, to scale, with each edge's length in
    meters: S to 1, 41 (arrow from S); 1 to 2, 67; 1 to 3, 75; 3 to 4, 55;
    3 to 5, 64; 4 to 6, 66; 5 to 6, 53; 5 to 7, 179; 6 to G, 40 (arrow
    into G).
 
-- The cost of each edge is its length in meters.
 - G has an arrow because it is reached only from 6.
 - Three edges leave our route, so the search has choices: south at 1
   (toward 2), straight on at 3 (toward 4), and east at 5 (toward 7).
 
-Our route is 41 + 75 + 64 + 53 + 40 = 273 m on the intersection graph and
-260.6 m on the waypoint graph: 12.4 m more on the intersection graph. This
-graph measures to each intersection's center, and the lanes cut through the
+Our route is 41 + 75 + 64 + 53 + 40 = 273 m on the toy graph and 260.6 m on
+the waypoint graph: 12.4 m more on the toy graph. This graph measures to each intersection's center, and the lanes cut through the
 turns.
 
 
@@ -1631,8 +1458,7 @@ Check: the Graph
    :class: hint
 
    The street between S and node 1 has two lanes, one each way. Why does the
-   intersection graph give S only one edge, S to 1, and no edge from 1 back
-   to S?
+   toy graph give S only one edge, S to 1, and no edge from 1 back to S?
 
 .. dropdown:: Answer
    :color: success
@@ -1641,7 +1467,7 @@ Check: the Graph
    **S is a point in the westbound lane.** The AV starts there facing west,
    so it can only drive toward 1. A route back to S would arrive in the
    westbound lane from the east, through the intersection at the street's
-   other end, which is outside the intersection graph. In the waypoint graph
+   other end, which is outside the toy graph. In the waypoint graph
    the two lanes are separate chains of nodes, so the one-way start comes
    from the graph itself.
 
@@ -1665,8 +1491,27 @@ the left lane can turn left at junction 238 (the map file's number for that
 intersection).
 
 So the graph needs a third kind of edge, the **lane change**, and a route
-must use one to reach the right lane before the intersection. Without it, an
-AV in the right lane has no route to that left turn.
+must use one to reach the right lane before the intersection.
+
+
+.. _l7-lec-next-lanes:
+
+Next: Lane Change Edges
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L7/map_pipeline_lanes.png
+   :alt: A UML activity diagram in three rows. It starts at a black dot, then a diamond, a choice. For your own area, the flow goes down to the object .osm file (OpenStreetMap), into the action Osm2Odr.convert(), and into the object map file (.xodr). For Town01, which comes with CARLA, the flow goes straight to the map file. The map file flows into the action carla.Map(name, text), which flows into the object carla.Map. Row 2: carla.Map flows, through its method get_topology(), into the object segments, then the action sample every 2 m, join in driving order, the object waypoint graph, and a fork, a thick black bar, where the flow splits in two and both branches run. The branch marked [by hand] goes to the action keep S, G and 7 intersections, the object toy graph, and a flow final node, a circle with an X: that branch ends there. Row 3, from the fork, the branch marked [GP4]: the action add lane change edges where lane_change allows, the object routing graph, the action give every edge a cost, the object weighted graph, and the end of the activity, a ringed dot. The action add lane change edges and the object routing graph are outlined in yellow.
+   :width: 90%
+   :align: center
+
+   The pipeline, with "add lane change edges where ``lane_change`` allows"
+   and the routing graph outlined in yellow.
+
+After the fork, the branch marked [GP4] starts from the waypoint graph. Its
+waypoints are joined only along each lane, so a route could never leave its
+lane. A lane change edge joins a waypoint to the next lane over, where the
+map allows the AV to change lanes. The waypoint graph with these edges is the
+**routing graph**.
 
 
 .. _l7-lec-edge-kinds:
@@ -1674,11 +1519,10 @@ AV in the right lane has no route to that left turn.
 Three Kinds of Edge
 ~~~~~~~~~~~~~~~~~~~
 
-Town03's road 4 has two lanes driving south toward junction 238, so its graph
-needs a third kind of edge.
+Town03's road 4 has two lanes driving south toward junction 238.
 
 .. figure:: /_static/images/L7/edge_kinds.png
-   :alt: Town03's road 4 approaching junction 238 from the north, drawn as a graph: dark dots every 4 meters along two southbound lanes, joined by gray arrows pointing south; dashed gray arrows cross between the two lanes in X shapes; at the intersection, chains of arrows turn right to the west, go straight on, or turn left to the east. Three edges are dark and tagged: tag 1, an arrow along the west lane; tag 2, a dashed arrow from the west lane to the east lane; tag 3, a short arrow at the end of the east lane, just before its arrows split into the left turn and the straight way.
+   :alt: Town03's road 4 approaching junction 238 from the north, drawn as a graph: dark dots every 4 meters along two southbound lanes, joined by gray arrows pointing south; dashed gray arrows cross between the two lanes in X shapes; at the intersection, chains of arrows turn right to the west, go straight on, or turn left to the east. Three edges are dark and tagged: tag 1, an arrow along the west lane; tag 2, a dashed arrow from the west lane to the east lane; tag 3, a short dark arrow at the end of the east lane, into the first node of the left turn's road; the turn's curve starts about 4 meters farther south.
    :width: 60%
    :align: center
 
@@ -1687,12 +1531,14 @@ needs a third kind of edge.
    gray arrows cross between them in X shapes. At the bottom, the west lane's
    arrows turn right to the west or go straight on; the east lane's go
    straight on or turn left to the east. **1**, **2** and **3** are the three
-   dark edges.
+   dark edges; **3** ends at the first node of the left turn's road, and the
+   turn's curve starts about 4 m farther south.
 
 - **1 Lane follow:** the AV stays in its lane. The edge joins a waypoint to
   the next one in the same lane.
 - **2 Lane change:** the AV moves to the lane beside it. The edge joins a
-  waypoint to one two nodes ahead in that lane (8 m in this drawing).
+  waypoint to the waypoint two nodes ahead in that lane (8 m in this
+  drawing).
 - **3 Through an intersection:** the AV crosses. The edge joins a lane's
   last waypoint to the first waypoint of a turn, or of the straight way
   across.
@@ -1742,15 +1588,15 @@ AV on it may change lanes: ``NONE`` (neither), ``Left``, ``Right`` or
 from the AV, facing the way its lane drives.
 
 .. figure:: /_static/images/L7/lane_change_marks.png
-   :alt: A top view of 20 meters of Town03's road 4, five lanes side by side, labeled with their lane numbers minus 2, minus 1, 1, 2 and 3 from west to east. Lanes minus 2 and minus 1 have arrows pointing south, lanes 2 and 3 arrows pointing north, and the shaded middle lane 1 an arrow pointing both ways. Solid lines run along the outer edges; broken lines separate lanes minus 2 and minus 1, and lanes 2 and 3; each side of the middle lane has a double line, one broken and one solid. Curved arrows show the allowed moves: purple from lane minus 2 into lane minus 1, from lane minus 1 into the middle lane, and from lane 3 into lane 2; orange from lane minus 1 into lane minus 2, and from lane 2 into lane 3.
+   :alt: A top view of 20 meters of Town03's road 4, x east from about minus 90 to minus 72 meters and y north from minus 85 to minus 65 meters. Five lanes side by side, labeled minus 2, minus 1, 1, 2 and 3 from west to east. Gray arrows show each lane's direction: lanes minus 2 and minus 1 point south, lanes 2 and 3 point north, and the shaded middle lane 1 has an arrow pointing both ways. Solid lines run along the outer edges; broken lines separate lanes minus 2 and minus 1, and lanes 2 and 3; each side of the middle lane has a double line, one broken and one solid. Purple curved arrows go from lane minus 2 into minus 1 and from 3 into 2; a dashed purple arrow goes from minus 1 into the middle lane 1. Orange curved arrows go from minus 1 into minus 2, and from 2 into 3.
    :width: 45%
    :align: center
 
    The same 20 m of road 4, now labeled with the lane numbers. The curved
    arrows are the moves the map allows. **Purple:** moves to the AV's left
-   (lane −2 into −1, lane −1 into the center lane 1, lane 3 into 2).
-   **Orange:** moves to the AV's right (lane −1 into −2, lane 2 into 3). **Gray:** the way
-   each lane drives.
+   (lane −2 into −1, lane 3 into 2). **Dashed purple:** lane −1 into the
+   center lane 1. **Orange:** moves to the AV's right (lane −1 into −2, lane
+   2 into 3). **Gray:** the way each lane drives.
 
 - Lane −2 says ``Left``: an AV there may move only to its left, into lane −1.
 - Lane −1 says ``Both``: an AV there may move right, into lane −2, or left,
@@ -1761,14 +1607,16 @@ from the AV, facing the way its lane drives.
   not into the center lane.
 - Lane 3 says ``Left``: an AV there may move only to its left, into lane 2.
 
-Our graph adds a lane change edge only between lanes that drive the same way.
-The move from lane −1 into the center lane gets no edge.
+Purple is a move to the AV's left, orange a move to its right, and gray
+each lane's direction. The dashed purple arrow is a move the map allows,
+from lane −1 into lane 1, but lane 1 has no waypoints, so our graph has no
+edge for it.
 
 
 .. _l7-lec-lanes-towns:
 
-Lanes and Lane Changes in Town01 and Town03
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Town01 vs. Town03
+~~~~~~~~~~~~~~~~~
 
 These counts were measured with ``carla.Map`` on each town's file, with
 waypoints every 2 m. A **road section** is a stretch of one road with a fixed
@@ -1814,23 +1662,23 @@ In Town03 the route must pick the lane before a turn. Road 4 has two lanes
 driving south, toward junction 238.
 
 .. figure:: /_static/images/L7/town03_lanes.png
-   :alt: A top view in meters of road 4 in Town03 approaching junction 238 from the north, with the other lanes in light gray. Two lanes drive south: the left one teal, tag 1, the right one brown, tag 2. At the bottom, the teal lane goes straight on or turns left, toward the east; the brown lane goes straight on or turns right, toward the west. Short dashed black arrows, tag 3, run diagonally from the brown lane to the teal lane along the approach.
+   :alt: A top view in meters of road 4 in Town03 approaching junction 238 from the north, with the other lanes in light gray. Two lanes drive south: the left one teal, tag 1, the right one brown, tag 2. At the bottom, the teal lane goes straight on or turns left, toward the east; the brown lane goes straight on or turns right, toward the west. Short dashed black arrows run diagonally from the brown lane to the teal lane along the approach.
    :width: 40%
    :align: center
 
    Road 4 from above, in meters. **1** the left lane (teal), which goes
    straight on or turns left to the east. **2** the right lane (brown), which
-   goes straight on or turns right to the west. **3** dashed black arrows,
-   lane changes from the brown lane to the teal one. Gray: the other lanes'
-   centers.
+   goes straight on or turns right to the west. **Dashed black arrows:**
+   lane changes from the brown lane to the teal one. **Gray:** the other
+   lanes' centers.
 
 - **1** The left lane (teal): left or straight on.
 - **2** The right lane (brown): right or straight on.
-- **3** Dashed arrows: lane changes from the right lane to the left one. The
-  map allows them on all 92 m of road 4; the last 60 m are drawn, one every
-  10 m.
 
-The cost of a lane change edge is its length plus a penalty (not set in this
+Gray lines are the other lanes' centers. The dashed arrows are lane changes
+from the right lane to the left one, which the map allows on all 92 m of
+road 4 (the last 60 m are drawn, one every 10 m). The cost of a lane change
+edge is its length plus a penalty (not set in this
 example). The search then decides where the AV changes lanes.
 
 
@@ -1877,33 +1725,48 @@ An edge can cost its length, its driving time, or its length plus a penalty for 
 **What it is for:** the cost decides which route is "best"; the search only finds it.
 
 
+.. _l7-lec-next-costs:
+
+Next: Edge Costs
+~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L7/map_pipeline_costs.png
+   :alt: A UML activity diagram in three rows. It starts at a black dot, then a diamond, a choice. For your own area, the flow goes down to the object .osm file (OpenStreetMap), into the action Osm2Odr.convert(), and into the object map file (.xodr). For Town01, which comes with CARLA, the flow goes straight to the map file. The map file flows into the action carla.Map(name, text), which flows into the object carla.Map. Row 2: carla.Map flows, through its method get_topology(), into the object segments, then the action sample every 2 m, join in driving order, the object waypoint graph, and a fork, a thick black bar, where the flow splits in two and both branches run. The branch marked [by hand] goes to the action keep S, G and 7 intersections, the object toy graph, and a flow final node, a circle with an X: that branch ends there. Row 3, from the fork, the branch marked [GP4]: the action add lane change edges where lane_change allows, the object routing graph, the action give every edge a cost, the object weighted graph, and the end of the activity, a ringed dot. The action give every edge a cost and the object weighted graph are outlined in yellow.
+   :width: 90%
+   :align: center
+
+   The pipeline, with "give every edge a cost" and the weighted graph
+   outlined in yellow.
+
+The routing graph says where the AV can drive, but not what each move costs.
+So every edge of the routing graph gets a number, its cost, and the search
+adds the costs up along a route. The routing graph with its costs is the
+**weighted graph**.
+
+
 .. _l7-lec-three-costs:
 
 Three Costs for the Same Edge
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The search adds up the costs of a route's edges and keeps the route with the
-smallest total. We can set the cost of an edge :math:`\ell` meters long in
-three ways:
+We can set the cost of an edge :math:`\ell` meters long in three ways:
 
 1. **Distance.** The cost of the edge is its length, :math:`\ell` meters. The
    search then finds the shortest route.
 2. **Travel time.** The cost is the time the AV will need for the edge,
    :math:`\ell / v` seconds, with :math:`v` worked out from the map before
-   the drive: the speed limit, or less in a turn. The search then finds the
-   fastest route. A 100 m edge costs 100 / 11.18 = 8.9 s at 25 mph
-   (11.18 m/s), but 100 / 6.71 = 14.9 s at 15 mph (6.71 m/s): 6.0 s more.
+   the drive: the speed limit, or **less in a turn**. The search then finds
+   the fastest route. A 100 m edge costs 100 / 11.18 = 8.9 s at 25 mph
+   (11.18 m/s), but 100 / 6.71 = 14.9 s at 15 mph (6.71 m/s, chosen for this
+   example): 6.0 s more.
 3. **Left-turn penalty.** The cost is the edge's length in meters. The edge
-   that starts a left turn costs :math:`P` meters more. To the search, every
-   left turn then looks like :math:`P` extra meters of road.
+   that starts a left turn costs :math:`P` meters more.
 
 .. note::
 
-   - **The speed** :math:`v`: the speed limit is not a cost by itself, but it
-     sets :math:`v` in :math:`\ell / v`.
-   - **The penalty** :math:`P`: 30 m, chosen for this example. A route with no
-     left turn then beats one with a left turn if it is less than 30 m
-     longer. A left turn crosses oncoming traffic, so a planner may avoid it.
+   **The penalty** :math:`P`: 30 m, chosen for this example. A route with no
+   left turn then beats one with a left turn if it is less than 30 m longer.
+   A left turn crosses oncoming traffic, so a planner may avoid it.
 
 
 .. _l7-lec-turn-slow:
@@ -1911,8 +1774,8 @@ three ways:
 In a Turn, the AV Must Slow Down
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The travel-time cost needs the AV's speed on each edge. In a curve, a limit on
-how hard the AV may accelerate toward the center caps that speed.
+How fast may the AV drive through a curve? The planner answers this from the
+map, before the drive, and puts the answer in the travel-time cost.
 
 .. figure:: /_static/images/L7/turn_geometry.png
    :alt: A top view of a lane turning left: it comes from the left, curves through a quarter circle and leaves upward. A dark dot, tag 1, marks the circle's center. A dashed line, tag 2, runs from the center to the AV, which drives along the curve. An arrow along the lane ahead of the AV is tag 3; an arrow from the AV toward the center is tag 4.
@@ -1928,78 +1791,142 @@ how hard the AV may accelerate toward the center caps that speed.
 To follow a curve, the AV must accelerate toward the curve's center (**4**).
 Passengers feel this as a push toward the outside.
 
-- The acceleration is :math:`v^2 / r`, in m/s²: :math:`v` is the AV's speed
-  (m/s) (**3**), and :math:`r` is the radius (m) (**2**) of the circle the
-  lane follows.
+- The acceleration is :math:`v^2 / r`, in m/s²: :math:`r` (**2**) is the
+  radius of the circle the lane follows, and :math:`v` (**3**) is the AV's
+  speed along the lane.
 - A small :math:`r` is a tight curve, so :math:`v^2 / r` is large.
-- To keep the ride comfortable, we keep it at or below a limit
-  :math:`a_{\mathrm{lat}}` ("lat" for lateral, sideways):
+- For comfort, we keep it at or below a limit :math:`a_{\mathrm{lat}}`
+  ("lat" for lateral, sideways), 2.0 m/s² (chosen):
   :math:`v^2 / r \le a_{\mathrm{lat}}`.
 - Multiply both sides by :math:`r` and take the square root: the top speed in
   a curve is :math:`\sqrt{a_{\mathrm{lat}}\, r}`.
 
 
-.. _l7-lec-turn-speed:
+.. _l7-lec-turn-example:
 
-Top Speed in Town01's Turns
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Worked Example: the Left Turn in the Figure
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. figure:: /_static/images/L7/turn_speed.png
-   :alt: A graph, not a map: top speed in meters per second against the curve's radius in meters, 0 to 90. A solid dark curve rises from 0 and becomes flat at about 11.2 meters per second from a radius of about 62 meters on. Dots on it: tag 1 at radius 7.2 and speed 3.8, tag 2 at radius 11.5 and speed 4.8, tag 3 where it becomes flat. Tag 4 points at the flat part. A dotted gray line marks 11.18 meters per second across the graph, and a dashed gray curve, tag 5, keeps rising above the flat part.
-   :width: 75%
-   :align: center
+The figure of :ref:`l7-lec-turn-slow` is drawn with the median radius of
+Town01's left-turn lanes, :math:`r` = 11.5 m, read from the map (the next
+part shows how). Town01's speed limit, also in the map file, is 11.18 m/s
+(25 mph), and :math:`a_{\mathrm{lat}}` = 2.0 m/s² (chosen).
 
-   A graph, not a map: the top speed (m/s) against the curve's radius
-   :math:`r` (m). **1** and **2** the median right and left turns. **3**
-   :math:`\sqrt{2.0\, r}` meets the limit at
-   :math:`r = 11.18^2 / 2.0 = 62.5` m. **4** the limit, above 62.5 m. **5**
-   :math:`\sqrt{2.0\, r}` alone (dashed).
-
-1. The limit: :math:`a_{\mathrm{lat}} = 2.0` m/s², chosen for this example.
-2. **1** Town01's 24 right-turn lanes have a median radius of 7.2 m (from the
-   map): √(2.0 × 7.2) = √14.4 = 3.79 m/s.
-3. **2** Its 24 left-turn lanes have a median of 11.5 m:
-   √(2.0 × 11.5) = √23 = 4.80 m/s.
-4. On a straight lane, the AV drives at the speed limit, 11.18 m/s.
-
-The solid line is the top speed: the lower of :math:`\sqrt{2.0\, r}` and the
-speed limit (dotted).
+1. **Top speed in the turn:** √(2.0 × 11.5) = √23 = 4.80 m/s.
+2. **Check the speed limit instead:** at 11.18 m/s the acceleration would be
+   11.18 × 11.18 / 11.5 = 10.87 m/s², which is 10.87 / 2.0 = 5.4 times the
+   limit. Too fast for this turn.
+3. **The speed the planner uses:** the lower of the two, 4.80 m/s. On a
+   straight lane, where :math:`r` has no bound, it is the speed limit,
+   11.18 m/s.
 
 .. note::
 
-   **Travel time of an edge:** its length divided by the lower of the speed
-   limit and the curve's top speed. A meter of the median left turn takes
-   11.18 / 4.80 = 2.3 times as long as a straight meter; a meter of the
-   median right turn, 11.18 / 3.79 = 2.9 times.
+   Travel time for one meter of this turn: 1 / 4.80 = 0.21 s, against
+   1 / 11.18 = 0.09 s on a straight lane. The turn costs about
+   11.18 / 4.80 = 2.3 times as much time per meter.
 
 
-.. _l7-lec-costs-code:
+.. _l7-lec-radius-file:
 
-The Three Costs in Code
-~~~~~~~~~~~~~~~~~~~~~~~
+The Radius in the Map File
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The costs in this section were computed this way, for all 3143 edges at once:
-edge ``i`` goes from node ``ef[i]`` to node ``et[i]`` and is ``el[i]`` meters
-long.
+Our trip's right turn at intersection 1 is road 312. The file draws its
+reference line in four pieces: a line, two arcs and a line.
 
-.. code-block:: python
+.. code-block:: xml
 
-   turn = np.radians(wrap_deg(yaw[et] - yaw[ef]))  # rad
-   kappa = np.abs(turn) / el          # curvature: 1 / radius
-   kappa = np.maximum(kappa, 1e-12)   # never exactly 0
-   v = np.minimum(v_limit, np.sqrt(a_lat / kappa))  # m/s
-   cost_distance = el                           # 1. meters
-   cost_time = el / v                           # 2. seconds
-   cost_left = el + np.where(is_left, P, 0.0)   # 3. meters
+   <road name="Road 312" id="312"
+     junction="306" length="18.97">
+    <planView>
+     <geometry s="0" length="2.67">
+      <line/>
+     </geometry>
+     <geometry s="2.67" length="6.77">
+      <arc curvature="0.1046"/>
+     </geometry>
+     <geometry s="9.44" length="6.62">
+      <arc curvature="0.1304"/>
+     </geometry>
+     <geometry s="16.06" length="2.91">
+      <line/>
+     </geometry>
+    </planView>
 
-- ``yaw`` holds each node's heading in degrees, and ``wrap_deg`` brings a
-  change of heading into −180 to 180 degrees.
-- ``v_limit`` is 11.18 m/s, ``a_lat`` is 2.0 m/s² and ``P`` is 30 m, as in
-  the last subsections.
-- A straight edge has ``kappa`` 0. ``np.maximum`` keeps the division finite,
-  so the speed limit sets ``v``.
-- ``is_left`` is true on the first edge of each left turn, so a left turn
-  adds ``P`` once.
+From ``Town01.xodr``, values rounded; each ``geometry``'s ``x``, ``y`` and
+``hdg`` are left out.
+
+ASAM defines an ``arc`` as a reference line "with constant curvature", in
+1/m, and "Positive curvature: left curve (counter-clockwise motion)" (ASAM,
+OpenDRIVE 1.9.0, Section 9).
+
+A curvature is 1 over the radius. For the second arc, where our waypoints
+are: :math:`r` = 1 / 0.1304 = 7.67 m. That is the radius of the reference
+line, not yet of the lane the AV drives.
+
+
+.. _l7-lec-radius-lane:
+
+From the Reference Line to the Lane Center
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L7/radius_file.png
+   :alt: A top view in meters of road 312, x east from 88 to 103 and y north from minus 132.5 to minus 117.5. A shaded lane 4 meters wide comes down from the north and curves to the east. Its west and south edge is a thick dark line, tag 1. A dashed line runs along the lane's middle, tag 2. A dot, tag 3, sits inside the curve near x 98.5, y minus 123.7. A solid line from that dot reaches the thick line, tag 4; a dotted line from the same dot reaches the dashed line, tag 5.
+   :width: 55%
+   :align: center
+
+   Road 312 from above, in meters (:math:`x` east, :math:`y` north). The
+   shaded strip is its lane, which comes down from the north and curves to
+   the east. **1** the reference line, the thick dark line along the lane's
+   west and south edge. **2** the center of lane 1, dashed. **3** the center
+   of the arcs. **4** the reference line's radius, a solid line from **3**.
+   **5** the lane center's radius, a dotted line from **3**.
+
+1. **4** The reference line's radius: 7.67 m.
+2. In the file, lane 1 is 4.0 m wide (attribute ``a`` of its ``width``) and
+   lies on the left of the reference line, inside the curve. It is the only
+   lane of road 312.
+3. The AV drives the lane's center, 2.0 m closer to **3**. Its radius (**5**):
+   7.67 − 2.00 = 5.67 m.
+
+Lane 1 drives the other way from the reference line: the AV comes from the
+east, so the file's left curve is the AV's right turn.
+
+
+.. _l7-lec-radius-waypoints:
+
+The Radius from the Waypoints
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L7/radius_waypoints.png
+   :alt: A top view in meters of road 312, x east from 88 to 103 and y north from minus 132.5 to minus 117.5: road 312's lane, its center dashed. Dots on the center line are the route's waypoints. Two of them, tags 1 and 2, carry short arrows pointing west and west-north-west: their headings. A dotted circle passes through both; its center, tag 4, is the dot inside the curve, and a line from the center to waypoint 1 is its radius, tag 3.
+   :width: 55%
+   :align: center
+
+   Road 312's lane from above, in meters, its center dashed. The dots on the
+   center line are the route's waypoints. **1** and **2** two neighboring
+   waypoints, with short arrows for their headings. The dotted circle passes
+   through both. **3** its radius, from the center to waypoint **1**. **4**
+   the circle's center.
+
+A planner reads the lane through its waypoints. Between two neighboring
+waypoints, the heading turns by :math:`\Delta\theta` (radians) over the
+edge's length :math:`\ell`. On a circle of radius :math:`r`, an arc
+:math:`\ell` long turns by :math:`\ell / r`, so
+:math:`r = \ell / \Delta\theta`.
+
+1. **Headings:** 171.8° at **1**, 156.9° at **2**, 1.474 m further on. They
+   differ by 171.8 − 156.9 = 14.9°, 0.2607 rad before rounding.
+2. **The radius** (**3**): 1.474 / 0.2607 = 5.65 m, around **4**. The file
+   gave 5.67 m.
+3. **Top speed:** √(2.0 × 5.65) = 3.36 m/s, below the speed limit,
+   11.18 m/s, so the AV plans 3.36 m/s here.
+
+.. tip::
+
+   See *Top speed in Town01's turns* in :doc:`Going Further <l7_appendix>`,
+   for all of Town01's turns.
 
 
 .. _l7-lec-routes-costs:
@@ -2052,8 +1979,8 @@ rust: the travel-time route, which the penalty also picks.
 
 .. tip::
 
-   See "Traffic lights add waiting time" in :doc:`Going Further
-   <l7_appendix>`.
+   See *Traffic lights add waiting time* and *The three costs in code* in
+   :doc:`Going Further <l7_appendix>`.
 
 
 .. _l7-lec-handson-costs:
@@ -2061,9 +1988,8 @@ rust: the travel-time route, which the penalty also picks.
 Hands-On: the Edge Costs
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``costs`` part of the hands-on script shows every edge's three costs, and
-the routes of the last subsection. The commands are on :doc:`the Code page
-<l7_code>`.
+``python3 l7_handson.py --part costs`` shows every edge's three costs and the
+three routes. The commands are on :doc:`the Code page <l7_code>`.
 
 .. figure:: /_static/images/L7/handson_costs.png
    :alt: A screenshot of the left panel of the costs window: every edge of Town01, light gray on the straight lanes and dark gray to black in the turns, with a scale under it from 0 to about 0.33 seconds per meter. Twenty-four small rings mark the left-turn edges; a legend says a left turn adds 30 meters in the penalty cost. A thick black mark near x 146 meters, y minus 59 meters is the clicked edge. A box at the bottom lists edge 0, node 0 to node 1, and edge 31, node 0 to node 33, a left turn: both 2.00 meters and 0.179 seconds at the speed limit; with the penalty, edge 0 costs 2.00 meters and edge 31 costs 32.00 meters.
@@ -2082,7 +2008,6 @@ the routes of the last subsection. The commands are on :doc:`the Code page
   Here edges 0 and 31 leave node 0 along the same first 2 m, where the heading
   does not change yet. Both cost 2.00 m and 0.179 s, but edge 31 starts a
   left turn, so its penalty cost is 32.00 m.
-- The window's right panel draws the three routes.
 
 
 .. _l7-lec-search:
@@ -2095,8 +2020,13 @@ You know Dijkstra (Dijkstra, 1959) and A* (Hart et al., 1968) from the planning 
 **What it is for:** GP4 needs a heuristic that never overestimates, in the same units as the edge costs.
 
 The recap, "Dijkstra and A*: the recap", is in :doc:`Going Further
-<l7_appendix>`. Every step of both searches on the intersection graph is on
+<l7_appendix>`. Every step of both searches on the toy graph is on
 :doc:`l7_search_steps`.
+
+Optional: `the same two searches in the Rerun viewer
+<https://github.com/rubixcubic/enpm818z-fall-2026-carla-python/blob/main/lecture7/README.md#optional-the-search-in-rerun>`__,
+run from the course's Python repo. :doc:`The Code page <l7_code>` gives the
+commands.
 
 
 .. _l7-lec-scale:
@@ -2109,7 +2039,7 @@ The appendix runs the same two searches on Town01's full waypoint graph, 3107 no
 **What it is for:** how much work A*'s heuristic saves on a real map, and why GP4 stops a search after ``max_astar_nodes``, 10,000 nodes.
 
 The searches on Town01 are in :doc:`Going Further <l7_appendix>`. The same two
-searches on the small intersection graph, step by step, are on
+searches on the small toy graph, step by step, are on
 :doc:`l7_search_steps`.
 
 
@@ -2132,20 +2062,21 @@ from it, the AV needs a new route.
 GP4's Two Triggers
 ~~~~~~~~~~~~~~~~~~
 
-While the AV drives, an object can block the route, or the AV can end up away
-from it; GP4's planner then plans again. GP4 calls the route's waypoints the
-**path**: the planner publishes them as a ``nav_msgs/Path`` message.
+GP4 calls the route's waypoints the **path**: the planner publishes them as
+a ``nav_msgs/Path`` message.
 
 .. figure:: /_static/images/L7/triggers.png
-   :alt: Two panels to scale, each with a straight blue path along x from 0 to 30 meters, black dots every 2 meters. Panel 1, trigger 1, an object within 3.0 m of the path: the AV at the left on the path; a red X 2.0 m beside the path at x 20 with a red circle of radius 3 meters around it; the three path points inside the circle are red. Panel 2, trigger 2, the AV more than 2.0 m off the path: the AV 2.5 m to the side of the path, with a double arrow from its rear axle down to the nearest path point, labeled 2.5 m.
+   :alt: Two panels to scale, each with a straight blue path along x from 0 to 30 meters, black dots every 2 meters. Panel 1, trigger 1, an object within 3.0 m of a waypoint: the AV at the left on the path; a red X 2.0 m beside the path at x 20, with a double arrow from it down to the path labeled 2.0 m, and a red circle of radius 3 meters around it; the three path points inside the circle are red. Panel 2, trigger 2, the AV more than 2.0 m from the nearest waypoint: the AV 2.5 m to the side of the path, with a double arrow from its rear axle down to the nearest path point, labeled 2.5 m.
    :width: 95%
    :align: center
 
-   Two panels to scale, in meters. **Left, trigger 1:** the AV on the path;
-   a red X 2.0 m beside the path at :math:`x` = 20 m, a red circle of 3.0 m
-   around it, and the three waypoints inside it in red. **Right, trigger 2:**
-   the AV 2.5 m to the side of the path, with a double arrow from its rear
-   axle to the nearest waypoint.
+   Two panels to scale, in meters. **Left, trigger 1, an object within
+   3.0 m of a waypoint:** the AV on the path; a red X 2.0 m beside the path
+   at :math:`x` = 20 m (double arrow, labeled 2.0 m), a red circle of 3.0 m
+   around it, and the three waypoints inside it in red. **Right, trigger 2,
+   the AV more than 2.0 m from the nearest waypoint:** the AV 2.5 m to the
+   side of the path, with a double arrow from its rear axle to the nearest
+   waypoint, labeled 2.5 m.
 
 1. **An obstacle on the path.** Perception reports an object whose center is
    within ``obstacle_clearance``, 3.0 m, of a waypoint. In panel 1, it is
@@ -2166,7 +2097,7 @@ An Obstacle on the Road from 5 to 6
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L7/replan.png
-   :alt: A top view of the trip's area with intersections 3 to 6 marked by small gray circles. The AV, tag 1, drives north on the left street below intersection 3. The old route, thick blue, goes from the AV north to 3, east to 5, north to 6 and east to G. On the street from 5 to 6, tag 2: a red X inside a red circle of radius 3 meters on the blue route. The new route, dashed green, goes from the AV north past 3 to 4, then east past 6 to G.
+   :alt: A top view of the trip's area with intersections 3 to 6 marked by small gray circles. The AV, tag 1, drives north on the left street below intersection 3. The old route, thick blue, goes from the AV north to 3, east to 5, north to 6 and east to G. On the street from 5 to 6, tag 2: a red X inside a red circle of radius 3 meters. The new route, dashed green, goes from the AV north past 3 to 4, then east past 6 to G.
    :width: 75%
    :align: center
 
@@ -2196,12 +2127,11 @@ at 5.
 Re-plan from Where the AV Is, at a Fixed Rate
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When a trigger fires, the planner searches again. Three rules decide where
-and when:
+Three rules decide where and when the planner searches again:
 
 - **Start from the waypoint nearest the AV, not from S.** The AV has already
-  driven part of the route. The new search starts at the waypoint nearest the
-  AV, in the AV's lane and facing the way it drives.
+  driven part of the route. That waypoint must be in the AV's lane and face
+  the way it drives.
 - **Check at a fixed rate.** The planner checks the triggers twice a second
   (GP4's ``replan_frequency``, 2.0 Hz), so a new obstacle waits at most 0.5 s
   for the next check. At 8.0 m/s (the controller's default
@@ -2255,8 +2185,8 @@ obstacle.
 Check: Re-planning
 ~~~~~~~~~~~~~~~~~~
 
-**Question.** At one check, the localizer's pose is 2.3 m toward the other
-lane; at the next check, it is back, as after a bad scan match in L6. The AV
+**Question.** At one check, the localizer's pose is 2.3 m (chosen for this
+example) toward the other lane; at the next check, it is back, as after a bad scan match in L6. The AV
 itself never leaves its lane. What does trigger 2 do, and what should the
 planner do?
 
@@ -2267,8 +2197,7 @@ planner do?
    away a good route and searches again because of one bad pose. The new
    start still lands on the AV's own lane, because it must face the way the
    AV drives, but the search is wasted. The planner should re-plan only when
-   the deviation shows on 2 checks in a row (2 is chosen): hysteresis again.
-   The 2.3 m is chosen for this example.
+   the deviation shows on 2 checks in a row (2 is chosen).
 
 
 .. _l7-lec-maneuvers:
@@ -2293,9 +2222,6 @@ Our Route as Four Maneuvers
 
    The trip's route in blue, in meters: from S west to intersection 1, north
    to 3, east to 5, north to 6 and east to G.
-
-Besides the waypoints, the next lectures' planners (L8, L9) need what the AV
-does at each intersection on the route.
 
 .. list-table::
    :widths: 40 60
@@ -2335,11 +2261,6 @@ with the AV 50.0 m along the route (chosen for this example):
 3. **Next maneuver:** turn right at 3. The route enters intersection 3 at
    99.7 m, so it is 99.7 − 50.0 = 49.7 m ahead.
 
-.. note::
-
-   A navigation app shows the same three things: where you are, how far is
-   left, and the next turn.
-
 
 .. _l7-lec-grp:
 
@@ -2362,7 +2283,7 @@ A CARLA install has a route planner, ``GlobalRoutePlanner``, in
    may use ``GlobalRoutePlanner`` only in your tests, to check your routes.
    Its costs differ from length: an edge costs the number of waypoints it
    samples along the road, one every ``sampling_resolution`` meters (set when
-   you create the planner), so about its length divided by that spacing; a
+   you create the planner): about its length divided by that spacing. A
    lane change costs 0. Compare it with your distance costs at the same 2 m
    spacing.
 
@@ -2402,7 +2323,8 @@ Next Class
 
    L6 found where the AV is; **L7 found which lanes take it to the goal.**
    Town01's map file became a directed graph of 3107 waypoints; in Town03,
-   roads have several lanes, so the route must also pick the lane. Travel
+   22 approaches have lanes that lead to different turns, so the route must
+   also pick the lane. Travel
    time picked a route 6.3 m longer but 3.3 s faster than distance. In the
    appendix, A* took 196 nodes from its open set where Dijkstra took 543. The
    route is planned again on GP4's two triggers and passed on as a turn at

@@ -4,25 +4,25 @@
 Dijkstra and A*, Step by Step
 =============================
 
-This page is reading material. The lecture recaps both searches in four
-slides and keeps their results. Here you work every step on the intersection graph cut
-from the trip's Town01 streets.
+This page is reading material. The deck's appendix recaps both searches and
+keeps their results. Here you work every step on the toy graph cut from the
+trip's Town01 streets.
 
 
 .. _l7-steps-toy:
 
-The Intersection Graph
-----------------------
+The Toy Graph
+-------------
 
 Seven Intersections from Our Trip's Streets
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L7/toy_on_map.png
-   :alt: A top view with axes x, east, in meters and y, north, in meters. Town01's lanes in light gray, with the intersection graph drawn over them: nine white circles labeled S, 1 to 7 and G, joined by straight black lines. S sits on a street east of node 1. Node 1 has node 2 below it and node 3 above it; node 3 joins node 4 above and node 5 to the right; nodes 4 and 5 both join node 6, which joins G to its right; node 5 also joins node 7 far to the east.
+   :alt: A top view with axes x, east, in meters and y, north, in meters. Town01's lanes in light gray, with the toy graph drawn over them: nine white circles labeled S, 1 to 7 and G, joined by straight black lines. S sits on a street east of node 1. Node 1 has node 2 below it and node 3 above it; node 3 joins node 4 above and node 5 to the right; nodes 4 and 5 both join node 6, which joins G to its right; node 5 also joins node 7 far to the east.
    :width: 85%
    :align: center
 
-   The intersection graph drawn over Town01's lanes (light gray). The axes are
+   The toy graph drawn over Town01's lanes (light gray). The axes are
    :math:`x` east and :math:`y` north, in meters.
 
 - **Nodes:** S (the AV's start), G (the goal), and seven intersections, 1 to
@@ -34,24 +34,24 @@ Seven Intersections from Our Trip's Streets
   edge each.
 
 
-The Intersection Graph We Search by Hand
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The Toy Graph We Search by Hand
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L7/toy_base.png
-   :alt: The intersection graph alone, to scale, nodes as white circles. Edge lengths in meters beside each edge: S to 1, 41, with an arrow from S to 1; 1 to 2, 67; 1 to 3, 75; 3 to 4, 55; 3 to 5, 64; 4 to 6, 66; 5 to 6, 53; 5 to 7, 179; 6 to G, 40, with an arrow from 6 to G.
+   :alt: The toy graph alone, to scale, nodes as white circles. Edge lengths in meters beside each edge: S to 1, 41, with an arrow from S to 1; 1 to 2, 67; 1 to 3, 75; 3 to 4, 55; 3 to 5, 64; 4 to 6, 66; 5 to 6, 53; 5 to 7, 179; 6 to G, 40, with an arrow from 6 to G.
    :width: 75%
    :align: center
 
-   The intersection graph, to scale. The number beside each edge is its length in
+   The toy graph, to scale. The number beside each edge is its length in
    meters.
 
 - Edge costs: lengths in meters.
 - S has an arrow: the AV faces west, toward 1. G has one: it is reached from
   6.
-- The intersection graph keeps three choices: south at 1 (toward 2),
+- The toy graph keeps three choices: south at 1 (toward 2),
   straight on at 3 (toward 4), and east at 5 (toward 7).
 
-The intersection graph counts each road to an intersection's center; the waypoint graph
+The toy graph counts each road to an intersection's center; the waypoint graph
 follows the lane through the turn. So their totals differ a little, as you
 will see.
 
@@ -63,7 +63,7 @@ Dijkstra
 
 Dijkstra's search grows the set of nodes whose cheapest cost from S is known,
 one node at a time, always the closest one next. Here it runs by hand on the
-intersection graph, with distance as the cost.
+toy graph, with distance as the cost.
 
 
 Three Words for a Search: g, Open, Done
@@ -109,7 +109,7 @@ Dijkstra, Step 1: Start at S
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L7/toy_dij_1.png
-   :alt: The intersection graph, as in the earlier figure, with edge lengths beside the edges. Node S is amber: taken from the open set in this step. Black rings, open: 1. Thick amber edges from S to 1.
+   :alt: The toy graph, as in the earlier figure, with edge lengths beside the edges. Node S is amber: taken from the open set in this step. Black rings, open: 1. Thick amber edges from S to 1.
    :width: 70%
    :align: center
 
@@ -139,7 +139,7 @@ Dijkstra, Step 2: Take Node 1
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L7/toy_dij_2.png
-   :alt: The intersection graph, as in the earlier figure, with edge lengths beside the edges. Node 1 is amber: taken from the open set in this step. Gray, done: S. Black rings, open: 2 and 3. Thick amber edges from 1 to 2 and 3.
+   :alt: The toy graph, as in the earlier figure, with edge lengths beside the edges. Node 1 is amber: taken from the open set in this step. Gray, done: S. Black rings, open: 2 and 3. Thick amber edges from 1 to 2 and 3.
    :width: 70%
    :align: center
 
@@ -174,7 +174,7 @@ Dijkstra, Step 3: Take Node 2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L7/toy_dij_3.png
-   :alt: The intersection graph, as in the earlier figure, with edge lengths beside the edges. Node 2 is amber: taken from the open set in this step. Gray, done: S and 1. Black rings, open: 3.
+   :alt: The toy graph, as in the earlier figure, with edge lengths beside the edges. Node 2 is amber: taken from the open set in this step. Gray, done: S and 1. Black rings, open: 3.
    :width: 70%
    :align: center
 
@@ -204,7 +204,7 @@ Dijkstra, Step 4: Take Node 3
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L7/toy_dij_4.png
-   :alt: The intersection graph, as in the earlier figure, with edge lengths beside the edges. Node 3 is amber: taken from the open set in this step. Gray, done: S, 1 and 2. Black rings, open: 4 and 5. Thick amber edges from 3 to 4 and 5.
+   :alt: The toy graph, as in the earlier figure, with edge lengths beside the edges. Node 3 is amber: taken from the open set in this step. Gray, done: S, 1 and 2. Black rings, open: 4 and 5. Thick amber edges from 3 to 4 and 5.
    :width: 70%
    :align: center
 
@@ -239,7 +239,7 @@ Dijkstra, Step 5: Take Node 4
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L7/toy_dij_5.png
-   :alt: The intersection graph, as in the earlier figure, with edge lengths beside the edges. Node 4 is amber: taken from the open set in this step. Gray, done: S, 1, 2 and 3. Black rings, open: 5 and 6. Thick amber edge from 4 to 6.
+   :alt: The toy graph, as in the earlier figure, with edge lengths beside the edges. Node 4 is amber: taken from the open set in this step. Gray, done: S, 1, 2 and 3. Black rings, open: 5 and 6. Thick amber edge from 4 to 6.
    :width: 70%
    :align: center
 
@@ -274,7 +274,7 @@ Dijkstra, Step 6: Take Node 5
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L7/toy_dij_6.png
-   :alt: The intersection graph, as in the earlier figure, with edge lengths beside the edges. Node 5 is amber: taken from the open set in this step. Gray, done: S, 1, 2, 3 and 4. Black rings, open: 6 and 7. Thick amber edges from 5 to 6 and 7.
+   :alt: The toy graph, as in the earlier figure, with edge lengths beside the edges. Node 5 is amber: taken from the open set in this step. Gray, done: S, 1, 2, 3 and 4. Black rings, open: 6 and 7. Thick amber edges from 5 to 6 and 7.
    :width: 70%
    :align: center
 
@@ -310,7 +310,7 @@ Dijkstra, Step 7: Take Node 6
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L7/toy_dij_7.png
-   :alt: The intersection graph, as in the earlier figure, with edge lengths beside the edges. Node 6 is amber: taken from the open set in this step. Gray, done: S, 1, 2, 3, 4 and 5. Black rings, open: G and 7. Thick amber edge from 6 to G.
+   :alt: The toy graph, as in the earlier figure, with edge lengths beside the edges. Node 6 is amber: taken from the open set in this step. Gray, done: S, 1, 2, 3, 4 and 5. Black rings, open: G and 7. Thick amber edge from 6 to G.
    :width: 70%
    :align: center
 
@@ -345,7 +345,7 @@ Dijkstra, Step 8: Take G, the Route Is Final
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L7/toy_dij_8.png
-   :alt: The intersection graph, as in the earlier figure, with edge lengths beside the edges. Node G is amber: taken from the open set. The route S, 1, 3, 5, 6, G is drawn as thick blue edges. Gray, done: S, 1, 2, 3, 4, 5 and 6. Black rings, still open: 7.
+   :alt: The toy graph, as in the earlier figure, with edge lengths beside the edges. Node G is amber: taken from the open set. The route S, 1, 3, 5, 6, G is drawn as thick blue edges. Gray, done: S, 1, 2, 3, 4, 5 and 6. Black rings, still open: 7.
    :width: 70%
    :align: center
 
@@ -373,8 +373,8 @@ Dijkstra, Step 8: Take G, the Route Is Final
 Done: S, 1, 2, 3, 4, 5, 6, G.
 
 
-What Dijkstra Did on the Intersection Graph
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+What Dijkstra Did on the Toy Graph
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
    :widths: 40 60
@@ -382,7 +382,7 @@ What Dijkstra Did on the Intersection Graph
    :class: compact-table
 
    * - **Result**
-     - **On the intersection graph**
+     - **On the toy graph**
    * - route
      - S, 1, 3, 5, 6, G: 273 m
    * - nodes taken
@@ -395,7 +395,7 @@ What Dijkstra Did on the Intersection Graph
 - Dijkstra takes nodes in order of :math:`g` alone. Node 2 lies away from G,
   but its :math:`g` (108) was the lowest, so it went first.
 - On the waypoint graph, the same route: through intersections 1, 3, 5 and
-  6, 260.6 m. The intersection graph's 273 m counts each turn to the intersection's center;
+  6, 260.6 m. The toy graph's 273 m counts each turn to the intersection's center;
   the AV cuts the corner.
 
 
@@ -444,7 +444,7 @@ Our Heuristic: the Straight Line to G
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L7/toy_h.png
-   :alt: The intersection graph with its edge lengths, all nodes white. A dashed black straight line runs from node 3 to G, crossing the block between them and the edge from 5 to 6, labeled 117 m beside the line.
+   :alt: The toy graph with its edge lengths, all nodes white. A dashed black straight line runs from node 3 to G, crossing the block between them and the edge from 5 to 6, labeled 117 m beside the line.
    :width: 70%
    :align: center
 
@@ -490,7 +490,7 @@ A*, Step 1: Start at S
 ~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L7/toy_ast_1.png
-   :alt: The intersection graph, as in the earlier figure, with edge lengths beside the edges. Node S is amber: taken from the open set in this step. Black rings, open: 1. Thick amber edge from S to 1.
+   :alt: The toy graph, as in the earlier figure, with edge lengths beside the edges. Node S is amber: taken from the open set in this step. Black rings, open: 1. Thick amber edge from S to 1.
    :width: 70%
    :align: center
 
@@ -525,7 +525,7 @@ A*, Step 2: Take Node 1
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L7/toy_ast_2.png
-   :alt: The intersection graph, as in the earlier figure, with edge lengths beside the edges. Node 1 is amber: taken from the open set in this step. Gray, done: S. Black rings, open: 3 and 2. Thick amber edges from 1 to 2 and 3.
+   :alt: The toy graph, as in the earlier figure, with edge lengths beside the edges. Node 1 is amber: taken from the open set in this step. Gray, done: S. Black rings, open: 3 and 2. Thick amber edges from 1 to 2 and 3.
    :width: 70%
    :align: center
 
@@ -566,7 +566,7 @@ A*, Step 3: Take Node 3
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L7/toy_ast_3.png
-   :alt: The intersection graph, as in the earlier figure, with edge lengths beside the edges. Node 3 is amber: taken from the open set in this step. Gray, done: S and 1. Black rings, open: 5, 4 and 2. Thick amber edges from 3 to 4 and 5.
+   :alt: The toy graph, as in the earlier figure, with edge lengths beside the edges. Node 3 is amber: taken from the open set in this step. Gray, done: S and 1. Black rings, open: 5, 4 and 2. Thick amber edges from 3 to 4 and 5.
    :width: 70%
    :align: center
 
@@ -613,7 +613,7 @@ A*, Step 4: Take Node 5
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L7/toy_ast_4.png
-   :alt: The intersection graph, as in the earlier figure, with edge lengths beside the edges. Node 5 is amber: taken from the open set in this step. Gray, done: S, 1 and 3. Black rings, open: 6, 4, 2 and 7. Thick amber edges from 5 to 6 and 7.
+   :alt: The toy graph, as in the earlier figure, with edge lengths beside the edges. Node 5 is amber: taken from the open set in this step. Gray, done: S, 1 and 3. Black rings, open: 6, 4, 2 and 7. Thick amber edges from 5 to 6 and 7.
    :width: 70%
    :align: center
 
@@ -665,7 +665,7 @@ A*, Step 5: Take Node 6
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L7/toy_ast_5.png
-   :alt: The intersection graph, as in the earlier figure, with edge lengths beside the edges. Node 6 is amber: taken from the open set in this step. Gray, done: S, 1, 3 and 5. Black rings, open: G, 4, 2 and 7. Thick amber edges from 6 to 4 and G.
+   :alt: The toy graph, as in the earlier figure, with edge lengths beside the edges. Node 6 is amber: taken from the open set in this step. Gray, done: S, 1, 3 and 5. Black rings, open: G, 4, 2 and 7. Thick amber edges from 6 to 4 and G.
    :width: 70%
    :align: center
 
@@ -717,7 +717,7 @@ A*, Step 6: Take G, the Route Is Final
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L7/toy_ast_6.png
-   :alt: The intersection graph, as in the earlier figure, with edge lengths beside the edges. Node G is amber: taken from the open set. The route S, 1, 3, 5, 6, G is drawn as thick blue edges. Gray, done: S, 1, 3, 5 and 6. Black rings, still open: 4, 2 and 7.
+   :alt: The toy graph, as in the earlier figure, with edge lengths beside the edges. Node G is amber: taken from the open set. The route S, 1, 3, 5, 6, G is drawn as thick blue edges. Gray, done: S, 1, 3, 5 and 6. Black rings, still open: 4, 2 and 7.
    :width: 70%
    :align: center
 
@@ -759,8 +759,8 @@ A*, Step 6: Take G, the Route Is Final
 Done: S, 1, 3, 5, 6, G.
 
 
-Dijkstra Against A* on the Intersection Graph
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Dijkstra Against A* on the Toy Graph
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
    :widths: 30 35 35
@@ -796,11 +796,13 @@ An Admissible Heuristic Never Overestimates
 
    :math:`h` is admissible if, for every node :math:`n`, :math:`h(n)` is no
    more than the true cost of the cheapest route from :math:`n` to the goal.
-   With an admissible :math:`h`, A* returns a cheapest route.
+   With an admissible :math:`h`, A* returns a cheapest route, if it may take
+   a node again when it finds a cheaper way to it; the straight line never
+   needs that.
 
 **The straight line is admissible for distance:** every road from :math:`n`
 to G is at least as long as the straight line between them. On the
-intersection graph:
+toy graph:
 
 .. list-table::
    :widths: auto
@@ -861,7 +863,7 @@ Overestimate, Step 3: Take Node 3
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L7/toy_wrong_3.png
-   :alt: The intersection graph, as in the earlier figure, with edge lengths beside the edges. Node 3 is amber: taken from the open set in this step. Gray, done: S and 1. Black rings, open: 4, 2 and 5. Thick amber edges from 3 to 4 and 5.
+   :alt: The toy graph, as in the earlier figure, with edge lengths beside the edges. Node 3 is amber: taken from the open set in this step. Gray, done: S and 1. Black rings, open: 4, 2 and 5. Thick amber edges from 3 to 4 and 5.
    :width: 70%
    :align: center
 
@@ -908,7 +910,7 @@ Overestimate, Step 4: Take Node 4
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L7/toy_wrong_4.png
-   :alt: The intersection graph, as in the earlier figure, with edge lengths beside the edges. Node 4 is amber: taken from the open set in this step. Gray, done: S, 1 and 3. Black rings, open: 6, 2 and 5. Thick amber edge from 4 to 6.
+   :alt: The toy graph, as in the earlier figure, with edge lengths beside the edges. Node 4 is amber: taken from the open set in this step. Gray, done: S, 1 and 3. Black rings, open: 6, 2 and 5. Thick amber edge from 4 to 6.
    :width: 70%
    :align: center
 
@@ -954,7 +956,7 @@ Overestimate, Step 5: Take Node 6
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L7/toy_wrong_5.png
-   :alt: The intersection graph, as in the earlier figure, with edge lengths beside the edges. Node 6 is amber: taken from the open set in this step. Gray, done: S, 1, 3 and 4. Black rings, open: G, 2 and 5. Thick amber edges from 6 to 5 and G.
+   :alt: The toy graph, as in the earlier figure, with edge lengths beside the edges. Node 6 is amber: taken from the open set in this step. Gray, done: S, 1, 3 and 4. Black rings, open: G, 2 and 5. Thick amber edges from 6 to 5 and G.
    :width: 70%
    :align: center
 
@@ -1001,7 +1003,7 @@ Overestimate, Step 6: Take G, the Route Is Final
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L7/toy_wrong_6.png
-   :alt: The intersection graph, as in the earlier figure, with edge lengths beside the edges. Node G is amber: taken from the open set. The route S, 1, 3, 4, 6, G is drawn as thick rust edges. Gray, done: S, 1, 3, 4 and 6. Black rings, still open: 2 and 5. Never reached: 7, a plain white circle.
+   :alt: The toy graph, as in the earlier figure, with edge lengths beside the edges. Node G is amber: taken from the open set. The route S, 1, 3, 4, 6, G is drawn as thick rust edges. Gray, done: S, 1, 3, 4 and 6. Black rings, still open: 2 and 5. Never reached: 7, a plain white circle.
    :width: 70%
    :align: center
 

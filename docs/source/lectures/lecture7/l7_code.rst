@@ -12,8 +12,9 @@ uses: from S, the start, to G, the goal. The folder has three scripts:
   window.
 - ``read_map.py``: the code on the slide "Read the map file yourself, with
   no CARLA server". It prints three counts and opens no window.
-- ``osm_to_map.py``: the code on the slide "From your .osm file to a map, in
-  Python". It turns an OpenStreetMap export into a CARLA map.
+- ``osm_to_map.py``: the code on the appendix slide "From your .osm file to
+  a map, in Python" (:doc:`Going Further <l7_appendix>`). It turns an
+  OpenStreetMap export into a CARLA map.
 
 You need Python with ``numpy`` and ``matplotlib``. You need **no CARLA
 server, no ROS and no GPU**. The ``map`` part, ``read_map.py`` and
@@ -122,7 +123,7 @@ Team, Python API reference):
    text = open("maps/Town01.xodr").read()
    m = carla.Map("Town01", text)      # no server needed
    wps = m.generate_waypoints(2.0)    # every 2 m, every lane
-   segs = m.get_topology()            # (start, end) of each segment
+   segs = m.get_topology()            # (start, end) waypoint pairs
 
 ``maps/Town01.xodr`` is CARLA 0.9.16's map file for Town01, unchanged.
 ``generate_waypoints(2.0)`` puts a point every 2 m along the middle of every
@@ -149,8 +150,9 @@ It prints the slide's three counts, measured on Town01:
 Your Own Map: ``osm_to_map.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This is the code of the slide "From your .osm file to a map, in Python". It
-turns an OpenStreetMap export into OpenDRIVE text, then into a CARLA map:
+This is the code of the appendix slide "From your .osm file to a map, in
+Python", in :doc:`Going Further <l7_appendix>`. It turns an OpenStreetMap
+export into OpenDRIVE text, then into a CARLA map:
 
 .. code-block:: python
 
@@ -166,8 +168,8 @@ turns an OpenStreetMap export into OpenDRIVE text, then into a CARLA map:
 ``proj_string`` sets how latitude and longitude become meters: on the slide,
 :math:`x = 0`, :math:`y = 0` is at latitude 38.99, longitude −76.939. With
 ``center_map`` on, the converter would move the origin to the center of the
-road map; with ``use_offsets`` on, it would shift it by an offset. Both stay
-off, so the origin stays where ``proj_string`` puts it.
+road map, and ``use_offsets`` would shift it too. Both stay off, so the
+origin stays where ``proj_string`` puts it.
 
 The script does not use the slide's fixed numbers. It reads the edges of the
 exported box from the file (its ``<bounds>`` element) and puts ``lat_0`` and
@@ -213,7 +215,9 @@ Part 0: The Map File (``--part map``)
 The script reads ``maps/Town01.xodr`` with ``carla.Map("Town01", text)`` and
 no server. In the terminal it prints what the file holds (122 roads, 96 of
 them inside the 12 intersections, 36 traffic lights) and what CARLA makes of
-it (3266 waypoints at 2 m, 160 topology segments). Then it opens the window.
+it: 3266 waypoints at 2 m, and the 160 (start, end) waypoint pairs of
+``get_topology()``, which the script prints as "160 topology segments". Then
+it opens the window.
 
 .. figure:: /_static/images/L7/handson_map.png
    :alt: A screenshot of the map window: Town01 from above, x from 0 to 400 meters east and y from minus 330 to 0 meters north, drawn as dots along every lane, dark on the roads and amber inside the twelve intersections. A legend names the two kinds of dot. Under the map, a hint line, a Search box holding road 25, an x, y box holding 133.6, minus 129.4, and three buttons: Zoom in, Zoom out and Whole map.
@@ -237,7 +241,8 @@ it (3266 waypoints at 2 m, 160 topology segments). Then it opens the window.
     where the road starts.
   - ``lane 25 -1``: road 25, lane −1.
   - ``junction 332``: the waypoints inside intersection 332.
-  - ``segment 12``: one of the 160 topology segments, numbered 0 to 159.
+  - ``segment 12``: one of the 160 waypoint pairs of ``get_topology()``,
+    numbered 0 to 159 (the script calls each pair a segment).
   - ``waypoint 100``: one waypoint.
 
   The match turns pink, and the view zooms to it.
@@ -259,8 +264,12 @@ it (3266 waypoints at 2 m, 160 topology segments). Then it opens the window.
 2. Open ``Town01.xodr`` at the line it prints. Read the road's length, its
    speed limit, and the junction at each end (``predecessor``,
    ``successor``).
-3. Lane 1 lies left of the road's reference line, and the file marks it
-   backward, so it drives against :math:`s`, the distance along that line.
+3. Lane 1 lies left of the road's reference line, so it drives against
+   :math:`s`, the distance along that line. **Question:** which junction
+   does the AV reach first, the predecessor or the successor, and which
+   intersection of our route is it?
+
+The answer is in :doc:`Exercise 1 on the Exercises page <l7_exercises>`.
 
 
 Part 1: Town01's Graph (``--part graph``)
@@ -378,6 +387,32 @@ straight on at 3 and turns right at 4, instead of turning right at 3 and
 left at 5.
 
 
+Optional: the Search in Rerun
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``rerun_search.py``, in the same folder, replays the two searches of
+``--part search`` in the `Rerun <https://rerun.io>`__ viewer. The lecture
+does not need it: in the folder's README, "its package and viewer take
+several hundred megabytes". The README's section `Optional: the search in
+Rerun
+<https://github.com/rubixcubic/enpm818z-fall-2026-carla-python/blob/main/lecture7/README.md#optional-the-search-in-rerun>`__
+gives the details.
+
+.. code-block:: bash
+
+   pip install rerun-sdk
+   python3 rerun_search.py
+
+   # write a recording instead, and open it later
+   python3 rerun_search.py --save search.rrd
+   rerun search.rrd
+
+Drag the time slider, or press play, to watch both searches take their
+nodes; a search's route appears when it reaches G. Rerun's 2D views point
+:math:`y` down, so the script flips :math:`y`: north stays up, and the axis
+shows 130 where the map has :math:`y` = −130 m.
+
+
 The Data
 --------
 
@@ -392,7 +427,7 @@ The Data
 - ``l7_results/routes.npz`` holds the routes (lists of node numbers), the two
   search orders, the re-planned route, and the route's reference path with
   saved speeds. ``l7_results/summary.json`` holds every number, the values we
-  chose, and the intersection graph the slides search by hand.
+  chose, and the toy graph the slides search by hand.
 
 .. list-table::
    :widths: 35 65

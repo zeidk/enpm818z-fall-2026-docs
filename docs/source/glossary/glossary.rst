@@ -2108,7 +2108,7 @@ L5: Perception II, 3D Detection, BEV, Fusion & Tracking
       sensor affect everything. :doc:`L5 </lectures/lecture5/l5_index>`
 
    Global Nearest Neighbor
-      GNN (not the graph neural network of L8). Data association that
+      GNN. Data association that
       solves a whole frame at once, choosing the set of pairings with the
       lowest total cost, usually with the Hungarian algorithm. Removes the
       order dependence that makes plain nearest-neighbor association
@@ -2565,24 +2565,27 @@ L7 (not yet published)
    Curvature
       How sharply a line or a lane bends, written :math:`\kappa`, in 1/m. A
       curve of radius :math:`r` has :math:`|\kappa| = 1/r`, so a tight curve
-      has a large curvature. In OpenDRIVE, an arc has a constant curvature,
-      and a negative one is a right curve. L7's edge costs compute each
-      edge's curvature as its change of heading, in radians, divided by its
-      length. L7
+      has a large curvature. In OpenDRIVE, an arc has a constant curvature:
+      positive is a left curve, negative a right curve. Road 312, L7's right
+      turn at intersection 1, has an arc of curvature 0.1304 per meter, so
+      its reference line's radius is 1 / 0.1304 = 7.67 m. L7's edge costs
+      compute each edge's curvature as its change of heading, in radians,
+      divided by its length: from two waypoints on road 312's lane,
+      :math:`r` = 1.474 / 0.2607 = 5.65 m. L7
 
    Dijkstra
       A search that finds the cheapest route through a graph (Dijkstra,
       1959). You know it from the planning course; L7 recaps it in its
       appendix. It always takes the open node with the lowest cost so far,
-      :math:`g`, and treats that cost as final. That is right only if no edge
-      cost is negative. Dijkstra is A* with :math:`h = 0` at every node.
+      :math:`g`, and treats that cost as final. It is sure to find the
+      cheapest route if no edge cost is negative. Dijkstra is A* with :math:`h = 0` at every node.
       Autoware's route search is Dijkstra, in the Lanelet2 map library. L7 · L9
 
    Directed Graph
       A set of nodes and a set of edges, each edge an ordered pair (from, to)
       with a cost. An edge can be followed only from its first node to its
       second. L7's graph of the roads is directed because the AV cannot drive
-      against its lane. See Routing Graph. L7
+      against its lane. See Waypoint Graph. L7
 
    Edge Cost
       The number a route search adds up along a route; the search keeps the
@@ -2609,14 +2612,6 @@ L7 (not yet published)
       detour at the first check that sees it, go back only at the third
       check in a row without it; 3 is chosen), the route changes once. L7
 
-   Intersection Graph
-      L7's small graph for searching by hand: the start S, the goal G and
-      seven Town01 intersections, joined by the roads between them. Each edge
-      stands for a street's two lanes, one each way, with their average
-      length in whole meters along the lane. L7's route costs
-      41 + 75 + 64 + 53 + 40 = 273 m on it, 12.4 m more than the 260.6 m on
-      the waypoint graph, because it measures to each intersection's center. L7
-
    Junction
       In OpenDRIVE and CARLA, an intersection, and the element of the map
       file that lists which lane leads to which there. Each connection names
@@ -2637,12 +2632,16 @@ L7 (not yet published)
 
    Lane Change Edge
       An edge of the routing graph that moves the AV to the lane beside it,
-      from a waypoint to one two nodes ahead in that lane. It is one of three
+      from a waypoint to the waypoint two nodes ahead in that lane. It is one of three
       kinds of edge, with lane follow (to the next waypoint in the same lane)
       and through an intersection. Each CARLA waypoint says to which side an
       AV may change lanes there (``NONE``, ``Left``, ``Right`` or ``Both``);
       L7's graph adds lane change edges only between lanes that drive the
-      same way. Town01 needs none. In Town03, an AV in the right lane of road
+      same way, where the waypoint's ``lane_change`` field allows it. On
+      Town03's road 4, the map allows a move from lane −1 into the center
+      lane, but that lane has no waypoints, so the graph has no edge for it.
+      The waypoint graph with these edges is the routing graph. Town01 needs
+      none. In Town03, an AV in the right lane of road
       4 needs one to turn left at junction 238. L7
 
    Lanelet
@@ -2674,11 +2673,11 @@ L7 (not yet published)
       lane. L7 labels each intersection by how much the heading turns in it:
       more than 30° left is a left turn, more than 30° right a right turn,
       less is straight on (30° is chosen). L7's route is four maneuvers: right
-      at 1, right at 3, left at 5 and right at 6. The planners of L8 and L9
-      need them besides the waypoints. L7
+      at 1, right at 3, left at 5 and right at 6. L9's motion planning needs
+      them besides the waypoints. L7
 
    Merge (Graph)
-      A node of the routing graph where two lanes from an intersection join
+      A node of the waypoint graph where two lanes from an intersection join
       one lane, so two edges arrive at it. Contrast Split (Graph). L7
 
    OpenDRIVE
@@ -2738,11 +2737,12 @@ L7 (not yet published)
       as waypoints. L7
 
    Routing Graph
-      The directed graph a route search runs on. In CARLA's waypoint graph,
-      each node is a waypoint, one every 2 m along every lane, and each edge
-      goes from a waypoint to the next one along its lane, with the length
-      between them as its cost. Measured on Town01: 3107 nodes and 3143
-      edges, one edge out of each node and two out of each of the 36 splits. L7
+      The waypoint graph with lane change edges added where the map allows
+      them, in L7's pipeline from the map file to edge costs. Once every edge
+      has a cost, it is the weighted graph the search runs on. Town01 has no
+      lane change edges, so its routing graph is its waypoint graph: 3107
+      nodes and 3143 edges. See Waypoint Graph, Lane Change Edge and Weighted
+      Graph. L7
 
    Segment
       One lane of one road, in driving order. CARLA cuts a lane where it
@@ -2752,13 +2752,24 @@ L7 (not yet published)
       160 waypoint pairs, one pair per segment and way out. L7
 
    Split (Graph)
-      A node of the routing graph where a lane meets an intersection and the
+      A node of the waypoint graph where a lane meets an intersection and the
       AV can go two ways, so two edges leave it. Town01 has 36 splits: 12
       intersections with 3 roads into each. Contrast Merge (Graph). L7
 
    Successor
-      A node that one of a node's edges leads to. In the routing graph, most
+      A node that one of a node's edges leads to. In the waypoint graph, most
       nodes have one successor; a split has two. L7
+
+   Toy Graph
+      L7's small graph for searching by hand. Town01's waypoint graph has
+      3107 nodes, too many to follow a search by hand, so the toy graph keeps
+      S (the trip's start), G (its goal) and seven Town01 intersections,
+      joined by the roads between them. Each edge stands for a street's two
+      lanes, one each way, with their average length in whole meters along
+      the lane. L7's route costs 41 + 75 + 64 + 53 + 40 = 273 m on it, 12.4 m
+      more than the 260.6 m on the waypoint graph, because it measures to
+      each intersection's center. GP4 searches the full waypoint graph
+      instead. L7
 
    Trajectory
       A path with times: where the AV is at each moment. Formally, "a
@@ -2776,8 +2787,22 @@ L7 (not yet published)
       (11.18 m/s). In a curve of radius :math:`r`, the top speed is
       :math:`\sqrt{a_{\mathrm{lat}}\, r}`, where :math:`a_{\mathrm{lat}}` is
       the limit on sideways acceleration (2.0 m/s², chosen for L7's
-      example). On L7's trip, travel time picks a route 6.3 m longer but
-      3.3 s faster than distance. L7
+      example). In Town01's median left turn (:math:`r` = 11.5 m), the top
+      speed is √(2.0 × 11.5) = 4.80 m/s, so a meter of it takes about
+      11.18 / 4.80 = 2.3 times as long as a straight meter. On L7's trip,
+      travel time picks a route 6.3 m longer but 3.3 s faster than distance. L7
+
+   Waypoint Graph
+      The directed graph built from CARLA's waypoints: a node every 2 m along
+      each segment, and an edge from each node to the next one along its
+      lane, with the length between them. Measured on Town01: 3107 nodes and
+      3143 edges, one edge out of each node and two out of each of the 36
+      splits. L7
+
+   Weighted Graph
+      The routing graph with a cost, a number, on every edge. A route search
+      adds the costs up along a route and keeps the route with the smallest
+      total. See Edge Cost. L7
 
 .. raw:: html
 
@@ -2791,40 +2816,130 @@ L8 (not yet published)
 
 .. glossary::
 
-   Behavior Planning
-      The strategic decision-making layer that selects high-level maneuvers
-      (lane follow, lane change, yield, stop) based on the current driving
-      context. Often implemented as a finite state machine (FSM). L8
+   ADE
+      Average displacement error: the displacement error averaged over every
+      predicted time (Chang et al., 2019; Wilson et al., 2021). L8's CV
+      prediction for car A is off by 0.52, 1.50, 2.58, 6.01 and 12.35 m at 1
+      to 5 s, so over those five times its ADE is 22.96 / 5 = 4.59 m; over
+      all 50 predicted times, every 0.1 s, it is 3.37 m. See FDE. L8
+
+   Constant Velocity (CV)
+      A physics model of motion: the road user keeps the velocity it has now,
+      :math:`x(h) = x_0 + v_x h` and :math:`y(h) = y_0 + v_y h`, where
+      :math:`h` is the horizon. L5's tracker uses it for one 0.1 s step. In
+      L8, CV predicts car A, which brakes for a left turn, straight on past
+      the junction: 12.35 m off after 5 s. With no turn ahead, it is the best
+      of L8's three physics models: under 2 m for 3 s on the test set. L8
+
+   Critical Headway
+      The shortest gap, in seconds, that a driver accepts to make a maneuver
+      across traffic (gap acceptance). The Highway Capacity Manual's base
+      value for a left turn from the major street of a two-lane road is
+      4.1 s, as reproduced by the McTrans Center. In L8, car A turns left
+      across the AV's lane only if the AV is at least 4.1 s from the
+      crossing: 6.0 s in run 1, so A turns; 3.0 s in run 2, with the AV 24 m
+      closer, so A waits. L8
 
    CTRA
-      Constant Turn Rate and Acceleration. A physics-based motion prediction
-      model that assumes constant yaw rate and longitudinal acceleration.
-      More realistic than constant-velocity models for curving trajectories. L8
+      Constant turn rate and acceleration: CTRV with the speed changing at a
+      constant rate (Schubert et al., 2008). It uses car A's braking, read
+      from the track (0.96 m/s²), so it keeps A closer to the junction than
+      CV: 7.26 m off at 5 s against 12.35 m, still a miss. With no turn
+      ahead, the braking it reads is mostly noise: a mean error of 16.1 m at
+      5 s on L8's test set, against CV's 4.0 m. L8
 
-   FSM
-      Finite State Machine. A classical approach to behavior planning using
-      discrete states (lane follow, lane change, stop, yield) and
-      transition rules. Simple, interpretable, but brittle for complex
-      scenarios. L8
+   CTRV
+      Constant turn rate and velocity: the road user keeps its speed and its
+      turn rate, so it drives on a circle of radius speed / turn rate
+      (Schubert et al., 2008). In the middle of car A's left turn, the fit
+      gives 4.98 m/s and 0.331 rad/s: a circle of 4.98 / 0.331 = 15.0 m,
+      close to the lane's 14.7 m. After the turn the lane straightens and
+      the circle keeps turning. With a turn rate near 0 the formula divides
+      by almost 0, so code switches to CV. L8
 
-   GNN
-      Graph Neural Network. A neural network operating on graph-structured
-      data. Used in trajectory prediction to model interactions between
-      agents, where nodes represent agents and edges represent
-      relationships. Not the Global Nearest Neighbor data association of
-      L5. L8
+   Displacement Error
+      The distance between a road user's predicted and true position at one
+      time. ADE averages it over every predicted time; FDE takes its value
+      at the last one. L8
 
-   Multi-Modal Prediction
-      A trajectory prediction output that represents several plausible
-      futures simultaneously (typically as :math:`K` weighted trajectory
-      modes), capturing the inherent uncertainty in other agents'
-      intentions. L8
+   FDE
+      Final displacement error: the displacement error at the last predicted
+      time (Chang et al., 2019; Wilson et al., 2021). L8's CV prediction for
+      car A has an FDE of 12.35 m at 5 s. An FDE above 2.0 m is a miss. See
+      ADE and Miss Rate. L8
+
+   Intelligent Driver Model (IDM)
+      A model of a driver following another car (Treiber et al., 2000):
+      accelerate toward a desired speed :math:`v_0`, brake when the gap
+      :math:`s` gets smaller than a desired gap :math:`s^*`.
+      :math:`a = a_{\max}[1 - (v/v_0)^4 - (s^*/s)^2]`, with
+      :math:`s^* = s_0 + vT + v\,\Delta v / (2\sqrt{a_{\max} b})`. The paper's
+      values: :math:`T` = 1.6 s, :math:`a_{\max}` = 0.73 m/s², :math:`b` =
+      1.67 m/s², :math:`s_0` = 2 m; L8 chose :math:`v_0` = 9 m/s. L8's car B,
+      22.25 m behind car A and closing in at 1.77 m/s, wants
+      :math:`s^*` = 20.64 m and brakes at 0.30 m/s². L8
+
+   Intent
+      The maneuver a driver means to make next (turn left, go straight on,
+      change lanes, stop). It cannot be measured; it is inferred from cues:
+      slowing down, the position in the lane, a turn signal, where the lane
+      goes. In L8, car A's slowing down alone makes the left turn 0.87
+      likely. L8
+
+   minADE
+      The ADE of the best of a prediction's modes, the one closest to the
+      truth: "the average ... L2 distance ... between the best forecasted
+      trajectory and the ground truth" (Wilson et al., 2021). L8's car A has
+      two modes with ADEs of 0.86 and 3.55 m, so minADE = 0.86 m. It does
+      not look at the probabilities. L8
+
+   minFDE
+      The FDE of the best of a prediction's modes. For L8's car A, the
+      smaller of 1.88 and 13.06 m: 1.88 m, under 2 m, so not a miss. More
+      modes always lower it, so it is read together with a score that uses
+      the probabilities, such as the probability given to the true future
+      (0.87 for car A). L8
+
+   Miss Rate
+      The share of predictions that miss. Argoverse 2: "the proportion of
+      test samples where none of the forecasted trajectories were within 2.0
+      meters of ground truth according to endpoint error" (Wilson et al.,
+      2021). With one mode, a miss is an FDE above 2.0 m; with several, no
+      mode ends within 2.0 m. On L8's test set with a turn ahead, CV misses
+      99.6% of the time and the best of the map's modes 40.5%. L8
+
+   Mode (Prediction)
+      One future trajectory of a multimodal prediction, with its
+      probability. In L8, car A has two modes: the left turn, probability
+      0.87, and straight on, 0.13. Not the Degraded Mode or Synchronous Mode
+      of L2. L8
+
+   Multimodal Prediction
+      A prediction made of :math:`K` future trajectories for one road user,
+      each called a mode, each with a probability; the :math:`K`
+      probabilities add up to 1. A single answer trained for the smallest
+      mean squared error tends to the average of the futures: for L8's car
+      A, the average of the left turn and straight on ends 7.21 m from each,
+      where no lane leads. L8
+
+   Prediction Horizon
+      How far ahead a prediction reaches, :math:`h`, in seconds. It must
+      cover at least the time the AV needs to react and stop: at 8 m/s, with
+      0.5 s to react and braking at 3 m/s² (chosen), 0.5 + 8 / 3 = 3.17 s.
+      L8 predicts 5 s ahead (chosen). Argoverse predicts 3 s, Argoverse 2
+      6 s and the Waymo Open Motion Dataset 8 s. L8
 
    Trajectory Prediction
-      Forecasting the future positions and states of other traffic agents
-      (vehicles, pedestrians, cyclists) over a prediction horizon.
-      Methods range from physics-based (CTRA) to transformer-based
-      models generating multi-modal trajectory distributions. L8
+      For each road user near the AV, from its past track and the map: its
+      future positions over a time horizon (in L8, every 0.1 s for 5 s), how
+      sure each one is, and, when it could do different things, several
+      futures with a probability each. L8 compares physics models (CV, CTRV,
+      CTRA), the map's lanes with Bayes' rule, and models of drivers who
+      react to each other. L8
+
+.. raw:: html
+
+   <p class="glossary-also">Also used here: <a href="#term-ADS" target="_blank" rel="noopener">ADS</a> (L1), <a href="#term-Ground-Truth" target="_blank" rel="noopener">Ground Truth</a> (L2), <a href="#term-Prior" target="_blank" rel="noopener">Prior</a> (L2), <a href="#term-Likelihood" target="_blank" rel="noopener">Likelihood</a> (L3), <a href="#term-Motion-Model" target="_blank" rel="noopener">Motion Model</a> (L3), <a href="#term-NIS" target="_blank" rel="noopener">NIS</a> (L3), <a href="#term-Standard-Deviation" target="_blank" rel="noopener">Standard Deviation</a> (L3), <a href="#term-Junction" target="_blank" rel="noopener">Junction</a> (L7), <a href="#term-Lane" target="_blank" rel="noopener">Lane</a> (L7).</p>
 
 
 .. _g-l9:

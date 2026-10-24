@@ -1,384 +1,249 @@
+====================================================
 References
-==========
+====================================================
 
+These are the sources the L8 slides cite, grouped by the lecture's sections,
+in the order the slides first cite each source. A source cited in several
+sections is listed once, where the slides first cite it. The sections The
+Scene, Scoring, Several Futures and Using the Map cite no new source. Four
+sources are cited only in the appendix (:doc:`l8_appendix`); they have their
+own group at the end.
 
-.. dropdown:: Lecture 8
-    :class-container: sd-border-secondary
-    :open:
+.. dropdown:: Introduction
+   :class-container: sd-border-secondary
+   :open:
 
-    .. card::
-        :class-card: sd-border-secondary
+   The Tempe crash, the prediction windows of the public datasets, and the
+   three kinds of motion model.
 
-        **ENPM818Z -- L8: Prediction & Behavior Modeling**
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-        Covers why prediction is necessary for planning (horizon
-        requirements), physics-based prediction (CV, CTRA),
-        maneuver-based prediction (intent classification + conditional
-        model), interaction-aware prediction (Social Force, GNNs),
-        Transformer-based prediction (MotionTransformer, scene
-        context encoding, multi-modal output), multi-modal prediction
-        metrics (MinADE, MinFDE, MissRate, mAP), FSM behavior
-        planning (states, transitions, limitations), rule-based vs.
-        learned decision-making, behavior cloning (distribution shift,
-        compounding errors), and DAgger (dataset aggregation, expert
-        querying, convergence guarantees).
+      .. grid-item-card:: The Tempe crash
+         :link: https://www.ntsb.gov/investigations/AccidentReports/Reports/HAR1903.pdf
+         :class-card: sd-border-secondary
 
+         **National Transportation Safety Board (2019)**
 
-.. dropdown:: Trajectory Prediction
-    :class-container: sd-border-secondary
+         *Collision Between Vehicle Controlled by Developmental Automated
+         Driving System and Pedestrian, Tempe, Arizona, March 18, 2018.*
+         Report NTSB/HAR-19/03, Investigation HWY18MH010, adopted 19
+         November 2019. Washington, DC.
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+         "The ADS detected the pedestrian 5.6 seconds before impact", but
+         it never "predicted her path": when perception changed an object's
+         class, the system "no longer considered the tracking history of
+         that object". Also cited in the appendix, on pedestrians and
+         cyclists.
 
-        .. grid-item-card:: Schubert et al. -- CTRA Model (2008)
-            :class-card: sd-border-secondary
+      .. grid-item-card:: Argoverse
+         :class-card: sd-border-secondary
 
-            **IEEE IV 2008**
+         **Chang, M.-F., Lambert, J., Sangkloy, P., Singh, J., Bak, S.,
+         Hartnett, A., Wang, D., Carr, P., Lucey, S., Ramanan, D. and Hays,
+         J. (2019)**
 
-            Analysis and comparison of constant-motion kinematic
-            models (CV, CA, CTRA, CTRV) for vehicle trajectory
-            prediction with empirical accuracy benchmarks.
+         "Argoverse: 3D Tracking and Forecasting with Rich Maps."
+         *Proceedings of the IEEE/CVF Conference on Computer Vision and
+         Pattern Recognition (CVPR)*, 8748 to 8757.
 
-            +++
+         Observes 2 s and predicts 3 s. Also cited in Scoring, for ADE and
+         FDE.
 
-            - CTRA derivation
-            - Model comparison
-            - Short-horizon accuracy
+      .. grid-item-card:: Argoverse 2
+         :class-card: sd-border-secondary
 
-        .. grid-item-card:: Helbing & Molnar -- Social Force (1995)
-            :class-card: sd-border-secondary
+         **Wilson, B., Qi, W., Agarwal, T., Lambert, J., Singh, J.,
+         Khandelwal, S., Pan, B., Kumar, R., Hartnett, A., Pontes, J. K.,
+         Ramanan, D., Carr, P. and Hays, J. (2021)**
 
-            **Physical Review E, 1995**
+         "Argoverse 2: Next Generation Datasets for Self-Driving Perception
+         and Forecasting." *Proceedings of the Neural Information Processing
+         Systems Track on Datasets and Benchmarks.*
 
-            Seminal social force model for pedestrian dynamics,
-            modelling attraction toward goals and repulsion from
-            obstacles and other pedestrians.
+         Observes 5 s and predicts 6 s. Also cited in Scoring (ADE, FDE and
+         the miss rate: "within 2.0 meters of ground truth according to
+         endpoint error") and in Several Futures (minADE and minFDE).
 
-            +++
+      .. grid-item-card:: Waymo Open Motion Dataset
+         :class-card: sd-border-secondary
 
-            - Force model formulation
-            - Crowd dynamics simulation
-            - Parameter estimation
+         **Ettinger, S., Cheng, S., Caine, B., Liu, C., Zhao, H., Pradhan,
+         S., Chai, Y., Sapp, B., Qi, C., Zhou, Y., Yang, Z., Chouard, A.,
+         Sun, P., Ngiam, J., Vasudevan, V., McCauley, A., Shlens, J. and
+         Anguelov, D. (2021)**
 
-        .. grid-item-card:: Alahi et al. -- Social LSTM (CVPR 2016)
-            :class-card: sd-border-secondary
+         "Large Scale Interactive Motion Forecasting for Autonomous Driving:
+         The Waymo Open Motion Dataset." *Proceedings of the IEEE/CVF
+         International Conference on Computer Vision (ICCV)*, 9710 to 9719.
 
-            **CVPR 2016**
+         Observes 1 s and predicts 8 s. Also cited in Scoring (thresholds
+         that depend on the horizon and the speed) and in Several Futures
+         (mAP).
 
-            Introduced the social pooling mechanism to LSTM-based
-            pedestrian trajectory prediction, enabling interaction-
-            aware learning.
+      .. grid-item-card:: Three kinds of motion model
+         :link: https://doi.org/10.1186/s40648-014-0001-z
+         :class-card: sd-border-secondary
 
-            +++
+         **Lefèvre, S., Vasquez, D. and Laugier, C. (2014)**
 
-            - LSTM trajectory prediction
-            - Social pooling
-            - ETH/UCY benchmark results
+         "A survey on motion prediction and risk assessment for intelligent
+         vehicles." *ROBOMECH Journal*, 1(1).
+         doi:10.1186/s40648-014-0001-z.
 
-        .. grid-item-card:: Gupta et al. -- Social GAN (CVPR 2018)
-            :class-card: sd-border-secondary
+         Physics-based, maneuver-based and interaction-aware models. Also
+         cited in Using the Map and Other Drivers.
 
-            **CVPR 2018**
 
-            Generative adversarial network for multi-modal
-            pedestrian trajectory prediction with socially
-            acceptable samples.
+.. dropdown:: Physics Models
+   :class-container: sd-border-secondary
 
-            +++
+   The motion models with a constant turn rate.
 
-            - GAN-based multi-modal prediction
-            - Variety loss
-            - Social acceptability
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
+      .. grid-item-card:: CTRV and CTRA
+         :class-card: sd-border-secondary
 
-.. dropdown:: Transformer-Based Prediction
-    :class-container: sd-border-secondary
+         **Schubert, R., Richter, E. and Wanielik, G. (2008)**
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+         "Comparison and Evaluation of Advanced Motion Models for Vehicle
+         Tracking." *Proceedings of the 11th International Conference on
+         Information Fusion (FUSION 2008)*, Cologne, Germany, 730 to 735.
 
-        .. grid-item-card:: Shi et al. -- MotionTransformer (NeurIPS 2023)
-            :class-card: sd-border-secondary
+         Constant turn rate and velocity, and constant turn rate and
+         acceleration. Also cited in the appendix, for CTRA's integrals in
+         closed form.
 
-            **NeurIPS 2023**
 
-            State-of-the-art Transformer predictor with two-stage
-            global + local motion Transformers and learnable motion
-            query pairs for multi-modal prediction on WOMD.
+.. dropdown:: Other Drivers
+   :class-container: sd-border-secondary
 
-            +++
+   Intent, a driver following another car, gap acceptance, and how the AV's
+   actions change what others do.
 
-            - Two-stage Transformer architecture
-            - Factorized attention
-            - WOMD state-of-the-art results
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-        .. grid-item-card:: Nayakanti et al. -- Wayformer (ICRA 2023)
-            :class-card: sd-border-secondary
+      .. grid-item-card:: Autoware's map-based prediction
+         :link: https://github.com/autowarefoundation/autoware_universe/blob/main/perception/autoware_map_based_prediction/README.md
+         :class-card: sd-border-secondary
 
-            **ICRA 2023**
+         **Autoware Foundation**
 
-            Waymo's Transformer-based prediction model with
-            efficient factorized attention for joint agent and
-            map encoding.
+         *autoware_map_based_prediction*, README of the package,
+         autoware_universe repository. Accessed 14 October 2026.
 
-            +++
+         A car drifting toward a lane boundary may change lanes. Also cited
+         in the appendix: "a module to predict the future paths (and their
+         probabilities) of other vehicles and pedestrians according to the
+         shape of the map and the surrounding environment".
 
-            - Factorized attention design
-            - Scalability analysis
-            - Real-time inference
+      .. grid-item-card:: The Intelligent Driver Model (IDM)
+         :link: https://doi.org/10.1103/PhysRevE.62.1805
+         :class-card: sd-border-secondary
 
-        .. grid-item-card:: Ngiam et al. -- Scene Transformer (ICLR 2022)
-            :class-card: sd-border-secondary
+         **Treiber, M., Hennecke, A. and Helbing, D. (2000)**
 
-            **ICLR 2022**
+         "Congested traffic states in empirical observations and microscopic
+         simulations." *Physical Review E*, 62(2), 1805 to 1824.
+         doi:10.1103/PhysRevE.62.1805.
 
-            Joint prediction of all agents in a scene using a
-            single Transformer, enabling fully interaction-aware
-            prediction.
+         The IDM and its values: :math:`T` = 1.6 s, :math:`a_{\max}` =
+         0.73 m/s², :math:`b` = 1.67 m/s², :math:`\delta` = 4, :math:`s_0` =
+         2 m.
 
-            +++
+      .. grid-item-card:: Critical headway
+         :link: https://mctranswordpresssa.blob.core.windows.net/uploads/2022/01/TWSC.pdf
+         :class-card: sd-border-secondary
 
-            - Joint multi-agent prediction
-            - Factored attention masks
-            - nuScenes and WOMD results
+         **McTrans Center, University of Florida**
 
-        .. grid-item-card:: Shi et al. -- MTR++ (T-PAMI 2024)
-            :class-card: sd-border-secondary
+         *HCS Two-Way Stop Controlled Intersections Users Guide.* Glossary,
+         base critical headway and base follow-up headway, from the Highway
+         Capacity Manual's defaults. Accessed 14 October 2026.
 
-            **IEEE T-PAMI 2024**
+         The base critical headway for a left turn from the major street of
+         a two-lane road: 4.1 s.
 
-            Extension of MotionTransformer with improved scene
-            encoding and multi-agent prediction, achieving SOTA
-            across multiple benchmarks.
+      .. grid-item-card:: The AV's actions affect other drivers
+         :class-card: sd-border-secondary
 
-            +++
+         **Sadigh, D., Sastry, S., Seshia, S. A. and Dragan, A. D. (2016)**
 
-            - Extended architecture
-            - Multi-dataset training
-            - Benchmark leaderboard
+         "Planning for Autonomous Cars that Leverage Effects on Human
+         Actions." *Robotics: Science and Systems XII (RSS)*, Ann Arbor,
+         Michigan.
 
+         "an autonomous car's actions will actually affect what other cars
+         will do in response, whether the car is aware of it or not".
 
-.. dropdown:: Behavior Planning
-    :class-container: sd-border-secondary
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+.. dropdown:: Cited Only in the Appendix
+   :class-container: sd-border-secondary
 
-        .. grid-item-card:: Paden et al. -- AV Planning Survey (IEEE T-ITS 2016)
-            :class-card: sd-border-secondary
+   Learned predictors, from :doc:`l8_appendix`.
 
-            **IEEE T-ITS, 2016**
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-            Survey of behavior planning approaches including FSMs,
-            POMDP, and rule-based methods for autonomous vehicles.
+      .. grid-item-card:: VectorNet
+         :link: https://arxiv.org/abs/2005.04259
+         :class-card: sd-border-secondary
 
-            +++
+         **Gao, J., Sun, C., Zhao, H., Shen, Y., Anguelov, D., Li, C. and
+         Schmid, C. (2020)**
 
-            - FSM design patterns
-            - POMDP formulation
-            - Rule-based systems
+         "VectorNet: Encoding HD Maps and Agent Dynamics from Vectorized
+         Representation." *Proceedings of the IEEE/CVF Conference on
+         Computer Vision and Pattern Recognition (CVPR).* arXiv:2005.04259.
 
-        .. grid-item-card:: Ulbrich & Maurer -- MOMDP for Behavior (IV 2013)
-            :class-card: sd-border-secondary
+         "Observed agent trajectories and map features are represented as
+         sequence of vectors".
 
-            **IV 2013**
+      .. grid-item-card:: MultiPath
+         :class-card: sd-border-secondary
 
-            Models behavior planning as a Mixed Observability MDP,
-            enabling principled uncertainty handling beyond FSMs.
+         **Chai, Y., Sapp, B., Bansal, M. and Anguelov, D. (2019)**
 
-            +++
+         "MultiPath: Multiple Probabilistic Anchor Trajectory Hypotheses for
+         Behavior Prediction." *Proceedings of the 3rd Conference on Robot
+         Learning (CoRL 2019)*, Proceedings of Machine Learning Research,
+         volume 100, 86 to 99.
 
-            - MOMDP formulation
-            - Belief-space planning
-            - Intersection scenarios
+         A probability for each anchor trajectory, with offsets and
+         uncertainties.
 
-        .. grid-item-card:: Brechtel et al. -- Probabilistic MDP (ITSC 2014)
-            :class-card: sd-border-secondary
+      .. grid-item-card:: MTR (Motion Transformer)
+         :link: https://arxiv.org/abs/2209.13508
+         :class-card: sd-border-secondary
 
-            **ITSC 2014**
+         **Shi, S., Jiang, L., Dai, D. and Schiele, B. (2022)**
 
-            Probabilistic behavior planning under prediction
-            uncertainty using continuous-state MDP.
+         "Motion Transformer with Global Intention Localization and Local
+         Movement Refinement." *Advances in Neural Information Processing
+         Systems 35 (NeurIPS 2022).* arXiv:2209.13508.
 
-            +++
+         "a small set of learnable motion query pairs", each in charge of
+         one motion mode.
 
-            - MDP with probabilistic transitions
-            - Integration with prediction
-            - Risk-aware planning
+      .. grid-item-card:: Social LSTM
+         :class-card: sd-border-secondary
 
-        .. grid-item-card:: Werber et al. -- Rule Book (IV 2019)
-            :class-card: sd-border-secondary
+         **Alahi, A., Goel, K., Ramanathan, V., Robicquet, A., Fei-Fei, L.
+         and Savarese, S. (2016)**
 
-            **IV 2019**
+         "Social LSTM: Human Trajectory Prediction in Crowded Spaces."
+         *Proceedings of the IEEE Conference on Computer Vision and Pattern
+         Recognition (CVPR)*, 961 to 971.
 
-            Formalization of traffic rules as a hierarchically
-            ordered rule book for certifiable behavior planning.
+         Pools the hidden states of nearby people, so each person's
+         prediction depends on its neighbors.
 
-            +++
 
-            - Rule formalization
-            - Hierarchical priority
-            - Verification
+.. rubric:: Map data and images
 
-
-.. dropdown:: Imitation Learning and DAgger
-    :class-container: sd-border-secondary
-
-    .. grid:: 1 1 2 2
-        :gutter: 2
-
-        .. grid-item-card:: Ross & Bagnell -- Behavior Cloning (2010)
-            :class-card: sd-border-secondary
-
-            **JMLR Workshop, 2010**
-
-            Analysis of distribution shift in behavior cloning with
-            the formal :math:`O(\epsilon T^2)` error bound derivation.
-
-            +++
-
-            - Distribution shift analysis
-            - Compounding error bound
-            - Theoretical foundations
-
-        .. grid-item-card:: Ross, Gordon & Bagnell -- DAgger (AISTATS 2011)
-            :class-card: sd-border-secondary
-
-            **AISTATS 2011**
-
-            Original DAgger paper introducing the dataset aggregation
-            algorithm with formal reduction from :math:`O(\epsilon T^2)`
-            to :math:`O(\epsilon T)` regret.
-
-            +++
-
-            - DAgger algorithm
-            - Convergence guarantees
-            - No-regret analysis
-
-        .. grid-item-card:: Codevilla et al. -- CILRS (ICCV 2019)
-            :class-card: sd-border-secondary
-
-            **ICCV 2019**
-
-            Conditional imitation learning with reinforcement
-            learning for robust urban driving, addressing
-            distribution shift via hybrid IL+RL training.
-
-            +++
-
-            - Conditional command inputs
-            - IL + RL hybrid
-            - CARLA benchmark results
-
-        .. grid-item-card:: Chen et al. -- TransFuser (CVPR 2021)
-            :class-card: sd-border-secondary
-
-            **CVPR 2021**
-
-            Transformer-based imitation learning agent fusing
-            camera and LiDAR via cross-attention for CARLA
-            Leaderboard challenge.
-
-            +++
-
-            - Sensor fusion via attention
-            - End-to-end imitation
-            - Leaderboard benchmark
-
-
-.. dropdown:: Datasets and Benchmarks
-    :class-container: sd-border-secondary
-
-    .. grid:: 1 1 2 2
-        :gutter: 2
-
-        .. grid-item-card:: Waymo Open Motion Dataset (WOMD)
-            :link: https://waymo.com/open/data/motion/
-            :class-card: sd-border-secondary
-
-            **Waymo Open Dataset**
-
-            Large-scale real-world prediction benchmark with 570 hours
-            of driving data across diverse scenarios. Standard benchmark
-            for MotionTransformer and similar models.
-
-            +++
-
-            - Agent trajectory annotations
-            - HD map with road graph
-            - Prediction challenge leaderboard
-
-        .. grid-item-card:: nuScenes Prediction
-            :link: https://www.nuscenes.org/prediction
-            :class-card: sd-border-secondary
-
-            **nuScenes (Motional)**
-
-            360-degree sensor suite dataset with prediction challenge
-            and standardized MinADE/MinFDE/MissRate metrics.
-
-            +++
-
-            - Multi-sensor annotations
-            - Prediction challenge
-            - MinADE/MinFDE baseline results
-
-        .. grid-item-card:: ETH/UCY Pedestrian Datasets
-            :link: https://graphics.cs.ucy.ac.cy/research/downloads/crowd-data
-            :class-card: sd-border-secondary
-
-            **ETH Zurich / UCY**
-
-            Standard pedestrian trajectory prediction benchmarks
-            used to evaluate Social LSTM, Social GAN, and subsequent
-            pedestrian prediction models.
-
-            +++
-
-            - Overhead video annotations
-            - Multiple crowd scenarios
-            - ADE/FDE metrics
-
-
-.. dropdown:: Recommended Reading
-    :class-container: sd-border-secondary
-
-    .. grid:: 1 1 2 2
-        :gutter: 2
-
-        .. grid-item-card:: Schmerling et al.
-            :class-card: sd-border-secondary
-
-            **Multimodal Probabilistic Model-Based Planning for
-            Human-Robot Interaction (ICRA 2018)**
-
-            Unified framework for prediction and planning under
-            multi-modal agent behavior uncertainty.
-
-        .. grid-item-card:: Sutton & Barto
-            :class-card: sd-border-secondary
-
-            **Reinforcement Learning: An Introduction (2nd Ed.)**
-
-            Comprehensive RL textbook. Chapters 3--6 provide the
-            MDP and policy optimization foundations underlying
-            learned behavior planners and DAgger.
-
-        .. grid-item-card:: Vaswani et al.
-            :class-card: sd-border-secondary
-
-            **Attention Is All You Need (NeurIPS 2017)**
-
-            Original Transformer paper. Essential background for
-            understanding MotionTransformer and all Transformer-based
-            prediction architectures.
-
-        .. grid-item-card:: Goodfellow, Bengio & Courville
-            :class-card: sd-border-secondary
-
-            **Deep Learning (MIT Press, 2016)**
-
-            Chapters 6--10 cover the deep learning foundations
-            (MLPs, CNNs, RNNs) underlying LSTM-based and
-            Transformer-based prediction models.
+The lanes in every top view are CARLA's ``Town01.xodr``, read
+offline with the CARLA Python API. The vehicle icons in the figures were
+created by Stone from the `Noun Project <https://thenounproject.com>`_.
