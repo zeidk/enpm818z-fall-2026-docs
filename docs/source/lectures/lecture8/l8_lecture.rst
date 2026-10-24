@@ -1453,7 +1453,7 @@ from the objects around it. There are two ways to look at car A at
 
 .. note::
 
-   The prediction warns the AV at :math:`t` = 0, 3.4 s earlier: time to
+   The prediction warns the AV 3.4 s earlier, at :math:`t` = 0: time to
    ease off gently instead of braking hard. GP4's behavior node reads
    current fused objects; a predicted path is the next input to add.
 
