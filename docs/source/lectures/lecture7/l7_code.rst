@@ -143,7 +143,7 @@ It prints the slide's three counts, measured on Town01:
 .. code-block:: text
 
    waypoints at 2 m, len(wps): 3266
-   topology segments, len(segs): 160
+   (start, end) waypoint pairs, len(segs): 160
    traffic lights in the file: 36
 
 
@@ -216,8 +216,7 @@ The script reads ``maps/Town01.xodr`` with ``carla.Map("Town01", text)`` and
 no server. In the terminal it prints what the file holds (122 roads, 96 of
 them inside the 12 intersections, 36 traffic lights) and what CARLA makes of
 it: 3266 waypoints at 2 m, and the 160 (start, end) waypoint pairs of
-``get_topology()``, which the script prints as "160 topology segments". Then
-it opens the window.
+``get_topology()``. Then it opens the window.
 
 .. figure:: /_static/images/L7/handson_map.png
    :alt: A screenshot of the map window: Town01 from above, x from 0 to 400 meters east and y from minus 330 to 0 meters north, drawn as dots along every lane, dark on the roads and amber inside the twelve intersections. A legend names the two kinds of dot. Under the map, a hint line, a Search box holding road 25, an x, y box holding 133.6, minus 129.4, and three buttons: Zoom in, Zoom out and Whole map.

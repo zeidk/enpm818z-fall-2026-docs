@@ -18,8 +18,10 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
      worked example and three slides on reading a curve's radius, from the
      map file and from the waypoints. Eight detail slides moved to Going
      Further. The quiz and exercises use only the lecture's main content,
-     and a new first exercise finds the trip's start in the map file. These
-     pages stay hidden until Lecture 7 is published.
+     and a new first exercise finds the trip's start in the map file. The
+     Code page quotes the scripts' output: 160 waypoint pairs from
+     ``get_topology()``. These pages stay hidden until Lecture 7 is
+     published.
 
    .. rubric:: Lecture 8
 
