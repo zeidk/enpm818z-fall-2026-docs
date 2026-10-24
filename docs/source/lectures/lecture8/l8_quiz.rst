@@ -294,7 +294,8 @@ Multiple Choice (Questions 1 to 14)
    **A**.
 
    For car A, the point-by-point average of the two futures ends at 5 s
-   7.21 m from each, toward the junction's corner. No lane leads there, and
+   7.21 m from each, toward the junction's corner. No driver in A's lane
+   ends up there, and
    its FDE is 5.92 m, a miss, while the left-turn future alone is off by
    1.88 m. **B** is not a rule: a mode can be far off (straight on ends
    13.06 m away). See Several Futures in :doc:`l8_lecture`.
@@ -416,7 +417,7 @@ Multiple Choice (Questions 1 to 14)
    3. 4.0 s is below 4.1 s, so A waits for the AV to pass.
 
    **D** takes the 2.0 s change for the gap. The lecture makes the same
-   point for run 2: an AV that slowed by 1 s would give A a 4.0 s gap, and
+   point for run 2: an AV that arrived 1 s later would give A a 4.0 s gap, and
    A would still wait. See Other Drivers in :doc:`l8_lecture`.
 
 
@@ -443,7 +444,7 @@ Multiple Choice (Questions 1 to 14)
 
    The planner keeps the AV away from the crossing while a likely mode puts
    A there. 6.08 s is after 4.0 s, so the AV can keep its speed. **C** is
-   the check of today's positions only, which finds A in the AV's lane only
+   the check of current positions only, which finds A in the AV's lane only
    at :math:`t` = 3.4 s. See Several Futures in :doc:`l8_lecture`.
 
 
@@ -462,8 +463,9 @@ True or False (Questions 15 to 18)
    **False.**
 
    With no turn, CTRA's mean error at 5 s is 16.13 m and CV's is 4.01 m.
-   Each extra term (CTRV's turn rate, CTRA's braking) is read from a noisy
-   track, and that noise is carried 5 s ahead. See "Why the error grows, and
+   Each extra term (CTRV's turn rate, CTRA's braking) is carried 5 s ahead,
+   and with no turn it often comes from a turn that is ending or braking
+   that will stop. See "Why the error grows, and
    why more terms do not help" in :doc:`l8_lecture`.
 
 

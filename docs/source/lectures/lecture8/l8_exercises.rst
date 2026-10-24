@@ -201,7 +201,7 @@ Two exercises end with a check in the lecture's hands-on window.
            - 174.59 − 23.94 = 150.65
            - 1.98 − 0.776 = 1.20
          * - 5 s
-           - 174.59 − 29.925 = 144.66
+           - 174.59 − 29.925 = 144.67
            - 1.98 − 0.970 = 1.01
 
       Question 2: west, a little south, past the junction, at
@@ -209,10 +209,11 @@ Two exercises end with a check in the lecture's hands-on window.
 
       Question 3:
 
-      1. Along :math:`x`: 144.66 − 154.08 = −9.42 m, so 9.42 m apart.
+      1. Along :math:`x`: 154.08 − 144.67 = 9.41 m apart.
       2. Along :math:`y`: 1.01 − (−6.98) = 7.99 m.
-      3. FDE: :math:`\sqrt{9.42^2 + 7.99^2} = \sqrt{88.74 + 63.84} =
-         \sqrt{152.58}` = 12.35 m, the lecture's value.
+      3. FDE: :math:`\sqrt{9.41^2 + 7.99^2} = \sqrt{88.55 + 63.84} =
+         \sqrt{152.39}` = 12.34 m. The lecture's 12.35 m comes from the
+         unrounded fit.
 
       Question 4: (0.52 + 1.50 + 2.58 + 6.01 + 12.35) / 5 = 22.96 / 5 =
       4.59 m.
@@ -413,7 +414,7 @@ Two exercises end with a check in the lecture's hands-on window.
       7.91 m: outside.
 
       Question 3: the fitted velocity has an error, carried further at each
-      second, and CV allows the speed to drift (0.5 m/s² per
+      second, and CV allows the speed to drift (0.5 m/s per
       :math:`\sqrt{\text{s}}`, chosen in the lecture).
 
       Question 4: a 95% region must hold the truth 95% of the time. With no
@@ -803,7 +804,7 @@ Two exercises end with a check in the lecture's hands-on window.
      :math:`t` = 3.2 to 4.0 s. In truth, A is there from :math:`t` = 3.4 to
      4.3 s.
    - The left mode turns at 5.42 m/s; A really turns at 5.0 m/s.
-   - A check of today's positions only first finds A in the AV's lane at
+   - A check of current positions only first finds A in the AV's lane at
      :math:`t` = 3.4 s.
 
    .. raw:: html
@@ -835,7 +836,7 @@ Two exercises end with a check in the lecture's hands-on window.
 
    **Part C. Time to react**
 
-   5. With today's positions only, how much time does the AV have between
+   5. With current positions only, how much time does the AV have between
       :math:`t` = 0 and the moment it first finds A in its lane? With the
       prediction?
 
@@ -871,7 +872,7 @@ Two exercises end with a check in the lecture's hands-on window.
       Which modes count, and how much room to keep, is the planner's job
       (L9).
 
-      Question 5: with today's positions only, the AV first finds A in its
+      Question 5: with current positions only, the AV first finds A in its
       lane at :math:`t` = 3.4 s, when A is already there: no warning. With
       the prediction, the AV knows at :math:`t` = 0, 3.4 s earlier, which
       gives it time to ease off gently instead of braking hard.

@@ -135,10 +135,10 @@ gives each model's error at 5 s (its FDE).
 
 **What to look for:**
 
-1. At now = 0: read each model's error at 5 s in the title. Which is
-   smallest, and why?
-2. Move now to 2.5, then 3.0, then 3.5 s. When does CTRV beat CV? When does
-   it start to lose again?
+1. At now = 0: read each model's error at 5 s in the right panel's title
+   (FDE). Which is smallest, and why?
+2. Move now from 0 to 3.0 s, 0.5 s at a time. When does CTRV beat CV at 5 s?
+   When does it lose?
 3. Where is CTRA worst: while A brakes, or while it speeds up after the
    turn?
 
@@ -177,7 +177,7 @@ for run 2.
 
 1. Run 1: compare B's speed from CV and from the IDM. When do they part?
 2. Tick **AV 24 m closer** (run 2). Read A's gap in the title. Which of the
-   two left-mode lines is right?
+   two "most likely mode" lines matches the truth?
 3. In ``l8sim.py``, set ``GAP = 2.5``. ``GAP`` is the critical headway, 4.1 s
    in the lecture. What does A do in run 2 now? And car B, behind it?
 
@@ -213,7 +213,7 @@ with a 0.05 m error, 2 s of history, the last 1.5 s used for the fit, a 5 s
 horizon; a cruising speed of 8 m/s; a sideways acceleration in a turn of
 2.0 m/s² (``A_LAT``) and an expected braking of 1.0 m/s² before a turn;
 the spreads of the three likelihoods, 1.0 m/s (``SIG_V``), 8° and 0.7 m;
-CV's speed drift, 0.5 m/s² per :math:`\sqrt{\text{s}}`; car A's decision
+CV's speed drift, 0.5 m/s per :math:`\sqrt{\text{s}}`; car A's decision
 point, 6 m before the junction. **From sources:** the 2.0 m miss threshold
 (Argoverse), the 4.1 s critical headway (``GAP``, the Highway Capacity
 Manual's value), and the IDM's :math:`T`, :math:`a_{\max}`, :math:`b`,

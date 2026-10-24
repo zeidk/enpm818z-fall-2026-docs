@@ -184,7 +184,7 @@ is:
    0.00074 = 0.0245 m²; the wander is 0.25 × 125 / 3 = 10.42 m²; so
    :math:`\sigma = \sqrt{10.44}` = 3.23 m.
 
-After a second or two, the wander is almost all of it: CV's uncertainty is
+From :math:`h` = 1 s on, the wander is almost all of it: CV's uncertainty is
 about what the driver does next, not about the track.
 
 
@@ -305,7 +305,7 @@ P(left) as Car A Approaches
 **1** A starts braking, :math:`t` = −2 s. **2** Now, :math:`t` = 0.
 P(left) at :math:`t` = −2, −1, 0 and +1 s: 0.50, 0.60, 0.87 and 0.99. At
 −2 s A still drives 8 m/s, the street's speed: no evidence yet. Each second
-of braking adds some; inside the junction, the heading settles it.
+of braking adds some.
 
 
 .. _l8-app-autoware:
@@ -364,7 +364,7 @@ What a Learned Predictor Reads and Writes
 - The output is the same as our map-aware predictor's: :math:`K` modes and
   their probabilities.
 - What changes: the turn speeds, the :math:`\sigma`'s and the priors we
-  chose by hand are **set by training** on millions of recorded tracks.
+  chose by hand are **set by training** on recorded tracks.
 
 
 .. _l8-app-learned-designs:
@@ -421,8 +421,8 @@ How Learned Predictors Are Trained and Scored
 
    **Why CV still matters:** it is the baseline every learned model is
    compared with, and the fallback when the learned model meets a road user
-   it was not trained for. On our test set with no turn, CV stays under 2 m
-   for 3 s.
+   it was not trained for. On our test set with no turn, CV's mean error
+   stays under 2 m for 3 s.
 
 
 .. _l8-app-learned-peds:
@@ -431,10 +431,10 @@ Pedestrians and Cyclists
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 - They follow few lanes: a pedestrian can turn on the spot and step off the
-  curb. Lanes help less; sidewalks and crosswalks help some.
+  curb. Sidewalks and crosswalks help some.
 - They move in groups and avoid each other. Social LSTM learns that from
-  crowds: it pools the hidden states of nearby people, so each person's
-  prediction depends on its neighbors (Alahi et al., 2016).
+  crowds: each person's prediction depends on the people near them (Alahi et
+  al., 2016).
 - Their uncertainty grows fast: at 1.4 m/s (chosen, a walking pace) a
   pedestrian can be anywhere within 1.4 × 3 = 4.2 m after 3 s.
 
