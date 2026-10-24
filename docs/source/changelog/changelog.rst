@@ -5,10 +5,36 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.10.1: GP2 Fixes from a Full Check (2026-10-17)
+.. dropdown:: v2.11.0: Lecture 7 Pages Follow the Slides (2026-10-24)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lecture 7
+
+   - **Lecture, appendix, code, quiz, exercises and references** are
+     rewritten to follow the slides: one trip in Town01, from the map file
+     to a routing graph, lane change edges in Town03, three edge costs,
+     re-planning on GP4's two triggers, and the route as maneuvers. These
+     pages stay hidden until Lecture 7 is published.
+
+   .. rubric:: Lectures
+
+   - **Schedule:** the Key Concepts for L7 now list what the lecture
+     covers.
+
+   .. rubric:: Glossary
+
+   - **L7 (not yet published):** 29 new terms from Lecture 7, among them
+     road, carriageway, route, path, trajectory, routing graph, segment,
+     junction, edge cost, travel time, hysteresis and maneuver.
+     Configuration space moved here from L9, which now lists it under
+     "Also used here". A* Search, Dijkstra, Lanelet2 and OpenDRIVE follow
+     the lecture's wording.
+
+.. dropdown:: v2.10.1: GP2 Fixes from a Full Check (2026-10-17)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Projects
 

@@ -46,7 +46,7 @@ slides are finished; the table shows the plan.
      - GNSS and RTK, dead reckoning and its drift, fusion in L3's EKF, absolute pose error (APE), Monte Carlo localization (MCL), scan registration with ICP and a k-d tree, four ways to score a scan (point to point, point to line, GICP, NDT), scenes that cannot pin down the pose, checking a match before it is fused, SLAM (pose graph, loop closure), on one recorded CARLA drive
    * - L7
      - Route Planning
-     - Road network graphs, OpenDRIVE/Lanelet2 maps, HD maps, global route planning (Dijkstra, A*), lane-level routing, dynamic rerouting, CARLA GlobalRoutePlanner
+     - Route, path and trajectory; HD maps; the OpenDRIVE map file read with carla.Map; from the map file to a routing graph (segments, junctions, traffic rules in the graph's shape); lane change edges in Town03; edge costs (distance, travel time with the top speed in turns, a left-turn penalty); Dijkstra and A* recapped; re-planning on GP4's two triggers, with hysteresis; maneuvers and CARLA's GlobalRoutePlanner; on one Town01 trip
    * - L8
      - Prediction & Behavior Modeling
      - Trajectory prediction (physics-based, maneuver-based, interaction-aware, Transformer-based), multi-modal prediction, behavior planning, FSM, rule-based vs learned decision-making

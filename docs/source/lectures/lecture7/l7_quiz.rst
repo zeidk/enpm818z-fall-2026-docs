@@ -10,504 +10,598 @@ Quiz
    The graded quizzes are the **five in-class quizzes** listed in the
    :doc:`syllabus </syllabus/index>`. Those are closed-notes, given at the
    start of class, and they **use different questions from these**. Working
-   through this page is good preparation for one. Memorising the answers
+   through this page is good preparation for one. Memorizing the answers
    below is not.
 
-This quiz covers the key concepts from Lecture 7: Route Planning.
-Topics include the navigation vs. motion planning distinction,
-road network graph representation, OpenDRIVE and Lanelet2 map formats,
-HD maps, multi-objective cost functions, Dijkstra and A* on road graphs,
-lane-level routing, dynamic rerouting, CARLA's GlobalRoutePlanner, and
-route-to-reference-path conversion.
+This quiz covers Lecture 7: the terms of route planning (road, carriageway,
+lane, route, path, trajectory), the trip in Town01, HD maps and their layers,
+reading the map file ``Town01.xodr``, segments and the waypoint graph,
+junctions and the traffic rules they put in the graph, the intersection
+graph, lane changes in Town03, edge costs and the top speed in a turn, routes
+under three costs, GP4's re-planning triggers and hysteresis, and turning the
+route into maneuvers. Every question can be answered from the lecture notes,
+:doc:`l7_lecture`. Nothing on this page needs
+:doc:`Going Further <l7_appendix>`.
 
 .. note::
 
    **Instructions:**
 
-   - Answer all questions to the best of your ability.
    - Multiple choice questions have exactly one correct answer.
-   - True/False questions require you to determine if the statement is correct.
-   - Essay questions require short written responses (2-4 sentences).
+   - True or false questions ask whether the statement holds as stated in
+     the lecture.
+   - Short answer questions want two to four sentences.
    - Click the dropdown after each question to reveal the answer.
+   - The trip in CARLA's Town01 is the lecture's running example. The start,
+     S, is 41 m east of the center of intersection 1, with the AV driving
+     west. The goal, G, is 40 m east of the center of intersection 6, on the
+     top street, driving east. The start and the goal were chosen for the
+     lecture. The shortest route is 9 lanes and 260.6 m long, and it turns
+     at intersections 1, 3, 5 and 6 (CARLA's junctions 306, 171, 332 and
+     54). The map frame has :math:`x` east and :math:`y` north, in meters.
 
 
 ----
 
 
-Multiple Choice (Questions 1-10)
-=================================
+Multiple Choice (Questions 1 to 14)
+===================================
 
 .. admonition:: Question 1
    :class: hint
 
-   What is the key difference between navigation (route planning) and
-   motion planning?
+   The lecture uses three words for how the AV gets to its goal: route,
+   path and trajectory. Which statement matches the lecture?
 
-   A. Navigation uses neural networks; motion planning uses classical algorithms.
-   B. Navigation operates at the city scale on road graphs; motion planning
-      operates at the local scale on continuous space.
-   C. Navigation considers obstacles; motion planning does not.
-   D. Navigation runs at 50 Hz; motion planning runs once per trip.
+   A. A route is a chain of configurations :math:`(x, y, \theta)`, and a
+      path is a route with times added.
+
+   B. A route says which lanes to take, in order. A path is a chain of
+      configurations :math:`(x, y, \theta)` with no times. A trajectory is
+      the path, plus when the AV is at each point.
+
+   C. A route and a trajectory are the same thing, seen at two scales.
+
+   D. A path says which lanes to take, and a route says how fast to drive
+      on them.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B**
+   **B**.
 
-   Navigation operates at the city scale, finding the optimal sequence of
-   road segments on a road network graph (km scale, replanned every few
-   minutes or on request). Motion planning operates at the local scale
-   (10--50 m) in continuous space, producing a collision-free trajectory
-   at 10--50 Hz. Option C is backwards: motion planning is precisely the
-   layer that reasons about individual obstacle geometry, while navigation
-   sees only aggregate traffic conditions.
+   A configuration is a position :math:`x`, :math:`y` in meters and a
+   heading :math:`\theta`, counterclockwise from east. Route planning, this
+   lecture, finds the route. L9 plans the path, and L10 follows the
+   trajectory. In the lecture's trajectory, every point of the path gets a
+   speed: the speed limit, 11.18 m/s, but slower in a turn. All of those
+   settings were chosen for that example. See the Introduction in
+   :doc:`l7_lecture`.
 
 
 .. admonition:: Question 2
    :class: hint
 
-   In a lane-level road network graph, which of the following is **not**
-   a standard edge type?
+   On road 25, ``Town01.xodr`` gives two sidewalks, 4.0 m wide each, two
+   shoulders, 0.3 m wide each, and two driving strips, 4.0 m wide each, one
+   going south and one going north. How wide is the carriageway?
 
-   A. Lane follow
-   B. Lane change (left/right)
-   C. Junction maneuver
-   D. Obstacle avoidance
+   A. 4.0 m
+
+   B. 8.0 m
+
+   C. 8.6 m
+
+   D. 16.6 m
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **D**
+   **B**.
 
-   Edges encode topological connectivity: continuing along a lane,
-   transitioning to an adjacent lane, or traversing an intersection.
-   Obstacle avoidance is not a topological property of the map -- it is a
-   runtime decision made by the motion planner (L9) against perceived
-   obstacles, which are not in the map at all.
+   The carriageway is the "part of the road intended mainly for the
+   movement of road vehicles". Shoulders and parking are not part of it, and
+   the sidewalks are part of the road but not of the carriageway. Only the
+   two driving strips count: 4.0 + 4.0 = 8.0 m. **C** adds the two
+   shoulders (8.0 + 0.3 + 0.3 = 8.6 m). **D** is the whole road:
+   4.0 + 0.3 + 4.0 + 4.0 + 0.3 + 4.0 = 16.6 m. **A** is one lane. See the
+   Introduction in :doc:`l7_lecture`.
 
 
 .. admonition:: Question 3
    :class: hint
 
-   Which statement correctly describes the difference between OpenDRIVE
-   and Lanelet2 geometry representation?
+   GP4's planner node has three inputs, a goal and one output. Which input
+   does not reach the node on a ROS topic?
 
-   A. OpenDRIVE uses polylines; Lanelet2 uses parametric curves.
-   B. OpenDRIVE uses parametric curves (lines, arcs, spirals) with lanes
-      defined as offsets from a road reference line; Lanelet2 uses
-      polylines defining left and right lane boundaries.
-   C. Both use identical geometry; they differ only in file extension.
-   D. OpenDRIVE stores geometry as a raster occupancy grid.
+   A. The AV's pose.
+
+   B. The objects on the road.
+
+   C. The map.
+
+   D. None: all three inputs come on topics.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B**
+   **C**.
 
-   OpenDRIVE (``.xodr``, used by CARLA and SUMO) describes each road by a
-   reference line built from analytic primitives -- straight lines, arcs,
-   and spirals (clothoids) -- with lanes specified as width offsets from
-   that line. Lanelet2 (OSM-based ``.osm``, used by Autoware) instead
-   represents a lanelet as the region bounded by two explicit linestrings.
-   The practical consequence: OpenDRIVE gives exact curvature analytically,
-   while Lanelet2 is simpler to edit and query but must approximate
-   curvature from discrete points.
+   The planner reads the map from the CARLA world through the Python API,
+   and CARLA built it from the OpenDRIVE file. The pose comes on
+   ``/localization/pose`` from your GP3 localization node (L6), and the
+   objects come on ``/perception/fused_objects`` from your GP3 fusion node
+   (L5). The goal is two parameters, ``goal_x`` and ``goal_y``: a point with
+   no heading. The output is the route as waypoints on ``/planning/path``,
+   for GP4 Task 2's controller. See the Introduction in :doc:`l7_lecture`.
 
 
 .. admonition:: Question 4
    :class: hint
 
-   A route planner uses the cost function
-   :math:`\text{cost}(e) = w_d d(e) + w_t t(e) + w_r r(e) + w_c c(e) + w_m m(e)`.
-   To produce the **fastest** route rather than the shortest, you should:
+   The lecture compares ``Town01.xodr`` with the six HD map layers of
+   Elghazaly et al.: base map, geometric, semantic, road connectivity,
+   priors and real-time. Which layers does the file hold?
 
-   A. Increase :math:`w_d` and set all other weights to zero.
-   B. Increase :math:`w_t` relative to :math:`w_d`, since
-      :math:`t(e)` = segment length / speed limit.
-   C. Increase :math:`w_m` to penalize complex maneuvers.
-   D. Switch from A* to Dijkstra.
+   A. All six.
+
+   B. The base map and the geometric layer only.
+
+   C. The geometric layer, the road connectivity layer, and part of the
+      semantic layer.
+
+   D. Only the road connectivity layer.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B**
+   **C**.
 
-   The travel-time term :math:`t(e)` divides segment length by the speed
-   limit, so weighting it favors highways over shorter but slower surface
-   streets. Option D is a category error: Dijkstra and A* are *search
-   algorithms* that both return the optimal path for whatever cost
-   function they are given -- changing the algorithm cannot change the
-   objective.
+   The geometric layer is there: the line each road is drawn along, and the
+   lane widths. So is road connectivity: the junctions list which lane leads
+   to which. The semantic layer is there only in part: 36 traffic lights and
+   22 speed signs, but no stop lines and no crossings. The base map is not
+   in the file: CARLA ships it as a separate 190 MB point cloud. There are
+   no priors, and no real-time layer: "To change the map, the world has to
+   change too". So the file is the lane-level part of an HD map. See Map to
+   Graph in :doc:`l7_lecture`.
 
 
 .. admonition:: Question 5
    :class: hint
 
-   What is the time complexity of Dijkstra's algorithm with a binary heap,
-   and why is it tractable on city-scale road networks?
+   Road 25's ``<geometry>`` element has ``hdg="-1.572"``. The heading
+   ``hdg`` is in radians, measured counterclockwise from east. Which way
+   does road 25's reference line point?
 
-   A. :math:`O(V^2)`; road graphs are small.
-   B. :math:`O((V + E)\log V)`; road networks are sparse, with
-      :math:`|E| \approx 3|V|`.
-   C. :math:`O(V!)`; tractable only with pruning.
-   D. :math:`O(E \log E)`; road networks are dense.
+   A. North.
+
+   B. East.
+
+   C. South.
+
+   D. West.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B**
+   **C**.
 
-   With a binary heap, Dijkstra runs in :math:`O((V + E)\log V)`. Road
-   networks are **sparse** -- each intersection connects to only a handful
-   of others, giving :math:`|E| \approx 3|V|` -- so the term is effectively
-   :math:`O(V \log V)`. This is why city-scale routing is feasible without
-   specialized preprocessing.
+   1. In degrees: −1.572 × 180 / π = −90.07°.
+   2. A negative angle turns clockwise from east, and a quarter turn
+      clockwise from east points south.
+
+   The geometry starts at (156.07, −11.02) and runs 35.18 m, so it ends at
+   :math:`y = -11.02 + 35.18 \sin(-90.07^\circ) = -46.20` m, at junction
+   332. Lanes are numbered from the reference line: lane 1 on its left
+   drives north, and lane −1 on its right drives south. See Map to Graph in
+   :doc:`l7_lecture`.
 
 
 .. admonition:: Question 6
    :class: hint
 
-   For a road graph whose edge costs are **travel times**, which heuristic
-   is admissible for A*?
+   Town01's waypoint graph, with a waypoint every 2 m, has 3107 nodes and
+   3143 edges. Where does the difference of 36 come from?
 
-   A. :math:`h(n) = 0` for all nodes.
-   B. :math:`h(n) = \|\text{pos}(n) - \text{pos}(\text{goal})\|_2 / v_{\max}`
-   C. :math:`h(n) = \|\text{pos}(n) - \text{pos}(\text{goal})\|_2`
-   D. :math:`h(n) = \|\text{pos}(n) - \text{pos}(\text{goal})\|_2 \times v_{\max}`
+   A. The graph has 36 lane change edges.
+
+   B. The map has 36 traffic lights, and each one adds an edge.
+
+   C. Each node has one edge out, and each of the 36 splits has two:
+      3107 + 36 = 3143.
+
+   D. The graph has 36 U-turn edges.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B**
+   **C**.
 
-   The heuristic must be in the **same units as the edge costs** (seconds)
-   and must never overestimate. Dividing straight-line distance by the
-   maximum speed limit gives the shortest conceivable travel time, which
-   is admissible. Option C returns metres and is dimensionally
-   inconsistent with a time-weighted graph. Option A is technically
-   admissible but reduces A* to Dijkstra.
+   A split is a node where a lane meets an intersection and the AV can go
+   two ways, so two edges leave it. Town01 has 36 splits: 12 intersections
+   with 3 roads into each. Every other node has one edge out. **A** is
+   wrong: no waypoint in Town01 allows a lane change. **D** is wrong:
+   ``Town01.xodr`` has 0 U-turn connections. The 36 traffic lights are
+   real, but they are in the semantic layer and add no edges. See Map to
+   Graph in :doc:`l7_lecture`.
 
 
 .. admonition:: Question 7
    :class: hint
 
-   In CARLA, ``GlobalRoutePlanner.trace_route()`` returns a list of:
+   Junction 332 in ``Town01.xodr`` holds this connection:
 
-   A. ``carla.Location`` objects only.
-   B. ``(waypoint, RoadOption)`` tuples, where ``RoadOption`` annotates the
-      maneuver type.
-   C. Raw OpenDRIVE XML strings.
-   D. A single smoothed spline.
+   .. code-block:: xml
+
+      <connection id="0"
+        incomingRoad="25"
+        connectingRoad="333"
+        contactPoint="start">
+       <laneLink from="-1" to="-1"/>
+      </connection>
+
+   What does it say?
+
+   A. Road 333 leads into road 25.
+
+   B. From road 25's lane −1, the AV may drive on into lane −1 of road 333,
+      a short road inside the junction that begins where road 25 ends.
+
+   C. Roads 25 and 333 are two names for the same road.
+
+   D. An AV in road 25's lane −1 must change to lane 1 before the junction.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B**
+   **B**.
 
-   Each element pairs a ``carla.Waypoint`` with a ``RoadOption``
-   (``LANEFOLLOW``, ``LEFT``, ``RIGHT``, ``STRAIGHT``, ``CHANGELANELEFT``,
-   ``CHANGELANERIGHT``, ``VOID``). The annotation is what lets the behavior
-   planner prepare for an upcoming maneuver -- slowing before a turn, or
-   checking the blind spot before a lane change.
+   ``incomingRoad`` is the road that leads into the junction, 25.
+   ``connectingRoad`` is the path across the junction, road 333, the right
+   turn. ``contactPoint="start"`` says road 333 begins where road 25 ends,
+   so traffic drives it from its :math:`s = 0`. ``laneLink`` joins road
+   25's lane −1 (driving south) to road 333's lane −1. Connection 3 does the
+   same for road 339, the left turn. Together they give the split at the
+   end of road 25's lane −1 its two edges. See Map to Graph in
+   :doc:`l7_lecture`.
 
 
 .. admonition:: Question 8
    :class: hint
 
-   A vehicle must exit the highway in 400 m but is in the leftmost of four
-   lanes. Which lane-level routing behavior is correct?
+   On the intersection graph, our route costs
+   41 + 75 + 64 + 53 + 40 = 273 m. On the waypoint graph, the same route is
+   260.6 m long. Why is the intersection graph 12.4 m longer?
 
-   A. Wait until 50 m before the exit, then change all three lanes at once.
-   B. Begin transitioning right immediately, allowing one lane change at a
-      time with adequate gaps; if the exit becomes unreachable, reroute.
-   C. Stop on the highway and wait for a gap.
-   D. Ignore the exit and let the motion planner handle it.
+   A. The intersection graph measures straight lines between its nodes.
+
+   B. The intersection graph measures to each intersection's center, and
+      the lanes cut through the turns.
+
+   C. The waypoint graph's route skips intersection 3.
+
+   D. The waypoint graph rounds each edge down to 2 m.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B**
+   **B**.
 
-   Lane changes take time and require gap acceptance in the target lane,
-   so the navigation layer must signal the need for a lane change with
-   substantial lead distance -- typically 500 m before a highway diverge.
-   Critically, the system must also be willing to **miss the exit and
-   reroute**: forcing a late multi-lane change is the unsafe option, and a
-   missed exit costs only time.
+   Each node of the intersection graph sits at the center of CARLA's
+   rectangle around an intersection. An AV that turns does not drive
+   through that center: its lane cuts the corner, so the waypoint graph
+   gives a shorter length. 273 − 260.6 = 12.4 m. **A** is wrong: the edge
+   lengths are whole meters along the lane, even where the figure draws the
+   edge straight. One edge stands for a street's two lanes, with their
+   average length. See Map to Graph in :doc:`l7_lecture`.
 
 
 .. admonition:: Question 9
    :class: hint
 
-   The curvature-constrained speed limit is
-   :math:`v_{\max} = \sqrt{a_{\text{lat,max}} / \kappa}`. With
-   :math:`a_{\text{lat,max}} = 2.5\ \text{m/s}^2` and a curve of radius
-   50 m, the maximum comfortable speed is approximately:
+   In Town03, the AV drives south on road 4 in the right lane, and it must
+   turn left at junction 238. Which edges must its route hold, in order?
 
-   A. 5.0 m/s
-   B. 11.2 m/s
-   C. 25.0 m/s
-   D. 125.0 m/s
+   A. Lane follow edges in the right lane, then the left turn through 238.
+
+   B. Lane follow edges in the right lane, one lane change edge, lane follow
+      edges in the left lane, then the left turn through 238.
+
+   C. Lane follow edges in the right lane, then a lane change edge inside
+      junction 238.
+
+   D. Lane follow edges in the right lane, a U-turn, and the left lane back.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B**
+   **B**.
 
-   Curvature is the reciprocal of radius: :math:`\kappa = 1/50 = 0.02`
-   m\ :sup:`-1`. Then
-
-   .. math::
-
-      v_{\max} = \sqrt{2.5 / 0.02} = \sqrt{125} \approx 11.2\ \text{m/s}
-
-   which is about 40 km/h. The common error is to substitute the radius
-   directly for :math:`\kappa`, giving :math:`\sqrt{2.5/50} = 0.22` m/s.
+   On road 4, the left lane goes left or straight on, and the right lane
+   goes right or straight on. From the right lane, the paths through 238 go
+   only right or straight on, so a route with no lane change edge cannot
+   turn left there. The map allows the lane change on all 92 m of road 4.
+   The cost of a lane change edge is its length plus a penalty, and the
+   search then decides where the AV changes lanes. See Lane Changes in
+   :doc:`l7_lecture`.
 
 
 .. admonition:: Question 10
    :class: hint
 
-   When building a road graph from CARLA waypoints, keying nodes on the
-   raw tuple ``(road_id, section_id, lane_id, wp.s)`` produces a graph
-   with almost no edges. Why?
+   The top speed in a curve of radius :math:`r` is
+   :math:`\sqrt{a_{\mathrm{lat}}\, r}`, with
+   :math:`a_{\mathrm{lat}} = 2.0` m/s² (chosen for the lecture). Town01's
+   24 right-turn lanes have a median radius of 7.2 m, from the map. What is
+   the AV's top speed in that turn?
 
-   A. ``wp.next()`` returns waypoints on different roads only.
-   B. ``wp.s`` is a float, and ``generate_waypoints()`` and ``wp.next()``
-      do not return bit-identical values for the same road position, so
-      dictionary lookups fail.
-   C. CARLA waypoints are immutable and cannot be dictionary keys.
-   D. ``section_id`` is always zero, causing hash collisions.
+   A. 3.79 m/s
+
+   B. 14.4 m/s
+
+   C. 11.18 m/s
+
+   D. 2.68 m/s
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B**
+   **A**.
 
-   The two APIs compute ``s`` independently, so tiny floating-point
-   differences make ``next_key in waypoint_map`` fail for essentially
-   every neighbour. The graph builds with the right number of *nodes* and
-   almost zero *edges* -- and because the failure is silent, it surfaces
-   later as "no route found." Quantizing ``s`` (e.g.
-   ``int(round(wp.s / 1.0))``) makes both APIs agree. Asserting that the
-   edge count is non-zero immediately after construction turns a
-   mysterious failure into an obvious one.
+   :math:`\sqrt{2.0 \times 7.2} = \sqrt{14.4} = 3.79` m/s. **B** forgets
+   the square root. **C** is the speed limit, which caps the speed only
+   where the curve is wider than :math:`11.18^2 / 2.0 = 62.5` m. **D** drops
+   :math:`a_{\mathrm{lat}}`: :math:`\sqrt{7.2} = 2.68`. A meter of this turn
+   takes 11.18 / 3.79 = 2.9 times as long as a straight meter at the limit.
+   See Edge Costs in :doc:`l7_lecture`.
 
-
-----
-
-
-True or False (Questions 11-15)
-================================
 
 .. admonition:: Question 11
    :class: hint
 
-   **True or False:** CARLA's ``GlobalRoutePlanner.trace_route()`` returns
-   a collision-free trajectory that accounts for other vehicles on the road.
+   Searched by distance, the route through intersections 1, 3, 5 and 6 is
+   260.6 m long, and it has one left turn, at 5. The route through 1, 3, 4
+   and 6 is 266.9 m long, and the left-turn penalty adds nothing to it. With
+   a left-turn penalty of :math:`P = 5` m (chosen for this question), which
+   route does the search pick?
+
+   A. The route through 5.
+
+   B. The route through 4.
+
+   C. Neither: the two routes cost the same.
+
+   D. Neither: the penalty blocks every route with a turn.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **A**.
 
-   ``trace_route()`` is a **global route planner**: it searches the static
-   road network topology and returns an ordered sequence of waypoints. It
-   has no knowledge of dynamic obstacles, and it produces a path rather
-   than a timed trajectory. Collision avoidance against other agents is
-   the responsibility of the behavior planner (L8) and motion planner
-   (L9).
+   1. The route through 5 costs 260.6 + 5 = 265.6 m.
+   2. The route through 4 costs 266.9 m.
+   3. 265.6 m is less, so the search keeps the route through 5.
+
+   The route through 4 is 266.9 − 260.6 = 6.3 m longer, so a penalty
+   switches the route only when it is above 6.3 m. With the lecture's
+   :math:`P = 30` m, the route through 5 costs 260.6 + 30 = 290.6 m, and the
+   route through 4 wins. See Edge Costs in :doc:`l7_lecture`.
 
 
 .. admonition:: Question 12
    :class: hint
 
-   **True or False:** A* with an admissible heuristic will always expand
-   fewer nodes than Dijkstra on the same graph.
+   GP4's settings are ``obstacle_clearance`` 3.0 m and ``max_deviation``
+   2.0 m. Which situation fires one of GP4's two re-planning triggers?
+
+   A. An object whose center is 3.4 m from the nearest waypoint of the path.
+
+   B. The AV's base link is 1.6 m from the nearest waypoint of the path.
+
+   C. An object whose center is 2.0 m beside the path, with waypoints every
+      2 m.
+
+   D. An object whose center is 2.5 m from the AV's base link, on the far
+      side of the AV from the path, and 4.0 m from every waypoint.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **C**.
 
-   A* never expands *more* nodes than Dijkstra given the same admissible
-   heuristic, but it does not always expand strictly fewer. With
-   :math:`h(n) = 0` the two are identical. More practically, a very weak
-   heuristic -- such as Euclidean distance divided by a large
-   :math:`v_{\max}` on a distance-weighted graph -- provides almost no
-   guidance, and A* degenerates toward Dijkstra's behavior. The strength
-   of the heuristic, not the choice of algorithm, determines the saving.
+   Trigger 1 fires when an object's center is within 3.0 m of a waypoint.
+   An object 2.0 m beside the path is within 3.0 m of three waypoints, as in
+   the lecture's panel 1. **A** is farther than 3.0 m. **B** does not fire
+   trigger 2, which needs more than 2.0 m. **D** does not fire trigger 1:
+   the trigger measures from the object to the path's waypoints, not to the
+   AV. See Re-planning in :doc:`l7_lecture`.
 
 
 .. admonition:: Question 13
    :class: hint
 
-   **True or False:** HD maps eliminate the need for online perception,
-   since all road geometry and traffic control devices are already
-   encoded.
+   At one check, the localizer's pose is 2.3 m toward the other lane (chosen
+   for this question). At the next check it is back, as after a bad scan
+   match in L6. The AV itself never leaves its lane. What does the lecture
+   say?
+
+   A. Trigger 2 does not fire, because the AV did not move.
+
+   B. Trigger 2 fires, and the planner throws away a good route. The planner
+      should re-plan only when the deviation shows on 2 checks in a row.
+
+   C. Trigger 1 fires, because the AV is now an obstacle on its own path.
+
+   D. The planner should lower ``max_deviation`` to 1.0 m.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **B**.
 
-   HD maps provide static **priors** -- lane geometry, speed limits,
-   traffic light positions -- but they cannot represent anything dynamic
-   or anything that has changed since the survey. The vehicle still needs
-   perception for other agents, for the current *state* of a traffic light
-   (the map gives its position, not whether it is red), and for
-   construction zones or closures. Maps also go stale, which is why the
-   industry trend is toward lighter maps with stronger online perception.
+   Trigger 2 compares the pose the localizer reports with the path, and
+   2.3 m is more than 2.0 m, so it fires. The new start still lands on the
+   AV's own lane, because it must face the way the AV drives, but the
+   search is wasted. Waiting for 2 checks in a row (2 is chosen) is
+   hysteresis again: a rule that waits before it acts. **D** makes the
+   trigger fire even more often. See Re-planning in :doc:`l7_lecture`.
 
 
 .. admonition:: Question 14
    :class: hint
 
-   **True or False:** Dynamic rerouting should be triggered as soon as the
-   vehicle detects any blockage on the planned route, and the new route
-   may be adopted at any point.
+   The lecture labels each intersection on the route by how much the
+   heading turns in it: more than 30° left is a left turn, more than 30°
+   right is a right turn, and less is straight on (the lecture chose 30°).
+   In one intersection, the heading turns 20° to the left (chosen for this
+   question). What is the maneuver?
+
+   A. Turn left.
+
+   B. Turn right.
+
+   C. Straight on.
+
+   D. Lane change.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **C**.
 
-   Two problems. First, rerouting is normally triggered by a **threshold**
-   (for instance when the remaining cost exceeds 1.5x an alternative)
-   rather than by any blockage, to avoid oscillating between routes on
-   minor fluctuations. Second, and more importantly, the new route must be
-   ready **before the last decision point where the routes diverge** -- a
-   vehicle cannot stop on a highway to recompute, and a route adopted
-   after the exit has passed is useless.
-
-
-.. admonition:: Question 15
-   :class: hint
-
-   **True or False:** Contraction Hierarchies and Hub Labeling are
-   preprocessing techniques that let continental-scale routing queries be
-   answered in microseconds.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**
-
-   Both precompute auxiliary structures over the road graph -- shortcut
-   edges for Contraction Hierarchies, distance labels for Hub Labeling --
-   trading offline computation and memory for extremely fast online
-   queries. They are what makes Google Maps and OSRM feel instantaneous
-   at continental scale. They are also why plain Dijkstra is adequate for
-   this course: our graphs are a single CARLA town.
+   20° is less than 30°, so the intersection is labeled straight on. Our
+   route has four maneuvers: turn right at 1, turn right at 3, turn left at
+   5 and turn right at 6. Between intersections, the AV follows its lane.
+   The next lectures' planners (L8, L9) need these maneuvers besides the
+   waypoints. See Maneuvers in :doc:`l7_lecture`.
 
 
 ----
 
 
-Essay Questions (Questions 16-18)
+True or False (Questions 15 to 18)
 ==================================
 
-.. admonition:: Question 16
+.. admonition:: Question 15
    :class: hint
 
-   Explain the three-layer separation between the navigation layer, the
-   behavior planner, and the motion planner when executing a lane change.
-   State specifically what each layer decides.
+   The straight line from S to G is 141.9 m long, so the shortest drivable
+   route from S to G is close to 141.9 m.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   The layers answer three different questions about the same maneuver:
+   **False.**
 
-   - **Navigation** decides *whether a lane change is needed at all*, and
-     roughly where. It knows the route requires an exit in 500 m and the
-     vehicle is in the wrong lane. It works on the static map, at km
-     scale, and replans on the order of minutes.
-   - **Behavior planning** (L8) decides *whether it is safe to execute
-     now*. It consumes predicted trajectories of surrounding agents,
-     evaluates gap acceptance in the target lane, and either commits to
-     the maneuver, waits, or aborts one already in progress. It runs at
-     1--10 Hz.
-   - **Motion planning** (L9) decides *what the geometry is*. Given the
-     committed decision, it generates a kinematically feasible,
-     collision-free path into the target lane, respecting curvature and
-     comfort limits, at 10--50 Hz.
+   No lane runs along the straight line: it crosses blocks with no lanes.
+   The shortest drivable route turns four times and is 260.6 m long,
+   260.6 − 141.9 = 118.7 m more than the line. The map gives only which lane
+   leads to which, so a planner has to search for the route. See The Trip in
+   :doc:`l7_lecture`.
 
-   The value of the separation is that each layer's output constrains the
-   layer below, keeping each search tractable. It also localizes failures:
-   an unnecessary lane change is a navigation bug, an unsafe one is a
-   behavior bug, and an uncomfortable one is a motion planning bug.
+
+.. admonition:: Question 16
+   :class: hint
+
+   At intersection 1 (junction 306), a search with the distance cost returns
+   a U-turn whenever the U-turn is the shortest way to the goal.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False.**
+
+   Only the connections the file lists become edges. A U-turn has no
+   connection, so it has no edge, and no search can return it.
+   ``Town01.xodr`` has 0 U-turn connections. The traffic rules are in the
+   graph's shape: the missing edges and the directions of the edges. See
+   Map to Graph in :doc:`l7_lecture`.
 
 
 .. admonition:: Question 17
    :class: hint
 
-   You are given a road graph whose edge costs are distances in metres.
-   A colleague runs Dijkstra and A* on it, observes that both return the
-   same route, and concludes that A* is broken. Explain what is actually
-   happening and describe how to set up a meaningful comparison of the two,
-   and separately a meaningful comparison of shortest-distance against
-   fastest-time routing.
+   On Town03's road 4, lane −1 says ``Both``, so our graph adds a lane change
+   edge from lane −1 into the center lane, lane 1.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   Nothing is broken. Dijkstra and A* with an admissible heuristic are
-   **both optimal**, so on the same graph with the same cost function they
-   must return paths of the same cost. Returning the same route is
-   evidence that the implementation is correct, not that it is faulty.
+   **False.**
 
-   The two comparisons are different experiments:
-
-   - **Dijkstra vs A\*** is a comparison of *search efficiency*, not
-     route quality. Instrument both to count the number of nodes expanded
-     (or popped from the priority queue) and compare those counts. A*
-     should expand fewer, and the margin grows with the quality of the
-     heuristic. Weighted A* with :math:`\varepsilon > 1` will expand fewer
-     still, at the cost of an :math:`\varepsilon`-suboptimal route.
-   - **Shortest-distance vs fastest-time** is a comparison of
-     *objectives*, which lives in the **edge costs**, not the algorithm.
-     Rebuild the graph with :math:`\text{cost}(e) = \text{length}(e) /
-     v_{\text{limit}}(e)` and rerun. Only then can the routes legitimately
-     differ -- and the fastest-time route will typically be longer in
-     distance while favoring high-speed roads. Remember to change the
-     heuristic to match the new units, or A* loses admissibility.
+   ``Both`` says an AV in lane −1 may move right, into lane −2, or left,
+   into the center lane. But the center lane, lane 1, has no waypoints
+   (``generate_waypoints`` skips it), so our graph has no node there. Our
+   graph adds a lane change edge only between lanes that drive the same
+   way, so the move into the center lane gets no edge. See Lane Changes in
+   :doc:`l7_lecture`.
 
 
 .. admonition:: Question 18
    :class: hint
 
-   Describe the steps needed to convert a global route (a sequence of
-   discrete waypoints) into a **reference path** usable by the motion
-   planner, and explain why a raw waypoint list is insufficient.
+   CARLA's ``GlobalRoutePlanner`` also runs A* on ``get_topology()``, so GP4
+   Task 1 lets you call it inside your planner node.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   A raw waypoint list gives position only, at a fixed spacing, with no
-   indication of how fast to travel or how sharply the path bends. The
-   motion planner and controller need both. Conversion involves:
+   **False.**
 
-   1. **Pose extraction.** Pull the ordered :math:`(x, y, z,
-      \text{yaw})` from each waypoint to form the geometric path.
-   2. **Curvature estimation.** Compute curvature at each point, for
-      example via the Menger curvature of three consecutive points,
-      :math:`\kappa = 4A / (abc)`. Curvature is what couples geometry to
-      the speed profile.
-   3. **Speed profile generation.** Set the target speed at each point to
+   GP4 Task 1 asks you to write A* yourself, in ``astar_waypoints``. You may
+   use ``GlobalRoutePlanner`` only in your tests, to check your routes. Its
+   costs also differ from length: an edge costs the number of waypoints it
+   samples along the road, one every ``sampling_resolution`` meters, and a
+   lane change costs 0. See Maneuvers in :doc:`l7_lecture`.
 
-      .. math::
 
-         v_{\max}(s) = \min\left(v_{\text{limit}}(s),\;
-           \sqrt{a_{\text{lat,max}} / \kappa(s)},\; v_{\text{comfort}}\right)
+----
 
-      so the vehicle slows for curves before reaching them rather than
-      discovering the constraint mid-corner.
-   4. **Smoothing (optional but usual).** Fit splines through the
-      waypoints to remove the heading discontinuities that appear at lane
-      changes and junction boundaries, where consecutive waypoints can
-      jump laterally.
 
-   The result is a dense reference with position, heading, curvature, and
-   target speed at every sample -- which is exactly the input the Stanley
-   and Pure Pursuit controllers of L10 expect.
+Short Answer (Questions 19 to 20)
+=================================
+
+.. admonition:: Question 19
+   :class: hint
+
+   The street between S and intersection 1 has two lanes, one each way. Why
+   does the intersection graph give S only one edge, S to 1, and no edge
+   from 1 back to S?
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   S is a point in the westbound lane. The AV starts there facing west, so
+   it can only drive toward 1. A route back to S would have to arrive in
+   the westbound lane from the east, through the intersection at the
+   street's other end, and that intersection is not in the intersection
+   graph.
+
+   In the waypoint graph, the two lanes are separate chains of nodes, and
+   every edge points the way its lane drives. So the one-way start comes
+   from the graph itself.
+
+
+.. admonition:: Question 20
+   :class: hint
+
+   Searched by travel time, the trip's route is 6.3 m longer than the
+   distance route but 3.3 s faster. Explain why, with the lecture's numbers.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   The travel-time cost of an edge is its length divided by the AV's speed
+   on it, worked out from the map before the drive. On a straight lane, the
+   speed is the limit, 11.18 m/s. In a turn, it is at most
+   :math:`\sqrt{2.0\, r}`: 3.79 m/s in the median right turn and 4.80 m/s in
+   the median left turn. So a meter of the median right turn takes 2.9
+   times as long as a straight meter, and a meter of the median left turn
+   2.3 times.
+
+   The distance route, through 1, 3, 5 and 6, is 260.6 m and takes 31.0 s.
+   The travel-time route, through 1, 3, 4 and 6, is 266.9 m and takes
+   27.7 s. It makes two turns against the distance route's four, and each
+   turn caps the speed. So it is 266.9 − 260.6 = 6.3 m longer and
+   31.0 − 27.7 = 3.3 s faster.
