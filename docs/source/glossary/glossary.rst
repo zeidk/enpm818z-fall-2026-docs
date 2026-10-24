@@ -603,7 +603,7 @@ L2: Sensor Technologies & Calibration
       here" (the sign match). :doc:`L2 </lectures/lecture2/l2_index>` ·
       :doc:`L3 </lectures/lecture3/l3_index>` ·
       :doc:`L6 </lectures/lecture6/l6_index>` ·
-      L7
+      :doc:`L7 </lectures/lecture7/l7_index>`
 
    IMU
       Inertial Measurement Unit. Measures linear acceleration
@@ -2512,8 +2512,8 @@ L6: Localization and SLAM
 
 .. _g-l7:
 
-L7 (not yet published)
-======================
+L7: Route Planning
+==================
 
 .. glossary::
 
@@ -2527,7 +2527,7 @@ L7 (not yet published)
       Dijkstra. On Town01's waypoint graph, with distance costs, A* took 196
       nodes for L7's trip where Dijkstra took 543; both found the same
       260.6 m route. GP4's planner searches with A*. See Heuristic and
-      Admissible Heuristic. L7 · L9
+      Admissible Heuristic. :doc:`L7 </lectures/lecture7/l7_index>` · L9
 
    Admissible Heuristic
       A heuristic :math:`h` that never overestimates: for every node
@@ -2537,14 +2537,14 @@ L7 (not yet published)
       cheaper way to it. For distance costs, the straight line to the goal is
       admissible: no road is shorter than the straight line. For travel-time
       costs, :math:`h` must be in seconds too: the straight line divided by
-      the top speed, 11.18 m/s in Town01. L7
+      the top speed, 11.18 m/s in Town01. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Carriageway
       "Part of the road intended mainly for the movement of road vehicles"
       (Glossary for Transport Statistics, 2019). Shoulders and parking are
       not part of it. On Town01's road 25, the carriageway is the two
       driving strips, 4.0 m each, so 4.0 + 4.0 = 8.0 m. The 4.0 m sidewalks
-      and the 0.3 m shoulders are part of the road, not of the carriageway. L7
+      and the 0.3 m shoulders are part of the road, not of the carriageway. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Configuration Space
       The set of all configurations of the AV, written :math:`X`. LaValle
@@ -2553,14 +2553,14 @@ L7 (not yet published)
       one point on the car and its heading, :math:`(x, y, \theta)` (Paden et
       al., 2016). At L7's start, :math:`(x, y)` = (133.6, −129.4) m is the
       AV's base link, and :math:`\theta` = 180°, measured counterclockwise
-      from east, so the AV faces west. L7 · L9
+      from east, so the AV faces west. :doc:`L7 </lectures/lecture7/l7_index>` · L9
 
    Consistent Heuristic
       A heuristic :math:`h` with :math:`h(n) \le \text{cost}(n, m) + h(m)`
       for every edge from :math:`n` to :math:`m`, and :math:`h = 0` at the
       goal. A consistent :math:`h` is also admissible. With it, a node that
       A* takes already has its final cost, as in Dijkstra. The straight line
-      to the goal is consistent. L7
+      to the goal is consistent. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Curvature
       How sharply a line or a lane bends, written :math:`\kappa`, in 1/m. A
@@ -2571,7 +2571,7 @@ L7 (not yet published)
       its reference line's radius is 1 / 0.1304 = 7.67 m. L7's edge costs
       compute each edge's curvature as its change of heading, in radians,
       divided by its length: from two waypoints on road 312's lane,
-      :math:`r` = 1.474 / 0.2607 = 5.65 m. L7
+      :math:`r` = 1.474 / 0.2607 = 5.65 m. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Dijkstra
       A search that finds the cheapest route through a graph (Dijkstra,
@@ -2579,13 +2579,13 @@ L7 (not yet published)
       appendix. It always takes the open node with the lowest cost so far,
       :math:`g`, and treats that cost as final. It is sure to find the
       cheapest route if no edge cost is negative. Dijkstra is A* with :math:`h = 0` at every node.
-      Autoware's route search is Dijkstra, in the Lanelet2 map library. L7 · L9
+      Autoware's route search is Dijkstra, in the Lanelet2 map library. :doc:`L7 </lectures/lecture7/l7_index>` · L9
 
    Directed Graph
       A set of nodes and a set of edges, each edge an ordered pair (from, to)
       with a cost. An edge can be followed only from its first node to its
       second. L7's graph of the roads is directed because the AV cannot drive
-      against its lane. See Waypoint Graph. L7
+      against its lane. See Waypoint Graph. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Edge Cost
       The number a route search adds up along a route; the search keeps the
@@ -2594,14 +2594,14 @@ L7 (not yet published)
       it (travel time, for the fastest route), or its length plus a penalty
       on the edge that starts a left turn. A search uses one cost. No cost
       may be negative: to favor a road, give it a smaller positive cost. See
-      Travel Time and Left-Turn Penalty. L7
+      Travel Time and Left-Turn Penalty. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Heuristic
       Written :math:`h(n)`: an estimate of the cost from node :math:`n` to
       the goal, in the same units as the edge costs, computed without
       searching. A* adds it to the cost so far. For distance costs, L7 uses
       the straight line to the goal, 141.9 m from the start. See Admissible
-      Heuristic. L7
+      Heuristic. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Hysteresis
       A rule that waits before switching back. In L7's re-planning example,
@@ -2610,7 +2610,7 @@ L7 (not yet published)
       every check that sees the obstacle, and goes back at every check that
       does not, changes the route 5 times in 4.5 s. With hysteresis (take the
       detour at the first check that sees it, go back only at the third
-      check in a row without it; 3 is chosen), the route changes once. L7
+      check in a row without it; 3 is chosen), the route changes once. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Junction
       In OpenDRIVE and CARLA, an intersection, and the element of the map
@@ -2620,7 +2620,7 @@ L7 (not yet published)
       road 25's lane −1 go on into road 333 (a right turn) or road 339 (a
       left turn). Only the connections the file lists become edges of the
       routing graph, so a move the file does not list, such as a U-turn, is
-      never on a route. L7
+      never on a route. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Lane
       "One of the longitudinal strips into which a carriageway is divisible,
@@ -2628,7 +2628,7 @@ L7 (not yet published)
       enough for one moving line of motor vehicles other than motor cycles"
       (Glossary for Transport Statistics, 2019). Longitudinal means along the
       road, the way the traffic moves. Every road outside the intersections
-      in Town01 has one 4.0 m lane each way. L7
+      in Town01 has one 4.0 m lane each way. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Lane Change Edge
       An edge of the routing graph that moves the AV to the lane beside it,
@@ -2642,14 +2642,14 @@ L7 (not yet published)
       lane, but that lane has no waypoints, so the graph has no edge for it.
       The waypoint graph with these edges is the routing graph. Town01 needs
       none. In Town03, an AV in the right lane of road
-      4 needs one to turn left at junction 238. L7
+      4 needs one to turn left at junction 238. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Lanelet
       "A Lanelet represents one atomic section of a lane. Atomic means that
       along a Lanelet, traffic rules (including possible lane changes to
       other Lanelets) do not change" (Lanelet2 documentation). A lanelet has
       exactly one left and one right linestring, its two borders; together
-      they form its drivable area. See Lanelet2. L7
+      they form its drivable area. See Lanelet2. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Lanelet2
       A map framework (Poggenhans et al., 2018) that builds a map from
@@ -2657,7 +2657,7 @@ L7 (not yet published)
       road's reference line as in OpenDRIVE. Traffic rules are regulatory
       elements that the lanelets refer to. Autoware's map must be in Lanelet2
       format. For routing, OpenDRIVE and Lanelet2 give the same graph; L7 and
-      CARLA use OpenDRIVE. L7
+      CARLA use OpenDRIVE. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Left-Turn Penalty
       An edge cost: the edge's length in meters, plus :math:`P` meters on the
@@ -2665,7 +2665,7 @@ L7 (not yet published)
       :math:`P` extra meters of road. L7's example chooses :math:`P` = 30 m:
       a route with no left turn then beats one with a left turn if it is less
       than 30 m longer. A left turn crosses oncoming traffic, so a planner may
-      avoid it. L7
+      avoid it. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Maneuver
       The move the AV makes at an intersection on its route: turn left, turn
@@ -2674,11 +2674,11 @@ L7 (not yet published)
       more than 30° left is a left turn, more than 30° right a right turn,
       less is straight on (30° is chosen). L7's route is four maneuvers: right
       at 1, right at 3, left at 5 and right at 6. L9's motion planning needs
-      them besides the waypoints. L7
+      them besides the waypoints. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Merge (Graph)
       A node of the waypoint graph where two lanes from an intersection join
-      one lane, so two edges arrive at it. Contrast Split (Graph). L7
+      one lane, so two edges arrive at it. Contrast Split (Graph). :doc:`L7 </lectures/lecture7/l7_index>`
 
    OpenDRIVE
       The map format CARLA uses, a standard of ASAM: "a common base for
@@ -2686,7 +2686,7 @@ L7 (not yet published)
       using the file extension xodr". Town01's map is the file
       ``Town01.xodr``. Each road is drawn along a reference line, its lanes
       are numbered out from that line, and its junctions list which lane
-      leads to which. L7
+      leads to which. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Path
       Where the AV goes: a chain of configurations :math:`(x, y, \theta)`,
@@ -2695,14 +2695,14 @@ L7 (not yet published)
       :math:`\alpha` from 0 at the start to 1 at the goal (Paden et al.,
       2016). L9 plans it. In route planning, a path in a graph is a chain of
       edges; and GP4 calls the route's waypoints the path, because it
-      publishes them as a ``nav_msgs/Path`` message. See Trajectory. L7
+      publishes them as a ``nav_msgs/Path`` message. See Trajectory. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Reference Line
       In OpenDRIVE, the line the map file draws a road along, made of
       pieces: lines, arcs and spirals (Town01 uses only lines and arcs). The
       road's lanes are numbered out from it: positive on its left, negative
       on its right. Road 25's reference line starts at (156.07, −11.02) m,
-      points south (heading −1.572 rad) and is 35.18 m long. L7
+      points south (heading −1.572 rad) and is 35.18 m long. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Road
       "Line of communication (travelled way) open to public traffic,
@@ -2711,12 +2711,12 @@ L7 (not yet published)
       2019). Roads also cover junctions and crossings, so in CARLA an
       intersection is made of roads too: 96 of Town01's 122 roads are short
       roads inside its 12 intersections. Road 25 is 35.18 m long, between two
-      intersections. L7
+      intersections. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Road Network
       "All roads in a given area" (Glossary for Transport Statistics, 2019).
       Town01's road network is its 122 roads: 26 between intersections and
-      96 inside the 12 intersections. Route planning searches it. L7
+      96 inside the 12 intersections. Route planning searches it. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Route
       "The route is made of a sequence of lanes on a static map" (Autoware's
@@ -2725,7 +2725,7 @@ L7 (not yet published)
       at intersection 1, right at 3, left at 5 and right at 6. The planner
       hands it on as waypoints along those lanes, about one every 2 m, 130 in
       all. A route says which lanes; a path and a trajectory say how the AV
-      moves along them. L7
+      moves along them. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Route Planning
       Choosing a route through the road network, from the AV's current
@@ -2734,7 +2734,7 @@ L7 (not yet published)
       are the cost of each road segment, it is "the problem of finding a
       minimum-cost path". In GP4 it is one ROS 2 node. It reads the AV's pose,
       the objects on the road, the map and a goal point, and writes the route
-      as waypoints. L7
+      as waypoints. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Routing Graph
       The waypoint graph with lane change edges added where the map allows
@@ -2742,23 +2742,23 @@ L7 (not yet published)
       has a cost, it is the weighted graph the search runs on. Town01 has no
       lane change edges, so its routing graph is its waypoint graph: 3107
       nodes and 3143 edges. See Waypoint Graph, Lane Change Edge and Weighted
-      Graph. L7
+      Graph. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Segment
       One lane of one road, in driving order. CARLA cuts a lane where it
       leads to more than one lane, and where the file starts a new road.
       ``get_topology()`` returns each segment as two waypoints: its start,
       and an end that can be reached. Town01 has 124 segments, returned as
-      160 waypoint pairs, one pair per segment and way out. L7
+      160 waypoint pairs, one pair per segment and way out. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Split (Graph)
       A node of the waypoint graph where a lane meets an intersection and the
       AV can go two ways, so two edges leave it. Town01 has 36 splits: 12
-      intersections with 3 roads into each. Contrast Merge (Graph). L7
+      intersections with 3 roads into each. Contrast Merge (Graph). :doc:`L7 </lectures/lecture7/l7_index>`
 
    Successor
       A node that one of a node's edges leads to. In the waypoint graph, most
-      nodes have one successor; a split has two. L7
+      nodes have one successor; a split has two. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Toy Graph
       L7's small graph for searching by hand. Town01's waypoint graph has
@@ -2769,7 +2769,7 @@ L7 (not yet published)
       the lane. L7's route costs 41 + 75 + 64 + 53 + 40 = 273 m on it, 12.4 m
       more than the 260.6 m on the waypoint graph, because it measures to
       each intersection's center. GP4 searches the full waypoint graph
-      instead. L7
+      instead. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Trajectory
       A path with times: where the AV is at each moment. Formally, "a
@@ -2778,7 +2778,7 @@ L7 (not yet published)
       time", where ":math:`T` is the planning horizon" (Paden et al., 2016).
       In L7's example, with speeds chosen for the example, from rest to
       rest, the AV reaches the goal at :math:`T` = 45.9 s. L10 follows a
-      trajectory. L7
+      trajectory. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Travel Time
       An edge cost: the time the AV needs for the edge, its length divided by
@@ -2790,19 +2790,19 @@ L7 (not yet published)
       example). In Town01's median left turn (:math:`r` = 11.5 m), the top
       speed is √(2.0 × 11.5) = 4.80 m/s, so a meter of it takes about
       11.18 / 4.80 = 2.3 times as long as a straight meter. On L7's trip,
-      travel time picks a route 6.3 m longer but 3.3 s faster than distance. L7
+      travel time picks a route 6.3 m longer but 3.3 s faster than distance. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Waypoint Graph
       The directed graph built from CARLA's waypoints: a node every 2 m along
       each segment, and an edge from each node to the next one along its
       lane, with the length between them. Measured on Town01: 3107 nodes and
       3143 edges, one edge out of each node and two out of each of the 36
-      splits. L7
+      splits. :doc:`L7 </lectures/lecture7/l7_index>`
 
    Weighted Graph
       The routing graph with a cost, a number, on every edge. A route search
       adds the costs up along a route and keeps the route with the smallest
-      total. See Edge Cost. L7
+      total. See Edge Cost. :doc:`L7 </lectures/lecture7/l7_index>`
 
 .. raw:: html
 

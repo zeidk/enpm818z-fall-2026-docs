@@ -5,10 +5,31 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.12.0: Lectures 7 and 8 Follow the Reviewed Slides (2026-10-24)
+.. dropdown:: v2.13.0: Lecture 7 Published (2026-10-24)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lecture 7
+
+   - **Route Planning is open:** the lecture, Going Further, the step by
+     step searches, code, exercises, quiz and references. One trip in
+     Town01, from the map file to a weighted graph, lane change edges in
+     Town03, three edge costs, re-planning on GP4's two triggers, and the
+     route as maneuvers.
+
+   .. rubric:: Lectures
+
+   - **Schedule:** L1 to L7 are open.
+
+   .. rubric:: Glossary
+
+   - **L7: Route Planning:** the section is published, and its terms link
+     to the lecture.
+
+.. dropdown:: v2.12.0: Lectures 7 and 8 Follow the Reviewed Slides (2026-10-24)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lecture 7
 

@@ -44,9 +44,10 @@ templates_path = ["_templates"]
 # ---------------------------------------------------------------------------
 # What is published.
 #
-# L1 to L6 are published in full (L5 since 2026-10-10, L6 since 2026-10-11).
+# L1 to L7 are published in full (L5 since 2026-10-10, L6 since 2026-10-11,
+# L7 since 2026-10-24).
 #
-# L7 to L13 are hidden completely: they do not match the syllabus yet and
+# L8 to L13 are hidden completely: they do not match the syllabus yet and
 # open one at a time as their decks are finished. To reopen lecture N:
 #   1. remove N from HIDDEN_LECTURES below,
 #   2. restore its line in the toctree of lectures/index.rst,
@@ -55,7 +56,7 @@ templates_path = ["_templates"]
 #      pages that mention it.
 # The source files stay on disk.
 # ---------------------------------------------------------------------------
-HIDDEN_LECTURES = range(7, 14)
+HIDDEN_LECTURES = range(8, 14)
 
 exclude_patterns = [f"lectures/lecture{n}/**" for n in HIDDEN_LECTURES]
 
