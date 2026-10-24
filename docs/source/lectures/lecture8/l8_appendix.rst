@@ -225,8 +225,11 @@ Waymo's Miss Rate and mAP
   :math:`\lambda_{lat}` and its error **along** the lane is under
   :math:`\lambda_{lon}`. At 3, 5 and 8 s: :math:`\lambda_{lat}` = 1, 1.8
   and 3 m; :math:`\lambda_{lon}` = 2, 3.6 and 6 m.
-- Both are scaled by the road user's speed (between 1.4 and 11 m/s), "so
-  that we do not over-penalize faster agents".
+- Both are multiplied by a scale from the road user's speed at the start:
+  0.5 below 1.4 m/s, 1 above 11 m/s, a straight line between (Waymo, 2021
+  challenge page); "so that we do not over-penalize faster agents"
+  (Ettinger et al., 2021). At our 8 m/s: 0.5 + 0.5 × (8 − 1.4) / (11 − 1.4)
+  = 0.84, so at 5 s :math:`\lambda_{lat}` = 1.8 × 0.84 = 1.51 m.
 - mAP (mean average precision): the modes are ranked by their confidence,
   and the miss rate's match decides the true and false positives. "The
   final mAP metric averages over eight different ground truth trajectory

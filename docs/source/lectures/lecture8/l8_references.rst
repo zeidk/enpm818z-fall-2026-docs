@@ -5,7 +5,7 @@ References
 These are the sources the L8 slides cite, grouped by the lecture's sections,
 in the order the slides first cite each source. A source cited in several
 sections is listed once, where the slides first cite it. The sections The
-Scene, Scoring, Several Futures and Using the Map cite no new source. Four
+Scene, Scoring, Several Futures and Using the Map cite no new source. Five
 sources are cited only in the appendix (:doc:`l8_appendix`); they have their
 own group at the end.
 
@@ -183,10 +183,24 @@ own group at the end.
 .. dropdown:: Cited Only in the Appendix
    :class-container: sd-border-secondary
 
-   Learned predictors, from :doc:`l8_appendix`.
+   Waymo's threshold scaling and the learned predictors, from
+   :doc:`l8_appendix`.
 
    .. grid:: 1 1 2 2
       :gutter: 2
+
+      .. grid-item-card:: Waymo's speed scaling
+         :link: https://waymo.com/open/challenges/2021/motion-prediction/
+         :class-card: sd-border-secondary
+
+         **Waymo LLC**
+
+         *Motion Prediction, 2021 Waymo Open Dataset Challenge.* Accessed
+         24 October 2026.
+
+         The miss rate's thresholds are multiplied by a scale from the
+         initial speed: 0.5 below 1.4 m/s, 1 above 11 m/s, a straight line
+         between.
 
       .. grid-item-card:: VectorNet
          :link: https://arxiv.org/abs/2005.04259
@@ -238,8 +252,7 @@ own group at the end.
          *Proceedings of the IEEE Conference on Computer Vision and Pattern
          Recognition (CVPR)*, 961 to 971.
 
-         Pools the hidden states of nearby people, so each person's
-         prediction depends on its neighbors.
+         Each person's prediction depends on the people near them.
 
 
 .. rubric:: Map data and images
