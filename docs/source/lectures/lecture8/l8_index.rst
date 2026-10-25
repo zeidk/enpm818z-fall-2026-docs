@@ -30,12 +30,12 @@ A's next 5 s:
 - **Using the map.** The map's lanes are the candidate paths, and Bayes'
   rule gives each one a probability from A's speed: 0.87 for the left
   turn, which ends 1.88 m from the truth.
+- **Learned predictors.** What they read and write, three well-known
+  designs (VectorNet, MultiPath, MTR), what Waymo and Tesla say they use,
+  how they are trained and scored, and pedestrians and cyclists.
 - **Other drivers.** Car B follows car A (the Intelligent Driver Model,
   IDM), and car A waits for a gap in the AV's lane: the AV's own plan
   changes what A does.
-
-Learned predictors (VectorNet, MultiPath, MTR, Social LSTM) are in
-:doc:`Going Further <l8_appendix>`, to read after class.
 
 
 Learning Objectives
@@ -43,16 +43,18 @@ Learning Objectives
 
 After this lecture, you can:
 
-- Say what a planner needs from **prediction**, and how far ahead it must
-  look.
+- Say what a **planner** needs from **prediction**, and how far ahead it
+  must look (the **horizon**).
 - Predict a road user's motion by hand with **constant velocity (CV)**,
   **constant turn rate (CTRV)** and **constant turn rate and acceleration
   (CTRA)**, and say why their error grows with the horizon.
-- Score a prediction with **ADE, FDE and the miss rate**, and several
-  predictions with **minADE and minFDE**; check whether an uncertainty is
-  honest.
+- Score a prediction with **ADE**, **FDE** and the **miss rate**, and
+  several predictions with **minADE** and **minFDE**; check whether an
+  **uncertainty** is honest.
 - Use the **map's lanes as candidate paths** and give each one a
   probability with **Bayes' rule**.
+- Say what a **learned predictor** reads and writes, and how it is trained
+  and scored.
 - Model another driver's **intent**, its reaction to the car ahead (the
   **IDM**), and its **gap acceptance**.
 
@@ -64,10 +66,11 @@ Lecture Materials
 - :doc:`Going Further <l8_appendix>`: the deck's appendix (the track fit,
   CTRV and CTRA written out, the test set, CV's uncertainty and its 95%
   region, Waymo's miss rate and mAP, the three map scores, P(left) over
-  time, Autoware's map-based prediction, learned predictors, and the IDM's
-  terms).
+  time, Autoware's map-based prediction, and the IDM's parameters).
 - :doc:`l8_code`: the hands-on, four parts on the junction (``scene``,
-  ``physics``, ``modes`` and ``interact``), and Foxglove.
+  ``physics``, ``modes`` and ``interact``).
+- :doc:`Foxglove: A Second Viewer for ROS 2 </preread/foxglove>`: the reading
+  that goes with L8, with a live demo of its predictions in Foxglove.
 - :doc:`l8_exercises`, :doc:`l8_quiz` and :doc:`l8_references`.
 
 .. toctree::
@@ -90,6 +93,6 @@ Next Steps
   every likely future of every road user.
 - **Before then:** run the four hands-on parts on the :doc:`Code page
   <l8_code>`, and read, in :doc:`Going Further <l8_appendix>`, the sections
-  on CTRV, on the region's honesty check and on learned predictors.
-- **Post-work:** record 30 s of your GP stack and open the recording in
-  Foxglove (see :doc:`l8_code`).
+  on CTRV and on CV's 95% region.
+- **Post-work:** read :doc:`Foxglove </preread/foxglove>`, then record 30 s
+  of your GP stack and open the recording in Foxglove.

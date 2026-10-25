@@ -65,6 +65,11 @@ exclude_patterns = [f"lectures/lecture{n}/**" for n in HIDDEN_LECTURES]
 # assignments/index.rst) to publish it.
 exclude_patterns += [f"assignments/gp{n}.rst" for n in range(3, 5)]
 
+# The Foxglove reading (after L8) is held back with L8. To publish it: remove
+# this line, add "foxglove" to the toctree of preread/index.rst and its row to
+# the table there (When: After L8), in the same change that reopens L8.
+exclude_patterns += ["preread/foxglove.rst"]
+
 # ---------------------------------------------------------------------------
 # PyData Sphinx Theme
 # ---------------------------------------------------------------------------

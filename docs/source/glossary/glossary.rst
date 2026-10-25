@@ -2886,6 +2886,21 @@ L8 (not yet published)
       goes. In L8, car A's slowing down alone makes the left turn 0.87
       likely. L8
 
+   Learned Predictor
+      A predictor whose numbers are set by training on recorded tracks: it
+      reads every road user's last few seconds of track, the map's lanes and
+      the traffic lights, and writes :math:`K` modes and their probabilities,
+      the same output as L8's map-aware predictor. L8 chose its turn speeds,
+      :math:`\sigma`'s and priors by hand; a learned predictor sets them by
+      training. Well-known designs: VectorNet, MultiPath, MTR. L8
+
+   Marginal Prediction
+      A prediction that predicts each road user alone. Tesla (AI Day 2022):
+      "Relying purely on collision checks with marginal predictions will only
+      get you so far because you will miss out on a lot of valid
+      interactions". In L8, car B's prediction needs car A's, and car A's
+      needs the AV's plan. L8
+
    minADE
       The ADE of the best of a prediction's modes, the one closest to the
       truth: "the average ... L2 distance ... between the best forecasted

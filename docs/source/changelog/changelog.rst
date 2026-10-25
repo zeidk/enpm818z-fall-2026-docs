@@ -5,10 +5,42 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.13.0: Lecture 7 Published (2026-10-24)
+.. dropdown:: v2.14.0: Lecture 8 Follows the Revised Slides, and a Foxglove Reading (2026-10-25)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lecture 8
+
+   - **All pages** follow the revised slides: Learned Predictors is now part
+     of the lecture, with a new section on what Waymo and Tesla say they use;
+     ADE and FDE each get a formula; a flowchart shows the plan for car A;
+     Step 3 shows the bell curve and reads its formula in words; the IDM is
+     split into its acceleration, the gap it wants, and car B by hand. The
+     References page groups the learned predictors' sources, and the Code
+     page points to the new Foxglove reading. These pages stay hidden until
+     Lecture 8 is published.
+
+   .. rubric:: Pre-Read Material
+
+   - **Foxglove: A Second Viewer for ROS 2:** a new reading that goes with
+     Lecture 8, with a live demo of the lecture's predictions on CARLA
+     (``l8_foxglove_demo``), a layout to import, and six exercises. Hidden
+     with Lecture 8.
+
+   .. rubric:: Lectures
+
+   - **Schedule:** L8's Key Concepts list the learned predictors as lecture
+     content.
+
+   .. rubric:: Glossary
+
+   - **L8 (not yet published):** new terms Learned Predictor and Marginal
+     Prediction.
+
+.. dropdown:: v2.13.0: Lecture 7 Published (2026-10-24)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lecture 7
 

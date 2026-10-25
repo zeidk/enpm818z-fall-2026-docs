@@ -5,36 +5,43 @@ References
 These are the sources the L8 slides cite, grouped by the lecture's sections,
 in the order the slides first cite each source. A source cited in several
 sections is listed once, where the slides first cite it. The sections The
-Scene, Scoring, Several Futures and Using the Map cite no new source. Five
-sources are cited only in the appendix (:doc:`l8_appendix`); they have their
-own group at the end.
+Scene, Scoring, Several Futures and Using the Map cite no new source. One
+source is cited only in the appendix (:doc:`l8_appendix`); it has its own
+group at the end.
 
 .. dropdown:: Introduction
    :class-container: sd-border-secondary
    :open:
 
-   The Tempe crash, the prediction windows of the public datasets, and the
-   three kinds of motion model.
+   How often the predictor runs, the prediction windows of the public
+   datasets, and the three kinds of motion model.
 
    .. grid:: 1 1 2 2
       :gutter: 2
 
-      .. grid-item-card:: The Tempe crash
-         :link: https://www.ntsb.gov/investigations/AccidentReports/Reports/HAR1903.pdf
+      .. grid-item-card:: Apollo's prediction module
+         :link: https://github.com/ApolloAuto/apollo/blob/master/modules/prediction/prediction_component.cc
          :class-card: sd-border-secondary
 
-         **National Transportation Safety Board (2019)**
+         **Apollo Auto**
 
-         *Collision Between Vehicle Controlled by Developmental Automated
-         Driving System and Pedestrian, Tempe, Arizona, March 18, 2018.*
-         Report NTSB/HAR-19/03, Investigation HWY18MH010, adopted 19
-         November 2019. Washington, DC.
+         *Apollo prediction module: prediction_component.cc.* Source code.
+         Accessed 24 October 2026.
 
-         "The ADS detected the pedestrian 5.6 seconds before impact", but
-         it never "predicted her path": when perception changed an object's
-         class, the system "no longer considered the tracking history of
-         that object". Also cited in the appendix, on pedestrians and
-         cyclists.
+         ``Proc`` runs on each ``PerceptionObstacles`` message and writes
+         the prediction.
+
+      .. grid-item-card:: Autoware's map-based prediction, source
+         :link: https://github.com/autowarefoundation/autoware_universe/blob/main/perception/autoware_map_based_prediction/lib/map_based_prediction_node/callbacks.cpp
+         :class-card: sd-border-secondary
+
+         **Autoware Foundation**
+
+         *autoware_map_based_prediction: callbacks.cpp.* Source code.
+         Accessed 24 October 2026.
+
+         ``objectsCallback`` runs on each ``TrackedObjects`` message and
+         publishes the predicted objects.
 
       .. grid-item-card:: Argoverse
          :class-card: sd-border-secondary
@@ -63,7 +70,8 @@ own group at the end.
 
          Observes 5 s and predicts 6 s. Also cited in Scoring (ADE, FDE and
          the miss rate: "within 2.0 meters of ground truth according to
-         endpoint error") and in Several Futures (minADE and minFDE).
+         endpoint error"), in Several Futures (minADE and minFDE) and in
+         Learned Predictors (training and scores).
 
       .. grid-item-card:: Waymo Open Motion Dataset
          :class-card: sd-border-secondary
@@ -78,8 +86,8 @@ own group at the end.
          International Conference on Computer Vision (ICCV)*, 9710 to 9719.
 
          Observes 1 s and predicts 8 s. Also cited in Scoring (thresholds
-         that depend on the horizon and the speed) and in Several Futures
-         (mAP).
+         that depend on the horizon and the speed), in Several Futures (mAP)
+         and in Learned Predictors (training and scores).
 
       .. grid-item-card:: Three kinds of motion model
          :link: https://doi.org/10.1186/s40648-014-0001-z
@@ -115,6 +123,122 @@ own group at the end.
          Constant turn rate and velocity, and constant turn rate and
          acceleration. Also cited in the appendix, for CTRA's integrals in
          closed form.
+
+
+.. dropdown:: Learned Predictors
+   :class-container: sd-border-secondary
+
+   Three well-known designs, what Waymo and Tesla say they use, and
+   pedestrians and cyclists (with the Tempe crash).
+
+   .. grid:: 1 1 2 2
+      :gutter: 2
+
+      .. grid-item-card:: VectorNet
+         :link: https://arxiv.org/abs/2005.04259
+         :class-card: sd-border-secondary
+
+         **Gao, J., Sun, C., Zhao, H., Shen, Y., Anguelov, D., Li, C. and
+         Schmid, C. (2020)**
+
+         "VectorNet: Encoding HD Maps and Agent Dynamics from Vectorized
+         Representation." *Proceedings of the IEEE/CVF Conference on
+         Computer Vision and Pattern Recognition (CVPR).* arXiv:2005.04259.
+
+         "Observed agent trajectories and map features are represented as
+         sequence of vectors".
+
+      .. grid-item-card:: MultiPath
+         :class-card: sd-border-secondary
+
+         **Chai, Y., Sapp, B., Bansal, M. and Anguelov, D. (2019)**
+
+         "MultiPath: Multiple Probabilistic Anchor Trajectory Hypotheses for
+         Behavior Prediction." *Proceedings of the 3rd Conference on Robot
+         Learning (CoRL 2019)*, Proceedings of Machine Learning Research,
+         volume 100, 86 to 99.
+
+         A probability for each anchor trajectory, with offsets and
+         uncertainties.
+
+      .. grid-item-card:: MTR (Motion Transformer)
+         :link: https://arxiv.org/abs/2209.13508
+         :class-card: sd-border-secondary
+
+         **Shi, S., Jiang, L., Dai, D. and Schiele, B. (2022)**
+
+         "Motion Transformer with Global Intention Localization and Local
+         Movement Refinement." *Advances in Neural Information Processing
+         Systems 35 (NeurIPS 2022).* arXiv:2209.13508.
+
+         "a small set of learnable motion query pairs", each in charge of
+         one motion mode.
+
+      .. grid-item-card:: Waymo's onboard models
+         :link: https://waymo.com/blog/2025/12/demonstrably-safe-ai-for-autonomous-driving/
+         :class-card: sd-border-secondary
+
+         **Waymo (2025)**
+
+         *Demonstrably Safe AI for Autonomous Driving.* Waymo blog, 9
+         December 2025. Accessed 24 October 2026.
+
+         A "World Decoder" uses the sensor inputs "to predict other road
+         users behaviors"; the car runs smaller models "optimized for
+         real-time onboard deployment".
+
+      .. grid-item-card:: Tesla AI Day 2022
+         :link: https://www.youtube.com/watch?v=ODSJsviD_SU
+         :class-card: sd-border-secondary
+
+         **Tesla (2022)**
+
+         *Tesla AI Day 2022.* Video, 30 September 2022, planning part, at
+         1:06:27. Accessed 24 October 2026.
+
+         "Relying purely on collision checks with marginal predictions will
+         only get you so far because you will miss out on a lot of valid
+         interactions".
+
+      .. grid-item-card:: Tesla Q1 2024 Update
+         :link: https://digitalassets.tesla.com/tesla-contents/image/upload/IR/TSLA-Q1-2024-Update.pdf
+         :class-card: sd-border-secondary
+
+         **Tesla (2024)**
+
+         *Q1 2024 Update.* Shareholder update, 23 April 2024. Accessed 24
+         October 2026.
+
+         FSD runs on "end-to-end neural networks".
+
+      .. grid-item-card:: Social LSTM
+         :class-card: sd-border-secondary
+
+         **Alahi, A., Goel, K., Ramanathan, V., Robicquet, A., Fei-Fei, L.
+         and Savarese, S. (2016)**
+
+         "Social LSTM: Human Trajectory Prediction in Crowded Spaces."
+         *Proceedings of the IEEE Conference on Computer Vision and Pattern
+         Recognition (CVPR)*, 961 to 971.
+
+         Each person's prediction depends on the people near them.
+
+      .. grid-item-card:: The Tempe crash
+         :link: https://www.ntsb.gov/investigations/AccidentReports/Reports/HAR1903.pdf
+         :class-card: sd-border-secondary
+
+         **National Transportation Safety Board (2019)**
+
+         *Collision Between Vehicle Controlled by Developmental Automated
+         Driving System and Pedestrian, Tempe, Arizona, March 18, 2018.*
+         Report NTSB/HAR-19/03, Investigation HWY18MH010, adopted 19
+         November 2019. Washington, DC.
+
+         "The ADS detected the pedestrian 5.6 seconds before impact", but
+         it never "predicted her path": when perception changed an object's
+         class, the system "no longer considered the tracking history of
+         that object". Cited for pedestrians and cyclists: a predictor with
+         no history has nothing to predict from.
 
 
 .. dropdown:: Other Drivers
@@ -183,8 +307,7 @@ own group at the end.
 .. dropdown:: Cited Only in the Appendix
    :class-container: sd-border-secondary
 
-   Waymo's threshold scaling and the learned predictors, from
-   :doc:`l8_appendix`.
+   Waymo's threshold scaling, from :doc:`l8_appendix`.
 
    .. grid:: 1 1 2 2
       :gutter: 2
@@ -202,57 +325,6 @@ own group at the end.
          initial speed: 0.5 below 1.4 m/s, 1 above 11 m/s, a straight line
          between.
 
-      .. grid-item-card:: VectorNet
-         :link: https://arxiv.org/abs/2005.04259
-         :class-card: sd-border-secondary
-
-         **Gao, J., Sun, C., Zhao, H., Shen, Y., Anguelov, D., Li, C. and
-         Schmid, C. (2020)**
-
-         "VectorNet: Encoding HD Maps and Agent Dynamics from Vectorized
-         Representation." *Proceedings of the IEEE/CVF Conference on
-         Computer Vision and Pattern Recognition (CVPR).* arXiv:2005.04259.
-
-         "Observed agent trajectories and map features are represented as
-         sequence of vectors".
-
-      .. grid-item-card:: MultiPath
-         :class-card: sd-border-secondary
-
-         **Chai, Y., Sapp, B., Bansal, M. and Anguelov, D. (2019)**
-
-         "MultiPath: Multiple Probabilistic Anchor Trajectory Hypotheses for
-         Behavior Prediction." *Proceedings of the 3rd Conference on Robot
-         Learning (CoRL 2019)*, Proceedings of Machine Learning Research,
-         volume 100, 86 to 99.
-
-         A probability for each anchor trajectory, with offsets and
-         uncertainties.
-
-      .. grid-item-card:: MTR (Motion Transformer)
-         :link: https://arxiv.org/abs/2209.13508
-         :class-card: sd-border-secondary
-
-         **Shi, S., Jiang, L., Dai, D. and Schiele, B. (2022)**
-
-         "Motion Transformer with Global Intention Localization and Local
-         Movement Refinement." *Advances in Neural Information Processing
-         Systems 35 (NeurIPS 2022).* arXiv:2209.13508.
-
-         "a small set of learnable motion query pairs", each in charge of
-         one motion mode.
-
-      .. grid-item-card:: Social LSTM
-         :class-card: sd-border-secondary
-
-         **Alahi, A., Goel, K., Ramanathan, V., Robicquet, A., Fei-Fei, L.
-         and Savarese, S. (2016)**
-
-         "Social LSTM: Human Trajectory Prediction in Crowded Spaces."
-         *Proceedings of the IEEE Conference on Computer Vision and Pattern
-         Recognition (CVPR)*, 961 to 971.
-
-         Each person's prediction depends on the people near them.
 
 
 .. rubric:: Map data and images

@@ -30,12 +30,9 @@ Going Further
    * - :ref:`l8-app-sec-map`
      - The three map scores written out, P(left) as car A approaches the
        junction, and Autoware's map-based prediction.
-   * - :ref:`l8-app-sec-learned`
-     - What a learned predictor reads and writes, three well-known designs,
-       how they are trained and scored, and pedestrians and cyclists.
    * - :ref:`l8-app-sec-drivers`
-     - The terms of the Intelligent Driver Model (IDM), one by one, and the
-       gap at which car B follows steadily.
+     - The Intelligent Driver Model's (IDM's) parameters, and the gap at
+       which car B follows steadily.
 
 
 .. _l8-app-sec-physics:
@@ -336,141 +333,23 @@ A lane change is detected from the distance to each lane boundary and the
 time to reach it (Autoware Foundation, map-based prediction).
 
 
-.. _l8-app-sec-learned:
-
-Learned Predictors
-------------------
-
-This section is the Learned Predictors section of the :doc:`lecture
-<l8_lecture>`. Our map-aware predictor used lanes as modes, and
-probabilities from rules we chose (a turn speed, a :math:`\sigma`). A
-learned predictor learns the turn speeds, :math:`\sigma`'s and priors that
-we chose by hand, from recorded driving.
-
-
-.. _l8-app-learned-io:
-
-What a Learned Predictor Reads and Writes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. figure:: /_static/images/L8/learned_io.png
-   :alt: A block diagram. Three gray input boxes on the left: 1. every road user's last few seconds of track; 2. the map's lanes, as polylines (lists of points); 3. traffic lights, the road user's type (car, cyclist). Each has an arrow into a central box: a neural network, weights set by training. Two green arrows lead out to two green boxes: K future tracks for each road user, and one probability for each of them.
-   :width: 90%
-   :align: center
-
-   A learned predictor. Its inputs: **1** every road user's last few
-   seconds of track; **2** the map's lanes, as polylines (lists of points);
-   **3** traffic lights and the road user's type (car, cyclist). A neural
-   network, with weights set by training, writes :math:`K` future tracks for
-   each road user and one probability for each of them.
-
-- The output is the same as our map-aware predictor's: :math:`K` modes and
-  their probabilities.
-- What changes: the turn speeds, the :math:`\sigma`'s and the priors we
-  chose by hand are **set by training** on recorded tracks.
-
-
-.. _l8-app-learned-designs:
-
-Three Well-Known Designs
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. list-table::
-   :widths: 20 45 35
-   :header-rows: 1
-   :class: compact-table
-
-   * - **Model**
-     - **Main idea, in the paper's words**
-     - **In our terms**
-   * - VectorNet (Gao et al., 2020)
-     - "Observed agent trajectories and map features are represented as
-       sequence of vectors"
-     - the lanes and the tracks as lists of points, as in our
-       ``l8_scene.npz``
-   * - MultiPath (Chai et al., 2019)
-     - "predicts a discrete distribution over the anchors and, for each
-       anchor, regresses offsets from anchor waypoints along with
-       uncertainties"
-     - anchors play our candidate lanes' part; each gets a probability, a
-       shift and a :math:`\sigma`
-   * - MTR (Shi et al., 2022)
-     - "a small set of learnable motion query pairs. Each motion query pair
-       takes charge of trajectory prediction and refinement for a specific
-       motion mode"
-     - one learned slot per kind of future (turn left, go straight, ...)
-
-MTR "ranks 1st on the leaderboards of Waymo Open Motion Dataset", in its
-authors' words, 2022 (Shi et al., 2022).
-
-
-.. _l8-app-learned-train:
-
-How Learned Predictors Are Trained and Scored
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-1. **Data:** recorded scenes, each cut into an observed part and a future
-   part. Argoverse 2 observes 5 s and predicts 6 s (Wilson et al., 2021).
-   Waymo's dataset observes 1 s and predicts 8 s, at 10 Hz (Ettinger et al.,
-   2021).
-2. **Training**, in one common form: the network predicts :math:`K` modes;
-   the one nearest the true future is moved toward it, and its probability
-   is raised.
-3. **Scores:** minADE, minFDE and the miss rate (Argoverse 2); the miss
-   rate and mAP (Waymo). The same scores as ours, on the benchmark's test
-   scenes.
-
-.. note::
-
-   **Why CV still matters:** it is the baseline every learned model is
-   compared with, and the fallback when the learned model meets a road user
-   it was not trained for. On our test set with no turn, CV's mean error
-   stays under 2 m for 3 s.
-
-
-.. _l8-app-learned-peds:
-
-Pedestrians and Cyclists
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-- They follow few lanes: a pedestrian can turn on the spot and step off the
-  curb. Sidewalks and crosswalks help some.
-- They move in groups and avoid each other. Social LSTM learns that from
-  crowds: each person's prediction depends on the people near them (Alahi et
-  al., 2016).
-- Their uncertainty grows fast: at 1.4 m/s (chosen, a walking pace) a
-  pedestrian can be anywhere within 1.4 × 3 = 4.2 m after 3 s.
-
-.. note::
-
-   Tempe again: a track that restarts at every new class has no history,
-   and a predictor with no history has nothing to predict from (NTSB, 2019).
-
-
 .. _l8-app-sec-drivers:
 
 Other Drivers
 -------------
 
-This section continues the slide "The Intelligent Driver Model (IDM), by
-hand" in the Other Drivers section of the :doc:`lecture <l8_lecture>`.
+This section continues the slide "The Intelligent Driver Model (IDM): B's
+acceleration" in the Other Drivers section of the :doc:`lecture
+<l8_lecture>`.
 
 
 .. _l8-app-idm:
 
-The IDM's Terms, One by One
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The IDM's Parameters, and Steady Following
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- :math:`1 - (v / v_0)^4`: on an empty road, speed up, less and less as the
-  speed :math:`v` nears the desired speed :math:`v_0`. The exponent, 4, is
-  the paper's :math:`\delta`.
-- :math:`(s^* / s)^2`: brake when the gap :math:`s` is smaller than the
-  desired gap :math:`s^*`.
-- :math:`s^* = s_0 + vT + v\,\Delta v / (2\sqrt{a_{\max} b})`: a standstill
-  distance :math:`s_0`, a time gap :math:`T`, and more room when closing in
-  fast (:math:`\Delta v` is how fast the follower closes in).
-
-The paper's Table I (Treiber et al., 2000): :math:`v_0` = 120 km/h,
+The exponent 4 in :math:`(v / v_0)^4` is the paper's :math:`\delta`. The
+paper's Table I (Treiber et al., 2000): :math:`v_0` = 120 km/h,
 :math:`T` = 1.6 s, :math:`a_{\max}` = 0.73 m/s², :math:`b` = 1.67 m/s²,
 :math:`\delta` = 4, :math:`s_0` = 2 m. We keep all but :math:`v_0`, which is
 a highway's; ours is 9 m/s (chosen).
@@ -499,27 +378,12 @@ cites:
 - Ettinger, S. et al. (2021). "Large Scale Interactive Motion Forecasting
   for Autonomous Driving: The Waymo Open Motion Dataset." ICCV, 9710 to
   9719.
-- Wilson, B. et al. (2021). "Argoverse 2: Next Generation Datasets for
-  Self-Driving Perception and Forecasting." NeurIPS Track on Datasets and
-  Benchmarks.
+- Waymo LLC. `Motion Prediction, 2021 Waymo Open Dataset Challenge
+  <https://waymo.com/open/challenges/2021/motion-prediction/>`_. Accessed
+  2026-10-24.
 - Autoware Foundation. `autoware_map_based_prediction, README
   <https://github.com/autowarefoundation/autoware_universe/blob/main/perception/autoware_map_based_prediction/README.md>`_.
   Accessed 2026-10-14.
-- Gao, J., Sun, C., Zhao, H., Shen, Y., Anguelov, D., Li, C. and Schmid, C.
-  (2020). "VectorNet: Encoding HD Maps and Agent Dynamics from Vectorized
-  Representation." CVPR. arXiv:2005.04259.
-- Chai, Y., Sapp, B., Bansal, M. and Anguelov, D. (2019). "MultiPath:
-  Multiple Probabilistic Anchor Trajectory Hypotheses for Behavior
-  Prediction." CoRL 2019, PMLR 100, 86 to 99.
-- Shi, S., Jiang, L., Dai, D. and Schiele, B. (2022). "Motion Transformer
-  with Global Intention Localization and Local Movement Refinement."
-  NeurIPS 2022. arXiv:2209.13508.
-- Alahi, A., Goel, K., Ramanathan, V., Robicquet, A., Fei-Fei, L. and
-  Savarese, S. (2016). "Social LSTM: Human Trajectory Prediction in Crowded
-  Spaces." CVPR, 961 to 971.
-- National Transportation Safety Board (2019). *Collision Between Vehicle
-  Controlled by Developmental Automated Driving System and Pedestrian,
-  Tempe, Arizona, March 18, 2018.* NTSB/HAR-19/03.
 - Treiber, M., Hennecke, A. and Helbing, D. (2000). "Congested traffic
   states in empirical observations and microscopic simulations." *Physical
   Review E*, 62(2), 1805 to 1824.

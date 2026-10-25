@@ -239,24 +239,10 @@ project solution code. One test compares the code with the slides' numbers;
 it is skipped when the slides' files are not on your computer.
 
 
-Foxglove, Next to RViz
-----------------------
+Foxglove
+--------
 
-The last slide of L8 introduces Foxglove, a second viewer for ROS 2 next to
-RViz (`Foxglove's ROS 2 guide
-<https://docs.foxglove.dev/docs/getting-started/frameworks/ros2>`__). It
-connects to a running ROS 2 system through ``foxglove_bridge``, and it opens
-ROS 2 recordings (``.mcap`` files).
-
-.. code-block:: bash
-
-   sudo apt install ros-$ROS_DISTRO-foxglove-bridge
-   ros2 launch foxglove_bridge foxglove_bridge_launch.xml
-   # in Foxglove: Open connection, Foxglove WebSocket,
-   #   then the address ws://localhost:8765
-   ros2 bag record -s mcap --all   # a recording Foxglove opens
-
-- Foxglove needs a free account. Sign up with your umd.edu address: the
-  Academic plan costs nothing.
-- **Post-work:** record 30 s of your GP stack and open the recording in
-  Foxglove.
+Foxglove, a second viewer for ROS 2 next to RViz, has its own reading:
+:doc:`Foxglove: A Second Viewer for ROS 2 </preread/foxglove>`. It covers
+installing it, connecting to a live system, a demo that shows L8's predictions
+live on CARLA (``l8_foxglove_demo``), layouts, and recording and playback.
