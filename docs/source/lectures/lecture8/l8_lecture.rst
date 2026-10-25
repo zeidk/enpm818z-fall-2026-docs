@@ -995,8 +995,8 @@ Car A, with :math:`K` = 2:
 
 .. note::
 
-   The best of :math:`K` asks: was the truth among the futures the
-   predictor offered? It does not look at the probabilities.
+   minADE and minFDE check only whether the truth was among the futures the
+   predictor offered; they ignore the probabilities.
 
 
 .. _l8-lec-score-probs:
@@ -1018,8 +1018,8 @@ whatever A does: its minFDE looks very good.
 
 .. note::
 
-   Car A's prediction is a good one: two modes, the left turn 1.88 m from
-   the truth, with 0.87 of the probability.
+   For car A, the left turn ends 1.88 m from the truth, under the 2 m miss
+   threshold, and holds 0.87 of the probability.
 
 
 .. _l8-lec-planner-two:
@@ -1197,8 +1197,7 @@ Each path's likelihood, with :math:`\sigma` = 1.0 m/s:
 .. note::
 
    A drives 2.01 m/s slower than a car going straight on would, and only
-   0.52 m/s slower than a car about to turn. The slowing down is the
-   evidence.
+   0.52 m/s slower than a car about to turn.
 
 
 .. _l8-lec-step4-bayes:

@@ -5,10 +5,21 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.14.0: Lecture 8 Follows the Revised Slides, and a Foxglove Reading (2026-10-25)
+.. dropdown:: v2.14.1: Lecture 8 Wording (2026-10-25)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lecture 8
+
+   - **Several Futures and Using the Map:** three notes now say plainly what
+     minADE and minFDE check, why car A's prediction scores well (under the
+     2 m miss threshold), and what A's speed shows. Still hidden until
+     Lecture 8 is published.
+
+.. dropdown:: v2.14.0: Lecture 8 Follows the Revised Slides, and a Foxglove Reading (2026-10-25)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lecture 8
 
