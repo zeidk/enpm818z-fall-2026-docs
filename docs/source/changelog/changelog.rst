@@ -5,10 +5,20 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.14.1: Lecture 8 Wording (2026-10-25)
+.. dropdown:: v2.14.2: GP1 Rig Tool Pitch Sign (2026-10-26)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Tools
+
+   - **make_team_configs.py:** ``--answers`` now uses CARLA's sign for the
+     camera pitch, so each rig's matrix matches the one CARLA computes from
+     the same mounts. The rig table in GP1 is unchanged.
+
+.. dropdown:: v2.14.1: Lecture 8 Wording (2026-10-25)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lecture 8
 

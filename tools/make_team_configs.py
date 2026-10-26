@@ -73,9 +73,12 @@ def build(year: int, n_teams: int):
 def extrinsic(t) -> np.ndarray:
     """The T_cam_lidar each team should arrive at. Grading reference."""
     th = np.radians(t["pitch"])
-    r_mount = np.array([[np.cos(th), 0, np.sin(th)],
+    # Camera axes in vehicle coordinates, as carla.Rotation(pitch=p).get_matrix()
+    # gives them: CARLA's pitch is positive nose-up, so a negative pitch tilts
+    # the camera's forward axis down (its z component is sin(pitch) < 0).
+    r_mount = np.array([[np.cos(th), 0, -np.sin(th)],
                         [0, 1, 0],
-                        [-np.sin(th), 0, np.cos(th)]])
+                        [np.sin(th), 0, np.cos(th)]])
     rot = P_OPTICAL @ r_mount.T
     delta = np.array(t["camera"]) - np.array(t["lidar"])
     trans = -rot @ delta.reshape(3, 1)
