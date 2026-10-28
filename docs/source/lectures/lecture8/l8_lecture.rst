@@ -511,8 +511,8 @@ Constant Turn Rate: CTRV and CTRA
   5.99 / 0.049 = 122 m, nearly straight.
 - That 0.049 rad/s is not a turn: A drives straight now. It comes from the
   0.05 m errors in the track.
-- That radius divides by the turn rate. Near 0 that is a division by
-  almost 0, so code must switch to CV there.
+- Near a turn rate of 0, that formula divides by almost 0, so code must
+  switch to CV there.
 
 .. tip::
 
@@ -644,8 +644,7 @@ Why the Error Grows, and Why More Terms Do Not Help
 .. note::
 
    With a turn ahead, every model is past 2 m before 2 s: the AV needs to
-   know **what the road user can do**. The next sections add the maneuvers
-   and the map.
+   know **what the road user can do**.
 
 
 .. _l8-lec-handson-physics:
@@ -884,7 +883,7 @@ How Often the Region Holds the Truth
 A 95% region must hold the truth 95% of the time. On our test set, at 1, 3
 and 5 s:
 
-- no turn: 81.5, 85.6 and 82.6%. Two groups hide in that average:
+- no turn: 81.5, 85.6 and 82.6%. That average mixes two groups:
   straight routes, 100% (too wide); turning routes before the turn, 59 to
   68% (too narrow);
 - a turn: 46.5, 20.4 and 7.2%: far too narrow.
@@ -1115,8 +1114,7 @@ lane through the junction), and the motion follows it (Lefèvre et al.,
 The Map's Lanes Are the Candidate Paths
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- A car on a road follows a lane. Where the lane splits, each branch is a
-  possible future path: one mode.
+- Where a lane splits, each branch is a possible future path: one mode.
 - Town01's map lists, for junction 54, every way through it: six, two from
   each arm. Car A's arm has two: **straight on** (23.12 m inside the
   junction) and **left** (23.07 m, radius 14.7 m).
@@ -1334,7 +1332,7 @@ With a turn ahead (1095 predictions):
 - Still, the most likely mode misses 50.5% of the time (mean FDE 4.98 m):
   the right lane, at the wrong speed.
 
-With no turn, the most likely mode is no better than CV: FDE 3.91 against
+With no turn, the most likely mode does worse than CV: FDE 3.91 against
 3.64 m, and it misses more (49.5 against 35.9%). In 1 of 10 of these
 predictions, its most likely mode is the wrong lane.
 
@@ -1507,7 +1505,7 @@ Three Well-Known Designs
        anchor, regresses offsets from anchor waypoints along with
        uncertainties"
      - anchors: typical trajectories, clustered from training tracks. Each
-       plays a candidate lane's part: a probability, a shift, a
+       works like a candidate lane: a probability, a shift, a
        :math:`\sigma`
    * - MTR (Shi et al., 2022)
      - "a small set of learnable motion query pairs. Each motion query pair
@@ -1564,9 +1562,9 @@ How Learned Predictors Are Trained and Scored
 
 .. note::
 
-   **Why CV still matters:** it is a common baseline for learned models,
-   and a simple prediction to fall back on. On our test set with no turn,
-   CV's mean error stays under 2 m for 3 s.
+   CV is a common baseline for learned models, and a simple prediction to
+   fall back on. On our test set with no turn, its mean error stays under
+   2 m for 3 s.
 
 
 .. _l8-lec-learned-peds:
@@ -1586,8 +1584,8 @@ Pedestrians and Cyclists
 
 .. note::
 
-   Tempe again: a track that restarts at every new class has no history,
-   and a predictor with no history has nothing to predict from (NTSB, 2019).
+   Tempe again: a track that restarts at every new class leaves the
+   predictor no history to predict from (NTSB, 2019).
 
 
 .. _l8-lec-drivers:

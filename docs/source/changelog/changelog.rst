@@ -5,10 +5,21 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.15.0: Lecture 8 Audit, New Test Set and New Figures (2026-10-28)
+.. dropdown:: v2.15.1: Lecture 8 Wording (2026-10-28)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lecture 8
+
+   - **Lecture and Going Further pages:** shorter wording that matches the
+     revised slides, and one correction: with no turn ahead, the most likely
+     mode does worse than CV (FDE 3.91 against 3.64 m). Still hidden until
+     Lecture 8 is published.
+
+.. dropdown:: v2.15.0: Lecture 8 Audit, New Test Set and New Figures (2026-10-28)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lecture 8
 

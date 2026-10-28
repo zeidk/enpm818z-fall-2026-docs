@@ -338,8 +338,8 @@ Autoware's ``map_based_prediction`` package does what we did, with lanelets
    and Right Lane Change based on the object history and the reference path
    obtained in the first step".
 
-A lane change is detected from the distance to each lane boundary and the
-time to reach it (Autoware Foundation, map-based prediction).
+Autoware detects a lane change from the distance to each lane boundary and
+the time to reach it (Autoware Foundation, map-based prediction).
 
 
 .. _l8-app-sec-drivers:
