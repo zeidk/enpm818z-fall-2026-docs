@@ -5,7 +5,7 @@ References
 These are the sources the L8 slides cite, grouped by the lecture's sections,
 in the order the slides first cite each source. A source cited in several
 sections is listed once, where the slides first cite it. The sections The
-Scene, Scoring, Several Futures and Using the Map cite no new source. One
+Scene, Scoring and Several Futures cite no new source. One
 source is cited only in the appendix (:doc:`l8_appendix`); it has its own
 group at the end.
 
@@ -13,8 +13,8 @@ group at the end.
    :class-container: sd-border-secondary
    :open:
 
-   How often the predictor runs, the prediction windows of the public
-   datasets, and the three kinds of motion model.
+   How often the predictor runs, the Tempe crash, the prediction windows of
+   the public datasets, and the three kinds of motion model.
 
    .. grid:: 1 1 2 2
       :gutter: 2
@@ -42,6 +42,24 @@ group at the end.
 
          ``objectsCallback`` runs on each ``TrackedObjects`` message and
          publishes the predicted objects.
+
+      .. grid-item-card:: The Tempe crash
+         :link: https://www.ntsb.gov/investigations/AccidentReports/Reports/HAR1903.pdf
+         :class-card: sd-border-secondary
+
+         **National Transportation Safety Board (2019)**
+
+         *Collision Between Vehicle Controlled by Developmental Automated
+         Driving System and Pedestrian, Tempe, Arizona, March 18, 2018.*
+         Report NTSB/HAR-19/03, Investigation HWY18MH010, adopted 19
+         November 2019. Washington, DC.
+
+         "The ADS detected the pedestrian 5.6 seconds before impact", but
+         it never "predicted her path": when perception changed an object's
+         class, the system "no longer considered the tracking history of
+         that object". Also cited in Learned Predictors, for pedestrians
+         and cyclists: a predictor with no history has nothing to predict
+         from.
 
       .. grid-item-card:: Argoverse
          :class-card: sd-border-secondary
@@ -125,11 +143,34 @@ group at the end.
          closed form.
 
 
+.. dropdown:: Using the Map
+   :class-container: sd-border-secondary
+
+   Whether the map-aware predictor's probabilities come true as often as
+   they say.
+
+   .. grid:: 1 1 2 2
+      :gutter: 2
+
+      .. grid-item-card:: Calibration
+         :link: https://arxiv.org/abs/1706.04599
+         :class-card: sd-border-secondary
+
+         **Guo, C., Pleiss, G., Sun, Y. and Weinberger, K. Q. (2017)**
+
+         "On Calibration of Modern Neural Networks." *Proceedings of the
+         34th International Conference on Machine Learning*, PMLR, volume
+         70, Sydney, Australia. arXiv:1706.04599.
+
+         A predictor is calibrated when, of all the futures it gives a
+         probability :math:`p`, a fraction :math:`p` comes true.
+
+
 .. dropdown:: Learned Predictors
    :class-container: sd-border-secondary
 
    Three well-known designs, what Waymo and Tesla say they use, and
-   pedestrians and cyclists (with the Tempe crash).
+   pedestrians and cyclists.
 
    .. grid:: 1 1 2 2
       :gutter: 2
@@ -183,8 +224,9 @@ group at the end.
          *Demonstrably Safe AI for Autonomous Driving.* Waymo blog, 9
          December 2025. Accessed 24 October 2026.
 
-         A "World Decoder" uses the sensor inputs "to predict other road
-         users behaviors"; the car runs smaller models "optimized for
+         A "World Decoder" reads the output of two encoders, one of them
+         for the fused sensor data, "to predict other road users
+         behaviors"; the car runs smaller models "optimized for
          real-time onboard deployment".
 
       .. grid-item-card:: Tesla AI Day 2022
@@ -223,29 +265,12 @@ group at the end.
 
          Each person's prediction depends on the people near them.
 
-      .. grid-item-card:: The Tempe crash
-         :link: https://www.ntsb.gov/investigations/AccidentReports/Reports/HAR1903.pdf
-         :class-card: sd-border-secondary
-
-         **National Transportation Safety Board (2019)**
-
-         *Collision Between Vehicle Controlled by Developmental Automated
-         Driving System and Pedestrian, Tempe, Arizona, March 18, 2018.*
-         Report NTSB/HAR-19/03, Investigation HWY18MH010, adopted 19
-         November 2019. Washington, DC.
-
-         "The ADS detected the pedestrian 5.6 seconds before impact", but
-         it never "predicted her path": when perception changed an object's
-         class, the system "no longer considered the tracking history of
-         that object". Cited for pedestrians and cyclists: a predictor with
-         no history has nothing to predict from.
-
 
 .. dropdown:: Other Drivers
    :class-container: sd-border-secondary
 
-   Intent, a driver following another car, gap acceptance, and how the AV's
-   actions change what others do.
+   Intent, a driver following another car, gap acceptance,
+   post-encroachment time, and how the AV's actions change what others do.
 
    .. grid:: 1 1 2 2
       :gutter: 2
@@ -290,6 +315,20 @@ group at the end.
 
          The base critical headway for a left turn from the major street of
          a two-lane road: 4.1 s.
+
+      .. grid-item-card:: Post-encroachment time (PET)
+         :link: https://www.fhwa.dot.gov/publications/research/safety/08051/02.cfm
+         :class-card: sd-border-secondary
+
+         **Gettman, D., Pu, L., Sayed, T. and Shelby, S. (2008)**
+
+         *Surrogate Safety Assessment Model and Validation: Final Report.*
+         Report FHWA-HRT-08-051, Federal Highway Administration, June 2008.
+         Accessed 28 October 2026.
+
+         "Post-encroachment time is the time between when the first vehicle
+         last occupied a position and the time when the second vehicle
+         subsequently arrived to the same position".
 
       .. grid-item-card:: The AV's actions affect other drivers
          :class-card: sd-border-secondary

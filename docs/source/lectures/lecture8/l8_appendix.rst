@@ -42,7 +42,7 @@ Physics Models
 
 This section continues the slides "Step 1: read car A's motion from its
 track", "Constant turn rate: CTRV and CTRA" and "Error against horizon, on
-2417 predictions" in the Physics Models section of the :doc:`lecture
+2476 predictions" in the Physics Models section of the :doc:`lecture
 <l8_lecture>`.
 
 
@@ -139,13 +139,13 @@ Everything is in ``l8sim.test_set()``, and every number is chosen.
 2. Each drive draws a braking between 0.8 and 2.0 m/s² and a sideways
    acceleration in the turn between 1.5 and 2.5 m/s². After the turn the car
    speeds up at 1.0 m/s². The speed wanders by 0.3 m/s² (a slow random
-   change).
+   change), and the driver steers it back toward the cruising speed.
 3. Tracks: a position every 0.1 s, with a 0.05 m error, as in our scene.
-4. A prediction every 0.5 s, while the car is between 50 m before the
-   junction and its exit, with 2 s of history and 5 s of future: 2417
-   predictions.
+4. From each drive, we scored one prediction every 0.5 s, while the car is
+   between 50 m before the junction and its exit, with 2 s of history and
+   5 s of future: 2476 predictions.
 5. "A turn" means that the true heading changes by more than 20° in the next
-   5 s: 1088 of the predictions. The other 1329 are "no turn".
+   5 s: 1095 of the predictions. The other 1381 are "no turn".
 
 
 .. _l8-app-sec-scoring:
@@ -173,10 +173,14 @@ is:
    uncertain the fit's position and velocity are (variance of the position,
    their covariance, variance of the velocity). They come from the 0.05 m
    track errors; our code uses a straight-line fit's formula for them. For
-   car A: 0.00057 m², 0.00055 m²/s and 0.00074 m²/s².
+   car A: 0.00057 m², 0.00055 m²/s and 0.00074 m²/s². The prediction takes
+   its velocity from the constant-acceleration fit, whose velocity error is
+   larger (0.103 against 0.027 m/s), so the region is too small at the
+   shortest horizons.
 2. :math:`q\,h^3/3` is a speed that wanders at random, with
-   :math:`q` = 0.5 × 0.5 = 0.25 (chosen). It is the same term as L3's
-   process noise for a constant-velocity model.
+   :math:`q` = 0.5 × 0.5 = 0.25 m²/s³ (chosen). It is a close relative of
+   L3's process noise: there the acceleration was constant over each 0.1 s
+   step; here it changes all the time, which gives :math:`q\,h^3/3`.
 3. At :math:`h` = 5 s: the fit part is 0.00057 + 2 × 5 × 0.00055 + 25 ×
    0.00074 = 0.0245 m²; the wander is 0.25 × 125 / 3 = 10.42 m²; so
    :math:`\sigma = \sqrt{10.44}` = 3.23 m.
@@ -215,22 +219,25 @@ Waymo's Miss Rate and mAP
    "A single distance threshold to determine IsMatch is insufficient: we
    want a stricter criteria for slower moving and closer-in-time
    predictions, and also different criteria for lateral deviation (e.g.
-   wrong lane) versus longitudinal (e.g. wrong speed profile)." (Ettinger et
-   al., 2021)
+   wrong lane) versus longitudinal (e.g. wrong speed profile)" (Ettinger et
+   al., 2021).
 
-- A mode matches when its error **across** the lane is under
+- A mode (one of several predicted futures, defined in Several Futures in
+  the :doc:`lecture <l8_lecture>`) matches when its error **across** the
+  lane is under
   :math:`\lambda_{lat}` and its error **along** the lane is under
   :math:`\lambda_{lon}`. At 3, 5 and 8 s: :math:`\lambda_{lat}` = 1, 1.8
   and 3 m; :math:`\lambda_{lon}` = 2, 3.6 and 6 m.
 - Both are multiplied by a scale from the road user's speed at the start:
   0.5 below 1.4 m/s, 1 above 11 m/s, a straight line between (Waymo, 2021
   challenge page); "so that we do not over-penalize faster agents"
-  (Ettinger et al., 2021). At our 8 m/s: 0.5 + 0.5 × (8 − 1.4) / (11 − 1.4)
-  = 0.84, so at 5 s :math:`\lambda_{lat}` = 1.8 × 0.84 = 1.51 m.
+  (Ettinger et al., 2021). Car A at 5.99 m/s: 0.5 + 0.5 × (5.99 − 1.4) /
+  (11 − 1.4) = 0.74, so at 5 s :math:`\lambda_{lat}` = 1.8 × 0.74 =
+  1.33 m.
 - mAP (mean average precision): the modes are ranked by their confidence,
   and the miss rate's match decides the true and false positives. "The
   final mAP metric averages over eight different ground truth trajectory
-  shapes."
+  shapes".
 
 
 .. _l8-app-sec-map:
@@ -278,12 +285,12 @@ what the mode expects, and :math:`\sigma` is its spread (chosen).
      - 0.995
    * - prior × all three
      -
-     - 0.4222
-     - 0.0640
+     - 0.4221
+     - 0.0639
 
-1. Left: 0.5 × 0.872 × 0.973 × 0.995 = 0.4222. Straight on: 0.5 × 0.132 ×
-   0.973 × 0.995 = 0.0640.
-2. P(left) = 0.4222 / (0.4222 + 0.0640) = 0.868; P(straight on) = 0.132.
+1. Left: 0.5 × 0.872 × 0.973 × 0.995 = 0.4221. Straight on: 0.5 × 0.132 ×
+   0.973 × 0.995 = 0.0639.
+2. P(left) = 0.4221 / (0.4221 + 0.0639) = 0.869; P(straight on) = 0.131.
 
 Multiplying the three treats them as independent: a simplification.
 
@@ -303,9 +310,11 @@ P(left) as Car A Approaches
    **2:** the gray dotted line, now.
 
 **1** A starts braking, :math:`t` = −2 s. **2** Now, :math:`t` = 0.
-P(left) at :math:`t` = −2, −1, 0 and +1 s: 0.50, 0.60, 0.87 and 0.99. At
-−2 s A still drives 8 m/s, the street's speed: no evidence yet. Each second
-of braking adds some.
+P(left) at :math:`t` = −2, −1, 0 and +1 s: 0.50, 0.60, 0.87 and 0.99. More
+than 17.3 m from the junction, a driver about to turn could still drive
+8 m/s: :math:`\sqrt{5.42^2 + 2 \times 1.0 \times 17.3}` = 8.0. So both
+paths expect 8 m/s, and P(left) stays 0.5. Closer in, each second of braking
+adds evidence.
 
 
 .. _l8-app-autoware:
@@ -320,14 +329,14 @@ Autoware's ``map_based_prediction`` package does what we did, with lanelets
 
    "``map_based_prediction`` is a module to predict the future paths (and
    their probabilities) of other vehicles and pedestrians according to the
-   shape of the map and the surrounding environment."
+   shape of the map and the surrounding environment".
 
 1. "Get reference path: Create a reference path for the object from the
-   associated lanelet."
+   associated lanelet".
 2. "Predict object maneuver: Generate predicted paths for the object.
    Assign probability to each maneuver of Lane Follow, Left Lane Change,
    and Right Lane Change based on the object history and the reference path
-   obtained in the first step."
+   obtained in the first step".
 
 A lane change is detected from the distance to each lane boundary and the
 time to reach it (Autoware Foundation, map-based prediction).
@@ -354,7 +363,8 @@ paper's Table I (Treiber et al., 2000): :math:`v_0` = 120 km/h,
 :math:`\delta` = 4, :math:`s_0` = 2 m. We keep all but :math:`v_0`, which is
 a highway's; ours is 9 m/s (chosen).
 
-**Steady following** (:math:`\Delta v` = 0, no acceleration):
+**Steady following:** set :math:`a` = 0 and :math:`\Delta v` = 0 in the
+IDM, so :math:`1 - (v/v_0)^4 = (s^*/s)^2` and
 :math:`s = s^* / \sqrt{1 - (v / v_0)^4}`. At :math:`v` = 8 m/s:
 
 1. :math:`s^*` = 2 + 8 × 1.6 = 14.8 m.

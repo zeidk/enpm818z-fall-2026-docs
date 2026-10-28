@@ -19,23 +19,25 @@ A's next 5 s:
 
 - **How far ahead.** At 8 m/s, the AV needs 3.17 s to react and stop, so
   we predict 5 s ahead (chosen).
-- **Physics models.** Constant velocity (CV), constant turn rate (CTRV) and
-  constant turn rate and acceleration (CTRA). From :math:`t` = 0, all three
+- **Physics models.** Constant velocity (CV), constant turn rate and
+  velocity (CTRV) and constant turn rate and acceleration (CTRA). From :math:`t` = 0, all three
   miss A's turn: CV ends 12.35 m off.
 - **Scoring.** ADE, FDE and the miss rate (FDE above 2 m), on car A and on a
-  test set of 2417 predictions. CV's 95% region, and a check of whether it
-  is honest.
+  test set of 2476 predictions. CV's 95% region, and how often it really
+  holds the truth.
 - **Several futures.** Two modes for car A, left and straight on, scored
   with minADE and minFDE.
 - **Using the map.** The map's lanes are the candidate paths, and Bayes'
   rule gives each one a probability from A's speed: 0.87 for the left
-  turn, which ends 1.88 m from the truth.
+  turn, which ends 1.88 m from the truth. Calibration checks how often such
+  probabilities come true on the test set.
 - **Learned predictors.** What they read and write, three well-known
   designs (VectorNet, MultiPath, MTR), what Waymo and Tesla say they use,
   how they are trained and scored, and pedestrians and cyclists.
 - **Other drivers.** Car B follows car A (the Intelligent Driver Model,
   IDM), and car A waits for a gap in the AV's lane: the AV's own plan
-  changes what A does.
+  changes what A does. Post-encroachment time (PET) says how close the two
+  runs came.
 
 
 Learning Objectives
@@ -46,7 +48,7 @@ After this lecture, you can:
 - Say what a **planner** needs from **prediction**, and how far ahead it
   must look (the **horizon**).
 - Predict a road user's motion by hand with **constant velocity (CV)**,
-  **constant turn rate (CTRV)** and **constant turn rate and acceleration
+  **constant turn rate and velocity (CTRV)** and **constant turn rate and acceleration
   (CTRA)**, and say why their error grows with the horizon.
 - Score a prediction with **ADE**, **FDE** and the **miss rate**, and
   several predictions with **minADE** and **minFDE**; check whether an
@@ -92,7 +94,7 @@ Next Steps
 - **Next class, L9: Motion Planning.** Paths for the AV that keep clear of
   every likely future of every road user.
 - **Before then:** run the four hands-on parts on the :doc:`Code page
-  <l8_code>`, and read, in :doc:`Going Further <l8_appendix>`, the sections
-  on CTRV and on CV's 95% region.
+  <l8_code>`, and read :doc:`Going Further <l8_appendix>` (four parts,
+  listed at the top of that page).
 - **Post-work:** read :doc:`Foxglove </preread/foxglove>`, then record 30 s
   of your GP stack and open the recording in Foxglove.

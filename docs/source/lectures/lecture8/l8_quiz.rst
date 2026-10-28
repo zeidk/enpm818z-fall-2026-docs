@@ -15,10 +15,11 @@ Quiz
 
 This quiz covers Lecture 8: what a planner needs from prediction and how far
 ahead it must look, the physics models (CV, CTRV, CTRA) and why their error
-grows, ADE, FDE and the miss rate, CV's 95% region and its honesty check,
-several futures with minADE and minFDE, the map's lanes as candidate paths
-with Bayes' rule, intent, the Intelligent Driver Model (IDM), and gap
-acceptance. Every question can be answered from the lecture notes,
+grows, ADE, FDE and the miss rate, CV's 95% region and how often it holds
+the truth, several futures with minADE and minFDE, the map's lanes as
+candidate paths with Bayes' rule and the calibration of their
+probabilities, intent, the Intelligent Driver Model (IDM), gap acceptance,
+and post-encroachment time (PET). Every question can be answered from the lecture notes,
 :doc:`l8_lecture`. Nothing on this page needs
 :doc:`Going Further <l8_appendix>`.
 
@@ -43,7 +44,7 @@ acceptance. Every question can be answered from the lecture notes,
 ----
 
 
-Multiple Choice (Questions 1 to 14)
+Multiple Choice (Questions 1 to 15)
 ===================================
 
 .. admonition:: Question 1
@@ -159,8 +160,8 @@ Multiple Choice (Questions 1 to 14)
 
    The truth is 0 rad/s: A drives straight at :math:`t` = 0. The 14.7 m in
    **A** is the radius of the lane's left turn, which A has not started.
-   **D** confuses this case with a turn rate near 0, where CTRV's formula
-   divides by almost 0 and code switches to CV; 0.049 rad/s gives a large
+   **D** confuses this case with a turn rate near 0, where the radius,
+   speed / turn rate, divides by almost 0 and code switches to CV; 0.049 rad/s gives a large
    radius, not a division by zero. See Physics Models in
    :doc:`l8_lecture`.
 
@@ -250,27 +251,34 @@ Multiple Choice (Questions 1 to 14)
 .. admonition:: Question 8
    :class: hint
 
-   On the test set with no turn ahead, CV's 95% region held the truth 81.1,
-   85.2 and 81.1% of the time at 1, 3 and 5 s. What does that say?
+   On the test set with no turn ahead, CV's 95% region held the truth 81.5,
+   85.6 and 82.6% of the time at 1, 3 and 5 s. The lecture splits these
+   predictions into cars on straight routes and cars on turning routes
+   (before the turn). What does it find?
 
-   A. The region is too large: CV is not sure enough.
+   A. Both groups hold the truth about 83% of the time: the region is a
+      little too narrow everywhere.
 
-   B. The region is honest: 81 to 85% is close enough to 95%.
+   B. Straight routes: 100% (the region is too wide). Turning routes
+      before the turn: 59 to 68% (too narrow).
 
-   C. The region is a little too small: CV is a little too sure.
+   C. Straight routes: 59 to 68% (too narrow). Turning routes before the
+      turn: 100% (too wide).
 
-   D. Nothing: the region can only be checked on turns.
+   D. Nothing: chance alone moves each number by about 20 points.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C**.
+   **B**.
 
-   A 95% region must hold the truth 95% of the time. Holding it less often
-   means the region is too small for the real errors: the predictor claims
-   more certainty than it has. With a turn ahead it is far too sure: 42.8,
-   15.3 and 4.8%. The region only covers a slightly wrong speed and knows
-   nothing about a turn. See Scoring in :doc:`l8_lecture`.
+   A 95% region must hold the truth 95% of the time. The average of 82 to
+   86% hides two groups. On straight routes the region holds the truth
+   every time: it is too wide. On turning routes, cars brake before the
+   turn or speed up after it, and CV's region has no term for a speed
+   change: 59 to 68%, too narrow. With a turn ahead it is far too narrow:
+   46.5, 20.4 and 7.2%. Chance alone moves each number by about 2 points, not
+   20 (**D**). See Scoring in :doc:`l8_lecture`.
 
 
 .. admonition:: Question 9
@@ -278,9 +286,9 @@ Multiple Choice (Questions 1 to 14)
 
    Why do predictors give several futures instead of one?
 
-   A. A single answer trained for the smallest mean squared error tends to
-      the average of the futures. Between a left turn and straight on, that
-      average leads where no lane goes.
+   A. If half the drivers turn and half go straight on, a single answer
+      trained for the smallest mean squared error learns to give the
+      average of the futures, which no driver in A's lane follows.
 
    B. Several futures always have a smaller FDE than one.
 
@@ -294,10 +302,9 @@ Multiple Choice (Questions 1 to 14)
    **A**.
 
    For car A, the point-by-point average of the two futures ends at 5 s
-   7.21 m from each, toward the junction's corner. No driver in A's lane
-   ends up there, and
-   its FDE is 5.92 m, a miss, while the left-turn future alone is off by
-   1.88 m. **B** is not a rule: a mode can be far off (straight on ends
+   7.21 m from each, inside the AV's own lane, facing against its traffic.
+   No driver in A's lane ends up there, and its FDE is 5.92 m, a miss,
+   while the left-turn future alone is off by 1.88 m. **B** is not a rule: a mode can be far off (straight on ends
    13.06 m away). See Several Futures in :doc:`l8_lecture`.
 
 
@@ -385,8 +392,9 @@ Multiple Choice (Questions 1 to 14)
    1. :math:`(s^*/s)^2` = (20.64 / 15.0)² = 1.376² = 1.893.
    2. :math:`a` = 0.73 × (0.447 − 1.893) = 0.73 × (−1.446) = −1.06 m/s².
 
-   B brakes harder than in the lecture (−0.30 m/s², **A**), because the gap
-   is smaller than the gap it wants. **B** is the free-road term alone,
+   B brakes harder than in the lecture (−0.30 m/s², **A**): the gap term,
+   1.893, is now much larger than the free-road term, 0.447. **B** is the
+   free-road term alone,
    0.73 × 0.447. **D** forgets to multiply by :math:`a_{\max}`. See Other
    Drivers in :doc:`l8_lecture`.
 
@@ -448,10 +456,45 @@ Multiple Choice (Questions 1 to 14)
    at :math:`t` = 3.4 s. See Several Futures in :doc:`l8_lecture`.
 
 
-True or False (Questions 15 to 18)
+.. admonition:: Question 15
+   :class: hint
+
+   In run 1, car A's rear bumper leaves the red cross at 4.09 s, and the
+   AV's front bumper reaches it at 5.63 s: a post-encroachment time (PET) of
+   1.54 s. Suppose the AV's front bumper reached the cross at 4.60 s instead,
+   with car A's motion unchanged (chosen for this question). What is the
+   PET, and what does it say?
+
+   A. 0.51 s: a narrower margin than run 1's 1.54 s.
+
+   B. 1.54 s: the same as run 1, because car A's motion is the same.
+
+   C. 8.69 s: a wider margin than run 1's.
+
+   D. 0.51 s: a wider margin than run 1's, because a smaller PET is safer.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **A**.
+
+   PET is the time between when the first vehicle last occupied a position
+   and when the second one arrived there.
+
+   1. A's rear bumper leaves the cross at 4.09 s.
+   2. The AV's front bumper arrives at 4.60 s.
+   3. PET = 4.60 − 4.09 = 0.51 s.
+
+   A larger PET is a wider margin, so 0.51 s is a narrower one than 1.54 s
+   (**D** has the rule backward). **B** ignores the AV's arrival time, and
+   **C** adds the two times instead of subtracting them. See Other Drivers
+   in :doc:`l8_lecture`.
+
+
+True or False (Questions 16 to 20)
 ==================================
 
-.. admonition:: Question 15
+.. admonition:: Question 16
    :class: hint
 
    **True or false:** with no turn ahead, CTRA uses more terms than CV, so
@@ -462,14 +505,15 @@ True or False (Questions 15 to 18)
 
    **False.**
 
-   With no turn, CTRA's mean error at 5 s is 16.13 m and CV's is 4.01 m.
-   Each extra term (CTRV's turn rate, CTRA's braking) is carried 5 s ahead,
-   and with no turn it often comes from a turn that is ending or braking
-   that will stop. See "Why the error grows, and
-   why more terms do not help" in :doc:`l8_lecture`.
+   With no turn, CTRA's mean error at 5 s is 15.22 m and CV's is 3.64 m.
+   Each extra term (CTRV's turn rate, CTRA's speed change) is carried 5 s
+   ahead, and with no turn it often comes from a turn that is ending or a
+   speed change that will stop (braking before a turn, speeding up after
+   it). See "Why the error grows, and why more terms do not help" in
+   :doc:`l8_lecture`.
 
 
-.. admonition:: Question 16
+.. admonition:: Question 17
    :class: hint
 
    **True or false:** a predictor that gives six modes spread over every
@@ -488,7 +532,7 @@ True or False (Questions 15 to 18)
    :doc:`l8_lecture`.
 
 
-.. admonition:: Question 17
+.. admonition:: Question 18
    :class: hint
 
    **True or false:** at :math:`t` = 0, car A's offset from the lane's
@@ -500,14 +544,14 @@ True or False (Questions 15 to 18)
 
    **True.**
 
-   Before the junction, the two lanes are one: A is 0.07 m from the center
-   and 1.86° off the heading of both, so the heading and offset likelihoods
-   are the same for both (0.973 and 0.995). Only A's speed tells them apart
+   Before the junction, the two lanes share one line: A is 0.07 m from the
+   center and 1.86° off the heading of both, so the heading and offset
+   likelihoods are the same for both (0.973 and 0.995). Only A's speed tells them apart
    so far: 5.99 m/s, against 6.51 m/s expected for the left turn and
    8.00 m/s for straight on. See Using the Map in :doc:`l8_lecture`.
 
 
-.. admonition:: Question 18
+.. admonition:: Question 19
    :class: hint
 
    **True or false:** in run 2, car A waits because its track up to
@@ -524,10 +568,32 @@ True or False (Questions 15 to 18)
    an input to A's prediction. See Other Drivers in :doc:`l8_lecture`.
 
 
-Short Answer (Questions 19 to 20)
+.. admonition:: Question 20
+   :class: hint
+
+   **True or false:** on the lecture's test set, the map-aware predictor's
+   modes given a probability of 0.7 to 0.9 (0.810 on average) came true
+   0.729 of the time, so in that group the predictor is calibrated, within
+   what chance alone explains.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **True.**
+
+   A predictor is calibrated when, of all the futures it gives a
+   probability :math:`p`, a fraction :math:`p` comes true. The gap is
+   0.810 − 0.729 = 0.081. Modes from one drive are not independent, so
+   chance is counted by redrawing whole drives at random: it moves the 0.729
+   by about 0.06. The gap is only 1.3 times that, so the test set cannot
+   show that the predictor is too sure in this group, the one that holds car
+   A's 0.87. See Using the Map in :doc:`l8_lecture`.
+
+
+Short Answer (Questions 21 to 22)
 =================================
 
-.. admonition:: Question 19
+.. admonition:: Question 21
    :class: hint
 
    In the Tempe crash of March 2018, the ADS detected the pedestrian
@@ -539,12 +605,13 @@ Short Answer (Questions 19 to 20)
    A prediction is built from the track's history. The NTSB report says
    that when perception changed the class of an object, the system "no
    longer considered the tracking history of that object when generating a
-   new trajectory". With the history thrown away at every new class, the
-   system had no path for her across the road. It saw an emergency only when she was in the vehicle's path, 1.2 s
+   new trajectory". The history was thrown away every time her class (the
+   object type) changed, so the system had no path for her across the road.
+   It saw an emergency only when she was in the vehicle's path, 1.2 s
    before impact. See the Introduction in :doc:`l8_lecture`.
 
 
-.. admonition:: Question 20
+.. admonition:: Question 22
    :class: hint
 
    Explain why predicting car B needs car A's prediction, and why

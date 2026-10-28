@@ -118,8 +118,8 @@ What Each Part Shows
 Part 1: The Scene (``--part scene``)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The three road users over time, and the tracked positions the AV sees. The
-title gives the time and each road user's speed.
+The three road users over time. The dots are the tracked positions the AV
+sees. The title gives the time and says what the dots are.
 
 **What to look for:** drag the now slider from −2 to 3 s. At which time can
 you first tell, by eye, that car A is slowing down? That it turns?
@@ -175,7 +175,8 @@ for run 2.
 
 **What to look for:**
 
-1. Run 1: compare B's speed from CV and from the IDM. When do they part?
+1. Run 1: compare B's speed from CV and from the IDM. At what time do the
+   two speed curves start to differ?
 2. Tick **AV 24 m closer** (run 2). Read A's gap in the title. Which of the
    two "most likely mode" lines matches the truth?
 3. In ``l8sim.py``, set ``GAP = 2.5``. ``GAP`` is the critical headway, 4.1 s

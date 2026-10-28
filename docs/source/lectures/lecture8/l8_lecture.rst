@@ -56,9 +56,9 @@ L5's Tracker Predicts One Step
 L5's tracker keeps, for each road user, a state
 :math:`[\,p_x,\ p_y,\ v_x,\ v_y\,]`: its position east and north
 (:math:`p_x`, :math:`p_y`, in m) and its velocity east and north
-(:math:`v_x`, :math:`v_y`, in m/s). Before each new set of detections,
-:math:`\Delta t` = 0.1 s later, it predicts the state with constant
-velocity:
+(:math:`v_x`, :math:`v_y`, in m/s). New detections come every
+:math:`\Delta t` = 0.1 s. Before each set arrives, the tracker predicts the
+state with constant velocity:
 
 .. math::
 
@@ -82,18 +82,23 @@ velocity:
 The Tempe Crash, March 2018
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+From the NTSB report on the Uber test vehicle (NTSB, 2019). ADS means its
+automated driving system.
+
 .. note::
 
    "The ADS detected the pedestrian 5.6 seconds before impact. Although the
    ADS continued to track the pedestrian until the crash, it never
-   accurately classified her as a pedestrian or **predicted her path**".
+   accurately classified her as a pedestrian or **predicted her path**"
+   (bold ours).
 
    "If the perception process changed the classification of a detected
    object, it no longer considered the tracking history of that object when
    generating a new trajectory".
 
-- A prediction is built from the track's history. With the history thrown
-  away at every new class, the system had no path for her across the road.
+- A prediction is built from the track's history. The history was thrown
+  away every time her class (the object type) changed, so the system had no
+  path for her across the road.
 - The system saw an emergency only when she was in the vehicle's path:
   1.2 s before impact (L5).
 
@@ -117,7 +122,9 @@ own path and speed for the next few seconds, and chooses again as it drives.
 1. **Where:** a position at each future time. The planner
    checks its own path against each of them, time by time.
 2. **How sure:** an uncertainty that grows with the horizon. The planner
-   keeps more room where it is larger.
+   keeps more room where the uncertainty is larger. A road user hidden for a
+   moment (behind a truck, say) has gaps in its track, so its prediction is
+   less sure.
 3. **Which future:** a car at a junction may go straight on or turn. Each
    option is one predicted future with its own probability.
 
@@ -131,17 +138,25 @@ The prediction must reach at least as far ahead as the AV needs to react and
 stop. Our AV drives at 8 m/s (GP4's default ``target_speed``). We chose the
 reaction time and the braking for this example.
 
+.. figure:: /_static/images/L8/stopping_side.png
+   :alt: A side view of the road, to scale, with a distance axis from 0 to 16 meters: distance driven since the AV sees the problem. A faded gray car stands with its front bumper at 0. A black car, the same AV, stands with its front bumper at about 14.7 meters. A darker gray band runs from 0 to 4 meters and a lighter gray band from 4 to 14.7 meters, with dashed vertical lines at 0, 4 and 14.7. Above the road, a double arrow from 0 to 4 marked tag 1 and a double arrow from 4 to 14.7 marked tag 2. Below the road, a double arrow from 0 to 14.7 marked tag 3.
+   :width: 95%
+   :align: center
+
+   The AV from the side, drawn to scale. Faded: the AV when it sees a
+   problem; black: where it stands still. **1:** reacting, 4.0 m. **2:**
+   braking, 10.67 m. **3:** in all, 14.67 m.
+
 1. Reacting (sensing, deciding) takes 0.5 s: 8 × 0.5 = 4.0 m. The AV
    drives 4.0 m before its brakes even start.
-2. Braking at 3 m/s² takes 8 / 3 = 2.67 s: speed × speed / (2 × braking) =
-   8 × 8 / (2 × 3) = 10.67 m. The AV drives 10.67 m more while it slows to
-   a stop.
+2. Braking at 3 m/s² takes 8 / 3 = 2.67 s. While braking, the speed falls
+   evenly from 8 to 0 m/s, so the average speed is 8 / 2 = 4 m/s, and the
+   AV drives 4 × 2.67 = 10.67 m more before it stops.
 3. In all: 0.5 + 2.67 = 3.17 s and 4.0 + 10.67 = 14.67 m. From the moment
    the AV sees a problem, it needs 3.17 s and 14.67 m to stand still.
 
 So the prediction must reach at least 3.17 s ahead. Today we predict 5 s
-ahead (chosen): that covers the 3.17 s, with room to slow down gently
-instead of braking hard.
+ahead (chosen), with room to slow down gently instead of braking hard.
 
 
 .. _l8-lec-datasets:
@@ -152,6 +167,18 @@ Prediction Windows in Public Datasets
 Public datasets of recorded traffic, used to train and score predictors, fix
 two windows: **observed**, how much past track the predictor reads, and
 **predicted**, how far ahead it must predict.
+
+.. figure:: /_static/images/L8/dataset_windows.png
+   :alt: Four horizontal bars on a time axis from minus 6 to 8 seconds, with a dotted line at 0, now. For each row, a light gray bar to the left of 0 is the observed past and a dark bar to the right is the predicted future, each labeled with its length. Argoverse: 2 s and 3 s. Argoverse 2: 5 s and 6 s. Waymo Open Motion: 1 s and 8 s. This lecture: 2 s and 5 s.
+   :width: 95%
+   :align: center
+
+   Each dataset's two windows on one time axis, with now at 0. Gray: the
+   observed past; dark: the predicted future. Each bar is labeled with its
+   length.
+
+The table gives the same windows. They come from the papers of Argoverse,
+Argoverse 2 and Waymo Open Motion; this lecture's windows are chosen.
 
 .. list-table::
    :widths: 50 25 25
@@ -190,7 +217,7 @@ three levels (Lefèvre et al., 2014):
 
    * - **Level**
      - **In the survey's words**
-     - **Today**
+     - **Section today**
    * - Physics-based
      - "the motion of vehicles only depends on the laws of physics"
      - Physics Models
@@ -217,8 +244,8 @@ After this lecture, you can:
 1. say what a **planner** needs from **prediction**, and how far ahead it
    must look (the **horizon**);
 2. predict a road user's motion by hand with **constant velocity (CV)**,
-   **constant turn rate (CTRV)** and **constant turn rate and acceleration
-   (CTRA)**, and say why their error grows with the horizon;
+   **constant turn rate and velocity (CTRV)** and **constant turn rate and
+   acceleration (CTRA)**, and say why their error grows with the horizon;
 3. score a prediction with **ADE**, **FDE** and the **miss rate**, and
    several predictions with **minADE** and **minFDE**; check whether an
    **uncertainty** is honest;
@@ -244,7 +271,7 @@ truth we know.
 **Where the numbers come from.** The lanes are CARLA's: read from
 ``Town01.xodr`` with ``carla.Map``, with no CARLA server. The motion is
 ours: simulated in Python on those lanes, so the truth is known exactly.
-Every speed and every braking is chosen, and these notes say so.
+We chose every speed and every braking rate, and these notes say so.
 
 
 .. _l8-lec-junction:
@@ -262,12 +289,13 @@ The Junction, from Town01's Map
    east. **A:** car A and **B:** car B, on the north lane, facing west. The
    red cross: where A's left turn would cross the AV's lane.
 
-**1** is the AV, **A** car A and **B** car B, all at :math:`t` = 0, now
-(:math:`t` is the time in seconds). The red cross is where A's left turn
-would cross the AV's lane.
+**1** is the AV, **A** car A and **B** car B, all at :math:`t` = 0, which
+is now. :math:`t` is the time in seconds; a negative :math:`t` is the past.
+The red cross is where A's left turn would cross the AV's lane.
 
 Measured on the map: the lanes are 4.0 m wide. A's left turn is about a
-quarter circle, 23.07 m long, so its radius is 23.07 / (π/2) = 14.7 m.
+quarter circle, 23.07 m long. A quarter circle turns π/2 = 1.571 rad, and
+length = radius × angle, so the radius is 23.07 / 1.571 = 14.7 m.
 
 
 .. _l8-lec-truth:
@@ -291,9 +319,9 @@ every second. We chose this motion; the AV does not know it.
 
 - **1** The AV drives east at 8 m/s, straight on. It reaches the red cross
   at :math:`t` = 6.08 s.
-- **A** Car A drove at 8 m/s until :math:`t` = −2 s, and has braked at
-  1.0 m/s² since. It turns left at 5.0 m/s and is in the AV's lane from
-  :math:`t` = 3.4 to 4.3 s.
+- **A** Car A drove at 8 m/s until :math:`t` = −2 s, then braked at
+  1.0 m/s²: 6.0 m/s now, 5.0 m/s at :math:`t` = 1 s. It turns left at
+  5.0 m/s and is in the AV's lane from :math:`t` = 3.4 to 4.3 s.
 - **B** Car B follows A, with 22.3 m between A's rear and B's front, and
   goes straight on.
 
@@ -318,6 +346,12 @@ What the AV Knows at t = 0
      - Their speeds to come.
    * - Its own plan: 8 m/s, straight on.
      - How each driver decides when to brake, turn or go.
+
+.. admonition:: You first
+   :class: hint
+
+   Will A turn or go straight on? Which cue did you use? See
+   :ref:`l8-lec-intent`.
 
 .. important::
 
@@ -456,8 +490,8 @@ CV Against the Truth
    * - 5 s
      - 12.35 m
 
-For the first 2 s the error stays at 1.5 m or less. Once A turns, each
-second adds meters.
+For the first 2 s the error stays at 1.5 m or less. Then A turns, and each
+second adds more: 1.08, then 3.43, then 6.34 m.
 
 
 .. _l8-lec-ctrv:
@@ -477,8 +511,8 @@ Constant Turn Rate: CTRV and CTRA
   5.99 / 0.049 = 122 m, nearly straight.
 - That 0.049 rad/s is not a turn: A drives straight now. It comes from the
   0.05 m errors in the track.
-- With a turn rate near 0, CTRV's formula divides by almost 0: code must
-  switch to CV there.
+- That radius divides by the turn rate. Near 0 that is a division by
+  almost 0, so code must switch to CV there.
 
 .. tip::
 
@@ -492,14 +526,14 @@ CV, CTRV and CTRA from t = 0
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/ctra_now.png
-   :alt: The same close-up of the junction with car A at x 175. The black truth curves left into the side road. Three predictions run west along the north lane: blue CV straight to x 145; purple dashed CTRV bending slightly south, ending at x 145, y minus 2.6; brown dash-dotted CTRA shorter, slowing, ending at x 157, y minus 0.3. None follows the truth into the side road.
+   :alt: The same close-up of the junction with car A at x 175. The black truth curves left into the side road. Three predictions run west along the north lane: blue CV straight to x 145; purple dashed CTRV bending slightly south, ending at x 145, y minus 2.6; dark gold dash-dotted CTRA shorter, slowing, ending at x 157, y minus 0.3. None follows the truth into the side road.
    :width: 70%
    :align: center
 
    Car A's three physics predictions from :math:`t` = 0, a dot every second.
    Black: the truth. Blue: CV, straight west. Purple dashed: CTRV, bending
-   a little south. Brown dash-dotted: CTRA, shorter because it slows. None
-   follows the truth into the side road.
+   a little south. Dark gold dash-dotted: CTRA, shorter because it slows.
+   None follows the truth into the side road.
 
 .. list-table::
    :widths: 30 35 35
@@ -519,8 +553,8 @@ CV, CTRV and CTRA from t = 0
      - 1.89 m
      - 7.26 m
 
-CTRA uses A's braking, so it keeps A closer to the junction. None of the
-three knows the turn is coming: at :math:`t` = 0, A has not started it.
+CTRA uses A's braking, so it keeps A closer to the junction. At
+:math:`t` = 0, A has not started the turn.
 
 
 .. _l8-lec-midturn:
@@ -566,24 +600,23 @@ The lane straightens after the turn, but CTRV's circle keeps turning
 
 .. _l8-lec-err-horizon:
 
-Error Against Horizon, on 2417 Predictions
+Error Against Horizon, on 2476 Predictions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/err_horizon.png
-   :alt: Two panels of mean error in meters against horizon from 0 to 5 seconds, a gray dotted line at 2 meters. Left, no turn in the next 5 s, 1329 predictions: blue CV rises slowly to 4.0 meters at 5 seconds; purple dashed CTRV to 10.5; brown dash-dotted CTRA to 16.1. Right, a turn in the next 5 s, 1088 predictions: all three rise steeply and close together, CV to 21.7, CTRV to 20.1, CTRA to 19.1 meters.
+   :alt: Two panels of mean error in meters against horizon from 0 to 5 seconds, a gray dotted line at 2 meters. Left, no turn in the next 5 s, 1381 predictions: blue CV rises slowly to 3.6 meters at 5 seconds; purple dashed CTRV to 10.1; dark gold dash-dotted CTRA to 15.2. Right, a turn in the next 5 s, 1095 predictions: all three rise steeply and close together, CV to 20.8, CTRV to 19.1, CTRA to 18.3 meters.
    :width: 95%
    :align: center
 
    Mean error against horizon on our test set. **Left:** no turn in the
-   next 5 s, 1329 predictions. **Right:** a turn in the next 5 s, 1088
-   predictions. Blue: CV. Purple dashed: CTRV. Brown dash-dotted: CTRA.
+   next 5 s, 1381 predictions. **Right:** a turn in the next 5 s, 1095
+   predictions. Blue: CV. Purple dashed: CTRV. Dark gold dash-dotted: CTRA.
    Gray dotted line: 2 m, the error the next section counts as a miss.
 
 **Our test set:** every way through the junction, at 6 to 10 m/s, with
 random braking and turn speeds (chosen). From each drive we scored one
-prediction every 0.5 s. CV's
-mean error at 1, 3 and 5 s is 0.52, 1.80 and 4.01 m with no turn, and 1.54,
-9.19 and 21.71 m with a turn. The gray dotted line is at 2 m, the error the
+prediction every 0.5 s. CV's mean error at 1, 3 and 5 s is 0.49, 1.65 and
+3.64 m with no turn, and 1.44, 8.74 and 20.84 m with a turn. The gray dotted line is at 2 m, the error the
 next section counts as a miss.
 
 .. tip::
@@ -599,13 +632,14 @@ Why the Error Grows, and Why More Terms Do Not Help
 1. **Any error in the speed grows with time.** 0.1 m/s off is 0.5 m after
    5 s. A speed that changes (a driver slowing for no reason we can see)
    adds more.
-2. **A physics model cannot see a maneuver coming.** Before the turn,
-   A's turn rate is 0. Only a predictor that knows the junction can read
-   A's braking as a turn. With a turn ahead, all three models
-   are 19 to 22 m off at 5 s.
+2. **A physics model has no term for a maneuver that has not started.**
+   Before the turn, A's turn rate is 0. Only a predictor that knows the
+   junction can read A's braking as a turn. With a turn ahead, all three
+   models are 18 to 21 m off at 5 s.
 3. **Each extra term is carried 5 s ahead.** With no turn, CTRV's turn rate
-   and CTRA's braking often come from a turn that is ending or braking that
-   will stop: 10.5 and 16.1 m against CV's 4.0 m.
+   and CTRA's speed change (braking before a turn, speeding up after it)
+   often come from a turn that is ending or a speed change that will stop:
+   10.1 and 15.2 m against CV's 3.6 m.
 
 .. note::
 
@@ -742,10 +776,10 @@ The number of predictions in each group is in brackets.
    :class: compact-table
 
    * -
-     - **No turn** (1329)
+     - **No turn** (1381)
      -
      -
-     - **A turn** (1088)
+     - **A turn** (1095)
      -
      -
    * -
@@ -756,31 +790,32 @@ The number of predictions in each group is in brackets.
      - FDE
      - miss rate
    * - CV
-     - 1.67
-     - 4.01
-     - 37.9%
-     - 8.34
-     - 21.71
-     - 99.6%
-   * - CTRV
-     - 3.93
-     - 10.50
-     - 62.6%
-     - 7.29
-     - 20.14
-     - 99.7%
-   * - CTRA
-     - 5.89
-     - 16.13
-     - 79.3%
-     - 7.04
-     - 19.07
+     - 1.52
+     - 3.64
+     - 35.9%
+     - 7.95
+     - 20.84
      - 99.3%
+   * - CTRV
+     - 3.75
+     - 10.05
+     - 60.7%
+     - 6.87
+     - 19.14
+     - 99.5%
+   * - CTRA
+     - 5.55
+     - 15.22
+     - 78.5%
+     - 6.71
+     - 18.32
+     - 98.3%
 
 - With a turn ahead, the physics models miss almost every time.
-- With no turn, CV is the best of the three, and still misses 37.9% of the
-  time at 5 s: our simulated drivers never hold a speed exactly (a slow
-  random acceleration, 0.3 m/s² standard deviation, chosen).
+- With no turn, CV is the best of the three, and still misses 35.9% of the
+  time. The misses come from cars on a turning route, braking before the
+  turn or speeding up after it: CV misses 76.3% of those 625 predictions,
+  and 2.5% of the 756 on straight routes.
 
 
 .. _l8-lec-cv-region:
@@ -799,8 +834,10 @@ CV's 95% Region
    outside.
 
 The light blue circles show where CV says the truth is, 95% of the time.
-They grow because the fitted velocity has an error, and because CV allows
-the speed to drift (0.5 m/s per :math:`\sqrt{\text{s}}`, chosen).
+:math:`\sigma` is the standard deviation of the position, per axis. The
+circles grow almost only because CV lets the speed drift (0.5 m/s per
+:math:`\sqrt{\text{s}}`, chosen); the fitted velocity's error adds under 3%
+of the variance from 1 s on.
 
 .. list-table::
    :widths: 30 35 35
@@ -811,7 +848,7 @@ the speed to drift (0.5 m/s per :math:`\sqrt{\text{s}}`, chosen).
      - :math:`\sigma`
      - **95% radius**
    * - 1 s
-     - 0.29 m
+     - 0.293 m
      - 0.72 m
    * - 3 s
      - 1.50 m
@@ -820,9 +857,9 @@ the speed to drift (0.5 m/s per :math:`\sqrt{\text{s}}`, chosen).
      - 3.23 m
      - 7.91 m
 
-:math:`\sigma` is the standard deviation of the position, per axis. The 95%
-radius is 2.45 × :math:`\sigma` (2.45 = :math:`\sqrt{5.99}`, rounded; the appendix says why).
-The truth is inside at 1, 2 and 3 s, outside at 4 and 5 s.
+The 95% radius is 2.45 × :math:`\sigma` (2.45 = :math:`\sqrt{5.99}`,
+rounded; the appendix says why). The truth is inside at 1, 2 and 3 s,
+outside at 4 and 5 s.
 
 .. tip::
 
@@ -836,27 +873,29 @@ How Often the Region Holds the Truth
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/coverage.png
-   :alt: Percent of true positions inside CV's 95 percent region against horizon, 0 to 5 seconds. A red line at 95 percent is labeled 95 percent: what the region promises. A solid blue line, no turn, rises from about 57 to about 85 percent and stays between 81 and 85 percent. A dashed blue line, a turn, starts near 45 percent and falls to about 5 percent at 5 seconds.
+   :alt: Percent of true positions inside CV's 95 percent region against horizon, 0 to 5 seconds. A dark dotted line at 95 percent is labeled 95 percent: what the region promises. A solid blue line, no turn, rises from about 58 to about 85 percent and stays between 81 and 86 percent from 1 second on. A dashed blue line, a turn, starts near 47 percent, peaks near 52 percent at 0.4 seconds and falls to about 7 percent at 5 seconds.
    :width: 70%
    :align: center
 
    The share of true positions inside CV's 95% region, against horizon, on
-   our test set. Red: 95%, what the region promises. Solid blue: no turn.
-   Dashed blue: a turn.
+   our test set. Dark dotted line: 95%, what the region promises. Solid
+   blue: no turn. Dashed blue: a turn.
 
 A 95% region must hold the truth 95% of the time. On our test set, at 1, 3
 and 5 s:
 
-- no turn: 81.1, 85.2 and 81.1%: a little too sure;
-- a turn: 42.8, 15.3 and 4.8%: far too sure.
+- no turn: 81.5, 85.6 and 82.6%. Two groups hide in that average:
+  straight routes, 100% (too wide); turning routes before the turn, 59 to
+  68% (too narrow);
+- a turn: 46.5, 20.4 and 7.2%: far too narrow.
 
-The region only covers CV's own kind of error: a slightly wrong speed. It
-knows nothing about a turn.
+Chance alone moves each number by about 2 points (counted by drive). CV's
+region has no term for a turn or a speed change.
 
 .. note::
 
-   L6 checked a localizer the same way (NIS, integrity). For a predictor:
-   count how often the truth falls in its region, separately for turns.
+   L6 checked a localizer this way (normalized innovation squared, NIS).
+   Check a predictor's region the same way, for each kind of motion.
 
 
 .. _l8-lec-scoring-summary:
@@ -869,11 +908,12 @@ Physics Models, Scored
 
    - **Car A, from t = 0:** CV's FDE 12.35 m, CTRV's 10.00 m, CTRA's
      7.26 m: three misses. A had not started its turn.
-   - **The test set:** with no turn, CV's mean error stays under 2 m for 3 s (1.80 m) and
-     is the best of the three. With a turn ahead, all three are past 2 m
-     before 2 s, and miss at 5 s almost every time (99.3 to 99.7%).
-   - **Uncertainty:** CV's 95% region held the truth 81 to 85% of the time
-     with no turn, 4.8% at 5 s with one.
+   - **The test set:** with no turn, CV's mean error stays under 2 m for
+     3 s (1.65 m) and is the best of the three. With a turn ahead, all
+     three are past 2 m before 2 s, and miss at 5 s almost every time (98.3
+     to 99.5%).
+   - **Uncertainty:** CV's 95% region held the truth 82 to 86% of the time
+     with no turn, 7.2% at 5 s with one.
    - **So:** for more than a second or two near a junction, the predictor
      must consider what the road user **could do**: several futures.
 
@@ -905,7 +945,7 @@ Car A Can Do Two Things
    turn, probability 0.87. Dashed green: straight on, probability 0.13.
 
 A's lane splits at the junction: **straight on** to the west, or **left**
-into the side road. A right turn is not possible from A's lane.
+into the side road. No road leaves the junction to A's right.
 
 These are two predicted futures, each with a probability. How we got 0.87
 and 0.13 is the next section (:ref:`l8-lec-map`); here, what to do with
@@ -925,17 +965,18 @@ The Average of Two Futures Is Not a Future
    **1:** the left turn. **2:** straight on. **3:** their average, point by
    point: the red dotted line, ending at the red dot.
 
-At 5 s, point **3** is 7.21 m from each future, toward the junction's
-corner. No driver in A's lane ends up at point **3**.
+At 5 s, point **3** is 7.21 m from each future, inside the AV's own lane,
+facing against its traffic. No driver in A's lane ends up there.
 
 Its FDE against the truth is 5.92 m, a miss, while the left-turn future
 alone is off by 1.88 m.
 
 .. note::
 
-   A predictor trained to give one answer with the smallest mean squared
-   error learns to give point **3**, the average. So predictors give
-   **several** futures instead.
+   If half the drivers in A's place turn and half go straight on, a
+   predictor trained to give one answer with the smallest mean squared error
+   learns to give point **3**, the average. So predictors give **several**
+   futures instead.
 
 
 .. _l8-lec-multimodal:
@@ -989,9 +1030,11 @@ minADE and minFDE
 
 Car A, with :math:`K` = 2:
 
-1. minADE: the smaller of 0.86 and 3.55, so 0.86 m.
-2. minFDE: the smaller of 1.88 and 13.06, so 1.88 m. That is under 2 m, so
-   **not** a miss. A miss now means that **no** mode ends within 2 m.
+1. The best mode ends closest to the truth: the left turn (1.88 against
+   13.06 m).
+2. minFDE = that mode's FDE, 1.88 m; minADE = its ADE, 0.86 m.
+3. 1.88 m is under 2 m, so **not** a miss. A miss now means that **no** mode
+   ends within 2 m.
 
 .. note::
 
@@ -1014,12 +1057,8 @@ whatever A does: its minFDE looks very good.
   ranks the modes by their confidence and computes a mean average precision
   (mAP) (Ettinger et al., 2021).
 - **Our simpler check:** the probability a predictor gives to the true
-  future. For car A: 0.87.
-
-.. note::
-
-   For car A, the left turn ends 1.88 m from the truth, under the 2 m miss
-   threshold, and holds 0.87 of the probability.
+  future. For car A: 0.87. Whether such probabilities come true as often as
+  they say, we check on the test set (:ref:`l8-lec-calibration`).
 
 
 .. _l8-lec-planner-two:
@@ -1027,22 +1066,31 @@ whatever A does: its minFDE looks very good.
 What the Planner Does with Two Futures
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The AV's own plan is 8 m/s, straight on. It reaches the point where A's left
-turn crosses its lane at :math:`t` = 6.08 s.
+The AV's own plan is 8 m/s, straight on.
 
-1. For each mode, find when it puts car A in the AV's lane: the left turn,
-   from :math:`t` = 3.2 to 4.0 s; straight on, never.
-2. Weigh each mode by its probability: 0.87 for the one that crosses.
-3. Plan so that the AV is not at the crossing while a likely mode is. At
-   8 m/s the AV arrives at 6.08 s, after A has left the lane, so it can keep
-   its speed. A plan that reached the crossing near :math:`t` = 4 s would
-   have to slow down.
+.. figure:: /_static/images/L8/lane_timeline.png
+   :alt: A timeline from 0 to 8 seconds, time from now, with three rows. Row tag 1: a green bar from 3.2 to 4.0 seconds. Row tag 2: empty. Row tag 3: an orange bar from 3.4 to 4.3 seconds. A black vertical line at 6.08 seconds, tag 4.
+   :width: 95%
+   :align: center
+
+   When car A is in the AV's lane, against the time from now. **1:** the
+   left turn mode (probability 0.87), 3.2 to 4.0 s. **2:** the straight on
+   mode (0.13): never, so its row is empty. **3:** the truth, what A did,
+   3.4 to 4.3 s. **4:** the AV reaches the point where A's turn crosses its
+   lane, at 6.08 s.
+
+1. For each mode, find when it puts car A in the AV's lane, and weigh it by
+   its probability: 0.87 for the one that crosses.
+2. Plan so that the AV is not at the crossing while a likely mode is. The
+   AV arrives at 6.08 s, after A has left the lane, so it keeps its speed. A
+   plan that reached the crossing near :math:`t` = 4 s would have to slow
+   down.
 
 .. note::
 
    Which modes count, and how much room to keep for each, is the planner's
-   job (L9). The prediction's job: offer every likely future, with honest
-   probabilities and times.
+   job (L9). The prediction's job: every likely future, with its times and
+   its probability.
 
 
 .. _l8-lec-map:
@@ -1072,9 +1120,6 @@ The Map's Lanes Are the Candidate Paths
 - Town01's map lists, for junction 54, every way through it: six, two from
   each arm. Car A's arm has two: **straight on** (23.12 m inside the
   junction) and **left** (23.07 m, radius 14.7 m).
-- Our script reads them with ``carla.Map`` from ``Town01.xodr``, with no
-  CARLA server: ``junction.get_waypoints()`` gives each way's first and last
-  waypoint, and each lane is followed from there.
 
 .. _l8-lec-plan:
 
@@ -1107,9 +1152,10 @@ position:
 
 .. note::
 
-   Before the junction, the two lanes are one: offset and heading cannot
-   tell them apart. Only A's **speed** can, so far. Once A starts turning,
-   its heading leaves the straight lane's.
+   Before the junction, the two lanes share one line: offset and heading
+   cannot tell them apart (each path's heading and offset scores, 0.973 and
+   0.995, are the same). Only A's **speed** can, so far. Once A starts
+   turning, its heading leaves the straight lane's.
 
 
 .. _l8-lec-step2-speed:
@@ -1133,9 +1179,36 @@ cruise at). **Left:** slow enough for the turn.
 
 .. note::
 
-   Each mode's predicted future follows its lane at its own speed. Straight
-   on keeps 5.99 m/s. Left brakes evenly to 5.42 m/s by the junction, holds
-   it through the turn, then speeds up.
+   The expected speed is only for scoring. Each mode's predicted future
+   starts from A's own 5.99 m/s: straight on keeps it; left brakes evenly to
+   5.42 m/s by the junction (at 0.50 m/s²), holds it through the turn, then
+   speeds up.
+
+
+.. _l8-lec-step2-graph:
+
+Step 2, as a Graph: A's Speed Against Each Path's
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This is a graph, not a picture of the road: it plots each path's expected
+speed against the distance to the junction.
+
+.. figure:: /_static/images/L8/speed_expect.png
+   :alt: A graph of speed in meters per second, 3.5 to 8.5, against distance to the junction in meters, 0 to 25. A dashed green line at 8 meters per second runs across. A solid green curve rises from 5.42 at 0 meters to 8 at about 17.3 meters, then runs flat at 8. An orange dot at 6.51 meters and 5.99 meters per second, just below the curve. A short solid segment from the dot up to the curve, tag 1; a dotted segment from the dot level up to the dashed line, tag 2. A gray dotted vertical line at 17.3 meters, tag 3.
+   :width: 95%
+   :align: center
+
+   The speed each path expects against the distance to the junction. Solid
+   green: left; dashed green: straight on. Orange dot: car A, 5.99 m/s at
+   6.51 m. **1:** how much slower A is than left expects. **2:** how much
+   slower A is than straight on expects. **3:** 17.3 m from the junction,
+   where left's curve reaches 8 m/s.
+
+**1** Left: A drives 6.51 − 5.99 = 0.52 m/s slower than this path expects.
+**2** Straight on: A drives 8.00 − 5.99 = 2.01 m/s slower than this path
+expects. **3** Step 2's formula, solved for the distance, puts left's 8 m/s
+at (8² − 5.42²) / (2 × 1.0) = 17.3 m from the junction. Farther than that,
+both paths expect 8 m/s, so speed cannot tell them apart.
 
 
 .. _l8-lec-step3-likelihood:
@@ -1152,9 +1225,12 @@ the higher its **likelihood**.
    :width: 80%
    :align: center
 
-   The likelihood against :math:`\Delta v`. **1:** left,
-   :math:`\Delta v` = −0.52 m/s, likelihood 0.87. **2:** straight on,
-   :math:`\Delta v` = −2.01 m/s, likelihood 0.13.
+   The likelihood against :math:`\Delta v`. **1:** left. **2:** straight
+   on.
+
+**1** Left: :math:`\Delta v` = 5.988 − 6.512 = −0.524 m/s, likelihood
+0.872. **2** Straight on: :math:`\Delta v` = 5.988 − 8.000 = −2.012 m/s,
+likelihood 0.132.
 
 
 .. _l8-lec-step3-words:
@@ -1176,28 +1252,10 @@ it from the inside out:
 
 .. note::
 
-   A likelihood is at most 1 and says how well a path fits A's speed. Step 4
-   turns it into a probability.
-
-
-.. _l8-lec-step3-numbers:
-
-Step 3: How Well Each Path Explains A's Speed
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Each path's likelihood, with :math:`\sigma` = 1.0 m/s:
-
-1. Left: :math:`\Delta v` = 5.988 − 6.512 = −0.524 m/s;
-   :math:`e^{-\frac12 (0.524)^2} = e^{-0.137}` = **0.872**.
-2. Straight on: :math:`\Delta v` = 5.988 − 8.000 = −2.012 m/s;
-   :math:`e^{-\frac12 (2.012)^2} = e^{-2.024}` = **0.132**.
-3. Heading and offset: the same for both lanes here (0.973 and 0.995), so
-   they change nothing.
-
-.. note::
-
-   A drives 2.01 m/s slower than a car going straight on would, and only
-   0.52 m/s slower than a car about to turn.
+   Car A: left, :math:`e^{-\frac12 (0.524)^2} = e^{-0.137}` = 0.872;
+   straight on, :math:`e^{-\frac12 (2.012)^2} = e^{-2.024}` = 0.132. A
+   likelihood is at most 1; Step 4 turns the likelihoods into
+   probabilities.
 
 
 .. _l8-lec-step4-bayes:
@@ -1217,8 +1275,14 @@ then divide by the sum, so the probabilities add up to 1.
 .. note::
 
    The two 0.5 priors cancel: with equal priors, the probabilities are the
-   likelihoods divided by their sum, 0.872 / (0.872 + 0.132) = 0.87. A
-   prior from data (how often drivers turn left here) would change that.
+   likelihoods divided by their sum, 0.872 / (0.872 + 0.132) = 0.87. That
+   sum, 1.004, is close to 1 by chance, so the probabilities show the same
+   digits as the likelihoods. A prior from data (how often drivers turn
+   left here) would change them.
+
+In papers this is written P(maneuver | track, map): here the maneuver is
+the lane path, the track gives A's speed, and the map gives each path's
+expected speed.
 
 .. tip::
 
@@ -1243,8 +1307,8 @@ The Map-Aware Prediction Against the Truth
 The left mode's error at 1 to 5 s: 0.20, 0.62, 1.04, 1.46 and 1.88 m.
 
 The mode picks the right lane but drives it a little too fast: it turns at
-5.42 m/s, and A turns at 5.0 m/s (our choice for the truth). The error grows
-by about 0.4 m every second.
+5.42 m/s, and A turns at 5.0 m/s (our choice for the truth). 5.42 − 5.0 =
+0.42 m/s too fast, so the mode gains about 0.42 m on A every second.
 
 CV, for comparison: FDE 12.35 m.
 
@@ -1255,26 +1319,85 @@ Map-Aware Prediction on the Test Set
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/test_scores.png
-   :alt: A bar chart of mean FDE at 5 seconds, in meters, on the test set's predictions with a turn ahead. Blue CV 21.7, purple CTRV 20.1, brown CTRA 19.1, green map most likely mode 5.6, and a hatched green bar, map best of the modes, 1.9. A gray dotted line at 2 meters.
+   :alt: A bar chart of mean FDE at 5 seconds, in meters, on the test set's predictions with a turn ahead. Blue CV 20.8, purple CTRV 19.1, dark gold CTRA 18.3, green map most likely mode 5.0, and a hatched green bar, map best of the modes, 1.8. A gray dotted line at 2 meters.
    :width: 70%
    :align: center
 
    Mean FDE at 5 s on the test set's predictions with a turn ahead. Blue:
-   CV. Purple: CTRV. Brown: CTRA. Green: the map's most likely mode.
+   CV. Purple: CTRV. Dark gold: CTRA. Green: the map's most likely mode.
    Hatched green: the best of the map's modes (minFDE). Gray dotted line:
    2 m, the miss threshold.
 
-With a turn ahead (1088 predictions):
+With a turn ahead (1095 predictions):
 
-- The most likely mode has a mean FDE of 5.61 m and misses 53.6% of the
-  time.
-- The best of the modes has a mean minFDE of 1.92 m and misses 40.5% of the
-  time.
-- The true path gets 0.68 of the probability on average, and at least half
-  of it 82% of the time.
+- The true path is the most likely mode 84% of the time.
+- Still, the most likely mode misses 50.5% of the time (mean FDE 4.98 m):
+  the right lane, at the wrong speed.
 
-With no turn, the most likely mode's mean FDE is 4.07 m, CV's 4.01 m; the
-best of the modes, 1.08 m.
+With no turn, the most likely mode is no better than CV: FDE 3.91 against
+3.64 m, and it misses more (49.5 against 35.9%). In 1 of 10 of these
+predictions, its most likely mode is the wrong lane.
+
+
+.. _l8-lec-calibration:
+
+Calibration: How Often the Probabilities Come True
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. admonition:: Definition: Calibration
+   :class: note
+
+   A predictor is calibrated when, of all the futures it gives a
+   probability :math:`p`, a fraction :math:`p` comes true (Guo et al.,
+   2017). Of 100 modes given 0.8, about 80 should be the true path.
+
+Our test set: every mode of every prediction (4896 modes), in four groups by
+its probability. Each dot is a group; its bar shows how far chance alone
+moves it.
+
+.. figure:: /_static/images/L8/reliability.png
+   :alt: A square plot of share that came true, 0 to 1, against probability given, 0 to 1 (each dot is placed at its group's mean). A gray dashed diagonal, tag 1. Four green dots with error bars: near 0.06 and 0.09, at 0.5 and 0.5, at 0.81 and 0.73 with a long bar, tag 2, below the diagonal, and near 0.99 and 0.98.
+   :width: 55%
+   :align: center
+
+   The share of each group's modes that came true against the probability
+   given (the group's mean). Each dot: a group; its bar: how far chance
+   alone moves it. **1:** the diagonal, where a perfectly calibrated
+   predictor's dots sit. **2:** the group of car A's 0.87 (0.7 to 0.9):
+   given 0.810 on average, came true 0.729.
+
+The table gives the same four groups:
+
+.. list-table::
+   :widths: 28 24 24 24
+   :header-rows: 1
+   :class: compact-table
+
+   * - **Probability given**
+     - **Mean given**
+     - **Came true**
+     - **Modes**
+   * - 0 to 0.3
+     - 0.061
+     - 0.091
+     - 904
+   * - 0.3 to 0.7
+     - 0.500
+     - 0.500
+     - 3032
+   * - 0.7 to 0.9
+     - 0.810
+     - 0.729
+     - 240
+   * - 0.9 to 1
+     - 0.986
+     - 0.976
+     - 720
+
+Modes from one drive are not independent, so chance is counted by redrawing
+whole drives at random: it moves the 0.729 by about 0.06. The gap,
+0.810 − 0.729 = 0.081, is only 1.3 times that: this test set cannot show
+whether the predictor is too sure in the group of car A's 0.87.
 
 
 .. _l8-lec-map-wrong:
@@ -1295,7 +1418,7 @@ Where Map-Aware Prediction Goes Wrong
 .. note::
 
    Keep a physics mode next to the lane modes. When no lane fits (a large
-   offset or heading gap on every lane), the physics mode takes the
+   offset or heading gap on every lane), the physics mode gets most of the
    probability.
 
 .. tip::
@@ -1331,10 +1454,11 @@ Learned Predictors
 ------------------
 
 So far we chose the turn speeds, the :math:`\sigma`'s and the priors by
-hand. Learned predictors set them by training on recorded driving.
+hand. A learned predictor has no such values to choose: training on
+recorded driving sets its network's weights instead.
 
-**What it is for:** you will know the names and the shape of the predictors
-that production systems and the benchmarks use.
+**What it is for:** you will know the names of the predictors that
+production systems and the benchmarks use, and what they read and output.
 
 
 .. _l8-lec-learned-io:
@@ -1355,8 +1479,10 @@ What a Learned Predictor Reads and Writes
 
 - The output is the same as our map-aware predictor's: :math:`K` modes and
   their probabilities.
-- What changes: the turn speeds, the :math:`\sigma`'s and the priors we
-  chose by hand are **set by training** on recorded tracks.
+- What changes: a learned predictor has no turn speeds or
+  :math:`\sigma`'s to choose. Its network's weights are **set by
+  training** on recorded tracks, and they do the job our hand-chosen values
+  did.
 
 
 .. _l8-lec-learned-designs:
@@ -1375,22 +1501,23 @@ Three Well-Known Designs
    * - VectorNet (Gao et al., 2020)
      - "Observed agent trajectories and map features are represented as
        sequence of vectors"
-     - the lanes and the tracks as lists of points, as in our
-       ``l8_scene.npz``
+     - lanes and tracks as lists of points, like our scene file
    * - MultiPath (Chai et al., 2019)
      - "predicts a discrete distribution over the anchors and, for each
        anchor, regresses offsets from anchor waypoints along with
        uncertainties"
-     - anchors play our candidate lanes' part; each gets a probability, a
-       shift and a :math:`\sigma`
+     - anchors: typical trajectories, clustered from training tracks. Each
+       plays a candidate lane's part: a probability, a shift, a
+       :math:`\sigma`
    * - MTR (Shi et al., 2022)
      - "a small set of learnable motion query pairs. Each motion query pair
        takes charge of trajectory prediction and refinement for a specific
        motion mode"
-     - one learned slot per kind of future (turn left, go straight, ...)
+     - one learned query per likely end region (clustered from training
+       tracks)
 
-MTR "ranks 1st on the leaderboards of Waymo Open Motion Dataset", in its
-authors' words, 2022 (Shi et al., 2022).
+MTR's authors report it "ranking 1st on the leaderboards of Waymo Open
+Motion Dataset" (Shi et al., 2022).
 
 
 .. _l8-lec-learned-industry:
@@ -1398,11 +1525,12 @@ authors' words, 2022 (Shi et al., 2022).
 What Waymo and Tesla Say They Use
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Neither company says which named model runs in its cars. What each says in
-public:
+Neither source below names the model that runs in the cars. What each says
+in public:
 
-- **Waymo** (2025): its large model has a "World Decoder" that uses the
-  sensor inputs "to predict other road users behaviors". The car runs
+- **Waymo** (2025): its large model has a "World Decoder" that reads the
+  output of two encoders, one of them for the fused sensor data, "to
+  predict other road users behaviors". The car runs
   smaller models trained from it, "optimized for real-time onboard
   deployment" (Waymo, 2025).
 - **Tesla** (2022): "Relying purely on collision checks with marginal
@@ -1410,13 +1538,15 @@ public:
   of valid interactions" (Tesla, AI Day 2022). A marginal prediction
   predicts each road user alone.
 - **Tesla** (2024): FSD runs on "end-to-end neural networks" (Tesla, Q1 2024
-  Update). Tesla has not said whether a separate prediction step is left.
+  Update). The update does not say whether a separate prediction step
+  remains.
 
 .. note::
 
-   In the survey's terms: both are **learned** (neural networks), and
-   Tesla's 2022 planner is **interaction-aware**: it does not predict each
-   road user alone.
+   Both use neural networks, so their predictors are **learned**. Tesla's
+   2022 quote says that predicting each road user alone is not enough: the
+   point of Lefèvre's third level, **interaction-aware**
+   (:ref:`l8-lec-drivers`).
 
 
 .. _l8-lec-learned-train:
@@ -1425,22 +1555,18 @@ How Learned Predictors Are Trained and Scored
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 1. **Data:** recorded scenes, each cut into an observed part and a future
-   part. Argoverse 2 observes 5 s and predicts 6 s (Wilson et al., 2021).
-   Waymo's dataset observes 1 s and predicts 8 s, at 10 Hz (Ettinger et al.,
-   2021).
+   part, with the windows of :ref:`l8-lec-datasets`.
 2. **Training**, in one common form: the network predicts :math:`K` modes;
    the one nearest the true future is moved toward it, and its probability
    is raised.
-3. **Scores:** minADE, minFDE and the miss rate (Argoverse 2); the miss
-   rate and mAP (Waymo). The same scores as ours, on the benchmark's test
-   scenes.
+3. **Scores:** the same as ours (minADE, minFDE, the miss rate; Waymo adds
+   mAP), on the benchmark's test scenes.
 
 .. note::
 
-   **Why CV still matters:** it is the baseline every learned model is
-   compared with, and the fallback when the learned model meets a road user
-   it was not trained for. On our test set with no turn, CV's mean error
-   stays under 2 m for 3 s.
+   **Why CV still matters:** it is a common baseline for learned models,
+   and a simple prediction to fall back on. On our test set with no turn,
+   CV's mean error stays under 2 m for 3 s.
 
 
 .. _l8-lec-learned-peds:
@@ -1448,13 +1574,15 @@ How Learned Predictors Are Trained and Scored
 Pedestrians and Cyclists
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-- They follow few lanes: a pedestrian can turn on the spot and step off the
-  curb. Sidewalks and crosswalks help some.
+- They do not keep to lanes: a pedestrian can turn on the spot or step off
+  the curb. Sidewalks and crosswalks show where they usually walk.
 - They move in groups and avoid each other. Social LSTM learns that from
   crowds: each person's prediction depends on the people near them (Alahi et
   al., 2016).
-- Their uncertainty grows fast: at 1.4 m/s (chosen, a walking pace) a
-  pedestrian can be anywhere within 1.4 × 3 = 4.2 m after 3 s.
+- Their uncertainty spreads in every direction: at 1.4 m/s (chosen, a
+  walking pace), after 3 s a pedestrian can be anywhere in a circle of
+  radius 1.4 × 3 = 4.2 m, curb and road included. A car stays along its
+  lane.
 
 .. note::
 
@@ -1470,8 +1598,8 @@ Other Drivers
 Until now we predicted each road user alone. But drivers react to each
 other: car B to car A, and car A to the AV.
 
-**What it is for:** predictions then agree with each other, and the AV knows
-that its own motion changes what others do.
+**What it is for:** B's prediction then uses A's, A's uses the AV's plan,
+and the AV knows that its own motion changes what others do.
 
 Models that do this are the third of Lefèvre's levels, interaction-aware
 (Lefèvre et al., 2014).
@@ -1496,16 +1624,16 @@ Intent: What the Driver Means to Do
    * - **Cue**
      - **What it says, and how far to trust it**
    * - Slowing down
-     - A turn or a stop may be ahead. Step 4 got P(left) = 0.87 from A's
-       speed alone.
+     - A turn or a stop may be ahead. :ref:`Step 4 (Bayes' rule)
+       <l8-lec-step4-bayes>` got P(left) = 0.87 from A's speed alone.
    * - Position in the lane
      - A car drifting toward a lane boundary may change lanes (Autoware
        Foundation, map-based prediction).
    * - Turn signal
      - A camera can read it, but drivers forget it, or leave it on.
    * - Where the lane goes
-     - Only some maneuvers are possible from a lane: no right turn from
-       A's.
+     - Only some maneuvers are possible: no road leaves the junction to
+       A's right.
 
 
 .. _l8-lec-b-slows:
@@ -1554,8 +1682,9 @@ A model of a driver following another car (Treiber et al., 2000):
   :math:`v_0` = 9 m/s: the speed B would like to drive (chosen).
 - :math:`1 - (v / v_0)^4`: on an empty road, B speeds up, less and less as
   :math:`v` nears :math:`v_0`.
-- :math:`(s^* / s)^2`: B brakes when the gap :math:`s` is smaller than the
-  gap it wants, :math:`s^*`.
+- :math:`(s^* / s)^2`: grows as the gap :math:`s` shrinks; it is 1 when
+  :math:`s` equals the gap B wants, :math:`s^*`. B brakes when this term is larger than the free-road
+  term (step 5 of :ref:`l8-lec-idm-hand`).
 
 .. tip::
 
@@ -1591,7 +1720,7 @@ The IDM, by Hand, for Car B
    7.76 − 5.99 = 1.77 m/s; :math:`s` = 22.25 m.
 2. The gap B wants: :math:`\sqrt{a_{\max}\,b} = \sqrt{0.73 \times 1.67}` =
    1.104, so :math:`s^*` = 2 + 7.76 × 1.6 + 7.76 × 1.77 / (2 × 1.104) =
-   20.64 m.
+   2 + 12.42 + 6.22 = 20.64 m.
 3. The free-road term: 1 − (7.76 / 9)⁴ = 1 − 0.553 = 0.447.
 4. The gap term: (20.64 / 22.25)² = 0.861.
 5. The gap term is 0.861 − 0.447 = 0.414 larger, so B's acceleration
@@ -1603,23 +1732,23 @@ The IDM, by Hand, for Car B
 Car A Waits for a Gap in the AV's Lane
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A turns left across oncoming traffic: on a green light it must give way to
-the AV.
+A turns left across oncoming traffic, so it must give way to the AV.
 
 .. admonition:: Definition: Critical headway (gap acceptance)
    :class: note
 
    The shortest gap, in seconds, that a driver accepts to make a maneuver
    across traffic. The Highway Capacity Manual's base value for a left turn
-   from the major street of a two-lane road: **4.1 s**, as reproduced in
-   the McTrans Center's users guide (McTrans Center, HCS Two-Way Stop
-   Controlled Intersections Users Guide).
+   from the major street of a two-lane road, at a junction with stop signs
+   on the side street: **4.1 s**, as reproduced in the McTrans Center's
+   users guide (McTrans Center, HCS Two-Way Stop Controlled Intersections
+   Users Guide). We use it for car A (chosen).
 
 Our car A decides 6 m before the junction (chosen). Run 1 is the scene so
 far:
 
-1. At that moment the AV is 6.0 s from the point where A's turn crosses its
-   lane.
+1. At that moment the AV is 48 m from the point where A's turn crosses its
+   lane: 48 / 8 = 6.0 s (we placed it there).
 2. 6.0 s ≥ 4.1 s: A turns without stopping.
 
 
@@ -1639,20 +1768,60 @@ A Second Run, with the AV 24 m Closer
    the left mode with the AV ignored. Solid green: the left mode with the
    gap rule.
 
-Run 2 has the same history for A and B; only the AV starts 24 m further
-east, so 24 m closer to the crossing. **1** marks where A reaches the
-junction, **2** when the AV has passed.
+Run 2: only the AV starts 24 m further east, so 24 m closer to the
+crossing. **1** A reaches the junction; **2** the AV has passed.
 
-1. Gap: 24 m at the AV's 8 m/s is 3 s less, 6.0 − 24 / 8 = 3.0 s. That is
-   below 4.1 s, so A stops and waits.
-2. The AV passes at 3.64 s (**2**); A goes at 4.64 s.
-3. Left mode, AV ignored: FDE 18.31 m. With the gap rule: 0.86 m.
+1. Gap: 6.0 − 24 / 8 = 3.0 s, below 4.1 s: A stops and waits.
+2. The AV reaches the crossing at 6.08 − 3 = 3.08 s and is a car length past
+   it at 3.08 + 4.5 / 8 = 3.64 s (**2**). The gap rule says A goes then; our
+   driver waits 1 s more (chosen): 4.64 s.
+3. Left mode, AV ignored: FDE 18.31 m. With the gap rule: 0.86 m, from that
+   1 s.
 
 .. note::
 
-   A's track up to :math:`t` = 0 is the same in both runs. What A does next
-   depends on where the **AV** is: the AV's motion is an input to A's
-   prediction.
+   Same track for A up to :math:`t` = 0, different futures: the **AV's**
+   motion is an input to A's prediction.
+
+
+.. _l8-lec-pet:
+
+Post-Encroachment Time: How Close the Two Runs Came
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. admonition:: Definition: Post-encroachment time (PET)
+   :class: note
+
+   "Post-encroachment time is the time between when the first vehicle last
+   occupied a position and the time when the second vehicle subsequently
+   arrived to the same position" (Gettman et al., 2008). A larger PET is a
+   wider margin.
+
+.. figure:: /_static/images/L8/pet_timeline.png
+   :alt: A timeline from 0 to 8 seconds, time from now, in two parts. Run 1: an orange bar for car A from 3.19 to 4.09 seconds and a black bar for the AV from 5.63 to 6.19, with a double arrow between them, tag 1. Run 2: a black bar for the AV from 2.63 to 3.19 seconds, a double arrow from 3.19 to 8, tag 2, and an orange arrow for car A pointing right from 8 seconds.
+   :width: 95%
+   :align: center
+
+   When each car's body is on the red cross, against the time from now:
+   run 1 on top, run 2 below. Orange: car A; black: the AV. **1:** run 1's
+   PET, from A leaving to the AV arriving. **2:** run 2's PET so far, from
+   the AV leaving to the end of the run at 8 s; the orange arrow: A has not
+   arrived by then.
+
+The bars show when each car's body is on the red cross. The body runs from
+the rear bumper, 0.9 m behind the car's position, to the front bumper, 3.6 m
+ahead of it.
+
+- **1** Run 1: A leaves at 4.09 s, the AV arrives at 5.63 s.
+  PET = 5.63 − 4.09 = 1.54 s.
+- **2** Run 2: the AV leaves at 3.19 s; A has not arrived when the run ends,
+  at 8.0 s. PET is more than 8.0 − 3.19 = 4.81 s.
+
+.. note::
+
+   ADE and FDE say how good a prediction is; PET says how close two road
+   users come. A planner can compute PET on a predicted future too, before
+   the cars get there.
 
 
 .. _l8-lec-av-plan:
@@ -1686,9 +1855,9 @@ from the objects around it. There are two ways to look at car A at
 :math:`t` = 0:
 
 1. **Current position only:** A is in the other lane, 4 m from the AV's lane
-   center. A check of current positions first finds A in the AV's lane at
-   :math:`t` = 3.4 s, when it is there.
-2. **Predicted positions:** at :math:`t` = 0, the left mode (probability
+   center. A check that uses only current positions sees A in the AV's
+   lane at :math:`t` = 3.4 s, when A is already there.
+2. **Predicted positions:** at :math:`t` = 0, the left mode (P(left) =
    0.87) already puts A in the AV's lane from :math:`t` = 3.2 to 4.0 s.
 
 .. note::
@@ -1710,7 +1879,8 @@ meters driven on the left, car B's speed on the right. The commands are on
 .. admonition:: What to look at
    :class: hint
 
-   1. Run 1: compare B's speed from CV and from the IDM. When do they part?
+   1. Run 1: compare B's speed from CV and from the IDM. At what time do the
+      two speed curves start to differ?
    2. Tick **AV 24 m closer** (run 2). Read A's gap in the title. Which of
       the two "most likely mode" lines matches the truth?
    3. In ``l8sim.py``, set ``GAP = 2.5``. ``GAP`` is the critical headway,
@@ -1726,11 +1896,11 @@ Next Class
 .. admonition:: Today
    :class: important
 
-   Car A was braking 6.5 m before the junction; the physics models said
-   "straight on" (CV's FDE 12.35 m). The map gave two futures; A's speed
-   made the left turn 0.87 likely, and that mode ended 1.88 m from the
-   truth. Car B needed A's prediction (IDM: 0.92 m against CV's 3.55 m), and
-   A's own choice needed the AV's position (run 2).
+   Car A, braking, was 6.5 m before the junction at :math:`t` = 0; the
+   physics models said "straight on" (CV's FDE 12.35 m). The map gave two
+   futures; A's speed made the left turn 0.87 likely, and that mode ended
+   1.88 m from the truth. Car B needed A's prediction (FDE: IDM 0.92 m, CV
+   3.55 m), and A's own choice needed the AV's position (run 2).
 
 - **L9, Motion Planning:** paths for the AV that keep clear of every likely
   future of every road user.
@@ -1738,8 +1908,8 @@ Next Class
 **Before next class**
 
 - Run the four hands-on parts on :doc:`the Code page <l8_code>`.
-- Read, in :doc:`Going Further <l8_appendix>`, the sections on CTRV and on
-  CV's 95% region.
+- Read :doc:`Going Further <l8_appendix>`: four parts, listed at the top of
+  that page.
 - Read :doc:`Foxglove: A Second Viewer for ROS 2 </preread/foxglove>` and try
   its layout.
 

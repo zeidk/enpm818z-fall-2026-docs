@@ -5,10 +5,31 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.14.2: GP1 Rig Tool Pitch Sign (2026-10-26)
+.. dropdown:: v2.15.0: Lecture 8 Audit, New Test Set and New Figures (2026-10-28)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lecture 8
+
+   - **Test set:** the simulated drivers no longer drift above their cruising
+     speed before a turn, so every test-set number is new (2476 predictions).
+     The pages now say where CV's misses come from (cars braking for a turn)
+     and split the 95% region check into straight and turning routes.
+   - **New sections:** a graph of the speed each path expects (Step 2),
+     calibration of the predicted probabilities, and post-encroachment time
+     (PET). New figures show the stopping distance, the dataset windows, when
+     each future puts car A in the AV's lane, the calibration check and PET.
+   - **Corrections:** the IDM's gap term, the MTR quote, the average of two
+     futures, minADE and minFDE, gap acceptance, Waymo's World Decoder, and
+     several arithmetic steps. The quiz gains questions on PET and
+     calibration; the glossary gains Calibration (Prediction) and
+     Post-Encroachment Time. These pages stay hidden until Lecture 8 is
+     published.
+
+.. dropdown:: v2.14.2: GP1 Rig Tool Pitch Sign (2026-10-26)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Tools
 

@@ -54,8 +54,10 @@ Two exercises end with a check in the lecture's hands-on window.
 
    The prediction must reach at least as far ahead as the AV needs to react
    and stop. In the lecture: 8 m/s, a reaction time of 0.5 s and braking at
-   3 m/s² give 0.5 + 8 / 3 = 3.17 s and 4.0 + 10.67 = 14.67 m. The
-   braking distance is speed × speed / (2 × braking).
+   3 m/s² give 0.5 + 8 / 3 = 3.17 s and 4.0 + 10.67 = 14.67 m. While
+   braking, the speed falls evenly to 0, so the average speed is half the
+   starting speed, and the braking distance is that average speed × the
+   braking time.
 
    The datasets' windows (observed, then predicted): Argoverse 2 s and 3 s;
    Argoverse 2, 5 s and 6 s; Waymo Open Motion, 1 s and 8 s.
@@ -99,8 +101,8 @@ Two exercises end with a check in the lecture's hands-on window.
 
       Question 1: 0.5 s, and 10 × 0.5 = 5.0 m.
 
-      Question 2: 10 / 3 = 3.33 s, over 10 × 10 / (2 × 3) = 100 / 6 =
-      16.67 m.
+      Question 2: 10 / 3 = 3.33 s. The average speed is 10 / 2 = 5 m/s, so
+      the AV drives 5 × 3.33 = 16.67 m.
 
       Question 3: 0.5 + 3.33 = 3.83 s (and 5.0 + 16.67 = 21.67 m). Yes:
       5 s covers 3.83 s, with room to slow down gently.
@@ -108,8 +110,8 @@ Two exercises end with a check in the lecture's hands-on window.
       Question 4:
 
       1. Reacting: 0.5 s and 4.0 m, as in the lecture.
-      2. Braking: 8 / 1.5 = 5.33 s, over 8 × 8 / (2 × 1.5) = 64 / 3 =
-         21.33 m.
+      2. Braking: 8 / 1.5 = 5.33 s, at an average speed of 8 / 2 = 4 m/s:
+         4 × 5.33 = 21.33 m.
       3. In all: 0.5 + 5.33 = 5.83 s and 4.0 + 21.33 = 25.33 m.
 
       No: 5 s is shorter than 5.83 s. On a wet road, the AV would need to
@@ -225,7 +227,7 @@ Two exercises end with a check in the lecture's hands-on window.
 
       Question 6: all three miss: 12.35, 10.00 and 7.26 m are all above
       2.0 m. At :math:`t` = 0, car A has not started its turn, and none of
-      the three physics models can see it coming.
+      the three physics models has a term for a turn that has not started.
 
 
 .. dropdown:: Exercise 3. Turn Rates and Circles
@@ -304,8 +306,8 @@ Two exercises end with a check in the lecture's hands-on window.
       Question 1: at :math:`t` = 0, 5.99 / 0.049 = 122 m, nearly straight.
       At :math:`t` = 3 s, 4.98 / 0.331 = 15.0 m.
 
-      Question 2: a quarter circle is :math:`\pi/2` rad, so the radius is
-      23.07 / (π/2) = 14.7 m. The fit at :math:`t` = 3 s (15.0 m) matches
+      Question 2: a quarter circle turns π/2 = 1.571 rad, and length =
+      radius × angle, so the radius is 23.07 / 1.571 = 14.7 m. The fit at :math:`t` = 3 s (15.0 m) matches
       it.
 
       Question 3: from the 0.05 m errors in the track. A turn rate read from
@@ -358,7 +360,7 @@ Two exercises end with a check in the lecture's hands-on window.
         - :math:`\sigma`
         - **CV's error for car A**
       * - 1 s
-        - 0.29 m
+        - 0.293 m
         - 0.52 m
       * - 3 s
         - 1.50 m
@@ -367,9 +369,12 @@ Two exercises end with a check in the lecture's hands-on window.
         - 3.23 m
         - 12.35 m
 
-   On the test set, CV's 95% region held the truth 81.1, 85.2 and 81.1% of
-   the time at 1, 3 and 5 s with no turn, and 42.8, 15.3 and 4.8% with a
-   turn.
+   On the test set, CV's 95% region held the truth 81.5, 85.6 and 82.6% of
+   the time at 1, 3 and 5 s with no turn, and 46.5, 20.4 and 7.2% with a
+   turn. With no turn, the lecture also splits the predictions by route: on
+   straight routes, the region held the truth 100% of the time; on turning
+   routes, before the turn, 59 to 68%. Chance alone moves each number by
+   about 2 points (counted by drive).
 
    .. raw:: html
 
@@ -379,7 +384,8 @@ Two exercises end with a check in the lecture's hands-on window.
 
    1. Compute the 95% radius at 1, 3 and 5 s.
    2. At each of the three times, is the truth inside the region?
-   3. Why does the region grow with the horizon?
+   3. Why does the region grow with the horizon? Of the lecture's two
+      causes, which one is almost all of it?
 
    .. raw:: html
 
@@ -387,8 +393,9 @@ Two exercises end with a check in the lecture's hands-on window.
 
    **Part B. The test set**
 
-   4. Is CV's region honest with no turn? With a turn? Say "too sure" or
-      "not sure enough".
+   4. Is CV's region honest with no turn? Look at the average, then at the
+      two route groups. With a turn? Say "too narrow" (the predictor is too
+      sure) or "too wide" (not sure enough).
    5. Why does the region fail so badly with a turn?
    6. Another predictor's region (chosen for this exercise) holds the
       truth 99% of the time at every horizon. Is it honest? What would it
@@ -405,27 +412,31 @@ Two exercises end with a check in the lecture's hands-on window.
    .. dropdown:: Guidance
       :color: success
 
-      Question 1: 2.45 × 0.29 = 0.71 m, 2.45 × 1.50 = 3.68 m and 2.45 ×
-      3.23 = 7.91 m. The lecture gives 0.72 m at 1 s: it uses
-      :math:`\sigma` before rounding to 0.29 m.
+      Question 1: 2.45 × 0.293 = 0.72 m, 2.45 × 1.50 = 3.68 m and 2.45 ×
+      3.23 = 7.91 m.
 
-      Question 2: at 1 s, 0.52 m is less than 0.71 m: inside. At 3 s,
+      Question 2: at 1 s, 0.52 m is less than 0.72 m: inside. At 3 s,
       2.58 m is less than 3.68 m: inside. At 5 s, 12.35 m is more than
       7.91 m: outside.
 
-      Question 3: the fitted velocity has an error, carried further at each
-      second, and CV allows the speed to drift (0.5 m/s per
-      :math:`\sqrt{\text{s}}`, chosen in the lecture).
+      Question 3: two causes. The fitted velocity has an error, carried
+      further at each second, and CV lets the speed drift (0.5 m/s per
+      :math:`\sqrt{\text{s}}`, chosen in the lecture). The drift is almost
+      all of it: the fitted velocity's error adds under 3% of the variance
+      from 1 s on.
 
       Question 4: a 95% region must hold the truth 95% of the time. With no
-      turn, 81 to 85%: a little too sure. With a turn, 42.8% down to 4.8%:
-      far too sure.
+      turn, the average, 82 to 86%, looks a little too narrow. But it hides
+      two groups, and neither is honest: straight routes, 100%, too wide;
+      turning routes before the turn, 59 to 68%, too narrow. Chance alone
+      moves each number by about 2 points, so these gaps are not chance. With
+      a turn, 46.5% down to 7.2%: far too narrow.
 
-      Question 5: the region only covers CV's own kind of error, a slightly
-      wrong speed. It knows nothing about a turn.
+      Question 5: CV's region has no term for a turn or a speed change, so a
+      car that turns, or brakes for a turn, leaves it.
 
       Question 6: no. A 95% region that holds the truth 99% of the time is
-      larger than it needs to be: not sure enough. The planner keeps more
+      larger than it needs to be: too wide, not sure enough. The planner keeps more
       room where the uncertainty is larger, so it would keep more room than
       needed and slow down or wait for nothing.
 
@@ -514,16 +525,18 @@ Two exercises end with a check in the lecture's hands-on window.
    .. dropdown:: Guidance
       :color: success
 
-      Question 1: minADE is the smaller of 0.86 and 3.55, so 0.86 m. minFDE
-      is the smaller of 1.88 and 13.06, so 1.88 m.
+      Question 1: the best mode is the one that ends closest to the truth:
+      the left turn, 1.88 m against 13.06 m. minFDE is its FDE, 1.88 m, and
+      minADE is its ADE, 0.86 m.
 
       Question 2: no. With several modes, a miss means that no mode ends
       within 2.0 m. The left turn ends 1.88 m from the truth.
 
       Question 3: 0.87, the left turn's probability.
 
-      Question 4: 5.92 m is above 2.0 m: a miss. It ends toward the
-      junction's corner, where no lane leads, so no driver ends up there.
+      Question 4: 5.92 m is above 2.0 m: a miss. It ends inside the AV's
+      own lane, facing against its traffic, so no driver in A's lane ends up
+      there.
       This is why predictors give several futures instead of their average.
 
       Question 5: 0.40 + 0.35 + 0.25 = 1.00.
@@ -707,8 +720,8 @@ Two exercises end with a check in the lecture's hands-on window.
 
    Gap acceptance: car A decides 6 m before the junction (chosen). It turns
    only if the AV is at least 4.1 s (the critical headway) from the
-   crossing at that moment. In run 1, the AV is 6.0 s away. The AV drives
-   at 8 m/s.
+   crossing at that moment. The AV drives at 8 m/s. In run 1, it is 48 m
+   from the crossing at that moment: 48 / 8 = 6.0 s.
 
    .. raw:: html
 
