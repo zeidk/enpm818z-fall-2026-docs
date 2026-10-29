@@ -40,11 +40,11 @@ Introduction
    clear of them, and control (L10) drives the plan.
 
 .. figure:: /_static/images/L8/pred_stack.png
-   :alt: A block diagram. Two gray input boxes on the left: tracks (L5, GP3), each road user's position and velocity; and the map (L7), lanes and junctions. Each has an arrow into a green box labeled prediction (today). A green arrow leads from prediction to a box labeled planning (L9), and an arrow from planning to a box labeled control (L10). Below prediction, a green box lists its output: for each road user, over the next few seconds, 1. where it will be, and how sure that is, 2. which of several futures, how likely.
+   :alt: A block diagram. Two gray input boxes on the left: tracks (L5), each road user's position and velocity; and the map (L7), lanes and junctions. Each has an arrow into a green box labeled prediction (today). A green arrow leads from prediction to a box labeled planning (L9), and an arrow from planning to a box labeled control (L10). Below prediction, a green box lists its output: for each road user, over the next few seconds, 1. where it will be, and how sure that is, 2. which of several futures, how likely.
    :width: 95%
    :align: center
 
-   Where prediction sits. Its two inputs are the tracks of L5 (and GP3) and
+   Where prediction sits. Its two inputs are the tracks of L5 and
    the map of L7. Its output goes to planning (L9), and planning's output to
    control (L10). For each road user, over the next few seconds, prediction
    gives **1** where it will be, and how sure that is, and **2** which of

@@ -5,10 +5,19 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.16.1: Lecture 8 Introduction (2026-10-28)
+.. dropdown:: v2.16.2: Lecture 8 Figure Label (2026-10-28)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lecture 8
+
+   - **Lecture page:** the opening figure's input box names only L5's tracks.
+     Still hidden until Lecture 8 is published.
+
+.. dropdown:: v2.16.1: Lecture 8 Introduction (2026-10-28)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lecture 8
 
