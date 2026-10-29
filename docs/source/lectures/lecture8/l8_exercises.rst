@@ -436,9 +436,10 @@ Two exercises end with a check in the lecture's hands-on window.
       car that turns, or brakes for a turn, leaves it.
 
       Question 6: no. A 95% region that holds the truth 99% of the time is
-      larger than it needs to be: too wide, not sure enough. The planner keeps more
-      room where the uncertainty is larger, so it would keep more room than
-      needed and slow down or wait for nothing.
+      larger than it needs to be: too wide, not sure enough. Where the
+      uncertainty is larger, the planner keeps the AV farther from the
+      predicted position, so it would keep the AV farther away than needed
+      and slow down or wait for nothing.
 
 
 .. dropdown:: Exercise 5. Scoring Several Futures

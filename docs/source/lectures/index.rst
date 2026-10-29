@@ -48,7 +48,7 @@ slides are finished; the table shows the plan.
      - Route Planning
      - Route, path and trajectory; HD maps; the OpenDRIVE map file read with carla.Map; the pipeline from the map file to a weighted graph (segments, the waypoint graph, junctions and traffic rules in the graph's shape, a toy graph to search by hand); lane change edges and the routing graph in Town03; edge costs (distance, travel time with the top speed in turns, from the turn's radius in the map file and from the waypoints, a left-turn penalty); Dijkstra and A* recapped; re-planning on GP4's two triggers, with hysteresis; maneuvers and CARLA's GlobalRoutePlanner; on one Town01 trip
    * - L8
-     - Prediction & Behavior Modeling
+     - Trajectory Prediction & Behavior Modeling
      - What the planner needs from prediction and how far ahead to look; physics models (CV, CTRV, CTRA) and their error against the horizon; ADE, FDE, the miss rate and checking a 95% region; several futures (multimodal prediction, minADE, minFDE); the map's lanes as candidate paths with Bayes' rule, and whether their probabilities are calibrated; learned predictors (VectorNet, MultiPath, MTR) and what Waymo and Tesla say they use; intent, the Intelligent Driver Model (IDM), gap acceptance and post-encroachment time (PET); on one Town01 junction
    * - L9
      - Motion Planning

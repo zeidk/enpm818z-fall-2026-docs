@@ -688,7 +688,7 @@ all other Thursdays meet as scheduled. Dates below are given as MM/DD.
      -
    * - 10/29
      - 9
-     - Prediction & Behavior Modeling
+     - Trajectory Prediction & Behavior Modeling
      - L8
      - | :quiz:`Quiz 3`
        | :assignment:`GP2 due, GP3 posted`

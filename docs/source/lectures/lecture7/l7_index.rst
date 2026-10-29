@@ -90,7 +90,7 @@ Lecture Materials
 Next Steps
 ----------
 
-- **Next class, L8: Prediction and Behavior Modeling.** The other road users,
+- **Next class, L8: Trajectory Prediction and Behavior Modeling.** The other road users,
   and what they will do next.
 - **Before then:** run the five hands-on parts on the
   :doc:`Code page <l7_code>`; then, on :doc:`l7_search_steps`, redo the A*

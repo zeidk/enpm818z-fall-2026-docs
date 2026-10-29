@@ -602,13 +602,16 @@ Short Answer (Questions 21 to 22)
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   A prediction is built from the track's history. The NTSB report says
-   that when perception changed the class of an object, the system "no
-   longer considered the tracking history of that object when generating a
-   new trajectory". The history was thrown away every time her class (the
-   object type) changed, so the system had no path for her across the road.
-   It saw an emergency only when she was in the vehicle's path, 1.2 s
-   before impact. See the Introduction in :doc:`l8_lecture`.
+   A predicted path comes from the track's history and its class's goal.
+   The NTSB report says that when perception changed the class of an
+   object, the system "no longer considered the tracking history of that
+   object when generating a new trajectory". Her class kept changing, so at
+   each change the ADS predicted she would stay put. While her class held,
+   as a vehicle or a bicycle, it predicted that class's goal: she would
+   follow the left lane, with traffic. The goal set the direction; her
+   history only adjusted it. No class had a goal across the road, so it
+   never predicted her crossing. It saw an emergency only when she was in the vehicle's path,
+   1.2 s before impact. See the Introduction in :doc:`l8_lecture`.
 
 
 .. admonition:: Question 22

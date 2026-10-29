@@ -2330,7 +2330,7 @@ Next Class
    route is planned again on GP4's two triggers and passed on as a turn at
    each intersection.
 
-- **L8, Prediction and Behavior Modeling:** the other road users, and what
+- **L8, Trajectory Prediction and Behavior Modeling:** the other road users, and what
   they will do next.
 
 **Before next class**

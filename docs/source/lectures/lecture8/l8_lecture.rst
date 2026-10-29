@@ -51,6 +51,32 @@ Introduction
    several futures, and how likely each one is.
 
 
+.. _l8-lec-terms:
+
+What Trajectory Prediction Means
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. admonition:: Definition: Trajectory prediction
+   :class: note
+
+   For each road user near the AV, from its past track and the map: its
+   future positions over a time horizon, how sure each one is, and, when it
+   could do different things, several futures with a probability each.
+
+In this lecture, "prediction" always means trajectory prediction.
+
+The words in it:
+
+- **Road user:** anything that moves on or near the road: a car, a cyclist,
+  a pedestrian.
+- **Track** (L5): one road user followed over time: an ID, and its position
+  and velocity from a Kalman filter.
+- **Trajectory** (L7): a path with a time at each point. A predicted
+  trajectory says where the road user will be, and when.
+- **Horizon:** how far ahead the prediction reaches. Ours: 5 s, in 50 steps
+  of 0.1 s.
+
+
 .. _l8-lec-one-step:
 
 L5's Tracker Predicts One Step
@@ -67,10 +93,12 @@ state with constant velocity:
 
    p_x \leftarrow p_x + v_x\,\Delta t, \qquad p_y \leftarrow p_y + v_y\,\Delta t
 
-- The tracker needs **one** step: where to look for the object among the
-  next detections. A new detection then corrects it.
-- The planner needs **many** steps: where the object will be 1, 2, ..., 5 s
-  from now. No detection corrects those until they happen.
+- The tracker needs **one** step: where the object will be 0.1 s from now,
+  so it knows where to look among the next detections. When that detection
+  arrives, it corrects the step.
+- The planner needs **many** steps: where the object will be every 0.1 s, up
+  to 5 s from now (50 steps). No detection can correct a step until its
+  moment comes.
 - The predictor runs as often as the tracker: each new set of tracks, every
   0.1 s, gives a new 5 s prediction that replaces the last one. Apollo and
   Autoware also run their predictor on each new output of the tracker
@@ -78,6 +106,23 @@ state with constant velocity:
   ``callbacks.cpp``).
 - Constant velocity has no turn in it: a car that is turning is predicted to
   drive straight on.
+
+
+One Step for the Tracker, 50 for the Planner
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L8/steps_timeline.png
+   :alt: A time axis from minus 0.5 to 5 seconds, time from now, with a dotted line at 0 and two rows. Row tracker: six dark dots from minus 0.5 to 0 seconds, tag 1, and one blue circle at 0.1 seconds with a dark dot inside it, tag 2. Row planner: the same six dark dots, then 50 blue circles, one every 0.1 seconds from 0.1 to 5 seconds, tag 3.
+   :width: 95%
+   :align: center
+
+   A time axis, not a picture of the road. Dark dots are detections; blue
+   circles are predicted steps. **1:** detections, one every 0.1 s, up to
+   now (:math:`t` = 0). **2:** the tracker predicts one step, 0.1 s ahead,
+   then moves that prediction part of the way toward the next detection
+   (L3's Kalman update). **3:** the planner needs
+   50 steps, up to 5 s ahead; no detection corrects them until each moment
+   comes.
 
 
 .. _l8-lec-tempe:
@@ -99,11 +144,31 @@ automated driving system.
    object, it no longer considered the tracking history of that object when
    generating a new trajectory".
 
-- A prediction is built from the track's history. The history was thrown
-  away every time her class (the object type) changed, so the system had no
-  path for her across the road.
-- The system saw an emergency only when she was in the vehicle's path:
-  1.2 s before impact (L5).
+The report's table of what the ADS recorded shows what it predicted for her.
+
+.. figure:: /_static/images/L8/tempe_paths.png
+   :alt: A road seen from above, north to the right: a bicycle lane at the bottom, then the right and left through lanes, then the area where two left-turn lanes form, up to the median. Tag 1: a black car in the right lane, facing right. Tag 2: a dark arrow straight down across the lanes, ending in the right lane ahead of the car. Three gray rings, with no tag, on that arrow: one near its start, one in the turn-lane area, one in the right lane. Tag 3: a green arrow that starts on the dark arrow in the left through lane and points right, along that lane.
+   :width: 80%
+   :align: center
+
+   Lane widths from the report; along the road, not to scale. **1:** the
+   test vehicle, in the right lane at 45 mph. **2:** her path across the
+   lanes, pushing a bicycle. **Gray rings:** at each class change, the ADS
+   predicted she would stay put. **3:** while her class held (vehicle or
+   bicycle), it predicted she would follow the left through lane, as a
+   vehicle or a bicycle would: that class's goal. The goal set the
+   direction; her history only adjusted it. Even her longest hold, 1.1 s as
+   a bicycle (2.6 to 1.5 s before impact), gave a path along the lane.
+
+.. important::
+
+   A predicted path comes from the track's history and its class's goal.
+   Her class kept changing, and at each change the ADS stopped using her
+   history. No class it gave her had a goal across the road, so it never
+   predicted her crossing.
+
+The system saw an emergency only when she was already in the vehicle's
+path: 1.2 s before impact (L5).
 
 
 .. _l8-lec-needs:
@@ -113,19 +178,14 @@ What the Planner Needs from Prediction
 
 The planner here is the AV's **motion planner** (L9): it chooses the AV's
 own path and speed for the next few seconds, and chooses again as it drives.
+From each prediction it needs three things:
 
-.. admonition:: Definition: Trajectory prediction
-   :class: note
-
-   For each road user near the AV, from its past track and the map: its
-   future positions over a time horizon (here every 0.1 s for 5 s), how sure
-   each one is, and, when it could do different things, several futures with
-   a probability each.
-
-1. **Where:** a position at each future time. The planner
-   checks its own path against each of them, time by time.
-2. **How sure:** an uncertainty that grows with the horizon. The planner
-   keeps more room where the uncertainty is larger. A road user hidden for a
+1. **Where:** the road user's position at each future time. At each of
+   those times, the planner checks that the AV's own planned position stays
+   clear of it.
+2. **How sure:** an uncertainty that grows with the horizon. Where it is
+   larger, the planner keeps the AV farther from the predicted position. A
+   road user hidden for a
    moment (behind a truck, say) has gaps in its track, so its prediction is
    less sure.
 3. **Which future:** a car at a junction may go straight on or turn. Each
@@ -1401,6 +1461,36 @@ whole drives at random: it moves the 0.729 by about 0.06. The gap,
 whether the predictor is too sure in the group of car A's 0.87.
 
 
+.. _l8-lec-disc-calibration:
+
+Discussion: Trusting the Probabilities
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. admonition:: Discussion
+   :class: hint
+
+   Our modes given 0.810 came true 0.729 of the time, and chance alone moves
+   that by about 0.06. **What would you check before you trust these
+   probabilities in a car? What goes wrong in the planner if they are too
+   sure?** Three minutes with your neighbors.
+
+.. dropdown:: What to listen for
+   :color: success
+   :icon: check-circle
+
+   - **More drives.** Chance is counted by drives, and it shrinks with the
+     square root of their number, so four times the drives about halves the
+     0.06.
+   - **Groups, not only the total.** A predictor can be calibrated on average
+     and too sure in one kind of scene, such as left turns. Check each kind of
+     scene on its own.
+   - **Too sure hurts the planner.** If a 0.87 came true only 0.73 of the time,
+     the other future would happen 0.27 of the time, not 0.13: about twice as
+     often as the planner expects, so it keeps too little room for it.
+   - **The fix:** rescale the probabilities on drives kept out of training,
+     then draw the calibration plot again.
+
+
 .. _l8-lec-map-wrong:
 
 Where Map-Aware Prediction Goes Wrong
@@ -1589,6 +1679,37 @@ Pedestrians and Cyclists
 
    Tempe again: a track that restarts at every new class leaves the
    predictor no history to predict from (NTSB, 2019).
+
+
+.. _l8-lec-disc-learned:
+
+Discussion: A Learned Predictor on Our Streets
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. admonition:: Discussion
+   :class: hint
+
+   A learned predictor beats CV on a benchmark's test scenes. **What could
+   still make it worse than CV on our streets? How would you find out before
+   it drives?** Three minutes with your neighbors.
+
+.. dropdown:: What to listen for
+   :color: success
+   :icon: check-circle
+
+   - **Other data.** The benchmark was recorded in other cities, with other
+     road layouts and other drivers. A scene that is rare in training is
+     predicted badly: Tempe's ADS had no goal for a person crossing away from a
+     crosswalk.
+   - **Averages hide rare cases.** A better minADE over many test scenes can
+     come with worse errors on the few scenes that matter. Score turns,
+     pedestrians and cyclists on their own.
+   - **minADE keeps only the best of the modes.** The planner uses every mode
+     and its probability, so check calibration too.
+   - **Wrong inputs give wrong futures:** a broken track, or a map that is out
+     of date.
+   - **How to find out:** score it on drives recorded on our own streets, scene
+     by scene, against CV, and keep CV as the fallback.
 
 
 .. _l8-lec-drivers:
@@ -1823,6 +1944,35 @@ ahead of it.
    ADE and FDE say how good a prediction is; PET says how close two road
    users come. A planner can compute PET on a predicted future too, before
    the cars get there.
+
+
+.. _l8-lec-disc-react:
+
+Discussion: Do Other Drivers React to the AV?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. admonition:: Discussion
+   :class: hint
+
+   In run 2, our predictor assumed that car A sees the AV and waits for a
+   gap. **Should the AV assume that other drivers react to it? What goes
+   wrong if one does not?** Three minutes with your neighbors.
+
+.. dropdown:: What to listen for
+   :color: success
+   :icon: check-circle
+
+   - **A driver who does not react.** If the AV assumes A waits and A pulls out
+     (A did not see the AV), the AV keeps its speed toward a car in its lane.
+     Run 2 shows how far apart the two futures are: the left mode that ignores
+     the AV ends 18.31 m from the truth.
+   - **Nobody reacts.** If the AV assumes that, it treats every car as if it
+     will pull out, and it may wait a long time at a busy junction.
+   - **A middle way:** keep both futures, A waits and A goes, each with a
+     probability, and plan so the AV can still stop if the less likely one
+     happens.
+   - The next section takes this up: the AV's plan changes the other drivers'
+     futures.
 
 
 .. _l8-lec-av-plan:

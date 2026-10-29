@@ -5,10 +5,36 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.17.0: Publish Lecture 8, Prediction and Behavior Modeling (2026-10-28)
+.. dropdown:: v2.18.0: Lecture 8 Renamed Trajectory Prediction, New Sections (2026-10-28)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lecture 8
+
+   - **New title:** Trajectory Prediction and Behavior Modeling, on the
+     lecture, the schedule, the syllabus and the glossary.
+   - **Lecture page:** a new section defines trajectory prediction, road
+     user, track, trajectory and horizon. The Tempe section has a figure of
+     her path against what the ADS predicted, and says why it never
+     predicted her crossing. A new section shows the tracker's one step
+     against the planner's 50. Three discussions: trusting the
+     probabilities, a learned predictor on our streets, and drivers who
+     react to the AV.
+   - **Figures:** the vehicles are sharp vector icons in every figure and in
+     the browser hands-on.
+   - **Quiz:** Question 21's answer follows the new Tempe section.
+     **Exercises:** Exercise 4's answer says what the planner does with a
+     wider region.
+   - **Code page:** lists ``vehicle_icons.py`` and its icons.
+
+   .. rubric:: Lecture 7
+
+   - **Next class:** names L8 by its new title.
+
+.. dropdown:: v2.17.0: Publish Lecture 8, Prediction and Behavior Modeling (2026-10-28)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lecture 8
 

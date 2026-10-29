@@ -2,7 +2,8 @@
 
     /usr/bin/python3 tools/make_l8_handson_html.py [--l8 PATH] [--out PATH]
 
-Reads l8sim.py, l8_handson.py and l8_scene.npz from the carla-python repo's lecture8 folder
+Reads l8sim.py, l8_handson.py, vehicle_icons.py, icons/*.svg and l8_scene.npz from the
+carla-python repo's lecture8 folder
 and writes docs/source/_static/handson/l8_handson.html. The page has one tab per hands-on part
 (scene, physics, modes, interact), each with the now slider of l8_handson.py, and a tab with
 l8sim.py that students can edit and rerun. Rebuild the page after any change to those files.
@@ -234,6 +235,9 @@ async function main() {
     await py.loadPackage(["numpy", "matplotlib"]);
     py.FS.writeFile("/home/pyodide/l8sim.py", SRC.l8sim);
     py.FS.writeFile("/home/pyodide/l8_handson.py", SRC.handson);
+    py.FS.writeFile("/home/pyodide/vehicle_icons.py", SRC.icons_py);
+    py.FS.mkdir("/home/pyodide/icons");
+    for (const [name, text] of Object.entries(SRC.icons)) py.FS.writeFile("/home/pyodide/icons/" + name, text);
     py.FS.writeFile("/home/pyodide/l8_scene.npz", Uint8Array.from(atob(NPZ_B64), c => c.charCodeAt(0)));
     status.textContent = "Simulating the scene...";
     await py.runPythonAsync(GLUE);
@@ -255,7 +259,9 @@ def main():
     ap.add_argument("--l8", type=Path, default=L8_DEFAULT, help="the carla-python lecture8 folder")
     ap.add_argument("--out", type=Path, default=OUT_DEFAULT)
     a = ap.parse_args()
-    src = {"l8sim": (a.l8 / "l8sim.py").read_text(), "handson": (a.l8 / "l8_handson.py").read_text()}
+    src = {"l8sim": (a.l8 / "l8sim.py").read_text(), "handson": (a.l8 / "l8_handson.py").read_text(),
+           "icons_py": (a.l8 / "vehicle_icons.py").read_text(),
+           "icons": {f.name: f.read_text() for f in sorted((a.l8 / "icons").glob("*.svg"))}}
     npz = base64.b64encode((a.l8 / "l8_scene.npz").read_bytes()).decode()
     page = (PAGE.replace("__PYODIDE__", PYODIDE)
                 .replace("__PARTS__", json.dumps(PARTS))

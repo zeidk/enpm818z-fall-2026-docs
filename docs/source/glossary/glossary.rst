@@ -2811,8 +2811,8 @@ L7: Route Planning
 
 .. _g-l8:
 
-L8: Prediction and Behavior Modeling
-====================================
+L8: Trajectory Prediction and Behavior Modeling
+===============================================
 
 .. glossary::
 

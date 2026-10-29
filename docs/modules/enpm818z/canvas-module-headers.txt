@@ -13,7 +13,7 @@ Week 5 (10/01) - Perception II: BEV, Occupancy & Segmentation
 Week 6 (10/08) - Perception III: Tracking, Temporal & Deep Fusion
 Week 7 (10/15) - Localization & SLAM
 Week 8 (10/22) - Route Planning
-Week 9 (10/29) - Prediction & Behavior Modeling
+Week 9 (10/29) - Trajectory Prediction & Behavior Modeling
 Week 10 (11/05) - Motion Planning
 Week 11 (11/12) - Trajectory Generation & Control
 Week 12 (11/19) - End-to-End Driving, VLA & Imitation Learning

@@ -210,6 +210,10 @@ The Files
        scores and the test set
    * - ``l8_handson.py``
      - the four parts
+   * - ``vehicle_icons.py``
+     - draws the AV, car A and car B as vector icons, sharp at any zoom
+   * - ``icons/``
+     - the three icons, by Stone from the Noun Project (thenounproject.com)
    * - ``export_scene.py``
      - writes ``l8_scene.npz`` from ``Town01.xodr``; needs CARLA's Python
        package (``pip install carla==0.9.16``), no server
