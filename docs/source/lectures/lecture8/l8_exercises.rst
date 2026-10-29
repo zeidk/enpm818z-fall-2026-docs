@@ -311,9 +311,9 @@ Two exercises end with a check in the lecture's hands-on window.
       radius × angle, so the radius is 23.07 / 1.571 = 14.7 m. The fit at :math:`t` = 3 s (15.0 m) matches
       it.
 
-      Question 3: from the 0.05 m errors in the track. A turn rate read from
-      1.5 s of track is noisy; the true turn rate at :math:`t` = 0 is
-      0 rad/s.
+      Question 3: each tracked position is off by about 0.05 m at random, and
+      the fit reads that small zigzag as a slight turn. The true turn rate at
+      :math:`t` = 0 is 0 rad/s.
 
       Question 4: :math:`\omega = v / r` = 10 / 20 = 0.5 rad/s.
 

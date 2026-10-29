@@ -147,8 +147,8 @@ Multiple Choice (Questions 1 to 15)
       14.7 m.
 
    B. It gives a circle of radius 5.99 / 0.049 = 122 m, nearly straight.
-      It comes from the 0.05 m errors in the track: a turn rate read from
-      1.5 s of track is noisy.
+      Each tracked position is off by about 0.05 m at random, and the fit
+      reads that small zigzag as a slight turn.
 
    C. It is exact, because the fit uses 16 positions.
 

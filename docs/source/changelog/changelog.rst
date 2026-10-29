@@ -5,10 +5,25 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.18.4: Lecture 8 Hands-On Answers and Run 2 (2026-10-29)
+.. dropdown:: v2.18.5: Lecture 8 When to Trust Constant Velocity (2026-10-29)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lecture 8
+
+   - **Lecture page:** one clear answer on constant velocity, the same in
+     every section: trust it only for short horizons with no maneuver ahead,
+     and keep it as one mode and as the fallback near a junction. Step 2
+     shows its 50 horizons in a table; the turn rate has a definition.
+   - **Glossary:** the constant velocity entry says when to trust it; new
+     entry: turn rate.
+   - **Quiz and exercises:** the 0.049 rad/s answers say in plain words where
+     the number comes from.
+
+.. dropdown:: v2.18.4: Lecture 8 Hands-On Answers and Run 2 (2026-10-29)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lecture 8
 

@@ -2838,8 +2838,11 @@ L8: Trajectory Prediction and Behavior Modeling
       :math:`x(h) = x_0 + v_x h` and :math:`y(h) = y_0 + v_y h`, where
       :math:`h` is the horizon. L5's tracker uses it for one 0.1 s step. In
       L8, CV predicts car A, which brakes for a left turn, straight on past
-      the junction: 12.35 m off after 5 s. With no turn ahead, it is the best
-      of L8's three physics models: under 2 m for 3 s on the test set. :doc:`L8 </lectures/lecture8/l8_index>`
+      the junction: 12.35 m off after 5 s. On the test set, its mean error
+      stays under 2 m up to 3.5 s with no turn ahead, and passes 2 m at 1.3 s
+      with one. So it is trusted only for short horizons with no maneuver
+      ahead, and kept near a junction as one mode and as the fallback.
+      :doc:`L8 </lectures/lecture8/l8_index>`
 
    Critical Headway
       The shortest gap, in seconds, that a driver accepts to make a maneuver
@@ -2978,6 +2981,14 @@ L8: Trajectory Prediction and Behavior Modeling
       futures with a probability each. L8 compares physics models (CV, CTRV,
       CTRA), the map's lanes with Bayes' rule, and models of drivers who
       react to each other. :doc:`L8 </lectures/lecture8/l8_index>`
+
+   Turn Rate
+      How fast a road user's heading changes, in radians per second. A car
+      that drives straight has a turn rate of 0; a car driving at speed
+      :math:`v` on a circle of radius :math:`r` has a turn rate of
+      :math:`v / r`. In L8, car A's fitted turn rate is 0.049 rad/s while it
+      drives straight (from the noise in its track), and 0.331 rad/s in the
+      middle of its turn. :doc:`L8 </lectures/lecture8/l8_index>`
 
 .. raw:: html
 

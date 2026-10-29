@@ -477,7 +477,7 @@ turn rate and velocity, and constant turn rate and acceleration.
 method is compared with them.
 
 A physics model takes the road user's motion **now** (speed, heading, turn
-rate, braking) and assumes it does not change.
+rate: how fast the heading changes, braking) and assumes it does not change.
 
 
 .. _l8-lec-fit:
@@ -496,18 +496,17 @@ Step 1: Read Car A's Motion from Its Track
 Every physics model starts from car A's motion now, read from A's track.
 The AV keeps 2 s of A's track; the fit uses only its newest 1.5 s, the blue
 band (16 positions; both chosen: a shorter window follows a change in A's
-motion sooner, a longer one averages out more of the track's noise). We fit
-to those positions the path of a car with constant acceleration that
-passes closest to them (least squares). The dashed line is that path's
-speed.
+motion sooner, a longer one averages out more of the track's noise). Among all
+the paths a car with constant acceleration could drive, we pick the one
+closest to those positions: the smallest total of squared distances (least
+squares). The dashed line is the speed along that path.
 
 .. note::
 
-   **What the graph shows:** the fit's speed stays on the true speed, which
-   the AV cannot see. At :math:`t` = 0 the fit reads 5.99 m/s (truth 6.01)
-   and braking 0.96 m/s² (truth 1.0). It also reads a turn rate, how fast
-   the heading changes, of 0.049 rad/s, though A drives straight: the
-   track's errors put it there. (Its heading: 1.86° south of west.)
+   **What the graph shows:** the fit's speed (dashed) stays on the true
+   speed (black), which the AV cannot see. At :math:`t` = 0 the fit reads
+   5.99 m/s against the true 6.01, and a braking of 0.96 m/s² against the
+   true 1.0. (It also reads a heading 1.86° south of west, not shown.)
 
 .. tip::
 
@@ -525,24 +524,48 @@ Step 2: Constant Velocity, by Hand
 
    A physics model: the road user keeps the velocity it has now, the same
    speed and the same heading, for the whole horizon. Its predicted path is
-   a straight line.
+   a straight line:
 
-In CV, each coordinate moves at its velocity:
+   .. math::
 
-.. math::
+      x(h) = x_0 + v_x\,h, \qquad y(h) = y_0 + v_y\,h
 
-   x(h) = x_0 + v_x\,h, \qquad y(h) = y_0 + v_y\,h
+   :math:`(x_0, y_0)`: its position now; :math:`(v_x, v_y)`: its velocity
+   now; :math:`h`: the horizon, how far ahead in seconds.
 
-:math:`h` is the horizon: how far ahead, in seconds. From the fit (rounded):
-:math:`x_0` = 174.59 m, :math:`y_0` = 1.98 m; :math:`v_x` = −5.985 m/s,
-:math:`v_y` = −0.194 m/s (west, a little south).
+At :math:`t` = 0, from one position and one velocity, the AV predicts car
+A's position at 50 horizons at once: :math:`h` = 0.1, 0.2, …, 5.0 s. From
+the fit (rounded): :math:`x_0` = 174.59 m, :math:`y_0` = 1.98 m;
+:math:`v_x` = −5.985 m/s, :math:`v_y` = −0.194 m/s (west, a little south).
 
-1. :math:`h` = 1 s: :math:`x` = 174.59 − 5.985 = 168.60 m;
-   :math:`y` = 1.98 − 0.194 = 1.79 m.
-2. :math:`h` = 3 s: :math:`x` = 174.59 − 3 × 5.985 = 156.64 m;
-   :math:`y` = 1.98 − 3 × 0.194 = 1.40 m.
-3. :math:`h` = 5 s: :math:`x` = 174.59 − 5 × 5.985 = 144.67 m;
-   :math:`y` = 1.98 − 5 × 0.194 = 1.01 m.
+.. list-table::
+   :header-rows: 1
+   :widths: 20 40 40
+
+   * - :math:`h` (s)
+     - :math:`x` = 174.59 − 5.985 × :math:`h` (m)
+     - :math:`y` = 1.98 − 0.194 × :math:`h` (m)
+   * - 0.1
+     - 173.99
+     - 1.96
+   * - 0.2
+     - 173.39
+     - 1.94
+   * - …
+     - …
+     - …
+   * - 1.0
+     - 168.60
+     - 1.79
+   * - 3.0
+     - 156.64
+     - 1.40
+   * - 5.0
+     - 144.67
+     - 1.01
+
+0.1 s later, the AV does it again from the new track, and the new 50
+replace these.
 
 .. note::
 
@@ -585,13 +608,23 @@ CV Against the Truth
      - 12.35 m
 
 For the first 2 s the error stays at 1.5 m or less. Then A turns, and each
-second the error grows more: by 1.08, then 3.43, then 6.34 m.
+second the error grows more: by 1.08, then 3.43, then 6.34 m. **For car A,
+CV can be trusted for about 2 s, until A turns; then it is far off.**
+Whether that holds for every road user, the test set answers
+(:ref:`l8-lec-err-horizon`).
 
 
 .. _l8-lec-ctrv:
 
 Constant Turn Rate: CTRV and CTRA
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. admonition:: Definition: Turn rate
+   :class: note
+
+   How fast a road user's heading changes, in radians per second. A car that
+   drives straight has a turn rate of 0; a car driving at speed :math:`v` on
+   a circle of radius :math:`r` has a turn rate of :math:`v / r`.
 
 .. admonition:: Definition: CTRV and CTRA
    :class: note
@@ -601,10 +634,11 @@ Constant Turn Rate: CTRV and CTRA
    acceleration (CTRA):** the same, with its speed changing at a constant
    rate (Schubert et al., 2008).
 
-- The circle's radius is speed / turn rate. For car A now:
-  5.99 / 0.049 = 122 m, nearly straight.
-- That 0.049 rad/s is not a turn: A drives straight now. It comes from the
-  0.05 m errors in the track.
+- Step 1's fit also gives A a turn rate: 0.049 rad/s. The circle's radius
+  is speed / turn rate: 5.99 / 0.049 = 122 m, nearly straight.
+- That 0.049 rad/s is not a turn: A drives straight now. Each tracked
+  position is off by about 0.05 m at random, and the fit reads that small
+  zigzag as a slight turn.
 - Near a turn rate of 0, that formula divides by almost 0, so code must
   switch to CV there.
 
@@ -1004,14 +1038,15 @@ Physics Models, Scored
 
    - **Car A, from t = 0:** CV's FDE 12.35 m, CTRV's 10.00 m, CTRA's
      7.26 m: three misses. A had not started its turn.
-   - **The test set:** with no turn, CV's mean error stays under 2 m for
-     3 s (1.65 m) and is the best of the three. With a turn ahead, all
-     three are past 2 m before 2 s, and miss at 5 s almost every time (98.3
+   - **The test set:** with no turn, CV's mean error stays under 2 m up to
+     3.5 s (1.65 m at 3 s), the best of the three. With a turn ahead, CV
+     passes 2 m at 1.3 s, and all three miss at 5 s almost every time (98.3
      to 99.5%).
    - **Uncertainty:** CV's 95% region held the truth 82 to 86% of the time
      with no turn, 7.2% at 5 s with one.
-   - **So:** for more than a second or two near a junction, the predictor
-     must consider what the road user **could do**: several futures.
+   - **So:** trust CV only for short horizons with no maneuver ahead. Near
+     a junction, the AV keeps CV as one mode and as the fallback, never as
+     its only prediction: it needs **several futures**.
 
 
 .. _l8-lec-futures:
@@ -1541,9 +1576,8 @@ Where Map-Aware Prediction Goes Wrong
 
 .. note::
 
-   Keep a physics mode next to the lane modes. When no lane fits (a large
-   offset or heading gap on every lane), the physics mode gets most of the
-   probability.
+   Keep a CV mode next to the lane modes. When no lane fits (a large offset
+   or heading gap on every lane), the CV mode gets most of the probability.
 
 .. tip::
 
@@ -1688,9 +1722,9 @@ How Learned Predictors Are Trained and Scored
 
 .. note::
 
-   CV is a common baseline for learned models, and a simple prediction to
-   fall back on. On our test set with no turn, its mean error stays under
-   2 m for 3 s.
+   CV is the common baseline for learned models and the fallback when
+   nothing else fits: with no turn ahead, its mean error stays under 2 m up
+   to 3.5 s; with a turn ahead, it passes 2 m at 1.3 s.
 
 
 .. _l8-lec-learned-peds:
