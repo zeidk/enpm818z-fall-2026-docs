@@ -354,14 +354,15 @@ The Junction, from the Map
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/scene_map.png
-   :alt: A top view of a T-junction from the map, x east from 98 to 214 meters, y north from minus 24 to 12 meters. A road runs east to west with one lane each way, a white dashed center line, and a side road leaving the junction to the south. Tag 1: the AV, a black car on the south lane at x 108, facing east. Tag A: car A, a green car on the north lane at x 174, facing west. Tag B: car B, a gray car on the north lane at x 201, facing west. A red cross in the junction at x 156, y minus 2, with no tag.
+   :alt: A top view of a T-junction from the map, x east from 98 to 214 meters, y north from minus 24 to 12 meters. A road runs east to west with one lane each way, a white dashed center line, and a side road leaving the junction to the south. The junction is shaded tan; the rest of the road is gray. Tag 1: the AV, a black car on the south lane at x 108, facing east. Tag A: car A, a green car on the north lane at x 174, facing west. Tag B: car B, a gray car on the north lane at x 201, facing west. A red cross in the junction at x 156, y minus 2, with no tag.
    :width: 95%
    :align: center
 
    A T-junction of Town01, from above, :math:`x` east and :math:`y` north in
-   meters, all at :math:`t` = 0. **1:** the AV, on the south lane, facing
-   east. **A:** car A and **B:** car B, on the north lane, facing west. The
-   red cross: where car A's left turn would cross the AV's lane.
+   meters, all at :math:`t` = 0. The junction is shaded tan. **1:** the AV,
+   on the south lane, facing east. **A:** car A and **B:** car B, on the north
+   lane, facing west. The red cross: where car A's left turn would cross the
+   AV's lane.
 
 **1** is the AV, **A** car A and **B** car B, all at :math:`t` = 0, which
 is now. :math:`t` is the time in seconds; a negative :math:`t` is the past.
@@ -378,11 +379,12 @@ The Truth We Simulated
 ~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/scene_truth.png
-   :alt: The same top view with each road user's next 5 seconds drawn as a line with a dot every second, and the three cars faded at their positions now. The AV's black line runs east along its lane from x 107 to about 147, labeled 5 s at its end. Car A's green line runs west, then curves left through the junction into the side road, ending at x 154, y minus 7, labeled 5 s. Car B's gray line runs west along the north lane from x 201 to about 164, under car A's line where they overlap. Dark tags 1, A and B mark the AV, car A and car B; a red cross with no tag, in the junction at x 156, y minus 2, marks where car A's turn crosses the AV's lane.
+   :alt: The same top view, the junction shaded tan, with each road user's next 5 seconds drawn as a line with a dot every second, and the three cars faded at their positions now. The AV's black line runs east along its lane from x 107 to about 147, labeled 5 s at its end. Car A's green line runs west, then curves left through the junction into the side road, ending at x 154, y minus 7, labeled 5 s. Car B's gray line runs west along the north lane from x 201 to about 164, under car A's line where they overlap. Dark tags 1, A and B mark the AV, car A and car B; a red cross with no tag, in the junction at x 156, y minus 2, marks where car A's turn crosses the AV's lane.
    :width: 95%
    :align: center
 
-   Where each road user really goes over the next 5 s, a dot every second.
+   Where each road user really goes over the next 5 s, a dot every second;
+   the junction is shaded tan.
    **1:** the AV, black, east along its lane. **A:** car A, green, west and
    then left into the side road. **B:** car B, gray, west along the north
    lane, under car A's line where they overlap. The red cross: where car A's turn

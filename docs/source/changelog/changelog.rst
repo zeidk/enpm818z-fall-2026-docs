@@ -5,10 +5,21 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.18.8: Lecture 8 Review, Figures and Reading Material (2026-10-29)
+.. dropdown:: v2.18.9: Lecture 8 Junction Shading (2026-10-29)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lecture 8
+
+   - **Lecture page:** the junction is shaded tan in the map figure and in the
+     figure of the true futures, as in the later Lecture 8 figures. Captions
+     and alt text say so.
+
+
+.. dropdown:: v2.18.8: Lecture 8 Review, Figures and Reading Material (2026-10-29)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lecture 8
 
