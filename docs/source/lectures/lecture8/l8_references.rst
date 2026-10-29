@@ -14,7 +14,7 @@ group at the end.
    :open:
 
    How often the predictor runs, the Tempe crash, the prediction windows of
-   the public datasets, and the three kinds of motion model.
+   the public datasets, and the three levels of motion model.
 
    .. grid:: 1 1 2 2
       :gutter: 2
@@ -107,7 +107,7 @@ group at the end.
          that depend on the horizon and the speed), in Several Futures (mAP)
          and in Learned Predictors (training and scores).
 
-      .. grid-item-card:: Three kinds of motion model
+      .. grid-item-card:: Three levels of motion model
          :link: https://doi.org/10.1186/s40648-014-0001-z
          :class-card: sd-border-secondary
 

@@ -5,10 +5,23 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.18.1: Lecture 8 Colors and Clearer Steps (2026-10-29)
+.. dropdown:: v2.18.2: Lecture 8 Clearer Explanations (2026-10-29)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lecture 8
+
+   - **Lecture page:** Step 1's figure has a legend for the band and the dot,
+     and the text says what the graph shows. The three levels of motion model
+     (Lefèvre's word), the 17.3 m in the map steps, and the 6.0 s gap in gap
+     acceptance are explained in words.
+   - **Quiz:** the map question's answer no longer quotes numbers that only
+     the Going Further page shows.
+
+.. dropdown:: v2.18.1: Lecture 8 Colors and Clearer Steps (2026-10-29)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lecture 8
 

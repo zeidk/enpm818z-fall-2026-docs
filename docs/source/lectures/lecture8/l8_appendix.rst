@@ -134,7 +134,7 @@ How the Test Set Is Built
 
 Everything is in ``l8sim.test_set()``, and every number is chosen.
 
-1. The six ways through junction 54, at cruising speeds of 6, 7, 8, 9 and
+1. The six ways through the junction, at cruising speeds of 6, 7, 8, 9 and
    10 m/s, four random seeds each: 6 × 5 × 4 = 120 drives.
 2. Each drive draws a braking between 0.8 and 2.0 m/s² and a sideways
    acceleration in the turn between 1.5 and 2.5 m/s². After the turn the car

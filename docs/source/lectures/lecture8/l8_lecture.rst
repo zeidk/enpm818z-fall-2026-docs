@@ -274,8 +274,8 @@ Argoverse 2 and Waymo Open Motion. We read 2 s, as Argoverse does, and predict
 
 .. _l8-lec-three-kinds:
 
-Three Kinds of Motion Model
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Three Levels of Motion Model
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In their survey, Lefèvre, Vasquez and Laugier sort prediction models into
 three levels (Lefèvre et al., 2014):
@@ -472,26 +472,26 @@ Step 1: Read Car A's Motion from Its Track
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/track_fit.png
-   :alt: Car A's speed in meters per second against time from minus 2 to 0 seconds. A black line, the true speed, falls straight from 8.0 to 6.0. A light blue shaded band covers the last 1.5 seconds, tag 1 near its bottom. A blue dashed line, the speed from the fit, runs inside the band just under the black line and ends at a blue dot at time 0, at 5.99 meters per second, tag 2 below it. The legend, top right, says the AV does not know the true speed.
-   :width: 70%
+   :alt: Car A's speed in meters per second against time from minus 2 to 0 seconds. A black line, the true speed, falls straight from 8.0 to 6.0. A light blue band covers the last 1.5 seconds. A blue dashed line, the speed from the fit, runs inside the band just under the black line and ends at a blue dot at time 0, at 5.99 meters per second. The legend, bottom left, names the true speed (the AV does not know it), the speed from the fit, the band (the last 1.5 seconds of track, used for the fit) and the dot (the fit's speed now).
+   :width: 60%
    :align: center
 
-   Car A's speed against time, 0 = now. Black: the true speed, which the AV
-   does not know. Blue dashed: the speed from the fit. **1:** the shaded
-   band, the last 1.5 s of track used for the fit. **2:** the blue dot, the
-   fit's speed now, 5.99 m/s.
+   Car A's speed against time, 0 = now. The legend names each line, the
+   band and the dot.
 
-We fit a curve to the last 1.5 s of A's 2 s of track (**1**; 16 positions,
-1.5 s chosen): the path of a car with constant acceleration that passes
-closest to the points (least squares). At :math:`t` = 0 (**2**) the fit
-gives:
+Every physics model starts from car A's motion now, read from A's track.
+The blue band is the last 1.5 s of the track (16 positions; 1.5 s chosen).
+We fit to those positions the path of a car with constant acceleration that
+passes closest to them (least squares). The dashed line is that path's
+speed.
 
-- speed **5.99** m/s;
-- heading 1.86° south of west;
-- turn rate (how fast the heading changes) **0.049** rad/s;
-- braking **0.96** m/s².
+.. note::
 
-The truth: 6.01 m/s, 0 rad/s and 1.0 m/s².
+   **What the graph shows:** the fit's speed stays on the true speed, which
+   the AV cannot see. At :math:`t` = 0 the fit reads 5.99 m/s (truth 6.01)
+   and braking 0.96 m/s² (truth 1.0). It also reads a turn rate, how fast
+   the heading changes, of 0.049 rad/s, though A drives straight: the
+   track's errors put it there. (Its heading: 1.86° south of west.)
 
 .. tip::
 
@@ -967,7 +967,8 @@ region has no term for a turn or a speed change.
 
 .. note::
 
-   Check a predictor's region this way, for each kind of motion.
+   Check a predictor's region this way: for straight driving and for turns,
+   separately.
 
 
 .. _l8-lec-scoring-summary:
@@ -1188,8 +1189,7 @@ The Map's Lanes Are the Candidate Paths
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - Where a lane splits, each branch is a possible future path: one mode.
-- Town01's map lists, for junction 54, every way through it: six, two from
-  each arm. Car A's arm has two: **straight on** (23.12 m inside the
+- The map lists every way through the junction: six, two from each arm. Car A's arm has two: **straight on** (23.12 m inside the
   junction) and **left** (23.07 m, radius 14.7 m).
 
 .. _l8-lec-plan:
@@ -1224,8 +1224,8 @@ position:
 .. note::
 
    Before the junction, the two lanes share one line: offset and heading
-   cannot tell them apart (each path's heading and offset scores, 0.973 and
-   0.995, are the same). Only A's **speed** can, so far. Once A starts
+   cannot tell them apart: they are the same for both lanes. Only A's
+   **speed** can, so far. Once A starts
    turning, its heading leaves the straight lane's.
 
 
@@ -1277,8 +1277,8 @@ speed against the distance to the junction.
 
 **1** Left: A drives 6.51 − 5.99 = 0.52 m/s slower than this path expects.
 **2** Straight on: A drives 8.00 − 5.99 = 2.01 m/s slower than this path
-expects. **3** Step 2's formula, solved for the distance, puts left's 8 m/s
-at (8² − 5.42²) / (2 × 1.0) = 17.3 m from the junction. Farther than that,
+expects. **3** 17.3 m is the distance a driver needs to slow from 8 to 5.42 m/s at
+1.0 m/s²: (8² − 5.42²) / (2 × 1.0) = 17.3 m from the junction. Farther than that,
 both paths expect 8 m/s, so speed cannot tell them apart.
 
 
@@ -1379,7 +1379,7 @@ The left mode's error at 1 to 5 s: 0.20, 0.62, 1.04, 1.46 and 1.88 m.
 
 The mode picks the right lane but drives it a little too fast: it turns at
 5.42 m/s, and A turns at 5.0 m/s (our choice for the truth). 5.42 − 5.0 =
-0.42 m/s too fast, so the mode gains about 0.42 m on A every second.
+0.42 m/s too fast, so the mode gets about 0.42 m farther ahead of A every second.
 
 CV, for comparison: FDE 12.35 m.
 
@@ -1492,8 +1492,8 @@ Discussion: Trusting the Probabilities
      square root of their number, so four times the drives about halves the
      0.06.
    - **Groups, not only the total.** A predictor can be calibrated on average
-     and too sure in one kind of scene, such as left turns. Check each kind of
-     scene on its own.
+     and too sure in some scenes, such as left turns. Check those scenes on
+     their own.
    - **Too sure hurts the planner.** If a 0.87 came true only 0.73 of the time,
      the other future would happen 0.27 of the time, not 0.13: about twice as
      often as the planner expects, so it keeps too little room for it.
@@ -1685,11 +1685,6 @@ Pedestrians and Cyclists
   radius 1.4 × 3 = 4.2 m, curb and road included. A car stays along its
   lane.
 
-.. note::
-
-   Tempe again: a track that restarts at every new class leaves the
-   predictor no history to predict from (NTSB, 2019).
-
 
 .. _l8-lec-disc-learned:
 
@@ -1837,8 +1832,8 @@ The IDM: the Gap B Wants
 - :math:`v\,T`, with :math:`T` = 1.6 s: B keeps 1.6 s of driving between
   itself and A.
 - :math:`\Delta v`: B's speed minus A's, how fast B closes in. With
-  :math:`b` = 1.67 m/s², a comfortable braking, the last term adds room when
-  B closes in fast.
+  :math:`b` = 1.67 m/s², a comfortable braking, the last term makes the gap B
+  wants larger when B closes in fast.
 - :math:`T`, :math:`b` and :math:`s_0` are the paper's values (Treiber et
   al., 2000).
 
@@ -1876,11 +1871,12 @@ A turns left across oncoming traffic, so it must give way to the AV.
    users guide (McTrans Center, HCS Two-Way Stop Controlled Intersections
    Users Guide). We use it for car A (chosen).
 
-Our car A decides 6 m before the junction (chosen). Run 1 is the scene so
-far:
+In the scene so far (run 1; a second run follows), car A decides 6 m
+before the junction (chosen).
 
 1. At that moment the AV is 48 m from the point where A's turn crosses its
-   lane: 48 / 8 = 6.0 s (we placed it there).
+   lane, so the gap is the time it needs to get there: 48 / 8 = 6.0 s (we
+   placed it there).
 2. 6.0 s ≥ 4.1 s: A turns without stopping.
 
 

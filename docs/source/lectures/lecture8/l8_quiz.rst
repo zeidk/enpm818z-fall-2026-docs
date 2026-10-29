@@ -547,7 +547,7 @@ True or False (Questions 16 to 20)
 
    Before the junction, the two lanes share one line: A is 0.07 m from the
    center and 1.86° off the heading of both, so the heading and offset
-   likelihoods are the same for both (0.973 and 0.995). Only A's speed tells them apart
+   are the same for both lanes. Only A's speed tells them apart
    so far: 5.99 m/s, against 6.51 m/s expected for the left turn and
    8.00 m/s for straight on. See Using the Map in :doc:`l8_lecture`.
 
