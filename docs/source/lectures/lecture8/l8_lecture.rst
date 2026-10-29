@@ -31,20 +31,23 @@ Introduction
 
 .. note::
 
-   **L5** follows every road user: a track with a position and a velocity.
-   **L7** gives the AV a route. **L8** says where the other road users
-   **will be** over the next few seconds, so that the planner (L9) can keep
-   clear of them.
+   In **L5**, we tracked every road user with one Kalman filter per object:
+   an ID, a position and a velocity (top left in the figure below). In
+   **L7**, we read the map's lanes and junctions to give the AV a route
+   (bottom left). Today, prediction reads both and says, for each road user,
+   where it **will be** over the next few seconds, how sure that is, and how
+   likely each possible future is. The planner (L9) uses that to keep the AV
+   clear of them, and control (L10) drives the plan.
 
 .. figure:: /_static/images/L8/pred_stack.png
-   :alt: A block diagram. Two gray input boxes on the left: tracks (L5, GP3), each road user's position and velocity; and the map (L7), lanes and junctions. Each has an arrow into a green box labeled prediction (today). A green arrow leads from prediction to a box labeled planning (L9), and an arrow from planning to a box labeled control (L10). Below prediction, a green box lists its output: for each road user, over the next few seconds, 1. where it will be, 2. how sure that is, 3. which of several futures, how likely.
+   :alt: A block diagram. Two gray input boxes on the left: tracks (L5, GP3), each road user's position and velocity; and the map (L7), lanes and junctions. Each has an arrow into a green box labeled prediction (today). A green arrow leads from prediction to a box labeled planning (L9), and an arrow from planning to a box labeled control (L10). Below prediction, a green box lists its output: for each road user, over the next few seconds, 1. where it will be, and how sure that is, 2. which of several futures, how likely.
    :width: 95%
    :align: center
 
    Where prediction sits. Its two inputs are the tracks of L5 (and GP3) and
    the map of L7. Its output goes to planning (L9), and planning's output to
    control (L10). For each road user, over the next few seconds, prediction
-   gives **1** where it will be, **2** how sure that is, and **3** which of
+   gives **1** where it will be, and how sure that is, and **2** which of
    several futures, and how likely each one is.
 
 

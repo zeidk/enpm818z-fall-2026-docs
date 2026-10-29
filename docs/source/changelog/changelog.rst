@@ -5,10 +5,21 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.16.0: Lecture 8 Hands-On in the Browser (2026-10-28)
+.. dropdown:: v2.16.1: Lecture 8 Introduction (2026-10-28)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lecture 8
+
+   - **Lecture page:** the opening note tells how L5's tracks and L7's map
+     lead to prediction, and the figure below it lists two outputs: where
+     each road user will be and how sure that is, and which of several
+     futures, how likely. Still hidden until Lecture 8 is published.
+
+.. dropdown:: v2.16.0: Lecture 8 Hands-On in the Browser (2026-10-28)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lecture 8
 
