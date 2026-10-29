@@ -34,17 +34,17 @@ Introduction
    In **L5**, we tracked every road user with one Kalman filter per object:
    an ID, a position and a velocity (top left in the figure below). In
    **L7**, we read the map's lanes and junctions to give the AV a route
-   (bottom left). Today, prediction reads both and says, for each road user,
+   (bottom left). Today, trajectory prediction reads both and says, for each road user,
    where it **will be** over the next few seconds, how sure that is, and how
    likely each possible future is. The planner (L9) uses that to keep the AV
    clear of them, and control (L10) drives the plan.
 
 .. figure:: /_static/images/L8/pred_stack.png
-   :alt: A block diagram. Two gray input boxes on the left: tracks (L5), each road user's position and velocity; and the map (L7), lanes and junctions. Each has an arrow into a green box labeled prediction (today). A green arrow leads from prediction to a box labeled planning (L9), and an arrow from planning to a box labeled control (L10). Below prediction, a green box lists its output: for each road user, over the next few seconds, 1. where it will be, and how sure that is, 2. which of several futures, how likely.
+   :alt: A block diagram. Two gray input boxes on the left: tracks (L5), each road user's position and velocity; and the map (L7), lanes and junctions. Each has an arrow into a magenta box labeled trajectory prediction (today). A magenta arrow leads from prediction to a box labeled planning (L9), and an arrow from planning to a box labeled control (L10). Below prediction, a magenta box lists its output: for each road user, over the next few seconds, 1. where it will be, and how sure that is, 2. which of several futures, how likely.
    :width: 95%
    :align: center
 
-   Where prediction sits. Its two inputs are the tracks of L5 and
+   Where trajectory prediction sits. Its two inputs are the tracks of L5 and
    the map of L7. Its output goes to planning (L9), and planning's output to
    control (L10). For each road user, over the next few seconds, prediction
    gives **1** where it will be, and how sure that is, and **2** which of
@@ -137,8 +137,7 @@ automated driving system.
 
    "The ADS detected the pedestrian 5.6 seconds before impact. Although the
    ADS continued to track the pedestrian until the crash, it never
-   accurately classified her as a pedestrian or **predicted her path**"
-   (bold ours).
+   accurately classified her as a pedestrian or **predicted her path**".
 
    "If the perception process changed the classification of a detected
    object, it no longer considered the tracking history of that object when
@@ -147,7 +146,7 @@ automated driving system.
 The report's table of what the ADS recorded shows what it predicted for her.
 
 .. figure:: /_static/images/L8/tempe_paths.png
-   :alt: A road seen from above, north to the right: a bicycle lane at the bottom, then the right and left through lanes, then the area where two left-turn lanes form, up to the median. Tag 1: a black car in the right lane, facing right. Tag 2: a dark arrow straight down across the lanes, ending in the right lane ahead of the car. Three gray rings, with no tag, on that arrow: one near its start, one in the turn-lane area, one in the right lane. Tag 3: a green arrow that starts on the dark arrow in the left through lane and points right, along that lane.
+   :alt: A road seen from above, north to the right: a bicycle lane at the bottom, then the right and left through lanes, then the area where two left-turn lanes form, up to the median. Tag 1: a black car in the right lane, facing right. Tag 2: a dark arrow straight down across the lanes, ending in the right lane ahead of the car. Three gray rings, with no tag, on that arrow: one near its start, one in the turn-lane area, one in the right lane. Tag 3: a magenta arrow that starts on the dark arrow in the left through lane and points right, along that lane.
    :width: 80%
    :align: center
 
@@ -168,7 +167,7 @@ The report's table of what the ADS recorded shows what it predicted for her.
    predicted her crossing.
 
 The system saw an emergency only when she was already in the vehicle's
-path: 1.2 s before impact (L5).
+path: 1.2 s before impact.
 
 
 .. _l8-lec-needs:
@@ -198,28 +197,35 @@ How Far Ahead to Predict
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 The prediction must reach at least as far ahead as the AV needs to react and
-stop. Our AV drives at 8 m/s (GP4's default ``target_speed``). We chose the
-reaction time and the braking for this example.
+stop. The AV drives at 8 m/s and sees an obstacle in its lane. **1:** it
+reacts: it senses the obstacle and decides to brake. **2:** then it brakes
+until it stops. **3** is the whole stop. We chose the reaction time and the
+braking rate for this example.
 
 .. figure:: /_static/images/L8/stopping_side.png
-   :alt: A side view of the road, to scale, with a distance axis from 0 to 16 meters: distance driven since the AV sees the problem. A faded gray car stands with its front bumper at 0. A black car, the same AV, stands with its front bumper at about 14.7 meters. A darker gray band runs from 0 to 4 meters and a lighter gray band from 4 to 14.7 meters, with dashed vertical lines at 0, 4 and 14.7. Above the road, a double arrow from 0 to 4 marked tag 1 and a double arrow from 4 to 14.7 marked tag 2. Below the road, a double arrow from 0 to 14.7 marked tag 3.
+   :alt: A side view of the road, to scale, with a distance axis from 0 to 16 meters: distance driven since the AV sees the obstacle. A faded gray car, the AV when it sees the obstacle, has its front bumper at 0, with three short gray speed lines behind it to show it is moving. A black car, the same AV once it has stopped, stands with its front bumper at about 14.7 meters, just short of a red traffic cone, the obstacle, at about 15.6 meters. A darker gray band runs from 0 to 4 meters and a lighter gray band from 4 to 14.7 meters, with dashed vertical lines at 0, 4 and 14.7. Above the road, a double arrow from 0 to 4 marked tag 1 and a double arrow from 4 to 14.7 marked tag 2. Below the road, a double arrow from 0 to 14.7 marked tag 3.
    :width: 95%
    :align: center
 
-   The AV from the side, drawn to scale. Faded: the AV when it sees a
-   problem; black: where it stands still. **1:** reacting, 4.0 m. **2:**
-   braking, 10.67 m. **3:** in all, 14.67 m.
+   The same AV twice, from the side, drawn to scale. Faded: when it first
+   sees an obstacle, at 8 m/s; black: once it has stopped. **1:** reacting,
+   4.0 m. **2:** braking, 10.67 m. **3:** in all, 14.67 m.
 
-1. Reacting (sensing, deciding) takes 0.5 s: 8 × 0.5 = 4.0 m. The AV
-   drives 4.0 m before its brakes even start.
-2. Braking at 3 m/s² takes 8 / 3 = 2.67 s. While braking, the speed falls
-   evenly from 8 to 0 m/s, so the average speed is 8 / 2 = 4 m/s, and the
-   AV drives 4 × 2.67 = 10.67 m more before it stops.
-3. In all: 0.5 + 2.67 = 3.17 s and 4.0 + 10.67 = 14.67 m. From the moment
-   the AV sees a problem, it needs 3.17 s and 14.67 m to stand still.
+The numbers:
 
-So the prediction must reach at least 3.17 s ahead. Today we predict 5 s
-ahead (chosen), with room to slow down gently instead of braking hard.
+1. **Reaction time**, to sense the obstacle and decide to brake: 0.5 s
+   (chosen). The AV drives 8 × 0.5 = 4.0 m before its brakes even start.
+2. **Braking time:** the speed drops 3 m/s every second (3 m/s², chosen), so
+   slowing from 8 to 0 m/s takes 8 / 3 = 2.67 s. The speed falls evenly, so
+   its average is halfway between 8 and 0: (8 + 0) / 2 = 4 m/s. The AV drives
+   4 × 2.67 = 10.67 m more before it stops.
+3. **Stopping time:** the reaction time plus the braking time, 0.5 + 2.67 =
+   3.17 s, from seeing the obstacle to standing still. The distance is
+   4.0 + 10.67 = 14.67 m.
+
+So the prediction must reach at least 3.17 s ahead. We chose 5 s: the
+extra 5 − 3.17 = 1.83 s lets the AV slow down gently instead of braking
+hard.
 
 
 .. _l8-lec-datasets:
@@ -227,8 +233,8 @@ ahead (chosen), with room to slow down gently instead of braking hard.
 Prediction Windows in Public Datasets
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Public datasets of recorded traffic, used to train and score predictors, fix
-two windows: **observed**, how much past track the predictor reads, and
+Public datasets of recorded traffic, used to train and score predictors, set
+two time windows: **observed**, how much past track the predictor reads, and
 **predicted**, how far ahead it must predict.
 
 .. figure:: /_static/images/L8/dataset_windows.png
@@ -241,7 +247,8 @@ two windows: **observed**, how much past track the predictor reads, and
    length.
 
 The table gives the same windows. They come from the papers of Argoverse,
-Argoverse 2 and Waymo Open Motion; this lecture's windows are chosen.
+Argoverse 2 and Waymo Open Motion. We read 2 s, as Argoverse does, and predict
+5 s, enough for the 3.17 s stop.
 
 .. list-table::
    :widths: 50 25 25
@@ -293,8 +300,8 @@ three levels (Lefèvre et al., 2014):
        maneuvers"
      - Other Drivers
 
-:ref:`Learned predictors <l8-lec-learned>`, later in this lecture, can work
-at any of the three levels.
+A :ref:`learned predictor <l8-lec-learned>`, later in this lecture, can be
+built at any of the three levels.
 
 
 .. _l8-lec-objectives:
@@ -325,8 +332,7 @@ After this lecture, you can:
 The Scene
 ---------
 
-We take a junction of Town01, the town of L7, with the AV and two cars, and
-simulate their motion.
+We take a junction with the AV and two cars, and simulate their motion.
 
 **What it is for:** every predictor is compared on the same scene, against a
 truth we know.
@@ -343,7 +349,7 @@ The Junction, from Town01's Map
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/scene_map.png
-   :alt: A top view of a T-junction from Town01's map, x east from 98 to 214 meters, y north from minus 24 to 12 meters. A road runs east to west with one lane each way, a white dashed center line, and a side road leaving the junction to the south. Tag 1: the AV, a black car on the south lane at x 108, facing east. Tag A: car A, an orange car on the north lane at x 174, facing west. Tag B: car B, a gray car on the north lane at x 201, facing west. A red cross in the junction at x 156, y minus 2, with no tag.
+   :alt: A top view of a T-junction from Town01's map, x east from 98 to 214 meters, y north from minus 24 to 12 meters. A road runs east to west with one lane each way, a white dashed center line, and a side road leaving the junction to the south. Tag 1: the AV, a black car on the south lane at x 108, facing east. Tag A: car A, a green car on the north lane at x 174, facing west. Tag B: car B, a gray car on the north lane at x 201, facing west. A red cross in the junction at x 156, y minus 2, with no tag.
    :width: 95%
    :align: center
 
@@ -367,12 +373,12 @@ The Truth We Simulated
 ~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/scene_truth.png
-   :alt: The same top view with each road user's next 5 seconds drawn as a line with a dot every second, and the three cars faded at their positions now. The AV's black line runs east along its lane from x 107 to about 147, labeled 5 s at its end. Car A's orange line runs west, then curves left through the junction into the side road, ending at x 154, y minus 7, labeled 5 s. Car B's gray line runs west along the north lane from x 201 to about 164, under car A's line where they overlap. Dark tags 1, A and B mark the AV, car A and car B; a red cross with no tag, in the junction at x 156, y minus 2, marks where car A's turn crosses the AV's lane.
+   :alt: The same top view with each road user's next 5 seconds drawn as a line with a dot every second, and the three cars faded at their positions now. The AV's black line runs east along its lane from x 107 to about 147, labeled 5 s at its end. Car A's green line runs west, then curves left through the junction into the side road, ending at x 154, y minus 7, labeled 5 s. Car B's gray line runs west along the north lane from x 201 to about 164, under car A's line where they overlap. Dark tags 1, A and B mark the AV, car A and car B; a red cross with no tag, in the junction at x 156, y minus 2, marks where car A's turn crosses the AV's lane.
    :width: 95%
    :align: center
 
    Where each road user really goes over the next 5 s, a dot every second.
-   **1:** the AV, black, east along its lane. **A:** car A, orange, west and
+   **1:** the AV, black, east along its lane. **A:** car A, green, west and
    then left into the side road. **B:** car B, gray, west along the north
    lane, under A's line where they overlap. The red cross: where A's turn
    crosses the AV's lane.
@@ -382,9 +388,10 @@ every second. We chose this motion; the AV does not know it.
 
 - **1** The AV drives east at 8 m/s, straight on. It reaches the red cross
   at :math:`t` = 6.08 s.
-- **A** Car A drove at 8 m/s until :math:`t` = −2 s, then braked at
-  1.0 m/s²: 6.0 m/s now, 5.0 m/s at :math:`t` = 1 s. It turns left at
-  5.0 m/s and is in the AV's lane from :math:`t` = 3.4 to 4.3 s.
+- **A** Car A is slowing down for the junction. Two seconds ago
+  (:math:`t` = −2 s) it drove at 8 m/s; since then it loses 1.0 m/s every
+  second: 6.0 m/s now, 5.0 m/s one second from now. It turns left at
+  5.0 m/s and is in the AV's lane from 3.4 to 4.3 s from now.
 - **B** Car B follows A, with 22.3 m between A's rear and B's front, and
   goes straight on.
 
@@ -474,8 +481,9 @@ Step 1: Read Car A's Motion from Its Track
    band, the last 1.5 s of track used for the fit. **2:** the blue dot, the
    fit's speed now, 5.99 m/s.
 
-We fit the constant-acceleration curve closest to the last 1.5 s (chosen) of A's 2 s of track
-(**1**): 16 positions, by least squares. At :math:`t` = 0 (**2**) the fit
+We fit a curve to the last 1.5 s of A's 2 s of track (**1**; 16 positions,
+1.5 s chosen): the path of a car with constant acceleration that passes
+closest to the points (least squares). At :math:`t` = 0 (**2**) the fit
 gives:
 
 - speed **5.99** m/s;
@@ -526,7 +534,7 @@ CV Against the Truth
 ~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/cv_vs_truth.png
-   :alt: A close-up top view of the junction, x from 136 to 184 meters. Car A, orange, at x 175 on the north lane, facing west. A black line, the truth, runs west and curves left into the side road with a dot every second, ending at y minus 7. A blue line, constant velocity, runs straight west along the north lane with a dot every second. Tags 1, 2 and 3 mark the blue dots at 1, 3 and 5 seconds; red dotted lines join each to the truth's dot at the same time: hidden under the dots at 1 second, short at 3 seconds, long at 5 seconds.
+   :alt: A close-up top view of the junction, x from 136 to 184 meters. Car A, green, at x 175 on the north lane, facing west. A black line, the truth, runs west and curves left into the side road with a dot every second, ending at y minus 7. A blue line, constant velocity, runs straight west along the north lane with a dot every second. Tags 1, 2 and 3 mark the blue dots at 1, 3 and 5 seconds; red dotted lines join each to the truth's dot at the same time: hidden under the dots at 1 second, short at 3 seconds, long at 5 seconds.
    :width: 70%
    :align: center
 
@@ -554,7 +562,7 @@ CV Against the Truth
      - 12.35 m
 
 For the first 2 s the error stays at 1.5 m or less. Then A turns, and each
-second adds more: 1.08, then 3.43, then 6.34 m.
+second the error grows more: by 1.08, then 3.43, then 6.34 m.
 
 
 .. _l8-lec-ctrv:
@@ -616,8 +624,9 @@ CV, CTRV and CTRA from t = 0
      - 1.89 m
      - 7.26 m
 
-CTRA uses A's braking, so it keeps A closer to the junction. At
-:math:`t` = 0, A has not started the turn.
+CTRA uses A's braking, so its A slows down and stays closer to the junction.
+None of the three predicts the turn: at :math:`t` = 0, A has not started
+it.
 
 
 .. _l8-lec-midturn:
@@ -699,15 +708,16 @@ Why the Error Grows, and Why More Terms Do Not Help
    Before the turn, A's turn rate is 0. Only a predictor that knows the
    junction can read A's braking as a turn. With a turn ahead, all three
    models are 18 to 21 m off at 5 s.
-3. **Each extra term is carried 5 s ahead.** With no turn, CTRV's turn rate
-   and CTRA's speed change (braking before a turn, speeding up after it)
-   often come from a turn that is ending or a speed change that will stop:
-   10.1 and 15.2 m against CV's 3.6 m.
+3. **Each extra term is kept for all 5 s.** A turn rate or a braking rate
+   read from the track often belongs to a turn that is ending or a slow-down
+   about to stop, yet CTRV and CTRA keep it to the end. With no turn ahead,
+   their errors at 5 s are 10.1 and 15.2 m, against CV's 3.6 m.
 
 .. note::
 
-   With a turn ahead, every model is past 2 m before 2 s: the AV needs to
-   know **what the road user can do**.
+   With a turn ahead, every model's mean error passes 2 m by 1.4 s. To do
+   better, a predictor must know **which ways the road user can go**: the
+   map's lanes.
 
 
 .. _l8-lec-handson-physics:
@@ -874,10 +884,11 @@ The number of predictions in each group is in brackets.
      - 98.3%
 
 - With a turn ahead, the physics models miss almost every time.
-- With no turn, CV is the best of the three, and still misses 35.9% of the
-  time. The misses come from cars on a turning route, braking before the
-  turn or speeding up after it: CV misses 76.3% of those 625 predictions,
-  and 2.5% of the 756 on straight routes.
+- "No turn" means no turn within the next 5 s. There CV is the best of the
+  three, and still misses 35.9% of the time. Most misses come from cars that
+  turn earlier or later on their route, braking before the turn or speeding
+  up after it: CV misses 76.3% of those 625 predictions, and 2.5% of the 756
+  on straight routes.
 
 
 .. _l8-lec-cv-region:
@@ -897,9 +908,9 @@ CV's 95% Region
 
 The light blue circles show where CV says the truth is, 95% of the time.
 :math:`\sigma` is the standard deviation of the position, per axis. The
-circles grow almost only because CV lets the speed drift (0.5 m/s per
-:math:`\sqrt{\text{s}}`, chosen); the fitted velocity's error adds under 3%
-of the variance from 1 s on.
+circles grow because CV lets the speed drift at random (0.5 m/s per
+:math:`\sqrt{\text{s}}`, chosen). The error in the fitted velocity adds
+almost nothing: under 3% of :math:`\sigma^2` from 1 s on.
 
 .. list-table::
    :widths: 30 35 35
@@ -956,8 +967,7 @@ region has no term for a turn or a speed change.
 
 .. note::
 
-   L6 checked a localizer this way (normalized innovation squared, NIS).
-   Check a predictor's region the same way, for each kind of motion.
+   Check a predictor's region this way, for each kind of motion.
 
 
 .. _l8-lec-scoring-summary:
@@ -999,12 +1009,12 @@ Car A Can Do Two Things
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/two_futures.png
-   :alt: The close-up of the junction with car A at x 175 facing west. Two green predicted lines leave it, each with a dot every second: a thick solid one curving left into the side road, labeled left turn, p = 0.87, and a dashed one running straight west, labeled straight on, p = 0.13.
+   :alt: The close-up of the junction with car A at x 175 facing west. Two magenta predicted lines leave it, each with a dot every second: a thick solid one curving left into the side road, labeled left turn, p = 0.87, and a dashed one running straight west, labeled straight on, p = 0.13.
    :width: 70%
    :align: center
 
-   Car A's two predicted futures, a dot every second. Thick green: the left
-   turn, probability 0.87. Dashed green: straight on, probability 0.13.
+   Car A's two predicted futures, a dot every second. Thick magenta: the left
+   turn, probability 0.87. Dashed magenta: straight on, probability 0.13.
 
 A's lane splits at the junction: **straight on** to the west, or **left**
 into the side road. No road leaves the junction to A's right.
@@ -1020,7 +1030,7 @@ The Average of Two Futures Is Not a Future
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/mean_of_modes.png
-   :alt: The close-up of the junction with car A at x 175. Tag 1: the end of the green left-turn line in the side road. Tag 2: the end of the green dashed straight line, far west on A's lane. Tag 3: a red dot at the end of a red dotted line between them; the line starts along A's lane and bends south-west across the junction toward its south-west corner.
+   :alt: The close-up of the junction with car A at x 175. Tag 1: the end of the magenta left-turn line in the side road. Tag 2: the end of the magenta dashed straight line, far west on A's lane. Tag 3: a red dot at the end of a red dotted line between them; the line starts along A's lane and bends south-west across the junction toward its south-west corner.
    :width: 70%
    :align: center
 
@@ -1131,7 +1141,7 @@ What the Planner Does with Two Futures
 The AV's own plan is 8 m/s, straight on.
 
 .. figure:: /_static/images/L8/lane_timeline.png
-   :alt: A timeline from 0 to 8 seconds, time from now, with three rows. Row tag 1: a green bar from 3.2 to 4.0 seconds. Row tag 2: empty. Row tag 3: an orange bar from 3.4 to 4.3 seconds. A black vertical line at 6.08 seconds, tag 4.
+   :alt: A timeline from 0 to 8 seconds, time from now, with three rows. Row tag 1: a magenta bar from 3.2 to 4.0 seconds. Row tag 2: empty. Row tag 3: a green bar from 3.4 to 4.3 seconds. A black vertical line at 6.08 seconds, tag 4.
    :width: 95%
    :align: center
 
@@ -1188,7 +1198,7 @@ The Plan for Car A, in Four Steps
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/lane_plan.png
-   :alt: A flowchart. A gray box, car A's track and the map's lanes, has an arrow into Step 1, put A on each candidate lane; an arrow to Step 2, the speed each path expects here; an arrow down to Step 3, how well each path explains A's speed; an arrow left to Step 4, Bayes' rule; a green arrow left to a green box, one probability for each lane.
+   :alt: A flowchart. A gray box, car A's track and the map's lanes, has an arrow into Step 1, put A on each candidate lane; an arrow to Step 2, the speed each path expects here; an arrow down to Step 3, how well each path explains A's speed; an arrow left to Step 4, Bayes' rule; a magenta arrow left to a magenta box, one probability for each lane.
    :width: 90%
    :align: center
 
@@ -1255,12 +1265,12 @@ This is a graph, not a picture of the road: it plots each path's expected
 speed against the distance to the junction.
 
 .. figure:: /_static/images/L8/speed_expect.png
-   :alt: A graph of speed in meters per second, 3.5 to 8.5, against distance to the junction in meters, 0 to 25. A dashed green line at 8 meters per second runs across. A solid green curve rises from 5.42 at 0 meters to 8 at about 17.3 meters, then runs flat at 8. An orange dot at 6.51 meters and 5.99 meters per second, just below the curve. A short solid segment from the dot up to the curve, tag 1; a dotted segment from the dot level up to the dashed line, tag 2. A gray dotted vertical line at 17.3 meters, tag 3.
+   :alt: A graph of speed in meters per second, 3.5 to 8.5, against distance to the junction in meters, 0 to 25. A dashed magenta line at 8 meters per second runs across. A solid magenta curve rises from 5.42 at 0 meters to 8 at about 17.3 meters, then runs flat at 8. A green dot at 6.51 meters and 5.99 meters per second, just below the curve. A short solid segment from the dot up to the curve, tag 1; a dotted segment from the dot level up to the dashed line, tag 2. A gray dotted vertical line at 17.3 meters, tag 3.
    :width: 95%
    :align: center
 
    The speed each path expects against the distance to the junction. Solid
-   green: left; dashed green: straight on. Orange dot: car A, 5.99 m/s at
+   magenta: left; dashed magenta: straight on. Green dot: car A, 5.99 m/s at
    6.51 m. **1:** how much slower A is than left expects. **2:** how much
    slower A is than straight on expects. **3:** 17.3 m from the junction,
    where left's curve reaches 8 m/s.
@@ -1282,7 +1292,7 @@ closer :math:`\Delta v` is to 0, the better the path explains A's speed, and
 the higher its **likelihood**.
 
 .. figure:: /_static/images/L8/bell_curve.png
-   :alt: A bell curve of likelihood, 0 to 1, against delta v, A's speed minus the path's expected speed, from minus 3.5 to 3.5 meters per second. The curve peaks at 1 at delta v equals 0, marked by a dotted vertical line. Two green dots on the curve, each with a green dashed line down to the axis: tag 1 at about minus 0.5, likelihood about 0.87; tag 2 at about minus 2.0, likelihood about 0.13.
+   :alt: A bell curve of likelihood, 0 to 1, against delta v, A's speed minus the path's expected speed, from minus 3.5 to 3.5 meters per second. The curve peaks at 1 at delta v equals 0, marked by a dotted vertical line. Two magenta dots on the curve, each with a magenta dashed line down to the axis: tag 1 at about minus 0.5, likelihood about 0.87; tag 2 at about minus 2.0, likelihood about 0.13.
    :width: 80%
    :align: center
 
@@ -1357,12 +1367,12 @@ The Map-Aware Prediction Against the Truth
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/modes_vs_truth.png
-   :alt: The close-up of the junction with car A at x 175. The thick green left-turn mode, p = 0.87, curves into the side road; the green dashed straight-on mode, p = 0.13, runs west. The black truth follows the green left-turn line into the side road, its dots a little short of the green dots.
+   :alt: The close-up of the junction with car A at x 175. The thick magenta left-turn mode, p = 0.87, curves into the side road; the magenta dashed straight-on mode, p = 0.13, runs west. The black truth follows the magenta left-turn line into the side road, its dots a little short of the magenta dots.
    :width: 70%
    :align: center
 
-   Car A's two modes against the truth, a dot every second. Thick green:
-   the left turn, probability 0.87. Dashed green: straight on, 0.13. Black:
+   Car A's two modes against the truth, a dot every second. Thick magenta:
+   the left turn, probability 0.87. Dashed magenta: straight on, 0.13. Black:
    the truth. Its dots fall a little short of the left mode's dots.
 
 The left mode's error at 1 to 5 s: 0.20, 0.62, 1.04, 1.46 and 1.88 m.
@@ -1380,13 +1390,13 @@ Map-Aware Prediction on the Test Set
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/test_scores.png
-   :alt: A bar chart of mean FDE at 5 seconds, in meters, on the test set's predictions with a turn ahead. Blue CV 20.8, purple CTRV 19.1, dark gold CTRA 18.3, green map most likely mode 5.0, and a hatched green bar, map best of the modes, 1.8. A gray dotted line at 2 meters.
+   :alt: A bar chart of mean FDE at 5 seconds, in meters, on the test set's predictions with a turn ahead. Blue CV 20.8, purple CTRV 19.1, dark gold CTRA 18.3, magenta map most likely mode 5.0, and a hatched magenta bar, map best of the modes, 1.8. A gray dotted line at 2 meters.
    :width: 70%
    :align: center
 
    Mean FDE at 5 s on the test set's predictions with a turn ahead. Blue:
-   CV. Purple: CTRV. Dark gold: CTRA. Green: the map's most likely mode.
-   Hatched green: the best of the map's modes (minFDE). Gray dotted line:
+   CV. Purple: CTRV. Dark gold: CTRA. Magenta: the map's most likely mode.
+   Hatched magenta: the best of the map's modes (minFDE). Gray dotted line:
    2 m, the miss threshold.
 
 With a turn ahead (1095 predictions):
@@ -1417,7 +1427,7 @@ its probability. Each dot is a group; its bar shows how far chance alone
 moves it.
 
 .. figure:: /_static/images/L8/reliability.png
-   :alt: A square plot of share that came true, 0 to 1, against probability given, 0 to 1 (each dot is placed at its group's mean). A gray dashed diagonal, tag 1. Four green dots with error bars: near 0.06 and 0.09, at 0.5 and 0.5, at 0.81 and 0.73 with a long bar, tag 2, below the diagonal, and near 0.99 and 0.98.
+   :alt: A square plot of share that came true, 0 to 1, against probability given, 0 to 1 (each dot is placed at its group's mean). A gray dashed diagonal, tag 1. Four magenta dots with error bars: near 0.06 and 0.09, at 0.5 and 0.5, at 0.81 and 0.73 with a long bar, tag 2, below the diagonal, and near 0.99 and 0.98.
    :width: 55%
    :align: center
 
@@ -1504,7 +1514,7 @@ Where Map-Aware Prediction Goes Wrong
 3. **Off the map.** A car that leaves its lane (a U-turn, parking, avoiding
    something) has no lane to follow. Pedestrians and cyclists often have no
    lane to follow.
-4. **A wrong map.** If roadworks close a lane, L7's map is out of date.
+4. **A wrong map.** If roadworks close a lane, the map is out of date.
 
 .. note::
 
@@ -1558,7 +1568,7 @@ What a Learned Predictor Reads and Writes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/learned_io.png
-   :alt: A block diagram. Three gray input boxes on the left: 1. every road user's last few seconds of track; 2. the map's lanes, as polylines (lists of points); 3. traffic lights, the road user's type (car, cyclist). Each has an arrow into a central box: a neural network, weights set by training. Two green arrows lead out to two green boxes: K future tracks for each road user, and one probability for each of them.
+   :alt: A block diagram. Three gray input boxes on the left: 1. every road user's last few seconds of track; 2. the map's lanes, as polylines (lists of points); 3. traffic lights, the road user's type (car, cyclist). Each has an arrow into a central box: a neural network, weights set by training. Two magenta arrows lead out to two magenta boxes: K future tracks for each road user, and one probability for each of them.
    :width: 90%
    :align: center
 
@@ -1764,12 +1774,12 @@ Car B Slows Because Car A Slows
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/b_speed.png
-   :alt: Car B's speed in meters per second against time from minus 2 to 5 seconds, a gray dotted vertical line at 0 labeled now. The black truth falls from 8.0 to about 6.5 at 3.2 seconds, then rises to about 7.3 at 5 seconds. A blue line, CV, stays flat at 7.76 from 0 to 5 seconds. A green dashed line, the IDM behind A's likely future, follows the truth down to about 6.75 at 3 seconds and back up to about 7.6.
+   :alt: Car B's speed in meters per second against time from minus 2 to 5 seconds, a gray dotted vertical line at 0 labeled now. The black truth falls from 8.0 to about 6.5 at 3.2 seconds, then rises to about 7.3 at 5 seconds. A blue line, CV, stays flat at 7.76 from 0 to 5 seconds. A magenta dashed line, the IDM behind A's likely future, follows the truth down to about 6.75 at 3 seconds and back up to about 7.6.
    :width: 70%
    :align: center
 
    Car B's speed against time; the dotted line is now. Black: the truth.
-   Blue: CV, which holds B's speed. Green dashed: the IDM, a driver model,
+   Blue: CV, which holds B's speed. Magenta dashed: the IDM, a driver model,
    following A's most likely future.
 
 At :math:`t` = 0 there are 22.3 m between A's rear and B's front. A brakes
@@ -1880,14 +1890,14 @@ A Second Run, with the AV 24 m Closer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/run2.png
-   :alt: Car A's meters driven against time from 0 to 5 seconds, in the second run. A gray dotted horizontal line near 6.5 meters, tag 1 above it: A reaches the junction there. The black truth rises to about 5.5 meters by 1.5 seconds and stays there: A waits. A green dashed line, the left mode with the AV ignored, rises straight to about 27 meters. A solid green line, the left mode with the gap rule, follows the truth, flat, and starts rising after about 4 seconds. A dash-dotted vertical line at 3.64 seconds, tag 2 beside it: the AV has passed.
+   :alt: Car A's meters driven against time from 0 to 5 seconds, in the second run. A gray dotted horizontal line near 6.5 meters, tag 1 above it: A reaches the junction there. The black truth rises to about 5.5 meters by 1.5 seconds and stays there: A waits. A magenta dashed line, the left mode with the AV ignored, rises straight to about 27 meters. A solid magenta line, the left mode with the gap rule, follows the truth, flat, and starts rising after about 4 seconds. A dash-dotted vertical line at 3.64 seconds, tag 2 beside it: the AV has passed.
    :width: 70%
    :align: center
 
    Run 2: car A's meters driven against time, 0 = now. **1:** the gray
    dotted line, where A reaches the junction. **2:** the dash-dotted line,
-   when the AV has passed, 3.64 s. Black: the truth, A waits. Green dashed:
-   the left mode with the AV ignored. Solid green: the left mode with the
+   when the AV has passed, 3.64 s. Black: the truth, A waits. Magenta dashed:
+   the left mode with the AV ignored. Solid magenta: the left mode with the
    gap rule.
 
 Run 2: only the AV starts 24 m further east, so 24 m closer to the
@@ -1920,14 +1930,14 @@ Post-Encroachment Time: How Close the Two Runs Came
    wider margin.
 
 .. figure:: /_static/images/L8/pet_timeline.png
-   :alt: A timeline from 0 to 8 seconds, time from now, in two parts. Run 1: an orange bar for car A from 3.19 to 4.09 seconds and a black bar for the AV from 5.63 to 6.19, with a double arrow between them, tag 1. Run 2: a black bar for the AV from 2.63 to 3.19 seconds, a double arrow from 3.19 to 8, tag 2, and an orange arrow for car A pointing right from 8 seconds.
+   :alt: A timeline from 0 to 8 seconds, time from now, in two parts. Run 1: a green bar for car A from 3.19 to 4.09 seconds and a black bar for the AV from 5.63 to 6.19, with a double arrow between them, tag 1. Run 2: a black bar for the AV from 2.63 to 3.19 seconds, a double arrow from 3.19 to 8, tag 2, and a green arrow for car A pointing right from 8 seconds.
    :width: 95%
    :align: center
 
    When each car's body is on the red cross, against the time from now:
-   run 1 on top, run 2 below. Orange: car A; black: the AV. **1:** run 1's
+   run 1 on top, run 2 below. Green: car A; black: the AV. **1:** run 1's
    PET, from A leaving to the AV arriving. **2:** run 2's PET so far, from
-   the AV leaving to the end of the run at 8 s; the orange arrow: A has not
+   the AV leaving to the end of the run at 8 s; the green arrow: A has not
    arrived by then.
 
 The bars show when each car's body is on the red cross. The body runs from

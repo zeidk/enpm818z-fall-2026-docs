@@ -101,16 +101,17 @@ Two exercises end with a check in the lecture's hands-on window.
 
       Question 1: 0.5 s, and 10 × 0.5 = 5.0 m.
 
-      Question 2: 10 / 3 = 3.33 s. The average speed is 10 / 2 = 5 m/s, so
-      the AV drives 5 × 3.33 = 16.67 m.
+      Question 2: 10 / 3 = 3.33 s. The speed falls evenly, so its average
+      is halfway: (10 + 0) / 2 = 5 m/s, and the AV drives 5 × 3.33 = 16.67 m.
 
       Question 3: 0.5 + 3.33 = 3.83 s (and 5.0 + 16.67 = 21.67 m). Yes:
-      5 s covers 3.83 s, with room to slow down gently.
+      5 s covers 3.83 s, and the extra 5 − 3.83 = 1.17 s lets the AV slow
+      down gently.
 
       Question 4:
 
       1. Reacting: 0.5 s and 4.0 m, as in the lecture.
-      2. Braking: 8 / 1.5 = 5.33 s, at an average speed of 8 / 2 = 4 m/s:
+      2. Braking: 8 / 1.5 = 5.33 s, at an average speed of (8 + 0) / 2 = 4 m/s:
          4 × 5.33 = 21.33 m.
       3. In all: 0.5 + 5.33 = 5.83 s and 4.0 + 21.33 = 25.33 m.
 

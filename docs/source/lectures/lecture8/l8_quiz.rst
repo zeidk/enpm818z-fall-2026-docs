@@ -102,7 +102,8 @@ Multiple Choice (Questions 1 to 15)
    3. In all: 0.5 + 2.67 = 3.17 s.
 
    **A** leaves out the reaction time. **C** is the horizon the lecture
-   chose, which covers the 3.17 s with room to slow down gently. **D** is
+   chose: it covers the 3.17 s, and the extra 1.83 s lets the AV slow down
+   gently. **D** is
    the distance, 4.0 + 10.67 = 14.67 m, not a time. See the Introduction in
    :doc:`l8_lecture`.
 

@@ -5,10 +5,28 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.18.0: Lecture 8 Renamed Trajectory Prediction, New Sections (2026-10-28)
+.. dropdown:: v2.18.1: Lecture 8 Colors and Clearer Steps (2026-10-29)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lecture 8
+
+   - **Figures:** car A and its path are green, the predicted lane paths
+     magenta, so the red cross where A's turn crosses the AV's lane stands
+     out. The browser hands-on uses the same colors.
+   - **How far ahead to predict:** the story comes first, then the reaction
+     time, braking time and stopping time, each named and explained. The
+     figure shows the obstacle and that the AV is moving.
+   - **Lecture page:** clearer wording in the scene, physics models,
+     scoring and several futures sections; the 5 s horizon says why it was
+     chosen.
+   - **Exercises:** Exercise 1's answers explain the average braking speed.
+   - **Quiz:** the horizon question's answer gives the 1.83 s to spare.
+
+.. dropdown:: v2.18.0: Lecture 8 Renamed Trajectory Prediction, New Sections (2026-10-28)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lecture 8
 

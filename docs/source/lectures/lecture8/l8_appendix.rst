@@ -301,12 +301,12 @@ P(left) as Car A Approaches
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/p_left_time.png
-   :alt: P(left turn) against time from minus 4 to 3 seconds, 0 to 1. A green line stays at 0.5 until about minus 1.5 seconds, rises through 0.6 at minus 1 and 0.87 at 0, and reaches about 0.99 after 1 second. A dashed orange vertical line at minus 2, tag 1: A starts braking. A gray dotted vertical line at 0, tag 2: now.
+   :alt: P(left turn) against time from minus 4 to 3 seconds, 0 to 1. A magenta line stays at 0.5 until about minus 1.5 seconds, rises through 0.6 at minus 1 and 0.87 at 0, and reaches about 0.99 after 1 second. A dashed green vertical line at minus 2, tag 1: A starts braking. A gray dotted vertical line at 0, tag 2: now.
    :width: 70%
    :align: center
 
    P(left), the probability of the left-turn mode, against time, 0 = now.
-   **1:** the dashed orange line, :math:`t` = −2 s, when A starts braking.
+   **1:** the dashed green line, :math:`t` = −2 s, when A starts braking.
    **2:** the gray dotted line, now.
 
 **1** A starts braking, :math:`t` = −2 s. **2** Now, :math:`t` = 0.
