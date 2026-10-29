@@ -5,10 +5,22 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.18.3: Lecture 8 Tempe Explained (2026-10-29)
+.. dropdown:: v2.18.4: Lecture 8 Hands-On Answers and Run 2 (2026-10-29)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lecture 8
+
+   - **Hands-on, part 1:** the answers to "when can you tell that car A slows
+     down, and that it turns", measured in the simulation.
+   - **Lecture page:** constant velocity has a definition box; Step 1 says
+     why the fit uses 1.5 of the 2 s of track; run 2 explains A's 3.0 s gap
+     and where the 0.86 m error comes from.
+
+.. dropdown:: v2.18.3: Lecture 8 Tempe Explained (2026-10-29)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lecture 8
 

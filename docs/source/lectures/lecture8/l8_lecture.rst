@@ -451,6 +451,18 @@ Its ``scene`` part shows the junction over time. The commands are on
    2. At which time can you first tell, by eye, that car A is slowing down?
       That it turns?
 
+.. dropdown:: Answers, from the simulation
+   :class-container: sd-border-success
+
+   - **Slowing:** A brakes from :math:`t` = −2 s, the slider's start. Its
+     dots, one every 0.1 s, are 0.80 m apart then, 0.70 m at −1 s, 0.60 m
+     at 0 and 0.50 m from 1 s on, so the eye sees them close up slowly.
+   - **Turning:** A enters the junction at 1.2 s, but its heading starts to
+     change only at 2.3 s. It is 0.5 m off its straight line at 2.8 s (ten
+     times the track's 0.05 m noise) and 1 m off at 3.1 s, so by eye about
+     2.5 to 3 s. The map-aware prediction already gives the left turn 0.87
+     at :math:`t` = 0.
+
 
 .. _l8-lec-physics:
 
@@ -482,8 +494,10 @@ Step 1: Read Car A's Motion from Its Track
    band and the dot.
 
 Every physics model starts from car A's motion now, read from A's track.
-The blue band is the last 1.5 s of the track (16 positions; 1.5 s chosen).
-We fit to those positions the path of a car with constant acceleration that
+The AV keeps 2 s of A's track; the fit uses only its newest 1.5 s, the blue
+band (16 positions; both chosen: a shorter window follows a change in A's
+motion sooner, a longer one averages out more of the track's noise). We fit
+to those positions the path of a car with constant acceleration that
 passes closest to them (least squares). The dashed line is that path's
 speed.
 
@@ -506,7 +520,14 @@ speed.
 Step 2: Constant Velocity, by Hand
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Constant velocity (CV):** the road user keeps the velocity it has now.
+.. admonition:: Definition: Constant velocity (CV)
+   :class: note
+
+   A physics model: the road user keeps the velocity it has now, the same
+   speed and the same heading, for the whole horizon. Its predicted path is
+   a straight line.
+
+In CV, each coordinate moves at its velocity:
 
 .. math::
 
@@ -1898,15 +1919,16 @@ A Second Run, with the AV 24 m Closer
    the left mode with the AV ignored. Solid magenta: the left mode with the
    gap rule.
 
-Run 2: only the AV starts 24 m further east, so 24 m closer to the
-crossing. **1** A reaches the junction; **2** the AV has passed.
+Run 2 changes one thing: the AV starts 24 m closer to the crossing. **1** A
+reaches the junction; **2** the AV has passed.
 
-1. Gap: 6.0 − 24 / 8 = 3.0 s, below 4.1 s: A stops and waits.
+1. The AV reaches the crossing 24 / 8 = 3.0 s earlier, so A's gap is
+   6.0 − 3.0 = 3.0 s, below 4.1 s: A stops and waits.
 2. The AV reaches the crossing at 6.08 − 3 = 3.08 s and is a car length past
-   it at 3.08 + 4.5 / 8 = 3.64 s (**2**). The gap rule says A goes then; our
+   it at 3.08 + 4.5 / 8 = 3.64 s (**2**). The gap rule lets A go then; our
    driver waits 1 s more (chosen): 4.64 s.
-3. Left mode, AV ignored: FDE 18.31 m. With the gap rule: 0.86 m, from that
-   1 s.
+3. Left mode, AV ignored: FDE 18.31 m. With the gap rule: 0.86 m; that error
+   comes from the extra 1 s our driver waits.
 
 .. note::
 
