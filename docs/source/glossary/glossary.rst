@@ -2811,8 +2811,8 @@ L7: Route Planning
 
 .. _g-l8:
 
-L8 (not yet published)
-======================
+L8: Prediction and Behavior Modeling
+====================================
 
 .. glossary::
 
@@ -2821,7 +2821,7 @@ L8 (not yet published)
       predicted time (Chang et al., 2019; Wilson et al., 2021). L8's CV
       prediction for car A is off by 0.52, 1.50, 2.58, 6.01 and 12.35 m at 1
       to 5 s, so over those five times its ADE is 22.96 / 5 = 4.59 m; over
-      all 50 predicted times, every 0.1 s, it is 3.37 m. See FDE. L8
+      all 50 predicted times, every 0.1 s, it is 3.37 m. See FDE. :doc:`L8 </lectures/lecture8/l8_index>`
 
    Calibration (Prediction)
       A predictor is calibrated when, of all the futures it gives a
@@ -2831,7 +2831,7 @@ L8 (not yet published)
       0.729 of the time. Counted by drive, chance alone moves the 0.729 by
       about 0.06, so the gap, 0.081, cannot show that the predictor is too
       sure there. Not the sensor
-      Calibration of L2. L8
+      Calibration of L2. :doc:`L8 </lectures/lecture8/l8_index>`
 
    Constant Velocity (CV)
       A physics model of motion: the road user keeps the velocity it has now,
@@ -2839,7 +2839,7 @@ L8 (not yet published)
       :math:`h` is the horizon. L5's tracker uses it for one 0.1 s step. In
       L8, CV predicts car A, which brakes for a left turn, straight on past
       the junction: 12.35 m off after 5 s. With no turn ahead, it is the best
-      of L8's three physics models: under 2 m for 3 s on the test set. L8
+      of L8's three physics models: under 2 m for 3 s on the test set. :doc:`L8 </lectures/lecture8/l8_index>`
 
    Critical Headway
       The shortest gap, in seconds, that a driver accepts to make a maneuver
@@ -2849,7 +2849,7 @@ L8 (not yet published)
       by the McTrans Center. In L8, car A turns left
       across the AV's lane only if the AV is at least 4.1 s from the
       crossing: 6.0 s in run 1, so A turns; 3.0 s in run 2, with the AV 24 m
-      closer, so A waits. L8
+      closer, so A waits. :doc:`L8 </lectures/lecture8/l8_index>`
 
    CTRA
       Constant turn rate and acceleration: CTRV with the speed changing at a
@@ -2858,7 +2858,7 @@ L8 (not yet published)
       CV: 7.26 m off at 5 s against 12.35 m, still a miss. With no turn
       ahead, the speed change it reads (braking before a turn, speeding up
       after it) often comes from a speed change that will stop: a mean error
-      of 15.2 m at 5 s on L8's test set, against CV's 3.6 m. L8
+      of 15.2 m at 5 s on L8's test set, against CV's 3.6 m. :doc:`L8 </lectures/lecture8/l8_index>`
 
    CTRV
       Constant turn rate and velocity: the road user keeps its speed and its
@@ -2867,18 +2867,18 @@ L8 (not yet published)
       gives 4.98 m/s and 0.331 rad/s: a circle of 4.98 / 0.331 = 15.0 m,
       close to the lane's 14.7 m. After the turn the lane straightens and
       the circle keeps turning. The radius divides by the turn rate, so
-      near a turn rate of 0 code switches to CV. L8
+      near a turn rate of 0 code switches to CV. :doc:`L8 </lectures/lecture8/l8_index>`
 
    Displacement Error
       The distance between a road user's predicted and true position at one
       time. ADE averages it over every predicted time; FDE takes its value
-      at the last one. L8
+      at the last one. :doc:`L8 </lectures/lecture8/l8_index>`
 
    FDE
       Final displacement error: the displacement error at the last predicted
       time (Chang et al., 2019; Wilson et al., 2021). L8's CV prediction for
       car A has an FDE of 12.35 m at 5 s. An FDE above 2.0 m is a miss. See
-      ADE and Miss Rate. L8
+      ADE and Miss Rate. :doc:`L8 </lectures/lecture8/l8_index>`
 
    Intelligent Driver Model (IDM)
       A model of a driver following another car (Treiber et al., 2000):
@@ -2891,14 +2891,14 @@ L8 (not yet published)
       values: :math:`T` = 1.6 s, :math:`a_{\max}` = 0.73 m/s², :math:`b` =
       1.67 m/s², :math:`s_0` = 2 m; L8 chose :math:`v_0` = 9 m/s. L8's car B,
       22.25 m behind car A and closing in at 1.77 m/s, wants
-      :math:`s^*` = 20.64 m and brakes at 0.30 m/s². L8
+      :math:`s^*` = 20.64 m and brakes at 0.30 m/s². :doc:`L8 </lectures/lecture8/l8_index>`
 
    Intent
       The maneuver a driver means to make next (turn left, go straight on,
       change lanes, stop). It cannot be measured; it is inferred from cues:
       slowing down, the position in the lane, a turn signal, where the lane
       goes. In L8, car A's slowing down alone makes the left turn 0.87
-      likely. L8
+      likely. :doc:`L8 </lectures/lecture8/l8_index>`
 
    Learned Predictor
       A predictor whose numbers are set by training on recorded tracks: it
@@ -2907,14 +2907,14 @@ L8 (not yet published)
       the same output as L8's map-aware predictor. L8 chose its turn speeds,
       :math:`\sigma`'s and priors by hand; a learned predictor has no such
       values to choose: training sets its network's weights instead.
-      Well-known designs: VectorNet, MultiPath, MTR. L8
+      Well-known designs: VectorNet, MultiPath, MTR. :doc:`L8 </lectures/lecture8/l8_index>`
 
    Marginal Prediction
       A prediction that predicts each road user alone. Tesla (AI Day 2022):
       "Relying purely on collision checks with marginal predictions will only
       get you so far because you will miss out on a lot of valid
       interactions". In L8, car B's prediction needs car A's, and car A's
-      needs the AV's plan. L8
+      needs the AV's plan. :doc:`L8 </lectures/lecture8/l8_index>`
 
    minADE
       The ADE of the best of a prediction's modes, the one that ends closest
@@ -2922,7 +2922,7 @@ L8 (not yet published)
       forecasted trajectory and the ground truth" (Wilson et al., 2021). L8's
       car A has two modes; the left turn ends closest (1.88 against 13.06 m),
       so minADE is its ADE, 0.86 m. It does not look at the probabilities.
-      L8
+      :doc:`L8 </lectures/lecture8/l8_index>`
 
    minFDE
       The FDE of the best of a prediction's modes, the one that ends closest
@@ -2930,7 +2930,7 @@ L8 (not yet published)
       under 2 m, so not a miss. More
       modes always lower it, so it is read together with a score that uses
       the probabilities, such as the probability given to the true future
-      (0.87 for car A). L8
+      (0.87 for car A). :doc:`L8 </lectures/lecture8/l8_index>`
 
    Miss Rate
       The share of predictions that miss. Argoverse 2: "the proportion of
@@ -2938,13 +2938,13 @@ L8 (not yet published)
       meters of ground truth according to endpoint error" (Wilson et al.,
       2021). With one mode, a miss is an FDE above 2.0 m; with several, no
       mode ends within 2.0 m. On L8's test set with a turn ahead, CV misses
-      99.3% of the time and the map's most likely mode 50.5%. L8
+      99.3% of the time and the map's most likely mode 50.5%. :doc:`L8 </lectures/lecture8/l8_index>`
 
    Mode (Prediction)
       One future trajectory of a multimodal prediction, with its
       probability. In L8, car A has two modes: the left turn, probability
       0.87, and straight on, 0.13. Not the Degraded Mode or Synchronous Mode
-      of L2. L8
+      of L2. :doc:`L8 </lectures/lecture8/l8_index>`
 
    Multimodal Prediction
       A prediction made of :math:`K` future trajectories for one road user,
@@ -2953,7 +2953,7 @@ L8 (not yet published)
       straight on, a single answer trained for the smallest mean squared
       error learns to give the average of the futures: for L8's car A, the
       average of the left turn and straight on ends 7.21 m from each, inside
-      the AV's own lane, where no driver in A's lane ends up. L8
+      the AV's own lane, where no driver in A's lane ends up. :doc:`L8 </lectures/lecture8/l8_index>`
 
    Post-Encroachment Time (PET)
       "Post-encroachment time is the time between when the first vehicle
@@ -2962,14 +2962,14 @@ L8 (not yet published)
       larger PET is a wider margin. In L8's run 1, car A's rear bumper
       leaves the point where its turn crosses the AV's lane at 4.09 s and the
       AV's front bumper reaches it at 5.63 s: PET = 5.63 − 4.09 = 1.54 s. In
-      run 2, where A waits, PET is more than 4.81 s. L8
+      run 2, where A waits, PET is more than 4.81 s. :doc:`L8 </lectures/lecture8/l8_index>`
 
    Prediction Horizon
       How far ahead a prediction reaches, :math:`h`, in seconds. It must
       cover at least the time the AV needs to react and stop: at 8 m/s, with
       0.5 s to react and braking at 3 m/s² (chosen), 0.5 + 8 / 3 = 3.17 s.
       L8 predicts 5 s ahead (chosen). Argoverse predicts 3 s, Argoverse 2
-      6 s and the Waymo Open Motion Dataset 8 s. L8
+      6 s and the Waymo Open Motion Dataset 8 s. :doc:`L8 </lectures/lecture8/l8_index>`
 
    Trajectory Prediction
       For each road user near the AV, from its past track and the map: its
@@ -2977,7 +2977,7 @@ L8 (not yet published)
       sure each one is, and, when it could do different things, several
       futures with a probability each. L8 compares physics models (CV, CTRV,
       CTRA), the map's lanes with Bayes' rule, and models of drivers who
-      react to each other. L8
+      react to each other. :doc:`L8 </lectures/lecture8/l8_index>`
 
 .. raw:: html
 

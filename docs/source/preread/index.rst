@@ -41,6 +41,10 @@ That material lives here. **Each page states when to read it.** Most are read
      - After L6
      - Camera model, ORB, stereo depth, PnP tracking, a bag of visual words,
        and a robust back end, on the L6 route recorded with a stereo camera.
+   * - :doc:`Foxglove </preread/foxglove>`
+     - After L8
+     - A web viewer for live ROS 2 topics and recorded drives, on a demo
+       that shows L8's predictions.
    * - :doc:`Automotive Cybersecurity </preread/cybersecurity>`
      - Before L13
      - Attack surfaces, ISO/SAE 21434, and TARA. Supports the L13
@@ -56,4 +60,5 @@ That material lives here. **Each page states when to read it.** Most are read
    detector-grading
    slam-lidar
    slam-visual
+   foxglove
    cybersecurity

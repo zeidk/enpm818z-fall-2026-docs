@@ -5,10 +5,26 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.16.2: Lecture 8 Figure Label (2026-10-28)
+.. dropdown:: v2.17.0: Publish Lecture 8, Prediction and Behavior Modeling (2026-10-28)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lecture 8
+
+   - **Lecture 8 is open:** the lecture, Going Further (appendix), code,
+     exercises, quiz and references pages, and the hands-on that runs in the
+     browser. The glossary's L8 section is published and its terms link to
+     the L8 index.
+
+   .. rubric:: Pre-Read Material
+
+   - **Foxglove:** the reading that goes with L8, a second viewer for ROS 2
+     topics, live or recorded, shown on a demo of L8's predictions.
+
+.. dropdown:: v2.16.2: Lecture 8 Figure Label (2026-10-28)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lecture 8
 
