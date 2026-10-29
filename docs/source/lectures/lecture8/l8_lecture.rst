@@ -724,7 +724,8 @@ lane's radius is 14.7 m).
      - 4.81 m
 
 The lane straightens after the turn, but CTRV's circle keeps turning
-(dotted).
+(dotted). **So: CTRV beats CV only once a turn is under way, for about a
+second** (3.06 m off at 2 s).
 
 
 .. _l8-lec-err-horizon:
@@ -1042,6 +1043,9 @@ Physics Models, Scored
      3.5 s (1.65 m at 3 s), the best of the three. With a turn ahead, CV
      passes 2 m at 1.3 s, and all three miss at 5 s almost every time (98.3
      to 99.5%).
+   - **CTRV and CTRA:** better than CV only once a turn or a braking is
+     under way, for about a second; with no turn ahead, worse (FDE 10.1 and
+     15.2 against 3.6 m).
    - **Uncertainty:** CV's 95% region held the truth 82 to 86% of the time
      with no turn, 7.2% at 5 s with one.
    - **So:** trust CV only for short horizons with no maneuver ahead. Near
@@ -1466,6 +1470,12 @@ With a turn ahead (1095 predictions):
 With no turn, the most likely mode does worse than CV: FDE 3.91 against
 3.64 m, and it misses more (49.5 against 35.9%). In 1 of 10 of these
 predictions, its most likely mode is the wrong lane.
+
+.. note::
+
+   **So:** near a junction, the lanes pick the right path (84%), often at
+   the wrong speed; with no turn ahead, CV does better, so the AV keeps a
+   CV mode too.
 
 
 .. _l8-lec-calibration:

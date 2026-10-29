@@ -5,10 +5,21 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.18.5: Lecture 8 When to Trust Constant Velocity (2026-10-29)
+.. dropdown:: v2.18.6: Lecture 8 Verdicts for Each Predictor (2026-10-29)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lecture 8
+
+   - **Lecture page:** CTRV and the map-aware predictor each end with a clear
+     verdict: CTRV beats CV only once a turn is under way, for about a
+     second; the map's lanes pick the right path near a junction, often at
+     the wrong speed, so the AV keeps a CV mode too.
+
+.. dropdown:: v2.18.5: Lecture 8 When to Trust Constant Velocity (2026-10-29)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lecture 8
 
