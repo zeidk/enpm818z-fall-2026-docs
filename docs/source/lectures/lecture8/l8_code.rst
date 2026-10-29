@@ -64,6 +64,18 @@ predictors predict from. Drag it to predict from another moment, from
 lecture's "now", 2.0 s into car A's braking.
 
 
+Run It in Your Browser
+~~~~~~~~~~~~~~~~~~~~~~
+
+`Open the hands-on in your browser <../../_static/handson/l8_handson.html>`_
+to run the same four parts with no Python on your computer. Each part has its
+own tab, with the same **now** slider and the hands-on questions. The
+``l8sim.py`` tab holds the simulation code: edit a value (``SIG_V``,
+``A_LAT``, ``GAP``), press **Apply**, and every part runs again with your
+version. The first visit downloads Python, numpy and matplotlib (about 26 MB),
+so it takes a while; the browser keeps them for the next visit.
+
+
 Options
 ~~~~~~~
 

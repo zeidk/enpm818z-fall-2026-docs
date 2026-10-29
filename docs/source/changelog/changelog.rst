@@ -5,10 +5,26 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.15.1: Lecture 8 Wording (2026-10-28)
+.. dropdown:: v2.16.0: Lecture 8 Hands-On in the Browser (2026-10-28)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lecture 8
+
+   - **Code page:** a link to the hands-on running in the browser: one tab for
+     each of the four parts, with the same now slider and questions, and a tab
+     where you edit ``l8sim.py`` and run every part again. No Python is needed
+     on your computer. Still hidden until Lecture 8 is published.
+
+   .. rubric:: Tools
+
+   - **make_l8_handson_html.py:** builds that page from the lecture8 scripts
+     of the course's Python repo.
+
+.. dropdown:: v2.15.1: Lecture 8 Wording (2026-10-28)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lecture 8
 

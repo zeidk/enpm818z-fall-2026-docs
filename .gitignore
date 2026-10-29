@@ -210,3 +210,5 @@ _build
 .claude
 *.docx
 *.html
+# the in-browser hands-on pages are published files, built by tools/make_l8_handson_html.py
+!docs/source/_static/handson/*.html
