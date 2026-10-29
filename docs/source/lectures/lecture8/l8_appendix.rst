@@ -23,16 +23,19 @@ Going Further
      - **What it adds to the lecture**
    * - :ref:`l8-app-sec-physics`
      - How the fit reads speed, heading, turn rate and braking from a track;
-       CTRV and CTRA written out; how our test set is built.
+       how our test set is built.
    * - :ref:`l8-app-sec-scoring`
      - CV's uncertainty term by term, why the 95% region's radius is
        2.45 times :math:`\sigma`, and Waymo's miss rate and mAP.
    * - :ref:`l8-app-sec-map`
      - The three map scores written out, P(left) as car A approaches the
-       junction, and Autoware's map-based prediction.
+       junction, the map-aware predictor's results (on car A, on the test
+       set, calibration, where it goes wrong), Autoware's map-based
+       prediction, and hands-on part 3.
    * - :ref:`l8-app-sec-drivers`
-     - The Intelligent Driver Model's (IDM's) parameters, and the gap at
-       which car B follows steadily.
+     - Car B following car A, the Intelligent Driver Model (IDM) written out
+       and worked by hand, its parameters, and the gap at which car B
+       follows steadily.
 
 
 .. _l8-app-sec-physics:
@@ -76,55 +79,6 @@ Take the track's last 1.5 s: 16 positions :math:`(x_i, y_i)` at times
 
 For car A: :math:`v` = 5.99 m/s, :math:`\theta` = −178.14° (1.86° south of
 west), :math:`\omega` = 0.049 rad/s, braking 0.96 m/s².
-
-
-.. _l8-app-ctrv:
-
-CTRV, Written Out
-~~~~~~~~~~~~~~~~~
-
-In CTRV, the speed :math:`v` and the turn rate :math:`\omega` are fixed, and
-the heading turns: :math:`\theta(t) = \theta_0 + \omega t`. The position is
-the velocity added up over time:
-
-.. math::
-
-   x(h) = x_0 + \int_0^h v\cos(\theta_0 + \omega t)\,dt
-        = x_0 + \frac{v}{\omega}\big[\sin(\theta_0 + \omega h) - \sin\theta_0\big]
-
-.. math::
-
-   y(h) = y_0 + \int_0^h v\sin(\theta_0 + \omega t)\,dt
-        = y_0 + \frac{v}{\omega}\big[\cos\theta_0 - \cos(\theta_0 + \omega h)\big]
-
-1. The path is a circle of radius :math:`v / \omega`.
-2. When :math:`\omega \to 0`:
-   :math:`\sin(\theta_0 + \omega h) - \sin\theta_0 \approx \omega h \cos\theta_0`,
-   so :math:`x(h) \to x_0 + v h \cos\theta_0`: constant velocity.
-3. The code divides by :math:`\omega`, so it switches to CV for small
-   :math:`|\omega|` (``l8sim.py``: below 0.001 rad/s).
-
-
-.. _l8-app-ctra:
-
-CTRA: CTRV with a Changing Speed
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The heading turns as in CTRV, :math:`\theta(t) = \theta_0 + \omega t`, and
-the speed changes at a constant rate :math:`a`: :math:`v(t) = v_0 + a t`.
-
-.. math::
-
-   x(h) = x_0 + \int_0^h (v_0 + a t)\cos(\theta_0 + \omega t)\,dt, \qquad
-   y(h) = y_0 + \int_0^h (v_0 + a t)\sin(\theta_0 + \omega t)\,dt
-
-- Schubert, Richter and Wanielik give the integrals in closed form
-  (Schubert et al., 2008). Our code (``l8sim.py``) adds them up in steps of
-  0.01 s instead.
-- A braking car's speed reaches 0 and would then go negative: the car would
-  drive backward. The code holds the speed at 0 from then on.
-- Car A from :math:`t` = 0: braking at 0.96 m/s² from 5.99 m/s, it would
-  stop after 5.99 / 0.96 = 6.2 s, past our 5 s horizon.
 
 
 .. _l8-app-testset:
@@ -246,7 +200,7 @@ Using the Map
 -------------
 
 This section continues the slides "Step 4: Bayes' rule turns the scores
-into probabilities" and "Where map-aware prediction goes wrong" in the Using
+into probabilities" and "Results" in the Using
 the Map section of the :doc:`lecture <l8_lecture>`.
 
 
@@ -301,20 +255,193 @@ P(left) as Car A Approaches
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/p_left_time.png
-   :alt: P(left turn) against time from minus 4 to 3 seconds, 0 to 1. A magenta line stays at 0.5 until about minus 1.5 seconds, rises through 0.6 at minus 1 and 0.87 at 0, and reaches about 0.99 after 1 second. A dashed green vertical line at minus 2, tag 1: A starts braking. A gray dotted vertical line at 0, tag 2: now.
+   :alt: P(left turn) against time from minus 4 to 3 seconds, 0 to 1. A magenta line stays at 0.5 until about minus 1.5 seconds, rises through 0.6 at minus 1 and 0.87 at 0, and reaches about 0.99 after 1 second. A dashed green vertical line at minus 2, tag 1: car A starts braking. A gray dotted vertical line at 0, tag 2: now.
    :width: 70%
    :align: center
 
    P(left), the probability of the left-turn mode, against time, 0 = now.
-   **1:** the dashed green line, :math:`t` = −2 s, when A starts braking.
+   **1:** the dashed green line, :math:`t` = −2 s, when car A starts braking.
    **2:** the gray dotted line, now.
 
-**1** A starts braking, :math:`t` = −2 s. **2** Now, :math:`t` = 0.
+**1** Car A starts braking, :math:`t` = −2 s. **2** Now, :math:`t` = 0.
 P(left) at :math:`t` = −2, −1, 0 and +1 s: 0.50, 0.60, 0.87 and 0.99. More
 than 17.3 m from the junction, a driver about to turn could still drive
 8 m/s: :math:`\sqrt{5.42^2 + 2 \times 1.0 \times 17.3}` = 8.0. So both
 paths expect 8 m/s, and P(left) stays 0.5. Closer in, each second of braking
 adds evidence.
+
+
+.. _l8-lec-map-truth:
+
+The Map-Aware Prediction Against the Truth
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L8/modes_vs_truth.png
+   :alt: The close-up of the junction with car A at x 175. The thick magenta left-turn mode, p = 0.87, curves into the side road; the magenta dashed straight-on mode, p = 0.13, runs west. The black truth follows the magenta left-turn line into the side road, its dots a little short of the magenta dots.
+   :width: 70%
+   :align: center
+
+   Car A's two modes against the truth, a dot every second. Thick magenta:
+   the left turn, probability 0.87. Dashed magenta: straight on, 0.13. Black:
+   the truth. Its dots fall a little short of the left mode's dots.
+
+The left mode's error at 1 to 5 s: 0.20, 0.62, 1.04, 1.46 and 1.88 m.
+
+The mode picks the correct lane but drives it a little too fast: it turns at
+5.42 m/s, and car A turns at 5.0 m/s (our choice for the truth). 5.42 − 5.0 =
+0.42 m/s too fast, so the mode gets about 0.42 m farther ahead of car A every second.
+
+CV, for comparison: FDE 12.35 m.
+
+
+.. _l8-lec-map-test:
+
+Map-Aware Prediction on the Test Set
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L8/test_scores.png
+   :alt: A bar chart of mean FDE at 5 seconds, in meters, on the test set's predictions with a turn ahead. Blue CV 20.8, purple CTRV 19.1, dark gold CTRA 18.3, magenta map most likely mode 5.0, and a hatched magenta bar, map best of the modes, 1.8. A gray dotted line at 2 meters.
+   :width: 70%
+   :align: center
+
+   Mean FDE at 5 s on the test set's predictions with a turn ahead. Blue:
+   CV. Purple: CTRV. Dark gold: CTRA. Magenta: the map's most likely mode.
+   Hatched magenta: the best of the map's modes (minFDE). Gray dotted line:
+   2 m, the miss threshold.
+
+With a turn ahead (1095 predictions):
+
+- The true path is the most likely mode 84% of the time.
+- Still, the most likely mode misses 50.5% of the time (mean FDE 4.98 m):
+  the correct lane, at the wrong speed.
+
+With no turn, the most likely mode does worse than CV: FDE 3.91 against
+3.64 m, and it misses more (49.5 against 35.9%). In 1 of 10 of these
+predictions, its most likely mode is the wrong lane.
+
+.. note::
+
+   **So:** near a junction, the most likely mode is the correct path (84%), often at
+   the wrong speed; with no turn ahead, CV does better, so the AV keeps a
+   CV mode too.
+
+
+.. _l8-lec-calibration:
+
+Calibration: How Often the Probabilities Come True
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. admonition:: Definition: Calibration
+   :class: note
+
+   A predictor is calibrated when, of all the futures it gives a
+   probability :math:`p`, a fraction :math:`p` comes true (Guo et al.,
+   2017). Of 100 modes given 0.8, about 80 should be the true path.
+
+Our test set: every mode of every prediction (4896 modes), in four groups by
+its probability. Each dot is a group; its bar shows how far chance alone
+moves it.
+
+.. figure:: /_static/images/L8/reliability.png
+   :alt: A square plot of share that came true, 0 to 1, against probability given, 0 to 1 (each dot is placed at its group's mean). A gray dashed diagonal, tag 1. Four magenta dots with error bars: near 0.06 and 0.09, at 0.5 and 0.5, at 0.81 and 0.73 with a long bar, tag 2, below the diagonal, and near 0.99 and 0.98.
+   :width: 55%
+   :align: center
+
+   The share of each group's modes that came true against the probability
+   given (the group's mean). Each dot: a group; its bar: how far chance
+   alone moves it. **1:** the diagonal, where a perfectly calibrated
+   predictor's dots sit. **2:** the group of car A's 0.87 (0.7 to 0.9):
+   given 0.810 on average, came true 0.729.
+
+The table gives the same four groups:
+
+.. list-table::
+   :widths: 28 24 24 24
+   :header-rows: 1
+   :class: compact-table
+
+   * - **Probability given**
+     - **Mean given**
+     - **Came true**
+     - **Modes**
+   * - 0 to 0.3
+     - 0.061
+     - 0.091
+     - 904
+   * - 0.3 to 0.7
+     - 0.500
+     - 0.500
+     - 3032
+   * - 0.7 to 0.9
+     - 0.810
+     - 0.729
+     - 240
+   * - 0.9 to 1
+     - 0.986
+     - 0.976
+     - 720
+
+Modes from one drive are not independent, so chance is counted by redrawing
+whole drives at random: it moves the 0.729 by about 0.06. The gap,
+0.810 − 0.729 = 0.081, is only 1.3 times that: this test set cannot show
+whether the predictor is too sure in the group of car A's 0.87.
+
+
+.. _l8-lec-disc-calibration:
+
+Discussion: Trusting the Probabilities
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. admonition:: Discussion
+   :class: hint
+
+   Our modes given 0.810 came true 0.729 of the time, and chance alone moves
+   that by about 0.06. **What would you check before you trust these
+   probabilities in a car? What goes wrong in the planner if they are too
+   sure?** Three minutes with your neighbors.
+
+.. dropdown:: What to listen for
+   :color: success
+   :icon: check-circle
+
+   - **More drives.** Chance is counted by drives, and it shrinks with the
+     square root of their number, so four times the drives about halves the
+     0.06.
+   - **Groups, not only the total.** A predictor can be calibrated on average
+     and too sure in some scenes, such as left turns. Check those scenes on
+     their own.
+   - **Too sure hurts the planner.** If a 0.87 came true only 0.73 of the time,
+     the other future would happen 0.27 of the time, not 0.13: about twice as
+     often as the planner expects, so it is less ready for it than it should
+     be.
+   - **The fix:** rescale the probabilities on drives kept out of training,
+     then draw the calibration plot again.
+
+
+.. _l8-lec-map-wrong:
+
+Where Map-Aware Prediction Goes Wrong
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+1. **The speed along the path.** The correct lane at the wrong speed still
+   misses: our test set's drivers turn at 1.5 to 2.5 m/s² sideways, and the
+   predictor assumes 2.0.
+2. **A driver who does not look like the rule.** A car cruising at 6 m/s on
+   an 8 m/s street looks like a car about to turn.
+3. **Off the map.** A car that leaves its lane (a U-turn, parking, avoiding
+   something) has no lane to follow. Pedestrians and cyclists often have no
+   lane to follow.
+4. **A wrong map.** If roadworks close a lane, the map is out of date.
+
+.. note::
+
+   Keep a CV mode next to the lane modes. When no lane fits (a large offset
+   or heading gap on every lane), the CV mode gets most of the probability.
+
+.. tip::
+
+   See "In industry: Autoware's map-based prediction" in :doc:`Going
+   Further <l8_appendix>`.
 
 
 .. _l8-app-autoware:
@@ -342,14 +469,125 @@ Autoware detects a lane change from the distance to each lane boundary and
 the time to reach it (Autoware Foundation, map-based prediction).
 
 
+.. _l8-lec-handson-modes:
+
+Hands-On, Part 3: Two Futures and Their Probabilities
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``modes`` part of the hands-on script draws car A's two futures, with
+line widths that show their probabilities, and P(left) against time on the
+right. The commands are on :doc:`the Code page <l8_code>`.
+
+.. admonition:: What to look at
+   :class: hint
+
+   1. Move now from −0.5 to 1.0 s. Watch the line widths (the
+      probabilities) and P(left) on the right.
+   2. In ``l8sim.py``, set ``SIG_V = 0.5``, then ``2.0``. ``SIG_V`` is the
+      :math:`\sigma` of Step 3, 1.0 m/s in the lecture. What happens to
+      P(left) at :math:`t` = 0, and why?
+   3. Set ``A_LAT = 1.5``. ``A_LAT`` is the sideways acceleration of Step 2,
+      2.0 m/s² in the lecture. Does the left mode's FDE go down? Why?
+
+
 .. _l8-app-sec-drivers:
 
 Other Drivers
 -------------
 
-This section continues the slide "The Intelligent Driver Model (IDM): B's
-acceleration" in the Other Drivers section of the :doc:`lecture
-<l8_lecture>`.
+This section continues the slide "Following: the IDM" in the Other Drivers
+section of the :doc:`lecture <l8_lecture>`.
+
+
+.. _l8-lec-b-slows:
+
+Car B Slows Because Car A Slows
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L8/b_speed.png
+   :alt: Car B's speed in meters per second against time from minus 2 to 5 seconds, a gray dotted vertical line at 0 labeled now. The black truth falls from 8.0 to about 6.5 at 3.2 seconds, then rises to about 7.3 at 5 seconds. A blue line, CV, stays flat at 7.76 from 0 to 5 seconds. A magenta dashed line, the IDM behind car A's likely future, follows the truth down to about 6.75 at 3 seconds and back up to about 7.6.
+   :width: 70%
+   :align: center
+
+   Car B's speed against time; the dotted line is now. Black: the truth.
+   Blue: CV, which holds B's speed. Magenta dashed: the IDM, a driver model,
+   following car A's most likely future.
+
+At :math:`t` = 0 there are 22.3 m between car A's rear and B's front. Car A brakes
+for its turn, so B must slow too, until car A leaves its lane.
+
+- CV keeps B at 7.76 m/s: FDE 3.55 m.
+- A driver model (the IDM, next) that follows car A's most likely future: FDE
+  0.92 m.
+
+In truth, B is slowest at :math:`t` = 3.2 s, at 6.48 m/s.
+
+.. note::
+
+   To predict B, predict car A first. A predictor that treats each road user
+   alone cannot.
+
+
+.. _l8-lec-idm:
+
+The Intelligent Driver Model (IDM): B's Acceleration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A model of a driver following another car (Treiber et al., 2000):
+
+.. math::
+
+   a = a_{\max}\Big[\,1 - \Big(\frac{v}{v_0}\Big)^{4} - \Big(\frac{s^*}{s}\Big)^2\,\Big]
+
+- :math:`a`: B's acceleration; :math:`v`: B's speed; :math:`s`: the gap from
+  B's front to car A's rear; :math:`s^*`: the gap B wants (next section).
+- :math:`a_{\max}` = 0.73 m/s²: B's top acceleration (the paper's value).
+  :math:`v_0` = 9 m/s: the speed B would like to drive (chosen).
+- :math:`1 - (v / v_0)^4`: on an empty road, B speeds up, less and less as
+  :math:`v` nears :math:`v_0`.
+- :math:`(s^* / s)^2`: grows as the gap :math:`s` shrinks; it is 1 when
+  :math:`s` equals the gap B wants, :math:`s^*`. B brakes when this term is larger than the free-road
+  term (step 5 of :ref:`l8-lec-idm-hand`).
+
+.. tip::
+
+   See "The IDM's parameters, and steady following" in :doc:`Going Further
+   <l8_appendix>`.
+
+
+.. _l8-lec-idm-gap:
+
+The IDM: the Gap B Wants
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. math::
+
+   s^* = s_0 + v\,T + \frac{v\,\Delta v}{2\sqrt{a_{\max}\,b}}
+
+- :math:`s_0` = 2 m: the smallest gap, even when B stands still.
+- :math:`v\,T`, with :math:`T` = 1.6 s: B keeps 1.6 s of driving between
+  itself and car A.
+- :math:`\Delta v`: B's speed minus car A's, how fast B closes in. With
+  :math:`b` = 1.67 m/s², a comfortable braking, the last term makes the gap B
+  wants larger when B closes in fast.
+- :math:`T`, :math:`b` and :math:`s_0` are the paper's values (Treiber et
+  al., 2000).
+
+
+.. _l8-lec-idm-hand:
+
+The IDM, by Hand, for Car B
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+1. From the tracks: :math:`v` = 7.76 m/s, car A's 5.99, so :math:`\Delta v` =
+   7.76 − 5.99 = 1.77 m/s; :math:`s` = 22.25 m.
+2. The gap B wants: :math:`\sqrt{a_{\max}\,b} = \sqrt{0.73 \times 1.67}` =
+   1.104, so :math:`s^*` = 2 + 7.76 × 1.6 + 7.76 × 1.77 / (2 × 1.104) =
+   2 + 12.42 + 6.22 = 20.64 m.
+3. The free-road term: 1 − (7.76 / 9)⁴ = 1 − 0.553 = 0.447.
+4. The gap term: (20.64 / 22.25)² = 0.861.
+5. The gap term is 0.861 − 0.447 = 0.414 larger, so B's acceleration
+   :math:`a` is 0.73 × 0.414 = **0.30** m/s² of braking: B starts to brake.
 
 
 .. _l8-app-idm:
@@ -372,7 +610,7 @@ IDM, so :math:`1 - (v/v_0)^4 = (s^*/s)^2` and
 3. :math:`s` = 14.8 / √0.376 = 24.1 m.
 
 Our simulation starts car B at :math:`t` = −6 s, at 8 m/s with 24 m between
-A's rear and B's front: near that steady gap.
+car A's rear and B's front: near that steady gap.
 
 
 Sources for This Page
@@ -394,6 +632,6 @@ cites:
 - Autoware Foundation. `autoware_map_based_prediction, README
   <https://github.com/autowarefoundation/autoware_universe/blob/main/perception/autoware_map_based_prediction/README.md>`_.
   Accessed 2026-10-14.
-- Treiber, M., Hennecke, A. and Helbing, D. (2000). "Congested traffic
+- Treiber, M., Hennecke, car A. and Helbing, D. (2000). "Congested traffic
   states in empirical observations and microscopic simulations." *Physical
   Review E*, 62(2), 1805 to 1824.

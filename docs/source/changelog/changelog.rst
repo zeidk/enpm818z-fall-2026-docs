@@ -5,10 +5,36 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.18.7: Lecture 8 Fit, CTRV and Separate Runs Explained (2026-10-29)
+.. dropdown:: v2.18.8: Lecture 8 Review, Figures and Reading Material (2026-10-29)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lecture 8
+
+   - **Lecture page:** "car A" everywhere the lecture means car A. Scoring
+     says that ADE, FDE, minADE and minFDE are computed afterwards, from the
+     truth, never while the AV drives, with a new figure of the two loops.
+     A hit is defined (FDE of 2.0 m or less). minADE and minFDE are defined
+     in plain words. New figures: car A on its candidate lanes (Step 1),
+     three left-turn modes on a time line, the two runs from above, and a
+     side view of what a PET bar is. Step 2's graph reads in driving order;
+     Step 3 defines the likelihood; Step 4 defines the prior. New summary of
+     several futures; a behavior model is defined in Other Drivers. The two
+     runs are named run #1 and run #2.
+   - **Reading material:** the map-aware predictor's detailed results, its
+     calibration, where it goes wrong, hands-on part 3, and the IDM written
+     out and worked by hand move to Going Further; the lecture page keeps a
+     summary of each.
+   - **Quiz and exercises:** the calibration and IDM-by-hand questions are
+     removed (that material is now reading); Exercise 7 covers gap acceptance
+     only.
+   - **Glossary:** new entry: behavior model; the likelihood entry gains the
+     lecture's example; the FDE entry defines a hit.
+
+.. dropdown:: v2.18.7: Lecture 8 Fit, CTRV and Separate Runs Explained (2026-10-29)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lecture 8
 

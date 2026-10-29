@@ -7,7 +7,7 @@ The L8 hands-on is the folder ``lecture8/`` of
 <https://github.com/rubixcubic/enpm818z-fall-2026-carla-python/tree/main/lecture8>`_.
 Every part uses **one junction of CARLA's Town01**, the same scene the
 lecture uses: the AV driving east, car A ahead of it on the other lane,
-braking and about to turn left across the AV's lane, and car B following A.
+braking and about to turn left across the AV's lane, and car B following car A.
 
 You need Python with ``numpy`` and ``matplotlib``. You need **no CARLA
 server, no ROS and no GPU**.
@@ -32,7 +32,7 @@ server, no ROS and no GPU**.
      - "Hands-on, part 3: two futures and their probabilities" (Using the
        Map)
    * - ``interact``
-     - car B behind A (the IDM), and A's gap to the AV
+     - car B behind car A (the IDM), and car A's gap to the AV
      - "Hands-on, part 4: drivers who react" (Other Drivers)
 
 
@@ -108,15 +108,15 @@ The map frame has :math:`x` east and :math:`y` north, in meters (CARLA's
 - **The AV** drives east at 8 m/s, straight on.
 - **Car A** drives west, brakes at 1.0 m/s² from 8 m/s and turns left at
   5.0 m/s, across the AV's lane. It turns only if the AV is at least 4.1 s
-  from the crossing when A is 6 m before the junction (its gap); otherwise
+  from the crossing when car A is 6 m before the junction (its gap); otherwise
   it waits.
 - **Car B** follows car A and goes straight on. The Intelligent Driver Model
   (IDM) drives it.
 
 The predictors read only each car's **track**: its position every 0.1 s,
 with a 0.05 m error. Everything after "now" is the truth they must guess.
-Run 2 (the check box in part 4) moves the AV 24 m closer, so A's gap is
-3.0 s and A waits.
+Run #2 (the check box in part 4) moves the AV 24 m closer, so car A's gap is
+3.0 s and car A waits.
 
 .. important::
 
@@ -151,7 +151,7 @@ gives each model's error at 5 s (its FDE).
    (FDE). Which is smallest, and why?
 2. Move now from 0 to 3.0 s, 0.5 s at a time. When does CTRV beat CV at 5 s?
    When does it lose?
-3. Where is CTRA worst: while A brakes, or while it speeds up after the
+3. Where is CTRA worst: while car A brakes, or while it speeds up after the
    turn?
 
 
@@ -160,7 +160,7 @@ Part 3: Two Futures and Their Probabilities (``--part modes``)
 
 The map gives car A two lanes, straight on and left. Each lane is one
 future, drawn with a line width that shows its probability. The probability
-comes from how well the lane explains A's speed, its heading and its offset
+comes from how well the lane explains car A's speed, its heading and its offset
 from the lane's center (Bayes' rule). On the right: P(left) against time.
 
 **What to look for:**
@@ -182,17 +182,17 @@ Part 4: Drivers Who React (``--part interact``)
 
 **Left:** car A's meters driven against time: the truth, the most likely
 mode, and the same mode with the gap rule. **Right:** car B's speed: the
-truth, CV, and the IDM behind A's predicted future. Tick **AV 24 m closer**
-for run 2.
+truth, CV, and the IDM behind car A's predicted future. Tick **AV 24 m closer**
+for run #2.
 
 **What to look for:**
 
-1. Run 1: compare B's speed from CV and from the IDM. At what time do the
+1. Run #1: compare B's speed from CV and from the IDM. At what time do the
    two speed curves start to differ?
-2. Tick **AV 24 m closer** (run 2). Read A's gap in the title. Which of the
+2. Tick **AV 24 m closer** (run #2). Read car A's gap in the title. Which of the
    two "most likely mode" lines matches the truth?
 3. In ``l8sim.py``, set ``GAP = 2.5``. ``GAP`` is the critical headway, 4.1 s
-   in the lecture. What does A do in run 2 now? And car B, behind it?
+   in the lecture. What does car A do in run #2 now? And car B, behind it?
 
 
 The Files

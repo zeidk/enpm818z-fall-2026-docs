@@ -17,8 +17,7 @@ This quiz covers Lecture 8: what a planner needs from prediction and how far
 ahead it must look, the physics models (CV, CTRV, CTRA) and why their error
 grows, ADE, FDE and the miss rate, CV's 95% region and how often it holds
 the truth, several futures with minADE and minFDE, the map's lanes as
-candidate paths with Bayes' rule and the calibration of their
-probabilities, intent, the Intelligent Driver Model (IDM), gap acceptance,
+candidate paths with Bayes' rule, intent, the Intelligent Driver Model (IDM), gap acceptance,
 and post-encroachment time (PET). Every question can be answered from the lecture notes,
 :doc:`l8_lecture`. Nothing on this page needs
 :doc:`Going Further <l8_appendix>`.
@@ -44,7 +43,7 @@ and post-encroachment time (PET). Every question can be answered from the lectur
 ----
 
 
-Multiple Choice (Questions 1 to 15)
+Multiple Choice (Questions 1 to 14)
 ===================================
 
 .. admonition:: Question 1
@@ -102,8 +101,8 @@ Multiple Choice (Questions 1 to 15)
    3. In all: 0.5 + 2.67 = 3.17 s.
 
    **A** leaves out the reaction time. **C** is the horizon the lecture
-   chose: it covers the 3.17 s, and the extra 1.83 s lets the AV slow down
-   gently. **D** is
+   chose: it covers the 3.17 s and is 1.83 s longer than that minimum.
+   **D** is
    the distance, 4.0 + 10.67 = 14.67 m, not a time. See the Introduction in
    :doc:`l8_lecture`.
 
@@ -140,13 +139,14 @@ Multiple Choice (Questions 1 to 15)
    :class: hint
 
    At :math:`t` = 0 the fit gives car A a speed of 5.99 m/s and a turn rate
-   of 0.049 rad/s, while A really drives straight. What does the lecture
+   of 0.049 rad/s, while car A really drives straight. What does the lecture
    say about that turn rate?
 
-   A. It shows that A has started its left turn, on a circle of radius
+   A. It shows that car A has started its left turn, on a circle of radius
       14.7 m.
 
-   B. It gives a circle of radius 5.99 / 0.049 = 122 m, nearly straight.
+   B. It gives a circle of radius 5.99 / 0.049 = 122 m: after 5 s, CTRV is
+      3.65 m from CV's straight line.
       Each tracked position is off by about 0.05 m at random, and the fit
       reads that small zigzag as a slight turn.
 
@@ -159,8 +159,8 @@ Multiple Choice (Questions 1 to 15)
 
    **B**.
 
-   The truth is 0 rad/s: A drives straight at :math:`t` = 0. The 14.7 m in
-   **A** is the radius of the lane's left turn, which A has not started.
+   The truth is 0 rad/s: car A drives straight at :math:`t` = 0. The 14.7 m in
+   **A** is the radius of the lane's left turn, which car A has not started.
    **D** confuses this case with a turn rate near 0, where the radius,
    speed / turn rate, divides by almost 0 and code switches to CV; 0.049 rad/s gives a large
    radius, not a division by zero. See Physics Models in
@@ -289,7 +289,7 @@ Multiple Choice (Questions 1 to 15)
 
    A. If half the drivers turn and half go straight on, a single answer
       trained for the smallest mean squared error learns to give the
-      average of the futures, which no driver in A's lane follows.
+      average of the futures, which no driver in car A's lane follows.
 
    B. Several futures always have a smaller FDE than one.
 
@@ -304,7 +304,7 @@ Multiple Choice (Questions 1 to 15)
 
    For car A, the point-by-point average of the two futures ends at 5 s
    7.21 m from each, inside the AV's own lane, facing against its traffic.
-   No driver in A's lane ends up there, and its FDE is 5.92 m, a miss,
+   No driver in car A's lane ends up there, and its FDE is 5.92 m, a miss,
    while the left-turn future alone is off by 1.88 m. **B** is not a rule: a mode can be far off (straight on ends
    13.06 m away). See Several Futures in :doc:`l8_lecture`.
 
@@ -336,7 +336,7 @@ Multiple Choice (Questions 1 to 15)
 
    **A** is the lecture's answer with equal priors, where the two 0.5
    priors cancel. **C** forgets to divide by the sum, and **D** ignores the
-   evidence. A's slowing down still pulls P(left) from 0.2 up to 0.62. See
+   evidence. Car A's slowing down still pulls P(left) from 0.2 up to 0.62. See
    Using the Map in :doc:`l8_lecture`.
 
 
@@ -363,7 +363,7 @@ Multiple Choice (Questions 1 to 15)
    The turn speed is :math:`v = \sqrt{a \times r}`, with :math:`a` the
    sideways acceleration and :math:`r` the radius:
    :math:`\sqrt{2.0 \times 8.0} = \sqrt{16} = 4.0` m/s. **A** forgets the
-   square root. **B** is the lecture's turn speed for A's turn, of radius
+   square root. **B** is the lecture's turn speed for car A's turn, of radius
    14.7 m. **D** is :math:`\sqrt{8.0}`, without the acceleration. See Using
    the Map in :doc:`l8_lecture`.
 
@@ -371,42 +371,10 @@ Multiple Choice (Questions 1 to 15)
 .. admonition:: Question 12
    :class: hint
 
-   In the IDM by hand, car B wants a gap :math:`s^*` = 20.64 m, and
-   :math:`1 - (v/v_0)^4` = 0.447, with :math:`a_{\max}` = 0.73 m/s².
-   Suppose the gap to car A were :math:`s` = 15.0 m instead of 22.25 m
-   (chosen for this question), with everything else the same. What is B's
-   acceleration?
-
-   A. −0.30 m/s²
-
-   B. +0.33 m/s²
-
-   C. −1.06 m/s²
-
-   D. −1.45 m/s²
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **C**.
-
-   1. :math:`(s^*/s)^2` = (20.64 / 15.0)² = 1.376² = 1.893.
-   2. :math:`a` = 0.73 × (0.447 − 1.893) = 0.73 × (−1.446) = −1.06 m/s².
-
-   B brakes harder than in the lecture (−0.30 m/s², **A**): the gap term,
-   1.893, is now much larger than the free-road term, 0.447. **B** is the
-   free-road term alone,
-   0.73 × 0.447. **D** forgets to multiply by :math:`a_{\max}`. See Other
-   Drivers in :doc:`l8_lecture`.
-
-
-.. admonition:: Question 13
-   :class: hint
-
-   In run 1, when car A is 6 m before the junction, the AV is 6.0 s from
+   In run #1, when car A is 6 m before the junction, the AV is 6.0 s from
    the crossing. Suppose the AV started 16 m closer instead (chosen for this
    question), still at 8 m/s. With a critical headway of 4.1 s, what does
-   A do?
+   car A do?
 
    A. It turns, because the gap is 6.0 s.
 
@@ -423,14 +391,14 @@ Multiple Choice (Questions 1 to 15)
 
    1. 16 m at 8 m/s is 16 / 8 = 2.0 s less.
    2. Gap: 6.0 − 2.0 = 4.0 s.
-   3. 4.0 s is below 4.1 s, so A waits for the AV to pass.
+   3. 4.0 s is below 4.1 s, so car A waits for the AV to pass.
 
    **D** takes the 2.0 s change for the gap. The lecture makes the same
-   point for run 2: an AV that arrived 1 s later would give A a 4.0 s gap, and
-   A would still wait. See Other Drivers in :doc:`l8_lecture`.
+   point for run #2: an AV that arrived 1 s later would give car A a 4.0 s gap, and
+   car A would still wait. See Other Drivers in :doc:`l8_lecture`.
 
 
-.. admonition:: Question 14
+.. admonition:: Question 13
    :class: hint
 
    The left-turn mode (probability 0.87) puts car A in the AV's lane from
@@ -439,10 +407,10 @@ Multiple Choice (Questions 1 to 15)
 
    A. It brakes hard now, because the left turn is likely.
 
-   B. It keeps its speed: it arrives after A has left the lane. A plan that
+   B. It keeps its speed: it arrives after car A has left the lane. A plan that
       reached the crossing near :math:`t` = 4 s would have to slow down.
 
-   C. It ignores the left turn, because A is in the other lane now.
+   C. It ignores the left turn, because car A is in the other lane now.
 
    D. It changes lanes.
 
@@ -452,27 +420,27 @@ Multiple Choice (Questions 1 to 15)
    **B**.
 
    The planner keeps the AV away from the crossing while a likely mode puts
-   A there. 6.08 s is after 4.0 s, so the AV can keep its speed. **C** is
-   the check of current positions only, which finds A in the AV's lane only
+   car A there. 6.08 s is after 4.0 s, so the AV can keep its speed. **C** is
+   the check of current positions only, which finds car A in the AV's lane only
    at :math:`t` = 3.4 s. See Several Futures in :doc:`l8_lecture`.
 
 
-.. admonition:: Question 15
+.. admonition:: Question 14
    :class: hint
 
-   In run 1, car A's rear bumper leaves the red cross at 4.09 s, and the
+   In run #1, car A's rear bumper leaves the red cross at 4.09 s, and the
    AV's front bumper reaches it at 5.63 s: a post-encroachment time (PET) of
    1.54 s. Suppose the AV's front bumper reached the cross at 4.60 s instead,
    with car A's motion unchanged (chosen for this question). What is the
    PET, and what does it say?
 
-   A. 0.51 s: a narrower margin than run 1's 1.54 s.
+   A. 0.51 s: a narrower margin than run #1's 1.54 s.
 
-   B. 1.54 s: the same as run 1, because car A's motion is the same.
+   B. 1.54 s: the same as run #1, because car A's motion is the same.
 
-   C. 8.69 s: a wider margin than run 1's.
+   C. 8.69 s: a wider margin than run #1's.
 
-   D. 0.51 s: a wider margin than run 1's, because a smaller PET is safer.
+   D. 0.51 s: a wider margin than run #1's, because a smaller PET is safer.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
@@ -482,7 +450,7 @@ Multiple Choice (Questions 1 to 15)
    PET is the time between when the first vehicle last occupied a position
    and when the second one arrived there.
 
-   1. A's rear bumper leaves the cross at 4.09 s.
+   1. Car A's rear bumper leaves the cross at 4.09 s.
    2. The AV's front bumper arrives at 4.60 s.
    3. PET = 4.60 − 4.09 = 0.51 s.
 
@@ -492,10 +460,10 @@ Multiple Choice (Questions 1 to 15)
    in :doc:`l8_lecture`.
 
 
-True or False (Questions 16 to 20)
+True or False (Questions 15 to 18)
 ==================================
 
-.. admonition:: Question 16
+.. admonition:: Question 15
    :class: hint
 
    **True or false:** with no turn ahead, CTRA uses more terms than CV, so
@@ -514,26 +482,30 @@ True or False (Questions 16 to 20)
    :doc:`l8_lecture`.
 
 
-.. admonition:: Question 17
+.. admonition:: Question 16
    :class: hint
 
-   **True or false:** a predictor that gives six modes spread over every
-   lane and speed has a very good minFDE, so it is the best for the planner.
+   **True or false:** a predictor gives car A six modes, each with
+   probability 1/6: the left turn and straight on, each at three speeds
+   (slow, steady and fast). Its minFDE is very small, so it is the best
+   predictor for the planner.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False.**
 
-   One of six spread modes lands near the truth whatever the road user
-   does, so minFDE looks very good. But the AV must keep clear of every mode
-   it takes seriously, and six spread modes leave it little room. A score
-   that uses the probabilities catches this: Waymo's mAP, or the lecture's
-   check, the probability given to the true future. See Several Futures in
-   :doc:`l8_lecture`.
+   minFDE scores only the mode that ends closest to the truth. With six
+   modes, one ends near the truth whatever car A does, so minFDE is small.
+   But the planner gains little: the three left-turn modes would put car A in
+   the AV's lane at three different times, so the AV would have to keep the
+   crossing clear at all three. A score that uses the probabilities catches
+   this: Waymo's mAP, or the lecture's check, the probability given to the
+   true future (0.87 for the lecture's predictor, 1/6 = 0.17 for this one).
+   See Several Futures in :doc:`l8_lecture`.
 
 
-.. admonition:: Question 18
+.. admonition:: Question 17
    :class: hint
 
    **True or false:** at :math:`t` = 0, car A's offset from the lane's
@@ -545,56 +517,34 @@ True or False (Questions 16 to 20)
 
    **True.**
 
-   Before the junction, the two lanes share one line: A is 0.07 m from the
+   Before the junction, the two lanes share one line: car A is 0.07 m from the
    center and 1.86° off the heading of both, so the heading and offset
-   are the same for both lanes. Only A's speed tells them apart
+   are the same for both lanes. Only car A's speed tells them apart
    so far: 5.99 m/s, against 6.51 m/s expected for the left turn and
    8.00 m/s for straight on. See Using the Map in :doc:`l8_lecture`.
 
 
-.. admonition:: Question 19
+.. admonition:: Question 18
    :class: hint
 
-   **True or false:** in run 2, car A waits because its track up to
-   :math:`t` = 0 shows it braking harder than in run 1.
+   **True or false:** in run #2, car A waits because its track up to
+   :math:`t` = 0 shows it braking harder than in run #1.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False.**
 
-   A's track up to :math:`t` = 0 is the same in both runs. Only the AV
-   starts 24 m closer, so A's gap is 6.0 − 24 / 8 = 3.0 s, below 4.1 s, and
-   A waits. What A does next depends on where the AV is: the AV's motion is
-   an input to A's prediction. See Other Drivers in :doc:`l8_lecture`.
+   Car A's track up to :math:`t` = 0 is the same in both runs. Only the AV
+   starts 24 m closer, so car A's gap is 6.0 − 24 / 8 = 3.0 s, below 4.1 s, and
+   car A waits. What car A does next depends on where the AV is: the AV's motion is
+   an input to car A's prediction. See Other Drivers in :doc:`l8_lecture`.
 
 
-.. admonition:: Question 20
-   :class: hint
-
-   **True or false:** on the lecture's test set, the map-aware predictor's
-   modes given a probability of 0.7 to 0.9 (0.810 on average) came true
-   0.729 of the time, so in that group the predictor is calibrated, within
-   what chance alone explains.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True.**
-
-   A predictor is calibrated when, of all the futures it gives a
-   probability :math:`p`, a fraction :math:`p` comes true. The gap is
-   0.810 − 0.729 = 0.081. Modes from one drive are not independent, so
-   chance is counted by redrawing whole drives at random: it moves the 0.729
-   by about 0.06. The gap is only 1.3 times that, so the test set cannot
-   show that the predictor is too sure in this group, the one that holds car
-   A's 0.87. See Using the Map in :doc:`l8_lecture`.
-
-
-Short Answer (Questions 21 to 22)
+Short Answer (Questions 19 to 20)
 =================================
 
-.. admonition:: Question 21
+.. admonition:: Question 19
    :class: hint
 
    In the Tempe crash of March 2018, the ADS detected the pedestrian
@@ -616,7 +566,7 @@ Short Answer (Questions 21 to 22)
    Introduction in :doc:`l8_lecture`.
 
 
-.. admonition:: Question 22
+.. admonition:: Question 20
    :class: hint
 
    Explain why predicting car B needs car A's prediction, and why
@@ -625,12 +575,12 @@ Short Answer (Questions 21 to 22)
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   Car B follows A: A brakes for its turn, so B must slow too, until A
+   Car B follows car A: car A brakes for its turn, so B must slow too, until car A
    leaves its lane. CV keeps B at 7.76 m/s and ends 3.55 m off; the IDM,
-   following A's most likely future, ends 0.92 m off. Car A turns across
-   the AV's lane only with a gap of at least 4.1 s. In run 1 the gap is
-   6.0 s and A turns; in run 2, with the AV 24 m closer, it is 3.0 s and A
+   following car A's most likely future, ends 0.92 m off. Car A turns across
+   the AV's lane only with a gap of at least 4.1 s. In run #1 the gap is
+   6.0 s and car A turns; in run #2, with the AV 24 m closer, it is 3.0 s and car A
    waits. Ignoring the AV, the left mode ends 18.31 m off; with the gap
-   rule, 0.86 m. So the AV's own plan changes what A does, and planners
+   rule, 0.86 m. So the AV's own plan changes what car A does, and planners
    either alternate (predict, plan, predict again) or solve both together.
    See Other Drivers in :doc:`l8_lecture`.

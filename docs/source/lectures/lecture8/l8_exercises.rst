@@ -16,8 +16,8 @@ and on the lecture's Town01 junction. They use only the lecture, never
 :doc:`Going Further <l8_appendix>`. Exercise 1 works out how far ahead to
 predict. Exercises 2 and 3 run the physics models by hand. Exercise 4 checks
 CV's 95% region. Exercise 5 scores several futures, and Exercise 6 gives
-them probabilities with Bayes' rule. Exercise 7 runs the IDM and gap
-acceptance, and Exercise 8 puts the prediction to use in the AV's plan.
+them probabilities with Bayes' rule. Exercise 7 decides when car A turns
+(gap acceptance), and Exercise 8 puts the prediction to use in the AV's plan.
 Two exercises end with a check in the lecture's hands-on window.
 
 .. note::
@@ -29,7 +29,7 @@ Two exercises end with a check in the lecture's hands-on window.
    **The scene:** a T-junction of Town01, :math:`x` east and :math:`y`
    north in meters. The AV drives east at 8 m/s, straight on. Car A, on the
    other lane, drives west, brakes for a left turn across the AV's lane and
-   turns at 5.0 m/s. Car B follows A and goes straight on. :math:`t` = 0 is
+   turns at 5.0 m/s. Car B follows car A and goes straight on. :math:`t` = 0 is
    now. The motion is simulated, and every speed and braking in it was
    chosen for the lecture. Numbers that are not the lecture's are marked
    "chosen for this exercise".
@@ -250,11 +250,11 @@ Two exercises end with a check in the lecture's hands-on window.
    CTRV keeps the speed :math:`v` and the turn rate :math:`\omega`, so the
    road user drives on a circle of radius :math:`v / \omega`.
 
-   - At :math:`t` = 0, the fit gives car A 5.99 m/s and 0.049 rad/s. A
+   - At :math:`t` = 0, the fit gives car A 5.99 m/s and 0.049 rad/s. Car A
      drives straight.
    - At :math:`t` = 3 s, in the middle of the turn, it gives 4.98 m/s and
      0.331 rad/s.
-   - A's left turn on the map is about a quarter circle, 23.07 m long.
+   - Car A's left turn on the map is about a quarter circle, 23.07 m long.
 
    .. raw:: html
 
@@ -278,7 +278,7 @@ Two exercises end with a check in the lecture's hands-on window.
    exercise), and CTRV reads both exactly.
 
    4. What is its turn rate?
-   5. A turn like A's is a quarter circle, :math:`\pi/2` rad. After how many
+   5. A turn like car A's is a quarter circle, :math:`\pi/2` rad. After how many
       seconds has CTRV turned a quarter circle?
    6. By how many degrees has CTRV's heading turned after 5 s? What does
       that mean when the lane straightens after a quarter turn?
@@ -304,7 +304,8 @@ Two exercises end with a check in the lecture's hands-on window.
    .. dropdown:: Guidance
       :color: success
 
-      Question 1: at :math:`t` = 0, 5.99 / 0.049 = 122 m, nearly straight.
+      Question 1: at :math:`t` = 0, 5.99 / 0.049 = 122 m: a gentle curve,
+      0.15 m from CV's straight line after 1 s and 3.65 m after 5 s.
       At :math:`t` = 3 s, 4.98 / 0.331 = 15.0 m.
 
       Question 2: a quarter circle turns π/2 = 1.571 rad, and length =
@@ -537,7 +538,7 @@ Two exercises end with a check in the lecture's hands-on window.
       Question 3: 0.87, the left turn's probability.
 
       Question 4: 5.92 m is above 2.0 m: a miss. It ends inside the AV's
-      own lane, facing against its traffic, so no driver in A's lane ends up
+      own lane, facing against its traffic, so no driver in car A's lane ends up
       there.
       This is why predictors give several futures instead of their average.
 
@@ -580,7 +581,7 @@ Two exercises end with a check in the lecture's hands-on window.
      acceleration of 2.0 m/s² in the turn and a braking of 1.0 m/s² before
      it (both chosen).
    - The speed likelihood is :math:`e^{-\frac12 (\Delta v / \sigma)^2}`,
-     where :math:`\Delta v` is A's speed minus the path's, and
+     where :math:`\Delta v` is car A's speed minus the path's, and
      :math:`\sigma` = 1.0 m/s (chosen).
    - Bayes' rule: multiply each prior by its likelihood, then divide by the
      sum.
@@ -665,7 +666,7 @@ Two exercises end with a check in the lecture's hands-on window.
 
       :math:`\sigma` says how much drivers' speeds differ. A small
       :math:`\sigma` says that drivers hold the expected speed closely, so
-      A's 2.01 m/s gap to the straight-on speed rules that path out. A large
+      car A's 2.01 m/s gap to the straight-on speed rules that path out. A large
       :math:`\sigma` says that drivers differ a lot, so the same gap is weak
       evidence. The hands-on window shows the same values: about 1.00 and
       0.62.
@@ -690,15 +691,14 @@ Two exercises end with a check in the lecture's hands-on window.
       like a car about to turn.
 
 
-.. dropdown:: Exercise 7. The IDM and Gap Acceptance
+.. dropdown:: Exercise 7. Gap Acceptance
    :icon: number
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Run the Intelligent Driver Model for car B by hand in a second case, and
-   decide when car A turns across the AV's lane.
+   Decide when car A turns across the AV's lane.
 
    .. raw:: html
 
@@ -706,49 +706,23 @@ Two exercises end with a check in the lecture's hands-on window.
 
    **Specification**
 
-   The IDM:
-
-   .. math::
-
-      a = a_{\max}\Big[\,1 - \Big(\frac{v}{v_0}\Big)^{4} - \Big(\frac{s^*}{s}\Big)^2\,\Big],
-      \qquad s^* = s_0 + v\,T + \frac{v\,\Delta v}{2\sqrt{a_{\max}\,b}}
-
-   :math:`v` is B's speed, :math:`s` the gap to A, :math:`\Delta v` how fast
-   B closes in, :math:`s^*` the gap B wants. The paper's values:
-   :math:`T` = 1.6 s, :math:`a_{\max}` = 0.73 m/s², :math:`b` =
-   1.67 m/s², :math:`s_0` = 2 m; :math:`v_0` = 9 m/s (chosen). In the
-   lecture, :math:`v` = 7.76 m/s, :math:`s` = 22.25 m, A drives at
-   5.99 m/s, and B's acceleration comes out at −0.30 m/s².
-
    Gap acceptance: car A decides 6 m before the junction (chosen). It turns
    only if the AV is at least 4.1 s (the critical headway) from the
-   crossing at that moment. The AV drives at 8 m/s. In run 1, it is 48 m
+   crossing at that moment. The AV drives at 8 m/s. In run #1, it is 48 m
    from the crossing at that moment: 48 / 8 = 6.0 s.
 
    .. raw:: html
 
       <hr>
 
-   **Part A. The IDM**
+   **Questions**
 
-   1. Suppose A drove at 7.76 m/s too, the same as B (chosen for this
-      exercise), with the same gap of 22.25 m. Compute :math:`\Delta v` and
-      :math:`s^*`.
-   2. Compute B's acceleration. Compare it with the lecture's −0.30 m/s²
-      and explain the difference.
-
-   .. raw:: html
-
-      <hr>
-
-   **Part B. Gap acceptance**
-
-   3. The AV starts 8 m closer than in run 1 (chosen for this exercise).
-      What is A's gap, and does A turn?
-   4. In run 2, the AV starts 24 m closer. How much later must the AV
-      arrive at the crossing for A to turn without waiting?
-   5. Suppose the critical headway were 2.5 s instead of 4.1 s (chosen for
-      this exercise). What does A do in run 2? What about car B, behind it?
+   1. The AV starts 8 m closer than in run #1 (chosen for this exercise).
+      What is car A's gap, and does car A turn?
+   2. In run #2, the AV starts 24 m closer. How much later must the AV
+      arrive at the crossing for car A to turn without waiting?
+   3. Suppose the critical headway were 2.5 s instead of 4.1 s (chosen for
+      this exercise). What does car A do in run #2? What about car B, behind it?
 
    .. raw:: html
 
@@ -756,42 +730,26 @@ Two exercises end with a check in the lecture's hands-on window.
 
    **Deliverable**
 
-   The answers to questions 1 to 5, with the arithmetic.
+   The answers to questions 1 to 3, with the arithmetic.
 
    **Check in the hands-on window:** in ``l8sim.py``, set ``GAP = 2.5``, run
    ``python3 l8_handson.py --part interact``, tick **AV 24 m closer** and
-   compare with question 5. Set ``GAP`` back to 4.1 after.
+   compare with question 3. Set ``GAP`` back to 4.1 after.
 
    .. dropdown:: Guidance
       :color: success
 
-      Question 1:
+      Question 1: 8 m at 8 m/s is 1.0 s less, so the gap is 6.0 − 1.0 =
+      5.0 s. 5.0 s ≥ 4.1 s: car A turns without stopping.
 
-      1. :math:`\Delta v` = 7.76 − 7.76 = 0 m/s, so the last term of
-         :math:`s^*` is 0.
-      2. :math:`s^*` = 2 + 7.76 × 1.6 = 2 + 12.42 = 14.42 m.
-
-      Question 2:
-
-      1. :math:`1 - (7.76/9)^4` = 1 − 0.553 = 0.447, as in the lecture.
-      2. :math:`(s^*/s)^2` = (14.42 / 22.25)² = 0.648² = 0.420.
-      3. :math:`a` = 0.73 × (0.447 − 0.420) = 0.73 × 0.027 = +0.02 m/s².
-
-      B holds its speed. In the lecture, B closes in on A at 1.77 m/s, which
-      adds 7.76 × 1.77 / (2 × 1.104) = 6.22 m to the gap it wants (20.64 m
-      instead of 14.42 m), so B brakes at −0.30 m/s².
-
-      Question 3: 8 m at 8 m/s is 1.0 s less, so the gap is 6.0 − 1.0 =
-      5.0 s. 5.0 s ≥ 4.1 s: A turns without stopping.
-
-      Question 4: in run 2 the gap is 6.0 − 24 / 8 = 3.0 s. A turns when the
+      Question 2: in run #2 the gap is 6.0 − 24 / 8 = 3.0 s. Car A turns when the
       gap is at least 4.1 s, so the AV must arrive 4.1 − 3.0 = 1.1 s later,
-      or more. The lecture's two cases agree: 1 s later gives 4.0 s, and A
-      still waits; 2 s later gives 5.0 s, and A goes.
+      or more. The lecture's two cases agree: 1 s later gives 4.0 s, and car A
+      still waits; 2 s later gives 5.0 s, and car A goes.
 
-      Question 5: 3.0 s ≥ 2.5 s, so A turns without stopping, as in run 1.
-      Car A then does what it did in run 1, so car B, behind it, slows as in
-      run 1 too.
+      Question 3: 3.0 s ≥ 2.5 s, so car A turns without stopping, as in run #1.
+      Car A then does what it did in run #1, so car B, behind it, slows as in
+      run #1 too.
 
 
 .. dropdown:: Exercise 8. Using the Prediction in the AV's Plan
@@ -813,13 +771,13 @@ Two exercises end with a check in the lecture's hands-on window.
 
    From the lecture:
 
-   - At 8 m/s, the AV reaches the point where A's left turn crosses its lane
+   - At 8 m/s, the AV reaches the point where car A's left turn crosses its lane
      at :math:`t` = 6.08 s.
-   - The left-turn mode (probability 0.87) puts A in the AV's lane from
-     :math:`t` = 3.2 to 4.0 s. In truth, A is there from :math:`t` = 3.4 to
+   - The left-turn mode (probability 0.87) puts car A in the AV's lane from
+     :math:`t` = 3.2 to 4.0 s. In truth, car A is there from :math:`t` = 3.4 to
      4.3 s.
-   - The left mode turns at 5.42 m/s; A really turns at 5.0 m/s.
-   - A check of current positions only first finds A in the AV's lane at
+   - The left mode turns at 5.42 m/s; car A really turns at 5.0 m/s.
+   - A check of current positions only first finds car A in the AV's lane at
      :math:`t` = 3.4 s.
 
    .. raw:: html
@@ -840,7 +798,7 @@ Two exercises end with a check in the lecture's hands-on window.
    chosen for this exercise).
 
    2. For each plan, when does the AV reach the crossing?
-   3. For each plan, is A in the AV's lane at that time, by the left mode?
+   3. For each plan, is car A in the AV's lane at that time, by the left mode?
       By the truth?
    4. Why do the left mode and the truth disagree about the 12 m/s plan?
       What should the planner do about it?
@@ -852,7 +810,7 @@ Two exercises end with a check in the lecture's hands-on window.
    **Part C. Time to react**
 
    5. With current positions only, how much time does the AV have between
-      :math:`t` = 0 and the moment it first finds A in its lane? With the
+      :math:`t` = 0 and the moment it first finds car A in its lane? With the
       prediction?
 
    .. raw:: html
@@ -873,21 +831,21 @@ Two exercises end with a check in the lecture's hands-on window.
 
       Question 3:
 
-      - 10 m/s, 4.86 s: after 4.0 s and after 4.3 s. A has left the lane, by
+      - 10 m/s, 4.86 s: after 4.0 s and after 4.3 s. Car A has left the lane, by
         the mode and by the truth.
-      - 11 m/s, 4.42 s: after 4.0 s and after 4.3 s. A has left, by both.
-      - 12 m/s, 4.05 s: after the mode's 4.0 s, so the mode says A has left.
-        But it is before the truth's 4.3 s: A is still in the AV's lane.
+      - 11 m/s, 4.42 s: after 4.0 s and after 4.3 s. Car A has left, by both.
+      - 12 m/s, 4.05 s: after the mode's 4.0 s, so the mode says car A has left.
+        But it is before the truth's 4.3 s: car A is still in the AV's lane.
 
-      Question 4: the left mode picks the right lane but drives it a little
-      too fast (5.42 m/s against A's 5.0 m/s), so it has A leave the AV's
+      Question 4: the left mode picks the correct lane but drives it a little
+      too fast (5.42 m/s against car A's 5.0 m/s), so it has car A leave the AV's
       lane 0.3 s too early. A plan that arrives 0.05 s after the mode's
-      window has no room for that error. The planner must keep a margin in
-      time around each likely mode, not only avoid the mode's exact times.
-      Which modes count, and how much room to keep, is the planner's job
-      (L9).
+      window leaves no margin for that error. The planner must keep a
+      margin in time around each likely mode, not only avoid the mode's
+      exact times. Which modes count, and how big a margin to keep, is the
+      planner's job (L9).
 
-      Question 5: with current positions only, the AV first finds A in its
-      lane at :math:`t` = 3.4 s, when A is already there: no warning. With
+      Question 5: with current positions only, the AV first finds car A in its
+      lane at :math:`t` = 3.4 s, when car A is already there: no warning. With
       the prediction, the AV knows at :math:`t` = 0, 3.4 s earlier, which
       gives it time to ease off gently instead of braking hard.

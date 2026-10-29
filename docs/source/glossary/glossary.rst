@@ -1150,7 +1150,11 @@ L3: Probabilistic State Estimation & Sensor Fusion
       particle filter weighs each particle by it. For one sign match
       with noise :math:`\sigma`, it is, up to a constant,
       :math:`\exp(-(\mathbf{z} - h(\mathbf{x}))^2 / 2\sigma^2)`.
-      :doc:`L3 </lectures/lecture3/l3_index>`
+      :doc:`L3 </lectures/lecture3/l3_index>` In L8, a score from 0 to 1 for
+      how well a path explains car A's measured speed: 0.872 for the left
+      turn, 0.132 for straight on. It is not yet the probability of the
+      path; Bayes' rule turns the scores into probabilities.
+      :doc:`L8 </lectures/lecture8/l8_index>`
 
    Linearization
       Replacing a curved model by a straight line, its tangent at the
@@ -2823,6 +2827,13 @@ L8: Trajectory Prediction and Behavior Modeling
       to 5 s, so over those five times its ADE is 22.96 / 5 = 4.59 m; over
       all 50 predicted times, every 0.1 s, it is 3.37 m. See FDE. :doc:`L8 </lectures/lecture8/l8_index>`
 
+   Behavior Model
+      A model of how a road user decides what to do and reacts to others:
+      what it means to do next (its intent), how it follows the car ahead (the
+      IDM), and when it accepts a gap. L8's Other Drivers section is the
+      behavior modeling of the lecture's title; Lefèvre et al. (2014) call
+      these models interaction-aware. :doc:`L8 </lectures/lecture8/l8_index>`
+
    Calibration (Prediction)
       A predictor is calibrated when, of all the futures it gives a
       probability :math:`p`, a fraction :math:`p` comes true (Guo et al.,
@@ -2880,7 +2891,8 @@ L8: Trajectory Prediction and Behavior Modeling
    FDE
       Final displacement error: the displacement error at the last predicted
       time (Chang et al., 2019; Wilson et al., 2021). L8's CV prediction for
-      car A has an FDE of 12.35 m at 5 s. An FDE above 2.0 m is a miss. See
+      car A has an FDE of 12.35 m at 5 s. An FDE above 2.0 m is a miss; 2.0 m
+      or less is a hit. See
       ADE and Miss Rate. :doc:`L8 </lectures/lecture8/l8_index>`
 
    Intelligent Driver Model (IDM)
@@ -2921,8 +2933,7 @@ L8: Trajectory Prediction and Behavior Modeling
 
    minADE
       The ADE of the best of a prediction's modes, the one that ends closest
-      to the truth: "the average ... L2 distance ... between the best
-      forecasted trajectory and the ground truth" (Wilson et al., 2021). L8's
+      to the truth, as Argoverse 2 scores it (Wilson et al., 2021). L8's
       car A has two modes; the left turn ends closest (1.88 against 13.06 m),
       so minADE is its ADE, 0.86 m. It does not look at the probabilities.
       :doc:`L8 </lectures/lecture8/l8_index>`

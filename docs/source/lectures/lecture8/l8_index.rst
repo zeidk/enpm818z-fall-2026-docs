@@ -21,14 +21,14 @@ A's next 5 s:
   we predict 5 s ahead (chosen).
 - **Physics models.** Constant velocity (CV), constant turn rate and
   velocity (CTRV) and constant turn rate and acceleration (CTRA). From :math:`t` = 0, all three
-  miss A's turn: CV ends 12.35 m off.
+  miss car A's turn: CV ends 12.35 m off.
 - **Scoring.** ADE, FDE and the miss rate (FDE above 2 m), on car A and on a
   test set of 2476 predictions. CV's 95% region, and how often it really
   holds the truth.
 - **Several futures.** Two modes for car A, left and straight on, scored
   with minADE and minFDE.
 - **Using the map.** The map's lanes are the candidate paths, and Bayes'
-  rule gives each one a probability from A's speed: 0.87 for the left
+  rule gives each one a probability from car A's speed: 0.87 for the left
   turn, which ends 1.88 m from the truth. Calibration checks how often such
   probabilities come true on the test set.
 - **Learned predictors.** What they read and write, three well-known
@@ -36,7 +36,7 @@ A's next 5 s:
   how they are trained and scored, and pedestrians and cyclists.
 - **Other drivers.** Car B follows car A (the Intelligent Driver Model,
   IDM), and car A waits for a gap in the AV's lane: the AV's own plan
-  changes what A does. Post-encroachment time (PET) says how close the two
+  changes what car A does. Post-encroachment time (PET) says how close the two
   runs came.
 
 
@@ -66,7 +66,7 @@ Lecture Materials
 
 - :doc:`l8_lecture`: the notes, following the slides shown in class.
 - :doc:`Going Further <l8_appendix>`: the deck's appendix (the track fit,
-  CTRV and CTRA written out, the test set, CV's uncertainty and its 95%
+  the test set, CV's uncertainty and its 95%
   region, Waymo's miss rate and mAP, the three map scores, P(left) over
   time, Autoware's map-based prediction, and the IDM's parameters).
 - :doc:`l8_code`: the hands-on, four parts on the junction (``scene``,
