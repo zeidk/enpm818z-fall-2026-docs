@@ -5,10 +5,21 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.18.6: Lecture 8 Verdicts for Each Predictor (2026-10-29)
+.. dropdown:: v2.18.7: Lecture 8 Fit, CTRV and Separate Runs Explained (2026-10-29)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lecture 8
+
+   - **Lecture page:** Step 1 defines the fit; the CTRV section says what
+     CTRV and CTRA are for; the three physics predictions from t = 0 are
+     marked as separate runs made to compare the models; the junction
+     section no longer names Town01.
+
+.. dropdown:: v2.18.6: Lecture 8 Verdicts for Each Predictor (2026-10-29)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lecture 8
 

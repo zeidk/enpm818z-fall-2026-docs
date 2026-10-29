@@ -347,11 +347,11 @@ We chose every speed and every braking rate, and these notes say so.
 
 .. _l8-lec-junction:
 
-The Junction, from Town01's Map
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The Junction, from the Map
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/scene_map.png
-   :alt: A top view of a T-junction from Town01's map, x east from 98 to 214 meters, y north from minus 24 to 12 meters. A road runs east to west with one lane each way, a white dashed center line, and a side road leaving the junction to the south. Tag 1: the AV, a black car on the south lane at x 108, facing east. Tag A: car A, a green car on the north lane at x 174, facing west. Tag B: car B, a gray car on the north lane at x 201, facing west. A red cross in the junction at x 156, y minus 2, with no tag.
+   :alt: A top view of a T-junction from the map, x east from 98 to 214 meters, y north from minus 24 to 12 meters. A road runs east to west with one lane each way, a white dashed center line, and a side road leaving the junction to the south. Tag 1: the AV, a black car on the south lane at x 108, facing east. Tag A: car A, a green car on the north lane at x 174, facing west. Tag B: car B, a gray car on the north lane at x 201, facing west. A red cross in the junction at x 156, y minus 2, with no tag.
    :width: 95%
    :align: center
 
@@ -493,13 +493,14 @@ Step 1: Read Car A's Motion from Its Track
    Car A's speed against time, 0 = now. The legend names each line, the
    band and the dot.
 
-Every physics model starts from car A's motion now, read from A's track.
-The AV keeps 2 s of A's track; the fit uses only its newest 1.5 s, the blue
-band (16 positions; both chosen: a shorter window follows a change in A's
-motion sooner, a longer one averages out more of the track's noise). Among all
-the paths a car with constant acceleration could drive, we pick the one
-closest to those positions: the smallest total of squared distances (least
-squares). The dashed line is the speed along that path.
+Every physics model starts from car A's motion now, read from its track by
+a **fit**: among all the paths a car with constant acceleration could
+drive, the AV picks the one closest to the tracked positions (the smallest
+total of squared distances: least squares). The AV keeps 2 s of track; the
+fit uses only the newest 1.5 s, the blue band (16 positions; both chosen: a
+shorter window follows a change in A's motion sooner, a longer one averages
+out more of the track's noise). The dashed line is the speed along the
+fitted path.
 
 .. note::
 
@@ -619,6 +620,9 @@ Whether that holds for every road user, the test set answers
 Constant Turn Rate: CTRV and CTRA
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+CV cannot follow a road user that is turning or braking. CTRV and CTRA add
+those terms; we test whether they predict better than CV.
+
 .. admonition:: Definition: Turn rate
    :class: note
 
@@ -652,6 +656,10 @@ Constant Turn Rate: CTRV and CTRA
 
 CV, CTRV and CTRA from t = 0
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+These are three separate predictions from the same fit at :math:`t` = 0,
+made only to compare the models. An AV runs the one it keeps, every 0.1 s;
+the test set decides which.
 
 .. figure:: /_static/images/L8/ctra_now.png
    :alt: The same close-up of the junction with car A at x 175. The black truth curves left into the side road. Three predictions run west along the north lane: blue CV straight to x 145; purple dashed CTRV bending slightly south, ending at x 145, y minus 2.6; dark gold dash-dotted CTRA shorter, slowing, ending at x 157, y minus 0.3. None follows the truth into the side road.
