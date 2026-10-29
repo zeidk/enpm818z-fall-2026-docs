@@ -603,16 +603,17 @@ Short Answer (Questions 21 to 22)
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   A predicted path comes from the track's history and its class's goal.
-   The NTSB report says that when perception changed the class of an
-   object, the system "no longer considered the tracking history of that
-   object when generating a new trajectory". Her class kept changing, so at
-   each change the ADS predicted she would stay put. While her class held,
-   as a vehicle or a bicycle, it predicted that class's goal: she would
-   follow the left lane, with traffic. The goal set the direction; her
-   history only adjusted it. No class had a goal across the road, so it
-   never predicted her crossing. It saw an emergency only when she was in the vehicle's path,
-   1.2 s before impact. See the Introduction in :doc:`l8_lecture`.
+   Each predicted path started from her class's goal, and a vehicle or a
+   bicycle in a lane gets the goal of traveling with traffic in that lane.
+   Her history only adjusted that path, and the NTSB report says that when
+   perception changed the class of an object, the system "no longer
+   considered the tracking history of that object when generating a new
+   trajectory". So at each class change the ADS predicted she would stay
+   put, and while her class held it predicted she would follow the left
+   lane. A path from her sideways motion was possible only for a
+   pedestrian, and the ADS never classed her as one. It saw an emergency
+   only when she was in the vehicle's path, 1.2 s before impact. See the
+   Introduction in :doc:`l8_lecture`.
 
 
 .. admonition:: Question 22

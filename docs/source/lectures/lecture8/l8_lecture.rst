@@ -161,10 +161,12 @@ The report's table of what the ADS recorded shows what it predicted for her.
 
 .. important::
 
-   A predicted path comes from the track's history and its class's goal.
-   Her class kept changing, and at each change the ADS stopped using her
-   history. No class it gave her had a goal across the road, so it never
-   predicted her crossing.
+   **Why the lane, when it tracked her moving across?** Each path started
+   from her class's goal: a vehicle or a bicycle in a lane gets "a goal of
+   traveling in the direction of traffic in that lane" (NTSB, 2019). Her
+   history only adjusted that path, and at each class change the ADS stopped
+   using it. Only a pedestrian could get a path from its sideways motion,
+   and the ADS never classed her as one. So it never predicted her crossing.
 
 The system saw an emergency only when she was already in the vehicle's
 path: 1.2 s before impact.

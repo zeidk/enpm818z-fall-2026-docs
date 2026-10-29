@@ -5,10 +5,22 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.18.2: Lecture 8 Clearer Explanations (2026-10-29)
+.. dropdown:: v2.18.3: Lecture 8 Tempe Explained (2026-10-29)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lecture 8
+
+   - **Lecture page:** the Tempe section says why the ADS predicted her
+     along the lane while it tracked her moving across: each path started
+     from her class's goal, and only a pedestrian could get a path from its
+     sideways motion.
+   - **Quiz:** Question 21's answer gives the same reason.
+
+.. dropdown:: v2.18.2: Lecture 8 Clearer Explanations (2026-10-29)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lecture 8
 
