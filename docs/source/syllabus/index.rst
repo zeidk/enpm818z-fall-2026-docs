@@ -691,12 +691,12 @@ all other Thursdays meet as scheduled. Dates below are given as MM/DD.
      - Trajectory Prediction & Behavior Modeling
      - L8
      - | :quiz:`Quiz 3`
-       | :assignment:`GP2 due, GP3 posted`
+       | :assignment:`GP2 due`
    * - 11/05
      - 10
      - Motion Planning
      - L9
-     -
+     - :assignment:`GP3 posted (Sun, Nov 1)`
    * - 11/12
      - 11
      - Trajectory Generation & Control

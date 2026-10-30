@@ -32,8 +32,7 @@ GP3: Fusion & Localization
       :class: compact-table
 
       * - **Duration**
-        - 2 weeks: posted **Thursday, November 5**, due **Thursday,
-          November 19**
+        - Posted **Sunday, November 1**, due **Thursday, November 19**
       * - **Weight**
         - 25% of the group-project grade: 21.25% of the final project grade,
           17.0% of the course grade

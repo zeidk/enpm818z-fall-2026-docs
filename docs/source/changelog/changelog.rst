@@ -5,10 +5,20 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.19.0: Final Report Scenarios (2026-10-30)
+.. dropdown:: v2.19.1: GP3 Posted Nov 1 (2026-10-30)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   - **Syllabus**: GP3 is posted on Sunday, Nov 1, not on Oct 29. Its due
+     date stays Thursday, Nov 19.
+   - **Assignments**: the Final Report runs from Week 12 (posted Nov 19) to
+     Week 15 (due Dec 17). Week 14 has a class; only Week 15 has none.
+
+
+.. dropdown:: v2.19.0: Final Report Scenarios (2026-10-30)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Final Project
 

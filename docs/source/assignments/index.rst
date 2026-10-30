@@ -126,15 +126,15 @@ Team Formation
 
 .. _final-report:
 
-Final Report (Weeks 14 and 15)
-------------------------------
+Final Report (Weeks 12 to 15)
+-----------------------------
 
 **Weight:** 15% of the final project grade.
 
 After the last group project is complete, your team will evaluate the
 full pipeline on **instructor-provided scenarios** not seen during
-development and submit a final report. There are no classes during
-Weeks 14 and 15.
+development and submit a final report. It is posted in Week 12 (Nov 19)
+and due in Week 15 (Dec 17). Week 15 has no class.
 
 .. list-table::
    :widths: 30 70
