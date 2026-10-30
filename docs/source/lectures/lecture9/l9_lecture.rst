@@ -826,7 +826,6 @@ CARLA Implementation Exercise
    .. code-block:: python
 
       import carla
-      import heapq
 
       S_QUANT = 1.0   # metres; must be <= sampling_resolution
 
@@ -857,48 +856,10 @@ CARLA Implementation Exercise
           assert n_edges > 0, "No edges built -- check wp_key quantization"
           return graph, waypoint_map
 
-      def astar(graph, waypoint_map, start_key, goal_loc, epsilon=1.0):
-          """A* over the waypoint graph. epsilon>1 gives Weighted A*."""
-          def h(key):
-              return waypoint_map[key].transform.location.distance(goal_loc)
-
-          open_set = [(epsilon * h(start_key), 0.0, start_key)]
-          came_from = {}
-          g_score = {start_key: 0.0}
-          visited = set()
-          expanded = 0                      # for the Task 5 comparison
-
-          while open_set:
-              _, g, current = heapq.heappop(open_set)
-              if current in visited:
-                  continue
-              visited.add(current)
-              expanded += 1
-
-              if h(current) < 2.0:          # within 2 m of goal
-                  path = [current]
-                  while path[-1] in came_from:
-                      path.append(came_from[path[-1]])
-                  return path[::-1], expanded
-
-              for nkey, cost in graph.get(current, []):
-                  new_g = g + cost
-                  if new_g < g_score.get(nkey, float('inf')):
-                      g_score[nkey] = new_g
-                      came_from[nkey] = current
-                      heapq.heappush(
-                          open_set, (new_g + epsilon * h(nkey), new_g, nkey))
-
-          return None, expanded
-
-      # Usage
-      graph, wp_map = build_graph(world, sampling_resolution=2.0)
-      start_key = wp_key(world.get_map().get_waypoint(start_location))
-      path, n = astar(graph, wp_map, start_key, goal_location, epsilon=1.0)
-      print(f"A*:          {len(path)} waypoints, {n} nodes expanded")
-      path_w, n_w = astar(graph, wp_map, start_key, goal_location, epsilon=2.0)
-      print(f"Weighted A*: {len(path_w)} waypoints, {n_w} nodes expanded")
-
+   Write the search yourself, as GP4 Task 1 asks: A* from ``start_key``
+   to the waypoint nearest the goal, with the straight-line distance to the
+   goal as the heuristic (L7). Count the nodes it expands, and run it again
+   with the heuristic multiplied by :math:`\varepsilon` = 2 for step 5.
 
 Summary
 ====================================================

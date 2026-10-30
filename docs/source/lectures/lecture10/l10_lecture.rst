@@ -534,16 +534,10 @@ Anti-windup strategies:
 - **Back-calculation:** Subtract a correction proportional to
   the difference between the saturated and unsaturated output.
 
-.. code-block:: python
-
-   # Discrete PID with clamping anti-windup
-   def pid_step(e, e_prev, integral, dt, Kp, Ki, Kd,
-                u_min=-1.0, u_max=1.0):
-       u_unsat = Kp * e + Ki * integral + Kd * (e - e_prev) / dt
-       u = max(u_min, min(u_max, u_unsat))
-       if u == u_unsat:  # not saturated: update integral
-           integral += e * dt
-       return u, integral
+With clamping, each step computes the output from the current integral,
+clamps it to the actuator's limits, and adds the new error to the integral
+only when the output was not clamped. GP4 Task 2 asks you to write this
+step.
 
 Controller Comparison
 ====================================================

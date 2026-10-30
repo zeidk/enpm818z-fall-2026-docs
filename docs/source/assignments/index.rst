@@ -145,19 +145,15 @@ Weeks 14 and 15.
      - Description
    * - Urban intersection
      - Navigate a 4-way intersection with cross traffic and pedestrians.
-   * - Highway merging
-     - Merge onto a highway (Town04) with flowing traffic.
    * - Pedestrian crossing
      - Detect and stop for a pedestrian crossing mid-block.
    * - Adverse weather
      - Complete a route under heavy rain and reduced visibility.
-   * - Construction zone
-     - Navigate around a lane closure with static obstacles.
 
 **Final Deliverables:**
 
 1. **Integrated ADS pipeline:** all group-project nodes running end-to-end.
-2. **Evaluation results:** quantitative metrics on all 5 scenarios.
+2. **Evaluation results:** quantitative metrics on all 3 scenarios.
 3. **Written report (8 to 10 pages):** architecture, design decisions,
    results, failure analysis, lessons learned.
 4. **Peer evaluation:** individual contribution assessment.

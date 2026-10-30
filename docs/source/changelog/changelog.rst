@@ -5,10 +5,22 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.18.9: Lecture 8 Junction Shading (2026-10-29)
+.. dropdown:: v2.19.0: Final Report Scenarios (2026-10-30)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Final Project
+
+   - **Final Report:** three evaluation scenarios instead of five: urban
+     intersection, pedestrian crossing and adverse weather. Highway merging
+     and the construction zone are removed, because both need a lane change
+     in closed loop, which no group project builds.
+
+
+.. dropdown:: v2.18.9: Lecture 8 Junction Shading (2026-10-29)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lecture 8
 
