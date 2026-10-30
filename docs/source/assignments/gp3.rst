@@ -2,6 +2,28 @@
 GP3: Fusion & Localization
 ====================================================
 
+.. admonition:: The Situation
+   :class: story
+
+   Your team's GP2 report chose the detector for the robotaxi in Town01. The
+   car now sees the person in the dark jacket: a box in the camera image,
+   20 times a second.
+
+   To decide whether to brake, the planning lead needs three things that a
+   box in the image does not give, all on one map:
+
+   1. **Where is our car?** GNSS gives a position about once every 0.1 s, but
+      it can drop out, and the company has just moved the GNSS antenna to a
+      new spot on the roof.
+   2. **Where is each person and each car around us,** in meters, on the same
+      map?
+   3. **How fast is each one moving?** The planner keeps a 3.0 m clearance
+      around every object, and it needs the speed to know where the
+      object will be next.
+
+   GP3 builds all three, from the sensor rig, the detector and the tracker
+   your team already has.
+
 .. card:: GP3: At a Glance
    :class-card: sd-shadow-sm
 
@@ -10,35 +32,117 @@ GP3: Fusion & Localization
       :class: compact-table
 
       * - **Duration**
-        - 3 weeks: posted **Thursday, October 29**, due **Thursday,
+        - 2 weeks: posted **Thursday, November 5**, due **Thursday,
           November 19**
       * - **Weight**
-        - 17.0% of the course grade (21.25% of the project grade)
+        - 25% of the group-project grade: 21.25% of the final project grade,
+          17.0% of the course grade
       * - **Lectures**
-        - L3, L5 and L6
+        - L2 (projection), L3 (EKF, NIS, gating), L5 (frustum association,
+          tracking), L6 (GNSS, dead reckoning, APE)
+      * - **Starter code**
+        - `gp3_starter <https://github.com/rubixcubic/enpm818z-fall-2026-carla-ros/tree/main/gp3_starter>`__
+          and `ads_msgs <https://github.com/rubixcubic/enpm818z-fall-2026-carla-ros/tree/main/ads_msgs>`__
+          in the course repository
       * - **Team Size**
-        - 3 students
+        - 3 students, the GP1 team
       * - **Submission**
-        - Canvas + GitHub repository link
+        - Canvas + the ``gp3`` branch of your GP1 repository
+
+
+.. admonition:: AI Disclosure (required)
+   :class: warning
+
+   You may use AI tools on GP3. You must say so in your ``README.md``.
+
+   Name the tool and describe how you used it, two or three sentences per
+   team member. Disclosure carries no penalty. **Undisclosed use is a
+   violation of the Code of Academic Integrity.**
+
+   Your team is responsible for every line you submit. Any member may be
+   asked, in class or office hours, to walk through any part of the code:
+   why it works, what would break it, what you would change. **Work that
+   cannot be explained does not count**, even if it runs.
+
+   Read :ref:`ai-disclosure` for the full rules on what is permitted and
+   what is not.
 
 
 Overview
 --------
 
-In GP3 you will extend the ADS pipeline built in GP1 and GP2 by adding
-**sensor fusion** and **vehicle localization**. The core challenge is
-combining your camera-based object detections (from GP2) with LiDAR
-point cloud data to produce accurate **3D object positions**, and
-implementing an **Extended Kalman Filter (EKF)** that fuses GNSS and
-IMU measurements to provide a reliable estimate of the vehicle's pose.
+GP3 puts your car and every object around it on one map. You record a drive
+with your own GP1 node, and every later task works on that recording.
 
-By the end of GP3, your pipeline will output:
+.. code-block:: text
 
-- ``/perception/fused_objects``: 3D bounding box detections with class labels and confidence.
-- ``/localization/pose``: EKF-estimated vehicle pose (position + heading).
-- ``/localization/odom``: Odometry message for downstream planning.
+   Task 1: GP1 sensor_manager  ->  your drive: camera, LiDAR, IMU, GNSS, ground truth
+       |
+   Task 2: EKF (IMU + GNSS)    ->  /localization/pose
+       |
+   GP2 detector_node (camera)  ->  boxes in the image
+       |
+   Task 3: fusion (GP1 projection + LiDAR + pose)  ->  objects on the map
+       |
+   Task 4: tracker (GP2's, in meters)  ->  /perception/tracks: ID, position, speed
+       |
+   GP4: the planner and the behavior node
 
-These two outputs serve as the primary inputs for GP4 (Planning & Control).
+.. list-table::
+   :widths: 26 14 60
+   :header-rows: 1
+   :class: compact-table
+
+   * - **Task**
+     - **Lecture**
+     - **What it adds**
+   * - 1. Record your drive (10 pts)
+     - L2
+     - 90 s of driving in Town01, recorded with your GP1 node, with the
+       ground truth that grades everything else.
+   * - 2. EKF localization (30 pts)
+     - L3, L6
+     - Your car's position, heading and speed on the map, from the IMU and
+       GNSS, through a GNSS outage.
+   * - 3. Camera-LiDAR fusion (25 pts)
+     - L2, L5
+     - Each detection from GP2, placed on the map with the LiDAR.
+   * - 4. Tracking on the map (20 pts)
+     - L3, L5
+     - One ID and one speed per object, from GP2's tracker moved into meters.
+   * - 5. Report (15 pts)
+     - all
+     - How far off a person's map position is, and why.
+
+**What GP3 reuses.** Every task starts from code your team wrote:
+
+.. list-table::
+   :widths: 24 40 36
+   :header-rows: 1
+   :class: compact-table
+
+   * - **Task**
+     - **Your code it builds on**
+     - **What is new**
+   * - 1. Record
+     - GP1: ``sensor_manager.py``, its YAML, ``record_launch.py``
+     - Your GNSS antenna position; ground truth and traffic after each tick
+   * - 2. EKF
+     - GP1's IMU and GNSS topics; the Kalman filter's predict and update
+     - ``f``, ``F``, ``h``, ``H``, and the order of predict and update
+   * - 3. Fusion
+     - GP2's ``detector_node.py``; GP1's ``lidar_projection.py``
+       (``build_intrinsic_matrix``, ``build_extrinsic``)
+     - The points inside each box, the nearest cluster, its map position
+   * - 4. Tracker
+     - GP2's ``box_tracker.py`` (``associate``, the lifecycle constants)
+     - The state in meters, and the Mahalanobis gate instead of IoU
+
+.. note::
+
+   **If GP2 did not work for your team,** use the GP2 reference
+   implementation released on Canvas: GP3 Task 3 needs a working
+   ``detector_node``.
 
 
 Learning Objectives
@@ -46,509 +150,565 @@ Learning Objectives
 
 After completing GP3, you will be able to:
 
-- Project camera bounding boxes into 3D space using the LiDAR frustum
-  association technique.
-- Cluster LiDAR point clouds and match clusters to 2D detections.
-- Derive and implement the Extended Kalman Filter prediction and update
-  steps for a nonlinear vehicle motion model.
-- Fuse GNSS position fixes with the IMU's angular velocity (yaw rate)
-  using configurable noise covariance matrices.
-- Evaluate localization accuracy using Absolute Pose Error (APE) and
-  Relative Pose Error (RPE).
-- Quantitatively compare fused 3D object positions against CARLA
-  ground-truth objects.
-- Produce architecture diagrams, formulation write-ups, and
-  quantitative results suitable for a technical report.
+- Record a drive with ground truth and check that its frames agree.
+- Derive the Jacobians of a nonlinear motion model and of a GNSS model with
+  an antenna offset, and check them against finite differences.
+- Run an EKF on two sensors that arrive at different rates, and measure it
+  with APE and the NIS check.
+- Explain what happens to a filter in a GNSS outage when nothing measures
+  the speed.
+- Place 2D detections on the map with the LiDAR, and measure the position
+  error against the truth.
+- Track objects on the map with a Kalman filter and a Mahalanobis gate, and
+  measure ID switches, MOTA and speed error.
+- Split an object's map error into the part that comes from localization and
+  the part that comes from fusion.
 
+
+.. _gp3-provided-resources:
 
 Provided Resources
 ------------------
 
-The following files are provided by the instructor on Canvas and the
-course GitHub repository. **Do not re-implement these utilities from
-scratch**: integrate them into your package.
+GP3 adds files to the ``ads_pipeline`` package you extended in GP2. Keep
+working in the same private repository, on a new branch.
+
+1. Update the course repository:
+
+   .. code-block:: bash
+
+      cd ~/enpm818z_ws/src/enpm818z-fall-2026-carla-ros && git pull
+
+2. Build the message package GP3 adds, ``ads_msgs`` (one tracked object:
+   its ID, class, position, velocity and covariance):
+
+   .. code-block:: bash
+
+      cd ~/enpm818z_ws && colcon build --packages-select ads_msgs && source install/setup.bash
+
+3. Start the ``gp3`` branch from your GP2 submission:
+
+   .. code-block:: bash
+
+      cd ~/enpm818z_ws/src/GP1_TeamX && git checkout -b gp3 gp2-final
+
+4. Copy the GP3 files into your package. **Before you copy,** check that
+   none of them already exists in your package:
+
+   .. code-block:: bash
+
+      (cd ../enpm818z-fall-2026-carla-ros/gp3_starter/ads_pipeline && find . -type f -printf '%P\n') | while read -r f; do [ -e "ads_pipeline/$f" ] && echo "already exists: ads_pipeline/$f"; done
+
+   No output means the copy only adds files. Then copy:
+
+   .. code-block:: bash
+
+      cp -r ../enpm818z-fall-2026-carla-ros/gp3_starter/ads_pipeline/. ads_pipeline/
+
+5. Add the GP3 nodes to ``setup.py``, in ``console_scripts``:
+
+   .. code-block:: python
+
+      'gnss_outage = ads_pipeline.gnss_outage:main',
+      'localization_node = ads_pipeline.localization_node:main',
+      'fusion_node = ads_pipeline.fusion_node:main',
+      'tracker_node = ads_pipeline.tracker_node:main',
+
+6. Add the message package to ``package.xml``:
+
+   .. code-block:: xml
+
+      <exec_depend>ads_msgs</exec_depend>
+
+7. Check: ``python3 -m pytest test/ -k gp3`` runs. Most GP3 tests fail with
+   ``NotImplementedError`` until you write the functions marked YOURS.
+
+Folder Structure
+~~~~~~~~~~~~~~~~
+
+GP3 adds these files to your repository, on the ``gp3`` branch:
+
+.. code-block:: text
+
+   GP1_Team{X}/
+   ├── ads_pipeline/
+   │   ├── ads_pipeline/
+   │   │   ├── sensor_manager.py      # Task 1: yours, from GP1, extended
+   │   │   ├── ground_truth.py        # Provided
+   │   │   ├── traffic.py             # Provided
+   │   │   ├── geo.py                 # Provided
+   │   │   ├── gnss_outage.py         # Provided
+   │   │   ├── ekf_core.py            # Task 2
+   │   │   ├── localization_node.py   # Task 2
+   │   │   ├── fusion_core.py         # Task 3
+   │   │   ├── fusion_node.py         # Provided
+   │   │   ├── map_tracker.py         # Task 4
+   │   │   └── tracker_node.py        # Provided
+   │   ├── config/
+   │   │   ├── carla_config.yaml      # Task 1: your GNSS mount
+   │   │   ├── ekf_config.yaml        # Task 2: your antenna, Q and R
+   │   │   └── fusion_config.yaml     # Provided
+   │   ├── launch/
+   │   │   ├── record_gp3_launch.py   # Provided
+   │   │   └── gp3_launch.py          # Provided
+   │   ├── tools/                     # Provided: the evaluators
+   │   ├── test/
+   │   │   └── test_gp3_*.py          # Provided
+   │   ├── test_data/noisy_dets.json  # Provided: Task 4's day-1 input
+   │   ├── package.xml                # + ads_msgs
+   │   └── setup.py                   # + the four GP3 nodes
+   ├── results/
+   │   └── gp3/                       # every result file the tasks name
+   ├── README.md                      # with your AI disclosure
+   └── gp3_report.pdf                 # Task 5
+
+Your drive and the run bags stay out of git: add ``gp3_data/`` (or wherever
+you keep them) to ``.gitignore``. A 90 s drive's size depends on your
+camera's image size. We measured 4.3 GiB at 1024 x 576, 6.6 GiB at
+1280 x 720, 10.0 GiB at 1600 x 900 and 14.3 GiB at 1920 x 1080. Check your
+free disk space before you record.
+
+What the starter contains
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 30 20 50
+   :header-rows: 1
+   :class: compact-table
+
+   * - **File**
+     - **Status**
+     - **What it does**
+   * - ``ground_truth.py``
+     - Given
+     - Publishes the car's true pose (``/ground_truth/ego``) and the true
+       boxes of the vehicles and pedestrians within 80 m
+       (``/ground_truth/objects``), in the map frame. Grading only: no node
+       of yours may read them.
+   * - ``traffic.py``
+     - Given
+     - 80 vehicles and 150 pedestrians, the same traffic for the same seed,
+       as in GP2's drives.
+   * - ``geo.py``
+     - Given
+     - Latitude and longitude to the map frame (see Task 2).
+   * - ``gnss_outage.py``
+     - Given
+     - Drops the GNSS fixes inside your team's outage window, so your EKF
+       sees no fix there.
+   * - ``ekf_core.py``
+     - **Yours:** ``f``, ``F_jacobian``, ``h``, ``H_jacobian``
+     - The EKF. ``predict`` and ``update`` are given.
+   * - ``localization_node.py``
+     - **Yours:** ``on_imu``, ``on_gnss``
+     - The EKF as a ROS 2 node; publishes ``/localization/pose`` and
+       ``/localization/odom``.
+   * - ``fusion_core.py``
+     - **Yours:** ``associate_lidar_to_detection``, ``to_map``
+     - Given: the projection that keeps each point with its pixel, ground
+       removal and DBSCAN.
+   * - ``fusion_node.py``
+     - Given
+     - Pairs each GP2 box with the LiDAR sweep of the same stamp, publishes
+       ``/perception/fused_objects``.
+   * - ``map_tracker.py``
+     - **Yours:** ``MapKalman``, ``mahalanobis_cost``, ``MapTracker.step``
+     - GP2's tracker on the map.
+   * - ``tracker_node.py``
+     - Given
+     - Publishes ``/perception/tracks`` (``ads_msgs``), what GP4 reads.
+   * - ``tools/ape.py``, ``fusion_eval.py``, ``track_eval.py``
+     - Given
+     - Score a run against the ground truth (see each task).
+
+
+Your Team's Values
+------------------
+
+Each team has its own GNSS antenna position on the roof and its own GNSS
+outage window. Find your rig letter on Canvas (the same rig as in GP1 and
+GP2).
+
+.. GP3-TEAM-CONFIG-BEGIN (generated by tools/make_gp3_configs.py)
 
 .. list-table::
    :header-rows: 1
-   :widths: 35 65
+   :class: compact-table
 
-   * - File
-     - Description
-   * - ``ekf_template.py``
-     - EKF skeleton with pre-defined state vector ``[x, y, theta, v]``,
-       placeholder matrices ``F``, ``H``, ``Q``, ``R``, and stub methods
-       ``predict()`` and ``update()``. You fill in the math.
-   * - ``fusion_utils.py``
-     - Utility functions for camera-LiDAR association: ``project_to_image()``,
-       ``get_frustum_points()``, ``nearest_neighbor_match()``, and
-       ``compute_centroid()``.
-   * - ``ground_truth_logger.py``
-     - ROS 2 node that subscribes to the CARLA ground-truth actor list and
-       logs vehicle pose and object positions to CSV for evaluation.
-   * - ``evaluate_localization.py``
-     - Computes APE and RPE from trajectory CSV files using the ``evo``
-       toolkit format. Generates trajectory comparison plots.
-   * - ``carla_config.yaml`` (updated)
-     - Example config snippet showing new fusion-related parameters to
-       add to your existing ``carla_config.yaml``.
+   * - Rig
+     - Antenna x (m, forward)
+     - Antenna y (m, left)
+     - Outage start (s)
+     - Outage end (s)
+   * - A
+     - -1.22
+     - -0.72
+     - 35.2
+     - 58.3
+   * - B
+     - -1.44
+     - +0.19
+     - 40.7
+     - 60.4
+   * - C
+     - -1.41
+     - -0.20
+     - 38.7
+     - 57.1
+   * - D
+     - +1.46
+     - -0.46
+     - 32.8
+     - 49.9
+   * - E
+     - -1.11
+     - -0.61
+     - 44.4
+     - 64.1
 
-.. note::
+.. GP3-TEAM-CONFIG-END
 
-   All provided scripts are importable as Python modules. Place them in
-   your ``ads_pipeline/`` package directory and add them to
-   ``setup.py`` data files if needed.
+How to read the table:
+
+- **Antenna x and y** are the antenna's position in the vehicle frame, in
+  meters: x forward, **y to the left**, from the car's origin. They go into
+  ``ekf_config.yaml`` as ``antenna_x`` and ``antenna_y``.
+- Your GP1 YAML uses CARLA's axes, where **y points right**. So the mount
+  ``mounts.gnss_link`` gets ``x`` = antenna x and ``y`` = **minus** antenna y.
+  For example, an antenna at y = +0.40 (left) is ``y: -0.40`` in the YAML.
+- **The outage** is in seconds after the first GNSS fix of your drive. It
+  goes to ``gp3_launch.py`` as ``outage_start_s`` and ``outage_end_s``.
+
+.. important::
+
+   **Every team's numbers are different.** The antenna offset changes your
+   ``h`` and ``H``, and the grader runs your nodes on a second drive of your
+   rig that you have not seen. Code from another team gives wrong positions
+   on it.
 
 
 Tasks
 -----
 
-GP3 is worth **100 internal points** (scaled to 21.25% of the project grade).
-Complete Tasks 1, 2, 3 and 5. Task 4 is a bonus: it can push your score above
-100, but GP3 never counts for more than its 21.25% of the project grade.
+GP3 is worth **100 points**. Run every command from the package root,
+``ads_pipeline/``, with ROS 2 and your workspace sourced.
 
-.. dropdown:: Task 1: Camera-LiDAR Fusion Node (30 pts)
-   :icon: gear
+.. dropdown:: Task 1: Record Your Drive (10 pts)
+   :icon: goal
    :class-container: sd-border-primary
 
-   Implement ``fusion_node.py``, a ROS 2 node that subscribes to 2D
-   detections from GP2 and the raw LiDAR point cloud, and publishes 3D
-   object detections.
+   GP3 works on one 90 s drive in Town01, recorded with your GP1 node and
+   your rig. This task extends ``sensor_manager.py`` so the drive has the
+   ground truth and the traffic GP3 needs.
 
-   **Subscriptions:**
+   **Step 1: Your GNSS mount.** In your ``config/carla_config.yaml``, set
+   ``mounts.gnss_link`` ``x`` and ``y`` from Your Team's Values (``y`` is
+   minus the table's antenna y). Keep ``z``.
 
-   - ``/perception/detections``: ``vision_msgs/Detection2DArray`` (from GP2 YOLO or DETR node)
-   - ``/carla/lidar/points``: ``sensor_msgs/PointCloud2``
-
-   **Publications:**
-
-   - ``/perception/fused_objects``: ``vision_msgs/Detection3DArray``
-
-   **Algorithm: Frustum-Based Association**
-
-   1. For each 2D bounding box ``(u_min, v_min, u_max, v_max)`` in the
-      detection array, use the camera intrinsic matrix ``K`` to back-project
-      the four corners to rays in camera space.
-   2. Use the extrinsic calibration (camera-to-LiDAR transform ``T_cl``)
-      to transform the frustum into LiDAR frame.
-   3. Retain all LiDAR points whose ``(u, v)`` projection falls within the
-      bounding box **and** whose range is within ``[min_range, max_range]``.
-   4. Run DBSCAN clustering on the retained points. Select the cluster
-      closest to the camera as the associated object: points behind the
-      object (a wall, the road) fall in the same frustum and can form a
-      larger cluster. State your DBSCAN settings in the report.
-   5. Compute the 3D centroid of the cluster. Publish as ``Detection3D``
-      with ``results[0].hypothesis.class_id`` and
-      ``results[0].hypothesis.score`` copied from the 2D detection.
-
-   **Edge Cases (required handling):**
-
-   - If no LiDAR points fall within the frustum (occlusion, range limit,
-     sensor dropout), publish the detection with ``bbox.center.position.z = -1``
-     as a sentinel value and log a ``WARN`` message.
-   - If two detections select the same cluster (overlapping boxes), give
-     it to one of them and state your rule in the report.
-   - The node must work with both YOLO and DETR detection outputs from GP2
-     without modification (both use ``Detection2DArray``).
-
-   **Provided helper code (from** ``fusion_utils.py`` **):**
+   **Step 2: Extend sensor_manager.py.** Add these parameters to your
+   parameter list, with these defaults:
 
    .. code-block:: python
 
-      from fusion_utils import get_frustum_points, compute_centroid
-
-      def associate_lidar_to_detection(detection, cloud_array, K, T_cl,
-                                       min_range=1.0, max_range=50.0):
-          """The 3D centroid of the LiDAR cluster that belongs to one detection.
-
-          YOU WRITE THIS, following steps 3 to 5 above: keep the points
-          inside the box's frustum and range, cluster them, take the
-          cluster closest to the camera, and return its centroid. Return
-          None when no point falls inside the frustum.
-          """
-          raise NotImplementedError("GP3: associate_lidar_to_detection")
-
-   **Node skeleton:**
-
-   .. code-block:: python
-
-      import rclpy
-      from rclpy.node import Node
-      from sensor_msgs.msg import PointCloud2
-      from vision_msgs.msg import Detection2DArray, Detection3DArray, Detection3D
-      import numpy as np
-      import sensor_msgs_py.point_cloud2 as pc2
-      from fusion_utils import get_frustum_points, compute_centroid
-
-      class FusionNode(Node):
-          def __init__(self):
-              super().__init__('fusion_node')
-              # Declare parameters
-              self.declare_parameter('camera_frame', 'camera_front')
-              self.declare_parameter('lidar_frame', 'lidar_top')
-              self.declare_parameter('min_range', 1.0)
-              self.declare_parameter('max_range', 50.0)
-
-              # Load calibration (K and T_cl) -- implement load_calibration()
-              self.K, self.T_cl = self.load_calibration()
-
-              # Subscribers
-              self.det_sub = self.create_subscription(
-                  Detection2DArray, '/perception/detections',
-                  self.detections_callback, 10)
-              self.lidar_sub = self.create_subscription(
-                  PointCloud2, '/carla/lidar/points',
-                  self.lidar_callback, 10)
-
-              # Publisher
-              self.fused_pub = self.create_publisher(
-                  Detection3DArray, '/perception/fused_objects', 10)
-
-              self.latest_cloud = None
-
-          def lidar_callback(self, msg):
-              pts = pc2.read_points_numpy(msg, field_names=('x', 'y', 'z'),
-                                          skip_nans=True)
-              self.latest_cloud = pts
-
-          def detections_callback(self, msg):
-              # TODO: implement fusion logic here
-              pass
-
-          def load_calibration(self):
-              # TODO: load K and T_cl from config or TF tree
-              raise NotImplementedError
-
-      def main(args=None):
-          rclpy.init(args=args)
-          node = FusionNode()
-          rclpy.spin(node)
-          node.destroy_node()
-          rclpy.shutdown()
-
-   .. tip::
-
-      Synchronize the LiDAR and camera messages using
-      ``message_filters.ApproximateTimeSynchronizer`` for production-quality
-      fusion. For this project, caching the latest cloud and matching on
-      detection arrival is acceptable if you document the latency assumption.
-
-.. dropdown:: Task 2: EKF Localization Node (35 pts)
-   :icon: gear
-   :class-container: sd-border-primary
-
-   Implement ``localization_node.py`` using the provided ``ekf_template.py``
-   skeleton. The EKF estimates the vehicle's 2D pose and speed.
-
-   **State Vector:**
-
-   .. math::
-
-      \mathbf{x} = \begin{bmatrix} x \\ y \\ \theta \\ v \end{bmatrix}
-
-   where ``(x, y)`` is position in the map frame, ``theta`` is heading
-   (radians), and ``v`` is forward speed (m/s).
-
-   **Prediction Step: Motion Model**
-
-   The heading turns at the IMU's yaw rate ``omega`` (rad/s), and the
-   speed stays constant over the step. Given ``omega`` and the elapsed
-   time ``dt``:
-
-   .. math::
-
-      \mathbf{x}_{k|k-1} = \begin{bmatrix}
-          x_{k-1} + v_{k-1} \cos(\theta_{k-1}) \, dt \\
-          y_{k-1} + v_{k-1} \sin(\theta_{k-1}) \, dt \\
-          \theta_{k-1} + \omega \, dt \\
-          v_{k-1}
-      \end{bmatrix}
-
-   The Jacobian ``F`` linearizes this around the current state estimate.
-
-   **Update Step: GNSS Measurement**
-
-   GNSS provides ``(lat, lon)`` which must be converted to local Cartesian
-   ``(x_gps, y_gps)`` using a fixed reference origin. The measurement
-   model is:
-
-   .. math::
-
-      \mathbf{z}_k = \mathbf{H} \mathbf{x}_k + \mathbf{v}_k, \quad
-      \mathbf{H} = \begin{bmatrix} 1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \end{bmatrix}
-
-   **Subscriptions:**
-
-   - ``/carla/imu/data``: ``sensor_msgs/Imu``
-   - ``/carla/gnss/fix``: ``sensor_msgs/NavSatFix``
-
-   **Publications:**
-
-   - ``/localization/pose``: ``geometry_msgs/PoseStamped``
-   - ``/localization/odom``: ``nav_msgs/Odometry``
-
-   **Parameters (configurable via** ``ekf_config.yaml`` **):**
-
-   .. code-block:: yaml
-
-      ekf_node:
-        ros__parameters:
-          # Process noise covariance Q (diagonal entries)
-          q_x: 0.1        # position uncertainty per step (m^2)
-          q_y: 0.1
-          q_theta: 0.01   # heading uncertainty (rad^2)
-          q_v: 0.5        # speed uncertainty (m^2/s^2)
-          # Measurement noise covariance R (GNSS, diagonal entries)
-          r_x: 1.0        # GNSS x noise (m^2)
-          r_y: 1.0        # GNSS y noise (m^2)
-          # GNSS reference origin (set from first fix)
-          gnss_origin_lat: 0.0
-          gnss_origin_lon: 0.0
-
-   **EKF template usage:**
-
-   .. code-block:: python
-
-      from ekf_template import EKFBase
-      import numpy as np
-
-      class VehicleEKF(EKFBase):
-          """Concrete EKF: yaw-rate motion model + GNSS update."""
-
-          def __init__(self, Q, R):
-              # State: [x, y, theta, v]
-              x0 = np.zeros(4)
-              P0 = np.eye(4) * 1.0
-              super().__init__(x0, P0, Q, R)
-
-          def f(self, x, u, dt):
-              """Non-linear process model. u = [omega], the IMU yaw rate.
-
-              YOU WRITE THIS. State is [x, y, theta, v]. Advance it one step of
-              dt under the motion model above, taking velocity as constant
-              across the step. Returns a (4,) array.
-              """
-              raise NotImplementedError("GP3: f")
-          def F_jacobian(self, x, u, dt):
-              """Jacobian of f with respect to the state.
-
-              YOU WRITE THIS, and derive it on paper first. Four of the sixteen
-              entries sit off the diagonal: the ones carrying heading and speed
-              error into position error, which is the coupling L3 gave as the
-              reason velocity belongs in the state.
-
-              Verify it numerically rather than trusting the algebra. Perturb
-              each state element by 1e-6, re-run f, and compare the finite
-              difference against your matrix. An EKF with a wrong Jacobian does
-              not crash; it converges, confidently, on nonsense.
-
-              Returns a (4, 4) array.
-              """
-              raise NotImplementedError("GP3: F_jacobian")
-          def h(self, x):
-              """Measurement model: what GNSS observes given the state.
-
-              YOU WRITE THIS. Returns a (2,) array.
-              """
-              raise NotImplementedError("GP3: h")
-          def H_jacobian(self, x):
-              """Jacobian of h with respect to the state.
-
-              YOU WRITE THIS. Small, but get the shape right: it maps a
-              4-element state onto a 2-element measurement. Returns (2, 4).
-              """
-              raise NotImplementedError("GP3: H_jacobian")
-
-   .. warning::
-
-      Normalize ``theta`` to ``[-pi, pi]`` after every prediction and update
-      step. Angle wraparound is the most common source of EKF divergence in
-      student implementations.
-
-.. dropdown:: Task 3: Evaluation (20 pts)
-   :icon: gear
-   :class-container: sd-border-primary
-
-   Quantitatively evaluate both the fusion and localization components.
-
-   **3.1 Fusion Evaluation**
-
-   Use ``ground_truth_logger.py`` (provided) to record CARLA ground-truth
-   3D object positions at each timestep. Compare against your
-   ``/perception/fused_objects`` output.
-
-   For each object class (vehicle, pedestrian, cyclist), compute:
-
-   - **Mean 3D Position Error (m):** Euclidean distance between fused
-     centroid and ground-truth centroid, averaged over all matched detections.
-   - **Match rate (%):** Fraction of ground-truth objects that have at least
-     one fused detection within 2 m.
-
-   Report results in a table per class:
-
-   .. code-block:: python
-
-      import numpy as np
-
-      def mean_3d_position_error(fused_positions, gt_positions):
-          """
-          fused_positions, gt_positions: list of np.ndarray shape (3,)
-          Returns mean Euclidean error in metres.
-          """
-          errors = [np.linalg.norm(f - g)
-                    for f, g in zip(fused_positions, gt_positions)]
-          return np.mean(errors), np.std(errors)
-
-   **3.2 Localization Evaluation**
-
-   Use the provided ``evaluate_localization.py`` script:
+      ('ground_truth', False), ('ignore_lights', False), ('max_sim_s', 0.0),
+      ('traffic.vehicles', 0), ('traffic.walkers', 0), ('traffic.seed', 818),
+
+   Then:
+
+   1. Import ``from ads_pipeline import traffic`` and
+      ``from ads_pipeline.ground_truth import GroundTruth``.
+   2. After the vehicle and its sensors exist (and after autopilot is set):
+      create ``self.gt = GroundTruth(self, self.world, self.vehicle)`` when
+      ``ground_truth`` is true, and call ``traffic.spawn(self.client,
+      self.world, <traffic manager port>, <vehicles>, <walkers>, <seed>,
+      exclude_index=<your spawn_index>)`` when a count is above 0. Add the
+      actors it returns to the list your node destroys.
+   3. When ``ignore_lights`` is true and autopilot is on, call
+      ``traffic_manager.ignore_lights_percentage(self.vehicle, 100.0)``. A
+      car that waits at a red light for half the drive gives the EKF and the
+      tracker little to do.
+   4. In your tick callback, right after ``world.tick()``, call
+      ``self.gt.publish(<sim time>)``, so the truth has the same stamp as
+      the sensors.
+   5. Write ``time_is_up(sim_now, sim_start, max_sim_s)``, a module-level
+      function: true once ``max_sim_s`` seconds of simulated time have
+      passed since ``sim_start``, and never when ``max_sim_s`` is 0. When it
+      is true, stop ticking and shut the node down
+      (``rclpy.try_shutdown()``), so the recording ends by itself.
+   6. Stop the walker controllers before you destroy them
+      (``actor.type_id == 'controller.ai.walker'``: call ``actor.stop()``).
+
+   **Step 3: Record.** Set ``traffic.vehicles: 80`` and
+   ``traffic.walkers: 150`` in your YAML, start CARLA, then:
 
    .. code-block:: bash
 
-      # Record EKF output and ground truth to CSV first, then:
-      python evaluate_localization.py \
-          --est  ekf_trajectory/ekf_pose.csv \
-          --ref  ground_truth/gt_pose.csv \
-          --plot evaluation/plots/
+      ros2 launch ads_pipeline record_gp3_launch.py config:=$PWD/config/carla_config.yaml \
+          out:=$HOME/gp3_data/drive duration:=90.0
 
-   The script reports:
+   The launch file turns on autopilot, the ground truth and
+   ``ignore_lights``, and records only the topics GP3 needs. Our recording
+   took 118 s of wall time for 90 s of driving (1280 x 720 camera, 6.6 GiB;
+   sizes for the other image sizes are under Folder Structure). On GP1's
+   slowest machine (about 11 times slower than real time) it would take
+   about 17 minutes.
 
-   - **APE (Absolute Pose Error):** RMSE of position error over entire run.
-   - **RPE (Relative Pose Error):** Mean error over fixed-length sub-segments.
-   - Trajectory overlay plot and error-over-time plot.
+   **Step 4: Evidence.** Save into ``results/gp3/``:
 
-   **3.3 Multi-Town Testing**
+   - ``drive_info.txt``: the output of ``ros2 bag info`` on your drive. It
+     must show 1800 camera frames (90 s at 20 Hz) and about 900 GNSS fixes.
+   - ``playback.txt``: while ``ros2 bag play`` replays the drive, the output
+     of ``ros2 topic hz`` on ``/carla/gnss/fix`` and ``/carla/imu/data``,
+     and of ``ros2 topic echo --once`` on ``/ground_truth/ego``. It shows
+     that the bag replays.
 
-   Run your full GP3 pipeline (sensors + detection + fusion + EKF) in at
-   least **two CARLA towns** with different road layouts and conditions
-   (e.g., Town01 and Town05). Report evaluation metrics for each town
-   separately and discuss differences.
+   **Tests:** ``python3 -m pytest test/test_gp3_ground_truth.py -v``.
 
-   .. important::
-
-      Include **all evaluation CSV files and generated plots** in your
-      submission under ``evaluation/``. The grader will re-run
-      ``evaluate_localization.py`` to verify your reported numbers.
-
-.. dropdown:: Task 4: LiDAR Odometry, Bonus (10 pts)
-   :icon: gear
+.. dropdown:: Task 2: EKF Localization (30 pts)
+   :icon: goal
    :class-container: sd-border-primary
 
-   Implement ICP (Iterative Closest Point) scan matching as an additional
-   localization measurement source and fuse it into the EKF.
+   The EKF estimates your car's state on the map:
 
-   **Requirements:**
+   .. math::
 
-   1. Implement ``lidar_odometry_node.py`` that subscribes to
-      ``/carla/lidar/points`` and publishes relative pose increments on
-      ``/localization/lidar_odom_delta`` using ICP between consecutive scans.
-      You may use ``open3d.pipelines.registration.registration_icp`` or
-      ``scikit-learn``'s nearest-neighbor routines.
+      \mathbf{x} = \begin{bmatrix} x & y & \theta & v \end{bmatrix}^T
 
-   2. Add a second EKF update step in ``localization_node.py`` that
-      ingests the LiDAR odometry delta as an additional measurement
-      ``z_lidar = [dx, dy, dtheta]``.
+   where :math:`(x, y)` is the car's origin on the map in meters,
+   :math:`\theta` its heading in radians (0 along the map's x axis,
+   counterclockwise positive) and :math:`v` its forward speed in m/s.
 
-   3. Compare localization APE **with and without** LiDAR odometry fusion
-      and report the reduction in error.
+   **Prediction.** Between two IMU messages, :math:`dt` seconds apart, the
+   heading turns at the IMU's yaw rate :math:`\omega` (rad/s), and the
+   speed stays the same:
 
-   .. code-block:: python
+   .. math::
 
-      import open3d as o3d
+      x_{k} = x_{k-1} + v_{k-1} \cos\theta_{k-1}\, dt, \quad
+      y_{k} = y_{k-1} + v_{k-1} \sin\theta_{k-1}\, dt, \quad
+      \theta_{k} = \theta_{k-1} + \omega\, dt, \quad
+      v_{k} = v_{k-1}
 
-      def icp_scan_match(source_pts, target_pts, threshold=0.5):
-          """Align a live scan to the map and return the 4x4 transform.
+   Nothing in this model measures the speed directly: only the GNSS fixes,
+   through the change in position, correct it. In the outage there are no
+   fixes, so the speed stays at its last estimate.
 
-          YOU WRITE THIS. You may call a library for the inner registration
-          step, but you choose the initial guess, the correspondence
-          threshold and the convergence test, and those decide whether it
-          works.
+   **Update.** The GNSS measures the antenna, not the car's origin. The
+   antenna sits at :math:`(d_x, d_y)` in the vehicle frame (your team's
+   values), so the measurement model is
 
-          Report what you do when it fails to converge. Returning an
-          unchecked transform is how a localisation node silently teleports.
-          """
-          raise NotImplementedError("GP3: icp_scan_match")
+   .. math::
 
-   .. note::
+      h(\mathbf{x}) = \begin{bmatrix}
+         x + d_x \cos\theta - d_y \sin\theta \\
+         y + d_x \sin\theta + d_y \cos\theta
+      \end{bmatrix}
 
-      ICP scan matching can be slow on dense point clouds. Downsample to
-      a voxel grid (e.g., 0.2 m) before running ICP to keep the update
-      rate above 5 Hz.
+   **Yours, in ekf_core.py:** ``f``, ``F_jacobian``, ``h``, ``H_jacobian``.
+   Derive both Jacobians on paper first; the tests compare them with finite
+   differences at four headings.
+
+   **Yours, in localization_node.py:** ``on_imu`` and ``on_gnss``, the order
+   of predict and update. The IMU arrives at 20 Hz and the GNSS at 10 Hz, so
+   half the IMU stamps also have a fix. Use the given ``Clock``: it returns
+   how far to predict for each message's stamp, and 0 for a second message
+   at the same stamp, so you never predict twice for one instant. Use the
+   stamps, never the wall clock: a bag played at ``--rate 0.25`` must give
+   the same answer.
+
+   **The first state.** While the car stands still, nothing shows its
+   heading, and the motion model cannot tell heading :math:`\theta` at speed
+   :math:`v` from heading :math:`\theta + \pi` at speed :math:`-v`. Started
+   at heading 0, our filter settled on the wrong one on two of five drives,
+   3 m off for the whole drive. So ``on_gnss`` waits until the antenna has
+   moved ``INIT_DISTANCE`` (3 m) from the first fix, and sets the first
+   state with the given ``initial_state``: the heading is the direction of
+   that move.
+
+   **The map frame.** ``geo.py`` turns latitude and longitude into the map
+   frame that GP1's ``sensor_manager`` publishes and the ground truth uses.
+   Two facts about CARLA, measured on Town01: one degree is 111,275.5 m
+   there, and **latitude grows toward the map's minus y**, because the map
+   frame flips CARLA's y axis. ``geo.py`` handles both; anchor it at
+   Town01's origin, latitude 0 and longitude 0 (in ``ekf_config.yaml``).
+
+   **Run it.** ``gp3_launch.py`` replays your drive through the GNSS outage
+   relay, your EKF, GP2's detector, fusion and the tracker, and records the
+   outputs:
+
+   .. code-block:: bash
+
+      ros2 launch ads_pipeline gp3_launch.py bag:=$HOME/gp3_data/drive \
+          config:=$PWD/config/carla_config.yaml ekf_config:=$PWD/config/ekf_config.yaml \
+          fusion_config:=$PWD/config/fusion_config.yaml weights:=yolov8s.pt \
+          outage_start_s:=<yours> outage_end_s:=<yours> out:=$HOME/gp3_data/run_ekf \
+          nis_csv:=../results/gp3/nis.csv
+      python3 -m tools.ape --bag $HOME/gp3_data/run_ekf --outage <start> <end> \
+          --nis ../results/gp3/nis.csv --csv ../results/gp3/ape.csv
+
+   ``ape.py`` prints the APE RMSE over the whole drive, inside the outage,
+   and with GNSS, and the NIS verdict. "With GNSS" leaves out the outage and
+   the 3 s after it: the first fixes after an outage still carry the error
+   it built up, and the filter needs a moment to remove it.
+
+   **Tune Q and R.** The starter's ``ekf_config.yaml`` is not tuned. Measure
+   R from your rig's GNSS noise (it is in your GP1 YAML, in degrees), then
+   tune Q until the NIS check says consistent. Report what you tried.
+
+   **Our reference** on a demo drive (rig A's values, 90 s, a 23.1 s
+   outage): APE RMSE 0.43 m with GNSS and 17.95 m inside the outage, with
+   the NIS consistent (mean 1.94, 95.4% of fixes inside the band). With an
+   untuned Q (``q_v`` 0.1), the outage APE was 29.59 m.
+
+   **Evidence** in ``results/gp3/``: ``ape.txt`` (the output of ``ape.py``),
+   ``ape.csv``, ``nis.csv``.
+
+   **Tests:** ``python3 -m pytest test/test_gp3_ekf.py test/test_gp3_ape.py -v``.
+
+.. dropdown:: Task 3: Camera-LiDAR Fusion (25 pts)
+   :icon: goal
+   :class-container: sd-border-primary
+
+   ``fusion_node`` turns each GP2 detection into one point on the map, as in
+   frustum association:
+
+   1. Project the LiDAR sweep of the box's stamp into the image with your
+      GP1 ``K`` and extrinsic (given: ``project_keep_points``; the published
+      cloud has ROS axes, y left, and GP1's extrinsic expects CARLA's, y
+      right, so it flips y for the projection only).
+   2. Drop the points within 0.3 m of the road (given: ``remove_ground``).
+      Without this, the road in front of a person's feet, inside the
+      person's box, can be the nearest cluster.
+   3. **Yours:** ``associate_lidar_to_detection``. Keep the points inside
+      the box and between ``min_range`` and ``max_range`` from the LiDAR,
+      group them with DBSCAN, and return the centroid of the cluster nearest
+      the LiDAR.
+   4. **Yours:** ``to_map``. Move that centroid from the LiDAR frame to the
+      vehicle frame, then onto the map with the car's pose.
+
+   **Start on day 1:** run the fusion with the true pose
+   (``pose_topic:=/ground_truth/ego``), so your fusion does not wait for your
+   EKF.
+
+   **Score it.** Run ``gp3_launch.py`` twice, once with
+   ``pose_topic:=/localization/pose`` (your EKF) and once with
+   ``pose_topic:=/ground_truth/ego`` (the truth), then for each:
+
+   .. code-block:: bash
+
+      python3 -m tools.fusion_eval --bag $HOME/gp3_data/run_truth \
+          --rig config/carla_config.yaml --drive $HOME/gp3_data/drive
+
+   ``fusion_eval.py`` counts a true object only when the sensors can see it:
+   inside the camera's field of view, within 60 m, and with at least 5 LiDAR
+   points of the same sweep inside its box (as nuScenes does). A fused
+   object matches a true one of the same class within 3 m: the LiDAR sees
+   a car's near side, so the cluster's center falls short of the box's
+   center, by up to half the car's length. It prints the share of true
+   objects matched and the mean position error, by distance from the car.
+
+   **Our reference** (YOLOv8s, rig A's demo drive), vehicles: with the true
+   pose, 37.7% of the visible vehicles matched, mean error 1.61 m; with the
+   EKF pose, 25.8%, 1.66 m. The demo drive had only 27 visible pedestrian
+   instances, too few to compare.
+
+   **Evidence:** ``fusion_truth.txt`` and ``fusion_ekf.txt``.
+
+   **Tests:** ``python3 -m pytest test/test_gp3_fusion.py test/test_gp3_fusion_eval.py -v``.
+
+.. dropdown:: Task 4: Tracking on the Map (20 pts)
+   :icon: goal
+   :class-container: sd-border-primary
+
+   ``map_tracker.py`` is GP2's ``BoxTracker`` moved from pixels to meters.
+   It imports ``CONFIRM_HITS``, ``MAX_MISSES``, ``Track`` and ``associate``
+   from your ``box_tracker.py``. What changes:
+
+   - **The state** is :math:`[x, y, v_x, v_y]` on the map, in meters and
+     m/s, with a constant-velocity model over the time between two stamps.
+     ``R_STD``, ``Q_ACC`` and ``V_STD0`` are given at the top of the file.
+   - **The cost** of pairing a track with a detection is the Mahalanobis
+     distance of the innovation, :math:`\nu^T S^{-1} \nu`, not
+     1 minus IoU.
+   - **The gate** is 9.21, the chi-square 99% bound for 2 values: a pair with a larger distance is never
+     matched.
+
+   **Yours:** ``MapKalman`` (``__init__``, ``predict``, ``update``),
+   ``mahalanobis_cost`` and ``MapTracker.step``.
+
+   **Start on day 1:** ``test_data/noisy_dets.json`` holds 1800 frames of
+   detections made from the truth of a reference drive, each moved by noise
+   of 1.29 m per axis, with 10% removed, and the truth beside them. Run your
+   tracker on it before your fusion works.
+
+   **Score it** on both runs of Task 3:
+
+   .. code-block:: bash
+
+      python3 -m tools.track_eval --bag $HOME/gp3_data/run_truth \
+          --rig config/carla_config.yaml --drive $HOME/gp3_data/drive
+
+   It prints ID switches, MOTA (as in GP2) and the mean speed error against
+   the truth. **Our reference,** true pose: MOTA 0.145, 27 ID switches,
+   speed error 1.07 m/s. MOTA is low because it also counts every visible
+   vehicle the detector missed.
+
+   **Evidence:** ``tracks_truth.txt`` and ``tracks_ekf.txt``.
+
+   **Tests:** ``python3 -m pytest test/test_gp3_tracker.py test/test_gp3_track_eval.py -v``.
 
 .. dropdown:: Task 5: Report (15 pts)
-   :icon: gear
+   :icon: goal
    :class-container: sd-border-primary
 
-   Write a **4 to 5 page technical report** (PDF, double-column preferred)
-   covering the following sections. Use your own words: do not copy
-   template text.
+   ``gp3_report.pdf``, at most 5 pages. Every number in it must match a
+   file in ``results/gp3/``.
 
-   **Required Sections:**
-
-   1. **Architecture Diagram:** draw the full ROS 2 node and topic graph
-      for your GP3 pipeline. Show all nodes (from GP1, GP2, and GP3),
-      all topics, and data flow directions. Tools: ``rqt_graph``, draw.io,
-      or PlantUML.
-
-   2. **EKF Formulation:** present the mathematical formulation:
-      state vector definition, process model ``f(x, u)``, Jacobian ``F``,
-      measurement model ``h(x)``, Jacobian ``H``, and noise matrices ``Q``
-      and ``R``. Show the full predict/update equations.
-
-   3. **Quantitative Results:** the following tables and plots.
-
-      - Fusion: mean 3D position error per class (Town01, Town05)
-      - Localization: APE and RPE (Town01, Town05)
-      - EKF trajectory overlay plot
-
-   4. **Error Analysis:** when does fusion fail? (Occlusion? Long range?
-      Adverse weather?) When does the EKF drift? (Sharp turns? GNSS outage?)
-      Support your analysis with specific timestamped examples from your
-      evaluation data.
-
-   5. **Conclusion:** key lessons learned and identified improvements.
-
-   .. tip::
-
-      Use ``rqt_graph`` to auto-generate a screenshot of your node/topic
-      graph and annotate it in a drawing tool. This is the fastest way to
-      produce a clean architecture diagram.
+   1. **The error budget.** How far off is an object's map position, and
+      how much of that comes from your EKF and how much from your fusion?
+      Use the two runs of Task 3: with the true pose, only fusion is wrong;
+      with your EKF, both are.
+   2. **The outage.** Plot your EKF's position error and its own
+      1-sigma (from ``/localization/odom``'s covariance) against time, with
+      the outage marked. What did the filter do, and why? Look at the speed:
+      what did the car do during your outage, and what did the filter
+      assume?
+   3. **Q and R.** What you measured for R, what you tried for Q, and the
+      NIS verdict of your final choice.
+   4. **One failure,** with its time: a missed person, an ID switch or a
+      false object. What each node published at that moment, and the cause.
+   5. AI disclosure in ``README.md``, per member.
 
 
-Folder Structure
-----------------
+Suggested Schedule
+------------------
 
-Your submission must follow this exact directory layout:
+The plan below finishes on day 13 of 15 and leaves two days of slack.
 
-.. code-block:: text
+.. list-table::
+   :widths: 14 40 46
+   :header-rows: 1
+   :class: compact-table
 
-   GP3_Team{X}/
-   ├── ads_pipeline/              # Extended from GP2
-   │   ├── ads_pipeline/
-   │   │   ├── __init__.py
-   │   │   ├── sensor_manager.py     # From GP1
-   │   │   ├── detector_node.py      # From GP2
-   │   │   ├── detector_core.py      # From GP2
-   │   │   ├── fusion_node.py        # NEW
-   │   │   ├── localization_node.py  # NEW
-   │   │   ├── ekf_template.py       # Provided (copied here)
-   │   │   └── fusion_utils.py       # Provided (copied here)
-   │   ├── config/
-   │   │   ├── carla_config.yaml     # Updated with fusion params
-   │   │   └── ekf_config.yaml       # NEW
-   │   ├── launch/
-   │   │   ├── sensors_launch.py     # From GP1
-   │   │   ├── perception_launch.py  # From GP2
-   │   │   └── fusion_launch.py      # NEW
-   │   ├── package.xml
-   │   └── setup.py
-   ├── evaluation/
-   │   ├── ground_truth/             # CSV files from ground_truth_logger
-   │   ├── ekf_trajectory/           # CSV files of EKF pose estimates
-   │   ├── fusion_results/           # Per-class 3D error CSVs
-   │   └── plots/                    # Trajectory and error plots (PNG/PDF)
-   └── report.pdf
-
-Replace ``{X}`` with your team number (e.g., ``GP3_Team3``).
+   * - Days
+     - Milestone
+     - Done when
+   * - 1 to 2
+     - Starter copied, ``ads_msgs`` built, Task 1 recorded
+     - ``drive_info.txt`` shows 1800 camera frames
+   * - 3 to 8
+     - Tasks 2, 3 and 4: one person per task; fusion uses the true pose and
+       the tracker uses ``noisy_dets.json`` until the others are ready
+     - Each task's tests pass
+   * - 9 to 10
+     - Everything on your drive, both poses
+     - The six result files are saved
+   * - 11 to 13
+     - Task 5 and the submission
+     - Checklist below fully ticked
+   * - 14 to 15
+     - **Slack**
+     - Nothing scheduled
 
 
 Submission
@@ -558,81 +718,101 @@ Submission
 
    **Submission Instructions**
 
-   Submit a single ``.zip`` archive named ``GP3_TeamX.zip`` (replace ``X``
-   with your team number) to **Canvas** by the deadline.
-
-   - **Deadline:** Thursday, November 19, Week 12 (see Canvas for the exact time)
-   - **Late policy:** 10% deduction per day, maximum 3 days late
-   - **One submission per team:** designate one member to submit
-   - Include **all** evaluation files, plots, and ``report.pdf`` inside the archive
-   - Your ``ads_pipeline`` package must build cleanly with
-     ``colcon build --packages-select ads_pipeline``
-
-   Canvas submissions only. Email submissions will not be graded.
+   1. Push the ``gp3`` branch to your team's private repository.
+   2. Keep the instructor, GitHub user ``rubixcubic``, as a collaborator.
+   3. Tag the submission commit: ``git tag gp3-final && git push --tags``.
+   4. Submit the repository link and ``gp3_report.pdf`` on Canvas by the
+      deadline.
+   5. Email your peer evaluation within 48 hours (see
+      :ref:`peer-evaluation`).
 
 
 Submission Checklist
 --------------------
 
-.. admonition:: Before You Submit: Check Every Item
+.. admonition:: Before Submitting: Check Every Item
    :class: tip
 
-   - [ ] ``fusion_node.py`` runs and publishes ``/perception/fused_objects``
-   - [ ] ``localization_node.py`` runs and publishes ``/localization/pose``
-         and ``/localization/odom``
-   - [ ] ``fusion_launch.py`` launches all GP3 nodes together with GP1 and GP2
-   - [ ] ``ekf_config.yaml`` is present and loaded by the launch file
-   - [ ] Evaluation CSVs are present in ``evaluation/ground_truth/`` and
-         ``evaluation/ekf_trajectory/``
-   - [ ] Evaluation plots are present in ``evaluation/plots/``
-   - [ ] Results tested in at least 2 CARLA towns
-   - [ ] ``report.pdf`` is present, 4 to 5 pages, includes architecture diagram
-         and EKF formulation
-   - [ ] ``colcon build`` succeeds with no errors
-   - [ ] Folder is named ``GP3_TeamX/`` (correct team number)
-   - [ ] Archive is named ``GP3_TeamX.zip``
+   **Build and tests**
+
+   - [ ] ``colcon build --packages-up-to ads_pipeline`` succeeds.
+   - [ ] ``python3 -m pytest test/ -k gp3`` passes, with nothing skipped.
+
+   **Task 1**
+
+   - [ ] ``mounts.gnss_link`` set from Your Team's Values (y with its sign
+         flipped).
+   - [ ] ``results/gp3/drive_info.txt`` and ``playback.txt`` saved.
+
+   **Tasks 2 to 4**
+
+   - [ ] ``ekf_config.yaml`` holds your antenna, your R and your tuned Q.
+   - [ ] ``ape.txt``, ``ape.csv``, ``nis.csv`` saved.
+   - [ ] ``fusion_truth.txt``, ``fusion_ekf.txt``, ``tracks_truth.txt``,
+         ``tracks_ekf.txt`` saved.
+   - [ ] No node of yours subscribes to ``/ground_truth/*``.
+
+   **Repository**
+
+   - [ ] No bags committed.
+   - [ ] AI use disclosed in ``README.md``, two or three sentences per
+         member.
+   - [ ] Commit tagged ``gp3-final`` and pushed.
+   - [ ] ``gp3_report.pdf`` submitted on Canvas.
    - [ ] Peer evaluation emailed within 48 hours (see :ref:`peer-evaluation`).
 
 
 Grading Rubric
 --------------
 
+Total: **100 points**, scaled to 25% of the group-project grade (21.25% of
+the final project grade).
+
+The grader also runs your nodes on a **held-out drive**: a second 90 s
+drive of your rig, with a different start and different traffic, that you
+have not seen. "Reference" below means our reference solution on that same
+drive. The factors (1.5 times, 0.8 times) are the margins chosen for GP3.
+
 .. list-table::
+   :widths: 26 10 64
    :header-rows: 1
-   :widths: 40 15 45
+   :class: compact-table
 
    * - Component
      - Points
      - Criteria
-   * - Camera-LiDAR Fusion
+   * - Task 1: Recording
+     - 10
+     - **3** the ground-truth tests pass. **3** the GNSS mount is right: on
+       your drive, the fixes land about 0.7 m from where your antenna
+       really was (your rig's GNSS noise), not farther. **4**
+       ``drive_info.txt`` and ``playback.txt``.
+   * - Task 2: EKF
      - 30
-     - Frustum association implemented correctly; ``Detection3DArray``
-       published on correct topic; occlusion/range edge cases handled;
-       works with both YOLO and DETR outputs; 3D position error < 1.5 m
-       on average for vehicles.
-   * - EKF Localization
-     - 35
-     - State vector correct; prediction step uses the motion model; Jacobian
-       ``F`` analytically derived; GNSS update step implemented; ``Q``
-       and ``R`` configurable via parameters; heading normalization
-       applied; APE < 2.0 m in Town01 straight roads.
-   * - Evaluation
+     - **10** the EKF tests pass. **8** held-out APE with GNSS at most 1.5
+       times the reference's. **6** held-out APE inside the outage
+       at most 1.5 times the reference's. **6** NIS consistent, with Q and R
+       explained.
+   * - Task 3: Fusion
+     - 25
+     - **10** the fusion tests pass. **8** held-out, true pose: vehicles
+       matched at least 0.8 times the reference's share, mean error at most
+       1.5 times the reference's. **7** both runs on your drive, in
+       ``fusion_truth.txt`` and ``fusion_ekf.txt``.
+   * - Task 4: Tracking
      - 20
-     - Fusion 3D error table with per-class breakdown; APE and RPE
-       reported; trajectory overlay plot; error-over-time plot; at least
-       2 towns tested; ``evaluate_localization.py`` re-runs successfully
-       on submitted CSVs.
-   * - Report
+     - **8** the tracker tests pass. **7** held-out, true pose: ID switches
+       at most 1.5 times the reference's and MOTA at least the reference's
+       minus 0.1. **5** both runs on your drive, with one ID switch shown.
+   * - Task 5: Report
      - 15
-     - Architecture diagram shows all nodes and topics; EKF formulation
-       section includes ``f``, ``F``, ``h``, ``H``, ``Q``, ``R``;
-       quantitative tables match submitted CSVs; error analysis discusses
-       specific failure cases; 4 to 5 pages.
-   * - LiDAR Odometry (Bonus)
-     - +10
-     - ICP scan matching implemented and publishing delta poses; second
-       EKF update step consumes LiDAR odometry; APE reduction
-       demonstrated quantitatively.
+     - **5** the error budget. **5** the outage, with the plot and the
+       cause. **3** Q, R and NIS. **2** one failure, with its time.
+
+.. note::
+
+   **Individual grade** = 60% team grade for GP3 + 40% peer review score, as
+   for every project (:ref:`peer-evaluation`).
 
 
 Common Mistakes
@@ -640,74 +820,21 @@ Common Mistakes
 
 .. danger::
 
-   **Avoid These Common Errors**
-
-   - **Forgetting to convert GNSS to Cartesian.** Raw ``(lat, lon)``
-     cannot be used directly as EKF measurements. You must convert to a
-     local Cartesian frame using a fixed reference origin. Use
-     ``pyproj.Transformer`` or the haversine formula.
-
-   - **Not normalizing heading.** After every EKF predict/update step,
-     wrap ``theta`` to ``[-pi, pi]``. Failure to do this causes the EKF
-     to diverge on long runs with turns.
-
-   - **Ignoring time synchronization.** Fusing a LiDAR cloud from time
-     ``t-0.5s`` with a detection at time ``t`` produces incorrect
-     associations. Cache the most recent cloud with its timestamp and
-     warn if the age exceeds 100 ms.
-
-   - **Hardcoding calibration values.** Camera intrinsics ``K`` and the
-     camera-to-LiDAR extrinsic ``T_cl`` must be loaded from config, not
-     hardcoded. Different CARLA vehicle setups have different calibrations.
-
-   - **Publishing an empty** ``Detection3DArray`` **on no detections.**
-     Always publish the message (even if empty) so downstream nodes
-     do not stall waiting for their first message.
-
-   - **Submitting without evaluation files.** The grader needs your
-     trajectory CSVs to re-run ``evaluate_localization.py``. Missing
-     files result in zero points for the evaluation component.
-
-   - **Copying EKF code without understanding it.** You must be able to
-     explain every line of your EKF during office hours. The template is a
-     scaffold: the math is yours to fill in.
-
-
-Tips for Success
-----------------
-
-.. tip::
-
-   **Set up the pipeline incrementally.** First verify that
-   ``/carla/lidar/points`` is publishing in RViz before writing the
-   fusion node. Then test frustum projection on a static scene before
-   running with the full detection pipeline.
-
-.. tip::
-
-   **Tune Q and R empirically.** Start with large ``R`` (low trust in
-   GNSS) and reduce it once your prediction step is verified. A good
-   sanity check: set ``Q = 0`` and ``R = 0`` and confirm the filter
-   runs at sensor rate without crashing before adding noise.
-
-.. tip::
-
-   **Use RViz for visual debugging.** Publish the LiDAR frustum points
-   as a ``sensor_msgs/PointCloud2`` on a debug topic to verify that
-   your frustum association is selecting the right points. Visualize
-   the EKF pose as a ``PoseStamped`` arrow in RViz alongside the
-   CARLA ground-truth pose.
-
-.. tip::
-
-   **Divide the work clearly.** A natural split for three: one member
-   on ``fusion_node.py``, one on ``localization_node.py``, one on the
-   evaluation scripts and plots. Share the report. All members
-   should understand all components before submission.
-
-.. tip::
-
-   **Test in Town05 early.** Town05 has more complex intersections and
-   varying road widths than Town01. EKF drift tends to be larger in
-   Town05 due to sharper turns: leave time to retune ``Q`` before the
-   deadline.
+   - **The GNSS mount's y sign.** The table's antenna y points left; the
+     YAML's y points right. A wrong sign moves your antenna to the other
+     side of the car, and every fix lands 2 times your antenna y away from
+     where the EKF expects it.
+   - **Starting at heading 0.** The filter can settle on the opposite
+     heading with a negative speed. Set the first state from the first move
+     (``initial_state``).
+   - **Predicting twice for one instant.** A GNSS fix and an IMU message
+     often share a stamp. Use the ``Clock``: it returns 0 the second time.
+   - **Using the wall clock.** ``dt`` comes from the message stamps. With
+     the wall clock, a replay at another rate gives another answer.
+   - **Anchoring at the first fix.** The map origin is latitude 0,
+     longitude 0 in Town01. Anchored at the first fix, your EKF is in a
+     different frame from the ground truth, and APE is the distance between
+     the two frames.
+   - **Reading the ground truth in a node.** ``/ground_truth/*`` is for
+     grading. The grader checks your nodes' subscriptions.
+   - **Committing a bag.** Your drive is several GB.
