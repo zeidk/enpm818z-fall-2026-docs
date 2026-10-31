@@ -81,6 +81,36 @@ GP4 drives the car with your whole pipeline, live in CARLA:
    **gray:** given. Every arrow carries a ROS 2 topic. The command goes back
    to your GP1 node, which waits for it before the next simulation step.
 
+**Our reference, running.** The video below shows our reference GP4 pipeline
+driving rig A's route (535 m) in closed loop, with its EKF pose, 40 other
+vehicles and 80 people. It plays at normal speed: 96 s of simulated time.
+
+.. raw:: html
+
+   <video controls preload="metadata" width="100%"
+          poster="../_static/images/GP4/gp4_video_poster.png">
+     <source src="../_static/videos/gp4_reference.mp4" type="video/mp4">
+     Your browser cannot play this video. The description below says what it shows.
+   </video>
+
+*What the video shows* (it has no sound). **Left:** a camera that follows
+the car from behind. It is only for the video; the pipeline does not use
+it. **Right:** a top view 80 m across, centered on the car: the lane
+centers from the map (light gray), the planned path (red) with the goal at
+its end (red star), the true car (black triangle), the EKF's pose (orange
+dot) and the tracks (purple squares, with speed arrows). The title gives
+the behavior state, its target speed and the car's speed.
+
+The car follows its lane at up to 8.1 m/s. Three times (at 64 s, 72 s and
+80 s) it brakes for a vehicle coming the other way in the next lane, and at
+80 s it stops briefly. Each time, the vehicle's track, or the position its speed
+arrow predicts 2 s ahead, comes within 3 m of our path, so the behavior
+node counts the vehicle as ahead. At 64 s and 80 s the arrow points partly
+across the road; at 72 s the bus's track sits near the edge of our lane. The car comes within 2 m of the goal
+at 89.6 s and stops 0.6 m from it, before a red light. Scored to arrival,
+the run had no collision and no red-light violation; the EKF's error was
+0.48 m RMSE and the mean cross-track error 0.27 m.
+
 .. list-table::
    :widths: 26 14 60
    :header-rows: 1
@@ -434,11 +464,14 @@ Tasks
    the integral of the error held within ``pid_windup_limit`` (2.0), and
    the output clamped to [-1, 1]: positive is throttle, negative brake.
 
-   **Speed in curves (given).** The controller node caps the behavior
-   node's target so the car can slow, at 2.0 m/s², to
+   **Speed in curves and at the goal (given).** The controller node caps
+   the behavior node's target so the car can slow, at 2.0 m/s², to
    :math:`\sqrt{a_{lat} / \kappa}` (``a_lat`` 2.0 m/s²) on every curve in
    the next 40 m of path, where :math:`\kappa` is the path's curvature.
-   Without it, our car took junction turns at 7 m/s and left its lane.
+   Once the goal is within those 40 m, the cap also lets the car stop at
+   the goal. Without the curve cap, our car took junction turns at 7 m/s
+   and left its lane. Without the goal cap, it drove past its goal at
+   5.1 m/s.
 
    **Tune offline first.** ``bicycle_sim.track`` drives a path with your
    two functions, with steering and engine lags. On the test curve, our
@@ -501,13 +534,16 @@ Tasks
    speed.
 
    **Our reference** on rig A's route (535 m, 40 vehicles and 80 people):
-   with the true pose and with the EKF, the route complete in 159.9 s of
-   simulated time, no collision, no red-light violation; the mean
-   cross-track error was 0.015 m with the true pose and 0.248 m with the EKF.
-   Each run took about 5 minutes of wall time on an RTX 4060 laptop GPU.
-   With a 1600 x 900 or 1920 x 1080 camera the detector is slower and the
-   lock step times out more often (407 and 301 times in our runs); the run
-   still works, it takes 19 to 25 minutes.
+   with the true pose, the car arrived in 160.3 s of simulated time, with a
+   mean cross-track error of 0.015 m; with the EKF, in 124.1 s, with
+   0.408 m. Neither run had a collision or a red-light violation. Each run
+   took about 5 minutes of wall time on an RTX 4060 laptop GPU. The traffic
+   differs from run to run, even with the same seed, so one route gives
+   different numbers: in the run of the video above, the same car with the
+   EKF arrived in 89.6 s, with 0.27 m. With a 1600 x 900 or 1920 x 1080
+   camera the detector is slower and the lock step times out more often
+   (301 to 407 times in our runs); the run still works, it takes 19 to 25
+   minutes.
 
    **The report,** ``gp4_report.pdf``, at most 5 pages:
 

@@ -83,7 +83,7 @@ with your own GP1 node, and every later task works on that recording.
    and data. Solid arrows carry a ROS 2 topic; dashed arrows mean that the
    GP3 node reuses the code of the box it comes from.
 
-**Our reference, running.** The video below is our reference GP3 pipeline
+**Our reference, running.** The video below shows our reference GP3 pipeline
 on a demo drive (rig A's values, 90 s, with a GNSS outage from 35.2 s to
 58.3 s after the first fix), played at normal speed.
 
