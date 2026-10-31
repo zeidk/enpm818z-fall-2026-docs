@@ -2,6 +2,26 @@
 GP4: Planning & Control
 ====================================================
 
+.. admonition:: The Situation
+   :class: story
+
+   Your robotaxi now knows where it is and where every car and person around
+   it is, with their speeds: your GP3 pipeline. It still has a safety driver
+   at the wheel.
+
+   The company's first driverless test is a trip across Town01: from a
+   pick-up point to a drop-off point, through junctions and traffic lights,
+   with cars and people around. The test has three rules:
+
+   1. **Follow the route** the car plans for itself.
+   2. **Stop at red lights,** and slow down or stop for cars and people in
+      the way.
+   3. **Search for a new route** when a parked vehicle blocks it or the car
+      leaves it.
+
+   GP4 closes the loop: the car plans its route, decides how fast to go, and
+   turns the wheel, with every earlier part of your pipeline running live.
+
 .. card:: GP4: At a Glance
    :class-card: sd-shadow-sm
 
@@ -10,41 +30,112 @@ GP4: Planning & Control
       :class: compact-table
 
       * - **Duration**
-        - 3 weeks: posted **Thursday, November 19**, due **Thursday,
-          December 10**
+        - 2 weeks of work: posted **Thursday, November 19**, due **Thursday,
+          December 10** (the Thanksgiving week, Nov 25 to 29, is not counted)
       * - **Weight**
-        - 13.6% of the course grade (17.0% of the project grade)
+        - 20% of the group-project grade: 17.0% of the final project grade,
+          13.6% of the course grade
       * - **Lectures**
-        - L7 to L10
+        - L7 (route planning, re-planning), L8 (constant-velocity prediction),
+          L10 (Pure Pursuit, PID); L9 for the report's discussion
+      * - **Starter code**
+        - `gp4_starter <https://github.com/rubixcubic/enpm818z-fall-2026-carla-ros/tree/main/gp4_starter>`__
+          and `ads_msgs <https://github.com/rubixcubic/enpm818z-fall-2026-carla-ros/tree/main/ads_msgs>`__
+          (now with ``VehicleCmd``) in the course repository
       * - **Team Size**
-        - 3 students
+        - 3 students, the GP1 team
       * - **Submission**
-        - Canvas + GitHub repository link
+        - Canvas + the ``gp4`` branch of your GP1 repository
+
+
+.. admonition:: AI Disclosure (required)
+   :class: warning
+
+   You may use AI tools on GP4. You must say so in your ``README.md``.
+
+   Name the tool and describe how you used it, two or three sentences per
+   team member. Disclosure carries no penalty. **Undisclosed use is a
+   violation of the Code of Academic Integrity.**
+
+   Your team is responsible for every line you submit. Any member may be
+   asked, in class or office hours, to walk through any part of the code:
+   why it works, what would break it, what you would change. **Work that
+   cannot be explained does not count**, even if it runs.
+
+   Read :ref:`ai-disclosure` for the full rules on what is permitted and
+   what is not.
 
 
 Overview
 --------
 
-GP4 is the final building block of your Automated Driving System (ADS).
-You will close the loop by adding **path planning** and **vehicle
-control** to the pipeline built across GP1 to GP3. When GP4 is complete,
-the vehicle will drive itself: perceiving the world (GP2), knowing where
-it is (GP3), deciding where to go (GP4 planner), and turning the wheel
-to get there (GP4 controller).
+GP4 drives the car with your whole pipeline, live in CARLA:
 
-The three new modules introduced in GP4 are:
+.. figure:: /_static/images/GP4/gp4_flow.png
+   :alt: A flow diagram of the closed loop. Top row, left to right: GP1's sensor_manager, green, sends the camera to GP2's detector_node, blue; its boxes go to GP3's fusion_node, purple, whose objects go to GP3's tracker_node, purple; sensor_manager also sends LiDAR to fusion_node along the top. sensor_manager sends IMU and GNSS down to GP3's localization_node, purple, whose pose goes to planner_node, red. Middle row: planner_node sends the path to behavior_node, red, which also gets tracks from tracker_node and the traffic light from a gray ground truth box on the right; tracker_node also sends standing vehicles to planner_node. Bottom: controller_node, red, gets the path from planner_node, pose and speed from localization_node, and the target speed from behavior_node, and sends /control/vehicle_cmd back to sensor_manager along the bottom and up the left side. A legend: green GP1, blue GP2, purple GP3, red GP4: yours, gray given.
+   :align: center
+   :width: 100%
 
-- **Path Planner** (``planner_node.py``): A* search on the CARLA
-  waypoint graph, producing a sequence of ``PoseStamped`` waypoints.
-- **Controller** (``controller_node.py``): Pure Pursuit (lateral)
-  combined with PID (longitudinal) to track the planned path.
-- **Behavioral State Machine** (``behavior_node.py``): an FSM that
-  governs high-level driving behavior: lane following, stopping at
-  lights and signs, obstacle avoidance, and emergency stop.
+   How GP4 closes the loop with GP1, GP2 and GP3. **Green:** GP1's code;
+   **blue:** GP2's; **purple:** GP3's; **red:** the GP4 nodes you write;
+   **gray:** given. Every arrow carries a ROS 2 topic. The command goes back
+   to your GP1 node, which waits for it before the next simulation step.
 
-By the end of GP4, your team will record a fully autonomous run in at
-least two provided CARLA scenarios and evaluate the system using the
-provided metrics script.
+.. list-table::
+   :widths: 26 14 60
+   :header-rows: 1
+   :class: compact-table
+
+   * - **Task**
+     - **Lecture**
+     - **What it adds**
+   * - 1. Close the loop (15 pts)
+     - L10
+     - Your GP1 node applies the controller's command and waits for it
+       before the next simulation step.
+   * - 2. Route planner (25 pts)
+     - L7
+     - A* on the road network, and a new search when a car is parked in the
+       way or the car leaves its route.
+   * - 3. Controller (25 pts)
+     - L10
+     - Pure Pursuit for steering, a PID with anti-windup for speed.
+   * - 4. Behavior (20 pts)
+     - L8
+     - Follow, slow down, stop at red lights, stop in an emergency, using
+       your GP3 tracks' speeds.
+   * - 5. Report (15 pts)
+     - all
+     - Your runs, what your EKF costs the controller, and one failure.
+
+**What GP4 reuses.** Every task starts from code your team wrote:
+
+.. list-table::
+   :widths: 24 40 36
+   :header-rows: 1
+   :class: compact-table
+
+   * - **Task**
+     - **Your code it builds on**
+     - **What is new**
+   * - 1. Close the loop
+     - GP1's ``sensor_manager.py`` and YAML (your vehicle, your sensors);
+       GP3's ground truth and traffic
+     - Apply the command at each step; wait for it (lock step)
+   * - 2. Planner
+     - GP3's pose (start, deviation) and tracks (parked cars)
+     - A* and the two triggers
+   * - 3. Controller
+     - GP3's pose and speed (``/localization/odom``)
+     - Pure Pursuit and the PID
+   * - 4. Behavior
+     - GP3's tracks with their speeds
+     - The state machine
+
+.. note::
+
+   **If GP3 did not work for your team,** use the GP3 reference
+   implementation released on Canvas: GP4 needs GP3's pose and tracks.
 
 
 Learning Objectives
@@ -52,564 +143,419 @@ Learning Objectives
 
 After completing GP4, you will be able to:
 
-- Implement A* graph search on a road network (CARLA waypoint graph)
-  and produce a drivable path in real time.
-- Design a re-planning strategy that reacts to detected obstacles and
-  path deviations.
-- Implement the Pure Pursuit lateral controller and derive the steering
-  angle from the lookahead geometry.
-- Implement a PID longitudinal controller with anti-windup for speed
-  tracking.
-- Design a finite state machine (FSM) for behavioral driving, including
-  state definitions, transition conditions, and safety guards.
-- Integrate four separate GP modules (GP1 to GP4) into a single pipeline
-  launched by one launch file.
-- Evaluate autonomous driving performance quantitatively: route
-  completion, collision rate, average speed, lateral jerk, and traffic
-  rule compliance.
-- Document system integration challenges and produce a technical
-  report with quantitative results.
+- Search a road network with A*, explain why the straight-line heuristic
+  never overestimates, and check routes against CARLA's own planner.
+- Decide when a route must be searched again, and keep a trigger from
+  firing again and again.
+- Steer with Pure Pursuit at the rear axle, and control speed with a PID
+  that does not wind up.
+- Write a state machine where the safer state always wins, and use a
+  constant-velocity prediction to see a person about to step into the road.
+- Run a closed loop where the simulation waits for the controller, and
+  measure a drive: route completion, collisions, red-light violations,
+  cross-track error.
+- Measure what localization error costs the controller.
 
 
 Provided Resources
 ------------------
 
-The following files are provided by the instructor on Canvas and the
-course GitHub repository. Integrate them into your package as-is.
+1. Update the course repository and rebuild ``ads_msgs`` (it now has
+   ``VehicleCmd``: throttle, steer, brake):
+
+   .. code-block:: bash
+
+      cd ~/enpm818z_ws/src/enpm818z-fall-2026-carla-ros && git pull
+      cd ~/enpm818z_ws && colcon build --packages-select ads_msgs && source install/setup.bash
+
+2. Start the ``gp4`` branch from your GP3 submission:
+
+   .. code-block:: bash
+
+      cd ~/enpm818z_ws/src/GP1_TeamX && git checkout -b gp4 gp3-final
+
+3. Copy the GP4 files into your package. One file has the same name as a
+   GP3 file on purpose: ``ground_truth.py``. The GP4 version adds the
+   collision sensor and the traffic light, and keeps everything GP3 used.
+   Check for other files with the same name first:
+
+   .. code-block:: bash
+
+      (cd ../enpm818z-fall-2026-carla-ros/gp4_starter/ads_pipeline && find . -type f -printf '%P\n') | while read -r f; do [ -e "ads_pipeline/$f" ] && echo "already exists: ads_pipeline/$f"; done
+      cp -r ../enpm818z-fall-2026-carla-ros/gp4_starter/ads_pipeline/. ads_pipeline/
+
+   The only line printed should be ``ads_pipeline/ads_pipeline/ground_truth.py``.
+
+4. Add the GP4 nodes to ``setup.py``, in ``console_scripts``:
+
+   .. code-block:: python
+
+      'planner_node = ads_pipeline.planner_node:main',
+      'behavior_node = ads_pipeline.behavior_node:main',
+      'controller_node = ads_pipeline.controller_node:main',
+
+5. Check: ``python3 -m pytest test/ -k gp4`` runs. Most GP4 tests fail with
+   ``NotImplementedError`` until you write the functions marked YOURS, and
+   ``test_gp4_lockstep.py`` fails to import until you finish Task 1.
+
+What the starter contains
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 30 20 50
+   :header-rows: 1
+   :class: compact-table
+
+   * - **File**
+     - **Status**
+     - **What it does**
+   * - ``route_graph.py``
+     - Given
+     - The road network as a graph, read from the map file with no CARLA
+       server: a node every 2 m along each lane, and lane changes where the
+       road markings allow them.
+   * - ``planner_core.py``
+     - **Yours:** ``astar_waypoints``, ``obstacle_on_path``, ``off_path``
+     - Given: ``Hysteresis``.
+   * - ``planner_node.py``
+     - Given
+     - Plans at the first pose, checks both triggers twice a second,
+       publishes ``/planning/path``.
+   * - ``controller_core.py``
+     - **Yours:** ``pure_pursuit_steer``, ``PIDController.compute``
+     - Given: the command conversion and the start-up creep.
+   * - ``controller_node.py``
+     - Given
+     - Answers every target speed with one ``VehicleCmd``, stamped for the
+       lock step.
+   * - ``bicycle_sim.py``
+     - Given
+     - Tunes your controller offline, with no CARLA.
+   * - ``behavior_core.py``
+     - **Yours:** ``BehaviorFSM.update``
+     - Given: ``nearest_ahead`` (the constant-velocity look-ahead) and the
+       start-up branch.
+   * - ``behavior_node.py``
+     - Given
+     - Answers every tracks message with a target speed; holds the car at
+       the goal.
+   * - ``ground_truth.py``
+     - Given
+     - GP3's helper plus collisions and the traffic light (grading and the
+       behavior node's light only).
+   * - ``tools/evaluate_run.py``
+     - Given
+     - Scores a run (see Task 5).
+
+
+Your Team's Values
+------------------
+
+Your route starts at a Town01 spawn point and ends at a goal on the road.
+Find your rig letter on Canvas (the same rig as in GP1 to GP3). Your route
+file is ``routes/<rig>.yaml``.
 
 .. list-table::
    :header-rows: 1
-   :widths: 38 62
+   :class: compact-table
 
-   * - File
-     - Description
-   * - ``waypoint_utils.py``
-     - Utilities for querying the CARLA waypoint graph:
-       ``get_waypoints(world, location, resolution)``,
-       ``get_next_waypoint(wp, distance)``,
-       ``distance_to_waypoint(pose, wp)``.
-       Wraps the CARLA Python API for ROS 2 compatibility.
-   * - ``carla_vehicle_control.py``
-     - Helper node that subscribes to a custom
-       ``VehicleCmd`` message (throttle, brake, steer) on
-       ``/control/vehicle_cmd`` and converts it to
-       ``carla_msgs/CarlaEgoVehicleControl`` for the CARLA ROS bridge.
-   * - ``traffic_light_detector.py``
-     - ROS 2 node that reads the current traffic light state
-       directly from the CARLA API (ground truth) and publishes
-       it on ``/traffic/light_state`` (``std_msgs/String``):
-       values ``"RED"``, ``"YELLOW"``, ``"GREEN"``, ``"UNKNOWN"``.
-   * - ``evaluation_metrics.py``
-     - Computes route completion %, collision count, average
-       speed, lateral jerk (mean absolute lateral acceleration),
-       and red-light violation count from a ROS bag file.
-       Outputs a JSON metrics file and summary plots.
-   * - ``town01_route.yaml``
-     - Test scenario: Town01 route with start pose, goal pose,
-       and intermediate checkpoints. Approximately 800 m.
-   * - ``town03_route.yaml``
-     - Test scenario: Town03 route through an urban grid with
-       intersections and traffic lights. Approximately 1.2 km.
+   * - Rig
+     - spawn_index
+     - Goal (x, y) m
+     - Length (m)
+     - Junctions
+     - Lights
+   * - A
+     - 71
+     - (327.72, -330.61)
+     - 535.2
+     - 2
+     - 2
+   * - B
+     - 114
+     - (167.62, -330.6)
+     - 577.6
+     - 7
+     - 7
+   * - C
+     - 128
+     - (-2.05, -71.96)
+     - 618.9
+     - 5
+     - 5
+   * - D
+     - 109
+     - (99.6, -330.46)
+     - 619.4
+     - 7
+     - 7
+   * - E
+     - 154
+     - (158.06, -20.2)
+     - 534.9
+     - 4
+     - 5
 
-.. note::
+Your vehicle is your GP1 rig's. We measured its wheels in CARLA:
 
-   ``carla_vehicle_control.py`` requires the ``carla_msgs`` ROS 2
-   package from the CARLA ROS bridge. Ensure it is installed before
-   building. See the CARLA setup guide in the course materials.
+.. list-table::
+   :header-rows: 1
+   :class: compact-table
+
+   * - Rig
+     - Vehicle
+     - Wheelbase (m)
+     - Rear axle behind the car's origin (m)
+   * - A
+     - ``vehicle.toyota.prius``
+     - 2.819
+     - 1.399
+   * - B
+     - ``vehicle.chevrolet.impala``
+     - 2.982
+     - 1.329
+   * - C
+     - ``vehicle.jeep.wrangler_rubicon``
+     - 2.308
+     - 1.017
+   * - D
+     - ``vehicle.audi.a2``
+     - 2.506
+     - 1.257
+   * - E
+     - ``vehicle.bmw.grandtourer``
+     - 2.935
+     - 1.443
+
+Put both into ``config/controller_config.yaml`` (``wheelbase``,
+``rear_offset``). Every vehicle's front wheels turn 70 degrees (1.222 rad) at
+full steering in CARLA: that is ``max_steer_angle``, and your controller
+never asks for more than ``steer_limit``, 0.7 rad.
 
 
 Tasks
 -----
 
-GP4 is worth **100 internal points** (scaled to 17.0% of the project
-grade). All four tasks are required. There is no bonus task in GP4:
-invest your effort in making the end-to-end integration robust.
-
-.. dropdown:: Task 1: Path Planner Node (30 pts)
-   :icon: gear
+.. dropdown:: Task 1: Close the Loop (15 pts)
+   :icon: goal
    :class-container: sd-border-primary
 
-   Implement ``planner_node.py``, which performs A* search on the CARLA
-   waypoint graph and publishes a drivable path to the controller.
+   Your GP1 ``sensor_manager`` ticks the world on a timer. In GP4 the
+   controller drives, so each step must wait for its answer.
 
-   **Subscriptions:**
+   **Step 1: Two functions** at module level in ``sensor_manager.py``:
 
-   - ``/localization/pose``: ``geometry_msgs/PoseStamped`` (current position from GP3)
-   - ``/perception/fused_objects``: ``vision_msgs/Detection3DArray`` (obstacles from GP3)
+   - ``ready_to_tick(last_tick_stamp, last_cmd_stamp, waited_s, timeout_s)``
+     returns ``(tick_now, timed_out)``. Tick when the last command's stamp
+     is at or after the last tick's stamp (a 1 ms margin), or when
+     ``timeout_s`` seconds of waiting have passed (then ``timed_out`` is
+     true). The first tick needs no command.
+   - ``to_carla_control(cmd)`` returns the ``carla.VehicleControl``
+     arguments as a dict. ``VehicleCmd.steer`` is positive to the LEFT;
+     CARLA's ``steer`` is positive to the RIGHT (its y axis points right).
 
-   **Publications:**
+   **Step 2: The lock step.** Add the parameters ``lock_step`` (default
+   false, so GP1 to GP3 behave as before) and ``cmd_timeout_s`` (2.0).
+   With ``lock_step``: subscribe to ``/control/vehicle_cmd``; poll in the
+   timer callback every 5 ms; tick only when ``ready_to_tick`` says so, and
+   log every timeout with its count; apply the last command with
+   ``vehicle.apply_control(carla.VehicleControl(**to_carla_control(cmd)))``
+   before ``world.tick()``.
 
-   - ``/planning/path``: ``nav_msgs/Path`` (sequence of ``PoseStamped`` waypoints)
+   **Step 3: Ground truth for GP4.** Create ``GroundTruth(...,
+   gp4=self.p('lock_step'))`` and add its ``actors`` to the list your node
+   destroys: it attaches a collision sensor.
 
-   **A* on the CARLA Waypoint Graph:**
+   **Step 4: Run it.** ``gp4_launch.py`` starts your whole pipeline with
+   ``lock_step`` on (Task 5 has the command). On day 1, before Tasks 2 to 4
+   work, the given controller already answers every frame: it creeps
+   straight at 2 m/s until the first pose and the first path.
 
-   The CARLA world exposes a waypoint graph: a waypoint's
-   ``next(distance)`` (``carla.Waypoint.next``) returns its successor
-   waypoints, and the provided ``get_next_waypoint(wp, distance)`` wraps
-   it. Represent the graph as an adjacency list and run A* with an
-   admissible heuristic of your choice: the straight-line distance to the
-   goal is one (L7).
+   **Evidence:** ``results/gp4/lockstep.txt``: ``ros2 topic hz
+   /control/vehicle_cmd`` during a run, and your log's timeout count.
 
-   .. code-block:: python
+   **Tests:** ``python3 -m pytest test/test_gp4_lockstep.py test/test_gp4_ground_truth.py -v``.
 
-      import heapq
-      import numpy as np
-      from waypoint_utils import get_waypoints, get_next_waypoint, distance_to_waypoint
-
-      def astar_waypoints(start_wp, goal_location, world, resolution=2.0,
-                          max_nodes=10000):
-          """A* over the CARLA waypoint graph.
-
-          YOU WRITE THIS, including the heuristic. The algorithm is
-          standard; what is yours is the cost, the heuristic, and how a
-          waypoint expands into its neighbours.
-
-          Your heuristic must be admissible, meaning it never overestimates
-          the remaining cost. State in the report which one you chose and
-          why it cannot overestimate. An inadmissible heuristic still
-          returns a path, just not the shortest, and nothing reports the
-          difference.
-          """
-          raise NotImplementedError("GP4: astar_waypoints")
-
-   .. important::
-
-      **CARLA's own route planner is a checker, not your planner.** A CARLA
-      install includes ``GlobalRoutePlanner``
-      (``PythonAPI/carla/agents/navigation/global_route_planner.py``),
-      which builds a graph from ``get_topology()`` and runs A*. You may use
-      it only in your tests, to compare your routes with its routes; report
-      the comparison. ``planner_node.py`` and the files it imports must not
-      import ``agents.navigation``: the grade is for your own
-      ``astar_waypoints``. CARLA's planner counts waypoints: an edge costs
-      the number of waypoints sampled along it (about its length divided
-      by the sampling resolution), and a lane change costs 0. Compare
-      with distance costs and the same resolution. A route clearly longer
-      than CARLA's on the same start and goal points to an inadmissible
-      heuristic or a missing edge.
-
-   **Re-Planning Triggers:**
-
-   The planner must re-plan when either of the following conditions is
-   detected (check at ``replan_frequency`` Hz):
-
-   1. **Obstacle on path:** A fused object from ``/perception/fused_objects``
-      has its 3D centroid within ``obstacle_clearance`` metres of any
-      waypoint on the current planned path.
-   2. **Path deviation:** The vehicle's current pose (from
-      ``/localization/pose``) is more than ``max_deviation`` metres from
-      the nearest waypoint on the current path.
-
-   **Parameters (configurable via** ``planner_config.yaml`` **):**
-
-   .. code-block:: yaml
-
-      planner_node:
-        ros__parameters:
-          goal_x: 50.0                # Goal position x (metres, map frame)
-          goal_y: 120.0               # Goal position y (metres, map frame)
-          waypoint_resolution: 2.0    # Metres between waypoints
-          replan_frequency: 2.0       # Hz -- how often to check re-plan triggers
-          obstacle_clearance: 3.0     # Metres -- min clearance from path to obstacle
-          max_deviation: 2.0          # Metres -- max off-path distance before re-plan
-          max_astar_nodes: 10000      # A* node expansion limit
-
-   .. note::
-
-      ``max_astar_nodes`` only stops a search that has gone wrong, such
-      as a goal off the road network. At 2 m spacing, the course's map
-      files give about 3,100 waypoints in Town01 and 6,600 in Town03,
-      and A* on an 800 m Town01 route expanded up to about 2,600 of
-      them. A limit of 10,000 is above both towns; a much smaller limit
-      stops correct searches before they reach the goal.
-
-      The CARLA API is not thread-safe. Make all CARLA API calls from
-      the main executor thread. Use a ROS 2 timer callback for the
-      re-planning check rather than a separate thread.
-
-.. dropdown:: Task 2: Controller Node (30 pts)
-   :icon: gear
+.. dropdown:: Task 2: Route Planner (25 pts)
+   :icon: goal
    :class-container: sd-border-primary
 
-   Implement ``controller_node.py``, which subscribes to the planned
-   path and the current pose, and publishes vehicle control commands.
+   **The graph** (``route_graph.py``, given) has a node every 2 m along
+   every lane of the map, an edge to the next node along the lane, and an
+   edge to the neighbor lane where the road markings allow a lane change.
+   Town01 has 3107 nodes and 3143 edges; it has one lane each way, so no
+   lane changes. Town03 has 6647 nodes and 2753 lane-change edges.
 
-   **Subscriptions:**
+   **Yours: astar_waypoints.** A* from the node nearest the car to the node
+   nearest your goal, with the straight-line distance to the goal as the
+   heuristic. It returns the node list, or ``None`` when no route exists or
+   after ``max_astar_nodes`` (10,000) expansions.
 
-   - ``/planning/path``: ``nav_msgs/Path``
-   - ``/localization/pose``: ``geometry_msgs/PoseStamped``
-   - ``/behavior/state``: ``std_msgs/String`` (from behavior node)
-   - ``/behavior/target_speed``: ``geometry_msgs/TwistStamped`` (speed
-     setpoint for the PID in ``twist.linear.x``, m/s, from behavior node)
+   **The tests compare your routes with CARLA's own planner,**
+   ``GlobalRoutePlanner``, on three Town01 and two Town03 trips; we
+   computed its routes once and stored their lengths. On Town01 both graphs
+   are the same, so the lengths must agree within 4 m. On Town03, CARLA
+   allows a lane change only once per road segment; your graph allows one
+   wherever the markings do, so your route may be shorter than CARLA's,
+   never longer by more than a lane width (4 m) per lane change. Do not
+   import CARLA's planner in your node.
 
-   **Publications:**
+   **Yours: the two triggers.** ``obstacle_on_path``: an object's center
+   within ``obstacle_clearance`` (3.0 m) of a waypoint. ``off_path``: the
+   car more than ``max_deviation`` (2.0 m) from the nearest waypoint.
 
-   - ``/control/vehicle_cmd``: ``VehicleCmd`` (throttle, brake, steer).
-     The provided ``carla_vehicle_control.py`` converts it and publishes
-     ``carla_msgs/CarlaEgoVehicleControl`` on
-     ``/carla/ego_vehicle/vehicle_control_cmd``.
+   **What the given node does with them,** twice a second:
 
-   **Pure Pursuit: Lateral Control**
+   - Trigger 1 counts only standing vehicles (vehicle tracks slower than
+     0.5 m/s) on the path ahead of the car, and not those within 30 m of a
+     traffic light's stop line, which are most likely queued at the light. It closes the graph's edges
+     within 3.0 m of the vehicle and searches again. Town01's lanes are
+     one-way: when no route avoids the vehicle, the node reopens the edges
+     and keeps the path, and your behavior node stops for it.
+   - Trigger 2 searches again from the node nearest the car.
+   - A trigger that stays on starts one search, not one per check: the
+     given ``Hysteresis`` waits until the trigger has been off for 1 s.
 
-   Pure Pursuit selects a lookahead point on the path at distance ``L_d``
-   from the vehicle and computes the required steering angle ``delta``:
+   **Tests:** ``python3 -m pytest test/test_gp4_route_graph.py test/test_gp4_planner.py test/test_gp4_triggers.py -v``.
 
-   .. math::
-
-      \delta = \arctan\!\left(\frac{2 \, L \, \sin(\alpha)}{L_d}\right)
-
-   where ``L`` is the vehicle wheelbase, ``L_d`` is the lookahead
-   distance, and ``alpha`` is the angle between the vehicle heading and
-   the direction to the lookahead point.
-
-   .. code-block:: python
-
-      import numpy as np
-
-      def pure_pursuit_steer(vehicle_pose, path_poses, lookahead_dist,
-                             wheelbase=2.875):
-          """Steering angle in radians, from Pure Pursuit.
-
-          YOU WRITE THIS. Find the goal point one lookahead distance along
-          the path, express it in the vehicle frame, and turn that geometry
-          into a steering angle using the wheelbase.
-
-          The lookahead distance is the whole character of the controller:
-          too short and it oscillates, too long and it cuts corners. Report
-          what you used and whether you scaled it with speed.
-          """
-          raise NotImplementedError("GP4: pure_pursuit_steer")
-
-   **PID: Longitudinal Control**
-
-   A PID controller tracks the target speed set by the behavior node.
-
-   .. code-block:: python
-
-      class PIDController:
-          """PID controller with anti-windup for speed (longitudinal) control."""
-
-          def __init__(self, kp, ki, kd, windup_limit=1.0):
-              self.kp = kp
-              self.ki = ki
-              self.kd = kd
-              self.windup_limit = windup_limit
-              self._integral = 0.0
-              self._prev_error = 0.0
-
-          def compute(self, setpoint, measurement, dt):
-              """One PID step. Returns the control output.
-
-              YOU WRITE THIS. Three terms and an anti-windup guard. State in
-              the report how you tuned the gains and what you clamped.
-              """
-              raise NotImplementedError("GP4: compute")
-
-   **Parameters (configurable via** ``controller_config.yaml`` **):**
-
-   .. code-block:: yaml
-
-      controller_node:
-        ros__parameters:
-          # Pure Pursuit
-          lookahead_distance: 5.0   # metres
-          wheelbase: 2.875          # metres (CARLA Lincoln MKZ default)
-          max_steer_angle: 0.7      # radians (~40 deg)
-          # PID speed control
-          target_speed: 8.0         # m/s (default, overridden by behavior node)
-          pid_kp: 0.5
-          pid_ki: 0.05
-          pid_kd: 0.1
-          pid_windup_limit: 2.0
-          # Control output limits
-          max_throttle: 0.75
-          max_brake: 1.0
-
-   .. warning::
-
-      CARLA steering is normalized to ``[-1, 1]``. Convert your
-      Pure Pursuit ``delta`` (radians) by dividing by
-      ``max_steer_angle``. Clamp the result to ``[-1, 1]`` before
-      publishing. Sending values outside this range will be silently
-      clipped by CARLA, masking bugs.
-
-.. dropdown:: Task 3: Behavioral State Machine (20 pts)
-   :icon: gear
+.. dropdown:: Task 3: Controller (25 pts)
+   :icon: goal
    :class-container: sd-border-primary
 
-   Implement ``behavior_node.py``, a finite state machine (FSM) that
-   governs high-level driving behavior and adjusts the target speed
-   sent to the controller.
+   **Yours: pure_pursuit_steer.** From the middle of the rear axle (the
+   given node moves your EKF's pose back by your ``rear_offset``), find the
+   goal point where the path leaves the circle of radius
+   ``lookahead_distance`` (5 m), put it in the car's frame, and return the
+   wheel angle :math:`\delta = \arctan(2 L \sin\alpha / L_d)`. The test is
+   the worked example: rear axle at (82.50, -0.07) m, heading -0.0796 rad,
+   goal point (87.22, -1.72) m, wheelbase 2.875 m: -0.285 rad.
 
-   **States:**
+   **Yours: PIDController.compute.** Kp, Ki and Kd on the speed error, with
+   the integral of the error held within ``pid_windup_limit`` (2.0), and
+   the output clamped to [-1, 1]: positive is throttle, negative brake.
 
-   .. list-table::
-      :header-rows: 1
-      :widths: 25 75
+   **Speed in curves (given).** The controller node caps the behavior
+   node's target so the car can slow, at 2.0 m/s², to
+   :math:`\sqrt{a_{lat} / \kappa}` (``a_lat`` 2.0 m/s²) on every curve in
+   the next 40 m of path, where :math:`\kappa` is the path's curvature.
+   Without it, our car took junction turns at 7 m/s and left its lane.
 
-      * - State
-        - Description
-      * - ``LANE_FOLLOW``
-        - Normal driving along the planned path at configured
-          ``target_speed``. Default state.
-      * - ``STOP``
-        - Vehicle decelerates to 0 and remains stationary.
-          Triggered by a red or yellow traffic light, or a stop sign,
-          within ``stop_distance`` metres ahead.
-      * - ``OBSTACLE_AVOIDANCE``
-        - Vehicle decelerates to ``slow_speed`` when a fused
-          object is within ``obstacle_distance`` metres of the
-          path but not yet requiring emergency stop.
-      * - ``EMERGENCY_STOP``
-        - Vehicle brakes immediately (throttle = 0, brake = 1).
-          Triggered when any fused object is within
-          ``emergency_distance`` metres directly ahead. The default,
-          8.0 m, covers a stop from 8 m/s: 0.2 s of reaction drives
-          8 × 0.2 = 1.6 m, and braking at 6 m/s\ :sup:`2` takes
-          8\ :sup:`2` / (2 × 6) = 5.3 m, so 6.9 m in all. The
-          6 m/s\ :sup:`2` is an assumption: measure your car's
-          full-brake deceleration in CARLA and adjust.
+   **Tune offline first.** ``bicycle_sim.track`` drives a path with your
+   two functions, with steering and engine lags. On the test curve, our
+   reference's largest cross-track error is 0.458 m with a 5 m lookahead
+   (0.195 m with 3 m, 0.821 m with 8 m: a longer lookahead cuts the
+   corners). The test allows 0.69 m.
 
-   **Subscriptions:**
+   **Tests:** ``python3 -m pytest test/test_gp4_controller.py -v``.
 
-   - ``/perception/fused_objects``: ``vision_msgs/Detection3DArray``
-   - ``/traffic/light_state``: ``std_msgs/String`` (from ``traffic_light_detector.py``)
-   - ``/planning/path``: ``nav_msgs/Path`` (to check for obstacles on path)
-
-   **Publications:**
-
-   - ``/behavior/state``: ``std_msgs/String`` (current FSM state name)
-   - ``/behavior/target_speed``: ``geometry_msgs/TwistStamped`` (speed
-     setpoint for the controller in ``twist.linear.x``, m/s). Set
-     ``header.stamp`` to the stamp of the ``/perception/fused_objects``
-     message the decision used, not the time you publish, so the
-     controller can tell how old the decision is.
-
-   **Transition rule:** when more than one condition holds, the safer
-   state wins: ``EMERGENCY_STOP``, then ``STOP``, then
-   ``OBSTACLE_AVOIDANCE``, then ``LANE_FOLLOW``. Leaving ``STOP`` is
-   yours to design: after a light, when it turns green; after a stop
-   sign, a rule you choose so that the vehicle does not wait there
-   forever. State both in the report.
-
-   .. code-block:: python
-
-      from enum import Enum, auto
-
-      class BehaviorState(Enum):
-          LANE_FOLLOW = auto()
-          STOP = auto()
-          OBSTACLE_AVOIDANCE = auto()
-          EMERGENCY_STOP = auto()
-
-      class BehaviorFSM:
-          """
-          Finite state machine for behavioral driving.
-          Call update() at the FSM tick rate (e.g. 10 Hz).
-          """
-
-          def __init__(self, target_speed=8.0, slow_speed=3.0,
-                       emergency_dist=8.0, obstacle_dist=15.0,
-                       stop_dist=20.0):
-              self.state = BehaviorState.LANE_FOLLOW
-              self.target_speed = target_speed
-              self.slow_speed = slow_speed
-              self.emergency_dist = emergency_dist
-              self.obstacle_dist = obstacle_dist
-              self.stop_dist = stop_dist
-
-          def update(self, nearest_obstacle_dist, traffic_light_state,
-                     stop_sign_dist):
-              """Next state and target speed, from the current inputs.
-
-              nearest_obstacle_dist: metres to the nearest object on the
-                  path (inf if none)
-              traffic_light_state: "RED", "YELLOW", "GREEN" or "UNKNOWN"
-              stop_sign_dist: metres to the nearest stop sign (inf if none)
-
-              Returns (BehaviorState, target speed in m/s).
-
-              YOU WRITE THIS. Follow the transition rule above. Keep on self
-              what the FSM needs between calls: the current state, and, for
-              your stop-sign rule, how long the vehicle has been stopped.
-              """
-              raise NotImplementedError("GP4: update")
-
-   **Required in Report:**
-   Include a state transition diagram showing all four states, all
-   transition conditions (with variable names and thresholds), and
-   the speed output associated with each state.
-
-   .. tip::
-
-      Test the FSM in isolation first using a simple Python unit test
-      that calls ``update()`` with controlled inputs and asserts the
-      correct output state and speed. This avoids needing CARLA running
-      to debug FSM logic.
-
-.. dropdown:: Task 4: End-to-End Integration Test (20 pts)
-   :icon: gear
+.. dropdown:: Task 4: Behavior (20 pts)
+   :icon: goal
    :class-container: sd-border-primary
 
-   Run the **complete ADS pipeline** in CARLA and evaluate its
-   autonomous driving performance.
+   **Yours: BehaviorFSM.update.** Four states; when more than one holds,
+   the safer state wins:
 
-   **Pipeline:**
+   1. ``EMERGENCY_STOP`` (0 m/s): no route, or an object within
+      ``emergency_distance`` (8.0 m) ahead.
+   2. ``STOP`` (0 m/s): a red or yellow light whose stop line is ahead of
+      the car and within ``stop_distance`` (20 m). A light that turns red
+      after the car has passed its stop line does not stop it in the
+      junction.
+   3. ``OBSTACLE_AVOIDANCE`` (``slow_speed``, 3 m/s): an object within
+      ``obstacle_distance`` (15 m) ahead.
+   4. ``LANE_FOLLOW`` (``target_speed``, 8 m/s).
 
-   .. code-block:: text
+   **What counts as ahead** (given, ``nearest_ahead``): an object whose
+   constant-velocity position over the next ``lookahead_s`` (2.0 s) comes
+   within 3.0 m of the path ahead of the car. A person 6 m from the path,
+   walking toward it at 1.5 m/s, counts: in 2 s they are 3 m from it.
 
-      GP1: sensor_manager.py  (camera, LiDAR, GNSS, IMU)
-           |
-      GP2: detector_node.py   (YOLO or DETR -- /perception/detections)
-           |
-      GP3: fusion_node.py        (/perception/fused_objects)
-           localization_node.py  (/localization/pose, /localization/odom)
-           |
-      GP4: behavior_node.py   (/behavior/state, /behavior/target_speed)
-           planner_node.py    (/planning/path)
-           controller_node.py (vehicle control commands -> CARLA)
+   **Given:** before the first path the car creeps at 2 m/s (the EKF needs
+   the car to move 3 m before it publishes a pose), and at the goal the
+   node holds the car.
 
-   **Required Scenarios:**
+   **Tests:** ``python3 -m pytest test/test_gp4_behavior.py -v``.
 
-   Run the full pipeline on both provided scenarios:
+.. dropdown:: Task 5: Runs and Report (15 pts)
+   :icon: goal
+   :class-container: sd-border-primary
 
-   .. list-table::
-      :header-rows: 1
-      :widths: 20 30 50
-
-      * - Scenario
-        - Config File
-        - Description
-      * - Town01
-        - ``town01_route.yaml``
-        - Straight roads with T-intersections. ~800 m route.
-          Primarily tests basic lane following and speed control.
-      * - Town03
-        - ``town03_route.yaml``
-        - Urban grid with traffic lights, roundabouts, and
-          pedestrian crossings. ~1.2 km route. Tests FSM and
-          re-planning under dynamic obstacles.
-
-   **For each scenario, record:**
-
-   1. A ROS bag of the full autonomous run:
+   **Run your route** twice: with your EKF, and with the true pose (for the
+   comparison):
 
    .. code-block:: bash
 
-      ros2 bag record \
-          /localization/pose \
-          /planning/path \
-          /perception/fused_objects \
-          /behavior/state \
-          /behavior/target_speed \
-          /carla/ego_vehicle/vehicle_control_cmd \
-          /carla/ego_vehicle/collision \
-          -o evaluation/rosbags/town01_run1
+      ros2 launch ads_pipeline gp4_launch.py config:=$PWD/config/carla_config.yaml \
+          route_file:=$PWD/routes/<rig>.yaml spawn_index:=<from the table> \
+          map_file:=$PWD/ads_pipeline/maps/Town01.xodr \
+          weights:=yolov8s.pt out:=$HOME/gp4_data/run_ekf
+      ros2 launch ... pose_topic:=/ground_truth/ego out:=$HOME/gp4_data/run_truth
+      python3 -m tools.evaluate_run --bag $HOME/gp4_data/run_ekf --out ../results/gp4/metrics_ekf.json
 
-   2. Run the provided evaluation script:
+   Set ``traffic.vehicles: 40`` and ``traffic.walkers: 80`` in your YAML.
+   ``evaluate_run.py`` scores the drive until the car first comes within
+   2 m of the goal: route completion (1 at arrival; otherwise 1 minus the
+   road distance still left to the goal over the route's length, so a
+   detour counts as progress), collisions, red-light violations (leaving a
+   light's area on red faster than 1 m/s), cross-track error and mean
+   speed.
 
-   .. code-block:: bash
+   **Our reference** on rig A's route (535 m, 40 vehicles and 80 people):
+   with the true pose and with the EKF, the route complete in 159.9 s of
+   simulated time, no collision, no red-light violation; the mean
+   cross-track error was 0.015 m with the true pose and 0.248 m with the EKF.
+   Each run took about 5 minutes of wall time on an RTX 4060 laptop GPU.
+   With a 1600 x 900 or 1920 x 1080 camera the detector is slower and the
+   lock step times out more often (407 and 301 times in our runs); the run
+   still works, it takes 19 to 25 minutes.
 
-      python evaluation_metrics.py \
-          --bag  evaluation/rosbags/town01_run1 \
-          --route scenarios/town01_route.yaml \
-          --output evaluation/metrics/town01_metrics.json \
-          --plot  evaluation/plots/
+   **The report,** ``gp4_report.pdf``, at most 5 pages:
 
-   **Metrics reported by** ``evaluation_metrics.py``:
-
-   .. list-table::
-      :header-rows: 1
-      :widths: 35 65
-
-      * - Metric
-        - Description
-      * - Route completion (%)
-        - Fraction of route checkpoints reached before timeout.
-      * - Collision count
-        - Number of collision events recorded by CARLA.
-      * - Average speed (m/s)
-        - Mean speed over the completed portion of the route.
-      * - Lateral jerk (m/s\ :sup:`3`)
-        - Mean absolute lateral acceleration rate: it measures
-          ride smoothness.
-      * - Red light violations
-        - Number of times the vehicle crossed a stop line
-          while the light was red.
-
-   **Minimum Passing Bar:**
-
-   - Route completion >= 70% on both scenarios
-   - Collision count = 0 (any collision loses 5 pts)
-   - At least 2 minutes of continuous autonomous driving recorded per scenario
-
-   .. important::
-
-      Record **at least 2 minutes** of autonomous driving per scenario.
-      Runs shorter than 2 minutes will not be graded for the integration
-      test component. Use CARLA's spectator camera to verify the vehicle
-      is actually driving and not stuck before starting the bag recording.
+   1. Both runs' metrics, from the JSON files.
+   2. What your EKF costs: cross-track error and speed with your EKF
+      against the true pose, and whether trigger 2 fired because of it.
+   3. One failure, with its time: what each node published then, and the
+      cause. Our first run had one: a vehicle about 5 m away that the
+      tracker did not report.
+   4. Re-planning: when your two triggers fired in your runs, and what the
+      planner did. In our tests with a car parked just past a junction,
+      the tracker first reported it 14.5 to 23.2 m ahead on three routes
+      out of five and never on the other two: after the junction where the
+      car could have turned off, so on Town01's one-way roads the planner
+      kept the route.
+   5. Your tuning: lookahead, PID gains, ``lookahead_s``, and why.
+   6. AI disclosure in ``README.md``, per member.
 
 
-Folder Structure
-----------------
+Suggested Schedule
+------------------
 
-Your submission must follow this exact directory layout:
+.. list-table::
+   :widths: 18 40 42
+   :header-rows: 1
+   :class: compact-table
 
-.. code-block:: text
-
-   GP4_Team{X}/
-   ├── ads_pipeline/                    # Extended from GP3
-   │   ├── ads_pipeline/
-   │   │   ├── __init__.py
-   │   │   ├── sensor_manager.py        # GP1
-   │   │   ├── detector_node.py         # GP2
-   │   │   ├── detector_core.py         # GP2
-   │   │   ├── fusion_node.py           # GP3
-   │   │   ├── localization_node.py     # GP3
-   │   │   ├── planner_node.py          # NEW
-   │   │   ├── controller_node.py       # NEW
-   │   │   ├── behavior_node.py         # NEW
-   │   │   ├── waypoint_utils.py        # Provided (copied here)
-   │   │   ├── carla_vehicle_control.py # Provided (copied here)
-   │   │   └── traffic_light_detector.py # Provided (copied here)
-   │   ├── config/
-   │   │   ├── carla_config.yaml        # From GP3
-   │   │   ├── ekf_config.yaml          # From GP3
-   │   │   ├── planner_config.yaml      # NEW
-   │   │   └── controller_config.yaml   # NEW
-   │   ├── launch/
-   │   │   ├── sensors_launch.py        # GP1
-   │   │   ├── perception_launch.py     # GP2
-   │   │   ├── fusion_launch.py         # GP3
-   │   │   ├── planning_launch.py       # NEW
-   │   │   └── full_pipeline_launch.py  # NEW -- launches everything
-   │   ├── scenarios/
-   │   │   ├── town01_route.yaml        # Provided
-   │   │   └── town03_route.yaml        # Provided
-   │   ├── package.xml
-   │   └── setup.py
-   ├── evaluation/
-   │   ├── rosbags/                     # ROS bag files (town01, town03)
-   │   ├── metrics/                     # JSON metrics output files
-   │   └── plots/                       # Generated plots (PNG/PDF)
-   └── report.pdf
-
-Replace ``{X}`` with your team number (e.g., ``GP4_Team3``).
-
-.. important::
-
-   ``full_pipeline_launch.py`` must launch **all** nodes (GP1 through GP4)
-   with a single command:
-
-   .. code-block:: bash
-
-      ros2 launch ads_pipeline full_pipeline_launch.py \
-          scenario:=town01_route.yaml
-
-   The grader will use this single command to launch your system.
-   If this launch file is missing or broken, the integration test
-   component receives zero points.
+   * - Days
+     - Milestone
+     - Done when
+   * - Nov 19 to 21
+     - Starter copied; Task 1 (lock step)
+     - The car creeps under the given controller, 0 timeouts
+   * - Nov 22 to 24
+     - Tasks 2, 3 and 4 offline: one person per task
+     - Each task's tests pass
+   * - Nov 25 to 29
+     - Thanksgiving: nothing scheduled
+     -
+   * - Nov 30 to Dec 4
+     - Closed loop on your route, tuning
+     - The route completes with your EKF
+   * - Dec 5 to 8
+     - Both runs, the report
+     - Checklist below fully ticked
+   * - Dec 9 to 10
+     - **Slack**
+     - Nothing scheduled
 
 
 Submission
@@ -619,87 +565,78 @@ Submission
 
    **Submission Instructions**
 
-   Submit a single ``.zip`` archive named ``GP4_TeamX.zip`` (replace ``X``
-   with your team number) to **Canvas** by the deadline.
-
-   - **Deadline:** Thursday, December 10, Week 14 (see Canvas for the exact time)
-   - **Late policy:** 10% deduction per day, maximum 3 days late
-   - **One submission per team:** designate one member to submit
-   - ROS bag files are large: zip them separately if the total archive
-     exceeds 500 MB and upload the bag zip to the shared Google Drive
-     folder (link on Canvas). Reference the Drive folder in your README.
-   - ``report.pdf`` must be inside the archive
-   - ``colcon build --packages-select ads_pipeline`` must succeed
-
-   **This is the last group project.** The final report (due
-   December 17) runs this same pipeline on scenarios you have not seen.
-   Make sure it runs reliably before you submit.
+   1. Push the ``gp4`` branch to your team's private repository.
+   2. Keep the instructor, GitHub user ``rubixcubic``, as a collaborator.
+   3. Tag the submission commit: ``git tag gp4-final && git push --tags``.
+   4. Submit the repository link and ``gp4_report.pdf`` on Canvas by the
+      deadline.
+   5. Email your peer evaluation within 48 hours (see
+      :ref:`peer-evaluation`).
 
 
 Submission Checklist
 --------------------
 
-.. admonition:: Before You Submit: Check Every Item
+.. admonition:: Before Submitting: Check Every Item
    :class: tip
 
-   - [ ] ``planner_node.py`` runs, publishes ``/planning/path``, and
-         re-plans on obstacle detection and path deviation
-   - [ ] ``controller_node.py`` runs and publishes valid vehicle
-         control commands (throttle, brake, steer all in expected range)
-   - [ ] ``behavior_node.py`` runs, publishes ``/behavior/state`` and
-         ``/behavior/target_speed``; all four FSM states are reachable
-   - [ ] ``full_pipeline_launch.py`` launches all GP1 to GP4 nodes
-         with one command and accepts a ``scenario`` argument
-   - [ ] ``planner_config.yaml`` and ``controller_config.yaml`` are
-         present and loaded by ``planning_launch.py``
-   - [ ] Town01 autonomous run recorded: bag >= 2 minutes, metrics JSON present
-   - [ ] Town03 autonomous run recorded: bag >= 2 minutes, metrics JSON present
-   - [ ] Evaluation plots present in ``evaluation/plots/``
-   - [ ] ``report.pdf`` is present: 4 to 5 pages, includes FSM diagram,
-         controller formulation, and quantitative metrics table
-   - [ ] ``colcon build`` succeeds with no errors or warnings
-   - [ ] Folder is named ``GP4_TeamX/`` (correct team number)
-   - [ ] Archive is named ``GP4_TeamX.zip``
+   - [ ] ``colcon build --packages-up-to ads_pipeline`` succeeds.
+   - [ ] ``python3 -m pytest test/ -k gp4`` passes, with nothing skipped.
+   - [ ] ``controller_config.yaml`` holds your wheelbase and rear offset.
+   - [ ] ``results/gp4/lockstep.txt``, ``metrics_ekf.json``,
+         ``metrics_truth.json`` saved.
+   - [ ] No bags committed.
+   - [ ] AI use disclosed in ``README.md``, per member.
+   - [ ] Commit tagged ``gp4-final`` and pushed; ``gp4_report.pdf`` on Canvas.
    - [ ] Peer evaluation emailed within 48 hours (see :ref:`peer-evaluation`).
-   - [ ] If bags are on Google Drive, Drive link is in README
 
 
 Grading Rubric
 --------------
 
+Total: **100 points**, scaled to 20% of the group-project grade (17.0% of
+the final project grade).
+
+The grader also runs your pipeline on a **held-out route**: another
+Town01 route for your rig, with the true pose (``pose_topic:=/ground_truth/ego``),
+so it measures your GP4 code and not your GP3 EKF. "Reference" means our
+reference solution on the same route, with your vehicle. The factors are
+the margins chosen for GP4.
+
 .. list-table::
+   :widths: 26 10 64
    :header-rows: 1
-   :widths: 40 15 45
+   :class: compact-table
 
    * - Component
      - Points
      - Criteria
-   * - Path Planner
-     - 30
-     - A* correctly implemented on CARLA waypoint graph, with no import
-       of ``agents.navigation`` in the planner; path
-       published as ``nav_msgs/Path``; re-planning triggers work
-       (obstacle on path and deviation > 2 m); goal specified
-       via parameter; planner does not crash on no-path scenarios.
-   * - Controller
-     - 30
-     - Pure Pursuit geometry correct (lookahead selection, alpha
-       computation, delta formula); PID longitudinal with
-       anti-windup; all gains configurable via YAML; steering
-       output normalized to ``[-1, 1]``; vehicle tracks straight
-       path at target speed without oscillation.
-   * - Behavioral FSM
+   * - Task 1: Close the loop
+     - 15
+     - **8** the lock-step tests pass. **4** no timeouts in a normal run
+       (``lockstep.txt``). **3** the ground-truth tests pass.
+   * - Task 2: Planner
+     - 25
+     - **12** the planner and trigger tests pass. **13** held-out route:
+       route completion at least 0.8 times the reference's.
+   * - Task 3: Controller
+     - 25
+     - **12** the controller tests pass. **13** held-out route: mean
+       cross-track error at most 1.5 times the reference's.
+   * - Task 4: Behavior
      - 20
-     - All four states implemented; transitions correct per spec;
-       red light stops demonstrated in Town03; obstacle avoidance
-       slows vehicle; emergency stop tested; FSM state diagram
-       in report matches implementation.
-   * - Integration Test
-     - 20
-     - Full pipeline launches with one command; Town01 route
-       completion >= 70%; Town03 route completion >= 70%;
-       zero collisions; ROS bags >= 2 min each; metrics JSON
-       present and verifiable; evaluation plots included.
+     - **10** the behavior tests pass. **10** held-out route: no more
+       red-light violations than the reference, and collisions at most the
+       reference's plus one.
+   * - Task 5: Report
+     - 15
+     - **4** both runs' metrics. **4** what the EKF costs. **3** one failure,
+       with its time. **2** re-planning. **2** the tuning.
+
+.. note::
+
+   **Individual grade** = 60% team grade for GP4 + 40% peer review score, as
+   for every project (:ref:`peer-evaluation`).
 
 
 Common Mistakes
@@ -707,99 +644,18 @@ Common Mistakes
 
 .. danger::
 
-   **Avoid These Common Errors**
-
-   - **Calling CARLA API from a ROS callback thread.** The CARLA Python
-     client is not thread-safe. All ``world.get_actors()``,
-     ``waypoint.next()``, and similar calls must happen in the
-     main thread (timer callbacks), not inside subscriber callbacks.
-     Use a shared-memory queue to pass data between callbacks and
-     the planner timer.
-
-   - **Not normalizing the Pure Pursuit angle** ``alpha``. If you do not
-     wrap ``alpha`` to ``[-pi, pi]``, the steering will reverse direction
-     when the lookahead point crosses behind the vehicle. Always apply
-     ``alpha = (alpha + pi) % (2*pi) - pi``.
-
-   - **Forgetting anti-windup in PID.** Without clamping the integrator,
-     the vehicle will oscillate around stop-and-go scenarios because
-     accumulated error causes large overshoot when the vehicle starts
-     moving again.
-
-   - **Publishing raw CARLA steering without normalization.** CARLA
-     expects steering in ``[-1, 1]``. Raw Pure Pursuit output is in
-     radians (typically ``[-0.7, 0.7]`` for a car). Divide by
-     ``max_steer_angle`` before publishing.
-
-   - **Missing** ``full_pipeline_launch.py``. This is the single most
-     common reason for zero points on the integration test. Verify it
-     works with a fresh ``colcon build`` in a clean workspace before
-     submitting.
-
-   - **Hardcoding the goal position.** The grader may test with a
-     different goal. The goal must be a ROS 2 parameter loadable from
-     ``planner_config.yaml``.
-
-   - **Not testing at traffic lights.** Both towns have traffic
-     lights at their intersections, and the rubric asks for a red-light
-     stop shown in Town03. If your FSM's ``STOP`` state never runs, it
-     is untested, and the grader will deduct points.
-
-   - **ROS bag too short.** Bags under 2 minutes will not be graded for
-     the integration component. Verify bag duration with
-     ``ros2 bag info <bag_folder>`` before submitting.
-
-
-Tips for Success
-----------------
-
-.. tip::
-
-   **Build and test incrementally.** Test the planner in isolation by
-   publishing a fake ``/localization/pose`` with a static publisher
-   and visualizing ``/planning/path`` in RViz before connecting it to
-   the controller. Add one node at a time.
-
-.. tip::
-
-   **Use RViz throughout.** Add these displays to your RViz config:
-
-   - ``nav_msgs/Path`` on ``/planning/path``: visualize the planned path as a line
-   - ``geometry_msgs/PoseStamped`` on ``/localization/pose``: vehicle position arrow
-   - ``vision_msgs/Detection3DArray`` on ``/perception/fused_objects``: 3D boxes
-   - ``std_msgs/String`` on ``/behavior/state``: current FSM state (text display)
-
-   Seeing all four in one RViz window catches integration bugs in seconds.
-
-.. tip::
-
-   **Tune Pure Pursuit lookahead for your test scenario.** A lookahead
-   of 5 to 8 m works well for Town01 straight roads. For Town03
-   intersections, reduce to 3 to 5 m so the vehicle starts turning
-   earlier. Make ``lookahead_distance`` a parameter so you can tune
-   without recompiling.
-
-.. tip::
-
-   **Record bags early and often.** Start recording before the run,
-   not after. A 5-minute bag of a failed run is more useful for
-   debugging than no bag at all. Name bags descriptively:
-   ``town01_run1``, ``town03_after_tuning``, etc.
-
-.. tip::
-
-   **Divide the work clearly.** A natural GP4 split for three:
-   one member on ``planner_node.py`` (A* and re-planning),
-   one on ``controller_node.py`` (Pure Pursuit and PID),
-   one on ``behavior_node.py`` (the FSM).
-   Share ``full_pipeline_launch.py``, the evaluation and the report.
-   All members should run the full pipeline together at least once
-   before the final submission.
-
-.. tip::
-
-   **The grader launches your pipeline with one command.** Practice
-   the full-pipeline launch command until it works reliably from a
-   clean terminal, and know how to restart CARLA and your pipeline
-   quickly if something goes wrong. The final report runs the same
-   pipeline on scenarios you have not seen.
+   - **The steering sign.** ``VehicleCmd.steer`` turns left when positive;
+     CARLA's ``steer`` turns right. A wrong sign drives the car off the
+     road at the first bend.
+   - **Dividing by 0.7.** The wheel turns 1.222 rad at full steering, so
+     ``steer = delta / 1.222``. Dividing by 0.7 turns the wheels 1.75 times
+     too far.
+   - **Steering from the car's center.** Pure Pursuit works at the rear
+     axle. The given node moves the pose there with your ``rear_offset``:
+     set it.
+   - **An integral that winds up.** At a red light the speed error stays at
+     8 m/s for 30 s. Without the clamp, the car lurches when the light
+     turns green.
+   - **Waiting forever.** If a node stops publishing, the lock step ticks
+     after ``cmd_timeout_s`` and logs it: read your timeout count.
+   - **Committing a bag.**

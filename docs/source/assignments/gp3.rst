@@ -73,19 +73,42 @@ Overview
 GP3 puts your car and every object around it on one map. You record a drive
 with your own GP1 node, and every later task works on that recording.
 
-.. code-block:: text
+.. figure:: /_static/images/GP3/gp3_flow.png
+   :alt: A flow diagram, left to right. GP1's sensor_manager, in green, records your drive, a gray box. From the drive: the camera goes to GP2's detector_node, in blue; GNSS goes to the gray gnss_outage box and on to localization_node as fix_used; the IMU goes to localization_node; LiDAR goes to fusion_node. The detector's boxes go to fusion_node, localization_node's pose goes up to fusion_node, fusion_node's objects go to tracker_node, and tracker_node's tracks and localization_node's pose go to a dashed red GP4 box: planner, behavior, controller. fusion_node, localization_node and tracker_node are purple, GP3's own. Above them, dashed gray arrows marked reuses come down from GP1's lidar_projection, green, to fusion_node, and from GP2's box_tracker, blue, to tracker_node. A legend: green from GP1, blue from GP2, purple GP3: yours, red next: GP4, gray given or data.
+   :align: center
+   :width: 100%
 
-   Task 1: GP1 sensor_manager  ->  your drive: camera, LiDAR, IMU, GNSS, ground truth
-       |
-   Task 2: EKF (IMU + GNSS)    ->  /localization/pose
-       |
-   GP2 detector_node (camera)  ->  boxes in the image
-       |
-   Task 3: fusion (GP1 projection + LiDAR + pose)  ->  objects on the map
-       |
-   Task 4: tracker (GP2's, in meters)  ->  /perception/tracks: ID, position, speed
-       |
-   GP4: the planner and the behavior node
+   How GP3 connects to GP1, GP2 and GP4. **Green:** GP1's code; **blue:** GP2's;
+   **purple:** the GP3 nodes you write; **red:** GP4, next; **gray:** given code
+   and data. Solid arrows carry a ROS 2 topic; dashed arrows mean that the
+   GP3 node reuses the code of the box it comes from.
+
+**Our reference, running.** The video below is our reference GP3 pipeline
+on a demo drive (rig A's values, 90 s, with a GNSS outage from 35.2 s to
+58.3 s after the first fix), played at normal speed.
+
+.. raw:: html
+
+   <video controls preload="metadata" width="100%"
+          poster="../_static/images/GP3/gp3_video_poster.png">
+     <source src="../_static/videos/gp3_reference.mp4" type="video/mp4">
+     Your browser cannot play this video. The description below says what it shows.
+   </video>
+
+*What the video shows* (it has no sound). **Left:** the front camera, with
+GP2's boxes in blue and the number of detections. **Right:** a top view
+70 m across, centered on the car: the true car (black triangle) and the
+road it drives (gray line), the EKF's estimate (orange dot) and its 1-sigma
+ellipse, the GNSS fixes of the last 3 s (blue dots), and the tracks (purple
+squares, with their IDs and speed arrows). The title gives the EKF's error.
+With GNSS, the error stays near a few tenths of a meter (0.43 m RMSE over
+the drive), and the fixes sit just behind the car, where rig A's antenna is.
+During the outage, the top view turns light orange: the EKF holds its last
+speed while the car speeds up, so its estimate falls behind (up to 31.4 m),
+and its ellipse stretches along the road. When the fixes return, the first
+one pulls the estimate back onto the car: the error drops from 17.1 m to
+under 2 m in 0.05 s, because the filter's uncertainty has grown so large
+that it trusts the fix almost completely.
 
 .. list-table::
    :widths: 26 14 60
