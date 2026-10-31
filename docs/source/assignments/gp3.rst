@@ -705,33 +705,33 @@ GP3 is worth **100 points**. Run every command from the package root,
 Suggested Schedule
 ------------------
 
-The plan below finishes on day 13 of 15 and leaves two days of slack.
+GP3 runs 19 days, from Sunday, November 1, to Thursday, November 19. The plan
+below finishes on November 16 and leaves three days of slack.
 
 .. list-table::
-   :widths: 14 40 46
+   :widths: 18 40 42
    :header-rows: 1
    :class: compact-table
 
-   * - Days
+   * - Dates
      - Milestone
      - Done when
-   * - 1 to 2
+   * - Nov 1 to 3
      - Starter copied, ``ads_msgs`` built, Task 1 recorded
      - ``drive_info.txt`` shows 1800 camera frames
-   * - 3 to 8
+   * - Nov 4 to 10
      - Tasks 2, 3 and 4: one person per task; fusion uses the true pose and
        the tracker uses ``noisy_dets.json`` until the others are ready
      - Each task's tests pass
-   * - 9 to 10
+   * - Nov 11 to 12
      - Everything on your drive, both poses
      - The six result files are saved
-   * - 11 to 13
+   * - Nov 13 to 16
      - Task 5 and the submission
      - Checklist below fully ticked
-   * - 14 to 15
+   * - Nov 17 to 19
      - **Slack**
      - Nothing scheduled
-
 
 Submission
 ----------

@@ -20,7 +20,7 @@ evaluates the complete system on challenging, unseen scenarios.
 .. note::
 
    Group projects are posted one at a time as the semester progresses.
-   **GP1 and GP2 are posted.** Later projects will appear here when
+   **GP1, GP2 and GP3 are posted.** Later projects will appear here when
    they open. See the syllabus for the full schedule and weights.
 
 
@@ -51,6 +51,11 @@ split between the group projects (**85%**) and the Final Report
      - 40%
      - 2 weeks, due Thu, Oct 29
      - L2 to L5
+   * - GP3: Fusion & Localization
+     - 100
+     - 25%
+     - 19 days, due Thu, Nov 19
+     - L2, L3, L5, L6
 
 .. note::
 
@@ -212,7 +217,7 @@ Support Resources
 
    gp1
    gp2
+   gp3
 
-.. GP3 and GP4 are hidden (see exclude_patterns in conf.py). Re-add here to publish:
-..    gp3
+.. GP4 is hidden (see exclude_patterns in conf.py). Re-add here to publish:
 ..    gp4

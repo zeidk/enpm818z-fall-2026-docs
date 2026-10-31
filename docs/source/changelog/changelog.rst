@@ -5,10 +5,24 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.19.1: GP3 Posted Nov 1 (2026-10-30)
+.. dropdown:: v2.20.0: GP3 Fusion and Localization (2026-11-01)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Assignments
+
+   - **GP3 is posted:** Fusion & Localization, due Thursday, Nov 19. You
+     record a drive with your GP1 node, build an EKF for your rig's GNSS
+     antenna, place GP2's detections on the map with the LiDAR, and track
+     them on the map with your GP2 tracker. The page shows how GP1 and GP2
+     feed GP3, and a video of our reference running on a demo drive.
+   - **Final project page:** GP3 is in the table of group projects.
+
+
+.. dropdown:: v2.19.1: GP3 Posted Nov 1 (2026-10-30)
+   :icon: tag
+   :class-container: sd-border-success
 
    - **Syllabus**: GP3 is posted on Sunday, Nov 1, not on Oct 29. Its due
      date stays Thursday, Nov 19.
