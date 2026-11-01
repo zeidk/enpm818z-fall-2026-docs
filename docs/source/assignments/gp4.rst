@@ -83,7 +83,7 @@ GP4 drives the car with your whole pipeline, live in CARLA:
 
 **Our reference, running.** The video below shows our reference GP4 pipeline
 driving rig A's route (535 m) in closed loop, with its EKF pose, 40 other
-vehicles and 80 people. It plays at normal speed: 131 s of simulated time.
+vehicles and 80 people. It plays at normal speed: 165 s of simulated time.
 
 .. raw:: html
 
@@ -105,18 +105,19 @@ the EKF's error (EKF minus truth) in map x, map y and heading over the last
 30 s, and the error of the heading the controller steers by (dashed;
 recomputed from the run's recording).
 
-The car creeps straight at 2 m/s until 6.3 s, while the EKF settles, then
-follows its lane at up to 7.6 m/s and takes the left turn at 33 s to 37 s
-at 5.1 to 7.3 m/s. At 40 s the light 29 m ahead turns yellow; the car
-stops 16 m before the stop line (the behavior node stops it as soon as the
-line is 20 m away) and waits through the red until 75 s. At 84 s it slows
-for a moment for a car coming the other way, and at 95 s it slows to 3 m/s
-(with a 0.2 s emergency stop) for a person 3 m from its path: the positions their
-tracks predict reach the 2 m band. At 108 s the next light shows red 50 m
-ahead; the car waits until it turns green at 121 s, comes within 2 m of
-the goal at 126 s and stops 0.08 m from it. Scored to arrival, the run had
-no collision, no pedestrian hit and no red-light violation; the EKF's
-error was 0.42 m RMSE and the mean cross-track error 0.14 m.
+The car creeps straight at 2 m/s until 6.7 s, while the EKF settles, then
+follows its lane at up to 7.5 m/s and takes the left turn at 33 s to 37 s
+at 5.1 to 7.2 m/s. At 40 s the light 29 m ahead turns yellow, then red. The
+car brakes, stops 1.0 m before the stop line at 47 s and waits until the
+light turns green at 75 s. At 106 s the next light shows red 50 m ahead. On
+the way to it, at 111 s, the car stops for 1.3 s for a person crossing the
+road 8 m ahead. It then stops 1.0 m before the line and leaves when the light
+turns green at 121 s. Two meters past the line it stops again: a car stands
+8 m ahead, on the goal, and the car waits behind it from 125 s to 157 s,
+while the light turns yellow and red. It comes within 2 m of the goal at
+160 s and stops 0.18 m from it. Scored to arrival, the run had no
+collision, no pedestrian hit and no red-light violation; the EKF's error
+was 0.40 m RMSE and the mean cross-track error 0.12 m.
 
 .. list-table::
    :widths: 26 14 60
@@ -540,6 +541,10 @@ Tasks
       junction. The given ground-truth helper reports the light of the stop
       line ahead in the car's lane from 50 m away. CARLA itself tells a car
       about a light only 2 to 3 m before the stop line, too late to stop.
+      The given node turns this STOP into braking: it lets the car keep the
+      speed from which it can stop 1 m before the line at 2.0 m/s²
+      (``stop_line_speed``). With 0 m/s as soon as the line was 20 m away,
+      our car stopped 16 m short of it.
    3. ``OBSTACLE_AVOIDANCE`` (``slow_speed``, 3 m/s): an object within
       ``obstacle_distance`` (15 m) ahead.
    4. ``LANE_FOLLOW`` (``target_speed``, 8 m/s).
@@ -607,10 +612,10 @@ Tasks
    faster than 0.5 m/s.
 
    **Our reference** on rig A's route (535 m, 40 vehicles and 80 people):
-   with the true pose, the car arrived in 126.8 s of simulated time, with a
-   mean cross-track error of 0.044 m; with the EKF, in 126.4 s, with
-   0.141 m. Neither run had a collision, a pedestrian hit or a red-light
-   violation. Each run took 5 to 12 minutes of wall time on an RTX 4060
+   with the true pose, the car arrived in 124.1 s of simulated time, with a
+   mean cross-track error of 0.036 m; with the EKF, in 124.1 s, with
+   0.161 m. Neither run had a collision, a pedestrian hit or a red-light
+   violation. Each run took 5 to 14 minutes of wall time on an RTX 4060
    laptop GPU. The traffic differs from run to run, even with the same
    seed, so one route gives different numbers: in two of our earlier runs
    of this route with the same code and the EKF, the car arrived in 159.9 s
