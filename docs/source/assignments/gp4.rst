@@ -72,7 +72,7 @@ Overview
 GP4 drives the car with your whole pipeline, live in CARLA:
 
 .. figure:: /_static/images/GP4/gp4_flow.png
-   :alt: A flow diagram of the closed loop. Top row, left to right: GP1's sensor_manager, green, sends the camera to GP2's detector_node, blue; its boxes go to GP3's fusion_node, purple, whose objects go to GP3's tracker_node, purple; sensor_manager also sends LiDAR along the top to fusion_node and on, down the right side of tracker_node, to behavior_node. sensor_manager sends IMU and GNSS down to GP3's localization_node, purple, whose pose goes to planner_node, red. Middle row: planner_node sends the path to behavior_node, red, which also gets tracks from tracker_node and the traffic light from a gray ground truth box on the right; tracker_node also sends standing vehicles to planner_node. Bottom: controller_node, red, gets the path from planner_node, pose and speed from localization_node, and the target speed from behavior_node, and sends /control/vehicle_cmd back to sensor_manager along the bottom and up the left side. A legend: green GP1, blue GP2, purple GP3, red GP4: yours, gray given.
+   :alt: A flow diagram of the closed loop. Top row, left to right: GP1's sensor_manager, green, sends the camera to GP2's detector_node, blue; its boxes go to GP3's fusion_node, purple, whose objects go to GP3's tracker_node, purple; sensor_manager also sends LiDAR along the top to fusion_node and on, down the right side of tracker_node, to behavior_node. sensor_manager sends IMU and GNSS down to GP3's localization_node, purple, whose pose goes to planner_node, red. Middle row: planner_node sends the path to behavior_node, red, which also gets tracks from tracker_node and the traffic light from a gray ground truth box on the right; tracker_node also sends standing vehicles to planner_node. Bottom: controller_node, red, gets the path from planner_node, the pose from localization_node, the target speed from behavior_node and the speed from the speedometer of the ground truth box, along the bottom right, and sends /control/vehicle_cmd back to sensor_manager along the bottom and up the left side. A legend: green GP1, blue GP2, purple GP3, red GP4: yours, gray given.
    :align: center
    :width: 100%
 
@@ -83,7 +83,7 @@ GP4 drives the car with your whole pipeline, live in CARLA:
 
 **Our reference, running.** The video below shows our reference GP4 pipeline
 driving rig A's route (535 m) in closed loop, with its EKF pose, 40 other
-vehicles and 80 people. It plays at normal speed: 130 s of simulated time.
+vehicles and 80 people. It plays at normal speed: 221 s of simulated time.
 
 .. raw:: html
 
@@ -99,18 +99,19 @@ it. **Right:** a top view 80 m across, centered on the car: the lane
 centers from the map (light gray), the planned path (red) with the goal at
 its end (red star), the true car (black triangle), the EKF's pose (orange
 dot) and the tracks (purple squares, with speed arrows). The title gives
-the behavior state, its target speed and the car's speed.
+the behavior state, its target speed, the car's speed and, when one
+applies, the light ahead with the distance to its stop line.
 
-The car follows its lane at up to 8.1 m/s. At 58 s, a person on the right
-is walking toward the road: their track's position 2 s ahead comes within
-3 m of our path, so the behavior node stops the car (from 7.4 m/s to 0 at
-58.4 s), and it drives on once the person's track no longer counts as
-ahead. At 66 s, a car coming the other way and a person on the right stop
-it again (from 7.3 m/s to 0 at 67.4 s). From 89 s to 121 s the car waits at a red
-light, 11 m before the goal. It then comes within 2 m of the goal at
-124.5 s and stops 0.35 m from it. Scored to arrival, the run had no
-collision, no pedestrian hit and no red-light violation; the EKF's error was
-0.44 m RMSE and the mean cross-track error 0.28 m.
+The car follows its lane at up to 7.6 m/s and takes the left turn at 29 s
+to 33 s without slowing below 5.2 m/s. At 40 s the light 5 m ahead turns
+yellow while the car drives at 7.6 m/s; the car stops hard, 1.3 m before
+the stop line, and waits through the red until the light turns green at
+75 s. At 112 s the next light shows red 50 m ahead. The car queues behind
+an ambulance, crosses the stop line on green at 170 s, and waits behind the
+ambulance again, 6 m before the goal, until 214 s. It comes within 2 m of
+the goal at 216 s and stops 0.13 m from it. Scored to arrival, the run had
+no collision, no pedestrian hit and no red-light violation; the EKF's error
+was 0.42 m RMSE and the mean cross-track error 0.14 m.
 
 .. list-table::
    :widths: 26 14 60
@@ -157,7 +158,7 @@ collision, no pedestrian hit and no red-light violation; the EKF's error was
      - GP3's pose (start, deviation) and tracks (parked cars)
      - A* and the two triggers
    * - 3. Controller
-     - GP3's pose and speed (``/localization/odom``)
+     - GP3's pose (``/localization/odom``)
      - Pure Pursuit and the PID
    * - 4. Behavior
      - GP3's tracks with their speeds
@@ -476,6 +477,13 @@ Tasks
    the integral of the error held within ``pid_windup_limit`` (2.0), and
    the output clamped to [-1, 1]: positive is throttle, negative brake.
 
+   **The speed (given).** The PID gets the car's speed from
+   ``/carla/speedometer``, a wheel-speed reading that the given ground-truth
+   helper publishes, not from your EKF. The EKF's speed jumps at each GNSS
+   fix and lags when the car brakes: in one of our runs it said 7 m/s while
+   the car slowed to 2 m/s in a turn, and the controller kept braking until
+   the car stopped.
+
    **Speed in curves and at the goal (given).** The controller node caps
    the behavior node's target so the car can slow, at 2.0 m/s², to
    :math:`\sqrt{a_{lat} / \kappa}` (``a_lat`` 2.0 m/s²) on every curve in
@@ -505,15 +513,21 @@ Tasks
    2. ``STOP`` (0 m/s): a red or yellow light whose stop line is ahead of
       the car and within ``stop_distance`` (20 m). A light that turns red
       after the car has passed its stop line does not stop it in the
-      junction.
+      junction. The given ground-truth helper reports the light of the stop
+      line ahead in the car's lane from 50 m away. CARLA itself tells a car
+      about a light only 2 to 3 m before the stop line, too late to stop.
    3. ``OBSTACLE_AVOIDANCE`` (``slow_speed``, 3 m/s): an object within
       ``obstacle_distance`` (15 m) ahead.
    4. ``LANE_FOLLOW`` (``target_speed``, 8 m/s).
 
    **What counts as ahead** (given, ``nearest_ahead``): an object whose
    constant-velocity position over the next ``lookahead_s`` (2.0 s) comes
-   within 3.0 m of the path ahead of the car. A person 6 m from the path,
-   walking toward it at 1.5 m/s, counts: in 2 s they are 3 m from it.
+   within 2.0 m of the path ahead of the car. A person 5 m from the path,
+   walking toward it at 1.5 m/s, counts: in 2 s they are 2 m from it. With
+   3.0 m, our car stopped for people standing on the sidewalk: their tracks'
+   speeds are noisy, and 2 s of a wrong speed carried them into a 3 m band.
+   On our 8 runs, against the truth, 2.0 m cut false stops from 87 to
+   41 and still caught 3 of the 4 people who came within 1.5 m of the path.
 
    **Given:** before the first path the car creeps at 2 m/s (the EKF needs
    the car to move 3 m before it publishes a pose), and at the goal the
@@ -554,24 +568,23 @@ Tasks
    2 m of the goal: route completion (1 at arrival; otherwise 1 minus the
    road distance still left to the goal over the route's length, so a
    detour counts as progress), collisions, pedestrian hits, red-light
-   violations (leaving a light's area on red faster than 1 m/s),
+   violations (crossing a stop line on red faster than 1 m/s),
    cross-track error and mean speed. CARLA's collision sensor misses
    people, so a pedestrian hit is a person whose center enters the car's
    outline (2.5 m ahead and behind, 1.1 m to each side) while the car moves
    faster than 0.5 m/s.
 
    **Our reference** on rig A's route (535 m, 40 vehicles and 80 people):
-   with the true pose, the car arrived in 160.3 s of simulated time, with a
-   mean cross-track error of 0.018 m; with the EKF, in 124.4 s, with
-   0.291 m. Neither run had a collision, a pedestrian hit or a red-light
+   with the true pose, the car arrived in 160.1 s of simulated time, with a
+   mean cross-track error of 0.019 m; with the EKF, in 159.9 s, with
+   0.192 m. Neither run had a collision, a pedestrian hit or a red-light
    violation. Each run took about 5 minutes of wall time on an RTX 4060
    laptop GPU. The traffic differs from run to run, even with the same
-   seed, so one route gives different numbers: in two of our earlier runs
-   of this route with the same code and the EKF, the car arrived in 89.6 s
-   and in 124.1 s. With a 1600 x 900 or 1920 x 1080
-   camera the detector is slower and the lock step times out more often
-   (301 to 407 times in our runs); the run still works, it takes 19 to 25
-   minutes.
+   seed, so one route gives different numbers: in the run of the video
+   above, with the same code and the EKF, the car arrived in 216.2 s. With
+   a 1600 x 900 or 1920 x 1080 camera the detector is slower and the lock
+   step times out more often (219 to 407 times in our runs); the run still
+   works, it takes 16 to 25 minutes.
 
    **The report,** ``gp4_report.pdf``, at most 5 pages:
 
