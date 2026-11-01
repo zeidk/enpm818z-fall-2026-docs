@@ -83,7 +83,7 @@ GP4 drives the car with your whole pipeline, live in CARLA:
 
 **Our reference, running.** The video below shows our reference GP4 pipeline
 driving rig A's route (535 m) in closed loop, with its EKF pose, 40 other
-vehicles and 80 people. It plays at normal speed: 221 s of simulated time.
+vehicles and 80 people. It plays at normal speed: 131 s of simulated time.
 
 .. raw:: html
 
@@ -100,18 +100,24 @@ centers from the map (light gray), the planned path (red) with the goal at
 its end (red star), the true car (black triangle), the EKF's pose (orange
 dot) and the tracks (purple squares, with speed arrows). The title gives
 the behavior state, its target speed, the car's speed and, when one
-applies, the light ahead with the distance to its stop line.
+applies, the light ahead with the distance to its stop line. **Bottom:**
+the EKF's error (EKF minus truth) in map x, map y and heading over the last
+30 s, and the error of the heading the controller steers by (dashed;
+recomputed from the run's recording).
 
 The car follows its lane at up to 7.6 m/s and takes the left turn at 29 s
-to 33 s without slowing below 5.2 m/s. At 40 s the light 5 m ahead turns
-yellow while the car drives at 7.6 m/s; the car stops hard, 1.3 m before
-the stop line, and waits through the red until the light turns green at
-75 s. At 112 s the next light shows red 50 m ahead. The car queues behind
-an ambulance, crosses the stop line on green at 170 s, and waits behind the
-ambulance again, 6 m before the goal, until 214 s. It comes within 2 m of
-the goal at 216 s and stops 0.13 m from it. Scored to arrival, the run had
-no collision, no pedestrian hit and no red-light violation; the EKF's error
-was 0.42 m RMSE and the mean cross-track error 0.14 m.
+to 33 s at 5.3 to 7.1 m/s. At 40 s the light 4 m ahead turns yellow while
+the car drives at 7.6 m/s; the car stops hard, 0.3 m before the stop line,
+and waits through the red until 75 s. At 89 s it brakes from 7.5 to
+2.2 m/s for a car coming the other way in the next lane, and at 99 s for a
+person 3 m from its path: the positions their tracks predict 2 s ahead
+reach the 2 m band, while the car really was 4.0 m and the person 3.2 m
+from the path. At 113 s the
+next light shows red 48 m ahead; the car waits until it turns green at
+121 s, comes within 2 m of the goal at 126 s and stops 0.08 m from it.
+Scored to arrival, the run had no collision, no pedestrian hit and no
+red-light violation; the EKF's error was 0.45 m RMSE and the mean
+cross-track error 0.18 m.
 
 .. list-table::
    :widths: 26 14 60
@@ -484,6 +490,16 @@ Tasks
    the car slowed to 2 m/s in a turn, and the controller kept braking until
    the car stopped.
 
+   **The heading (given).** Pure Pursuit gets a smoothed heading: the
+   IMU's yaw rate turns it, and it drifts toward your EKF's heading over
+   ``heading_tau`` (2 s). Your EKF's heading jumps a little at each GNSS fix
+   (2 degrees, standard deviation, in our run), and each jump would turn
+   the wheels. In our offline test with the EKF's measured error, the
+   smoothed heading cut the step-to-step change of the steering command by
+   a quarter and kept the car closer to its path (0.180 m against 0.198 m).
+   In CARLA, on rig A's route with the EKF, it cut that change by 31%
+   (standard deviation 0.0192 to 0.0132).
+
    **Speed in curves and at the goal (given).** The controller node caps
    the behavior node's target so the car can slow, at 2.0 m/s², to
    :math:`\sqrt{a_{lat} / \kappa}` (``a_lat`` 2.0 m/s²) on every curve in
@@ -564,6 +580,9 @@ Tasks
       python3 -m tools.evaluate_run --bag $HOME/gp4_data/run_ekf --out ../results/gp4/metrics_ekf.json
 
    Set ``traffic.vehicles: 40`` and ``traffic.walkers: 80`` in your YAML.
+   A run stops after 300 s of simulated time (``duration``): enough for a
+   route with two red lights and a traffic jam (our longest reference run
+   arrived after 216 s).
    ``evaluate_run.py`` scores the drive until the car first comes within
    2 m of the goal: route completion (1 at arrival; otherwise 1 minus the
    road distance still left to the goal over the route's length, so a
@@ -575,16 +594,17 @@ Tasks
    faster than 0.5 m/s.
 
    **Our reference** on rig A's route (535 m, 40 vehicles and 80 people):
-   with the true pose, the car arrived in 160.1 s of simulated time, with a
-   mean cross-track error of 0.019 m; with the EKF, in 159.9 s, with
-   0.192 m. Neither run had a collision, a pedestrian hit or a red-light
-   violation. Each run took about 5 minutes of wall time on an RTX 4060
+   with the true pose, the car arrived in 160.5 s of simulated time, with a
+   mean cross-track error of 0.019 m; with the EKF, in 127.9 s, with
+   0.163 m. Neither run had a collision, a pedestrian hit or a red-light
+   violation. Each run took 5 to 12 minutes of wall time on an RTX 4060
    laptop GPU. The traffic differs from run to run, even with the same
-   seed, so one route gives different numbers: in the run of the video
-   above, with the same code and the EKF, the car arrived in 216.2 s. With
-   a 1600 x 900 or 1920 x 1080 camera the detector is slower and the lock
-   step times out more often (219 to 407 times in our runs); the run still
-   works, it takes 16 to 25 minutes.
+   seed, so one route gives different numbers: in two of our earlier runs
+   of this route with the same code and the EKF, the car arrived in 159.9 s
+   and, after waiting in a jam of CARLA's own cars at the goal's junction,
+   in 216.2 s. With a 1600 x 900 or 1920 x 1080 camera the detector is
+   slower and the lock step times out more often (219 to 436 times in our
+   runs); the run still works, it takes 16 to 27 minutes.
 
    **The report,** ``gp4_report.pdf``, at most 5 pages:
 
