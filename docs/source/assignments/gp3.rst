@@ -591,22 +591,29 @@ GP3 is worth **100 points**. Run every command from the package root,
    :icon: goal
    :class-container: sd-border-primary
 
-   ``fusion_node`` turns each GP2 detection into one point on the map, as in
-   frustum association:
+   ``fusion_node`` turns each GP2 detection into one point on the map. A
+   vehicle goes through frustum association (steps 1 to 4); a pedestrian is
+   placed with the camera alone (step 5):
 
    1. Project the LiDAR sweep of the box's stamp into the image with your
       GP1 ``K`` and extrinsic (given: ``project_keep_points``; the published
       cloud has ROS axes, y left, and GP1's extrinsic expects CARLA's, y
       right, so it flips y for the projection only).
-   2. Drop the points within 0.3 m of the road (given: ``remove_ground``).
-      Without this, the road in front of a person's feet, inside the
-      person's box, can be the nearest cluster.
+   2. Drop the points within 0.3 m of the road (given: ``remove_ground``),
+      so the road itself never forms a cluster.
    3. **Yours:** ``associate_lidar_to_detection``. Keep the points inside
       the box and between ``min_range`` and ``max_range`` from the LiDAR,
       group them with DBSCAN, and return the centroid of the cluster nearest
       the LiDAR.
    4. **Yours:** ``to_map``. Move that centroid from the LiDAR frame to the
       vehicle frame, then onto the map with the car's pose.
+   5. **Pedestrians** (given: ``ground_point``). CARLA's LiDAR returns
+      almost no points on people: on one of our drives, a person 7 m ahead
+      had no points on their body, only road points around their feet. So
+      the node places a pedestrian box where the ray through the middle of
+      its bottom edge (the feet) meets the flat road, which lies the
+      LiDAR's mounting height below the LiDAR. ``to_map`` then moves that
+      point onto the map, as in step 4.
 
    **Start on day 1:** run the fusion with the true pose
    (``pose_topic:=/ground_truth/ego``), so your fusion does not wait for your
@@ -623,16 +630,21 @@ GP3 is worth **100 points**. Run every command from the package root,
 
    ``fusion_eval.py`` counts a true object only when the sensors can see it:
    inside the camera's field of view, within 60 m, and with at least 5 LiDAR
-   points of the same sweep inside its box (as nuScenes does). A fused
+   points of the same sweep inside its box (as nuScenes does). A pedestrian
+   has no LiDAR points, so it counts when it is in the camera's view within
+   30 m of the car. A fused
    object matches a true one of the same class within 3 m: the LiDAR sees
    a car's near side, so the cluster's center falls short of the box's
    center, by up to half the car's length. It prints the share of true
    objects matched and the mean position error, by distance from the car.
 
    **Our reference** (YOLOv8s, rig A's demo drive), vehicles: with the true
-   pose, 37.7% of the visible vehicles matched, mean error 1.61 m; with the
-   EKF pose, 25.8%, 1.66 m. The demo drive had only 27 visible pedestrian
-   instances, too few to compare.
+   pose, 37.6% of the visible vehicles matched, mean error 1.62 m; with the
+   EKF pose, 25.5%, 1.66 m. Pedestrians: with the true pose, 30.1% matched,
+   mean error 0.78 m (55% within 20 m, 0.53 m); with the EKF pose, 21.3%,
+   1.20 m. When pedestrians went through the LiDAR like vehicles, before
+   ``ground_point``, the same drive matched 61 pedestrian sightings with the
+   true pose, against 659 now.
 
    **Evidence:** ``fusion_truth.txt`` and ``fusion_ekf.txt``.
 
@@ -671,9 +683,9 @@ GP3 is worth **100 points**. Run every command from the package root,
           --rig config/carla_config.yaml --drive $HOME/gp3_data/drive
 
    It prints ID switches, MOTA (as in GP2) and the mean speed error against
-   the truth. **Our reference,** true pose: MOTA 0.145, 27 ID switches,
-   speed error 1.07 m/s. MOTA is low because it also counts every visible
-   vehicle the detector missed.
+   the truth. **Our reference,** true pose: MOTA 0.198, 47 ID switches,
+   speed error 0.91 m/s. MOTA is low because it also counts every visible
+   object the detector missed.
 
    **Evidence:** ``tracks_truth.txt`` and ``tracks_ekf.txt``.
 
