@@ -105,19 +105,18 @@ the EKF's error (EKF minus truth) in map x, map y and heading over the last
 30 s, and the error of the heading the controller steers by (dashed;
 recomputed from the run's recording).
 
-The car follows its lane at up to 7.6 m/s and takes the left turn at 29 s
-to 33 s at 5.3 to 7.1 m/s. At 40 s the light 4 m ahead turns yellow while
-the car drives at 7.6 m/s; the car stops hard, 0.3 m before the stop line,
-and waits through the red until 75 s. At 89 s it brakes from 7.5 to
-2.2 m/s for a car coming the other way in the next lane, and at 99 s for a
-person 3 m from its path: the positions their tracks predict 2 s ahead
-reach the 2 m band, while the car really was 4.0 m and the person 3.2 m
-from the path. At 113 s the
-next light shows red 48 m ahead; the car waits until it turns green at
-121 s, comes within 2 m of the goal at 126 s and stops 0.08 m from it.
-Scored to arrival, the run had no collision, no pedestrian hit and no
-red-light violation; the EKF's error was 0.45 m RMSE and the mean
-cross-track error 0.18 m.
+The car creeps straight at 2 m/s until 6.3 s, while the EKF settles, then
+follows its lane at up to 7.6 m/s and takes the left turn at 33 s to 37 s
+at 5.1 to 7.3 m/s. At 40 s the light 29 m ahead turns yellow; the car
+stops 16 m before the stop line (the behavior node stops it as soon as the
+line is 20 m away) and waits through the red until 75 s. At 84 s it slows
+for a moment for a car coming the other way, and at 95 s it slows to 3 m/s
+(with a 0.2 s emergency stop) for a person 3 m from its path: the positions their
+tracks predict reach the 2 m band. At 108 s the next light shows red 50 m
+ahead; the car waits until it turns green at 121 s, comes within 2 m of
+the goal at 126 s and stops 0.08 m from it. Scored to arrival, the run had
+no collision, no pedestrian hit and no red-light violation; the EKF's
+error was 0.42 m RMSE and the mean cross-track error 0.14 m.
 
 .. list-table::
    :widths: 26 14 60
@@ -500,6 +499,15 @@ Tasks
    In CARLA, on rig A's route with the EKF, it cut that change by 31%
    (standard deviation 0.0192 to 0.0132).
 
+   **The start (given).** Your EKF's first poses are its worst: in our run,
+   its heading was 12 degrees off at the first pose, then 38 degrees one
+   way and 29 degrees the other within the next 1.2 s, and the car swerved.
+   So the node keeps the car creeping straight for ``settle_s`` (4 s) after
+   the first pose, while the path ahead stays straight, and then starts the
+   steering heading from the path's direction. In our offline test with
+   that run's EKF error, the largest distance from the path in the first
+   12 s fell from 0.91 m to 0.36 m.
+
    **Speed in curves and at the goal (given).** The controller node caps
    the behavior node's target so the car can slow, at 2.0 m/s², to
    :math:`\sqrt{a_{lat} / \kappa}` (``a_lat`` 2.0 m/s²) on every curve in
@@ -536,18 +544,23 @@ Tasks
       ``obstacle_distance`` (15 m) ahead.
    4. ``LANE_FOLLOW`` (``target_speed``, 8 m/s).
 
-   **What counts as ahead** (given, ``nearest_ahead``): an object whose
-   constant-velocity position over the next ``lookahead_s`` (2.0 s) comes
-   within 2.0 m of the path ahead of the car. A person 5 m from the path,
-   walking toward it at 1.5 m/s, counts: in 2 s they are 2 m from it. With
-   3.0 m, our car stopped for people standing on the sidewalk: their tracks'
-   speeds are noisy, and 2 s of a wrong speed carried them into a 3 m band.
-   On our 8 runs, against the truth, 2.0 m cut false stops from 87 to
-   41 and still caught 3 of the 4 people who came within 1.5 m of the path.
+   **What counts as ahead** (given, ``nearest_ahead`` and
+   ``ahead_by_class``): an object whose constant-velocity position over the
+   next ``lookahead_s`` (2.0 s; ``ped_lookahead_s``, 1.0 s, for a
+   pedestrian) comes within 2.0 m of the path ahead of the car. A person
+   3.5 m from the path, walking toward it at 1.5 m/s, counts: in 1 s they
+   are 2 m from it. With 3.0 m, our car stopped for people standing on the
+   sidewalk: their tracks' speeds are noisy, and 2 s of a wrong speed
+   carried them into a 3 m band. On our 8 runs, against the truth, 2.0 m cut
+   false stops from 87 to 41 and still caught 3 of the 4 people who came
+   within 1.5 m of the path. The camera places pedestrians, so their speeds
+   are the noisiest: on 10 runs, predicting them 1 s ahead instead of 2 s
+   cut their false slow-downs and stops from 22 to 11 and still caught all
+   7 people who came within 1.5 m of the path (7 cases are few).
 
    **Given:** before the first path the car creeps at 2 m/s (the EKF needs
-   the car to move 3 m before it publishes a pose), and at the goal the
-   node holds the car.
+   the car to move 3 m before it publishes a pose), or slower when this
+   node asks for less, and at the goal the node holds the car.
 
    **Given: the LiDAR stop check.** The camera misses a vehicle close ahead:
    at 4.8 m, the back of a box truck fills the whole image, and the
@@ -594,17 +607,17 @@ Tasks
    faster than 0.5 m/s.
 
    **Our reference** on rig A's route (535 m, 40 vehicles and 80 people):
-   with the true pose, the car arrived in 160.5 s of simulated time, with a
-   mean cross-track error of 0.019 m; with the EKF, in 127.9 s, with
-   0.163 m. Neither run had a collision, a pedestrian hit or a red-light
+   with the true pose, the car arrived in 126.8 s of simulated time, with a
+   mean cross-track error of 0.044 m; with the EKF, in 126.4 s, with
+   0.141 m. Neither run had a collision, a pedestrian hit or a red-light
    violation. Each run took 5 to 12 minutes of wall time on an RTX 4060
    laptop GPU. The traffic differs from run to run, even with the same
    seed, so one route gives different numbers: in two of our earlier runs
    of this route with the same code and the EKF, the car arrived in 159.9 s
    and, after waiting in a jam of CARLA's own cars at the goal's junction,
    in 216.2 s. With a 1600 x 900 or 1920 x 1080 camera the detector is
-   slower and the lock step times out more often (219 to 436 times in our
-   runs); the run still works, it takes 16 to 27 minutes.
+   slower and the lock step times out more often (219 to 594 times in our
+   runs); the run still works, it takes 16 to 34 minutes.
 
    **The report,** ``gp4_report.pdf``, at most 5 pages:
 
