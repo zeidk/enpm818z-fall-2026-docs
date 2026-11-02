@@ -2,6 +2,9 @@
 
     /usr/bin/python3 tools/make_filters_figures.py
 
+line_or_curve.png: one model a matrix can use (a straight line) and two it cannot (curves).
+bell_line.png, bell_curve.png: a bell curve through a straight line and through a curve, in
+three steps read left to right.
 road_30_top.png: the scene of "A straight line keeps a bell curve a bell curve", seen from
 above. The AV drives d = 20 +- 1 m along a road at 30 degrees from east; x = d cos 30 is how
 far east it gets. Colors follow the graph after it (bell_1_line.png): the distance driven in
@@ -15,7 +18,8 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt                                    # noqa: E402
 from matplotlib import font_manager                                # noqa: E402
-from matplotlib.patches import Arc, Circle, Polygon                # noqa: E402
+from matplotlib.patches import Arc, Polygon                        # noqa: E402
+import numpy as np                                                 # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SLIDES = ROOT.parents[1] / "latex/enpm818z-fall-2026-latex/slides"
@@ -37,13 +41,6 @@ def save(fig, path):
     """Save at 300 dpi as RGB: an alpha channel fails tools/check_figures.py."""
     fig.savefig(path, dpi=300, facecolor="white")
     Image.open(path).convert("RGB").save(path, dpi=(300, 300))
-
-def tag(ax, x, y, n):
-    """A numbered tag: a dark circle with a white bold number."""
-    ax.add_patch(Circle((x, y), 0.55, color=INK, zorder=20))
-    ax.text(x, y, str(n), color="white", ha="center", va="center", fontsize=10,
-            fontweight="bold", zorder=21)
-
 
 def road_30_top():
     th = math.radians(30.0)
@@ -75,10 +72,13 @@ def road_30_top():
     ax.plot([0, 6.0], [0, 0], color=INK, lw=0.9, zorder=4)
     ax.add_patch(Arc((0, 0), 9.0, 9.0, theta1=0, theta2=30, color=INK, lw=1.0, zorder=4))
     ax.text(4.9, 1.15, "30°", fontsize=11, zorder=8)
-    # Tags, each beside its own mark.
-    tag(ax, -1.6, 2.6, 1)                       # the AV at the start
-    tag(ax, e[19][0] - 1.6, e[19][1] + 1.6, 2)  # where it ends, d = 19 to 21 m
-    tag(ax, e[21][0] + 1.2, y0 + 1.0, 3)        # how far east, x
+    # Word labels, each beside its own mark.
+    ax.text(-3.2, 3.0, "the AV at the start", fontsize=10.5, zorder=8)
+    ax.annotate("where it ends:\n19 to 21 m along the road", xy=(e[19][0] - 0.3, e[19][1] + 0.3),
+                xytext=(5.0, 11.8), fontsize=10.5, color="#555555", va="center",
+                arrowprops=dict(arrowstyle="-", color="#555555", lw=0.8, shrinkA=2, shrinkB=3), zorder=8)
+    ax.text(e[21][0] + 0.4, y0 + 0.9, "how far east:\n16.45 to 18.19 m", fontsize=10.5, color=BLUE,
+            va="bottom", zorder=8)
     ax.set_xlim(-3.5, 24.5)
     ax.set_ylim(y0, 13.5)
     ax.set_aspect("equal")
@@ -192,7 +192,141 @@ def run2():
     print("run2: slope", round(k, 3), "chord", round((h(16.0) - he) / 6.0, 3), "new", round(new, 3))
 
 
+def plain(ax):
+    ax.grid(color="#e6e6e6", lw=0.8)
+    for s in ("top", "right"):
+        ax.spines[s].set_visible(False)
+
+
+def line_or_curve():
+    """Three AV models: one a straight line (a matrix can do it), two curves (no matrix can)."""
+    fig, axs = plt.subplots(1, 3, figsize=(10.0, 3.5))
+    d = np.linspace(0, 30, 200)
+    axs[0].plot(d, d * math.cos(math.radians(30)), color=INK, lw=2.4)
+    axs[0].set_title("A straight line", fontsize=12, fontweight="bold")
+    axs[0].set_xlabel("distance driven, $d$ (m)")
+    axs[0].set_ylabel("distance east, $x$ (m)")
+    axs[0].text(1.0, 24.0, "$x$ = $d$ cos 30° = 0.866 $d$", fontsize=10.5)
+    axs[0].set_ylim(0, 27)
+    th = np.linspace(-90, 90, 300)
+    axs[1].plot(th, 20 * np.cos(np.radians(th)), color=INK, lw=2.4)
+    axs[1].set_title("A curve", fontsize=12, fontweight="bold")
+    axs[1].set_xlabel("heading, $\\theta$ (deg)")
+    axs[1].set_ylabel("distance east, $x$ (m)")
+    axs[1].set_xticks([-90, -45, 0, 45, 90])
+    axs[1].text(-88, 23.0, "$x$ = 20 cos $\\theta$ (drive 20 m)", fontsize=10.5)
+    axs[1].set_ylim(0, 27)
+    x = np.linspace(0, 30, 300)
+    axs[2].plot(x, np.sqrt((20 - x) ** 2 + 100), color=INK, lw=2.4)
+    axs[2].set_title("A curve", fontsize=12, fontweight="bold")
+    axs[2].set_xlabel("AV's position along the road, $x$ (m)")
+    axs[2].set_ylabel("range to the sign, $r$ (m)")
+    axs[2].text(1.0, 24.0, "$r = \\sqrt{(20 - x)^2 + 10^2}$", fontsize=10.5)
+    axs[2].set_ylim(0, 27)
+    for ax in axs:
+        plain(ax)
+    fig.patch.set_facecolor("white")
+    fig.tight_layout()
+    save(fig, OUT / "line_or_curve.png")
+
+
+def bell(x, m, s):
+    return np.exp(-0.5 * ((x - m) / s) ** 2) / (s * math.sqrt(2 * math.pi))
+
+
+def three_steps(knows, func, gets):
+    """One row of three panels, read left to right: what the AV knows, the function, what you get."""
+    fig, axs = plt.subplots(1, 3, figsize=(10.0, 3.6), gridspec_kw={"width_ratios": [1, 1, 1]})
+    for ax, t in zip(axs, ("Step 1: what the AV knows", "Step 2: the function", "Step 3: what you get")):
+        ax.set_title(t, fontsize=12, fontweight="bold", loc="left")
+        plain(ax)
+    for ax in (axs[0], axs[2]):
+        ax.set_yticks([])
+        ax.spines["left"].set_visible(False)
+    return fig, axs
+
+
+def bell_line():
+    """d = 20 +- 1 m through x = d cos 30: a straight line, so the bell stays a bell."""
+    c = math.cos(math.radians(30))
+    fig, axs = three_steps(None, None, None)
+    d = np.linspace(16, 24, 300)
+    axs[0].fill_between(d, bell(d, 20, 1), color=GRAY, alpha=0.3, lw=0)
+    axs[0].plot(d, bell(d, 20, 1), color=INK, lw=2)
+    axs[0].axvspan(19, 21, color=GRAY, alpha=0.25, lw=0)
+    axs[0].set_xlabel("distance driven, $d$ (m)")
+    axs[0].text(16.2, 0.36, "$d$ = 20 ± 1 m", fontsize=10.5)
+    axs[0].text(20, 0.43, "19 to 21 m", fontsize=10, color="#555555", ha="center")
+    axs[0].set_ylim(0, 0.46)
+    axs[1].plot(d, c * d, color=INK, lw=2.4)
+    axs[1].axvspan(19, 21, color=GRAY, alpha=0.25, lw=0)
+    axs[1].axhspan(19 * c, 21 * c, color=BLUE, alpha=0.2, lw=0)
+    axs[1].plot([20, 20, 16], [12.5, 20 * c, 20 * c], color=INK, lw=0.9, ls=(0, (1, 2)))
+    axs[1].set_xlim(16, 24)
+    axs[1].set_ylim(12.5, 21.5)
+    axs[1].set_xlabel("distance driven, $d$ (m)")
+    axs[1].set_ylabel("distance east, $x$ (m)")
+    axs[1].text(16.3, 20.4, "$x$ = $d$ cos 30°:\na straight line", fontsize=10.5)
+    x = np.linspace(13.5, 21, 300)
+    axs[2].fill_between(x, bell(x, 20 * c, c), color=BLUE, alpha=0.25, lw=0)
+    axs[2].plot(x, bell(x, 20 * c, c), color=BLUE, lw=2)
+    axs[2].axvspan(19 * c, 21 * c, color=BLUE, alpha=0.15, lw=0)
+    axs[2].set_xlabel("distance east, $x$ (m)")
+    axs[2].text(13.6, 0.52, "$x$ = 17.32 ± 0.87 m:\nstill a bell curve", fontsize=10.5, color=BLUE, va="top")
+    axs[2].text(20 * c, 0.03, "16.45 to\n18.19 m", fontsize=10, color=BLUE, ha="center", va="bottom")
+    axs[2].set_ylim(0, 0.55)
+    fig.patch.set_facecolor("white")
+    fig.tight_layout()
+    save(fig, OUT / "bell_line.png")
+    print("bell_line: x band", round(19 * c, 2), round(21 * c, 2))
+
+
+def bell_curve():
+    """theta = 30 +- 12 deg through x = 20 cos theta: a curve, so the output is lopsided."""
+    fig, axs = three_steps(None, None, None)
+    th = np.linspace(-10, 70, 300)
+    lo, hi = 20 * math.cos(math.radians(42)), 20 * math.cos(math.radians(18))
+    axs[0].fill_between(th, bell(th, 30, 12), color=GRAY, alpha=0.3, lw=0)
+    axs[0].plot(th, bell(th, 30, 12), color=INK, lw=2)
+    axs[0].axvspan(18, 42, color=GRAY, alpha=0.25, lw=0)
+    axs[0].set_xlabel("heading, $\\theta$ (deg)")
+    axs[0].text(-9, 0.0385, "$\\theta$ = 30° ± 12°", fontsize=10.5)
+    axs[0].text(30, 0.043, "18° to 42°", fontsize=10, color="#555555", ha="center")
+    axs[0].set_ylim(0, 0.046)
+    axs[1].plot(th, 20 * np.cos(np.radians(th)), color=INK, lw=2.4)
+    axs[1].axvspan(18, 42, color=GRAY, alpha=0.25, lw=0)
+    axs[1].axhspan(lo, hi, color=BLUE, alpha=0.2, lw=0)
+    x30 = 20 * math.cos(math.radians(30))
+    axs[1].plot([30, 30, -10], [6, x30, x30], color=INK, lw=0.9, ls=(0, (1, 2)))
+    axs[1].set_xlim(-10, 70)
+    axs[1].set_ylim(6, 21.5)
+    axs[1].set_xlabel("heading, $\\theta$ (deg)")
+    axs[1].set_ylabel("distance east, $x$ (m)")
+    axs[1].text(-8, 7.0, "$x$ = 20 cos $\\theta$:\na curve", fontsize=10.5)
+    rng = np.random.default_rng(818)
+    xs = 20 * np.cos(np.radians(rng.normal(30, 12, 400_000)))
+    mean = float(xs.mean())
+    axs[2].hist(xs, bins=np.arange(6, 20.25, 0.25), density=True, color=BLUE, alpha=0.35,
+                edgecolor=BLUE, lw=0.6)
+    axs[2].axvspan(lo, hi, color=BLUE, alpha=0.12, lw=0)
+    axs[2].axvline(mean, color=INK, lw=1.6)
+    axs[2].axvline(x30, color=INK, lw=1.2, ls=(0, (3, 2)))
+    axs[2].set_xlim(6, 21)
+    axs[2].set_ylim(0, 0.42)
+    axs[2].set_xlabel("distance east, $x$ (m)")
+    axs[2].text(6.3, 0.40, "lopsided:\nnot a bell curve", fontsize=10.5, color=BLUE, va="top")
+    label(axs[2], (mean, 0.25), f"its mean, {mean:.2f} m", (7.0, 0.25))
+    label(axs[2], (x30, 0.16), f"20 cos 30° = {x30:.2f} m", (7.0, 0.16))
+    fig.patch.set_facecolor("white")
+    fig.tight_layout()
+    save(fig, OUT / "bell_curve.png")
+    print("bell_curve: mean", round(mean, 3), "x band", round(lo, 2), round(hi, 2))
+
+
 if __name__ == "__main__":
+    line_or_curve()
     road_30_top()
+    bell_line()
+    bell_curve()
     run1()
     run2()

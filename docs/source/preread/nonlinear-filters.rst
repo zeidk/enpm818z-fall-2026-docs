@@ -63,58 +63,110 @@ covered by making :math:`Q` bigger. Knowing :math:`Q` and :math:`R` has a
 Matrices can only scale and add
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The Kalman filter runs on matrices. A matrix does two things: it **scales**
-numbers and **adds** them. That is enough for a straight-line model, and
-not for an AV that turns.
+Every step of the Kalman filter multiplies the state by a fixed matrix. A
+matrix does two things: it **scales** each number in the state by a fixed
+amount, and it **adds** the results. So each output is a fixed number times
+each state value, added up. Plot one output against one state value and you
+always get a straight line. Some of an AV's models are straight lines. Many
+are curves.
 
-.. figure:: /_static/images/L3/ekf_story_1_matrix.png
-   :alt: Three plots. Tag 1: three straight lines through the origin, output against input from minus 2 to 2, with slopes 2, 0.5 and minus 1. Tag 2: an arch, x in meters against heading theta from minus 90 to 90 degrees, highest at 20 meters for theta 0 and 0 at both ends. Tag 3: a curve, range r in meters against AV position x from 0 to 30 meters, starting near 22.4 meters, lowest at 10 meters for x 20, and rising again to about 14 meters at x 30.
+.. figure:: /_static/images/filters/line_or_curve.png
+   :alt: Three plots side by side. Left, titled "A straight line": distance east x in meters against distance driven d in meters, from 0 to 30; a straight line from the origin up to about 26 meters, labeled x = d cos 30° = 0.866 d. Middle, titled "A curve": distance east x against heading theta in degrees, from minus 90 to 90; an arch that is 0 at both ends and 20 meters at 0 degrees, labeled x = 20 cos theta (drive 20 m). Right, titled "A curve": range to the sign r in meters against the AV's position along the road x, from 0 to 30 meters; a curve that starts near 22.4 meters, is lowest at 10 meters at x = 20, and rises to about 14 meters at x = 30, labeled r = square root of (20 minus x) squared plus 10 squared.
    :align: center
    :width: 100%
    :class: white-figure
 
-   **1** A matrix: times 2, times 0.5, times minus 1. Every output is a
-   straight line. **2** Turning: driving 20 m at heading :math:`\theta`
-   moves the AV :math:`x = 20\cos\theta` east, an arch. **3** The range to
-   a sign 10 m off the road, beside :math:`x = 20`:
-   :math:`r = \sqrt{(20 - x)^2 + 10^2}`, a curve.
+   One AV model a matrix can give, and two it cannot.
 
-No fixed matrix times the state gives a cosine or a square root of the
-state. So the plain Kalman filter breaks the moment the AV turns, or a
-camera measures a range.
+.. admonition:: Reading the figure
+   :class: tip
+
+   - **Left, a straight line.** The AV drives a distance :math:`d` along a
+     road at :math:`30^\circ` from east. How far east it gets is
+     :math:`x = d\cos 30^\circ = 0.866\,d`: a fixed number, 0.866, times
+     :math:`d`. A matrix can do that, so the Kalman filter can use this
+     model.
+   - **Middle, a curve.** The AV drives 20 m at heading :math:`\theta`, its
+     angle from east. How far east it gets is :math:`x = 20\cos\theta`: 20 m when it heads due
+     east (:math:`0^\circ`), 0 m when it heads due north or south
+     (:math:`\pm 90^\circ`).
+   - **Right, a curve.** A sign stands 10 m off the road, beside the point
+     :math:`x = 20` m. The camera measures the range :math:`r` from the AV to
+     the sign: :math:`r = \sqrt{(20 - x)^2 + 10^2}`. It is smallest, 10 m,
+     when the AV is beside the sign.
+
+No fixed number times :math:`\theta` gives a cosine, and no fixed number
+times :math:`x` gives that square root. So the plain Kalman filter breaks
+the moment the AV turns, or a camera measures a range. The next two sections
+show why: a straight line keeps the filter's uncertainty in the shape the
+filter needs, and a curve does not.
 
 
 A straight line keeps a bell curve a bell curve
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The Kalman filter describes every number it is unsure of with a **bell
+curve** (a normal distribution). Two numbers set a bell curve: its
+**mean**, the most likely value, under the peak, and its **spread**
+:math:`\sigma`, how wide it is. ":math:`20 \pm 1` m" is short for a bell
+curve with mean 20 m and :math:`\sigma = 1` m. The real value is within one
+:math:`\sigma` of the mean, here between 19 and 21 m, about 68% of the time.
+That every uncertainty is a bell curve is the filter's assumption, not a
+fact about the AV.
 
 The AV is on a road that runs at :math:`30^\circ` from east. Its heading is
 **known**, :math:`30^\circ`. The distance it drives is not: :math:`d = 20
 \pm 1` m. You track :math:`x`, how far east it gets.
 
 .. figure:: /_static/images/filters/road_30_top.png
-   :alt: A top view, east to the right and north up, both in meters. A gray road runs from the bottom left up to the right at 30 degrees from east. Tag 1: the AV, a black car at the origin, pointing along the road; an arc marks the 30 degree angle between east and the road. Tag 2: about 20 meters along the road, a faint gray copy of the car with a dark gray bar under it along the road, and a black dot in its middle. Two blue dashed lines drop from the ends of the gray bar to the east axis, where a blue bar spans about 16.5 to 18.2 meters. Tag 3 sits beside the blue bar. A dotted line drops from the black dot to the east axis at about 17.3 meters.
+   :alt: A top view, east to the right and north up, both in meters. A gray road runs from the bottom left up to the right at 30 degrees from east. A black car at the origin, labeled "the AV at the start", points along the road; an arc marks the 30 degree angle between east and the road. About 20 meters along the road, a faint gray copy of the car has a dark gray bar under it along the road and a black dot in its middle, labeled "where it ends: 19 to 21 m along the road". Two blue dashed lines drop from the ends of the gray bar to the east axis, where a blue bar is labeled "how far east: 16.45 to 18.19 m". A dotted line drops from the black dot to the east axis at about 17.3 meters.
    :align: center
    :width: 75%
    :class: white-figure
 
-   The scene from above. **1** The AV at the start, heading :math:`30^\circ`
-   from east. **2** Where it ends: somewhere on the gray stretch, 19 to 21 m
-   along the road (the faint AV is at 20 m). **3** How far east that is,
-   :math:`x = d\cos 30^\circ`: the blue stretch, from
-   :math:`19 \times 0.866 = 16.45` m to :math:`21 \times 0.866 = 18.19` m.
+   The road from above: where the AV starts, and where it can end.
 
-The next figure is not a picture of the road. It is a graph: the distance
-driven along the bottom, and :math:`x`, how far east, on the left.
+.. admonition:: Reading the figure
+   :class: tip
 
-.. figure:: /_static/images/L3/bell_1_line.png
-   :alt: A bell curve pushed through a straight line. Bottom: the input, distance driven d in meters from 16 to 24, a gray bell curve centered on 20. Top right: a straight line labeled d cos 30 degrees and "A straight line". Top left: the output, distance along x in meters, a blue bell curve centered near 17.3. A dotted guide runs from 20 up to the line and across to the output's peak. Readout: in: bell curve; out: bell curve, 17.32 m plus or minus 0.87 m.
+   - The black AV starts at the origin and heads along the gray road,
+     :math:`30^\circ` from east.
+   - It drives :math:`d = 20 \pm 1` m, so it most likely ends on the dark
+     gray stretch, 19 to 21 m along the road. The faint AV marks 20 m.
+   - The blue dashed lines drop the ends of that stretch onto the east axis.
+     How far east the AV ends is :math:`x = d\cos 30^\circ`: the blue
+     stretch, from :math:`19 \times 0.866 = 16.45` m to
+     :math:`21 \times 0.866 = 18.19` m.
+
+The next figure is not a picture of the road. It is three graphs: the bell
+curve for :math:`d`, the function :math:`x = d\cos 30^\circ`, and the bell
+curve that comes out for :math:`x`.
+
+.. figure:: /_static/images/filters/bell_line.png
+   :alt: Three plots side by side. Left, "Step 1: what the AV knows": a gray bell curve over distance driven d from 16 to 24 meters, peaked at 20, labeled d = 20 plus or minus 1 m, with a shaded stretch from 19 to 21 meters. Middle, "Step 2: the function": distance east x against distance driven d, a straight line labeled "x = d cos 30°: a straight line"; a gray vertical band from d = 19 to 21 and a blue horizontal band from x = 16.45 to 18.19 cross on the line; a dotted guide runs from d = 20 up to the line and across to x = 17.32. Right, "Step 3: what you get": a blue bell curve over distance east x from 13.5 to 21 meters, peaked near 17.3, labeled "x = 17.32 plus or minus 0.87 m: still a bell curve", with a shaded stretch labeled 16.45 to 18.19 m.
    :align: center
-   :width: 60%
+   :width: 100%
    :class: white-figure
 
-   **Bottom:** the input, the distance driven. **Top right:** the function,
-   :math:`x = d\cos 30^\circ`, a straight line in :math:`d`. **Top left:**
-   the output, still a bell curve.
+   A bell curve through a straight line stays a bell curve.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   Read the three panels left to right.
+
+   - **Step 1, what the AV knows:** the bell curve for the distance driven,
+     :math:`d = 20 \pm 1` m. The higher the curve above a distance, the more
+     likely that distance is. The shaded stretch is 19 to 21 m, one
+     :math:`\sigma` on each side of the mean.
+   - **Step 2, the function:** :math:`x = d\cos 30^\circ`, a straight line.
+     Follow the dotted line: :math:`d = 20` m gives :math:`x = 17.32` m. The
+     gray stretch of :math:`d` lands on the blue stretch of :math:`x`, 16.45
+     to 18.19 m, as in the top view.
+   - **Step 3, what you get:** the curve for :math:`x`. A straight line
+     multiplies every possible :math:`d` by the same number, 0.866, so every
+     part of the input curve shrinks by the same factor. The shape stays a
+     bell curve, 0.866 times as wide.
 
 The numbers, in two steps:
 
@@ -133,16 +185,30 @@ Same road, the other way round. The distance is **known**, 20 m. The
 heading is not: :math:`30^\circ \pm 12^\circ`. The :math:`12^\circ` is a
 value chosen for this example, large enough to show the effect.
 
-.. figure:: /_static/images/L3/bell_2_curve.png
-   :alt: A bell curve pushed through a curve. Bottom: the input, heading theta in degrees from about minus 10 to 70, a gray bell curve centered on 30. Top right: the curve 20 cos theta, highest at 20 meters at 0 degrees and falling to about 7 meters at 70 degrees, labeled "A curve". Top left: the output, a gray histogram that is lopsided: it piles up just under 20 meters and has a long tail down to about 8 meters. A solid line marks its mean, just below a dotted guide at 17.32 meters. Readout: out: lopsided, not a bell; mean 16.95 m; at 30 degrees: 17.32 m.
+.. figure:: /_static/images/filters/bell_curve.png
+   :alt: Three plots side by side. Left, "Step 1: what the AV knows": a gray bell curve over heading theta from minus 10 to 70 degrees, peaked at 30, labeled theta = 30° plus or minus 12°, with a shaded stretch labeled 18° to 42°. Middle, "Step 2: the function": distance east x against heading, the curve labeled "x = 20 cos theta: a curve", highest at 20 meters at 0 degrees and falling to about 7 meters at 70 degrees; a gray vertical band from 18 to 42 degrees and a blue horizontal band from about 14.9 to 19.0 meters cross on the curve; a dotted guide runs from 30 degrees up to the curve and across to 17.32 meters. Right, "Step 3: what you get": blue histogram bars over distance east x from about 7.5 to 20 meters, low on the left and highest between about 17.5 and 19.5 meters, cut off at 20, labeled "lopsided: not a bell curve". A solid vertical line is labeled "its mean, 16.95 m" and a dashed vertical line just to its right is labeled "20 cos 30° = 17.32 m".
    :align: center
-   :width: 60%
+   :width: 100%
    :class: white-figure
 
-   **Bottom:** the input, the heading. **Top right:** the function,
-   :math:`x = 20\cos\theta`, a curve. **Top left:** the output, lopsided.
-   Solid line: its mean, 16.95 m. Dotted line: the curve at
-   :math:`30^\circ`, 17.32 m.
+   A bell curve through a curve comes out lopsided.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   - **Step 1, what the AV knows:** the bell curve for the heading,
+     :math:`30^\circ \pm 12^\circ`. The shaded stretch is :math:`18^\circ` to
+     :math:`42^\circ`.
+   - **Step 2, the function:** :math:`x = 20\cos\theta`, a curve. The dotted
+     line: :math:`30^\circ` gives 17.32 m. The gray stretch of headings lands
+     on the blue stretch of :math:`x`, from :math:`20\cos 42^\circ = 14.86` m
+     to :math:`20\cos 18^\circ = 19.02` m. That stretch is not centered on
+     17.32 m: it reaches 2.46 m below and only 1.70 m above, because the
+     curve is flatter at small headings.
+   - **Step 3, what you get:** 400,000 random headings from the Step 1 curve,
+     each pushed through :math:`20\cos\theta`. The bars count where they
+     land. The solid line is their mean, 16.95 m. The dashed line is the
+     curve at the mean heading, :math:`20\cos 30^\circ = 17.32` m.
 
 The output is not a bell curve. It piles up just under 20 m, because no
 heading takes the AV farther east than 20 m, and it has a long tail below.
@@ -305,9 +371,19 @@ The surprise is in meters of **range**. The filter moves the AV in meters of
    :width: 85%
    :class: white-figure
 
-   Run 1, close up. Read it from the green dot: down by the surprise, then
-   right by the move, to the green cross. The purple triangle is the slope:
-   1 m ahead, 0.41 m less range.
+   Run 1, close up: a good estimate lands near the AV.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   - Start at the green dot, the estimate: 15.5 m, where the filter expects
+     a range of 10.97 m.
+   - Go down by the surprise, the black arrow, to the camera's reading, the
+     dotted line at 10.77 m: 0.20 m less range.
+   - The purple triangle is the slope of the tangent: 1 m ahead, 0.41 m less
+     range.
+   - Go right by the move, the green arrow: :math:`0.20 / 0.41 = 0.48` m.
+     The green cross is the new estimate, 15.98 m. The AV is really at 16 m.
 
 The arithmetic, in four steps:
 
@@ -340,9 +416,19 @@ Same AV, same reading, 10.77 m. This time the estimate is
    :width: 85%
    :class: white-figure
 
-   Run 2. The dashed tangent falls faster than the real curve does between
-   10 m and 16 m (the dotted line), so it reaches the camera's reading too
-   soon: at 14.77 m, 1.23 m short of the AV.
+   Run 2: a poor estimate falls short.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   - The orange dot is the estimate, 10 m, where the filter expects 14.14 m.
+     The camera reads 10.77 m, the dotted line: 3.37 m less range, the black
+     arrow.
+   - The dashed purple line is the tangent at 10 m: 0.71 m less range per
+     meter. The dotted orange line is the real drop from 10 m to 16 m: 0.56 m
+     per meter.
+   - The tangent falls faster than the real curve, so it reaches the reading
+     too soon: at the orange cross, 14.77 m, 1.23 m short of the AV at 16 m.
 
 The arithmetic, in four steps:
 

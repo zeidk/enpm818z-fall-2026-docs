@@ -5,10 +5,26 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.21.1: Clearer EKF Figures in the Filters Reading (2026-11-01)
+.. dropdown:: v2.22.0: Filters Reading, First Figures Redrawn (2026-11-01)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Pre-Read
+
+   - **Nonlinear Filters reading:** the first four figures are redrawn with
+     words on the figure instead of numbered tags: why a matrix gives only
+     straight lines, the road from above, and a bell curve pushed through a
+     straight line and through a curve, read in three steps. Each figure now
+     has a short caption and a "Reading the figure" box that explains it,
+     and so do the run 1 and run 2 figures.
+   - **What a bell curve is:** the reading now says what ":math:`20 \pm 1`
+     m" means (a bell curve with its mean and spread) before it uses one.
+
+
+.. dropdown:: v2.21.1: Clearer EKF Figures in the Filters Reading (2026-11-01)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Pre-Read
 
