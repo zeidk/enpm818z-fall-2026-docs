@@ -5,10 +5,22 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.21.0: Reading on the EKF, UKF and Particle Filter (2026-11-01)
+.. dropdown:: v2.21.1: Clearer EKF Figures in the Filters Reading (2026-11-01)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Pre-Read
+
+   - **Nonlinear Filters reading:** a new top view shows the AV on the road at
+     30° from east and where it can end up. The close-up of run 1 and the plot
+     of run 2 are redrawn with each line and point labeled in words, so you
+     can read them without the caption.
+
+
+.. dropdown:: v2.21.0: Reading on the EKF, UKF and Particle Filter (2026-11-01)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Pre-Read
 

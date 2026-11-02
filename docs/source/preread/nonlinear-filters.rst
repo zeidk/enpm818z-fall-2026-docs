@@ -91,6 +91,21 @@ The AV is on a road that runs at :math:`30^\circ` from east. Its heading is
 **known**, :math:`30^\circ`. The distance it drives is not: :math:`d = 20
 \pm 1` m. You track :math:`x`, how far east it gets.
 
+.. figure:: /_static/images/filters/road_30_top.png
+   :alt: A top view, east to the right and north up, both in meters. A gray road runs from the bottom left up to the right at 30 degrees from east. Tag 1: the AV, a black car at the origin, pointing along the road; an arc marks the 30 degree angle between east and the road. Tag 2: about 20 meters along the road, a faint gray copy of the car with a dark gray bar under it along the road, and a black dot in its middle. Two blue dashed lines drop from the ends of the gray bar to the east axis, where a blue bar spans about 16.5 to 18.2 meters. Tag 3 sits beside the blue bar. A dotted line drops from the black dot to the east axis at about 17.3 meters.
+   :align: center
+   :width: 75%
+   :class: white-figure
+
+   The scene from above. **1** The AV at the start, heading :math:`30^\circ`
+   from east. **2** Where it ends: somewhere on the gray stretch, 19 to 21 m
+   along the road (the faint AV is at 20 m). **3** How far east that is,
+   :math:`x = d\cos 30^\circ`: the blue stretch, from
+   :math:`19 \times 0.866 = 16.45` m to :math:`21 \times 0.866 = 18.19` m.
+
+The next figure is not a picture of the road. It is a graph: the distance
+driven along the bottom, and :math:`x`, how far east, on the left.
+
 .. figure:: /_static/images/L3/bell_1_line.png
    :alt: A bell curve pushed through a straight line. Bottom: the input, distance driven d in meters from 16 to 24, a gray bell curve centered on 20. Top right: a straight line labeled d cos 30 degrees and "A straight line". Top left: the output, distance along x in meters, a blue bell curve centered near 17.3. A dotted guide runs from 20 up to the line and across to the output's peak. Readout: in: bell curve; out: bell curve, 17.32 m plus or minus 0.87 m.
    :align: center
@@ -284,15 +299,15 @@ Run 1: a good estimate lands near the truth
 The surprise is in meters of **range**. The filter moves the AV in meters of
 **position**. The slope of the tangent converts one into the other.
 
-.. figure:: /_static/images/L3/ekf_linearize_1b_zoom.png
-   :alt: A close-up of run 1, 14.5 to 17 meters along the road and 10.3 to 11.3 meters of range. The black curve and a dashed purple tangent through a green dot at 15.5 meters nearly overlap. Tag 1: a purple slope triangle from the dot, 1 meter to the right and about 0.41 meters down. Tag 2: a short black arrow down from the dot, near 10.97 meters, to a dotted reading line at 10.77 meters. Tag 3: a green arrow along the reading line from 15.5 to about 16. Tag 4: a green cross where the tangent meets the reading line, at about 15.98. Tag 5: a dotted vertical line at 16 meters, where the AV really is.
+.. figure:: /_static/images/filters/ekf_run1.png
+   :alt: A close-up of run 1. The horizontal axis is the AV's position along the road, x, from 14 to 17 meters; the vertical axis is the range to the landmark, from 10.3 to 11.4 meters. A thick black curve, labeled the real range h(x), falls from left to right. A dashed purple line, labeled the tangent at 15.5 m, touches the curve at a green dot labeled "the estimate, 15.5 m: the filter expects 10.97 m"; the two lines almost overlap. A purple right triangle above the dot is 1 m wide and 0.41 m tall. A dotted gray line at 10.77 m is labeled "the camera reads 10.77 m". A black arrow points down from the dot to that line, labeled "surprise: 0.20 m less range". A green arrow points right along it, labeled "move: 0.20 / 0.41 = 0.48 m", and ends at a green cross labeled "new estimate, 15.98 m", where the tangent meets the reading line. The cross sits almost on the black curve at 16 m, labeled "the AV really is at 16 m".
    :align: center
    :width: 85%
    :class: white-figure
 
-   **1** The slope at :math:`\hat{x}`: 1 m ahead, 0.41 m less range.
-   **2** The surprise: 0.20 m less range. **3** The move. **4** The new
-   estimate. **5** Where the AV really is, 16 m.
+   Run 1, close up. Read it from the green dot: down by the surprise, then
+   right by the move, to the green cross. The purple triangle is the slope:
+   1 m ahead, 0.41 m less range.
 
 The arithmetic, in four steps:
 
@@ -319,16 +334,15 @@ Run 2: a poor estimate falls short
 Same AV, same reading, 10.77 m. This time the estimate is
 :math:`\hat{x} = 10` m, 6 m behind the AV.
 
-.. figure:: /_static/images/L3/ekf_linearize_2_poor.png
-   :alt: The range to the landmark in meters against the AV's position along the road, 4 to 20 meters. Tag 1: a dotted horizontal line at 10.77 meters, the camera's reading. Tag 2: an orange dot on the curve at x 10, near 14.14 meters. Tag 3: a long black arrow down from the orange dot to the reading line. Tag 4: a dashed purple tangent through the orange dot, which runs below the curve to the right of it. Tag 5: an orange cross where the tangent meets the reading line, near 14.8 meters, with a short two-headed arrow to a black dot on the curve at 16. Tag 6: a dotted vertical line at 16 meters, where the AV really is.
+.. figure:: /_static/images/filters/ekf_run2.png
+   :alt: Run 2. The horizontal axis is the AV's position along the road, x, from 4 to 20 meters; the vertical axis is the range to the landmark, from 10 to 19 meters. A thick black curve, labeled the real range h(x), falls from left to right and flattens near 20 m. An orange dot on the curve at 10 m is labeled "the estimate, 10 m: the filter expects 14.14 m". A dotted gray line at 10.77 m is labeled "the camera reads 10.77 m". A long black arrow points down from the dot to that line, labeled "surprise: 3.37 m less range". A dashed purple line through the dot is labeled "the tangent at 10 m: 0.71 m less range per meter"; it runs below the curve to the right of the dot. An orange dotted line from the dot to a black dot on the curve at 16 m is labeled "the real drop from 10 m to 16 m: 0.56 m per meter". The tangent meets the reading line at an orange cross labeled "new estimate, 14.77 m". A two-headed orange arrow from the cross to the black dot, labeled "the AV really is at 16 m", is labeled "1.23 m short".
    :align: center
    :width: 85%
    :class: white-figure
 
-   Run 2. **1** The camera reads 10.77 m. **2** At :math:`\hat{x} = 10` m
-   the filter expects 14.14 m. **3** The surprise. **4** The tangent at
-   10 m. **5** Where the tangent meets the reading, 14.77 m, 1.23 m short of
-   **6**, the AV at 16 m.
+   Run 2. The dashed tangent falls faster than the real curve does between
+   10 m and 16 m (the dotted line), so it reaches the camera's reading too
+   soon: at 14.77 m, 1.23 m short of the AV.
 
 The arithmetic, in four steps:
 
