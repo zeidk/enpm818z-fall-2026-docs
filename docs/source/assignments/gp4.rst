@@ -43,9 +43,9 @@ GP4: Planning & Control
           and `ads_msgs <https://github.com/rubixcubic/enpm818z-fall-2026-carla-ros/tree/main/ads_msgs>`__
           (now with ``VehicleCmd``) in the course repository
       * - **Team Size**
-        - 3 students, the GP1 team
+        - Your GP2 team (three students in most teams)
       * - **Submission**
-        - Canvas + the ``gp4`` branch of your GP1 repository
+        - Canvas + the ``gp4`` branch of your team's repository
 
 
 .. admonition:: AI Disclosure (required)

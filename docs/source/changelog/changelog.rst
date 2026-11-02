@@ -5,10 +5,20 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.24.1: Filters Reading, the Range Example Repeated (2026-11-02)
+.. dropdown:: v2.24.2: GP3 Team Size (2026-11-02)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Assignments
+
+   - **GP3:** the team is your GP2 team, and you submit on the ``gp3`` branch
+     of your team's repository. Most teams are three students.
+
+
+.. dropdown:: v2.24.1: Filters Reading, the Range Example Repeated (2026-11-02)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Pre-Read
 
