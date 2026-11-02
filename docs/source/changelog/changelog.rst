@@ -5,10 +5,23 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.24.2: GP3 Team Size (2026-11-02)
+.. dropdown:: v2.25.0: Filters Reading, the UKF Steps Rewritten (2026-11-02)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Pre-Read
+
+   - **Nonlinear Filters reading, "Place, push, rebuild":** rewritten with the
+     heading example. It shows where each sigma point and weight comes from,
+     checks that the points keep the bell curve's mean and spread, and works
+     out the UKF's answer, 16.94 m plus or minus 2.12 m, step by step. The
+     symbols come last, in a box.
+
+
+.. dropdown:: v2.24.2: GP3 Team Size (2026-11-02)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Assignments
 

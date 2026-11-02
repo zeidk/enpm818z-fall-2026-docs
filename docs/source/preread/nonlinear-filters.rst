@@ -1226,18 +1226,9 @@ bell curve and pushes each through the real curve.
      their weighted mean and weighted spread: :math:`16.94 \pm 2.12` m,
      against a true :math:`16.95 \pm 2.11` m.
 
-The arithmetic, in three steps:
-
-1. **Place.** The middle, :math:`30^\circ`, and one step to each side,
-   :math:`9.2^\circ` and :math:`50.8^\circ`.
-2. **Push** each through the real curve: :math:`20\cos 9.2^\circ =
-   19.74` m, :math:`20\cos 30^\circ = 17.32` m,
-   :math:`20\cos 50.8^\circ = 12.64` m.
-3. **Average** with the weights: :math:`\tfrac{2}{3} \times 17.32 +
-   \tfrac{1}{6} \times 19.74 + \tfrac{1}{6} \times 12.64 = 16.94` m. The
-   weighted spread gives :math:`\pm 2.12` m.
-
-The truth, from 400,000 samples, is :math:`16.95 \pm 2.11` m. The EKF said
+The UKF gives :math:`16.94 \pm 2.12` m; `Place, push, rebuild`_ below
+shows where each number comes from. The truth, from 400,000 samples, is
+:math:`16.95 \pm 2.11` m. The EKF said
 :math:`17.32 \pm 2.09` m. Both filters cheat to get a bell curve back, in
 opposite places: **the EKF approximates the curve; the UKF approximates the
 bell curve.**
@@ -1275,56 +1266,70 @@ Sigma points
 Place, push, rebuild
 ~~~~~~~~~~~~~~~~~~~~
 
-The UKF predict step has three parts:
+Every UKF predict step does the three things you just did with three
+headings. Here they are again, with the rule behind each number. The
+heading example has one uncertain number, the heading
+:math:`\theta = 30^\circ \pm 12^\circ`.
 
-1. **Place** :math:`2n + 1` sigma points :math:`\chi_i`: the mean, plus one
-   step out and one step back along each of :math:`n` directions. Point
-   :math:`i` gets a weight :math:`W_i`; the weights add to 1.
-2. **Push** each one through the real motion model. :math:`\mathcal{Y}_i`
-   is where point :math:`i` lands:
+**Step 1: Place the points.**
 
-   .. math::
+- The first point is the estimate itself: :math:`30^\circ`.
+- The other points sit one step on each side of it. One step is
+  :math:`\sqrt{3}` times the spread, about :math:`1.7\sigma`:
+  :math:`\sqrt{3} \times 12^\circ = 20.785^\circ`. So the two other
+  points are :math:`20.785^\circ` more, :math:`50.785^\circ`, and
+  :math:`20.785^\circ` less, :math:`9.215^\circ`. (The arithmetic on this
+  page keeps three decimals so you can check it by hand; the figure rounds
+  to :math:`50.8^\circ` and :math:`9.2^\circ`.)
+- Each point gets a **weight**: how much it counts when you average. The
+  middle point gets 2/3 and each side point gets 1/6. The weights add to 1:
+  :math:`2/3 + 1/6 + 1/6 = 1`.
 
-      \mathcal{Y}_i = f(\chi_i, \mathbf{u})
+The step and the weights are chosen so that the three points have the same
+mean and the same spread as the bell curve they stand for. You can check
+it:
 
-3. **Rebuild** the prediction from where they land:
+1. Weighted mean: :math:`\tfrac{2}{3} \times 30 + \tfrac{1}{6} \times
+   50.785 + \tfrac{1}{6} \times 9.215 = 20 + 8.464 + 1.536 = 30^\circ`.
+2. Weighted spread: each side point is :math:`\sqrt{3} \times 12^\circ`
+   from the mean, and :math:`(\sqrt{3} \times 12)^2 = 3 \times 144 = 432`.
+   The middle point is :math:`0^\circ` from it. So
+   :math:`\tfrac{1}{6} \times 432 + \tfrac{1}{6} \times 432 = 144`, and
+   :math:`\sqrt{144} = 12^\circ`: the input's :math:`\sigma`.
 
-   .. math::
+**Step 2: Push each point through the real model.** No tangent: call the
+real function once per point.
 
-      \hat{\mathbf{x}}^{-} = \sum_i W_i\,\mathcal{Y}_i
-      \qquad
-      P^{-} = \sum_i W_i\,(\mathcal{Y}_i - \hat{\mathbf{x}}^{-})
-              (\mathcal{Y}_i - \hat{\mathbf{x}}^{-})^\top + Q_k
+- :math:`20\cos 30^\circ = 17.321` m
+- :math:`20\cos 50.785^\circ = 12.645` m
+- :math:`20\cos 9.215^\circ = 19.742` m
 
-   For each point, take how far it landed from the new mean, multiply that
-   difference by itself (the matrix version of squaring it), weight it, and
-   add them up. Then add :math:`Q_k`, because the model still makes its
-   usual error each step.
+**Step 3: Rebuild a bell curve from where they land.**
 
-**Step length.** The points sit at
+1. The new estimate is the weighted mean of the landing spots:
+   :math:`\tfrac{2}{3} \times 17.321 + \tfrac{1}{6} \times 12.645 +
+   \tfrac{1}{6} \times 19.742 = 11.547 + 2.107 + 3.290 = 16.944` m, about
+   16.94 m.
+2. The new spread: take how far each landing spot is from 16.944 m, square
+   it, weight it, and add.
 
-.. math::
+   - 17.321 m is 0.377 m more: :math:`0.377^2 \times \tfrac{2}{3} = 0.095`.
+   - 12.645 m is 4.299 m less: :math:`4.299^2 \times \tfrac{1}{6} = 3.080`.
+   - 19.742 m is 2.798 m more: :math:`2.798^2 \times \tfrac{1}{6} = 1.305`.
 
-   \chi_0 = \hat{\mathbf{x}} \qquad
-   \chi_i = \hat{\mathbf{x}} + \sqrt{n + \kappa}\;L_i \qquad
-   \chi_{n+i} = \hat{\mathbf{x}} - \sqrt{n + \kappa}\;L_i
+   The sum is 4.480, and :math:`\sqrt{4.480} = 2.117` m, about 2.12 m.
+3. In a real filter, add the model's own error, :math:`Q_k`, to the spread,
+   because the model is never exact. (The heading example is a single
+   function call, so it has no :math:`Q_k`.)
 
-:math:`L_i` is column :math:`i` of :math:`L`, the **matrix square root** of
-:math:`P`: the matrix with :math:`LL^\top = P`. Each column is one direction
-to step in, already :math:`1\sigma` long. Code gets :math:`L` with one call,
-named **Cholesky**. When :math:`P` is diagonal, the columns are the axes of
-the ellipse. :math:`\kappa` sets how far out the points sit. The usual
-choice is :math:`n + \kappa = 3`, so one step is :math:`\sqrt{3} \approx
-1.7` :math:`\sigma`. That is where the what-ifs came from:
-:math:`\sqrt{3} \times 12^\circ = 20.8^\circ`, about :math:`21^\circ`, and
-:math:`\sqrt{3} \times 0.5 = 0.87` m.
+The result is the bell curve :math:`16.94 \pm 2.12` m from the figure
+above.
 
-**Weights.**
-
-.. math::
-
-   W_0 = \frac{\kappa}{n + \kappa} \qquad\qquad
-   W_i = \frac{1}{2(n + \kappa)} \quad \text{for the other } 2n
+**More than one number.** A state with :math:`n` numbers gets one middle
+point and two points per number, :math:`2n + 1` in all, as the table above
+shows. Each pair steps out along one direction of the uncertainty ellipse,
+one step each way. The step stays :math:`\sqrt{3}` times the spread in that
+direction. The weights change with :math:`n` so that they still add to 1:
 
 .. list-table::
    :widths: 34 16 20 30
@@ -1332,26 +1337,45 @@ choice is :math:`n + \kappa = 3`, so one step is :math:`\sqrt{3} \approx
    :class: compact-table
 
    * - Case
-     - :math:`\kappa`
-     - Center
+     - Points
+     - Middle point
      - Each other point
    * - Heading example, :math:`n = 1`
-     - 2
+     - 3
      - 2/3
      - 1/6 (two)
-   * - Drive, :math:`n = 2`
-     - 1
+   * - Drive below, :math:`n = 2`
+     - 5
      - 1/3
      - 1/6 (four)
    * - Hands-on, :math:`n = 3`
-     - 0
+     - 7
      - 0
      - 1/6 (six)
 
-All three keep :math:`n + \kappa = 3`. With :math:`n = 3`, the center point
-is still placed, but its weight is 0. Many libraries use a scaled version
-with three settings, :math:`\alpha`, :math:`\beta` and :math:`\kappa`: same
-idea, different weights, so their numbers will not match this table.
+In every row the weights add to 1. With :math:`n = 3` the middle point is
+still placed, but its weight is 0. Many libraries use a scaled version with
+three settings, :math:`\alpha`, :math:`\beta` and :math:`\kappa`: the same
+three steps with other weights, so their numbers will not match this table.
+
+.. admonition:: The same steps in symbols
+   :class: note
+
+   - :math:`\chi_i` is sigma point :math:`i`, :math:`W_i` its weight, and
+     :math:`\mathcal{Y}_i = f(\chi_i, \mathbf{u})` where it lands.
+   - Place: :math:`\chi_0 = \hat{\mathbf{x}}`,
+     :math:`\chi_i = \hat{\mathbf{x}} + \sqrt{n + \kappa}\,L_i`,
+     :math:`\chi_{n+i} = \hat{\mathbf{x}} - \sqrt{n + \kappa}\,L_i`.
+     :math:`L_i` is column :math:`i` of :math:`L`, the matrix with
+     :math:`LL^\top = P` (code gets it with one call, **Cholesky**). Each
+     column is one direction of the ellipse, :math:`1\sigma` long. The
+     usual choice is :math:`n + \kappa = 3`, the :math:`\sqrt{3}` above.
+   - Weights: :math:`W_0 = \kappa / (n + \kappa)`, and
+     :math:`W_i = 1 / (2(n + \kappa))` for the other :math:`2n`.
+   - Rebuild: :math:`\hat{\mathbf{x}}^{-} = \sum_i W_i\,\mathcal{Y}_i` and
+     :math:`P^{-} = \sum_i W_i\,(\mathcal{Y}_i - \hat{\mathbf{x}}^{-})
+     (\mathcal{Y}_i - \hat{\mathbf{x}}^{-})^\top + Q_k`. The product of a
+     difference with itself is the matrix version of squaring it.
 
 
 The same drive, done with five points
