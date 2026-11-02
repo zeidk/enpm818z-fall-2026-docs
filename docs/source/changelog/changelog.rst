@@ -5,10 +5,27 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.20.0: GP3 Fusion and Localization (2026-11-01)
+.. dropdown:: v2.21.0: Reading on the EKF, UKF and Particle Filter (2026-11-01)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Pre-Read
+
+   - **New reading: Nonlinear Filters, EKF, UKF and Particle Filter.** Read it
+     before GP3 Task 2. It shows why the Kalman filter breaks on a curve, how
+     the EKF uses the Jacobian, how to check a Jacobian with finite differences,
+     how the UKF and the particle filter work without one, and how to check a
+     filter with NIS. It follows the Lecture 3 slides and figures.
+
+   .. rubric:: Assignments
+
+   - **GP3:** Task 2 points to the new reading.
+
+
+.. dropdown:: v2.20.0: GP3 Fusion and Localization (2026-11-01)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Assignments
 

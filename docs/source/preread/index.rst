@@ -32,6 +32,10 @@ That material lives here. **Each page states when to read it.** Most are read
      - Before GP2
      - IoU, precision and recall, AP, mAP\@0.5 and mAP\@0.5:0.95, ID
        switches and MOTA, one step at a time. Builds on L4.
+   * - :doc:`Nonlinear Filters: EKF, UKF and Particle Filter </preread/nonlinear-filters>`
+     - Before GP3
+     - The EKF that GP3 Task 2 asks for, step by step, then the UKF and the
+       particle filter for when it fails, and the NIS check. Builds on L3.
    * - :doc:`SLAM with a LiDAR </preread/slam-lidar>`
      - After L6
      - The SLAM problem, EKF-SLAM, FastSLAM and grid maps, graph SLAM with
@@ -58,6 +62,7 @@ That material lives here. **Each page states when to read it.** Most are read
    dev-environment
    simulation
    detector-grading
+   nonlinear-filters
    slam-lidar
    slam-visual
    foxglove

@@ -490,6 +490,9 @@ GP3 is worth **100 points**. Run every command from the package root,
    :icon: goal
    :class-container: sd-border-primary
 
+   If the EKF is new to you, read
+   :doc:`Nonlinear Filters </preread/nonlinear-filters>` first.
+
    The EKF estimates your car's state on the map:
 
    .. math::
