@@ -298,6 +298,28 @@ At the current estimate, draw the tangent. For the next step, use the
 tangent in place of the curve. At the next step, draw a new tangent at the
 new estimate.
 
+The example is the range to a sign from the first figure on this page,
+repeated here.
+
+.. figure:: /_static/images/filters/sign_range.png
+   :alt: Two panels. Left, "Measure the range to a sign", a view from above in meters, east and north: a gray road runs east; a black car facing east sits on it at x = 16 meters, measured by an arrow labeled "x = 16 m" from the start of the road; a black square labeled "the sign" stands 10 meters north of the road at x = 20, with a dotted line labeled 10 m; a line labeled r joins the car to the sign, and the text reads "the AV at x: r = 10.77 m". Right, "A curve": range to the sign r in meters against the AV's position along the road x from 0 to 30 meters; a black curve starts near 22.4 meters, is lowest, 10 meters, at x = 20 and rises to about 14 meters at x = 30, labeled r = square root of (20 minus x) squared plus 10 squared; a blue dot on it is labeled "x = 16 m: r = 10.77 m".
+   :align: center
+   :width: 85%
+   :class: white-figure
+
+   The range to the sign: the scene from above, and its graph.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   - **Left:** the AV drives east on a straight road. A sign stands 10 m off
+     the road, beside :math:`x = 20` m. The camera measures the range
+     :math:`r` from the AV to the sign. From :math:`x = 16` m it reads
+     10.77 m.
+   - **Right:** :math:`r` for every position :math:`x`. The blue dot is the
+     scene on the left. The graph is a curve, so the EKF replaces it with a
+     tangent, one step at a time, as the next figure shows.
+
 .. figure:: /_static/images/filters/ekf_tangent_steps.png
    :alt: A graph of the range to the sign r in meters against the AV's position along the road x in meters, from 0 to 24. A thick black curve, labeled "the real range, r", falls from about 22.4 meters at x = 0, is lowest, 10 meters, at x = 20, and rises after that. Purple dots on the curve at 4, 9 and 14 meters are labeled "step 1: the estimate, 4 m, and the tangent there", and the same for step 2 at 9 m and step 3 at 14 m. Through each dot a short, wide, light purple band lies along the curve. A dashed purple line, labeled "the tangent at 4 m, drawn long", starts at the first dot and runs straight on, falling farther and farther below the curve. At x = 18 it ends at a purple dot, and a two-headed black arrow from that dot up to the curve is labeled "at 18 m it says 7.00 m; the real range is 10.20 m".
    :align: center
@@ -309,9 +331,9 @@ new estimate.
 .. admonition:: Reading the figure
    :class: tip
 
-   - The black curve is the range to the sign, :math:`r`, from the right
-     panel of the first figure on this page. The three estimates, 4, 9 and
-     14 m, are values chosen for this picture.
+   - The black curve is the range to the sign, :math:`r`, from the figure
+     above. The three estimates, 4, 9 and 14 m, are values chosen for this
+     picture.
    - **Step 1:** the estimate is 4 m. The EKF draws the tangent there, the
      short purple band, and uses it in place of the curve for that step.
    - **Steps 2 and 3:** the estimate has moved to 9 m, then to 14 m. Each

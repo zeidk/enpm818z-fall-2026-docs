@@ -198,6 +198,54 @@ def plain(ax):
         ax.spines[s].set_visible(False)
 
 
+def sign_scene(ax):
+    """The range scene from above: a straight road, the AV at x = 16 m, a sign 10 m off the
+    road beside x = 20 m (the right column of line_or_curve.png, repeated in sign_range.png)."""
+    ax.add_patch(Polygon([(-2, -2), (26, -2), (26, 2), (-2, 2)], closed=True, color=ROAD, zorder=1))
+    draw_av(ax, 16, 0, 0)
+    ax.add_patch(Polygon([(19.3, 9.3), (20.7, 9.3), (20.7, 10.7), (19.3, 10.7)], closed=True, color=INK, zorder=6))
+    ax.text(20, 11.3, "the sign", fontsize=10, ha="center", va="bottom")
+    ax.plot([16, 20], [0, 10], color=INK, lw=1.4, zorder=7)
+    ax.text(16.6, 6.2, "$r$", fontsize=11, ha="right")
+    ax.plot([20, 20], [10, -3.0], color=GRAY, lw=0.9, ls=(0, (1, 2)), zorder=4)
+    ax.text(20.4, 5.0, "10 m", color="#555555", fontsize=10)
+    ax.annotate("", xy=(16, -3.0), xytext=(0, -3.0), arrowprops=dict(arrowstyle="<|-|>", color=INK, lw=1.2))
+    ax.plot([0, 0], [-2, -3.6], color=INK, lw=0.8)
+    ax.text(8, -4.2, "$x$ = 16 m", fontsize=10, ha="center", va="top")
+    ax.text(8, 4.5, "the AV at $x$:\n$r$ = 10.77 m", fontsize=10, ha="center")
+    ax.set_title("Measure the range to a sign", fontsize=11.5, fontweight="bold")
+    ax.set_xlim(-2, 26); ax.set_ylim(-8.5, 14)
+    ax.set_aspect("equal")
+    ax.set_xlabel("east (m)")
+    ax.set_ylabel("north (m)")
+    for s in ("top", "right"):
+        ax.spines[s].set_visible(False)
+
+
+def sign_graph(g):
+    """The range to the sign against the AV's position, with x = 16 m marked."""
+    x = np.linspace(0, 30, 300)
+    g.plot(x, np.sqrt((20 - x) ** 2 + 100), color=INK, lw=2.4)
+    g.plot(16, h(16), "o", color=BLUE, ms=7, zorder=5)
+    label(g, (16, h(16)), f"$x$ = 16 m: $r$ = {h(16):.2f} m", (6.0, 4.5), color=BLUE)
+    g.set_title("A curve", fontsize=11.5, fontweight="bold")
+    g.set_xlabel("AV's position along the road, $x$ (m)")
+    g.set_ylabel("range to the sign, $r$ (m)")
+    g.text(1.0, 24.0, "$r = \\sqrt{(20 - x)^2 + 10^2}$", fontsize=10.5)
+    g.set_ylim(0, 27)
+    plain(g)
+
+
+def sign_range():
+    """The right column of line_or_curve.png on its own, for the EKF section."""
+    fig, axs = plt.subplots(1, 2, figsize=(8.6, 3.7))
+    sign_scene(axs[0])
+    sign_graph(axs[1])
+    fig.patch.set_facecolor("white")
+    fig.tight_layout()
+    save(fig, OUT / "sign_range.png")
+
+
 def line_or_curve():
     """Three AV models, each with its scene from above (top row) and its graph (bottom row):
     one is a straight line (a matrix can do it), two are curves (no matrix can)."""
@@ -241,22 +289,7 @@ def line_or_curve():
     ax.text(e[0] / 2, -4.2, "$x$ = 20 cos $\\theta$", color=BLUE, fontsize=10, ha="center", va="top")
     ax.set_title("Drive 20 m at heading $\\theta$", fontsize=11.5, fontweight="bold")
     ax.set_xlim(-4, 24); ax.set_ylim(-8.5, 14)
-    # --- Scene 3: a straight road; the camera measures the range r to a sign.
-    ax = axs[0, 2]
-    ax.add_patch(Polygon([(-2, -2), (26, -2), (26, 2), (-2, 2)], closed=True, color=ROAD, zorder=1))
-    draw_av(ax, 16, 0, 0)
-    ax.add_patch(Polygon([(19.3, 9.3), (20.7, 9.3), (20.7, 10.7), (19.3, 10.7)], closed=True, color=INK, zorder=6))
-    ax.text(20, 11.3, "the sign", fontsize=10, ha="center", va="bottom")
-    ax.plot([16, 20], [0, 10], color=INK, lw=1.4, zorder=7)
-    ax.text(16.6, 6.2, "$r$", fontsize=11, ha="right")
-    ax.plot([20, 20], [10, -3.0], color=GRAY, lw=0.9, ls=(0, (1, 2)), zorder=4)
-    ax.text(20.4, 5.0, "10 m", color="#555555", fontsize=10)
-    ax.annotate("", xy=(16, -3.0), xytext=(0, -3.0), arrowprops=dict(arrowstyle="<|-|>", color=INK, lw=1.2))
-    ax.plot([0, 0], [-2, -3.6], color=INK, lw=0.8)
-    ax.text(8, -4.2, "$x$ = 16 m", fontsize=10, ha="center", va="top")
-    ax.text(8, 4.5, "the AV at $x$:\n$r$ = 10.77 m", fontsize=10, ha="center")
-    ax.set_title("Measure the range to a sign", fontsize=11.5, fontweight="bold")
-    ax.set_xlim(-2, 26); ax.set_ylim(-8.5, 14)
+    sign_scene(axs[0, 2])
     for ax in axs[0]:
         ax.set_aspect("equal")
         ax.set_xlabel("east (m)")
@@ -285,16 +318,7 @@ def line_or_curve():
     g.set_xticks([-90, -45, 0, 45, 90])
     g.text(-88, 24.0, "$x$ = 20 cos $\\theta$", fontsize=10.5)
     g.set_ylim(0, 27)
-    x = np.linspace(0, 30, 300)
-    g = axs[1, 2]
-    g.plot(x, np.sqrt((20 - x) ** 2 + 100), color=INK, lw=2.4)
-    g.plot(16, h(16), "o", color=BLUE, ms=7, zorder=5)
-    label(g, (16, h(16)), f"$x$ = 16 m: $r$ = {h(16):.2f} m", (6.0, 4.5), color=BLUE)
-    g.set_title("A curve", fontsize=11.5, fontweight="bold")
-    g.set_xlabel("AV's position along the road, $x$ (m)")
-    g.set_ylabel("range to the sign, $r$ (m)")
-    g.text(1.0, 24.0, "$r = \\sqrt{(20 - x)^2 + 10^2}$", fontsize=10.5)
-    g.set_ylim(0, 27)
+    sign_graph(axs[1, 2])
     for g in axs[1]:
         plain(g)
     fig.patch.set_facecolor("white")
@@ -403,6 +427,7 @@ def bell_curve():
 
 if __name__ == "__main__":
     line_or_curve()
+    sign_range()
     road_30_top()
     bell_line()
     bell_curve()

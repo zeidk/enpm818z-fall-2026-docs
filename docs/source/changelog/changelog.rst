@@ -5,10 +5,21 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.24.0: GP3 Drives Given (2026-11-02)
+.. dropdown:: v2.24.1: Filters Reading, the Range Example Repeated (2026-11-02)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Pre-Read
+
+   - **Nonlinear Filters reading:** the range-to-a-sign scene and its graph,
+     from the first figure, now appear again right before the figure of the
+     EKF's tangents, so you do not have to scroll back to it.
+
+
+.. dropdown:: v2.24.0: GP3 Drives Given (2026-11-02)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Assignments
 
