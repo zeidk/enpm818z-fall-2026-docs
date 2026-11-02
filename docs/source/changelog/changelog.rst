@@ -5,10 +5,33 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.25.0: Filters Reading, the UKF Steps Rewritten (2026-11-02)
+.. dropdown:: v2.26.0: Filters Reading, Definitions First and an Easier EKF Section (2026-11-02)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Pre-Read
+
+   - **Nonlinear Filters reading, "Words This Page Uses":** 14 short
+     definitions at the top, before you meet the words: mean, standard
+     deviation and variance, bell curve, the plus-or-minus notation, 1-sigma
+     and 2-sigma, probability density, random draw, state, covariance and
+     :math:`P`, noise, transpose and inverse, belief, uncertainty ellipse
+     and slope.
+   - **EKF section:** every worked number now checks by hand; the range's
+     changing slope is explained with the line-of-sight angle; the time step
+     :math:`k`, the noise terms and atan2 are explained where they first
+     appear; a new example shows how the EKF can settle on a wrong position
+     while :math:`P` keeps shrinking.
+   - **Corrections:** the mean is the average, not the most likely value;
+     "spread" now always means :math:`\sigma`; in the EKF hands-on, the
+     position and heading errors are RMS errors, and "inside
+     :math:`1\sigma`" counts the heading only, as the code computes it.
+
+
+.. dropdown:: v2.25.0: Filters Reading, the UKF Steps Rewritten (2026-11-02)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Pre-Read
 

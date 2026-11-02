@@ -11,9 +11,157 @@ Nonlinear Filters: EKF, UKF and Particle Filter
    where the EKF fails: the unscented Kalman filter (UKF) and the particle
    filter.
 
-**What you need first.** The linear Kalman filter from
-:doc:`Lecture 3 </lectures/lecture3/l3_lecture>`. This page uses its
-symbols:
+
+Words This Page Uses
+====================
+
+The boxes below explain the words and symbols this page uses. Skip the ones
+you already know.
+
+.. admonition:: Definition: mean
+   :class: note
+
+   The average value: add up all the values and divide by how many there
+   are. For a bell curve (defined below) the mean sits under the peak. For
+   a lopsided curve it does not: later on this page, 400,000 headings pushed
+   through :math:`x = 20\cos\theta` pile up just under 20 m, but their mean
+   is 16.95 m.
+
+.. admonition:: Definition: standard deviation :math:`\sigma` and variance :math:`\sigma^2`
+   :class: note
+
+   :math:`\sigma` is how far a typical value sits from the mean. Take each
+   value's distance from the mean, square it, and average the squares: that
+   average is the **variance**, :math:`\sigma^2`. Its square root is
+   :math:`\sigma`, back in the value's own unit. For a heading with a
+   variance of 144 square degrees, :math:`\sigma = \sqrt{144} = 12^\circ`.
+   This page also calls :math:`\sigma` the **spread**.
+
+.. admonition:: Definition: bell curve (normal distribution)
+   :class: note
+
+   The curve a Kalman filter uses for every number it is unsure of, also
+   called a normal distribution or a Gaussian. Two numbers set it: the mean,
+   under its one peak, and :math:`\sigma`, its width. It is symmetric: a
+   value a given distance above the mean is as likely as a value the same
+   distance below it.
+
+.. admonition:: Definition: plus-or-minus, :math:`20 \pm 1` m
+   :class: note
+
+   ":math:`20 \pm 1` m" is short for a bell curve with mean 20 m and
+   :math:`\sigma = 1` m. It is not a hard limit: the real value lands
+   outside 19 to 21 m about a third of the time. Where no bell curve is
+   meant, :math:`\pm` just means both signs: :math:`\pm 90^\circ` is
+   :math:`+90^\circ` and :math:`-90^\circ`.
+
+.. admonition:: Definition: 1-sigma and 2-sigma
+   :class: note
+
+   "Within :math:`1\sigma`" means no farther from the mean than one
+   :math:`\sigma`. A bell curve keeps a value within :math:`1\sigma` about
+   68% of the time, and within :math:`2\sigma` about 95% of the time. For
+   :math:`d = 20 \pm 1` m: 19 to 21 m holds 68%, and
+   :math:`20 - 2 \times 1 = 18` m to :math:`20 + 2 \times 1 = 22` m holds
+   95%.
+
+.. admonition:: Definition: probability density
+   :class: note
+
+   The height of a curve such as the bell curve. The area under the curve
+   between two values is the chance that the value falls between them, and
+   the whole area is 1, so the height is a chance per meter or per degree.
+   The curve for :math:`d = 20 \pm 1` m peaks at 0.40 per meter.
+
+.. admonition:: Definition: random draw (sample)
+   :class: note
+
+   A value picked at random from a curve, so that values where the curve is
+   high come up more often. Push many draws through the real function, and
+   where they land shows the true result. On this page, 400,000 draws give
+   the true mean of the heading example, 16.95 m; 200 draws give 16.82 m,
+   a little off.
+
+.. admonition:: Definition: state :math:`\mathbf{x}`
+   :class: note
+
+   The list of numbers that describes the AV at one moment, written in bold:
+   :math:`\mathbf{x}`. In the EKF hands-on it is
+   :math:`\mathbf{x} = [x,\ y,\ \theta]`, east, north and heading; a plain
+   :math:`x` is one number, such as the east position.
+   :math:`\mathbf{x}_k` is the state at time step :math:`k`, and
+   :math:`\mathbf{x}_{k-1}` the state one step earlier, 0.1 s before in the
+   hands-on.
+
+.. admonition:: Definition: covariance and :math:`P`
+   :class: note
+
+   How much two errors move together: multiply each value's distance from
+   its mean in :math:`x` by its distance in :math:`y`, then average. The
+   **covariance matrix** :math:`P` holds the filter's uncertainty about the
+   whole state: the variance of each state number on its diagonal, and the
+   covariance of each pair off it. For :math:`[x,\ y,\ \theta]`,
+   :math:`P` is 3 by 3; with :math:`\sigma = 0.3` m east, its first entry is
+   :math:`0.3 \times 0.3 = 0.09` m².
+
+.. admonition:: Definition: noise, :math:`Q` and :math:`R`
+   :class: note
+
+   A random error. Each step, the motion is off by a random amount
+   :math:`\mathbf{w}` and each reading by a random amount :math:`\mathbf{v}`,
+   both drawn from bell curves with mean 0. :math:`Q` is the covariance of
+   the motion noise and :math:`R` the covariance of the sensor noise. In the
+   EKF hands-on, the filter assumes a gyro :math:`\sigma` of
+   :math:`2^\circ`/s.
+
+.. admonition:: Definition: transpose, inverse and identity
+   :class: note
+
+   - :math:`F^\top`, "F transpose", is :math:`F` with its rows written as
+     columns. For a single number, :math:`F^\top = F`, so
+     :math:`FPF^\top = F \times P \times F`: scale an error by :math:`F`
+     and its variance scales by :math:`F^2`. On the :math:`30^\circ` road,
+     :math:`F = 0.866`, so a variance of 1 m² becomes
+     :math:`0.866^2 = 0.75` m², and :math:`\sigma` goes from 1 m to 0.87 m.
+   - :math:`S^{-1}`, "the inverse of S", does for a matrix what dividing by
+     :math:`S` does for one number.
+   - :math:`I` is the identity matrix: 1 on the diagonal, 0 elsewhere.
+     Multiplying by it changes nothing, as multiplying by 1 does.
+
+.. admonition:: Definition: belief and peak
+   :class: note
+
+   For every place the AV could be, how likely it is to really be there,
+   given everything measured so far. A **peak** is a high point of the
+   belief: a place the AV is likely to be. A Kalman filter keeps the belief
+   as one bell curve, with one peak; under two identical tunnel lights 25 m
+   apart, the honest belief has two.
+
+.. admonition:: Definition: uncertainty ellipse
+   :class: note
+
+   A picture of :math:`P` for two numbers, such as east and north, seen
+   from above. It is centered on the estimate and reaches :math:`1\sigma`
+   (or :math:`2\sigma`) out along its long and its short direction; a tilted
+   ellipse means the two errors move together. A value can miss two ways at
+   once, so a :math:`1\sigma` ellipse holds only about 39% of the values,
+   and a :math:`2\sigma` ellipse about 86%.
+
+.. admonition:: Definition: slope
+   :class: note
+
+   How much an output changes for each unit of input: the change in the
+   output divided by the change in the input. Later on this page, for a
+   small move from :math:`x = 15.5` m, the range to a landmark drops 0.41 m
+   for each meter the AV drives, so the slope is :math:`-0.41`; the minus
+   says the range drops. The slope of a function :math:`h` is written
+   :math:`dh/dx`, "the change in :math:`h` per change in :math:`x`".
+
+What You Need First
+===================
+
+The linear Kalman filter from :doc:`Lecture 3 </lectures/lecture3/l3_lecture>`.
+This page uses its symbols:
 
 - :math:`\hat{\mathbf{x}}` is the **estimate**: the filter's best guess of
   the state. :math:`P` is its **covariance**: how unsure the filter is.
@@ -113,14 +261,9 @@ filter needs, and a curve does not.
 A straight line keeps a bell curve a bell curve
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The Kalman filter describes every number it is unsure of with a **bell
-curve** (a normal distribution). Two numbers set a bell curve: its
-**mean**, the most likely value, under the peak, and its **spread**
-:math:`\sigma`, how wide it is. ":math:`20 \pm 1` m" is short for a bell
-curve with mean 20 m and :math:`\sigma = 1` m. The real value is within one
-:math:`\sigma` of the mean, here between 19 and 21 m, about 68% of the time.
-That every uncertainty is a bell curve is the filter's assumption, not a
-fact about the AV.
+The Kalman filter describes every number it is unsure of with a bell curve,
+as defined in `Words This Page Uses`_. That every uncertainty is a bell
+curve is the filter's assumption, not a fact about the AV.
 
 The AV is on a road that runs at :math:`30^\circ` from east. Its heading is
 **known**, :math:`30^\circ`. The distance it drives is not: :math:`d = 20
@@ -164,11 +307,10 @@ curve that comes out for :math:`x`.
    Read the three panels left to right.
 
    - **Step 1, what the AV knows:** the bell curve for the distance driven,
-     :math:`d = 20 \pm 1` m. The height is the **probability density**: how
-     likely each distance is, per meter. The area under the curve between two
-     distances is the chance that :math:`d` falls between them, and the whole
-     area is 1. The shaded stretch is 19 to 21 m, one :math:`\sigma` on each
-     side of the mean; about 68% of the area lies over it.
+     :math:`d = 20 \pm 1` m. The height is the probability density per
+     meter, defined at the top. The shaded stretch is 19 to 21 m, one
+     :math:`\sigma` on each side of the mean; about 68% of the area lies
+     over it.
    - **Step 2, the function:** :math:`x = d\cos 30^\circ`, a straight line.
      Follow the dotted line: :math:`d = 20` m gives :math:`x = 17.32` m. The
      gray stretch of :math:`d` lands on the blue stretch of :math:`x`, 16.45
@@ -283,12 +425,10 @@ The Extended Kalman Filter (EKF)
 .. admonition:: Definition: extended Kalman filter (EKF)
    :class: note
 
-   A Kalman filter for models that are curves, not straight lines. At every
-   step it replaces each curve by its **tangent at the estimate**, then runs
-   the ordinary Kalman equations.
-
-A **tangent** is the straight line that touches a curve at one point and
-has the same slope there.
+   A **tangent** is the straight line that touches a curve at one point and
+   has the same slope there. The EKF is a Kalman filter for models that are
+   curves, not straight lines. At every step it replaces each curve by its
+   **tangent at the estimate**, then runs the ordinary Kalman equations.
 
 
 The trick: a straight line, one step at a time
@@ -336,18 +476,28 @@ repeated here.
      picture.
    - **Step 1:** the estimate is 4 m. The EKF draws the tangent there, the
      short purple band, and uses it in place of the curve for that step.
-   - **Steps 2 and 3:** the estimate has moved to 9 m, then to 14 m. Each
-     step draws a new tangent at the new estimate. Near its estimate, each
-     band lies on the curve.
+   - **Steps 2 and 3:** between steps the AV drives on, so the estimate
+     moves, to 9 m and then to 14 m. Each step draws a new tangent at the
+     new estimate. Near its estimate, each band lies on the curve.
    - The dashed line is the tangent at 4 m, drawn long. At 18 m it says
      7.00 m, and the real range is 10.20 m. Far from where it touches, a
      tangent is wrong.
 
 Near the point where it touches, the tangent and the curve are almost the
-same. In the EKF hands-on, the AV drives a bend of 60 m radius at 10 m/s.
-It turns :math:`10 / 60 = 0.167` rad/s, so in one 0.1 s step it turns
-:math:`0.167 \times 0.1 = 0.0167` rad, or :math:`0.95^\circ`. Over one step
-the curve is almost straight.
+same. The EKF needs only that short stretch, because the estimate moves
+little in one step. For a turning AV the curve is the cosine of the heading
+(as in the middle panel of the first figure), and one step changes the
+heading very little:
+
+1. In the hands-on at the end of this section (`The EKF hands-on`_), the AV
+   drives a bend of 60 m radius at 10 m/s.
+2. On a circle, the turn rate in radians per second is the speed divided by
+   the radius: :math:`10 / 60 = 0.167` rad/s.
+3. One filter step lasts 0.1 s, so one step turns the AV
+   :math:`0.167 \times 0.1 = 0.0167` rad, or :math:`0.95^\circ`.
+
+Over :math:`0.95^\circ`, the cosine is almost a straight line, so the
+tangent stays close to the curve for one step.
 
 
 A worked example: the range to one landmark
@@ -378,12 +528,18 @@ hand.
    - The triangles above the road are the filter's estimate in the two runs
      below: 15.5 m in run 1 (green) and 10 m in run 2 (orange).
 
+This is the scene of the sign from the figures above, now called the
+**landmark**.
+
 - :math:`x` is the **AV's position along the road**, in meters. The AV
   drives right, toward the landmark.
 - The camera measures the **range**: the straight-line distance from the
   AV to the landmark. The AV, the landmark and the spot on the road beside
   the landmark make a right triangle. Its legs are :math:`20 - x` along the
-  road and 10 across. The range is the long side:
+  road and 10 across. The range is the long side.
+- The **measurement model** :math:`h` gives the range the camera should read
+  if the AV is at :math:`x`. It does the job that :math:`H` did in the
+  Kalman filter, but it is a curve, not a fixed number:
 
   .. math::
 
@@ -430,25 +586,36 @@ report at each position :math:`x`.
    - The curve falls steeply near 4 m and flattens near 19 m.
 
 As the AV drives right, the range shrinks, but not at a steady rate. The
-rate depends on where the camera looks:
+rate depends on where the camera looks. Take a small step, 0.1 m, from two
+places:
 
-- At :math:`x = 4`, the landmark is far ahead. The line of sight is
-  :math:`32^\circ` off the road. Drive 1 m and the range drops 0.85 m:
+- At :math:`x = 4`, the landmark is far ahead: :math:`20 - 4 = 16` m along
+  the road. The line of sight is :math:`32^\circ` off the road. A 0.1 m step
+  shortens the range by about 0.085 m: 0.85 m of range per meter driven,
   :math:`16 / 18.87 = 0.85`.
-- At :math:`x = 19`, the landmark is almost beside the AV. The line of
-  sight is :math:`84^\circ` off the road. Drive 1 m and the range drops
-  only 0.10 m: :math:`1 / 10.05 = 0.10`.
+- At :math:`x = 19`, the landmark is almost beside the AV:
+  :math:`20 - 19 = 1` m along the road. The line of sight is
+  :math:`84^\circ` off the road. A 0.1 m step shortens the range by about
+  0.01 m: only 0.10 m of range per meter driven, :math:`1 / 10.05 = 0.10`.
 
-The rate is how much of the line of sight points along the road,
-:math:`(20 - x)/h(x)`. The range **drops** as :math:`x` grows, so the slope
-of :math:`h` is that rate with a minus sign:
+In both cases the rate is the distance left along the road divided by the
+range, :math:`(20 - x)/h(x)`. That ratio is the cosine of the angle in the
+figure: :math:`\cos 32^\circ = 0.85` and :math:`\cos 84^\circ = 0.10`. A line
+of sight that points along the road shortens fast; one that points across the
+road barely shortens.
+
+The **slope** of :math:`h` is how many meters the range changes per meter
+of :math:`x`, written :math:`dh/dx`. The range drops as :math:`x` grows, so
+the slope is the rate with a minus sign:
 
 .. math::
 
    \frac{dh}{dx} = -\frac{20 - x}{h(x)}
 
-The slope changes as the AV drives. **There is no single slope**, so no
-fixed :math:`H` describes this sensor.
+In the Kalman filter, :math:`H` is a fixed matrix. With one number in the
+state, it would be one fixed number that turns a position into a reading.
+Here the slope is :math:`-0.85` at 4 m and :math:`-0.10` at 19 m. **There
+is no single slope**, so no fixed :math:`H` describes this sensor.
 
 
 The surprise says the AV is farther ahead
@@ -456,7 +623,7 @@ The surprise says the AV is farther ahead
 
 The camera measures from where the AV **really** is. The filter compares
 that reading with the reading it **expects** at its estimate. The gap, the
-surprise, is its only clue that the estimate is off.
+surprise, is the only information the filter has that the estimate is off.
 
 .. figure:: /_static/images/filters/ekf_run1_whole.png
    :alt: The range to the landmark in meters, from 8.6 to 19.4, against the AV's position along the road x, from 4 to 20 meters. A thick black curve, labeled "the real range, h(x)", falls from about 18.9 meters at x = 4 and flattens near 10 meters at x = 20. A dotted gray horizontal line is labeled "the camera reads 10.77 m". A green dot on the curve at 15.5 meters is labeled "the estimate, 15.5 m: the filter expects 10.97 m". A label, "surprise: 0.20 m less range", points to the small gap between the green dot and the dotted line. A dashed purple line, labeled "the tangent at 15.5 m", runs through the green dot from about 11.5 to 17.5 meters, close to the curve. A green cross where the tangent crosses the dotted line is labeled "where the tangent meets the reading: 15.98 m". A dotted gray vertical line at 16 meters is labeled "the AV really is at 16 m". A thin gray box around x = 14 to 17.2 meters and ranges 10.3 to 11.45 meters is labeled "drawn close up in the next figure".
@@ -481,9 +648,10 @@ surprise, is its only clue that the estimate is off.
      reading line at the green cross, 15.98 m, almost where the AV really
      is.
 
-The reading came in 0.20 m **less** than expected: :math:`10.77 - 10.97`.
-Less range means closer to the landmark, so the AV is **farther ahead**
-than :math:`\hat{x}`. How much farther is the next step.
+The reading came in **less** than expected: :math:`10.966 - 10.770 = 0.196`
+m, about 0.20 m. The AV is still before the landmark (:math:`x` below 20 m),
+where less range means closer to it, so the AV is **farther ahead** than
+:math:`\hat{x}`. How much farther is the next step.
 
 
 Run 1: a good estimate lands near the truth
@@ -517,10 +685,10 @@ The arithmetic, in four steps:
 1. The slope at :math:`\hat{x} = 15.5`: there are :math:`20 - 15.5 = 4.5`
    m to go and the range is 10.97 m, so the range drops
    :math:`4.5 / 10.97 = 0.41` m per meter.
-2. The surprise: the range must come down by 0.20 m (0.196 m before
-   rounding).
-3. The move: :math:`0.196 / 0.410 = 0.48` m ahead. It is the same
-   arithmetic as time equals distance divided by speed.
+2. The surprise: :math:`10.966 - 10.770 = 0.196` m less range than
+   expected.
+3. The move: 0.196 m of range, at 0.410 m of range per meter of position,
+   is :math:`0.196 / 0.410 = 0.48` m of position, ahead.
 4. The new estimate: :math:`15.5 + 0.48 = 15.98` m. The AV is really at
    16 m, so the filter is 0.02 m short.
 
@@ -557,13 +725,13 @@ Same AV, same reading, 10.77 m. This time the estimate is
    - The tangent falls faster than the real curve, so it reaches the reading
      too soon: at the orange cross, 14.77 m, 1.23 m short of the AV at 16 m.
 
-The arithmetic, in four steps:
+The arithmetic, in four steps (three decimals, so you can check it by hand):
 
-1. The surprise: :math:`14.14 - 10.77 = 3.37` m less range than expected,
+1. The slope at 10 m: there are :math:`20 - 10 = 10` m to go and the range is
+   14.142 m, so the range drops :math:`10 / 14.142 = 0.707` m per meter.
+2. The surprise: :math:`14.142 - 10.770 = 3.372` m less range than expected,
    so the AV is farther ahead.
-2. The slope at 10 m: :math:`-(20 - 10)/14.14 = -10 / 14.14 = -0.71`. The
-   range drops 0.71 m per meter.
-3. The move: :math:`3.37 / 0.71 = 4.77` m ahead, to
+3. The move: :math:`3.372 / 0.707 = 4.77` m ahead, to
    :math:`10 + 4.77 = 14.77` m.
 4. The miss: :math:`16 - 14.77 = 1.23` m short.
 
@@ -571,11 +739,13 @@ Why short? Between 10 m and 16 m the real curve drops only 3.37 m over
 6 m, :math:`3.37 / 6 = 0.56` m per meter. The tangent at 10 m says 0.71.
 The tangent is too steep, so the correction is too small.
 
-That slope, :math:`-0.71`, is what the EKF calls the **Jacobian**
-:math:`H` (defined below). A poor estimate gives a wrong :math:`H`, and a
-wrong :math:`H` gives a correction of the wrong size. Run 2 still
+That slope, :math:`-0.71`, is the number the EKF uses in place of
+:math:`H`. It is called the **Jacobian**, written :math:`H_k`; the section
+`The Jacobian: the tangent for several inputs`_ below defines it for
+several numbers at once. A poor estimate gives a wrong :math:`H_k`, and a
+wrong :math:`H_k` gives a correction of the wrong size. Run 2 still
 improved: from 6 m off to 1.23 m off. `The catch: a feedback loop`_ shows
-how a larger error can feed on itself.
+how a larger error can make the next estimate worse.
 
 
 Two jobs: the estimate uses the curve, P uses the tangent
@@ -601,13 +771,18 @@ curve comes out again.
    by panel.
 
    - **Step 1, what the AV knows:** the same bell curve for the heading,
-     :math:`30^\circ \pm 12^\circ`. The height of the curve is the probability
-     density. The area under the curve between two values is the chance that the
-     value falls between them.
+     :math:`30^\circ \pm 12^\circ`. The height is the probability density,
+     defined at the top.
    - **Step 2, the function:** the black curve is :math:`x = 20\cos\theta`. The
      dashed orange line is its tangent at :math:`30^\circ`, the line the EKF uses
-     in its place. The tangent drops :math:`20 \times \sin 30^\circ \times \pi / 180
-     = 0.1745` m per degree. So the gray stretch of headings, 12° on each side,
+     in its place. The tangent drops 0.1745 m per degree. You can check it with
+     two calls of the real curve, half a degree each side of :math:`30^\circ`:
+     :math:`20\cos 29.5^\circ = 17.4071` m and
+     :math:`20\cos 30.5^\circ = 17.2326` m, so 1 degree more gives
+     :math:`17.4071 - 17.2326 = 0.1745` m less. (With calculus you get the
+     same number, :math:`20 \times \sin 30^\circ \times \pi / 180 = 0.1745` m
+     per degree, where :math:`\pi / 180` turns radians into degrees.) So the
+     gray stretch of headings, 12° on each side,
      lands on the orange stretch, :math:`17.32 \pm 12 \times 0.1745`: from 15.23 m
      to 19.41 m. That stretch is centered on 17.32 m, because a straight line
      treats both sides the same.
@@ -615,8 +790,10 @@ curve comes out again.
      headings as in the curve example, pushed through the real curve. The dashed
      orange bell curve is the EKF's answer, :math:`17.32 \pm 2.09` m. The black
      line is the true mean, 16.95 m, and the orange line is the EKF's mean,
-     17.32 m. About 10% of the area under the orange curve lies above 20 m,
-     where the AV can never be.
+     17.32 m. The orange curve spills above 20 m, where the AV can never be:
+     20 m is :math:`20 - 17.32 = 2.68` m above its mean, and
+     :math:`2.68 / 2.09 = 1.28\sigma`. A bell curve has about 10% of its
+     area more than :math:`1.28\sigma` above the mean.
 
 So the EKF splits the work in two:
 
@@ -624,18 +801,22 @@ So the EKF splits the work in two:
   :math:`20\cos 30^\circ = 17.32` m.
 - The **uncertainty** goes through the tangent: :math:`\pm 2.09` m.
 
-The truth is :math:`16.95 \pm 2.11` m. The width is close. The mean is
-:math:`17.32 - 16.95 = 0.37` m too far, because a straight line cannot see
-the bend. The orange bell curve also spills above 20 m, where the AV can
-never be.
+The truth, the mean and :math:`\sigma` of the 400,000 samples, is
+:math:`16.95 \pm 2.11` m. The width is close: 2.09 m against 2.11 m. The
+mean is :math:`17.32 - 16.95 = 0.37` m too far east. The reason: on both
+sides of :math:`30^\circ`, the real curve lies below its tangent. Every
+heading that is not exactly :math:`30^\circ` lands lower on the curve than
+on the tangent, so the real average is lower than 17.32 m. The tangent gives
+the same 17.32 m whatever the :math:`\sigma`.
 
 
 The models f and h for an AV that turns
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The EKF replaces the matrices :math:`F` and :math:`H` by **functions**
-:math:`f` and :math:`h`. The noise, :math:`\mathbf{w}` for the motion and
-:math:`\mathbf{v}` for the sensor, stays as before:
+:math:`f` and :math:`h`. The subscript :math:`k` counts time steps:
+:math:`\mathbf{x}_k` is the state at step :math:`k`, and
+:math:`\mathbf{x}_{k-1}` is the state one step earlier.
 
 .. math::
 
@@ -643,11 +824,18 @@ The EKF replaces the matrices :math:`F` and :math:`H` by **functions**
    \qquad
    \mathbf{z}_k = h(\mathbf{x}_k) + \mathbf{v}
 
+- :math:`\mathbf{w}` is the random error the motion adds. Its covariance is
+  :math:`Q`, as in the Kalman filter.
+- :math:`\mathbf{v}` (bold) is the random error in the reading. Its
+  covariance is :math:`R`. Do not mix it up with the speed :math:`v`
+  (not bold) below.
+
 In the EKF hands-on, the state is :math:`\mathbf{x} = [x,\ y,\ \theta]`:
-the position and the heading :math:`\theta`, the direction the AV's nose
-points. The control input is :math:`\mathbf{u} = [v,\ \omega]`: the speed
-:math:`v` from the wheel encoders and the turn rate :math:`\omega` from the
-gyro. Over a time step :math:`\Delta t`:
+the position, :math:`x` east and :math:`y` north, and the heading
+:math:`\theta`, the direction the AV's nose points, measured from east. The
+control input is :math:`\mathbf{u} = [v,\ \omega]`: the speed :math:`v`
+from the wheel encoders and the turn rate :math:`\omega` from the gyro.
+Over a time step :math:`\Delta t`:
 
 .. math::
 
@@ -658,8 +846,22 @@ gyro. Over a time step :math:`\Delta t`:
                    \theta_{k-1} + \omega\,\Delta t \end{bmatrix}
    + \mathbf{w}
 
-Rows 1 and 2 hold the cosine and the sine of :math:`\theta`, and
-:math:`\theta` is a state number. No fixed matrix :math:`F` holds them.
+One step with the hands-on's numbers: the AV drives at :math:`v = 10` m/s
+and turns at :math:`\omega = 0.167` rad/s, one step is
+:math:`\Delta t = 0.1` s, and its heading is :math:`\theta = 30^\circ`
+(chosen for this example).
+
+1. It drives :math:`v\,\Delta t = 10 \times 0.1 = 1.0` m.
+2. East: :math:`1.0 \times \cos 30^\circ = 0.866` m farther east.
+3. North: :math:`1.0 \times \sin 30^\circ = 0.500` m farther north.
+4. Heading: :math:`0.167 \times 0.1 = 0.0167` rad, or :math:`0.95^\circ`
+   more, so :math:`30.95^\circ`.
+
+Rows 1 and 2 multiply by :math:`\cos\theta` and :math:`\sin\theta`, and
+:math:`\theta` is itself part of the state. A matrix can only multiply each
+state number by a fixed number and add (see `Matrices can only scale and
+add`_). No fixed number times :math:`\theta` gives :math:`\cos\theta`, so
+no fixed matrix :math:`F` holds this model.
 
 The camera in the hands-on matches an exit sign against the HD map, which
 gives the sign's position :math:`(x_s, y_s)`. It reports the **range**
@@ -673,9 +875,20 @@ angle from the AV's nose to the sign, positive to the left. With
    = \begin{bmatrix} \sqrt{\Delta x^2 + \Delta y^2} \\
      \operatorname{atan2}(\Delta y, \Delta x) - \theta \end{bmatrix}
 
-:math:`\operatorname{atan2}` is the arctangent that keeps track of the
-quadrant. A square root and an arctangent of the state: no fixed matrix
-:math:`H` holds them either.
+:math:`\operatorname{atan2}(\Delta y, \Delta x)` is the direction from the
+AV to the sign, measured from east, counterclockwise. Plain
+:math:`\arctan(\Delta y / \Delta x)` gives the same answer for a sign 3 m east
+and 4 m north as for one 3 m west and 4 m south; atan2 looks at the signs of
+both numbers and tells them apart. The bearing is that direction minus the
+heading: the angle the camera must turn from the nose to face the sign. For
+a sign 24 m east and 18 m north, the direction is
+:math:`\operatorname{atan2}(18, 24) = 36.87^\circ`; if the AV heads
+:math:`30^\circ`, the bearing is :math:`36.87^\circ - 30^\circ = 6.87^\circ`,
+to the left. (The 24 m, 18 m and :math:`30^\circ` are chosen for this
+example.)
+
+A square root and an arctangent of the state: no fixed matrix :math:`H`
+holds them either.
 
 
 The Jacobian: the tangent for several inputs
@@ -693,25 +906,31 @@ slopes.
    *nudge input* :math:`j` *a little, and output* :math:`i` *moves this
    much.*
 
-The EKF needs two of them:
+You have already used one Jacobian. In the one-number range example,
+:math:`H_k` was the slope :math:`-(20 - \hat{x})/h(\hat{x})`: :math:`-0.41`
+in run 1, taken at :math:`\hat{x} = 15.5` m, and :math:`-0.71` in run 2,
+taken at :math:`\hat{x} = 10` m. The EKF needs two Jacobians at every step:
 
-.. math::
+- :math:`F_k`, the slopes of the motion model :math:`f`. It is taken at the
+  **last estimate**, before predict moves it.
+- :math:`H_k`, the slopes of the measurement model :math:`h`. It is taken at
+  the **prediction**.
 
-   F_k = \left.\frac{\partial f}{\partial \mathbf{x}}\right|_{\hat{\mathbf{x}}_{k-1}}
-   \qquad\qquad
-   H_k = \left.\frac{\partial h}{\partial \mathbf{x}}\right|_{\hat{\mathbf{x}}^{-}_k}
+Both depend on the estimate, so both are **recomputed every step**. The
+plain Kalman filter's :math:`F` was a constant you typed once.
 
-- The curly :math:`\partial` reads "partial": the slope for one input while
-  the other inputs stay put.
-- The bar with a subscript says **where** the slope is taken.
-  :math:`F_k` is taken at the **last estimate**, before predict moves it.
-  :math:`H_k` is taken at the **prediction**.
-- Both depend on the estimate, so both are **recomputed every step**. The
-  plain Kalman filter's :math:`F` was a constant you typed once.
+.. admonition:: The same in symbols
+   :class: note
 
-In the one-number range example, :math:`H` was the slope
-:math:`-(20 - \hat{x})/h(\hat{x})`: :math:`-0.41` in run 1 and
-:math:`-0.71` in run 2.
+   .. math::
+
+      F_k = \left.\frac{\partial f}{\partial \mathbf{x}}\right|_{\hat{\mathbf{x}}_{k-1}}
+      \qquad\qquad
+      H_k = \left.\frac{\partial h}{\partial \mathbf{x}}\right|_{\hat{\mathbf{x}}^{-}_k}
+
+   - The curly :math:`\partial` reads "partial": the slope for one input
+     while the other inputs stay put.
+   - The bar with a subscript says **where** the slope is taken.
 
 
 H_k with real numbers: range and bearing
@@ -720,7 +939,8 @@ H_k with real numbers: range and bearing
 For the range and bearing model, :math:`H_k` has 2 rows (range, bearing) and
 3 columns (:math:`x`, :math:`y`, :math:`\theta`). The numbers are chosen for
 this example: the sign is 24 m east and 18 m north of the predicted
-position, so :math:`r = \sqrt{24^2 + 18^2} = 30` m.
+position, so :math:`\Delta x = 24` m, :math:`\Delta y = 18` m and
+:math:`r = \sqrt{24^2 + 18^2} = 30` m.
 
 .. math::
 
@@ -735,25 +955,45 @@ position, so :math:`r = \sqrt{24^2 + 18^2} = 30` m.
      0.020 & -0.027 & -1
    \end{bmatrix}
 
-Read two entries:
+Read three entries:
 
-- **Row 1, column 1:** move the AV 1 m east, partly toward the sign, and the
-  range drops by :math:`24 / 30 = 0.80` m. The minus sign says it drops.
+- **Row 1, column 1:** the same slope as in the one-number example, where
+  it was :math:`-(20 - \hat{x})/h(\hat{x})`: the distance to the sign along
+  the move, divided by the range. Here, for a small move east, the range
+  drops :math:`24 / 30 = 0.80` m per meter. The minus sign says it drops.
+- **Row 1, column 3:** 0. Turning in place does not change the distance to
+  the sign.
 - **Row 2, column 3:** turn the nose 1 rad to the left. The sign has not
   moved, so it now sits 1 rad farther to the right of the nose. The bearing
   drops by exactly 1, wherever the sign is.
 
-The middle entries of row 2 are small, :math:`18 / 900 = 0.020` and
-:math:`24 / 900 = 0.027` rad per meter, about one degree per meter, because
-the sign is 30 m away. A nearer sign makes them bigger.
+The middle entries of row 2 come from the slope of atan2, which takes
+calculus; the finite-difference check below confirms them without it. With
+:math:`r^2 = 30^2 = 900`, they are small, :math:`18 / 900 = 0.020` and
+:math:`24 / 900 = 0.027` rad per meter. One radian is :math:`57.3^\circ`, so
+that is about :math:`0.020 \times 57.3 = 1.1^\circ` and
+:math:`0.027 \times 57.3 = 1.5^\circ` per meter. They are small because the
+sign is 30 m away. A nearer sign makes them bigger.
 
 
 P goes through the Jacobian
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The predicted covariance is :math:`P^{-} = F_k P F_k^\top + Q_k`: the same
-sandwich as the Kalman filter, with a new :math:`F_k` at every step. The
-next figure shows what that does on a real drive.
+formula as in the Kalman filter, :math:`F_k` on the left and its transpose
+on the right, with a new :math:`F_k` at every step.
+
+With one number, you have done this already. In the heading example,
+:math:`F` was the slope 0.1745 m per degree, and :math:`P` was the variance
+of the heading, :math:`12^2 = 144` square degrees:
+
+1. :math:`F P F^\top = 0.1745 \times 144 \times 0.1745 = 4.385` square meters.
+2. Its square root, :math:`\sqrt{4.385} = 2.09` m, is the EKF's
+   :math:`\sigma` in `Two jobs: the estimate uses the curve, P uses the
+   tangent`_.
+
+The next figure shows what :math:`F_k P F_k^\top` does on a real drive,
+with three numbers in the state.
 
 .. figure:: /_static/images/filters/ekf_bend_ellipses.png
    :alt: Seen from above, north in meters against east in meters. A black arc curves left from the origin to about 29 meters east and 7 meters north, with dots every half second; it is labeled "the estimate: an arc from the real f". Black arrows show the heading at 0, 1, 2 and 3 seconds; the one at 3 seconds is labeled "the heading". Orange ellipses, labeled "each ellipse: 2σ", sit on the arc at 0, 1, 2 and 3 seconds, each marked with its time. The one at 0 seconds is a small circle labeled "at 0 s: σ = 0.3 m each way, heading σ = 3°". The ellipses grow longer and thinner over time and lie nearly across the direction of travel; the one at 3 seconds, about 6 meters long, is labeled "at 3 s: σ = 1.58 m the long way, 0.30 m the short way".
@@ -781,31 +1021,57 @@ next figure shows what that does on a real drive.
      with the AV, but more slowly: at 3 s it is :math:`75^\circ` from the
      heading, not :math:`90^\circ`.
 
-The heading is known only to :math:`3^\circ`. A heading error moves the AV
-**sideways**, and :math:`F_k` carries that into :math:`P`. Step after step,
-the ellipse stretches nearly across the direction of travel and stays thin
-the other way, and it turns with the AV. After 3 s, :math:`\sigma` is
-**1.58 m the long way**, :math:`75^\circ` from the heading, and still
-**0.30 m the short way**.
+The heading is known only to :math:`3^\circ`. A heading error turns the
+whole path a little about the start point, so it moves the AV **sideways**
+to the straight line from the start to where the AV is now. :math:`F_k`
+carries that into :math:`P` at every step. The numbers at 3 s (the 29.69 m
+and the :math:`13.9^\circ` were computed for this page by running the
+motion model :math:`f` for the 30 steps):
+
+1. A :math:`3^\circ` error is :math:`3 \times 0.017453 = 0.05236` rad.
+2. After 3 s the AV is 29.69 m from the start, in a straight line.
+3. The sideways error is :math:`29.69 \times 0.05236 = 1.55` m.
+4. With the 0.3 m it started with:
+   :math:`\sqrt{1.55^2 + 0.3^2} = 1.58` m, the long way of the ellipse.
+
+Along that straight line, nothing grows, so the short way stays 0.30 m.
+The straight line from the start turns about half as fast as the AV:
+
+1. At 3 s the line points :math:`13.9^\circ` from east.
+2. The long way of the ellipse is across that line:
+   :math:`13.9^\circ + 90^\circ = 103.9^\circ` from east.
+3. After 30 steps of 0.0167 rad, the AV heads 0.5 rad, or
+   :math:`28.6^\circ`, from east.
+4. So the long way is :math:`103.9^\circ - 28.6^\circ = 75.3^\circ`, about
+   :math:`75^\circ`, from the heading, not :math:`90^\circ`.
 
 
 Building Q_k from the wheel and gyro noise
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The motion noise is in the **inputs**: the wheel speed has an error
-:math:`\sigma_v`, and the gyro an error :math:`\sigma_\omega`. :math:`P`
-describes the state, so the noise must be carried into the state. One more
+The motion noise is in the **inputs**. The hands-on uses a wheel speed
+error :math:`\sigma_v = 0.2` m/s and a gyro error
+:math:`\sigma_\omega = 2^\circ`/s. Over one 0.1 s step:
+
+1. The speed error moves the AV :math:`0.2 \times 0.1 = 0.02` m (one
+   :math:`\sigma`) along its heading.
+2. The gyro error turns it :math:`2 \times 0.1 = 0.2^\circ` (one
+   :math:`\sigma`).
+
+:math:`P` is written in east, north and heading, not in speed and turn
+rate, so these errors must be turned into the state's terms. How much of
+the 0.02 m goes east and how much north depends on the heading. One more
 Jacobian does that: :math:`G = \partial f / \partial \mathbf{u}`, the slopes
-of :math:`f` with respect to the inputs, taken at the last estimate. Then
+of :math:`f` with respect to the inputs, taken at the last estimate. The
+heading changes, so :math:`G` changes, and :math:`Q_k` is **rebuilt every
+step**, next to :math:`F_k`.
 
 .. math::
 
    Q_k = G \begin{bmatrix} \sigma_v^2 & 0 \\ 0 & \sigma_\omega^2 \end{bmatrix} G^\top
 
-It is the same sandwich as :math:`FPF^\top`. :math:`G` depends on the
-estimate, so :math:`Q_k` is **rebuilt every step**, next to :math:`F_k`.
-The hands-on uses :math:`\sigma_v = 0.2` m/s and
-:math:`\sigma_\omega = 2^\circ`/s.
+The middle matrix holds the two input variances. It is the same form as
+:math:`FPF^\top`: :math:`G` on the left, its transpose on the right.
 
 
 The full EKF cycle
@@ -852,6 +1118,8 @@ The pattern:
 - The **order** matters. :math:`F_k` and :math:`Q_k` are computed at the
   last estimate, before the first line moves it. :math:`H_k` is computed at
   the prediction.
+- :math:`I` is the identity matrix: ones on the diagonal, zeros elsewhere
+  (``np.eye(3)`` in the code). Multiplying by it changes nothing.
 
 In code, from ``run_ekf()`` in the hands-on script
 ``curved_tunnel/ekf_curve.py``, trimmed:
@@ -874,8 +1142,9 @@ In code, from ``run_ekf()`` in the hands-on script
    x[2] = wrap(x[2])                 # angles wrap
    P = (np.eye(3) - K @ Hk) @ P
 
-The loop is short. Most of the work in an EKF goes into the three functions
-around it: :math:`f`, :math:`h` and their Jacobians.
+The loop is short. Most of the work in an EKF goes into the functions the
+loop calls: :math:`f`, :math:`h`, their Jacobians and the one that builds
+:math:`Q_k`.
 
 
 Checking a Jacobian with finite differences
@@ -903,11 +1172,13 @@ each entry with your formula.
 
 1. :math:`h(15.501) = 10.965446` m.
 2. :math:`h(15.499) = 10.966267` m.
-3. The change: :math:`10.965446 - 10.966267 = -0.000821` m, over a change
-   in :math:`x` of :math:`2 \times 0.001 = 0.002` m.
-4. The slope: :math:`-0.000821 / 0.002 = -0.410`.
-5. The formula gives :math:`-(20 - 15.5)/h(15.5) = -4.5 / 10.966 = -0.410`.
-   They agree to three decimals.
+3. The change: :math:`h(15.501)` is :math:`10.966267 - 10.965446 = 0.000821`
+   m less than :math:`h(15.499)`, over a change in :math:`x` of
+   :math:`2 \times 0.001 = 0.002` m.
+4. The slope: :math:`0.000821 / 0.002 = 0.410` m less range per meter, so
+   :math:`-0.410`.
+5. The formula gives :math:`(20 - 15.5)/h(15.5) = 4.5 / 10.966 = 0.410`
+   less per meter, so :math:`-0.410`. They agree to three decimals.
 
 If your formula had the wrong sign, it would give :math:`+0.410`, and the
 check would show the mismatch at once. The EKF hands-on script has this check built in:
@@ -943,12 +1214,15 @@ when the uncertainty is wide.
    - The dashed orange ellipse is the EKF's :math:`2\sigma` ellipse. It comes
      from one tangent, so it is straight: 1 m ahead and behind
      (:math:`2 \times 0.5` m) and 8.38 m to each side
-     (:math:`2 \times 20 \times 0.209`, with :math:`12^\circ = 0.209` rad).
+     (:math:`2 \times 20 \times 0.2094 = 8.38`, with
+     :math:`12^\circ = 0.2094` rad).
    - The orange dot is the EKF's mean, 20.00 m ahead. The black cross is the
      real middle of the dots, 19.57 m ahead.
 
 The slides show this as an animation of the AV driving away from the start
-with the same spreads. Two errors grow together as it drives:
+with the same spreads. The "real" columns below are the mean and
+:math:`\sigma` of the 500 random draws at each distance. Two errors grow
+together as it drives:
 
 .. list-table::
    :widths: 25 25 25 25
@@ -975,15 +1249,25 @@ with the same spreads. Two errors grow together as it drives:
 - **The mean.** The EKF puts the AV at the full distance driven. The AV
   lands short, because the forward part of the drive is the distance times
   :math:`\cos\theta`, and the average of :math:`\cos\theta` over a spread of
-  headings is less than 1. After 22 m, the real middle is 2 percent short.
+  headings is less than 1. After 22 m, the real middle is
+  :math:`22.0 - 21.54 = 0.46` m short: :math:`0.46 / 22 = 2` percent.
 - **The spread.** The EKF's along-track :math:`\sigma` stays at 0.50 m, the
   spread of the distance driven, while the real one grows to 0.79 m. The
   EKF is **overconfident**: it reports less uncertainty than it has.
 
-No tuning fixes this. It is a shape problem: no ellipse can draw a banana.
-The EKF works well while the uncertainty is small next to how sharply the
-function bends. A long stretch with no sign match is exactly when it is
-not.
+No choice of :math:`Q` or :math:`R` fixes this. An ellipse is never curved,
+and the dots lie on a curved band.
+
+In the hands-on the heading :math:`\sigma` settles at :math:`1.4^\circ` or
+less. With that :math:`\sigma`, a 20 m drive ends on average only 0.006 m
+short of the EKF's mean, against 0.43 m for :math:`12^\circ` (in the
+figure, :math:`20.00 - 19.57 = 0.43` m). A long stretch with no sign match
+lets the heading :math:`\sigma` grow, and that is when the EKF fails. (The two numbers were
+computed for this page. The average of :math:`\cos\theta` over a bell curve
+of :math:`\sigma` radians is :math:`e^{-\sigma^2/2}`: 0.9997 for
+:math:`1.4^\circ` and 0.9783 for :math:`12^\circ`. The shortfalls are
+:math:`20 \times (1 - 0.9997) = 0.006` m and
+:math:`20 \times (1 - 0.9783) = 0.43` m.)
 
 
 The catch: a feedback loop
@@ -1010,16 +1294,42 @@ at its **own estimate**, so a wrong estimate puts it in the wrong place.
    - The box on the right happens at the same time: every update shrinks
      :math:`P`, whether it helped or not.
 
-Every update shrinks :math:`P`, whether the update was good or not. So the
-filter becomes **more confident as it becomes less accurate**. That is
-**divergence**. Run 2 still improved; the loop starts only when the error
-is large enough to make the next estimate worse.
+Every update shrinks :math:`P`, whether the update was good or not. Look at
+its update line, :math:`P = (I - KH_k)P^{-}`. It uses :math:`P^{-}`,
+:math:`H_k` and, through :math:`K`, :math:`R`. It never uses the reading or
+the surprise. So a large surprise cannot make :math:`P` bigger.
+
+The range example shows the loop. Same AV at 16 m, same reading, 10.770 m,
+but the estimate is :math:`\hat{x} = 22` m, past the landmark (chosen for
+this example). As in runs 1 and 2, the reading is perfect and the filter
+trusts it fully:
+
+1. The filter expects :math:`h(22) = \sqrt{2^2 + 10^2} = 10.198` m. The
+   reading is :math:`10.770 - 10.198 = 0.572` m more.
+2. Past the landmark, the range grows as the AV drives: the slope is
+   :math:`(22 - 20) / 10.198 = 0.196` m more range per meter.
+3. More range means farther past the landmark, so the move is
+   :math:`0.572 / 0.196 = 2.92` m ahead, to 24.92 m.
+4. The estimate was :math:`22 - 16 = 6` m off; now it is
+   :math:`24.92 - 16 = 8.92` m off.
+
+Repeat the update with the same reading and the estimate goes to 24.07 m,
+then settles at 24.00 m (computed for this page with the same four steps).
+There the range is :math:`\sqrt{4^2 + 10^2} = 10.77` m, the same as at
+16 m, because 24 m is 4 m past the landmark and 16 m is 4 m before it. The
+surprise is now zero, and the filter is 8 m wrong. In a real filter,
+:math:`P` shrinks at each of these updates. The filter becomes **more
+confident as it becomes less accurate**. That is **divergence**: the
+estimate moves away from the truth while :math:`P` says the filter is more
+and more sure. Run 2 still improved, because its error was not large enough
+to make the next estimate worse.
 
 
 Three traps when you build an EKF
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-1. **Wrap angles, in three places:** inside :math:`f`, in the surprise
+1. **Wrap angles, in three places:** inside :math:`f`, because
+   :math:`\theta + \omega\Delta t` can pass :math:`180^\circ`; in the surprise
    :math:`\boldsymbol{\nu}`, and in :math:`\hat{\mathbf{x}}` after the
    update. Headings of :math:`179^\circ` and :math:`-179^\circ` are
    :math:`2^\circ` apart. Subtract them the plain way and you get
@@ -1032,7 +1342,7 @@ Three traps when you build an EKF
 3. **Rebuild** :math:`F_k`, :math:`Q_k` **and** :math:`H_k` **every step,
    at the right point:** :math:`F_k` and :math:`Q_k` before predict moves
    :math:`\hat{\mathbf{x}}`, :math:`H_k` after. Computing :math:`F_k` after
-   moving the estimate is a quiet bug.
+   moving the estimate is a bug that gives no error message.
 
 
 The EKF hands-on
@@ -1041,7 +1351,8 @@ The EKF hands-on
 The script ``curved_tunnel/ekf_curve.py`` runs an EKF on a drive of 21 s
 through a :math:`120^\circ` bend, one row every 0.1 s. The wheel speed and
 gyro give the control input. A sign match gives the range and bearing to a
-mapped sign. The true pose is in the file only to score the filter. How to
+mapped sign. The true pose (position and heading) is in the file only to
+score the filter. How to
 run it is on the :doc:`hands-on code page </lectures/lecture3/l3_code>`, under
 "Interactive: EKF and UKF on a curve".
 
@@ -1051,10 +1362,15 @@ What the slides measured with it:
   gyro drives the prediction. It drops at each match, because the bearing
   to the sign tells the filter which way the AV faces. It settles between
   about :math:`1.0^\circ` and :math:`1.4^\circ`.
-- An honest filter keeps its true error inside its own :math:`\pm 1\sigma`
-  band about 68 percent of the time. The default run: 65 percent.
+- An honest filter keeps its true heading error inside its own
+  :math:`\pm 1\sigma` heading band at about 68 percent of the steps. The
+  default run: 65 percent.
 
-What each setting does:
+The table scores each run over the whole drive. Position and heading error
+are root mean square (RMS) errors: square every step's error, average,
+take the square root. A step's position error is the straight-line
+distance from the estimate to the true position. The last number column
+counts only the heading.
 
 .. list-table::
    :widths: 34 16 16 14 20
@@ -1062,9 +1378,9 @@ What each setting does:
    :class: compact-table
 
    * - Setting
-     - Position error
-     - Heading error
-     - Inside 1 sigma
+     - Position error (RMS)
+     - Heading error (RMS)
+     - Heading inside :math:`1\sigma`
      - What it shows
    * - Default: gyro :math:`2^\circ`/s, range 1 m
      - 0.69 m
@@ -1092,11 +1408,15 @@ What each setting does:
      - 30%
      - **runs, and is wrong**
 
-The last row is the one to remember. One wrong sign in a Jacobian nearly
-doubles the position error, from 0.69 m to 1.23 m, and nearly triples the
-heading error, from :math:`1.4^\circ` to :math:`4.0^\circ`. The filter never
-complains. On a real AV you have no true pose to compare with, so your
-defenses are the finite-difference check and the NIS test below.
+**Underconfident** is the opposite of overconfident: the filter reports
+more uncertainty than it has, so the heading error stays inside its band
+too often: 92 percent of the steps with the gyro set to :math:`8^\circ`/s.
+
+One wrong sign in a Jacobian raises the position error from 0.69 m to
+1.23 m (1.8 times) and the heading error from :math:`1.4^\circ` to
+:math:`4.0^\circ` (2.9 times). The filter gives no error or warning. On a
+real AV you have no true pose to compare with, so you have two checks: the
+finite-difference test and the NIS test below.
 
 The default gyro noise, :math:`2^\circ`/s, is bigger than the gyro's real
 noise, :math:`1.1^\circ`/s, on purpose: :math:`Q` must also cover a small
@@ -1209,9 +1529,8 @@ bell curve and pushes each through the real curve.
    :class: tip
 
    - **Step 1, place three points:** the same heading bell curve as in the
-     curve example, :math:`30^\circ \pm 12^\circ`. The height of a curve is
-     the probability density: the area under it between two values is the
-     chance that the value falls between them. The UKF picks three headings:
+     curve example, :math:`30^\circ \pm 12^\circ`. The height is the
+     probability density, defined at the top. The UKF picks three headings:
      the mean, :math:`30^\circ`, and one step to each side,
      :math:`9.2^\circ` and :math:`50.8^\circ`. A weight says how much a point
      counts in the average: 2/3 for the middle, 1/6 for each side.
@@ -1241,8 +1560,8 @@ Sigma points
    :class: note
 
    :math:`2n + 1` points whose **weighted average is the mean** and whose
-   **weighted spread is the covariance**. :math:`n` is the size of the
-   state (Julier and Uhlmann, 1997).
+   **weighted covariance is** :math:`P`, the covariance of the state.
+   :math:`n` is the size of the state (Julier and Uhlmann, 1997).
 
 .. list-table::
    :widths: 50 25 25
@@ -1291,11 +1610,12 @@ it:
 
 1. Weighted mean: :math:`\tfrac{2}{3} \times 30 + \tfrac{1}{6} \times
    50.785 + \tfrac{1}{6} \times 9.215 = 20 + 8.464 + 1.536 = 30^\circ`.
-2. Weighted spread: each side point is :math:`\sqrt{3} \times 12^\circ`
+2. Weighted variance: each side point is :math:`\sqrt{3} \times 12^\circ`
    from the mean, and :math:`(\sqrt{3} \times 12)^2 = 3 \times 144 = 432`.
    The middle point is :math:`0^\circ` from it. So
-   :math:`\tfrac{1}{6} \times 432 + \tfrac{1}{6} \times 432 = 144`, and
-   :math:`\sqrt{144} = 12^\circ`: the input's :math:`\sigma`.
+   :math:`\tfrac{1}{6} \times 432 + \tfrac{1}{6} \times 432 = 144`, the
+   input's variance, and :math:`\sqrt{144} = 12^\circ`: the input's
+   :math:`\sigma`.
 
 **Step 2: Push each point through the real model.** No tangent: call the
 real function once per point.
@@ -1310,15 +1630,16 @@ real function once per point.
    :math:`\tfrac{2}{3} \times 17.321 + \tfrac{1}{6} \times 12.645 +
    \tfrac{1}{6} \times 19.742 = 11.547 + 2.107 + 3.290 = 16.944` m, about
    16.94 m.
-2. The new spread: take how far each landing spot is from 16.944 m, square
-   it, weight it, and add.
+2. The new variance: take how far each landing spot is from 16.944 m,
+   square it, weight it, and add.
 
    - 17.321 m is 0.377 m more: :math:`0.377^2 \times \tfrac{2}{3} = 0.095`.
    - 12.645 m is 4.299 m less: :math:`4.299^2 \times \tfrac{1}{6} = 3.080`.
    - 19.742 m is 2.798 m more: :math:`2.798^2 \times \tfrac{1}{6} = 1.305`.
 
-   The sum is 4.480, and :math:`\sqrt{4.480} = 2.117` m, about 2.12 m.
-3. In a real filter, add the model's own error, :math:`Q_k`, to the spread,
+   The sum, 4.480 square meters, is the variance. Its square root,
+   :math:`\sqrt{4.480} = 2.117` m, about 2.12 m, is the new :math:`\sigma`.
+3. In a real filter, add the model's own error, :math:`Q_k`, to the variance,
    because the model is never exact. (The heading example is a single
    function call, so it has no :math:`Q_k`.)
 
@@ -1509,13 +1830,13 @@ with :math:`\boldsymbol{\nu} = \mathbf{z} - \hat{\mathbf{z}}`, as always.
      - :math:`\hat{\mathbf{x}}^{-} = \sum W_i\,\mathcal{Y}_i`
    * -
      - :math:`P^{-} = F_k P F_k^\top + Q_k`
-     - :math:`P^{-} =` spread of :math:`\mathcal{Y}_i` :math:`+\, Q_k`
+     - :math:`P^{-} =` weighted covariance of :math:`\mathcal{Y}_i` :math:`+\, Q_k`
    * - Update
      - :math:`\hat{\mathbf{z}} = h(\hat{\mathbf{x}}^{-})`
      - :math:`\hat{\mathbf{z}} = \sum W_i\,\mathcal{Z}_i`
    * -
      - :math:`S = H_k P^{-} H_k^\top + R`
-     - :math:`S =` spread of :math:`\mathcal{Z}_i` :math:`+\, R`
+     - :math:`S =` weighted covariance of :math:`\mathcal{Z}_i` :math:`+\, R`
    * -
      - :math:`K = P^{-}H_k^\top S^{-1}`
      - :math:`K = P_{xz}\,S^{-1}`
@@ -1701,8 +2022,7 @@ belief has two peaks, with nothing in between.
 
    - This is a graph, not a map of the tunnel. The horizontal axis is the
      position along the tunnel. The height of a curve is the probability
-     density: the area under it between two positions is the chance that the
-     AV is between them.
+     density, defined at the top.
    - The yellow squares mark the two lights, 25 m apart. The black cross is
      where the AV really is, under the light at 0 m.
    - The blue curve is the honest belief: one peak under each light, each
@@ -1734,8 +2054,8 @@ The particle filter keeps no bell curve at all. On the heading example,
    :class: tip
 
    Read the three panels left to right, as in the curve figure above. The
-   height of a curve or a column is a probability density: the higher it is
-   above a value, the more likely that value. Each dot adds the same height,
+   height of a curve or a column is a probability density, defined at the
+   top. Each dot adds the same height,
    0.002 per degree on the left and 0.01 per meter on the right.
 
    - **Step 1, what the AV knows:** the same heading bell curve,
