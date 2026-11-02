@@ -199,34 +199,106 @@ def plain(ax):
 
 
 def line_or_curve():
-    """Three AV models: one a straight line (a matrix can do it), two curves (no matrix can)."""
-    fig, axs = plt.subplots(1, 3, figsize=(10.0, 3.5))
+    """Three AV models, each with its scene from above (top row) and its graph (bottom row):
+    one is a straight line (a matrix can do it), two are curves (no matrix can)."""
+    fig, axs = plt.subplots(2, 3, figsize=(10.5, 7.4), gridspec_kw={"height_ratios": [1.0, 1.0]})
+    c30 = math.cos(math.radians(30))
+    # --- Scene 1: drive d along a road at 30 degrees from east; x is how far east.
+    ax = axs[0, 0]
+    th = math.radians(30)
+    u, n = (math.cos(th), math.sin(th)), (-math.sin(th), math.cos(th))
+    a, b, w = -2.0, 25.0, 2.0
+    ax.add_patch(Polygon([(a * u[0] + s * w * n[0], a * u[1] + s * w * n[1]) for s in (-1, 1)]
+                         + [(b * u[0] + s * w * n[0], b * u[1] + s * w * n[1]) for s in (1, -1)],
+                         closed=True, color=ROAD, zorder=1))
+    draw_av(ax, 0, 0, 30)
+    e = (20 * u[0], 20 * u[1])
+    draw_av(ax, *e, 30, tint=GRAY, alpha=0.35)
+    ax.annotate("", xy=e, xytext=(0, 0), arrowprops=dict(arrowstyle="-|>", color=INK, lw=1.2), zorder=8)
+    ax.text(7.0, 6.4, "$d$ = 20 m along the road", fontsize=10, rotation=30, ha="center", va="center")
+    ax.plot([e[0], e[0]], [e[1], -3.0], color=BLUE, lw=0.9, ls=(0, (3, 3)), zorder=4)
+    ax.annotate("", xy=(e[0], -3.0), xytext=(0, -3.0), arrowprops=dict(arrowstyle="<|-|>", color=BLUE, lw=1.2))
+    ax.text(e[0] / 2, -4.2, f"$x$ = {20 * c30:.2f} m east", color=BLUE, fontsize=10, ha="center", va="top")
+    ax.plot([0, 6], [0, 0], color=INK, lw=0.8)
+    ax.add_patch(Arc((0, 0), 9, 9, theta1=0, theta2=30, color=INK, lw=0.9))
+    ax.text(5.0, 0.6, "30°", fontsize=10)
+    ax.set_title("Drive along a road at 30°", fontsize=11.5, fontweight="bold")
+    ax.set_xlim(-4, 24); ax.set_ylim(-8.5, 14)
+    # --- Scene 2: drive 20 m at heading theta from east; x is how far east.
+    ax = axs[0, 1]
+    t = np.radians(np.linspace(-60, 75, 200))
+    ax.plot(20 * np.cos(t), 20 * np.sin(t), color=GRAY, lw=0.9, ls=(0, (1, 2)))
+    label(ax, (18.8, -6.8), "every spot 20 m away", (1.0, -7.4))
+    draw_av(ax, 0, 0, 30)
+    ax.annotate("", xy=e, xytext=(0, 0), arrowprops=dict(arrowstyle="-|>", color=INK, lw=1.2), zorder=8)
+    ax.text(8.0, 6.6, "20 m at heading $\\theta$", fontsize=10, rotation=30, ha="center", va="center")
+    draw_av(ax, *e, 30, tint=GRAY, alpha=0.35)
+    ax.plot([0, 7], [0, 0], color=INK, lw=0.8)
+    ax.add_patch(Arc((0, 0), 11, 11, theta1=0, theta2=30, color=INK, lw=0.9))
+    ax.text(6.0, 0.7, "$\\theta$", fontsize=11)
+    ax.plot([e[0], e[0]], [e[1], -3.0], color=BLUE, lw=0.9, ls=(0, (3, 3)), zorder=4)
+    ax.annotate("", xy=(e[0], -3.0), xytext=(0, -3.0), arrowprops=dict(arrowstyle="<|-|>", color=BLUE, lw=1.2))
+    ax.text(e[0] / 2, -4.2, "$x$ = 20 cos $\\theta$", color=BLUE, fontsize=10, ha="center", va="top")
+    ax.set_title("Drive 20 m at heading $\\theta$", fontsize=11.5, fontweight="bold")
+    ax.set_xlim(-4, 24); ax.set_ylim(-8.5, 14)
+    # --- Scene 3: a straight road; the camera measures the range r to a sign.
+    ax = axs[0, 2]
+    ax.add_patch(Polygon([(-2, -2), (26, -2), (26, 2), (-2, 2)], closed=True, color=ROAD, zorder=1))
+    draw_av(ax, 16, 0, 0)
+    ax.add_patch(Polygon([(19.3, 9.3), (20.7, 9.3), (20.7, 10.7), (19.3, 10.7)], closed=True, color=INK, zorder=6))
+    ax.text(20, 11.3, "the sign", fontsize=10, ha="center", va="bottom")
+    ax.plot([16, 20], [0, 10], color=INK, lw=1.4, zorder=7)
+    ax.text(16.6, 6.2, "$r$", fontsize=11, ha="right")
+    ax.plot([20, 20], [10, -3.0], color=GRAY, lw=0.9, ls=(0, (1, 2)), zorder=4)
+    ax.text(20.4, 5.0, "10 m", color="#555555", fontsize=10)
+    ax.annotate("", xy=(16, -3.0), xytext=(0, -3.0), arrowprops=dict(arrowstyle="<|-|>", color=INK, lw=1.2))
+    ax.plot([0, 0], [-2, -3.6], color=INK, lw=0.8)
+    ax.text(8, -4.2, "$x$ = 16 m", fontsize=10, ha="center", va="top")
+    ax.text(8, 4.5, "the AV at $x$:\n$r$ = 10.77 m", fontsize=10, ha="center")
+    ax.set_title("Measure the range to a sign", fontsize=11.5, fontweight="bold")
+    ax.set_xlim(-2, 26); ax.set_ylim(-8.5, 14)
+    for ax in axs[0]:
+        ax.set_aspect("equal")
+        ax.set_xlabel("east (m)")
+        ax.set_ylabel("north (m)")
+        for s in ("top", "right"):
+            ax.spines[s].set_visible(False)
+    # --- The three graphs, each with the scene's example marked.
     d = np.linspace(0, 30, 200)
-    axs[0].plot(d, d * math.cos(math.radians(30)), color=INK, lw=2.4)
-    axs[0].set_title("A straight line", fontsize=12, fontweight="bold")
-    axs[0].set_xlabel("distance driven, $d$ (m)")
-    axs[0].set_ylabel("distance east, $x$ (m)")
-    axs[0].text(1.0, 24.0, "$x$ = $d$ cos 30° = 0.866 $d$", fontsize=10.5)
-    axs[0].set_ylim(0, 27)
-    th = np.linspace(-90, 90, 300)
-    axs[1].plot(th, 20 * np.cos(np.radians(th)), color=INK, lw=2.4)
-    axs[1].set_title("A curve", fontsize=12, fontweight="bold")
-    axs[1].set_xlabel("heading, $\\theta$ (deg)")
-    axs[1].set_ylabel("distance east, $x$ (m)")
-    axs[1].set_xticks([-90, -45, 0, 45, 90])
-    axs[1].text(-88, 23.0, "$x$ = 20 cos $\\theta$ (drive 20 m)", fontsize=10.5)
-    axs[1].set_ylim(0, 27)
+    g = axs[1, 0]
+    g.plot(d, d * c30, color=INK, lw=2.4)
+    g.plot(20, 20 * c30, "o", color=BLUE, ms=7, zorder=5)
+    label(g, (20, 20 * c30), f"$d$ = 20 m: $x$ = {20 * c30:.2f} m", (12.5, 4.5), color=BLUE)
+    g.set_title("A straight line", fontsize=11.5, fontweight="bold")
+    g.set_xlabel("distance driven, $d$ (m)")
+    g.set_ylabel("distance east, $x$ (m)")
+    g.text(1.0, 24.0, "$x$ = $d$ cos 30° = 0.866 $d$", fontsize=10.5)
+    g.set_ylim(0, 27)
+    tdeg = np.linspace(-90, 90, 300)
+    g = axs[1, 1]
+    g.plot(tdeg, 20 * np.cos(np.radians(tdeg)), color=INK, lw=2.4)
+    g.plot(30, 20 * c30, "o", color=BLUE, ms=7, zorder=5)
+    label(g, (30, 20 * c30), f"$\\theta$ = 30°: $x$ = {20 * c30:.2f} m", (-30, 4.5), color=BLUE)
+    g.set_title("A curve", fontsize=11.5, fontweight="bold")
+    g.set_xlabel("heading, $\\theta$ (deg)")
+    g.set_ylabel("distance east, $x$ (m)")
+    g.set_xticks([-90, -45, 0, 45, 90])
+    g.text(-88, 24.0, "$x$ = 20 cos $\\theta$", fontsize=10.5)
+    g.set_ylim(0, 27)
     x = np.linspace(0, 30, 300)
-    axs[2].plot(x, np.sqrt((20 - x) ** 2 + 100), color=INK, lw=2.4)
-    axs[2].set_title("A curve", fontsize=12, fontweight="bold")
-    axs[2].set_xlabel("AV's position along the road, $x$ (m)")
-    axs[2].set_ylabel("range to the sign, $r$ (m)")
-    axs[2].text(1.0, 24.0, "$r = \\sqrt{(20 - x)^2 + 10^2}$", fontsize=10.5)
-    axs[2].set_ylim(0, 27)
-    for ax in axs:
-        plain(ax)
+    g = axs[1, 2]
+    g.plot(x, np.sqrt((20 - x) ** 2 + 100), color=INK, lw=2.4)
+    g.plot(16, h(16), "o", color=BLUE, ms=7, zorder=5)
+    label(g, (16, h(16)), f"$x$ = 16 m: $r$ = {h(16):.2f} m", (6.0, 4.5), color=BLUE)
+    g.set_title("A curve", fontsize=11.5, fontweight="bold")
+    g.set_xlabel("AV's position along the road, $x$ (m)")
+    g.set_ylabel("range to the sign, $r$ (m)")
+    g.text(1.0, 24.0, "$r = \\sqrt{(20 - x)^2 + 10^2}$", fontsize=10.5)
+    g.set_ylim(0, 27)
+    for g in axs[1]:
+        plain(g)
     fig.patch.set_facecolor("white")
-    fig.tight_layout()
+    fig.tight_layout(h_pad=2.0)
     save(fig, OUT / "line_or_curve.png")
 
 
@@ -236,13 +308,10 @@ def bell(x, m, s):
 
 def three_steps(knows, func, gets):
     """One row of three panels, read left to right: what the AV knows, the function, what you get."""
-    fig, axs = plt.subplots(1, 3, figsize=(10.0, 3.6), gridspec_kw={"width_ratios": [1, 1, 1]})
+    fig, axs = plt.subplots(1, 3, figsize=(10.5, 3.6), gridspec_kw={"width_ratios": [1, 1, 1]})
     for ax, t in zip(axs, ("Step 1: what the AV knows", "Step 2: the function", "Step 3: what you get")):
         ax.set_title(t, fontsize=12, fontweight="bold", loc="left")
         plain(ax)
-    for ax in (axs[0], axs[2]):
-        ax.set_yticks([])
-        ax.spines["left"].set_visible(False)
     return fig, axs
 
 
@@ -255,6 +324,7 @@ def bell_line():
     axs[0].plot(d, bell(d, 20, 1), color=INK, lw=2)
     axs[0].axvspan(19, 21, color=GRAY, alpha=0.25, lw=0)
     axs[0].set_xlabel("distance driven, $d$ (m)")
+    axs[0].set_ylabel("probability density (per m)")
     axs[0].text(16.2, 0.36, "$d$ = 20 ± 1 m", fontsize=10.5)
     axs[0].text(20, 0.43, "19 to 21 m", fontsize=10, color="#555555", ha="center")
     axs[0].set_ylim(0, 0.46)
@@ -272,6 +342,7 @@ def bell_line():
     axs[2].plot(x, bell(x, 20 * c, c), color=BLUE, lw=2)
     axs[2].axvspan(19 * c, 21 * c, color=BLUE, alpha=0.15, lw=0)
     axs[2].set_xlabel("distance east, $x$ (m)")
+    axs[2].set_ylabel("probability density (per m)")
     axs[2].text(13.6, 0.52, "$x$ = 17.32 ± 0.87 m:\nstill a bell curve", fontsize=10.5, color=BLUE, va="top")
     axs[2].text(20 * c, 0.03, "16.45 to\n18.19 m", fontsize=10, color=BLUE, ha="center", va="bottom")
     axs[2].set_ylim(0, 0.55)
@@ -293,11 +364,17 @@ def bell_curve():
     axs[0].text(-9, 0.0385, "$\\theta$ = 30° ± 12°", fontsize=10.5)
     axs[0].text(30, 0.043, "18° to 42°", fontsize=10, color="#555555", ha="center")
     axs[0].set_ylim(0, 0.046)
+    axs[0].set_ylabel("probability density (per degree)")
     axs[1].plot(th, 20 * np.cos(np.radians(th)), color=INK, lw=2.4)
     axs[1].axvspan(18, 42, color=GRAY, alpha=0.25, lw=0)
     axs[1].axhspan(lo, hi, color=BLUE, alpha=0.2, lw=0)
     x30 = 20 * math.cos(math.radians(30))
     axs[1].plot([30, 30, -10], [6, x30, x30], color=INK, lw=0.9, ls=(0, (1, 2)))
+    # Equal steps in heading, unequal steps east: the ends of the shaded stretch.
+    for t, x in ((18, hi), (42, lo)):
+        axs[1].plot(t, x, "o", color=INK, ms=5, zorder=8)
+    label(axs[1], (18, hi), f"18°: {hi:.2f} m, {hi - x30:.2f} m above", (25, 20.75))
+    label(axs[1], (42, lo), f"42°: {lo:.2f} m,\n{x30 - lo:.2f} m below", (-8, 13.0))
     axs[1].set_xlim(-10, 70)
     axs[1].set_ylim(6, 21.5)
     axs[1].set_xlabel("heading, $\\theta$ (deg)")
@@ -314,6 +391,7 @@ def bell_curve():
     axs[2].set_xlim(6, 21)
     axs[2].set_ylim(0, 0.42)
     axs[2].set_xlabel("distance east, $x$ (m)")
+    axs[2].set_ylabel("probability density (per m)")
     axs[2].text(6.3, 0.40, "lopsided:\nnot a bell curve", fontsize=10.5, color=BLUE, va="top")
     label(axs[2], (mean, 0.25), f"its mean, {mean:.2f} m", (7.0, 0.25))
     label(axs[2], (x30, 0.16), f"20 cos 30° = {x30:.2f} m", (7.0, 0.16))

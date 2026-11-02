@@ -5,10 +5,32 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.22.0: Filters Reading, First Figures Redrawn (2026-11-01)
+.. dropdown:: v2.23.0: Filters Reading, Every Figure Redrawn (2026-11-01)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Pre-Read
+
+   - **Nonlinear Filters reading:** every figure is now labeled in words
+     and explained in a "Reading the figure" box: the EKF's tangents, the
+     range to a landmark, the EKF's covariance on a bend, the banana-shaped
+     belief, the UKF's sigma points and the particle filter in the tunnel.
+   - **Line or curve:** the first figure now shows, from above, the AV
+     scene behind each of its three graphs.
+   - **Bell curves:** every bell curve and histogram has a labeled y axis,
+     the probability density, and the box says what its height means. The
+     curve example now compares itself with the straight-line example, row
+     by row.
+   - **Corrections:** the EKF's ellipse after 3 s is 1.58 m the long way,
+     :math:`75^\circ` from the heading, and 0.30 m the short way. In the
+     tunnel, the third cluster sits at 568 m, and the weighted average stays
+     more than 10 m off until 20.9 s.
+
+
+.. dropdown:: v2.22.0: Filters Reading, First Figures Redrawn (2026-11-01)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Pre-Read
 
