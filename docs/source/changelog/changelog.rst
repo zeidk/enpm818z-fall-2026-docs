@@ -5,10 +5,27 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.23.0: Filters Reading, Every Figure Redrawn (2026-11-01)
+.. dropdown:: v2.24.0: GP3 Drives Given (2026-11-02)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Assignments
+
+   - **GP3: you no longer record your own drive.** We recorded a 90 s drive
+     for each rig, with your rig's GNSS antenna. Download your rig's file
+     from the link on Canvas (``team_1_gp3_drive.tar`` for rig A, up to
+     ``team_5`` for rig E), check it with ``SHA256SUMS`` and unpack it, as
+     the new section "Your Team's Drive" shows. Tasks 2 to 4 run on it.
+   - **GP3 Task 1** is now "Your Node and Your Drive": you still extend your
+     GP1 node to record ground truth, and recording a drive with CARLA is
+     optional. The rubric checks your tests, your GNSS mount in the YAML,
+     and ``drive_info.txt`` and ``playback.txt`` from the given drive.
+
+
+.. dropdown:: v2.23.0: Filters Reading, Every Figure Redrawn (2026-11-01)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Pre-Read
 

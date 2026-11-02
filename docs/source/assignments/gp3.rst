@@ -70,8 +70,9 @@ GP3: Fusion & Localization
 Overview
 --------
 
-GP3 puts your car and every object around it on one map. You record a drive
-with your own GP1 node, and every later task works on that recording.
+GP3 puts your car and every object around it on one map. You extend your
+GP1 node so it can record a drive with ground truth; we give you that drive,
+recorded with your rig, and every later task works on it.
 
 .. figure:: /_static/images/GP3/gp3_flow.png
    :alt: A flow diagram, left to right. GP1's sensor_manager, in green, records your drive, a gray box. From the drive: the camera goes to GP2's detector_node, in blue; GNSS goes to the gray gnss_outage box and on to localization_node as fix_used; the IMU goes to localization_node; LiDAR goes to fusion_node. The detector's boxes go to fusion_node, localization_node's pose goes up to fusion_node, fusion_node's objects go to tracker_node, and tracker_node's tracks and localization_node's pose go to a dashed red GP4 box: planner, behavior, controller. fusion_node, localization_node and tracker_node are purple, GP3's own. Above them, dashed gray arrows marked reuses come down from GP1's lidar_projection, green, to fusion_node, and from GP2's box_tracker, blue, to tracker_node. A legend: green from GP1, blue from GP2, purple GP3: yours, red next: GP4, gray given or data.
@@ -118,10 +119,10 @@ that it trusts the fix almost completely.
    * - **Task**
      - **Lecture**
      - **What it adds**
-   * - 1. Record your drive (10 pts)
+   * - 1. Your node and your drive (10 pts)
      - L2
-     - 90 s of driving in Town01, recorded with your GP1 node, with the
-       ground truth that grades everything else.
+     - Your GP1 node extended to record a drive with the ground truth that
+       grades everything else; the 90 s drive itself is given.
    * - 2. EKF localization (30 pts)
      - L3, L6
      - Your car's position, heading and speed on the map, from the IMU and
@@ -146,7 +147,7 @@ that it trusts the fix almost completely.
    * - **Task**
      - **Your code it builds on**
      - **What is new**
-   * - 1. Record
+   * - 1. Your node
      - GP1: ``sensor_manager.py``, its YAML, ``record_launch.py``
      - Your GNSS antenna position; ground truth and traffic after each tick
    * - 2. EKF
@@ -172,7 +173,8 @@ Learning Objectives
 
 After completing GP3, you will be able to:
 
-- Record a drive with ground truth and check that its frames agree.
+- Extend a node to record a drive with ground truth, and check that a
+  drive's frames agree.
 - Derive the Jacobians of a nonlinear motion model and of a GNSS model with
   an antenna offset, and check them against finite differences.
 - Run an EKF on two sensors that arrive at different rates, and measure it
@@ -288,7 +290,7 @@ Your drive and the run bags stay out of git: add ``gp3_data/`` (or wherever
 you keep them) to ``.gitignore``. A 90 s drive's size depends on your
 camera's image size. We measured 4.3 GiB at 1024 x 576, 6.6 GiB at
 1280 x 720, 10.0 GiB at 1600 x 900 and 14.3 GiB at 1920 x 1080. Check your
-free disk space before you record.
+free disk space before you unpack it (or record one).
 
 What the starter contains
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -409,19 +411,51 @@ How to read the table:
    on it.
 
 
+Your Team's Drive
+-----------------
+
+We recorded your team's 90 s drive for you, with your rig and your GNSS
+antenna: the same drive your own node would record in Task 1 (your GP1
+spawn point, traffic seed 818). Tasks 2 to 4 work on it.
+
+1. Download your rig's archive, ``team_X_gp3_drive.tar``, where ``X`` is
+   1 for rig A, 2 for rig B, 3 for rig C, 4 for rig D and 5 for rig E, and
+   the file ``SHA256SUMS`` from the same folder (link on Canvas). Download the two files one at a time, not the
+   whole folder.
+2. Check that the download is complete. The line for your archive must end
+   in ``OK``; if it says ``FAILED``, download it again:
+
+   .. code-block:: bash
+
+      cd ~/Downloads && sha256sum -c --ignore-missing SHA256SUMS
+
+3. Unpack it. It creates ``~/gp3_data/drive``, the path every command on
+   this page uses:
+
+   .. code-block:: bash
+
+      mkdir -p ~/gp3_data && tar xf ~/Downloads/team_X_gp3_drive.tar -C ~/gp3_data
+
+The archives are 4.3 to 14.3 GiB, depending on your camera's image size
+(see Folder Structure): check your free disk space first. Use only your own
+rig's drive: it carries your rig and your antenna, and your grade is
+checked against them.
+
+
 Tasks
 -----
 
 GP3 is worth **100 points**. Run every command from the package root,
 ``ads_pipeline/``, with ROS 2 and your workspace sourced.
 
-.. dropdown:: Task 1: Record Your Drive (10 pts)
+.. dropdown:: Task 1: Your Node and Your Drive (10 pts)
    :icon: goal
    :class-container: sd-border-primary
 
-   GP3 works on one 90 s drive in Town01, recorded with your GP1 node and
-   your rig. This task extends ``sensor_manager.py`` so the drive has the
-   ground truth and the traffic GP3 needs.
+   GP3 works on one 90 s drive in Town01 of your rig. We give you that
+   drive (see Your Team's Drive). This task extends ``sensor_manager.py`` so
+   your node can record such a drive itself, with the ground truth and the
+   traffic GP3 needs: GP4 runs your node live with these parameters.
 
    **Step 1: Your GNSS mount.** In your ``config/carla_config.yaml``, set
    ``mounts.gnss_link`` ``x`` and ``y`` from Your Team's Values (``y`` is
@@ -460,7 +494,8 @@ GP3 is worth **100 points**. Run every command from the package root,
    6. Stop the walker controllers before you destroy them
       (``actor.type_id == 'controller.ai.walker'``: call ``actor.stop()``).
 
-   **Step 3: Record.** Set ``traffic.vehicles: 80`` and
+   **Step 3 (optional): Record.** To see your node record a drive like the
+   one we give you, set ``traffic.vehicles: 80`` and
    ``traffic.walkers: 150`` in your YAML, start CARLA, then:
 
    .. code-block:: bash
@@ -475,9 +510,10 @@ GP3 is worth **100 points**. Run every command from the package root,
    slowest machine (about 11 times slower than real time) it would take
    about 17 minutes.
 
-   **Step 4: Evidence.** Save into ``results/gp3/``:
+   **Step 4: Evidence, on the given drive.** Save into ``results/gp3/``:
 
-   - ``drive_info.txt``: the output of ``ros2 bag info`` on your drive. It
+   - ``drive_info.txt``: the output of ``ros2 bag info`` on your team's
+     drive, ``~/gp3_data/drive``. It
      must show 1800 camera frames (90 s at 20 Hz) and about 900 GNSS fixes.
    - ``playback.txt``: while ``ros2 bag play`` replays the drive, the output
      of ``ros2 topic hz`` on ``/carla/gnss/fix`` and ``/carla/imu/data``,
@@ -732,7 +768,7 @@ below finishes on November 16 and leaves three days of slack.
      - Milestone
      - Done when
    * - Nov 1 to 3
-     - Starter copied, ``ads_msgs`` built, Task 1 recorded
+     - Starter copied, ``ads_msgs`` built, your drive unpacked, Task 1 done
      - ``drive_info.txt`` shows 1800 camera frames
    * - Nov 4 to 10
      - Tasks 2, 3 and 4: one person per task; fusion uses the true pose and
@@ -779,7 +815,10 @@ Submission Checklist
 
    - [ ] ``mounts.gnss_link`` set from Your Team's Values (y with its sign
          flipped).
-   - [ ] ``results/gp3/drive_info.txt`` and ``playback.txt`` saved.
+   - [ ] Your team's drive checked with ``SHA256SUMS`` and unpacked in
+         ``~/gp3_data/drive``.
+   - [ ] ``results/gp3/drive_info.txt`` and ``playback.txt`` saved, from the
+         given drive.
 
    **Tasks 2 to 4**
 
@@ -818,12 +857,12 @@ drive. The factors (1.5 times, 0.8 times) are the margins chosen for GP3.
    * - Component
      - Points
      - Criteria
-   * - Task 1: Recording
+   * - Task 1: Your node and your drive
      - 10
-     - **3** the ground-truth tests pass. **3** the GNSS mount is right: on
-       your drive, the fixes land about 0.7 m from where your antenna
-       really was (your rig's GNSS noise), not farther. **4**
-       ``drive_info.txt`` and ``playback.txt``.
+     - **3** the ground-truth tests pass. **3** the GNSS mount in your
+       ``config/carla_config.yaml`` matches Your Team's Values (x, and y
+       with its sign flipped). **4** ``drive_info.txt`` and
+       ``playback.txt``, from the given drive.
    * - Task 2: EKF
      - 30
      - **10** the EKF tests pass. **8** held-out APE with GNSS at most 1.5
