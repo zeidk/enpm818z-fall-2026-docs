@@ -10,538 +10,526 @@ Quiz
    The graded quizzes are the **five in-class quizzes** listed in the
    :doc:`syllabus </syllabus/index>`. Those are closed-notes, given at the
    start of class, and they **use different questions from these**. Working
-   through this page is good preparation for one. Memorising the answers
+   through this page is good preparation for one. Memorizing the answers
    below is not.
 
-This quiz covers the key concepts from Lecture 9: Motion Planning,
-including the planning hierarchy, bicycle kinematic model,
-graph-based planners (Dijkstra, A*, Weighted A*), sampling-based
-planners (RRT, RRT*, PRM), lattice-based planning, collision
-detection, and diffusion-based planning.
+This quiz covers Lecture 9: route, path and trajectory, configuration space
+and the region an obstacle becomes, the tightest and the comfortable turn,
+the Frenet frame and where it fails, sampling and scoring candidate paths,
+collision checking with circles and its margin, the behavior layer and its
+finite state machine, and the garage planners (grid search, hybrid A* and
+RRT). Every question can be answered from the lecture notes,
+:doc:`l9_lecture`. Nothing on this page needs
+:doc:`Going Further <l9_appendix>`.
 
 .. note::
 
    **Instructions:**
 
-   - Answer all questions to the best of your ability.
    - Multiple choice questions have exactly one correct answer.
-   - True/False questions require you to determine if the statement
-     is correct.
-   - Essay questions require short written responses (2-4 sentences).
+   - True or false questions ask whether the statement holds as stated in
+     the lecture.
+   - Short answer questions want two to four sentences.
    - Click the dropdown after each question to reveal the answer.
+   - The lecture's scene is one road of CARLA's Town03 map, two lanes each
+     way, 3.5 m wide. The AV drives at 10 m/s on the right lane's center,
+     at :math:`s` = 60 m. A car is parked 58 m ahead, at :math:`s` = 118 m,
+     0.3 m right of the lane's center. Both are 4.5 m long and 1.9 m wide.
+     :math:`s` is the distance along the right lane's center, :math:`d` the
+     distance across it, positive to the left. Numbers that are not the
+     lecture's are marked "chosen for this question".
 
 
 ----
 
 
-Multiple Choice
-===============
+Multiple Choice (Questions 1 to 14)
+===================================
 
 .. admonition:: Question 1
    :class: hint
 
-   In the three-tier autonomous vehicle planning hierarchy, which tier
-   is responsible for deciding whether the vehicle should change lanes
-   or yield to an oncoming vehicle?
+   Which one holds the positions and headings the AV follows over the next
+   few seconds, with no times?
 
-   A. Route planning (Tier 1)
+   A. The route
 
-   B. Behavior planning (Tier 2)
+   B. The path
 
-   C. Motion planning (Tier 3)
+   C. The trajectory
 
-   D. Trajectory planning (a separate fourth tier)
+   D. The lane graph
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Behavior planning (Tier 2).
+   **B**.
 
-   Behavior planning operates at the intersection scale and decides
-   *how* the vehicle interacts with other agents -- lane-keeping,
-   lane-change, yield, stop. Route planning selects which roads to
-   use. Motion planning finds a collision-free geometric path within
-   the maneuver envelope defined by the behavior planner. Trajectory
-   planning (covered in L10) adds the time dimension to the path.
+   A route is the lanes to drive, from start to goal (**A** is wrong). A
+   trajectory is a path with a speed and a time at each point (**C** is
+   wrong). The lane graph is what the route planner searches (**D** is
+   wrong). The local planner makes the path, and plans it again every
+   0.5 s. See "Route, Path and Trajectory" in :doc:`l9_lecture`.
 
 
 .. admonition:: Question 2
    :class: hint
 
-   The bicycle kinematic model describes vehicle heading change as:
+   The AV heads along the lane, the same way as the parked car. Its front
+   bumper is 3.6 m ahead of its base link; the parked car is 4.5 m long. The
+   two bodies overlap from behind when the base link is less than how far
+   behind the parked car's center?
 
-   .. math::
+   A. 3.15 m
 
-      \dot{\theta} = \frac{v}{L} \tan\delta
+   B. 3.6 m
 
-   If the wheelbase :math:`L = 2.7` m, speed :math:`v = 10` m/s,
-   and the steering angle :math:`\delta = 0.15` rad, what is
-   :math:`\dot{\theta}` (approximately)?
+   C. 5.85 m
 
-   A. 0.055 rad/s
-
-   B. 0.55 rad/s
-
-   C. 5.5 rad/s
-
-   D. 0.0055 rad/s
+   D. 9.0 m
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Approximately 0.55 rad/s.
+   **C**.
 
-   .. math::
-
-      \dot{\theta} = \frac{10}{2.7} \tan(0.15) \approx
-      3.70 \times 0.1501 \approx 0.556 \text{ rad/s}
-
-   At this heading rate the vehicle completes roughly one full turn
-   every 11 seconds, consistent with a gentle highway curve at
-   36 km/h.
+   The car's rear is 4.5 / 2 = 2.25 m behind its center. The AV's front
+   reaches it when the base link is less than 2.25 + 3.6 = 5.85 m behind the
+   center. 3.15 m (**A**) is the limit ahead of the car, from the AV's rear
+   (2.25 + 0.9). 9.0 m (**D**) is the whole length of the region,
+   5.85 + 3.15. See "Step 1: Grow the Parked Car" in :doc:`l9_lecture`.
 
 
 .. admonition:: Question 3
    :class: hint
 
-   A* search is guaranteed to find the optimal path when:
+   The region the AV's base link must avoid reaches 5.85 m behind the
+   parked car's center but only 3.15 m ahead of it. Why?
 
-   A. The heuristic overestimates the true cost-to-go by at most 10%.
+   A. The parked car faces the other way.
 
-   B. The heuristic is admissible (never overestimates the true
-      cost-to-go).
+   B. The base link sits near the AV's rear, 0.9 m from the rear bumper and
+      3.6 m from the front bumper.
 
-   C. The graph has no negative edge weights.
+   C. The 0.3 m margin is added only behind the car.
 
-   D. The goal node is expanded before any other node with higher
-      :math:`f`-value.
+   D. The AV is wider than the parked car.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- The heuristic is admissible (never overestimates).
+   **B**.
 
-   Admissibility ensures that whenever a node is expanded, its
-   :math:`g`-value is already optimal. An overestimating heuristic
-   can cause A* to expand the goal prematurely with a suboptimal
-   cost. Note: non-negative edge weights are required by Dijkstra
-   but A* inherits this requirement too; however, the critical
-   guarantee for *optimality specifically* is admissibility of
-   the heuristic.
+   Coming from behind, the AV's front leads by 3.6 m, so the base link must
+   stay farther back. Coming from ahead, only the 0.9 m behind the base
+   link matters. Both cars face the same way (**A** is wrong), the margin
+   is not part of this region (**C** is wrong), and both are 1.9 m wide
+   (**D** is wrong). See "Step 1: Grow the Parked Car" in :doc:`l9_lecture`.
 
 
 .. admonition:: Question 4
    :class: hint
 
-   Weighted A* with inflation factor :math:`\varepsilon = 3` finds a
-   path of cost 120. What is the tightest guarantee on the optimal
-   path cost?
+   At 10 m/s, with a limit of 3 m/s² on the sideways acceleration, what is
+   the smallest radius of a comfortable turn?
 
-   A. The optimal cost is at least 40.
+   A. 3.41 m
 
-   B. The optimal cost is at least 60.
+   B. 10 m
 
-   C. The optimal cost is at least 90.
+   C. 33.3 m
 
-   D. No guarantee can be made.
+   D. 300 m
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **A** -- The optimal cost is at least 40.
+   **C**.
 
-   Weighted A* guarantees that the returned cost is at most
-   :math:`\varepsilon` times the optimal cost:
-
-   .. math::
-
-      \text{cost}_{returned} \leq \varepsilon \cdot \text{cost}^*
-      \implies 120 \leq 3 \cdot \text{cost}^*
-      \implies \text{cost}^* \geq 40
-
-   The optimal cost is therefore at least 40 (it could be anywhere
-   in :math:`[40, 120]`).
+   The sideways acceleration on a curve of radius :math:`R` is
+   :math:`v^2 / R`. It must stay at or under 3 m/s², so
+   :math:`R` ≥ 10² / 3 = 100 / 3 = 33.3 m. 3.41 m (**A**) is the tightest
+   turn the steering allows, about ten times smaller. See "The AV Cannot
+   Move Sideways" in :doc:`l9_lecture`.
 
 
 .. admonition:: Question 5
    :class: hint
 
-   What is the key property that makes RRT* asymptotically optimal
-   but plain RRT is not?
+   With the right lane's center as the reference, where is the point
+   :math:`(s, d)` = (140, 3.0)?
 
-   A. RRT* uses a bidirectional search from both start and goal.
+   A. In the right lane, 3.0 m right of its center.
 
-   B. RRT* rewires the tree to reassign parents when a cheaper
-      path to a node is found.
+   B. In the left lane, 0.5 m right of the left lane's center.
 
-   C. RRT* uses a grid-based heuristic instead of random sampling.
+   C. On the left lane's left edge.
 
-   D. RRT* runs Dijkstra on the final tree to extract the path.
+   D. On the lane line between the two lanes.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- RRT* rewires the tree to reassign parents when a cheaper
-   path to a node is found.
+   **B**.
 
-   The two extra steps in RRT* (parent selection within a shrinking
-   radius and tree rewiring) allow the algorithm to continuously
-   improve path cost as more samples are added. Plain RRT only
-   adds edges and never removes or reassigns them, so the first
-   path found is never improved.
+   :math:`d` is positive to the left, so the point is 3.0 m left of the
+   right lane's center (**A** is wrong). The lane line is at
+   :math:`d` = 1.75 m (**D**) and the left lane's left edge at 5.25 m
+   (**C**), so the point is in the left lane. That lane's center is at
+   3.5 m, so the point is 3.5 − 3.0 = 0.5 m right of it. This is the point
+   P of "Two Coordinates That Follow the Road" in :doc:`l9_lecture`.
 
 
 .. admonition:: Question 6
    :class: hint
 
-   A Probabilistic Road Map (PRM) is best described as:
+   A path runs at :math:`d` = 4.0 m beside a left curve of radius 20 m
+   (chosen for this question). What is the factor :math:`1 - \kappa d`, and
+   does the Frenet frame hold there?
 
-   A. A single-query planner that rebuilds the graph for every new
-      start/goal pair.
+   A. 0.2; it fails.
 
-   B. A multi-query planner that constructs a roadmap offline and
-      reuses it for many queries.
+   B. 0.8; it holds.
 
-   C. A planner that samples configurations online during execution
-      to react to dynamic obstacles.
+   C. 0.935; it holds.
 
-   D. An exact planner that guarantees finding the shortest path.
+   D. 1.2; it holds.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- A multi-query planner that constructs a roadmap offline
-   and reuses it for many queries.
+   **B**.
 
-   PRM's two-phase design (offline construction + online query)
-   amortizes the sampling cost over many planning queries. This
-   makes it efficient for static or semi-static environments
-   where the same roadmap can be queried repeatedly (e.g., a
-   warehouse or structured parking garage).
+   :math:`\kappa = 1 / R` = 1 / 20, so :math:`1 - \kappa d` = 1 − 4.0 / 20 =
+   0.8. It is above 0, so the frame holds. It would fail at :math:`d` =
+   20 m, the curve's center. 0.935 (**C**) is the lecture's value on its
+   tightest curve, :math:`R` = 61.9 m. See "Where the Frenet Frame Fails" in
+   :doc:`l9_lecture`.
 
 
 .. admonition:: Question 7
    :class: hint
 
-   In lattice-based planning for autonomous vehicles, motion
-   primitives are:
+   At 10 m/s, a candidate moves 3.5 m sideways over a maneuver length of
+   25 m (chosen for this question). Using the lecture's estimate of the
+   peak sideways acceleration, is it kept?
 
-   A. Computed online at every planning cycle using numerical
-      integration of the bicycle model.
+   A. 1.62 m/s²; kept.
 
-   B. Pre-computed offline kinematically feasible maneuvers stored
-      in a lookup table.
+   B. 2.24 m/s²; kept.
 
-   C. Straight-line segments connecting adjacent grid cells,
-      ignoring vehicle kinematics.
+   C. 3.23 m/s²; dropped as too sharp.
 
-   D. Neural network outputs that map sensor data to control actions.
+   D. 5.05 m/s²; dropped as too sharp.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Pre-computed offline kinematically feasible maneuvers
-   stored in a lookup table.
+   **C**.
 
-   The key advantage of lattice planning is that the expensive
-   kinematic computation (integrating the bicycle model, checking
-   curvature limits) is done once offline. At runtime, planning
-   reduces to pure graph search with O(1) edge lookups, enabling
-   real-time replanning at 20--50 Hz.
+   :math:`a \approx v^2 \times 5.77 \times \Delta d / L^2` =
+   100 × 5.77 × 3.5 / 625 = 3.23 m/s², over the 3 m/s² limit. 2.24 (**B**)
+   is the 30 m candidate and 5.05 (**D**) the 20 m one. The estimate leaves
+   out the path's slope; the hands-on script's exact value for this path is
+   3.17 m/s², still over 3. See "How Hard a Candidate Turns, by Hand" in
+   :doc:`l9_lecture`.
 
 
 .. admonition:: Question 8
    :class: hint
 
-   The Minkowski sum :math:`\mathcal{O} \oplus \mathcal{B}(d)` used
-   in collision detection safety margins:
+   With the lecture's weights (comfort 2 per m/s², progress 0.5 per m),
+   how much lost progress costs as much as 1 m/s² more of peak sideways
+   acceleration?
 
-   A. Shrinks the obstacle by radius :math:`d` to create a
-      conservative free space.
+   A. 0.5 m
 
-   B. Inflates the obstacle boundary outward by radius :math:`d`,
-      equivalent to shrinking the robot to a point.
+   B. 2 m
 
-   C. Computes the intersection of the obstacle with a circle of
-      radius :math:`d`.
+   C. 4 m
 
-   D. Rotates the obstacle by angle :math:`d` around its centroid.
+   D. 8 m
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Inflates the obstacle boundary outward by radius
-   :math:`d`.
+   **C**.
 
-   The Minkowski sum with a disk inflates every point on the
-   obstacle boundary outward by :math:`d`. This is equivalent
-   to shrinking the robot to a point and planning in the inflated
-   configuration space -- a standard trick that reduces collision
-   checking to point-in-polygon tests. The safety margin encodes
-   both localization uncertainty and comfort distance.
+   1 m/s² costs 2 × 1 = 2. Lost progress costs 0.5 per meter, so 2 / 0.5 =
+   4 m costs the same 2. See "Step 3: the Four Cost Terms" in
+   :doc:`l9_lecture`.
 
 
 .. admonition:: Question 9
    :class: hint
 
-   DiffusionDrive (CVPR 2025) achieves real-time performance
-   compared to earlier diffusion planners primarily by:
+   Candidate C keeps the lane and stops; its path covers 50.15 m of the
+   70 m ahead. What is its progress term?
 
-   A. Using a larger neural network with more parameters.
+   A. 0
 
-   B. Running a truncated diffusion schedule starting partway
-      through the denoising chain, reducing denoising steps from
-      ~100 to ~10.
+   B. 9.93
 
-   C. Replacing the Transformer encoder with a simpler CNN.
+   C. 19.85
 
-   D. Only planning for the next 1 second instead of 8 seconds.
+   D. 25.08
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Using a truncated diffusion schedule starting partway
-   through the denoising chain.
+   **B**.
 
-   DiffusionDrive initializes from anchored Gaussian noise
-   (clustered around likely trajectory modes) rather than pure
-   noise, and runs the reverse diffusion process starting from
-   step :math:`T' \ll T`. This dramatically cuts the number of
-   network forward passes required at inference while maintaining
-   trajectory quality, enabling 45 FPS on a single GPU.
+   It leaves 70 − 50.15 = 19.85 m uncovered, and progress costs 0.5 per
+   meter: 0.5 × 19.85 = 9.93. 19.85 (**C**) forgets the weight; 25.08
+   (**D**) is 0.5 × 50.15, the meters covered. See "Step 3: Score Candidate
+   C" in :doc:`l9_lecture`.
 
 
 .. admonition:: Question 10
    :class: hint
 
-   Which planning algorithm is most appropriate for real-time motion
-   planning on a structured highway road network?
+   Two cars stand side by side, their centers 2.6 m apart across (chosen
+   for this question). Each is covered by the lecture's circles of radius
+   1.21 m. What does the check report, with the 0.3 m margin?
 
-   A. Plain RRT (fast first path)
+   A. Gap 0.18 m: under 0.3 m, a collision.
 
-   B. PRM (multi-query roadmap)
+   B. Gap 0.18 m: over 0, so the pose is free.
 
-   C. Lattice-based planner in Frenet frame
+   C. Gap 0.70 m: free.
 
-   D. Full RRT* (asymptotically optimal)
+   D. Gap −0.12 m: a collision.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- Lattice-based planner in Frenet frame.
+   **A**.
 
-   Highway driving is highly structured: lanes are well-defined,
-   maneuvers are limited, and replanning must occur at 10--50 Hz.
-   Lattice planners exploit this structure through pre-built
-   road-aligned motion primitives and fast graph search. RRT/RRT*
-   are designed for unstructured spaces and converge slowly. PRM
-   is a multi-query planner but its roadmap is not road-aligned.
+   The gap is the distance between the centers minus the two radii:
+   2.6 − 2 × 1.21 = 2.6 − 2.42 = 0.18 m. The check calls a pose a collision
+   when the gap is under 0.3 m, not only under 0 (**B** is wrong). 0.70 m
+   (**C**) is the gap between the bodies, 2.6 − 1.9; the circles reach
+   0.26 m past each side. −0.12 m (**D**) is the lecture's case with the
+   bodies 0.4 m apart. See "The Margin" and "Circles Can Report a Collision
+   That Is Not There" in :doc:`l9_lecture`.
 
-
-----
-
-
-True / False
-============
 
 .. admonition:: Question 11
    :class: hint
 
-   **True or False:** The bicycle model imposes a holonomic
-   constraint, meaning the vehicle can move freely in any direction
-   including sideways.
+   What does the 0.3 m margin of the collision check cover?
+
+   A. Only the error in the AV's own position.
+
+   B. Only the error in where perception places the parked car.
+
+   C. Only the error in prediction for a moving car.
+
+   D. All three errors together.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **A**.
 
-   The bicycle model imposes a **nonholonomic** constraint:
-   :math:`\dot{x}\sin\theta - \dot{y}\cos\theta = 0`. This
-   prohibits lateral (sideways) motion. A nonholonomic constraint
-   restricts the instantaneously achievable velocities but not
-   necessarily the reachable configurations over time (the vehicle
-   can parallel-park using a sequence of forward/backward arcs).
+   A published requirement allows at most 0.29 m of error in the AV's own
+   position on a local street, rounded to 0.3 m. The parked car's position
+   comes from perception, and a moving car's from prediction, with more
+   error; a margin for them would add to the 0.3 m. See "The Margin: How
+   Close Counts as a Collision" in :doc:`l9_lecture`.
 
 
 .. admonition:: Question 12
    :class: hint
 
-   **True or False:** Dijkstra's algorithm expands nodes in
-   increasing order of their true cost-to-come :math:`g(v)`.
+   The behavior layer closes the left lane, so the sampler keeps
+   :math:`d_\text{end}` ≤ 0.5 m. Why does the AV then wait behind the
+   parked car?
+
+   A. Stop behind is always the cheapest candidate.
+
+   B. The 9 candidates other than stop behind all collide:
+      at :math:`d_\text{end}` = 0.5 m the centers are only 0.8 m apart
+      across, under 2.42 m. Stop behind is the only one left.
+
+   C. The candidates in the right lane are all too sharp.
+
+   D. The behavior layer sets the speed to 0.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **True**
+   **B**.
 
-   Dijkstra maintains a min-priority queue keyed on :math:`g(v)`.
-   Each extraction yields the node with the smallest known
-   cost-to-come among unvisited nodes. This is exactly the
-   Bellman optimality condition: once a node is extracted, its
-   :math:`g`-value is optimal (assuming non-negative edge weights).
+   3 end offsets × 3 lengths + 1 = 10 candidates. At :math:`d_\text{end}` =
+   0.5 m the AV's circles are 0.5 + 0.3 = 0.8 m across from the car's,
+   under 2 × 1.21 = 2.42 m, so they overlap; the smaller offsets are closer
+   still. With the left lane open, stop behind ranks 8th at 11.54 (**A** is
+   wrong). See "One Decision Changes the Cheapest Path" in
+   :doc:`l9_lecture`.
 
 
 .. admonition:: Question 13
    :class: hint
 
-   **True or False:** RRT is probabilistically complete, meaning
-   that given infinite samples it will always find a path if one
-   exists.
+   The valet FSM is in Approach. The spot is still free, and its width
+   now reads 2.5 m. With the lecture's two thresholds (enter Approach at
+   2.6 m or more, go back to Search below 2.3 m), what happens?
+
+   A. The FSM goes back to Search.
+
+   B. The FSM stays in Approach.
+
+   C. The FSM goes to Reverse in.
+
+   D. The FSM goes to Parked.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **True**
+   **B**.
 
-   RRT is probabilistically complete. As the number of random
-   samples :math:`N \to \infty`, the probability that the tree
-   fails to reach any reachable configuration goes to zero. This
-   follows from the density of the sampling distribution over
-   :math:`\mathcal{C}_{free}`. However, probabilistic completeness
-   does not guarantee path quality -- RRT finds *a* path, not
-   necessarily a *good* path.
+   2.5 m is not under 2.3 m, and the spot is not taken, so transition 3
+   does not fire. With one threshold of 2.6 m both ways, the same reading
+   would send the AV back to Search (**A**). Reverse in needs the AV
+   stopped where the reverse maneuver starts (**C** is wrong). See "Two
+   Thresholds Keep a State from Flickering" in :doc:`l9_lecture`.
 
 
 .. admonition:: Question 14
    :class: hint
 
-   **True or False:** In diffusion-based planning, the reverse
-   (denoising) process starts from a trajectory drawn from the
-   dataset and gradually removes noise.
+   What does hybrid A* keep in each :math:`(x, y, \theta)` cell?
+
+   A. The cell's center, as plain A* does.
+
+   B. An exact pose, one the AV reaches by driving an arc from the pose
+      before it.
+
+   C. Every pose that has reached the cell.
+
+   D. Only the heading.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **B**.
 
-   The reverse process starts from **pure Gaussian noise**
-   :math:`\tau_T \sim \mathcal{N}(0, I)` (or, in DiffusionDrive,
-   from anchored noise near likely trajectory clusters). It is the
-   *forward* process that starts from a real trajectory and adds
-   noise. The reverse process is the generative (planning) process
-   that denoises from noise to a plausible trajectory.
-
-
-.. admonition:: Question 15
-   :class: hint
-
-   **True or False:** Inflating obstacle representations by a safety
-   margin :math:`d_{\text{safe}}` is equivalent to planning with a
-   point-mass robot in the inflated configuration space.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**
-
-   When all obstacles are inflated by the robot's radius (or
-   safety margin) via the Minkowski sum, the robot can be treated
-   as a point mass for collision checking purposes. Any path that
-   is collision-free for the point mass in the inflated space is
-   also collision-free for the full-size robot in the original
-   space. This simplification is used in virtually all practical
-   motion planners.
+   If the cell already holds an expanded pose, the new one is dropped
+   (**C** is wrong); if not, the exact pose is stored. The path is made of
+   these exact poses, so it has no jumps, unlike a path through cell
+   centers (**A**). See "Hybrid A*, Steps 4 to 6" in :doc:`l9_lecture`.
 
 
 ----
 
 
-Essay Questions
-===============
+True or False (Questions 15 to 18)
+==================================
+
+.. admonition:: Question 15
+   :class: hint
+
+   The three-circle collision check can miss a real collision between the
+   AV and the parked car.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False**.
+
+   The circles cover the whole body, so the check never misses a real
+   collision. It errs the other way: it can drop a path that was free.
+   Bodies 0.4 m apart already count as overlapping. See "Circles Can Report
+   a Collision That Is Not There" in :doc:`l9_lecture`.
+
 
 .. admonition:: Question 16
    :class: hint
 
-   **Compare RRT and A* as motion planners for an autonomous
-   vehicle navigating a structured urban environment.** Address
-   completeness, optimality, computational efficiency, and
-   suitability for real-time replanning.
+   If a path to the goal exists, hybrid A* always finds it.
 
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
+.. dropdown:: Answer
    :class-container: sd-border-success
 
-   *Key points to include:*
+   **False**.
 
-   - A* on a pre-built road graph is complete and optimal
-     (with an admissible heuristic) and runs in milliseconds
-     on sparse road graphs, making it well-suited for real-time
-     replanning in structured environments.
-   - RRT is probabilistically complete but not optimal; it
-     explores uniformly in all directions including off-road
-     areas, making it inefficient when the environment has
-     exploitable structure (lanes, intersections).
-   - For structured urban driving, A* (or lattice search) is
-     strongly preferred. RRT is better suited to unstructured
-     spaces (parking, off-road) where a road-graph abstraction
-     does not exist.
-   - Weighted A* with :math:`\varepsilon > 1` reduces the number
-     of expanded nodes at the cost of a bounded suboptimality,
-     making it the practical choice for real-time urban planning.
+   Every path hybrid A* returns can be driven, but the search is not
+   complete: it can miss a path that exists. See "Hybrid A* in the Garage"
+   in :doc:`l9_lecture`.
 
 
 .. admonition:: Question 17
    :class: hint
 
-   **Explain the concept of asymptotic optimality in RRT* and
-   why it matters for practical motion planning.** What is the
-   trade-off between RRT and RRT* in a time-constrained setting?
+   GP4 asks you to write a local planner that samples candidate paths in
+   :math:`(s, d)`.
 
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
+.. dropdown:: Answer
    :class-container: sd-border-success
 
-   *Key points to include:*
+   **False**.
 
-   - Asymptotic optimality means that as the number of samples
-     :math:`N \to \infty`, the cost of the RRT* path converges
-     to the true optimal cost. For any finite :math:`N`, RRT*
-     provides a path that is at least as good as RRT's.
-   - RRT* achieves this through the parent-selection and rewiring
-     steps that continuously improve the tree structure as new
-     samples are added.
-   - The trade-off: RRT* does more work per sample (neighbor
-     search within radius :math:`r_N`), so it runs slower than
-     RRT for a fixed time budget. In time-constrained scenarios
-     RRT might find a feasible path faster.
-   - In practice, RRT* is used for offline planning or as an
-     *anytime* algorithm: run it until the time budget expires
-     and return the best path found so far.
+   GP4 asks for A* on a lane graph with a node every 2 m, which plans again
+   when one of two triggers fires. It does not ask for a local planner; one
+   would sit between your A* and your controller. See "What a Local Planner
+   Adds to GP4's Planner" in :doc:`l9_lecture`.
 
 
 .. admonition:: Question 18
    :class: hint
 
-   **Describe how diffusion-based planners differ from classical
-   optimization-based motion planners.** What advantages do they
-   offer for complex multi-agent scenarios, and what are their
-   current limitations?
+   With the right lane's center as the reference, the lane line between the
+   two lanes is the line :math:`d` = +1.75 m.
 
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
+.. dropdown:: Answer
    :class-container: sd-border-success
 
-   *Key points to include:*
+   **True**.
 
-   - Classical optimization-based planners define an explicit
-     cost function (e.g., path length + smoothness + safety
-     margin) and solve a constrained optimization problem. They
-     are interpretable and can encode hard constraints but
-     struggle with multi-modal distributions over possible
-     futures.
-   - Diffusion planners learn a generative model of plausible
-     trajectories from expert data. The denoising process
-     implicitly captures the multi-modal distribution of human
-     driving behavior and can generate diverse, interaction-
-     consistent plans.
-   - Advantages: handles complex interactions without hand-crafted
-     cost functions; naturally multi-modal (can represent
-     uncertainty over which maneuver to take).
-   - Limitations: require large, high-quality training datasets;
-     inference is more expensive than classical planners;
-     safety guarantees are harder to formally prove; behavior
-     can be hard to interpret or correct when it fails.
+   The lanes are 3.5 m wide, so the lane line is 3.5 / 2 = 1.75 m left of
+   the right lane's center. In :math:`(s, d)` every lane edge is a line of
+   constant :math:`d`: −1.75, +1.75 and +5.25 m. See "The Road Becomes
+   Straight in (s, d)" in :doc:`l9_lecture`.
+
+
+----
+
+
+Short Answer (Questions 19 to 20)
+=================================
+
+.. admonition:: Question 19
+   :class: hint
+
+   For the AV heading along the lane, the parked car becomes a 9.0 m by
+   3.8 m box that the base link must avoid. Why do the planners not use
+   this box for every pose along a path, and what do they do instead?
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   The box holds only for one heading. Each heading gives its own region,
+   so the obstacle region depends on all three numbers
+   :math:`(x, y, \theta)`; for a turned AV it is not even a box. So the
+   planners do not build it. They place the AV's body at each pose along a
+   path, covered by three circles, and check it against the car's circles:
+   4,332 poses for the 31 candidates. See "The Region Changes with the
+   Heading" and the Collision Checking section in :doc:`l9_lecture`.
+
+
+.. admonition:: Question 20
+   :class: hint
+
+   Set the progress weight to 0 and keep the other weights. Which candidate
+   is the cheapest, and why? Use the cost terms of candidates A and C.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   Stop behind (C) wins. Without the progress term, its cost is
+   0 + 1.62 + 0 = 1.62 (1.61 unrounded): it pays only for clearance. A still
+   costs 2.51 + 0.56 + 2.00 = 5.07, because it never lost any progress. The
+   weight of 0.5 per meter is what makes the AV pass: it prices the 19.85 m
+   that stopping gives up at 9.93. See "Step 3: Score Candidate C" in
+   :doc:`l9_lecture`.

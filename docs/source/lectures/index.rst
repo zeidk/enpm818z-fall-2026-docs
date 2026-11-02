@@ -52,7 +52,7 @@ slides are finished; the table shows the plan.
      - What the planner needs from prediction and how far ahead to look; physics models (CV, CTRV, CTRA) and their error against the horizon; ADE, FDE, the miss rate and checking a 95% region; several futures (multimodal prediction, minADE, minFDE); the map's lanes as candidate paths with Bayes' rule, and whether their probabilities are calibrated; learned predictors (VectorNet, MultiPath, MTR) and what Waymo and Tesla say they use; intent, the Intelligent Driver Model (IDM), gap acceptance and post-encroachment time (PET); on one Town01 junction
    * - L9
      - Motion Planning
-     - Planning hierarchy, vehicle kinematic models, A*, Dijkstra, RRT, PRM, lattice planners, collision detection, diffusion-based planning (consumes L8 predictions)
+     - Configuration space; the Frenet frame; sampling and scoring candidate paths; collision checking with circles; behavior as a finite state machine; grid search, hybrid A* and RRT; on one Town03 road and a parking garage
    * - L10
      - Trajectory Generation & Control
      - Path vs. trajectory, polynomial and spline generation, optimization-based planning, MPC, Pure Pursuit, Stanley controller, real-time replanning

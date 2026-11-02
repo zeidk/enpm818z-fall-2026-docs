@@ -5,10 +5,22 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.26.0: Filters Reading, Definitions First and an Easier EKF Section (2026-11-02)
+.. dropdown:: v2.26.1: Lecture 9 Topics (2026-11-02)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **Lectures table:** the L9 row now lists what Lecture 9 covers:
+     configuration space, the Frenet frame, sampling and scoring paths,
+     collision checking with circles, behavior as a finite state machine,
+     and grid search, hybrid A* and RRT in a parking garage.
+
+
+.. dropdown:: v2.26.0: Filters Reading, Definitions First and an Easier EKF Section (2026-11-02)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Pre-Read
 

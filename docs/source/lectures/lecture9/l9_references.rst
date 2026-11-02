@@ -1,346 +1,275 @@
+====================================================
 References
-==========
+====================================================
 
+These are the sources of the L9 deck, grouped by the lecture's sections, in
+the order the lecture first uses each one. A source used in several
+sections is listed once, where the lecture first uses it. The Behavior
+section uses no new source. One source is used only in the appendix
+(:doc:`l9_appendix`); it has its own group at the end.
 
-.. dropdown:: Lecture 9
-    :class-container: sd-border-secondary
-    :open:
+.. dropdown:: Introduction
+   :class-container: sd-border-secondary
+   :open:
 
-    .. card::
-        :class-card: sd-border-secondary
+   Route, path and trajectory, and the A* search the route planner runs.
 
-        **ENPM818Z -- L9: Motion Planning**
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-        Covers the three-tier motion planning hierarchy (route,
-        behavior, motion), bicycle kinematic model and nonholonomic
-        constraints, graph-based planners (Dijkstra, A*, Weighted
-        A*), sampling-based planners (RRT, RRT*, PRM), lattice-based
-        planning in the Frenet frame with pre-computed motion
-        primitives, geometric collision detection with safety
-        margins (OBB, Minkowski sum), and diffusion-based planners
-        (Diffusion Planner ICLR 2025, DiffusionDrive CVPR 2025).
+      .. grid-item-card:: Configuration, route planning, path, trajectory
+         :link: https://doi.org/10.1109/TIV.2016.2578706
+         :class-card: sd-border-secondary
 
+         **Paden, B., Čáp, M., Yong, S. Z., Yershov, D. and Frazzoli, E.
+         (2016)**
 
-.. dropdown:: Foundational Textbooks
-    :class-container: sd-border-secondary
+         "A Survey of Motion Planning and Control Techniques for Self-Driving
+         Urban Vehicles". *IEEE Transactions on Intelligent Vehicles*, 1(1),
+         33 to 55. doi:10.1109/TIV.2016.2578706. arXiv:1604.07446.
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+         A car's configuration, "the planar coordinate of a point on the car
+         together with the car's heading". Route planning: the AV "must
+         select a route through the road network from its current position
+         to the requested destination". The survey separates a path from a
+         trajectory, which adds times.
 
-        .. grid-item-card:: Choset et al. -- Principles of Robot Motion
-            :class-card: sd-border-secondary
+      .. grid-item-card:: A*
+         :link: https://doi.org/10.1109/TSSC.1968.300136
+         :class-card: sd-border-secondary
 
-            **MIT Press, 2005**
+         **Hart, P. E., Nilsson, N. J. and Raphael, B. (1968)**
 
-            Comprehensive coverage of configuration spaces,
-            potential fields, graph-based planning, and sampling-
-            based planners. Chapters 4--7 are directly relevant
-            to this lecture.
+         "A Formal Basis for the Heuristic Determination of Minimum Cost
+         Paths". *IEEE Transactions on Systems Science and Cybernetics*,
+         4(2), 100 to 107. doi:10.1109/TSSC.1968.300136.
 
-            +++
+         A*, which adds a heuristic, an estimate of the cost to the goal.
+         The route planner runs A* on the lane graph, and so does GP4's
+         planner. Also used in Garage Planners: grid search and hybrid A*
+         are both A* searches.
 
-            - Configuration space theory
-            - PRM and RRT derivations
-            - Completeness and optimality proofs
 
-        .. grid-item-card:: LaValle -- Planning Algorithms
-            :class-card: sd-border-secondary
+.. dropdown:: The Scene
+   :class-container: sd-border-secondary
+   :open:
 
-            **Cambridge University Press, 2006**
-            (freely available at planning.cs.uiuc.edu)
+   How the road was read from CARLA's map file, with no CARLA server.
 
-            The definitive reference for motion planning
-            algorithms. Covers discrete planning, sampling-based
-            methods, and nonholonomic systems.
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-            +++
+      .. grid-item-card:: CARLA's map and waypoints
+         :link: https://carla.readthedocs.io/en/0.9.16/python_api/
+         :class-card: sd-border-secondary
 
-            - RRT and PRM foundations
-            - Nonholonomic planning
-            - Optimality analysis
+         **CARLA Team**
 
-        .. grid-item-card:: Thrun, Burgard, Fox -- Probabilistic Robotics
-            :class-card: sd-border-secondary
+         *Python API Reference: carla.Map and carla.Waypoint.* CARLA
+         Simulator, version 0.9.16. Accessed 14 October 2026.
 
-            **MIT Press, 2005**
+         ``export_scene.py`` reads ``Town03.xodr`` with ``carla.Map`` and
+         writes the lane centers every 0.5 m. Every distance on the road
+         comes from these waypoints.
 
-            Probabilistic foundations for robotics including
-            localization, mapping, and planning under uncertainty.
-            Relevant for understanding safety margins and
-            uncertainty-aware planning.
 
-            +++
+.. dropdown:: Configuration Space
+   :class-container: sd-border-secondary
+   :open:
 
-            - Probabilistic state estimation
-            - Occupancy grid maps
-            - Planning under uncertainty
+   The configuration, configuration space and its obstacle region.
 
-        .. grid-item-card:: Paden et al. -- Survey of AV Motion Planning
-            :class-card: sd-border-secondary
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-            **IEEE T-ITS, 2016**
+      .. grid-item-card:: Configuration space
+         :link: http://lavalle.pl/planning/
+         :class-card: sd-border-secondary
 
-            Comprehensive survey of motion planning techniques
-            specifically for autonomous vehicles, covering all
-            algorithm families in this lecture.
+         **LaValle, S. M. (2006)**
 
-            +++
+         *Planning Algorithms.* Cambridge University Press, Cambridge.
+         Online at http://lavalle.pl/planning/.
 
-            - Route, behavior, motion hierarchy
-            - Graph-based and sampling-based planners
-            - AV-specific constraints
+         "The state space for motion planning is a set of possible
+         transformations that could be applied to the robot. This will be
+         referred to as the configuration space". Also used in the appendix:
+         Section 4.3.2 derives the region an obstacle becomes for a robot
+         that only translates.
 
+      .. grid-item-card:: The configuration space approach
+         :link: https://doi.org/10.1109/TC.1983.1676196
+         :class-card: sd-border-secondary
 
-.. dropdown:: Graph-Based Planning
-    :class-container: sd-border-secondary
+         **Lozano-Pérez, T. (1983)**
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+         "Spatial Planning: A Configuration Space Approach". *IEEE
+         Transactions on Computers*, C-32(2), 108 to 120.
+         doi:10.1109/TC.1983.1676196.
 
-        .. grid-item-card:: Hart, Nilsson, Raphael -- A* (1968)
-            :class-card: sd-border-secondary
+         The deck lists it with LaValle for configuration space and its
+         obstacle region.
 
-            **IEEE T-SSC, 1968**
 
-            The original A* paper introducing the heuristic
-            search algorithm and proving its optimality under
-            admissible heuristics.
+.. dropdown:: The Frenet Frame
+   :class-container: sd-border-secondary
+   :open:
 
-            +++
+   Planning in coordinates along the road and across it.
 
-            - Original A* formulation
-            - Admissibility proof
-            - Heuristic design
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-        .. grid-item-card:: Likhachev et al. -- Weighted A* (2003)
-            :class-card: sd-border-secondary
+      .. grid-item-card:: Planning in a Frenet frame
+         :link: https://doi.org/10.1109/ROBOT.2010.5509799
+         :class-card: sd-border-secondary
 
-            **NIPS 2003**
+         **Werling, M., Ziegler, J., Kammel, S. and Thrun, S. (2010)**
 
-            Introduces the :math:`\varepsilon`-suboptimal
-            weighted A* variant with formal bounds on solution
-            quality vs. computation time.
+         "Optimal Trajectory Generation for Dynamic Street Scenarios in a
+         Frenét Frame". *2010 IEEE International Conference on Robotics and
+         Automation (ICRA)*, 987 to 993. IEEE.
+         doi:10.1109/ROBOT.2010.5509799.
 
-            +++
+         Trajectories for street driving, planned in a Frenet frame along
+         the road: the frame of the Frenet Frame and Sampling Paths
+         sections.
 
-            - Inflation factor analysis
-            - Anytime planning extensions
-            - Practical implementation
 
+.. dropdown:: Sampling Paths
+   :class-container: sd-border-secondary
+   :open:
 
-.. dropdown:: Sampling-Based Planning
-    :class-container: sd-border-secondary
+   Stanford's Junior, whose planner rolled out paths shifted sideways.
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-        .. grid-item-card:: LaValle -- RRT (1998)
-            :class-card: sd-border-secondary
+      .. grid-item-card:: Junior
+         :link: https://doi.org/10.1002/rob.20258
+         :class-card: sd-border-secondary
 
-            **Technical Report, Iowa State, 1998**
+         **Montemerlo, M., Becker, J., Bhat, S., Dahlkamp, H., Dolgov, D.,
+         Ettinger, S., Haehnel, D., Hilden, T., Hoffmann, G., Huhnke, B.,
+         Johnston, D., Klumpp, S., Langer, D., Levandowski, A., Levinson, J.,
+         Marcil, J., Orenstein, D., Paefgen, J., Penny, I., Petrovskaya, A.,
+         Pflueger, M., Stanek, G., Stavens, D., Vogt, A. and Thrun, S.
+         (2008)**
 
-            Original RRT paper introducing rapidly-exploring
-            random trees for single-query kinodynamic planning.
+         "Junior: The Stanford Entry in the Urban Challenge". *Journal of
+         Field Robotics*, 25(9), 569 to 597. doi:10.1002/rob.20258.
 
-            +++
+         Junior drove the 2007 DARPA Urban Challenge. The lecture takes three
+         facts from it: on roads it rolled out paths parallel to the lane's
+         center and shifted sideways; its behavior layer was a finite state
+         machine with 13 states (Behavior); and it used hybrid A* in parking
+         lots (Garage Planners).
 
-            - RRT algorithm
-            - Probabilistic completeness proof
-            - Kinodynamic extension
 
-        .. grid-item-card:: Karaman & Frazzoli -- RRT* (2011)
-            :class-card: sd-border-secondary
+.. dropdown:: Collision Checking
+   :class-container: sd-border-secondary
+   :open:
 
-            **IJRR, 2011**
+   The localization error bound behind the 0.3 m margin.
 
-            Introduces RRT* with asymptotic optimality guarantee.
-            Also introduces PRM* and formal analysis of
-            sampling-based planner convergence rates.
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-            +++
+      .. grid-item-card:: Localization requirements
+         :link: https://doi.org/10.4271/12-02-03-0012
+         :class-card: sd-border-secondary
 
-            - RRT* rewiring algorithm
-            - Asymptotic optimality proof
-            - Convergence rate analysis
+         **Reid, T. G. R., Houts, S. E., Cammarata, R., Mills, G., Agarwal,
+         S., Vora, A. and Pandey, G. (2019)**
 
-        .. grid-item-card:: Kavraki et al. -- PRM (1996)
-            :class-card: sd-border-secondary
+         "Localization Requirements for Autonomous Vehicles". *SAE
+         International Journal of Connected and Automated Vehicles*, 2(3),
+         173 to 190. doi:10.4271/12-02-03-0012. arXiv:1906.01061.
 
-            **IEEE T-RA, 1996**
+         The error bound, "the allowable maximum position error of the
+         vehicle to ensure it is within the lane": 0.29 m on a local street.
+         The lecture rounds it to 0.3 m, the margin of the collision check.
 
-            Original PRM paper introducing probabilistic road
-            maps for multi-query planning in high-dimensional
-            configuration spaces.
 
-            +++
+.. dropdown:: Garage Planners
+   :class-container: sd-border-secondary
+   :open:
 
-            - Two-phase construction
-            - Probabilistic completeness
-            - Multi-query efficiency
+   Hybrid A*, RRT and RRT*.
 
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-.. dropdown:: Lattice-Based Planning
-    :class-container: sd-border-secondary
+      .. grid-item-card:: Hybrid A*
+         :link: https://cdn.aaai.org/Workshops/2008/WS-08-10/WS08-10-006.pdf
+         :class-card: sd-border-secondary
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+         **Dolgov, D., Thrun, S., Montemerlo, M. and Diebel, J. (2008)**
 
-        .. grid-item-card:: Pivtoraiko et al. -- State Lattice (2009)
-            :class-card: sd-border-secondary
+         "Practical Search Techniques in Path Planning for Autonomous
+         Driving". *Proceedings of the First International Symposium on
+         Search Techniques in Artificial Intelligence and Robotics
+         (STAIR-08)*. AAAI, Chicago, USA.
 
-            **JFR, 2009**
+         Hybrid A*, which keeps an exact pose in each cell. Also used in the
+         appendix: "Our search algorithm is guided by two heuristics", and
+         near the goal, "analytic expansions based on the Reed-Shepp model".
 
-            Introduces the state lattice framework with
-            pre-computed motion primitives for kinematically
-            feasible robot motion planning.
+      .. grid-item-card:: RRT
+         :link: http://lavalle.pl/papers/Lav98c.pdf
+         :class-card: sd-border-secondary
 
-            +++
+         **LaValle, S. M. (1998)**
 
-            - Lattice construction methodology
-            - Motion primitive generation
-            - Search algorithms
+         *Rapidly-Exploring Random Trees: A New Tool for Path Planning.*
+         Technical Report TR 98-11, Computer Science Department, Iowa State
+         University.
 
-        .. grid-item-card:: McNaughton et al. -- Frenet Lattice (2011)
-            :class-card: sd-border-secondary
+         The original RRT. As the lecture says, it makes each step by
+         steering the robot's model, as hybrid A* does, so its path can be
+         driven; the lecture's garage RRT takes straight steps instead.
 
-            **ICRA 2011 (Uber ATG)**
+      .. grid-item-card:: RRT*
+         :link: https://doi.org/10.1177/0278364911406761
+         :class-card: sd-border-secondary
 
-            Describes the Frenet-frame lattice planner used
-            in structured autonomous driving, including
-            lane-change and yield maneuver encoding.
+         **Karaman, S. and Frazzoli, E. (2011)**
 
-            +++
+         "Sampling-Based Algorithms for Optimal Motion Planning". *The
+         International Journal of Robotics Research*, 30(7), 846 to 894.
+         doi:10.1177/0278364911406761. arXiv:1105.1186.
 
-            - Road-aligned lattice design
-            - Lane change primitives
-            - Real-time performance
+         The two proved results of "RRT*: the Path Keeps Getting Shorter".
+         Also used in the appendix: "Theorem 33 (Non-optimality of RRT) The
+         RRT algorithm is not asymptotically optimal".
 
 
-.. dropdown:: Diffusion-Based Planning
-    :class-container: sd-border-secondary
+.. dropdown:: Used Only in the Appendix
+   :class-container: sd-border-secondary
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+   The curves hybrid A* tries at the goal, from :doc:`l9_appendix`.
 
-        .. grid-item-card:: Zheng et al. -- Diffusion Planner (ICLR 2025)
-            :class-card: sd-border-secondary
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-            **ICLR 2025**
+      .. grid-item-card:: Reeds and Shepp curves
+         :link: https://doi.org/10.2140/pjm.1990.145.367
+         :class-card: sd-border-secondary
 
-            Joint ego-agent diffusion planner achieving
-            state-of-the-art closed-loop performance on the
-            nuPlan benchmark through interaction-aware trajectory
-            denoising.
+         **Reeds, J. and Shepp, L. (1990)**
 
-            +++
+         "Optimal Paths for a Car That Goes Both Forwards and Backwards".
+         *Pacific Journal of Mathematics*, 145(2), 367 to 393.
+         doi:10.2140/pjm.1990.145.367.
 
-            - Joint prediction and planning
-            - Scene context encoding
-            - nuPlan benchmark results
+         The shortest curve to a goal pose for a car that drives forward
+         and backward. Hybrid A* tries one as a single piece near the goal;
+         the course's version tries a straight reverse instead.
 
-        .. grid-item-card:: Liao et al. -- DiffusionDrive (CVPR 2025)
-            :class-card: sd-border-secondary
 
-            **CVPR 2025**
 
-            Real-time diffusion planner using truncated schedule
-            and anchored Gaussian initialization achieving 45 FPS
-            while maintaining competitive nuPlan performance.
+.. rubric:: Map data and images
 
-            +++
-
-            - Truncated diffusion schedule
-            - Anchored Gaussian initialization
-            - Real-time inference analysis
-
-        .. grid-item-card:: Ho et al. -- DDPM (NeurIPS 2020)
-            :class-card: sd-border-secondary
-
-            **NeurIPS 2020**
-
-            Foundational paper establishing denoising diffusion
-            probabilistic models, the framework underlying
-            all diffusion-based planners.
-
-            +++
-
-            - Forward/reverse process formulation
-            - Denoising score matching
-            - Image generation results
-
-
-.. dropdown:: Collision Detection
-    :class-container: sd-border-secondary
-
-    .. grid:: 1 1 2 2
-        :gutter: 2
-
-        .. grid-item-card:: Ericson -- Real-Time Collision Detection
-            :class-card: sd-border-secondary
-
-            **Morgan Kaufmann, 2004**
-
-            Comprehensive reference for geometric collision
-            detection algorithms including AABB, OBB, GJK,
-            and sweep-based methods.
-
-            +++
-
-            - Bounding volume hierarchies
-            - OBB intersection tests
-            - Minkowski sum computation
-
-        .. grid-item-card:: Berg et al. -- Reciprocal Velocity Obstacles
-            :class-card: sd-border-secondary
-
-            **IJRR, 2011**
-
-            Velocity-obstacle-based collision avoidance for
-            multi-agent scenarios, relevant to dynamic obstacle
-            handling in AV planning.
-
-            +++
-
-            - Velocity obstacles
-            - Multi-agent collision avoidance
-            - Real-time performance
-
-
-.. dropdown:: Benchmarks and Datasets
-    :class-container: sd-border-secondary
-
-    .. grid:: 1 1 2 2
-        :gutter: 2
-
-        .. grid-item-card:: nuPlan Benchmark
-            :link: https://nuplan.org/
-            :class-card: sd-border-secondary
-
-            **Motional / nuPlan**
-
-            Closed-loop planning benchmark used to evaluate
-            Diffusion Planner and DiffusionDrive, based on
-            real-world driving logs.
-
-            +++
-
-            - Closed-loop reactive simulation
-            - 1300+ hours of driving data
-            - Standardized metrics
-
-        .. grid-item-card:: CARLA Simulator
-            :link: https://carla.org/
-            :class-card: sd-border-secondary
-
-            **CARLA Open-Source Simulator**
-
-            High-fidelity autonomous driving simulator used
-            for the lecture's implementation exercise. Provides
-            waypoint graphs, sensor simulation, and traffic
-            scenarios.
-
-            +++
-
-            - Python API documentation
-            - Waypoint graph API
-            - Traffic scenario library
+The road in every top view is CARLA's ``Town03.xodr``, read offline with the
+CARLA Python API. The vehicle icons in the figures were created by Stone
+from the `Noun Project <https://thenounproject.com>`_.

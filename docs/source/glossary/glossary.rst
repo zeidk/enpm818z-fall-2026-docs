@@ -3013,48 +3013,101 @@ L9 (not yet published)
 
 .. glossary::
 
+   Behavior Layer
+      The layer of the driving stack that picks the task the local planner
+      carries out: pass or wait, park or keep searching. It sets which lanes
+      the AV may use, where it must stop, and a speed limit, from facts that
+      change slowly. In L9, closing the left lane leaves the local planner
+      10 candidates; 9 collide, so the AV stops behind the parked car. See
+      Finite State Machine. L9
+
    Bicycle Model
       A simplified kinematic vehicle model that merges the two front wheels
       and two rear wheels into single virtual wheels. Used as the foundation
       for motion planning and control. L9 · L10
 
-   Collision Detection
-      The geometric test that determines whether a candidate path or
-      trajectory intersects any obstacle (often expressed as inflated
-      bounding boxes, OBBs, or Minkowski sums). Run at every node
-      expansion during sampling- and graph-based planning. L9
+   Collision Check
+      A test of whether the AV's body overlaps an obstacle at one pose. L9
+      covers the AV with three circles of radius 1.21 m, and each obstacle
+      the same way. The gap between two circles is the distance between
+      their centers minus the two radii; a gap under 0.3 m counts as a
+      collision. The check is conservative: it never misses a real
+      collision, but bodies 0.4 m apart already count as overlapping. L9
 
-   Diffusion-Based Planning
-      Motion planning via iterative denoising of trajectories, learned
-      from expert demonstrations. Models the trajectory distribution as
-      a diffusion process and generates plans by reverse diffusion.
-      Examples: Diffusion Planner (ICLR 2025), DiffusionDrive (CVPR 2025). L9
+   Configuration
+      Three numbers, :math:`q = (x, y, \theta)`, that fix where every point
+      of the AV's rigid body is: the base link at :math:`(x, y)` in the map
+      frame, and the heading :math:`\theta`, counterclockwise from the map's
+      :math:`x` axis. L9's AV starts at (97.69 m, −207.29 m, 0.14°). See
+      Configuration Space. L9
 
-   Lattice Planner
-      A motion planning approach that performs graph search on a
-      pre-computed state lattice of kinematically feasible motion
-      primitives. Combines the completeness of graph search with
-      kinematic feasibility. L9
+   Finite State Machine (FSM)
+      A fixed list of states, of which the system is in exactly one at a
+      time, and a list of transitions: each one moves the system from one
+      state to another when its condition becomes true. In L9, a valet that
+      parks itself has five states (Enter, Search the aisle, Approach the
+      spot, Reverse in, Parked), with thresholds chosen for the lecture.
+      Stanford's Junior used one with 13 states. L9
+
+   Foot Point
+      The point of the reference path nearest to a given point P, where the
+      line from P meets the reference at a right angle. It gives P's
+      :math:`s`; the signed distance from it to P is :math:`d`. For L9's
+      parked car, the foot point is (155.686, −207.135), at
+      :math:`s` = 118.00 m. See Frenet Frame. L9
+
+   Frenet Frame
+      Coordinates attached to a reference path: :math:`s` is the distance
+      along the reference from its start, :math:`d` the distance across it,
+      positive to the left of the driving direction. Lanes become lines of
+      constant :math:`d`: in L9, with the right lane's center as the
+      reference, the left lane's center is :math:`d` = 3.5 m. The frame
+      fails where :math:`1 - \kappa d` reaches 0, at the center of a curve.
+      L9 · L10
+
+   Hybrid A*
+      A* over a grid of :math:`(x, y, \theta)` cells that keeps in each cell
+      an exact pose, one the AV reaches by driving an arc from the pose
+      before it. Its path can be driven, but the search is not complete: it
+      can miss a path that exists. In L9's garage it finds 24.0 m forward,
+      one switch, then 6.6 m in reverse into the spot. L9
+
+   Local Planner
+      The layer that finds the path for the next few seconds that follows
+      the route and stays clear of every object, and plans it again as the
+      AV moves. L9's local planner samples 31 candidate paths every 0.5 s,
+      checks them, scores them, and keeps the cheapest. GP4 does not ask
+      for one. L9
 
    Nonholonomic Constraint
-      A motion constraint that limits achievable velocities but not the
-      configuration space itself. A car cannot move sideways instantaneously
-      (no lateral velocity in the body frame), and planners must respect
-      this when generating paths. L9
+      A limit on how a vehicle can move, not on where it can be. A car's
+      wheels roll and do not slide, so its base link always moves along its
+      heading and it cannot move sideways; it turns only by steering, no
+      tighter than the steering limit allows (3.41 m in L9). L9
 
-   PRM
-      Probabilistic Road Map. A multi-query sampling-based planner that
-      pre-computes a graph of collision-free configurations connected by
-      feasible paths, then searches this graph for start-to-goal queries. L9
+   Obstacle Region
+      The part of configuration space where the robot's body overlaps an
+      obstacle; the rest is the free space. For L9's AV heading along the
+      lane, the parked car becomes a 9.0 m by 3.8 m region its base link
+      must avoid. The region depends on the heading too. L9
 
    RRT
-      Rapidly-Exploring Random Tree. A sampling-based motion planning
-      algorithm that incrementally builds a tree of feasible configurations
-      by random sampling. RRT* is its asymptotically optimal variant. L9
+      Rapidly exploring random tree. A tree of points grown from the start:
+      each step picks a random point, finds the tree's nearest node and
+      takes a short step from it toward the point. In L9's garage, with
+      1.5 m steps, the tree reaches the goal after 34 tries; its path of
+      straight steps is fast to find but not drivable as it is. L9
+
+   RRT*
+      RRT with two more steps for each new node: choose, among nearby
+      nodes, the parent that gives the shortest path from the start, and
+      rewire nearby nodes through the new one when that is shorter. Its
+      path's length tends to the shortest as the tree grows; plain RRT's
+      does not. L9
 
 .. raw:: html
 
-   <p class="glossary-also">Also used here: <a href="#term-A-Search" target="_blank" rel="noopener">A* Search</a> (L7), <a href="#term-Configuration-Space" target="_blank" rel="noopener">Configuration Space</a> (L7), <a href="#term-Dijkstra" target="_blank" rel="noopener">Dijkstra</a> (L7).</p>
+   <p class="glossary-also">Also used here: <a href="#term-A-Search" target="_blank" rel="noopener">A* Search</a> (L7), <a href="#term-Base-Link" target="_blank" rel="noopener">Base Link</a> (L3), <a href="#term-Configuration-Space" target="_blank" rel="noopener">Configuration Space</a> (L7), <a href="#term-Dijkstra" target="_blank" rel="noopener">Dijkstra</a> (L7), <a href="#term-Hysteresis" target="_blank" rel="noopener">Hysteresis</a> (L7), <a href="#term-Path" target="_blank" rel="noopener">Path</a> (L7), <a href="#term-Route" target="_blank" rel="noopener">Route</a> (L7), <a href="#term-Trajectory" target="_blank" rel="noopener">Trajectory</a> (L7).</p>
 
 
 .. _g-l10:
@@ -3074,12 +3127,6 @@ L10 (not yet published)
       front axle for Stanley, rear axle for Pure Pursuit) and the nearest
       point on the reference path. Drives the steering correction in both
       controllers. L10
-
-   Frenet Frame
-      A curvilinear coordinate system :math:`(s, d)` defined along a road
-      centerline, where :math:`s` is the arc-length along the path and
-      :math:`d` is the lateral offset. Simplifies trajectory planning on
-      curved roads. L10
 
    MPC
       Model Predictive Control. A receding-horizon optimization-based
@@ -3112,7 +3159,7 @@ L10 (not yet published)
 
 .. raw:: html
 
-   <p class="glossary-also">Also used here: <a href="#term-Bicycle-Model" target="_blank" rel="noopener">Bicycle Model</a> (L9).</p>
+   <p class="glossary-also">Also used here: <a href="#term-Bicycle-Model" target="_blank" rel="noopener">Bicycle Model</a> (L9), <a href="#term-Frenet-Frame" target="_blank" rel="noopener">Frenet Frame</a> (L9).</p>
 
 
 .. _g-l11:
@@ -3414,11 +3461,28 @@ Other Terms
 
 .. glossary::
 
+   Diffusion-Based Planning
+      Motion planning via iterative denoising of trajectories, learned
+      from expert demonstrations. Models the trajectory distribution as
+      a diffusion process and generates plans by reverse diffusion.
+      Examples: Diffusion Planner (ICLR 2025), DiffusionDrive (CVPR 2025).
+
+   Lattice Planner
+      A motion planning approach that performs graph search on a
+      pre-computed state lattice of kinematically feasible motion
+      primitives. Combines the completeness of graph search with
+      kinematic feasibility.
+
    MOTP
       Multi-Object Tracking Precision. The average overlap (IoU) between
       true positives and their assigned ground-truth boxes. Complements
       MOTA by measuring localisation quality independently of identity
       switches.
+
+   PRM
+      Probabilistic Road Map. A multi-query sampling-based planner that
+      pre-computes a graph of collision-free configurations connected by
+      feasible paths, then searches this graph for start-to-goal queries.
 
    Tracking-by-Detection
       The dominant MOT paradigm: at each frame, run an object detector,
