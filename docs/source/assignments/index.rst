@@ -54,7 +54,7 @@ split between the group projects (**85%**) and the Final Report
    * - GP3: Fusion & Localization
      - 100
      - 25%
-     - 19 days, due Thu, Nov 19
+     - 18 days, due Fri, Nov 20
      - L2, L3, L5, L6
 
 .. note::

@@ -696,7 +696,7 @@ all other Thursdays meet as scheduled. Dates below are given as MM/DD.
      - 10
      - Motion Planning
      - L9
-     - :assignment:`GP3 posted (Sun, Nov 1)`
+     - :assignment:`GP3 posted (Tue, Nov 3)`
    * - 11/12
      - 11
      - Trajectory Generation & Control
@@ -707,7 +707,7 @@ all other Thursdays meet as scheduled. Dates below are given as MM/DD.
      - End-to-End Driving, VLA & Imitation Learning
      - L11
      - | :quiz:`Quiz 4`
-       | :assignment:`GP3 due, GP4 and report posted`
+       | :assignment:`GP3 due (Fri, Nov 20), GP4 and report posted`
    * - 11/26
      -
      - :no-class:`Thanksgiving recess: no class`

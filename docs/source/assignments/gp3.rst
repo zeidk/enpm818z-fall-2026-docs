@@ -32,7 +32,7 @@ GP3: Fusion & Localization
       :class: compact-table
 
       * - **Duration**
-        - Posted **Sunday, November 1**, due **Thursday, November 19**
+        - Posted **Tuesday, November 3**, due **Friday, November 20**
       * - **Weight**
         - 25% of the group-project grade: 21.25% of the final project grade,
           17.0% of the course grade
@@ -759,8 +759,8 @@ GP3 is worth **100 points**. Run every command from the package root,
 Suggested Schedule
 ------------------
 
-GP3 runs 19 days, from Sunday, November 1, to Thursday, November 19. The plan
-below finishes on November 16 and leaves three days of slack.
+GP3 runs 18 days, from Tuesday, November 3, to Friday, November 20. The plan
+below finishes on November 17 and leaves three days of slack.
 
 .. list-table::
    :widths: 18 40 42
@@ -770,20 +770,20 @@ below finishes on November 16 and leaves three days of slack.
    * - Dates
      - Milestone
      - Done when
-   * - Nov 1 to 3
+   * - Nov 3 to 5
      - Starter copied, ``ads_msgs`` built, your drive unpacked, Task 1 done
      - ``drive_info.txt`` shows 1800 camera frames
-   * - Nov 4 to 10
+   * - Nov 6 to 11
      - Tasks 2, 3 and 4: one person per task; fusion uses the true pose and
        the tracker uses ``noisy_dets.json`` until the others are ready
      - Each task's tests pass
-   * - Nov 11 to 12
+   * - Nov 12 to 13
      - Everything on your drive, both poses
      - The six result files are saved
-   * - Nov 13 to 16
+   * - Nov 14 to 17
      - Task 5 and the submission
      - Checklist below fully ticked
-   * - Nov 17 to 19
+   * - Nov 18 to 20
      - **Slack**
      - Nothing scheduled
 

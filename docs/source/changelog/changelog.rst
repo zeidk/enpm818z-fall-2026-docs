@@ -5,10 +5,27 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.26.3: GP3 Links Its EKF Reading (2026-11-02)
+.. dropdown:: v2.26.4: GP3 Dates Moved (2026-11-02)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Assignments
+
+   - **GP3:** posted Tuesday, November 3, and due Friday, November 20 (was
+     Sunday, November 1, to Thursday, November 19). The suggested schedule
+     moves with it and still leaves three days of slack.
+   - **Final Project page:** the GP3 row says 18 days, due Fri, Nov 20.
+
+   .. rubric:: Syllabus
+
+   - **Course Schedule:** GP3 posted (Tue, Nov 3) in Week 10, and GP3 due
+     (Fri, Nov 20) in Week 12.
+
+
+.. dropdown:: v2.26.3: GP3 Links Its EKF Reading (2026-11-02)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Assignments
 
