@@ -39,6 +39,9 @@ GP3: Fusion & Localization
       * - **Lectures**
         - L2 (projection), L3 (EKF, NIS, gating), L5 (frustum association,
           tracking), L6 (GNSS, dead reckoning, APE)
+      * - **Pre-read**
+        - :doc:`/preread/nonlinear-filters`: the EKF that Task 2 asks you to
+          build, one step at a time
       * - **Starter code**
         - `gp3_starter <https://github.com/rubixcubic/enpm818z-fall-2026-carla-ros/tree/main/gp3_starter>`__
           and `ads_msgs <https://github.com/rubixcubic/enpm818z-fall-2026-carla-ros/tree/main/ads_msgs>`__

@@ -5,10 +5,21 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.26.2: Reference Titles and a Glossary Link (2026-11-02)
+.. dropdown:: v2.26.3: GP3 Links Its EKF Reading (2026-11-02)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Assignments
+
+   - **GP3, At a Glance:** a new "Pre-read" row links the Nonlinear Filters
+     reading, which teaches the EKF that Task 2 asks you to build. Before, the
+     link was only inside the Task 2 dropdown.
+
+
+.. dropdown:: v2.26.2: Reference Titles and a Glossary Link (2026-11-02)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 
