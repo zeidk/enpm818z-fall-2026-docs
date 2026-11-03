@@ -32,7 +32,7 @@ the end.
          **Reid, T. G. R., Houts, S. E., Cammarata, R., Mills, G., Agarwal,
          S., Vora, A. and Pandey, G. (2019)**
 
-         "Localization Requirements for Autonomous Vehicles." *SAE
+         "Localization Requirements for Autonomous Vehicles". *SAE
          International Journal of Connected and Automated Vehicles*, 2(3),
          173 to 190. doi:10.4271/12-02-03-0012. arXiv:1906.01061.
 
@@ -171,7 +171,7 @@ the end.
          of Catalonia). Accessed 10 October 2026.
 
          "The interference by multipath is generated when a signal arrives,
-         by different ways, at the antenna." "Its principal cause is the
+         by different ways, at the antenna". "Its principal cause is the
          antenna closeness to the reflecting structures".
 
 
@@ -216,7 +216,7 @@ the end.
          **Sturm, J., Engelhard, N., Endres, F., Burgard, W. and Cremers, D.
          (2012)**
 
-         "A Benchmark for the Evaluation of RGB-D SLAM Systems."
+         "A Benchmark for the Evaluation of RGB-D SLAM Systems".
          *Proceedings of the IEEE/RSJ International Conference on
          Intelligent Robots and Systems (IROS)*, 573 to 580.
          doi:10.1109/IROS.2012.6385773.
@@ -244,13 +244,13 @@ the end.
          **Fox, D., Burgard, W., Dellaert, F. and Thrun, S. (1999)**
 
          "Monte Carlo Localization: Efficient Position Estimation for Mobile
-         Robots." *Proceedings of the Sixteenth National Conference on
+         Robots". *Proceedings of the Sixteenth National Conference on
          Artificial Intelligence (AAAI-99)*, Orlando, FL, 343 to 349.
 
          MCL keeps its belief as "a set of :math:`N` weighted, random
          samples or particles". "The added samples are essential for
          relocalization in the rare event that the robot loses track of its
-         position."
+         position".
 
       .. grid-item-card:: Monte Carlo localization
          :link: https://doi.org/10.1109/ROBOT.1999.772544
@@ -258,7 +258,7 @@ the end.
 
          **Dellaert, F., Fox, D., Burgard, W. and Thrun, S. (1999)**
 
-         "Monte Carlo Localization for Mobile Robots." *Proceedings of the
+         "Monte Carlo Localization for Mobile Robots". *Proceedings of the
          IEEE International Conference on Robotics and Automation (ICRA)*,
          1322 to 1328. doi:10.1109/ROBOT.1999.772544.
 
@@ -283,7 +283,7 @@ the end.
 
          **Fox, D. (2003)**
 
-         "Adapting the Sample Size in Particle Filters Through KLD-Sampling."
+         "Adapting the Sample Size in Particle Filters Through KLD-Sampling".
          *The International Journal of Robotics Research*, 22(12), 985 to
          1003. doi:10.1177/0278364903022012001.
 
@@ -296,7 +296,7 @@ the end.
 
          **Thrun, S., Fox, D., Burgard, W. and Dellaert, F. (2001)**
 
-         "Robust Monte Carlo Localization for Mobile Robots." *Artificial
+         "Robust Monte Carlo Localization for Mobile Robots". *Artificial
          Intelligence*, 128(1 and 2), 99 to 141.
          doi:10.1016/S0004-3702(01)00069-8.
 
@@ -310,7 +310,7 @@ the end.
          **Biber, P. and Strasser, W. (2003)**
 
          "The Normal Distributions Transform: A New Approach to Laser Scan
-         Matching." *Proceedings of the IEEE/RSJ International Conference on
+         Matching". *Proceedings of the IEEE/RSJ International Conference on
          Intelligent Robots and Systems (IROS)*, 3, 2743 to 2748.
          doi:10.1109/IROS.2003.1249285.
 
@@ -325,7 +325,7 @@ the end.
 
          **Besl, P. J. and McKay, N. D. (1992)**
 
-         "A Method for Registration of 3-D Shapes." *IEEE Transactions on
+         "A Method for Registration of 3-D Shapes". *IEEE Transactions on
          Pattern Analysis and Machine Intelligence*, 14(2), 239 to 256.
          doi:10.1109/34.121791.
 
@@ -341,7 +341,7 @@ the end.
          **Bentley, J. L. (1975)**
 
          "Multidimensional Binary Search Trees Used for Associative
-         Searching." *Communications of the ACM*, 18(9), 509 to 517.
+         Searching". *Communications of the ACM*, 18(9), 509 to 517.
          doi:10.1145/361002.361007.
 
          The k-d tree: split on one key per level, the keys taken in turn.
@@ -352,12 +352,12 @@ the end.
 
          **Friedman, J. H., Bentley, J. L. and Finkel, R. A. (1977)**
 
-         "An Algorithm for Finding Best Matches in Logarithmic Expected Time."
+         "An Algorithm for Finding Best Matches in Logarithmic Expected Time".
          *ACM Transactions on Mathematical Software*, 3(3), 209 to 226.
          doi:10.1145/355744.355745.
 
          "The expected computation to perform each search is proportional to
-         logN."
+         logN".
 
       .. grid-item-card:: The best rotation
          :link: https://doi.org/10.1107/S0567739476001873
@@ -365,7 +365,7 @@ the end.
 
          **Kabsch, W. (1976)**
 
-         "A Solution for the Best Rotation to Relate Two Sets of Vectors."
+         "A Solution for the Best Rotation to Relate Two Sets of Vectors".
          *Acta Crystallographica Section A*, 32(5), 922 to 923.
          doi:10.1107/S0567739476001873.
 
@@ -379,13 +379,13 @@ the end.
 
          **Zhang, J., Kaess, M. and Singh, S. (2016)**
 
-         "On Degeneracy of Optimization-based State Estimation Problems."
+         "On Degeneracy of Optimization-based State Estimation Problems".
          *IEEE International Conference on Robotics and Automation (ICRA)*,
          809 to 816. doi:10.1109/ICRA.2016.7487211.
 
          What to do when a scan cannot see one direction. "Scarcity of
          texture features for vision sensors and lack of geometrical
-         structures for range sensors." Also cited in SLAM.
+         structures for range sensors". Also cited in SLAM.
 
       .. grid-item-card:: Autoware's NDT scan matcher
          :link: https://autowarefoundation.github.io/autoware_core/main/localization/autoware_ndt_scan_matcher/
@@ -408,7 +408,7 @@ the end.
          S. (2018)**
 
          "Robust and Precise Vehicle Localization Based on Multi-Sensor
-         Fusion in Diverse City Scenes." *IEEE International Conference on
+         Fusion in Diverse City Scenes". *IEEE International Conference on
          Robotics and Automation (ICRA)*, 4670 to 4677.
          doi:10.1109/ICRA.2018.8461224.
 
@@ -448,7 +448,7 @@ the end.
          Neira, J., Reid, I. and Leonard, J. J. (2016)**
 
          "Past, Present, and Future of Simultaneous Localization and Mapping:
-         Toward the Robust-Perception Age." *IEEE Transactions on Robotics*,
+         Toward the Robust-Perception Age". *IEEE Transactions on Robotics*,
          32(6), 1309 to 1332. doi:10.1109/TRO.2016.2624754.
 
          "The front-end abstracts sensor data into models that are amenable for
@@ -461,7 +461,7 @@ the end.
 
          **Grisetti, G., Kümmerle, R., Stachniss, C. and Burgard, W. (2010)**
 
-         "A Tutorial on Graph-Based SLAM." *IEEE Intelligent Transportation
+         "A Tutorial on Graph-Based SLAM". *IEEE Intelligent Transportation
          Systems Magazine*, 2(4), 31 to 43. doi:10.1109/MITS.2010.939925.
 
          The pose graph: find the poses that disagree least with all edges,
@@ -474,7 +474,7 @@ the end.
 
          **Mur-Artal, R., Montiel, J. M. M. and Tardós, J. D. (2015)**
 
-         "ORB-SLAM: A Versatile and Accurate Monocular SLAM System." *IEEE
+         "ORB-SLAM: A Versatile and Accurate Monocular SLAM System". *IEEE
          Transactions on Robotics*, 31(5), 1147 to 1163.
          doi:10.1109/TRO.2015.2463671.
 
@@ -486,7 +486,7 @@ the end.
 
          **Zhang, J. and Singh, S. (2014)**
 
-         "LOAM: Lidar Odometry and Mapping in Real-time." *Proceedings of
+         "LOAM: Lidar Odometry and Mapping in Real-time". *Proceedings of
          Robotics: Science and Systems (RSS)*, Berkeley, USA.
          doi:10.15607/RSS.2014.X.007.
 
@@ -501,7 +501,7 @@ the end.
          and Tardós, J. D. (2021)**
 
          "ORB-SLAM3: An Accurate Open-Source Library for Visual,
-         Visual-Inertial, and Multimap SLAM." *IEEE Transactions on
+         Visual-Inertial, and Multimap SLAM". *IEEE Transactions on
          Robotics*, 37(6), 1874 to 1890. doi:10.1109/TRO.2021.3075644.
 
          Pure monocular SLAM: "scale is unknown"; an IMU makes it observable.
@@ -513,7 +513,7 @@ the end.
          **Kim, G. and Kim, A. (2018)**
 
          "Scan Context: Egocentric Spatial Descriptor for Place Recognition
-         Within 3D Point Cloud Map." *IEEE/RSJ International Conference on
+         Within 3D Point Cloud Map". *IEEE/RSJ International Conference on
          Intelligent Robots and Systems (IROS)*, 4802 to 4809.
          doi:10.1109/IROS.2018.8593953.
 
@@ -526,11 +526,11 @@ the end.
 
          **Gálvez-López, D. and Tardós, J. D. (2012)**
 
-         "Bags of Binary Words for Fast Place Recognition in Image Sequences."
+         "Bags of Binary Words for Fast Place Recognition in Image Sequences".
          *IEEE Transactions on Robotics*, 28(5), 1188 to 1197.
          doi:10.1109/TRO.2012.2197158.
 
-         "If they are similar enough, a loop closure is detected."
+         "If they are similar enough, a loop closure is detected".
 
       .. grid-item-card:: Visual localization in changing conditions
          :link: https://doi.org/10.1109/CVPR.2018.00897
@@ -541,7 +541,7 @@ the end.
          Kahl, F. and Pajdla, T. (2018)**
 
          "Benchmarking 6DOF Outdoor Visual Localization in Changing
-         Conditions." *IEEE/CVF Conference on Computer Vision and Pattern
+         Conditions". *IEEE/CVF Conference on Computer Vision and Pattern
          Recognition (CVPR)*, 8601 to 8610. doi:10.1109/CVPR.2018.00897.
 
          Camera localization must handle "day-night changes, as well as
@@ -554,7 +554,7 @@ the end.
 
          **Hess, W., Kohler, D., Rapp, H. and Andor, D. (2016)**
 
-         "Real-Time Loop Closure in 2D LIDAR SLAM." *IEEE International
+         "Real-Time Loop Closure in 2D LIDAR SLAM". *IEEE International
          Conference on Robotics and Automation (ICRA)*, 1271 to 1278.
          doi:10.1109/ICRA.2016.7487258.
 
@@ -567,7 +567,7 @@ the end.
          **Qin, T., Li, P. and Shen, S. (2018)**
 
          "VINS-Mono: A Robust and Versatile Monocular Visual-Inertial State
-         Estimator." *IEEE Transactions on Robotics*, 34(4), 1004 to 1020.
+         Estimator". *IEEE Transactions on Robotics*, 34(4), 1004 to 1020.
          doi:10.1109/TRO.2018.2853729.
 
          A camera and an IMU together follow how the AV moves in 3-D,
@@ -580,7 +580,7 @@ the end.
          **Shan, T., Englot, B., Ratti, C. and Rus, D. (2021)**
 
          "LVI-SAM: Tightly-coupled Lidar-Visual-Inertial Odometry via
-         Smoothing and Mapping." *IEEE International Conference on Robotics
+         Smoothing and Mapping". *IEEE International Conference on Robotics
          and Automation (ICRA)*, 5692 to 5698.
          doi:10.1109/ICRA48506.2021.9561996.
 
@@ -595,7 +595,7 @@ the end.
          **Sarlin, P.-E., Cadena, C., Siegwart, R. and Dymczyk, M. (2019)**
 
          "From Coarse to Fine: Robust Hierarchical Localization at Large
-         Scale." *IEEE/CVF Conference on Computer Vision and Pattern
+         Scale". *IEEE/CVF Conference on Computer Vision and Pattern
          Recognition (CVPR)*, 12708 to 12717. doi:10.1109/CVPR.2019.01300.
 
          Find the likely places by comparing the image with stored images of
@@ -607,7 +607,7 @@ the end.
 
          **Durrant-Whyte, H. and Bailey, T. (2006)**
 
-         "Simultaneous Localization and Mapping: Part I." *IEEE Robotics &
+         "Simultaneous Localization and Mapping: Part I". *IEEE Robotics &
          Automation Magazine*, 13(2), 99 to 110.
          doi:10.1109/MRA.2006.1638022.
 
@@ -665,12 +665,12 @@ the end.
 
          **Chen, Y. and Medioni, G. (1991)**
 
-         "Object Modeling by Registration of Multiple Range Images."
+         "Object Modeling by Registration of Multiple Range Images".
          *Proceedings of the IEEE International Conference on Robotics and
          Automation (ICRA)*, Sacramento, CA, 2724 to 2729.
          doi:10.1109/ROBOT.1991.132043.
 
-         "We minimize the distance from points to planes."
+         "We minimize the distance from points to planes".
 
       .. grid-item-card:: Point to line
          :link: https://doi.org/10.1109/ROBOT.2008.4543181
@@ -678,12 +678,12 @@ the end.
 
          **Censi, A. (2008)**
 
-         "An ICP Variant Using a Point-to-Line Metric." *Proceedings of the
+         "An ICP Variant Using a Point-to-Line Metric". *Proceedings of the
          IEEE International Conference on Robotics and Automation (ICRA)*,
          Pasadena, CA, 19 to 25. doi:10.1109/ROBOT.2008.4543181.
 
          "PLICP is more precise, and requires less iterations. However, it is
-         less robust to very large initial displacement errors."
+         less robust to very large initial displacement errors".
 
       .. grid-item-card:: Generalized-ICP
          :link: https://doi.org/10.15607/RSS.2009.V.021
@@ -691,7 +691,7 @@ the end.
 
          **Segal, A., Haehnel, D. and Thrun, S. (2009)**
 
-         "Generalized-ICP." *Robotics: Science and Systems V*.
+         "Generalized-ICP". *Robotics: Science and Systems V*.
          doi:10.15607/RSS.2009.V.021.
 
          GICP models "locally planar surface structure from both scans", and
@@ -703,7 +703,7 @@ the end.
 
          **Magnusson, M., Lilienthal, A. J. and Duckett, T. (2007)**
 
-         "Scan Registration for Autonomous Mining Vehicles Using 3D-NDT."
+         "Scan Registration for Autonomous Mining Vehicles Using 3D-NDT".
          *Journal of Field Robotics*, 24(10), 803 to 827.
          doi:10.1002/rob.20204.
 
@@ -718,7 +718,7 @@ the end.
          **Zhu, N., Marais, J., Bétaille, D. and Berbineau, M. (2018)**
 
          "GNSS Position Integrity in Urban Environments: A Review of
-         Literature." *IEEE Transactions on Intelligent Transportation
+         Literature". *IEEE Transactions on Intelligent Transportation
          Systems*, 19(9), 2762 to 2778. doi:10.1109/TITS.2017.2766768.
 
          The definitions of integrity, the alert limit and the protection
@@ -731,7 +731,7 @@ the end.
          **Zhang, Z. and Scaramuzza, D. (2018)**
 
          "A Tutorial on Quantitative Trajectory Evaluation for
-         Visual(-Inertial) Odometry." *Proceedings of the IEEE/RSJ
+         Visual(-Inertial) Odometry". *Proceedings of the IEEE/RSJ
          International Conference on Intelligent Robots and Systems (IROS)*,
          7244 to 7251. doi:10.1109/IROS.2018.8593941.
 

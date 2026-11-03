@@ -82,7 +82,7 @@ the end.
          (2016)**
 
          "A Survey of Motion Planning and Control Techniques for Self-Driving
-         Urban Vehicles." *IEEE Transactions on Intelligent Vehicles*, 1(1),
+         Urban Vehicles". *IEEE Transactions on Intelligent Vehicles*, 1(1),
          33 to 55. doi:10.1109/TIV.2016.2578706.
 
          A car's configuration, "the planar coordinate of a point on the car
@@ -195,7 +195,7 @@ the end.
          **Elghazaly, G., Frank, R., Harvey, S. and Safko, S. (2023)**
 
          "High-Definition Maps: Comprehensive Survey, Challenges, and Future
-         Perspectives." *IEEE Open Journal of Intelligent Transportation
+         Perspectives". *IEEE Open Journal of Intelligent Transportation
          Systems*, 4, 527 to 550. doi:10.1109/OJITS.2023.3295502. Quoted from
          the accepted manuscript,
          https://orbilu.uni.lu/bitstream/10993/55774/1/OJ_ITS_2023.pdf.
@@ -356,7 +356,7 @@ the end.
 
          **Dijkstra, E. W. (1959)**
 
-         "A note on two problems in connexion with graphs." *Numerische
+         "A note on two problems in connexion with graphs". *Numerische
          Mathematik*, 1(1), 269 to 271. doi:10.1007/BF01386390.
 
          Dijkstra's search, which takes the open node with the lowest cost
@@ -369,7 +369,7 @@ the end.
          **Hart, P. E., Nilsson, N. J. and Raphael, B. (1968)**
 
          "A Formal Basis for the Heuristic Determination of Minimum Cost
-         Paths." *IEEE Transactions on Systems Science and Cybernetics*,
+         Paths". *IEEE Transactions on Systems Science and Cybernetics*,
          4(2), 100 to 107. doi:10.1109/TSSC.1968.300136.
 
          A*, which adds a heuristic, an estimate of the cost to the goal.
@@ -435,7 +435,7 @@ the end.
 
          The map as the fixed part of the AV's picture of the scene: "Dynamic
          elements and the scenery are associated with each other to obtain an
-         environment model." With the AV's own state added, it is the scene
+         environment model". With the AV's own state added, it is the scene
          model.
 
       .. grid-item-card:: Situation awareness
@@ -444,7 +444,7 @@ the end.
 
          **Endsley, M. R. (1995)**
 
-         "Toward a Theory of Situation Awareness in Dynamic Systems." *Human
+         "Toward a Theory of Situation Awareness in Dynamic Systems". *Human
          Factors*, 37(1), 32 to 64. doi:10.1518/001872095779049543.
 
          Three levels of situation awareness: perceive the elements,
@@ -559,7 +559,7 @@ the end.
          M., Kuhnt, F. and Mayr, M. (2018)**
 
          "Lanelet2: A High-Definition Map Framework for the Future of
-         Automated Driving." *2018 21st International Conference on
+         Automated Driving". *2018 21st International Conference on
          Intelligent Transportation Systems (ITSC)*, 1672 to 1679.
          doi:10.1109/ITSC.2018.8569929.
 
@@ -603,7 +603,7 @@ the end.
          **Geisberger, R., Sanders, P., Schultes, D. and Delling, D. (2008)**
 
          "Contraction Hierarchies: Faster and Simpler Hierarchical Routing in
-         Road Networks." *Experimental Algorithms*, Lecture Notes in Computer
+         Road Networks". *Experimental Algorithms*, Lecture Notes in Computer
          Science. Springer, 319 to 333. doi:10.1007/978-3-540-68552-4_24.
 
          The nodes are ranked, and shortcut edges skip the lower-ranked ones.

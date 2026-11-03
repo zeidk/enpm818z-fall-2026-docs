@@ -5,10 +5,25 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.26.1: Lecture 9 Topics (2026-11-02)
+.. dropdown:: v2.26.2: Reference Titles and a Glossary Link (2026-11-02)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L6, L7 and L8 references:** a period now goes after the closing quote
+     of a title or a quoted sentence, as on the rest of the site.
+
+   .. rubric:: Glossary
+
+   - **RRT\*:** the entry is now "RRT* (RRT star)", so a link to it lands on
+     RRT* and not on RRT.
+
+
+.. dropdown:: v2.26.1: Lecture 9 Topics (2026-11-02)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

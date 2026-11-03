@@ -68,7 +68,7 @@ group at the end.
          Hartnett, A., Wang, D., Carr, P., Lucey, S., Ramanan, D. and Hays,
          J. (2019)**
 
-         "Argoverse: 3D Tracking and Forecasting with Rich Maps."
+         "Argoverse: 3D Tracking and Forecasting with Rich Maps".
          *Proceedings of the IEEE/CVF Conference on Computer Vision and
          Pattern Recognition (CVPR)*, 8748 to 8757.
 
@@ -83,7 +83,7 @@ group at the end.
          Ramanan, D., Carr, P. and Hays, J. (2021)**
 
          "Argoverse 2: Next Generation Datasets for Self-Driving Perception
-         and Forecasting." *Proceedings of the Neural Information Processing
+         and Forecasting". *Proceedings of the Neural Information Processing
          Systems Track on Datasets and Benchmarks.*
 
          Observes 5 s and predicts 6 s. Also cited in Scoring (ADE, FDE and
@@ -100,7 +100,7 @@ group at the end.
          Anguelov, D. (2021)**
 
          "Large Scale Interactive Motion Forecasting for Autonomous Driving:
-         The Waymo Open Motion Dataset." *Proceedings of the IEEE/CVF
+         The Waymo Open Motion Dataset". *Proceedings of the IEEE/CVF
          International Conference on Computer Vision (ICCV)*, 9710 to 9719.
 
          Observes 1 s and predicts 8 s. Also cited in Scoring (thresholds
@@ -114,7 +114,7 @@ group at the end.
          **Lefèvre, S., Vasquez, D. and Laugier, C. (2014)**
 
          "A survey on motion prediction and risk assessment for intelligent
-         vehicles." *ROBOMECH Journal*, 1(1).
+         vehicles". *ROBOMECH Journal*, 1(1).
          doi:10.1186/s40648-014-0001-z.
 
          Physics-based, maneuver-based and interaction-aware models. Also
@@ -135,7 +135,7 @@ group at the end.
          **Schubert, R., Richter, E. and Wanielik, G. (2008)**
 
          "Comparison and Evaluation of Advanced Motion Models for Vehicle
-         Tracking." *Proceedings of the 11th International Conference on
+         Tracking". *Proceedings of the 11th International Conference on
          Information Fusion (FUSION 2008)*, Cologne, Germany, 730 to 735.
 
          Constant turn rate and velocity, and constant turn rate and
@@ -158,7 +158,7 @@ group at the end.
 
          **Guo, C., Pleiss, G., Sun, Y. and Weinberger, K. Q. (2017)**
 
-         "On Calibration of Modern Neural Networks." *Proceedings of the
+         "On Calibration of Modern Neural Networks". *Proceedings of the
          34th International Conference on Machine Learning*, PMLR, volume
          70, Sydney, Australia. arXiv:1706.04599.
 
@@ -183,7 +183,7 @@ group at the end.
          Schmid, C. (2020)**
 
          "VectorNet: Encoding HD Maps and Agent Dynamics from Vectorized
-         Representation." *Proceedings of the IEEE/CVF Conference on
+         Representation". *Proceedings of the IEEE/CVF Conference on
          Computer Vision and Pattern Recognition (CVPR).* arXiv:2005.04259.
 
          "Observed agent trajectories and map features are represented as
@@ -195,7 +195,7 @@ group at the end.
          **Chai, Y., Sapp, B., Bansal, M. and Anguelov, D. (2019)**
 
          "MultiPath: Multiple Probabilistic Anchor Trajectory Hypotheses for
-         Behavior Prediction." *Proceedings of the 3rd Conference on Robot
+         Behavior Prediction". *Proceedings of the 3rd Conference on Robot
          Learning (CoRL 2019)*, Proceedings of Machine Learning Research,
          volume 100, 86 to 99.
 
@@ -209,7 +209,7 @@ group at the end.
          **Shi, S., Jiang, L., Dai, D. and Schiele, B. (2022)**
 
          "Motion Transformer with Global Intention Localization and Local
-         Movement Refinement." *Advances in Neural Information Processing
+         Movement Refinement". *Advances in Neural Information Processing
          Systems 35 (NeurIPS 2022).* arXiv:2209.13508.
 
          "a small set of learnable motion query pairs", each in charge of
@@ -259,7 +259,7 @@ group at the end.
          **Alahi, A., Goel, K., Ramanathan, V., Robicquet, A., Fei-Fei, L.
          and Savarese, S. (2016)**
 
-         "Social LSTM: Human Trajectory Prediction in Crowded Spaces."
+         "Social LSTM: Human Trajectory Prediction in Crowded Spaces".
          *Proceedings of the IEEE Conference on Computer Vision and Pattern
          Recognition (CVPR)*, 961 to 971.
 
@@ -296,7 +296,7 @@ group at the end.
          **Treiber, M., Hennecke, A. and Helbing, D. (2000)**
 
          "Congested traffic states in empirical observations and microscopic
-         simulations." *Physical Review E*, 62(2), 1805 to 1824.
+         simulations". *Physical Review E*, 62(2), 1805 to 1824.
          doi:10.1103/PhysRevE.62.1805.
 
          The IDM and its values: :math:`T` = 1.6 s, :math:`a_{\max}` =
@@ -336,7 +336,7 @@ group at the end.
          **Sadigh, D., Sastry, S., Seshia, S. A. and Dragan, A. D. (2016)**
 
          "Planning for Autonomous Cars that Leverage Effects on Human
-         Actions." *Robotics: Science and Systems XII (RSS)*, Ann Arbor,
+         Actions". *Robotics: Science and Systems XII (RSS)*, Ann Arbor,
          Michigan.
 
          "an autonomous car's actions will actually affect what other cars

@@ -3098,7 +3098,7 @@ L9 (not yet published)
       1.5 m steps, the tree reaches the goal after 34 tries; its path of
       straight steps is fast to find but not drivable as it is. L9
 
-   RRT*
+   RRT* (RRT star)
       RRT with two more steps for each new node: choose, among nearby
       nodes, the parent that gives the shortest path from the start, and
       rewire nearby nodes through the new one when that is shorter. Its
