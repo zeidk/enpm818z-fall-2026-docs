@@ -26,15 +26,19 @@ Going Further
    * - :ref:`l9-app-frenet`
      - A path's position, heading and curvature from :math:`(s, d)`.
    * - :ref:`l9-app-scurve`
-     - The S curve's polynomial, and where 5.77 comes from.
+     - How hard a candidate turns, by hand; the S curve's polynomial, and
+       where 5.77 comes from.
    * - :ref:`l9-app-circles`
      - How the radius changes with the number of circles.
    * - :ref:`l9-app-grid`
-     - Grid search on a small grid, step by step.
+     - Grid search in the garage, with no heading, and on a small grid,
+       step by step.
    * - :ref:`l9-app-hybrid`
-     - Hybrid A*'s estimates of cost to go, and the direct try at the goal.
+     - Hybrid A*'s six steps, its estimates of cost to go, and the direct
+       try at the goal.
    * - :ref:`l9-app-rrt`
-     - RRT's goal test and settings, and why RRT is not optimal.
+     - How RRT* shortens the path; RRT's goal test and settings, and why RRT
+       is not optimal.
 
 The sources for these sections are on :doc:`the References page
 <l9_references>`.
@@ -126,6 +130,36 @@ This section continues "Step 1: One Candidate, a Smooth Move Sideways" and
 "How Hard a Candidate Turns, by Hand" in the Sampling Paths section of the
 :doc:`lecture <l9_lecture>`.
 
+.. _l9-app-how-hard:
+
+How Hard a Candidate Turns, by Hand
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+On a straight road, the sharpest bend of the S curve gives a sideways
+acceleration of about
+
+.. math::
+
+   a \approx v^2 \times 5.77 \times \frac{\Delta d}{L^2}
+
+with :math:`v` the speed, :math:`\Delta d` the sideways move and :math:`L`
+the maneuver length. The 5.77 comes from the S curve's shape (next subsection).
+
+With :math:`v` = 10 m/s and :math:`\Delta d` = 3.5 m:
+
+1. :math:`L` = 20 m: 100 × 5.77 × 3.5 / 400 = 5.05 m/s². Over 3, so
+   dropped.
+2. :math:`L` = 30 m: 100 × 5.77 × 3.5 / 900 = 2.24 m/s².
+3. :math:`L` = 40 m: 100 × 5.77 × 3.5 / 1600 = 1.26 m/s².
+
+.. important::
+
+   Twice the length, a quarter of the acceleration. The script measures the
+   bend of each drawn path exactly and gets 4.91, 2.21 and 1.25 m/s². The
+   formula leaves out the path's slope, which matters most for the steepest
+   one.
+
+
 The S Curve and Where 5.77 Comes From
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -213,11 +247,48 @@ One circle would make the AV 4.9 m wide. Going from 3 to 4 circles saves
 
 .. _l9-app-grid:
 
-Grid Search by Hand
--------------------
+Grid Search
+-----------
 
-This section continues "Grid Search on the Whole Garage" in the Garage
+This section continues "The Garage: No Lane to Follow" in the Garage
 Planners section of the :doc:`lecture <l9_lecture>`.
+
+.. _l9-app-grid-garage:
+
+Grid Search on the Whole Garage
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L9/garage_grid.png
+   :alt: The garage top view, x and y in meters, with a light rust band around every parked car and along the walls: cells the AV's base link may not enter. A green line of small squares leaves the AV at the left along the aisle, steps up in short diagonal pieces, then turns straight up into the free spot of the top row and ends where the goal is.
+   :width: 70%
+   :align: center
+
+   Grid search's path through the garage.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   - **Light rust band,** around every parked car and along the walls: the
+     cells the AV's base link may not enter.
+   - **Green line of small squares:** the path, one square per cell. It
+     leaves the AV along the aisle, steps up in short diagonal pieces, then
+     turns straight up into the free spot and ends at the goal.
+
+Grid search moves from cell to cell. The settings:
+
+- cells of 0.5 m;
+- each car and wall grown by 1.05 m (rust): half the AV's width plus a
+  0.1 m margin, chosen for the garage;
+- eight neighbors per cell;
+- A* with the straight-line distance to the goal as its estimate.
+
+Result: 514 cells expanded, a 27.4 m path.
+
+- The path has 9 corners of 45°: the heading would jump at each one.
+- The search knows no heading, so it cannot place the 4.5 m body. The cars
+  grow only by half the AV's width, and the path ends nose first, not backed
+  in.
+
 
 Grid Search, Step 1: Count the Steps from the Start
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -283,6 +354,38 @@ Hybrid A*
 This section continues "Hybrid A*, Steps 1 to 3: Expand a Pose and Check It"
 in the Garage Planners section of the :doc:`lecture <l9_lecture>`.
 
+.. _l9-app-hybrid-1-3:
+
+Hybrid A*, Steps 1 to 3: Expand a Pose and Check It
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+1. Take the pose with the lowest cost so far plus estimated cost to go, as
+   in A*.
+2. Drive the 10 arcs from it (5 steering angles, forward and reverse),
+   0.75 m each.
+3. Check each new pose with the three circles; drop the ones that hit a car
+   or a wall.
+
+
+.. _l9-app-hybrid-4-6:
+
+Hybrid A*, Steps 4 to 6: Cells, Cost and the Goal
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+4. Find the new pose's cell: 0.5 m by 0.5 m by 7.5° of heading. If the cell
+   already holds an expanded pose, drop the new one; if not, store the
+   **exact** pose there.
+5. Its cost: the length driven, doubled in reverse, plus 4 (as much as 4 m
+   driven) for each change of direction (all chosen).
+6. Near the goal, try to reverse straight onto the goal pose; if the circles
+   say it is free, stop.
+
+.. important::
+
+   The cells only keep the search from expanding the same place again. The
+   path is made of the stored exact poses, so it has no jumps.
+
+
 The Estimates of Cost to Go, and the Direct Try at the Goal
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -318,6 +421,31 @@ RRT and RRT*
 
 This section continues "RRT*: the Path Keeps Getting Shorter" in the Garage
 Planners section of the :doc:`lecture <l9_lecture>`.
+
+.. _l9-app-rrt-star:
+
+RRT*: the Path Keeps Getting Shorter
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Two proved results (Karaman and Frazzoli, 2011, on :doc:`the References page
+<l9_references>`):
+
+- As plain RRT adds nodes, its path's length settles on a value above the
+  shortest.
+- With RRT*, the path's length tends to the shortest as the tree grows.
+
+What RRT* adds to each new node:
+
+1. **Choose a parent:** among the tree's nodes near it, connect it to the
+   one that gives it the shortest path from the start, not just the nearest.
+2. **Rewire:** for each nearby node, if going through the new node is
+   shorter, change that node's parent.
+
+.. important::
+
+   RRT keeps the first path it finds. RRT* pays for a shorter path with more
+   distance checks per node.
+
 
 RRT and RRT* in Words
 ~~~~~~~~~~~~~~~~~~~~~

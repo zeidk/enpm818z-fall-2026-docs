@@ -191,6 +191,29 @@ section uses no new source. One source is used only in the appendix
          The lecture rounds it to 0.3 m, the margin of the collision check.
 
 
+.. dropdown:: Behavior
+   :class-container: sd-border-secondary
+   :open:
+
+   The Nash equilibrium of the lane change game.
+
+   .. grid:: 1 1 2 2
+      :gutter: 2
+
+      .. grid-item-card:: Nash equilibrium
+         :link: https://doi.org/10.1073/pnas.36.1.48
+         :class-card: sd-border-secondary
+
+         **Nash, Jr., J. F. (1950)**
+
+         "Equilibrium Points in n-Person Games". *Proceedings of the
+         National Academy of Sciences*, 36(1), 48 to 49.
+         doi:10.1073/pnas.36.1.48.
+
+         The paper that introduced the equilibrium named after Nash, used in
+         "The Lane Change as a Game".
+
+
 .. dropdown:: Garage Planners
    :class-container: sd-border-secondary
    :open:
@@ -239,8 +262,8 @@ section uses no new source. One source is used only in the appendix
          International Journal of Robotics Research*, 30(7), 846 to 894.
          doi:10.1177/0278364911406761. arXiv:1105.1186.
 
-         The two proved results of "RRT*: the Path Keeps Getting Shorter".
-         Also used in the appendix: "Theorem 33 (Non-optimality of RRT) The
+         Used in the appendix: the two proved results of "RRT*: the Path
+         Keeps Getting Shorter", and "Theorem 33 (Non-optimality of RRT) The
          RRT algorithm is not asymptotically optimal".
 
 

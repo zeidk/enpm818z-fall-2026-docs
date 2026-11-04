@@ -11,14 +11,15 @@ Exercises
    work, which is the five in-class quizzes and the four group projects
    listed in the :doc:`syllabus </syllabus/index>`.
 
-Seven take-home exercises built on the Lecture 9 notes, :doc:`l9_lecture`,
+Seven take-home exercises, then three in-class ones, built on the Lecture 9 notes, :doc:`l9_lecture`,
 and on the lecture's Town03 road and garage. They use only the lecture,
 never :doc:`Going Further <l9_appendix>`. Exercise 1 grows the parked car
 for another AV. Exercise 2 converts points between the map and the Frenet
 frame. Exercises 3 and 4 check and score candidate paths, and Exercise 5
 checks poses with circles. Exercise 6 runs the valet's state machine, and
 Exercise 7 compares the garage planners. Two exercises end with a check in
-the lecture's hands-on window.
+the lecture's hands-on window. Exercises 8 to 10 are done in class: a
+spreadsheet, a cost term in Python, and a game.
 
 .. note::
 
@@ -246,8 +247,8 @@ the lecture's hands-on window.
 
    **Goal**
 
-   Use the lecture's estimate of the peak sideways acceleration to find
-   which candidates are too sharp, and see why exactly four are.
+   Use the measured peak sideways accelerations to find which candidates
+   are too sharp, and see why exactly four are.
 
    .. raw:: html
 
@@ -255,11 +256,41 @@ the lecture's hands-on window.
 
    **Specification**
 
-   On a straight road, the S curve's sharpest bend gives a sideways
-   acceleration of about :math:`a \approx v^2 \times 5.77 \times \Delta d /
-   L^2`, with :math:`v` the speed, :math:`\Delta d` the sideways move and
-   :math:`L` the maneuver length. A candidate over 3 m/s² is dropped as too
-   sharp. The AV starts at :math:`d` = 0, so :math:`\Delta d = d_\text{end}`.
+   ``candidates.csv``, the file of the lecture's spreadsheet exercise,
+   gives each candidate's peak sideways acceleration and its smallest gap
+   to the parked car, as the hands-on script measured them at 10 m/s. A
+   candidate over 3 m/s² is dropped as too sharp; one whose gap falls under
+   0.3 m is dropped as a collision. The rows used here:
+
+   .. list-table::
+      :widths: 40 30 30
+      :header-rows: 1
+      :class: compact-table
+
+      * - **Candidate**
+        - **Peak sideways acceleration**
+        - **Smallest gap**
+      * - 4.0 m over 20 m
+        - 5.562 m/s²
+        - 1.858 m
+      * - 4.0 m over 30 m
+        - 2.521 m/s²
+        - 1.858 m
+      * - 4.0 m over 40 m
+        - 1.428 m/s²
+        - 1.858 m
+      * - 3.5 m over 20 m
+        - 4.907 m/s²
+        - 1.359 m
+      * - 3.0 m over 20 m
+        - 4.236 m/s²
+        - 0.859 m
+      * - 2.5 m over 20 m
+        - 3.551 m/s²
+        - 0.360 m
+      * - 2.0 m over 20 m
+        - 2.855 m/s²
+        - −0.139 m
 
    .. raw:: html
 
@@ -267,8 +298,9 @@ the lecture's hands-on window.
 
    **Part A. The 4.0 m candidates**
 
-   1. At 10 m/s, estimate the peak for :math:`d_\text{end}` = 4.0 m over 20,
-      30 and 40 m. Which is too sharp?
+   1. Which of the three 4.0 m candidates is too sharp?
+   2. About how many times smaller is the peak over 40 m than over 20 m?
+      What does doubling the maneuver length do to the peak?
 
    .. raw:: html
 
@@ -276,20 +308,9 @@ the lecture's hands-on window.
 
    **Part B. Why four**
 
-   2. Estimate the peak for :math:`d_\text{end}` = 3.0, 2.5 and 2.0 m over
-      20 m.
    3. Over 20 m, which end offsets are too sharp? The lecture's Step 2
-      counts 4 too sharp. The 2.0 m candidate over 20 m is not one of them:
-      why is it still dropped?
-
-   .. raw:: html
-
-      <hr>
-
-   **Part C. A slower AV**
-
-   4. At 8 m/s (chosen for this exercise), estimate the peak for 3.5 m over
-      20 m and over 30 m. Which are kept?
+      counts 4 too sharp.
+   4. 2.0 m over 20 m stays under 3 m/s². Why is it still dropped?
 
    .. raw:: html
 
@@ -302,25 +323,19 @@ the lecture's hands-on window.
    .. dropdown:: Guidance
       :color: success
 
-      Question 1: 100 × 5.77 × 4.0 = 2308, so 2308 / 400 = 5.77 m/s²,
-      2308 / 900 = 2.56 m/s² and 2308 / 1600 = 1.44 m/s². Only the 20 m
-      one is over 3. The hands-on script measures the drawn paths exactly
-      and gets 5.56, 2.52 and 1.43 m/s².
+      Question 1: only the 20 m one, at 5.56 m/s², over 3. The 30 m and
+      40 m ones, at 2.52 and 1.43 m/s², are kept.
 
-      Question 2: 100 × 5.77 × 3.0 / 400 = 4.33, 100 × 5.77 × 2.5 / 400 =
-      3.61 and 100 × 5.77 × 2.0 / 400 = 2.89 m/s². The script gets 4.24, 3.55
-      and 2.86 m/s².
+      Question 2: 5.562 / 1.428 = 3.9, so about 4 times smaller: twice the
+      length gives about a quarter of the peak.
 
-      Question 3: over 20 m, the end offsets 2.5, 3.0, 3.5 and 4.0 m are over
-      3 m/s²: 4 candidates. 2.0 m over 20 m stays under 3 m/s² (2.89), but
-      it ends only 2.0 + 0.3 = 2.3 m across from the parked car's center,
-      under 2 × 1.21 = 2.42 m, so the circles overlap: it collides. The
-      lecture counts it among the 18 that collide.
+      Question 3: 2.5, 3.0, 3.5 and 4.0 m, at 3.55, 4.24, 4.91 and 5.56
+      m/s²: 4 candidates, as Step 2 says. Their gaps, from 0.36 m up, are
+      all over 0.3 m, so none of them collides.
 
-      Question 4: 8² = 64, so 64 × 5.77 × 3.5 / 400 = 3.23 m/s², dropped,
-      and 64 × 5.77 × 3.5 / 900 = 1.44 m/s², kept. At 8 m/s, the 20 m move to
-      the left lane is still too sharp, by the estimate.
-
+      Question 4: its smallest gap is −0.139 m, under 0.3 m (negative: the
+      circles overlap). It collides, and the lecture counts it among the 18
+      that collide.
 
 .. dropdown:: Exercise 4. Score Two More Candidates, Then Change a Weight
    :icon: number
@@ -632,8 +647,9 @@ the lecture's hands-on window.
 
    **Goal**
 
-   Read the lecture's garage results as numbers: the cost hybrid A*'s path
-   pays, the work each planner did, and what each path costs the AV.
+   Read the lecture's garage results as numbers: how much of hybrid A*'s
+   path is in reverse, the work each planner did, and why one path can be
+   driven and the other cannot.
 
    .. raw:: html
 
@@ -643,24 +659,22 @@ the lecture's hands-on window.
 
    From the lecture:
 
-   - Grid search: 514 cells expanded, a 27.4 m path with 9 corners of 45°.
    - Hybrid A*: 8,478 poses expanded; 24.0 m forward, one switch to
-     reverse, 6.6 m in reverse, 30.6 m in all. Each expanded pose drives 10
-     arcs. The cost is the length driven, doubled in reverse, plus 4 for
-     each change of direction.
+     reverse, 6.6 m in reverse, 30.6 m in all. From each expanded pose, the
+     AV drives a short arc at one of 5 steering angles, forward or in
+     reverse: 10 arcs.
    - RRT (seed 4): the tree reaches the goal after 34 tries and has 23
-     nodes; the path is 16 straight steps.
+     nodes; the path is 16 straight steps, and the heading jumps by up to
+     78° where two steps meet.
 
    .. raw:: html
 
       <hr>
 
-   **Part A. Hybrid A*'s path**
+   **Part A. The two paths**
 
-   1. What is the cost of hybrid A*'s path?
-   2. Hybrid A*'s path is 30.6 − 27.4 = 3.2 m longer than grid search's.
-      Give two reasons from the lecture why grid search's shorter path is
-      not one the AV can drive.
+   1. What share of hybrid A*'s path does the AV drive in reverse?
+   2. Why can the AV drive hybrid A*'s path but not RRT's, as it is?
 
    .. raw:: html
 
@@ -684,15 +698,187 @@ the lecture's hands-on window.
    .. dropdown:: Guidance
       :color: success
 
-      Question 1: 24.0 + 2 × 6.6 + 4 = 24.0 + 13.2 + 4 = 41.2.
+      Question 1: 6.6 / 30.6 = 0.22: about 22 % of the path is in reverse.
 
-      Question 2: the heading would jump by 45° at each of its 9 corners,
-      and the AV cannot turn on the spot. The search knows no heading, so
-      it cannot place the 4.5 m body: the cars grow only by half the AV's
-      width, and the path ends nose first, not backed in.
+      Question 2: every pose of hybrid A*'s path is one the AV reaches by
+      driving an arc from the pose before it, so the heading never jumps.
+      RRT's path is straight steps that meet at angles of up to 78°: the AV
+      would have to turn on the spot, which it cannot do.
 
       Question 3: 8,478 × 10 = 84,780 new poses, each checked with the
       three circles.
 
       Question 4: 23 nodes means 23 − 1 = 22 steps were added. The other
       34 − 22 = 12 tries hit something, as the lecture says.
+
+
+In-Class Exercises
+==================
+
+The three exercises below are done in class, in pairs, at the slides that
+name them. Their answers are here for after class.
+
+.. dropdown:: Exercise 8. In Class: Score Every Candidate in a Spreadsheet
+   :icon: number
+   :class-container: sd-border-primary
+   :class-title: sd-font-weight-bold
+
+   **Goal**
+
+   Score every candidate the planner keeps, and see how one weight changes
+   the winner.
+
+   .. raw:: html
+
+      <hr>
+
+   **Specification**
+
+   Open ``candidates.csv``, in folder ``lecture9`` of the course's Python
+   repository, in Excel, Google Sheets or LibreOffice Calc. It has one row
+   per candidate from the AV at :math:`s` = 60 m: its end offset and
+   maneuver length, its peak sideways acceleration, its smallest gap to the
+   parked car, the lanes it ends away from the route's lane, how far it ends
+   from a lane center, and the meters of the 70 m it does not cover. The
+   ``dropped`` column names the 22 paths the planner removes before scoring.
+   The weights are the lecture's: comfort 2, clearance 4, lane 2 per lane
+   and 2 per m off center, progress 0.5.
+
+   1. Put the five weights in cells of their own.
+   2. Add one column per cost term and a total, for the 9 rows the planner
+      keeps.
+   3. Sort by the total. Is A (3.5 m over 40 m) first, at 5.07?
+   4. Set the clearance weight to 10 and sort again. Which path wins, and
+      where does it end?
+   5. Set the progress weight to 0. What does the AV do now, and why?
+
+   .. dropdown:: Guidance
+      :color: success
+
+      Question 3: yes. A costs 2 × 1.253 + 4 × (1.5 − 1.359) + 2 × 1 +
+      0 = 2.51 + 0.56 + 2.00 + 0 = 5.07.
+
+      Question 4: 4.0 m over 40 m wins at 5.86; A now costs 5.92 (Exercise 4
+      works it out). The winner ends at :math:`d` = 4.0 m, so the AV's left
+      side, 0.95 m to its left, is 5.25 − 4.95 = 0.30 m from the road's
+      center line.
+
+      Question 5: stop behind wins, at 1.62: with no cost for lost progress,
+      its only term is clearance, 4 × (1.5 − 1.096) = 1.62. Every pass costs
+      at least 2.00 for the lane, so the AV waits behind the parked car.
+
+.. dropdown:: Exercise 9. In Class: A Fifth Cost Term
+   :icon: number
+   :class-container: sd-border-primary
+   :class-title: sd-font-weight-bold
+
+   **Goal**
+
+   Add a cost term the planner does not have: keep the AV away from the
+   road's center line, where traffic comes the other way.
+
+   .. raw:: html
+
+      <hr>
+
+   **Specification**
+
+   The left lane's left edge, at :math:`d` = 3.5 + 1.75 = 5.25 m, is the
+   road's center line. Write ``edge_cost(path)`` in ``l9_exercise.py``, the
+   same way the clearance term works: 4 per meter that the gap from the
+   AV's left side to the center line falls under 1.5 m, at the path's worst
+   point. ``path["d"]`` holds the AV's :math:`d` at every point of the path;
+   the AV's left side is half its width, 0.95 m, to the left of it.
+
+   1. Run ``python3 l9_check.py`` until its five checks pass.
+   2. Run ``python3 l9_handson.py --part sample --extra``. Which path wins,
+      and at what cost?
+   3. Set ``W_EDGE`` to 10 and run it again. Which path wins now, and what
+      does the AV give up for it?
+
+   .. dropdown:: Guidance
+      :color: success
+
+      One way to write it:
+
+      .. code-block:: python
+
+         def edge_cost(path):
+             gap = EDGE_D - (float(np.max(path["d"])) + HALF_WIDTH)
+             return W_EDGE * max(0.0, EDGE_SOFT - gap)
+
+      Question 2: A still wins. Its left side ends 5.25 − (3.5 + 0.95) =
+      0.80 m from the line, so its edge cost is 4 × (1.5 − 0.80) = 2.80 and
+      its total 5.07 + 2.80 = 7.87. Next comes 3.0 m over 40 m, at 7.72 +
+      4 × (1.5 − 1.30) = 8.52.
+
+      Question 3: with ``W_EDGE`` at 10, A costs 5.07 + 10 × 0.70 = 12.07,
+      and 3.0 m over 40 m wins at 7.72 + 10 × 0.20 = 9.72. To keep 1.30 m
+      from oncoming traffic instead of 0.80 m, the AV passes the parked car
+      with a smallest gap of 0.86 m instead of 1.36 m: it trades one
+      clearance for the other.
+
+.. dropdown:: Exercise 10. In Class: The Lane Change as a Game
+   :icon: number
+   :class-container: sd-border-primary
+   :class-title: sd-font-weight-bold
+
+   **Goal**
+
+   Find the Nash equilibria of the lane change, and say what they mean for
+   the behavior layer.
+
+   .. raw:: html
+
+      <hr>
+
+   **Specification**
+
+   The AV chooses to go (move into the left lane now) or wait (stop behind
+   the parked car). The car coming up in the left lane chooses to keep its
+   speed or yield (slow down and let the AV in). Each cell gives the AV's
+   delay, then the other car's, in seconds; a crash costs 100. All numbers
+   are chosen for the lecture.
+
+   .. list-table::
+      :widths: 30 35 35
+      :header-rows: 1
+      :class: compact-table
+
+      * -
+        - **The other car keeps**
+        - **The other car yields**
+      * - **The AV goes**
+        - crash: 100, 100
+        - 0, 2
+      * - **The AV waits**
+        - 3, 0
+        - 3, 2
+
+   A cell is a **Nash equilibrium** when neither the AV nor the other car
+   can lower its own delay by changing only its own choice.
+
+   1. For each cell, can the AV lower its delay by switching its row, the
+      other car's choice fixed?
+   2. For each cell, can the other car lower its delay by switching its
+      column, the AV's choice fixed?
+   3. How many Nash equilibria does the game have? What does that mean for
+      the AV?
+
+   .. dropdown:: Guidance
+      :color: success
+
+      - (goes, keeps): the AV gains by waiting (3 instead of 100). Not an
+        equilibrium.
+      - (goes, yields): waiting would cost the AV 3 instead of 0, and keeping
+        its speed would cost the other car 100 instead of 2. An equilibrium.
+      - (waits, keeps): going would cost the AV 100 instead of 3, and
+        yielding would cost the other car 2 instead of 0. An equilibrium.
+      - (waits, yields): the other car gains by keeping its speed (0 instead
+        of 2). Not an equilibrium.
+
+      Two equilibria, so the game alone does not say which one happens. If
+      the AV moves first and the other car sees it, the car's best answer is
+      to yield, and the AV gets 0; if the car keeps its speed anyway, they
+      crash. So the behavior layer goes first only when prediction says the
+      other car will yield; otherwise it waits, at a cost of 3.

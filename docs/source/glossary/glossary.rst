@@ -3079,6 +3079,15 @@ L9 (not yet published)
       checks them, scores them, and keeps the cheapest. GP4 does not ask
       for one. L9
 
+   Nash Equilibrium
+      A choice for each player of a game such that no player can lower its
+      own cost by changing only its own choice. Named after John Nash, who
+      introduced it in 1950. In L9's lane change game (delays chosen for the
+      lecture), the AV and a car in the left lane each go or wait: (AV goes,
+      car yields) and (AV waits, car keeps) are both equilibria, so the
+      behavior layer goes first only when prediction says the car will
+      yield. L9
+
    Nonholonomic Constraint
       A limit on how a vehicle can move, not on where it can be. A car's
       wheels roll and do not slide, so its base link always moves along its

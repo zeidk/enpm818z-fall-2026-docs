@@ -17,8 +17,7 @@ This quiz covers Lecture 9: route, path and trajectory, configuration space
 and the region an obstacle becomes, the tightest and the comfortable turn,
 the Frenet frame and where it fails, sampling and scoring candidate paths,
 collision checking with circles and its margin, the behavior layer and its
-finite state machine, and the garage planners (grid search, hybrid A* and
-RRT). Every question can be answered from the lecture notes,
+finite state machine, and the garage planners (hybrid A* and RRT). Every question can be answered from the lecture notes,
 :doc:`l9_lecture`. Nothing on this page needs
 :doc:`Going Further <l9_appendix>`.
 
@@ -210,28 +209,28 @@ Multiple Choice (Questions 1 to 14)
 .. admonition:: Question 7
    :class: hint
 
-   At 10 m/s, a candidate moves 3.5 m sideways over a maneuver length of
-   25 m (chosen for this question). Using the lecture's estimate of the
-   peak sideways acceleration, is it kept?
+   At 10 m/s, the candidate that moves 3.5 m sideways over 20 m has a peak
+   sideways acceleration of 4.91 m/s², and its smallest gap to the parked
+   car is 1.36 m (both measured by the hands-on script). What does the
+   planner do with it?
 
-   A. 1.62 m/s²; kept.
+   A. It keeps it and scores it.
 
-   B. 2.24 m/s²; kept.
+   B. It drops it as too sharp.
 
-   C. 3.23 m/s²; dropped as too sharp.
+   C. It drops it as a collision.
 
-   D. 5.05 m/s²; dropped as too sharp.
+   D. It keeps it, with a clearance cost only.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C**.
+   **B**.
 
-   :math:`a \approx v^2 \times 5.77 \times \Delta d / L^2` =
-   100 × 5.77 × 3.5 / 625 = 3.23 m/s², over the 3 m/s² limit. 2.24 (**B**)
-   is the 30 m candidate and 5.05 (**D**) the 20 m one. The estimate leaves
-   out the path's slope; the hands-on script's exact value for this path is
-   3.17 m/s², still over 3. See "How Hard a Candidate Turns, by Hand" in
+   4.91 m/s² is over the 3 m/s² limit, so the planner drops the path before
+   it scores it (**A** and **D** are wrong). A gap of 1.36 m is well over the
+   0.3 m margin, so it does not collide (**C**). It is one of the 4 too-sharp
+   candidates of "Step 2: Drop Paths That Collide or Turn Too Hard" in
    :doc:`l9_lecture`.
 
 
@@ -415,10 +414,11 @@ Multiple Choice (Questions 1 to 14)
 
    **B**.
 
-   If the cell already holds an expanded pose, the new one is dropped
-   (**C** is wrong); if not, the exact pose is stored. The path is made of
-   these exact poses, so it has no jumps, unlike a path through cell
-   centers (**A**). See "Hybrid A*, Steps 4 to 6" in :doc:`l9_lecture`.
+   Plain A* visits only the cell centers (**A**). Hybrid A* keeps in each
+   cell one exact pose, one the AV reaches by driving from the pose before
+   it, not every pose that reached the cell (**C**). The path is made of
+   these exact poses, so it has no jumps. See "Hybrid A*: An Exact Pose in
+   Every Cell" in :doc:`l9_lecture`.
 
 
 ----

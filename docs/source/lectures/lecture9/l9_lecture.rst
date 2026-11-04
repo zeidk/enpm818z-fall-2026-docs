@@ -12,13 +12,16 @@ Lecture
    - the region the base link must avoid, worked for two boxes;
    - the Frenet formulas: a path's position, heading and curvature from
      :math:`(s, d)`;
-   - the S curve's polynomial, and where 5.77 comes from;
+   - how hard a candidate turns, by hand, and the S curve's polynomial, with
+     where 5.77 comes from;
    - how the circle radius changes with the number of circles;
-   - grid search by hand, on a small grid;
-   - hybrid A*'s estimates of cost to go, and its direct try at the goal;
-   - RRT and RRT* in words.
+   - grid search in the garage, and by hand on a small grid;
+   - hybrid A*'s six steps, its estimates of cost to go, and its direct try
+     at the goal;
+   - RRT*, and RRT and RRT* in words.
 
-   The hands-on commands are on :doc:`the Code page <l9_code>`. The papers
+   The hands-on commands, and the files of the in-class exercises, are on
+   :doc:`the Code page <l9_code>`. The papers
    and pages behind these notes are listed on :doc:`the References page
    <l9_references>`.
 
@@ -811,39 +814,13 @@ Step 2: Drop Paths That Collide or Turn Too Hard
 
 - **18 collide** (rust): the AV on them comes within 0.3 m of the car (see
   the Collision Checking section).
-- **4 are too sharp** (purple): over 3 m/s² sideways (next section).
+- **4 are too sharp** (purple): over 3 m/s² sideways.
 - **9 are kept**, stop behind included.
 
+.. tip::
 
-.. _l9-lec-how-hard:
-
-How Hard a Candidate Turns, by Hand
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-On a straight road, the sharpest bend of the S curve gives a sideways
-acceleration of about
-
-.. math::
-
-   a \approx v^2 \times 5.77 \times \frac{\Delta d}{L^2}
-
-with :math:`v` the speed, :math:`\Delta d` the sideways move and :math:`L`
-the maneuver length. The 5.77 comes from the S curve's shape (see "The S
-Curve" in :doc:`Going Further <l9_appendix>`).
-
-With :math:`v` = 10 m/s and :math:`\Delta d` = 3.5 m:
-
-1. :math:`L` = 20 m: 100 × 5.77 × 3.5 / 400 = 5.05 m/s². Over 3, so
-   dropped.
-2. :math:`L` = 30 m: 100 × 5.77 × 3.5 / 900 = 2.24 m/s².
-3. :math:`L` = 40 m: 100 × 5.77 × 3.5 / 1600 = 1.26 m/s².
-
-.. important::
-
-   Twice the length, a quarter of the acceleration. The script measures the
-   bend of each drawn path exactly and gets 4.91, 2.21 and 1.25 m/s². The
-   formula leaves out the path's slope, which matters most for the steepest
-   one.
+   See "How Hard a Candidate Turns, by Hand" in :doc:`Going Further
+   <l9_appendix>` for an estimate of the peak by hand.
 
 
 .. _l9-lec-cost-terms:
@@ -879,7 +856,7 @@ Each kept candidate gets a cost; lower is better. All weights are
 
    1 m/s² of extra sideways acceleration costs as much as 4 m of lost
    progress (2 = 0.5 × 4). Change a weight and a different path can win; the
-   hands-on has a slider for each.
+   spreadsheet exercise and the hands-on let you try it.
 
 
 .. _l9-lec-score-a:
@@ -945,6 +922,27 @@ distance from the AV's front to its base link.
    Cost of C: 0 + 1.62 + 0 + 9.93 = 11.55 (11.54 unrounded). Stopping costs
    nothing for comfort or the lane, but the 19.85 m of lost progress costs
    9.93.
+
+
+.. _l9-lec-spreadsheet:
+
+Exercise: Score Every Candidate in a Spreadsheet
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In class, in pairs. Open ``candidates.csv``, from folder ``lecture9`` of the
+course's Python repository (see :doc:`the Code page <l9_code>`), in Excel,
+Google Sheets or LibreOffice Calc. It has one row per candidate: the
+numbers each cost term needs, and no costs.
+
+1. Put the five weights of the cost terms in cells of their own.
+2. Add one column per cost term and a total. Skip the rows the ``dropped``
+   column names: the planner drops them before it scores.
+3. Sort by the total. Is A first, at 5.07?
+4. Set the clearance weight to 10 and sort again. Which path wins, and
+   where does it end?
+5. Set the progress weight to 0. What does the AV do now, and why?
+
+The answers are in Exercise 8 of :doc:`l9_exercises`.
 
 
 .. _l9-lec-cheapest:
@@ -1036,6 +1034,30 @@ again from where it is.
   is behind it. It is back on its lane's center by :math:`s` = 160 m.
 
 
+.. _l9-lec-demo:
+
+Demo: the Same Planner in CARLA
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ROS 2 package ``l9_planning_demo``, in the course's ROS repository
+(`its README <https://github.com/rubixcubic/enpm818z-fall-2026-carla-ros/blob/main/l9_planning_demo/README.md>`__),
+runs this planner on the same stretch of Town03, with the parked car at
+:math:`s` = 118 m:
+
+.. code-block:: bash
+
+   ros2 launch l9_planning_demo demo.launch.py
+   ros2 param set /planning_demo w_clearance 10.0
+
+- RViz draws every candidate in the colors of these figures, and the AV's
+  circles.
+- Every 0.5 s the AV moves along the first 0.5 s of the cheapest path, then
+  plans again. The demo places the AV on the path; L10 adds the controller
+  that drives it.
+- A changed weight takes effect at the next plan: the path changes while you
+  watch.
+
+
 .. _l9-lec-handson-sample:
 
 Hands-On, Part 2: Sample, Score, Drive
@@ -1050,26 +1072,40 @@ plans again every 0.5 s. The commands are on :doc:`the Code page
 
    1. In ``sample``, read the table: do A, B and C have the costs of the
       last sections?
-   2. Raise the clearance weight from 4 to 10. Which candidate wins, and
-      why?
-   3. Set the progress weight to 0. What does the AV do now?
-   4. Move the parked car to :math:`s` = 90 m. How many candidates survive?
-   5. In ``drive``, step through the plans: when does the AV start back?
+   2. Move the parked car to :math:`s` = 90 m. How many candidates survive?
+   3. In ``drive``, step through the plans: when does the AV start back?
 
 .. dropdown:: Answers, from the script
    :class-container: sd-border-success
 
    1. Yes. The table ranks the nine kept candidates: A is rank 1 at 5.07, B
       rank 4 at 7.72 and C (``stop``) rank 8 at 11.54.
-   2. 4.0 m over 40 m wins, at 5.86 against A's 5.92. Its smallest gap,
-      1.86 m, is over 1.5 m, so it pays no clearance at any weight. A's gap
-      of 1.36 m now costs 10 × (1.5 − 1.359) = 1.41 instead of 0.56.
-   3. The AV stops behind the car. With no cost for lost progress, stop
-      behind costs only its clearance, 1.61, less than A's 5.07.
-   4. 8 of the 31: 7 shifts and stop behind. 19 collide and 4 are too sharp.
+   2. 8 of the 31: 7 shifts and stop behind. 19 collide and 4 are too sharp.
       The cheapest is then 4.0 m over 40 m, at 6.80.
-   5. At :math:`t` = 5.5 s, with the AV at :math:`s` = 115 m: the plan
+   3. At :math:`t` = 5.5 s, with the AV at :math:`s` = 115 m: the plan
       changes from :math:`d_\text{end}` = 3.5 m to :math:`d_\text{end}` = 0.
+
+
+.. _l9-lec-fifth-term:
+
+Exercise: a Fifth Cost Term
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In class, in pairs. The road has two lanes each way. The left lane's left
+edge, at :math:`d` = 3.5 + 1.75 = 5.25 m, is the road's center line: past
+it, traffic comes the other way. No cost term sees it. With the clearance
+weight at 10, the cheapest path ends at :math:`d` = 4.0 m: its left side,
+half the AV's 1.9 m width to the left, is 5.25 − (4.0 + 0.95) = 0.30 m from
+the line. The commands are on :doc:`the Code page <l9_code>`.
+
+1. In ``l9_exercise.py``, write ``edge_cost(path)``: like clearance, 4 per
+   meter that the gap to the center line falls under 1.5 m, at the path's
+   worst point.
+2. Run ``l9_check.py`` until its five checks pass.
+3. Run the sample part with ``--extra``: which path wins, and at what cost?
+4. Set ``W_EDGE`` to 10. Which path wins now, and what does the AV give up?
+
+The answers are in Exercise 9 of :doc:`l9_exercises`.
 
 
 .. _l9-lec-sampling-summary:
@@ -1342,6 +1378,98 @@ behavior layer closes that lane (hatched). The sampler keeps
 3. Stop behind is the only one left, at cost 11.54: the AV waits.
 
 
+.. _l9-lec-game:
+
+The Lane Change as a Game
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The last section closed the left lane because another car was coming up in
+it. That car has a driver who chooses too, and each choice changes what is
+best for the other.
+
+- The AV chooses: **go** (move into the left lane now) or **wait** (stop
+  behind the parked car).
+- The other car chooses: **keep** its speed, or **yield** (slow down and let
+  the AV in).
+- Each pair of choices costs each of them seconds of delay; a crash costs
+  100. All numbers are chosen for this example.
+
+.. admonition:: Definition: Nash equilibrium
+   :class: note
+
+   A choice for each player such that no player can lower its own cost by
+   changing only its own choice. Named after John Nash, who introduced it in
+   1950 (see :doc:`the References page <l9_references>`).
+
+
+.. _l9-lec-nash-exercise:
+
+Exercise: Find the Nash Equilibria
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Each cell gives the AV's delay, then the other car's, in seconds (chosen).
+
+.. list-table::
+   :widths: 30 35 35
+   :header-rows: 1
+   :class: compact-table
+
+   * -
+     - **The other car keeps**
+     - **The other car yields**
+   * - **The AV goes**
+     - crash: 100, 100
+     - 0, 2
+   * - **The AV waits**
+     - 3, 0
+     - 3, 2
+
+With your neighbor, for each of the four cells:
+
+1. Can the AV lower its delay by switching its row, the other car's choice
+   fixed?
+2. Can the other car lower its delay by switching its column, the AV's
+   choice fixed?
+
+A cell where both answers are no is a Nash equilibrium. How many does this
+game have?
+
+
+.. _l9-lec-two-equilibria:
+
+Two Equilibria: the AV Goes First Only When It Is Sure
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 30 35 35
+   :header-rows: 1
+   :class: compact-table
+
+   * -
+     - **The other car keeps**
+     - **The other car yields**
+   * - **The AV goes**
+     - crash: 100, 100
+     - **0, 2** (equilibrium)
+   * - **The AV waits**
+     - **3, 0** (equilibrium)
+     - 3, 2
+
+- In (goes, yields), a switch costs the AV 3 instead of 0 and the other car
+  100 instead of 2. In (waits, keeps), it costs the AV 100 instead of 3 and
+  the car 2 instead of 0. Each of the other two cells has a player who gains
+  by switching.
+- Two equilibria: the game alone does not say which one happens.
+- If the AV moves first and the other car sees it, the car's best answer is
+  to yield (2 instead of 100): the AV gets 0. If the car keeps its speed
+  anyway, they crash.
+
+.. important::
+
+   So the behavior layer goes first only when prediction says the other car
+   will yield; otherwise it waits, at a cost of 3.
+
+
 .. _l9-lec-fsm:
 
 A Finite State Machine Picks One Behavior at a Time
@@ -1461,6 +1589,8 @@ Where Behavior Leaves Us
      it.
    - On our road, closing the left lane leaves 10 candidates; 9 collide, and
      the AV stops behind the car (cost 11.54).
+   - The lane change is a game with two Nash equilibria: the AV goes first
+     only when prediction says the other car will yield.
    - An FSM: states, transitions, one condition each; two thresholds against
      flicker.
 
@@ -1505,46 +1635,10 @@ Garage 36 m by 18 m, aisle 7 m, spots 2.6 m by 5.5 m, 19 parked cars (all
 chosen). To compare them, each planner below plans the drive from tag 1
 along the aisle.
 
-
-.. _l9-lec-grid:
-
-Grid Search on the Whole Garage
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. figure:: /_static/images/L9/garage_grid.png
-   :alt: The garage top view, x and y in meters, with a light rust band around every parked car and along the walls: cells the AV's base link may not enter. A green line of small squares leaves the AV at the left along the aisle, steps up in short diagonal pieces, then turns straight up into the free spot of the top row and ends where the goal is.
-   :width: 70%
-   :align: center
-
-   Grid search's path through the garage.
-
-.. admonition:: Reading the figure
-   :class: tip
-
-   - **Light rust band,** around every parked car and along the walls: the
-     cells the AV's base link may not enter.
-   - **Green line of small squares:** the path, one square per cell. It
-     leaves the AV along the aisle, steps up in short diagonal pieces, then
-     turns straight up into the free spot and ends at the goal.
-
-Grid search moves from cell to cell. The settings:
-
-- cells of 0.5 m;
-- each car and wall grown by 1.05 m (rust): half the AV's width plus a
-  0.1 m margin, chosen for the garage;
-- eight neighbors per cell;
-- A* with the straight-line distance to the goal as its estimate.
-
-Result: 514 cells expanded, a 27.4 m path.
-
-- The path has 9 corners of 45°: the heading would jump at each one.
-- The search knows no heading, so it cannot place the 4.5 m body. The cars
-  grow only by half the AV's width, and the path ends nose first, not backed
-  in.
-
 .. tip::
 
-   See "Grid Search by Hand" in :doc:`Going Further <l9_appendix>`.
+   See "Grid Search" in :doc:`Going Further <l9_appendix>`: grid search
+   in this garage, with no heading, and on a small grid, step by step.
 
 
 .. _l9-lec-hybrid:
@@ -1583,42 +1677,10 @@ From a pose, the AV drives a short arc at one of 5 steering angles, forward
 the Configuration Space section. The arcs are drawn 3 m long; the search
 used 0.75 m.
 
-
-.. _l9-lec-hybrid-1-3:
-
-Hybrid A*, Steps 1 to 3: Expand a Pose and Check It
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-1. Take the pose with the lowest cost so far plus estimated cost to go, as
-   in A*.
-2. Drive the 10 arcs from it (5 steering angles, forward and reverse),
-   0.75 m each.
-3. Check each new pose with the three circles; drop the ones that hit a car
-   or a wall.
-
 .. tip::
 
-   See "Hybrid A*" in :doc:`Going Further <l9_appendix>` for the estimates
-   of cost to go.
-
-
-.. _l9-lec-hybrid-4-6:
-
-Hybrid A*, Steps 4 to 6: Cells, Cost and the Goal
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-4. Find the new pose's cell: 0.5 m by 0.5 m by 7.5° of heading. If the cell
-   already holds an expanded pose, drop the new one; if not, store the
-   **exact** pose there.
-5. Its cost: the length driven, doubled in reverse, plus 4 (as much as 4 m
-   driven) for each change of direction (all chosen).
-6. Near the goal, try to reverse straight onto the goal pose; if the circles
-   say it is free, stop.
-
-.. important::
-
-   The cells only keep the search from expanding the same place again. The
-   path is made of the stored exact poses, so it has no jumps.
+   See "Hybrid A*" in :doc:`Going Further <l9_appendix>`: its six
+   steps, its estimates of cost to go, and the direct try at the goal.
 
 
 .. _l9-lec-hybrid-garage:
@@ -1726,34 +1788,25 @@ goal with a chance of 5 in 100.
 The original RRT makes each step by steering the AV's model, as hybrid A*
 does, so its path can be driven.
 
-
-.. _l9-lec-rrt-star:
-
-RRT*: the Path Keeps Getting Shorter
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Two proved results (Karaman and Frazzoli, 2011, on :doc:`the References page
-<l9_references>`):
-
-- As plain RRT adds nodes, its path's length settles on a value above the
-  shortest.
-- With RRT*, the path's length tends to the shortest as the tree grows.
-
-What RRT* adds to each new node:
-
-1. **Choose a parent:** among the tree's nodes near it, connect it to the
-   one that gives it the shortest path from the start, not just the nearest.
-2. **Rewire:** for each nearby node, if going through the new node is
-   shorter, change that node's parent.
-
-.. important::
-
-   RRT keeps the first path it finds. RRT* pays for a shorter path with more
-   distance checks per node.
-
 .. tip::
 
-   See "RRT and RRT*" in :doc:`Going Further <l9_appendix>`.
+   See "RRT and RRT*" in :doc:`Going Further <l9_appendix>`: how RRT*
+   keeps shortening the path.
+
+
+.. _l9-lec-which-discussion:
+
+Discussion: Which Planner Where
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Two minutes with your neighbor, before the next section:
+
+1. Why does sampling in :math:`(s, d)` not work in the garage?
+2. Why not run hybrid A* on the road too?
+3. The AV leaves the road and enters the garage. What decides that it
+   switches planners?
+
+The next section answers them.
 
 
 .. _l9-lec-which:
@@ -1793,8 +1846,8 @@ Which Planner Where
 Hands-On, Part 3: the Garage
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``rrt`` part grows the tree; the ``search`` part shows the grid search
-and hybrid A* results. We computed those two results in advance. GP4 asks
+The ``rrt`` part grows the tree; the ``search`` part shows the hybrid A*
+result (and the grid search's, from Going Further). We computed those two results in advance. GP4 asks
 you to write A* on the lane graph, not these garage searches. The commands
 are on :doc:`the Code page <l9_code>`.
 
@@ -1803,8 +1856,8 @@ are on :doc:`the Code page <l9_code>`.
 
    1. In ``rrt``, drag the slider: where does the tree grow first?
    2. Try three seeds. Does the path change? Does it get any smoother?
-   3. In ``search``, compare the grid path with hybrid A*'s: where would the
-      AV have to stop and turn on the spot?
+   3. In ``search``, follow hybrid A*'s path: where does it switch to
+      reverse?
 
 .. dropdown:: Answers, from the script
    :class-container: sd-border-success
@@ -1813,9 +1866,8 @@ are on :doc:`the Code page <l9_code>`.
       step is straight, so the heading jumps where two steps meet. Seed 4:
       16 steps, jumps up to 78.2°. Seed 7: 15 steps, up to 52.7°. Seed 1:
       16 steps, up to 72.3°.
-   3. On the grid path, at each of its 9 corners of 45°. Hybrid A*'s path
-      has no corners: the AV stops only once, at the switch to reverse at
-      (25.9, 9.7) m.
+   3. At (25.9, 9.7) m, after 24.0 m forward: the AV stops once and backs
+      6.6 m into the spot.
 
 
 .. _l9-lec-garage-summary:
@@ -1826,10 +1878,9 @@ Where Garage Planning Leaves Us
 .. admonition:: Where garage planning leaves us
    :class: tip
 
-   - Grid search: 27.4 m in the garage, with 45° corners and no heading.
    - Hybrid A*: exact poses in cells; 24.0 m forward, one switch, 6.6 m in
      reverse into the spot.
-   - RRT: 34 tries, a jagged path; RRT* keeps shortening it.
+   - RRT: 34 tries, a jagged path the AV cannot drive as it is.
 
 
 .. _l9-lec-next:
@@ -1852,7 +1903,8 @@ Next Class
 
 **Before next class**
 
-- Run the three hands-on parts on :doc:`the Code page <l9_code>`.
+- Finish the two exercises and the three hands-on parts on :doc:`the Code
+  page <l9_code>`.
 - Read "The S Curve" and "Hybrid A*" in :doc:`Going Further <l9_appendix>`.
 
 

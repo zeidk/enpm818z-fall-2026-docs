@@ -57,11 +57,13 @@ Lecture Materials
 
 - :doc:`l9_lecture`: the notes, following the slides shown in class.
 - :doc:`Going Further <l9_appendix>`: the deck's appendix (the region for
-  two boxes, the Frenet formulas, the S curve, more or fewer circles, grid
-  search by hand, hybrid A*'s estimates of cost to go, and RRT and RRT* in
-  words).
+  two boxes, the Frenet formulas, how hard a candidate turns and the S
+  curve, more or fewer circles, grid search, hybrid A*'s six steps and its
+  estimates of cost to go, and RRT*).
 - :doc:`l9_code`: the hands-on, five parts (``scene``, ``sample``,
-  ``drive``, ``rrt`` and ``search``).
+  ``drive``, ``rrt`` and ``search``), and the files of two in-class
+  exercises (a spreadsheet and a fifth cost term; the third, a game, needs
+  no code).
 - :doc:`l9_exercises`, :doc:`l9_quiz` and :doc:`l9_references`.
 
 .. toctree::
@@ -82,6 +84,6 @@ Next Steps
 
 - **Next class, L10: Trajectory Generation and Control.** Put a speed and a
   time on the path, then steer and drive along it.
-- **Before then:** run the three hands-on parts on the :doc:`Code page
-  <l9_code>`, and read "The S Curve" and "Hybrid A*" in :doc:`Going Further
+- **Before then:** finish the two exercises and the three hands-on parts on
+  the :doc:`Code page <l9_code>`, and read "The S Curve" and "Hybrid A*" in :doc:`Going Further
   <l9_appendix>`.

@@ -64,6 +64,18 @@ Each part opens a matplotlib window:
    # save a still instead of opening a window
    python3 l9_handson.py --part sample --snapshot sample.png
 
+The two in-class exercises use the same folder:
+
+.. code-block:: bash
+
+   # Exercise: score every candidate in a spreadsheet.
+   # Open candidates.csv in Excel, Google Sheets or LibreOffice Calc.
+   python3 export_candidates.py                 # writes candidates.csv again, if you need it
+
+   # Exercise: a fifth cost term. Write edge_cost in l9_exercise.py, then:
+   python3 l9_check.py                          # PASS or FAIL for five paths
+   python3 l9_handson.py --part sample --extra  # the table gets an "extra" column
+
 
 What Each Part Shows
 ~~~~~~~~~~~~~~~~~~~~
@@ -128,9 +140,17 @@ The Files
      - **What it is**
    * - ``l9_handson.py``
      - the five parts above
+   * - ``candidates.csv``
+     - the candidate paths for the spreadsheet exercise
+   * - ``export_candidates.py``
+     - writes ``candidates.csv`` from ``l9common.py``
+   * - ``l9_exercise.py``
+     - the code exercise: you write ``edge_cost``
+   * - ``l9_check.py``
+     - checks your ``edge_cost``
    * - ``l9common.py``
-     - the road, the Frenet frame, the S curve, the circles, the costs and
-       the RRT
+     - the road, the Frenet frame, the S curve, the circles, the costs (with
+       a hook for a fifth term) and the RRT
    * - ``export_scene.py``
      - reads ``Town03.xodr`` with ``carla.Map`` (offline) and writes
        ``l9_scene.npz``
