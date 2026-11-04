@@ -44,12 +44,13 @@ After this lecture, you can:
   an obstacle into the region the AV's base link must avoid.
 - Convert a point between the map and the **Frenet frame**
   :math:`(s, d)`, and say where the frame fails.
-- Generate **candidate paths** with sideways shifts and score them by hand.
+- Generate **candidate paths** with sideways shifts, score them, and add a
+  cost term.
 - Check a pose for collision with **circles**, and say why the check is
   conservative.
-- Explain the **behavior layer** with a **finite state machine**.
-- Explain **grid search**, **hybrid A*** and **RRT**, and say where each one
-  is used.
+- Explain the **behavior layer** with a **finite state machine**, and find
+  the **Nash equilibria** of a lane change between the AV and another car.
+- Explain **hybrid A*** and **RRT**, and say where each planner is used.
 
 
 Lecture Materials
