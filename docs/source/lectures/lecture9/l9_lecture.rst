@@ -494,6 +494,30 @@ the AV by 30° and the grown obstacle changes shape.
   cover the AV's body at each pose.
 
 
+.. _l9-lec-heading-grow:
+
+Step 1 Again: Grow the Obstacle for the Turned AV
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The dashed outline comes from Step 1, done with the AV turned 30° to its left.
+
+.. figure:: /_static/images/L9/cspace_heading_grow.png
+   :alt: A top view in the obstacle's own frame, along it to the right and across it upward, in meters. The blue car sits at the center. Four gray copies of the AV, each turned 30 degrees to its left, sit around it: behind it, above it, ahead of it and below it, each just touching it. Each copy's base link is a white dot. A dashed rust outline runs through the four dots and around the obstacle: straight pieces along and across, joined by slanted pieces.
+   :width: 70%
+   :align: center
+
+   Step 1 for the AV turned 30°.
+
+1. Keep the AV turned 30°. Move it around the obstacle and stop each time it
+   just touches it (the gray copies show four of these poses).
+2. Mark the base link at each touching pose (white dots).
+3. Join the marks all the way around: the dashed outline. With its base link
+   inside, the turned AV overlaps the obstacle.
+
+Each slanted piece is where an edge of the turned AV slides along a corner of
+the obstacle. So the outline is no longer a box.
+
+
 .. _l9-lec-sideways:
 
 The AV Cannot Move Sideways
@@ -514,19 +538,19 @@ limits follow.
 
    - **Tag 1:** the base link's path in the tightest turn, to the left and to
      the right. Each arc turns around a center (plus sign) 3.41 m to the side.
-   - **Tag 2:** a sideways move, which the AV cannot make.
+   - **Tag 2:** a sideways move: the AV cannot make it.
 
-1. **The tightest turn:** radius :math:`R = L / \tan\delta_\text{max}`,
-   with :math:`L` the wheelbase and :math:`\delta_\text{max}` the largest
-   steering angle. With :math:`L` = 2.875 m and :math:`\delta_\text{max}` =
-   0.7 rad (40.1°):
+- **The tightest turn:** radius :math:`R = L / \tan\delta_\text{max}`,
+  with :math:`L` the wheelbase and :math:`\delta_\text{max}` the largest
+  steering angle. With :math:`L` = 2.875 m and :math:`\delta_\text{max}` =
+  0.7 rad (40.1°):
 
-   1. tan 0.7 = 0.842;
-   2. :math:`R` = 2.875 / 0.842 = 3.41 m.
+  1. tan 0.7 = 0.842;
+  2. :math:`R` = 2.875 / 0.842 = 3.41 m.
 
-2. **A comfortable turn:** at speed :math:`v` on a curve of radius
-   :math:`R`, the sideways acceleration is :math:`v^2 / R`. With a limit of
-   3 m/s² at 10 m/s: :math:`R` ≥ 10² / 3 = 33.3 m.
+- **A comfortable turn:** at speed :math:`v` on a curve of radius
+  :math:`R`, the sideways acceleration is :math:`v^2 / R`. With a limit of
+  3 m/s² at 10 m/s: :math:`R` ≥ 10² / 3 = 33.3 m.
 
 The wheelbase and the 3 m/s² limit are chosen; the 0.7 rad steering limit is
 GP4's. GP4's vehicles have wheelbases of 2.3 to 3.0 m, and GP4 uses a
