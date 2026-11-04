@@ -460,6 +460,31 @@ Where the grown obstacle lies on our road, in meters along the stretch and
 across the lane, is worked out in the appendix: :ref:`l9-app-cspace-road`.
 
 
+.. _l9-lec-heading-grow:
+
+Step 1 Again: Grow the Obstacle for the Turned AV
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+So far the AV headed along the obstacle. Turn it 30° to its left and do Step 1
+again.
+
+.. figure:: /_static/images/L9/cspace_heading_grow.png
+   :alt: A top view in the obstacle's own frame, along it to the right and across it upward, in meters. The blue car sits at the center. Four gray copies of the AV, each turned 30 degrees to its left, sit around it: behind it, above it, ahead of it and below it, each just touching it. Each copy's base link is a white dot. A dashed rust outline runs through the four dots and around the obstacle: straight pieces along and across, joined by slanted pieces.
+   :width: 70%
+   :align: center
+
+   Step 1 for the AV turned 30°.
+
+1. Keep the AV turned 30°. Move it around the obstacle and stop each time it
+   just touches it (the gray copies show four of these poses).
+2. Mark the base link at each touching pose (white dots).
+3. Join the marks all the way around: the dashed outline. With its base link
+   inside, the turned AV overlaps the obstacle.
+
+Each slanted piece is where an edge of the turned AV slides along a corner of
+the obstacle. So the outline is no longer a box.
+
+
 .. _l9-lec-heading:
 
 The Region Changes with the Heading
@@ -494,37 +519,14 @@ the AV by 30° and the grown obstacle changes shape.
   cover the AV's body at each pose.
 
 
-.. _l9-lec-heading-grow:
-
-Step 1 Again: Grow the Obstacle for the Turned AV
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The dashed outline comes from Step 1, done with the AV turned 30° to its left.
-
-.. figure:: /_static/images/L9/cspace_heading_grow.png
-   :alt: A top view in the obstacle's own frame, along it to the right and across it upward, in meters. The blue car sits at the center. Four gray copies of the AV, each turned 30 degrees to its left, sit around it: behind it, above it, ahead of it and below it, each just touching it. Each copy's base link is a white dot. A dashed rust outline runs through the four dots and around the obstacle: straight pieces along and across, joined by slanted pieces.
-   :width: 70%
-   :align: center
-
-   Step 1 for the AV turned 30°.
-
-1. Keep the AV turned 30°. Move it around the obstacle and stop each time it
-   just touches it (the gray copies show four of these poses).
-2. Mark the base link at each touching pose (white dots).
-3. Join the marks all the way around: the dashed outline. With its base link
-   inside, the turned AV overlaps the obstacle.
-
-Each slanted piece is where an edge of the turned AV slides along a corner of
-the obstacle. So the outline is no longer a box.
-
-
 .. _l9-lec-sideways:
 
 The AV Cannot Move Sideways
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The wheels roll; they do not slide. So the base link always moves along the heading, and the AV turns only by steering. Two
-limits follow.
+The wheels roll; they do not slide. So the base link always moves along the
+heading, and the AV turns only by steering. Every path the planner keeps
+obeys two limits.
 
 .. figure:: /_static/images/L9/turn_limits.png
    :alt: A top view of the AV, a black car heading right, its base link a white dot near the rear. Tag 1: two dashed arcs start at the base link and curve forward, one to the left and one to the right, each around a center marked with a plus sign beside the AV; an arrow marked 3.41 m runs from the upper center to the end of the left arc. Tag 2: an arrow pointing straight up from the AV's left side.
@@ -536,9 +538,10 @@ limits follow.
 .. admonition:: Reading the figure
    :class: tip
 
-   - **Tag 1:** the base link's path in the tightest turn, to the left and to
-     the right. Each arc turns around a center (plus sign) 3.41 m to the side.
-   - **Tag 2:** a sideways move: the AV cannot make it.
+   - **Tag 1:** the tightest turn, to the left or to the right: the base link
+     follows a circle of radius 3.41 m (worked out below) around a center (plus
+     sign) beside the AV. No turn can be tighter.
+   - **Tag 2:** a sideways move. The AV cannot make it.
 
 - **The tightest turn:** radius :math:`R = L / \tan\delta_\text{max}`,
   with :math:`L` the wheelbase and :math:`\delta_\text{max}` the largest
@@ -562,22 +565,25 @@ stricter 2.0 m/s².
 What the Two Limits Rule Out
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The planners later in this lecture keep both limits.
-
 .. important::
 
-   A drivable path has no corners (the heading never jumps), and no turn has
-   a radius under 3.41 m. At 10 m/s, comfort needs a radius of 33.3 m or
-   more: 33.3 / 3.41 = 9.8, about ten times the tightest turn.
+   A drivable path bends smoothly: the AV changes direction only while it
+   rolls, so it cannot follow a sharp corner, where the direction changes at
+   one point. No bend is tighter than a 3.41 m radius. At 10 m/s, comfort asks
+   for more: with the 3 m/s² limit, a radius of 10² / 3 = 33.3 m or more,
+   about ten times the tightest turn (33.3 / 3.41 = 9.8).
 
-1. **Sampling drops every candidate that turns harder than 3 m/s²:** 4 of
-   the 31 on our road (:ref:`l9-lec-drop`).
-2. **A path with corners cannot be driven as it is.** RRT's garage path has
-   them (:ref:`l9-lec-rrt-garage`). Hybrid A* builds its path from arcs no
-   tighter than 3.41 m (:ref:`l9-lec-hybrid`).
-3. **The AV cannot slide into a parking spot.** Hybrid A*'s path drives
-   24.0 m forward, switches once, and backs 6.6 m into the spot
-   (:ref:`l9-lec-hybrid-garage`).
+A path that breaks these limits is one the AV cannot drive, so every planner
+in this lecture keeps them. Three places where they change what a planner
+returns:
+
+- **Sampling drops every candidate that turns harder than 3 m/s²:** 4 of the
+  31 on our road (:ref:`l9-lec-drop`).
+- **A path with sharp corners cannot be driven as it is.** RRT's garage path
+  has them (:ref:`l9-lec-rrt-garage`); hybrid A* uses only arcs of 3.41 m or
+  wider (:ref:`l9-lec-hybrid`).
+- **The AV cannot slide into a parking spot.** Hybrid A*'s path drives 24.0 m
+  forward, switches once, and backs 6.6 m in (:ref:`l9-lec-hybrid-garage`).
 
 
 .. _l9-lec-cspace-summary:
