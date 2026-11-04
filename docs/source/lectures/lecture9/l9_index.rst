@@ -12,23 +12,23 @@ follows, with positions and headings and no times; the controller of the
 next class drives it.
 
 The lecture follows one road of CARLA's Town03 map, read from the map file.
-The AV drives at 10 m/s in the right lane, and a car is parked 58 m ahead in
-the same lane. Every road method today runs on this scene:
+The AV drives at 10 m/s in the right lane, and the obstacle, a parked car,
+is 58 m ahead in the same lane. Every road method today runs on this scene:
 
 - **Configuration space.** Three numbers, :math:`(x, y, \theta)`, place the
-  whole AV. The parked car becomes a region, 9.0 m by 3.8 m, that the AV's
+  whole AV. The obstacle becomes a region, 9.0 m by 3.8 m, that the AV's
   base link must avoid. Steering limits the tightest turn to 3.41 m.
 - **The Frenet frame.** Positions along the road, :math:`s`, and across it,
-  :math:`d`. The lanes become lines of constant :math:`d`, and the parked
-  car sits at :math:`s` = 118.00 m, :math:`d` = −0.30 m.
+  :math:`d`. The lanes become lines of constant :math:`d`, and the obstacle
+  sits at :math:`s` = 118.00 m, :math:`d` = −0.30 m.
 - **Sampling paths.** 31 candidate paths, shifted sideways: 18 collide, 4
   turn too hard, and the cheapest of the other 9 passes in the left lane at
-  a cost of 5.07. Planned again every 0.5 s, the AV passes the car and comes
-  back to its lane.
+  a cost of 5.07. Planned again every 0.5 s, the AV passes the obstacle and
+  comes back to its lane.
 - **Collision checking.** Three circles cover the AV. The check never misses
   a real collision, but it can drop a path that was free.
 - **Behavior.** The layer that picks the task, as a finite state machine.
-  With the left lane closed, the AV stops behind the car.
+  With the left lane closed, the AV stops behind the obstacle.
 - **Garage planners.** Where there is no lane to follow: grid search, hybrid
   A* and RRT, in a parking garage.
 

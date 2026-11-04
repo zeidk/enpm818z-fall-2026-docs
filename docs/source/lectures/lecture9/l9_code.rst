@@ -6,7 +6,7 @@ The L9 hands-on is the folder ``lecture9/`` of
 `enpm818z-fall-2026-carla-python
 <https://github.com/rubixcubic/enpm818z-fall-2026-carla-python/tree/main/lecture9>`_.
 It uses the lecture's two scenes: **one road from CARLA's Town03 map**, with
-a car parked in the AV's lane, and **one parking garage**.
+the obstacle, a parked car, in the AV's lane, and **one parking garage**.
 
 You need Python with ``numpy`` and ``matplotlib``. You need **no CARLA
 server, no ROS and no GPU**.
@@ -28,7 +28,7 @@ server, no ROS and no GPU**.
        scored, and a table of the cheapest
      - "Hands-On, Part 2: Sample, Score, Drive" (Sampling Paths)
    * - ``drive``
-     - planning again every 0.5 s while the AV passes the parked car
+     - planning again every 0.5 s while the AV passes the obstacle
      - "Hands-On, Part 2: Sample, Score, Drive" (Sampling Paths)
    * - ``rrt``
      - an RRT growing in the garage
@@ -54,7 +54,7 @@ Each part opens a matplotlib window:
 
    python3 l9_handson.py --part scene    # 1. the road in the map and in the Frenet frame
    python3 l9_handson.py --part sample   # 2. candidate paths, their costs, the cheapest
-   python3 l9_handson.py --part drive    # 3. re-planning every 0.5 s while passing the car
+   python3 l9_handson.py --part drive    # 3. re-planning every 0.5 s while passing the obstacle
    python3 l9_handson.py --part rrt      # 4. an RRT growing in the garage
    python3 l9_handson.py --part search   # 5. grid search and hybrid A* results (read only)
 
@@ -87,10 +87,10 @@ What Each Part Shows
    the map and back.
 2. **sample:** the 31 candidates of the lecture: 10 end offsets times 3
    maneuver lengths, plus stop behind. Each one is checked with three
-   circles around the AV and three around the parked car, and scored with
+   circles around the AV and three around the obstacle, and scored with
    the four cost terms. Green is the cheapest, gray kept, rust collides,
    purple dashed too sharp, black dotted stop behind. The sliders change the
-   four weights and where the car is parked (:math:`s` from 80 to 140 m).
+   four weights and where the obstacle is parked (:math:`s` from 80 to 140 m).
    The table on the right ranks the nine cheapest candidates, with each
    cost term. A dropped candidate has a total of ``inf``, so it ranks last.
 3. **drive:** the planner runs every 0.5 s. The AV drives the first 0.5 s of
@@ -185,7 +185,7 @@ lecture and set at the top of ``l9common.py``:
        2.875 m (chosen for the lecture) and steering limit 0.7 rad (GP4's)
    * - the AV's start
      - :math:`s` = 60 m on the right lane's center, 10 m/s
-   * - the parked car
+   * - the obstacle
      - 4.5 m by 1.9 m, centered at :math:`s` = 118 m, :math:`d` = −0.3 m
    * - horizon
      - 70 m

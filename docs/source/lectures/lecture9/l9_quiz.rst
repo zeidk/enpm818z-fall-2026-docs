@@ -32,8 +32,9 @@ finite state machine, and the garage planners (hybrid A* and RRT). Every questio
    - Click the dropdown after each question to reveal the answer.
    - The lecture's scene is one road of CARLA's Town03 map, two lanes each
      way, 3.5 m wide. The AV drives at 10 m/s on the right lane's center,
-     at :math:`s` = 60 m. A car is parked 58 m ahead, at :math:`s` = 118 m,
-     0.3 m right of the lane's center. Both are 4.5 m long and 1.9 m wide.
+     at :math:`s` = 60 m. The obstacle, a parked car, is 58 m ahead, at
+     :math:`s` = 118 m, 0.3 m right of the lane's center. Both are 4.5 m
+     long and 1.9 m wide.
      :math:`s` is the distance along the right lane's center, :math:`d` the
      distance across it, positive to the left. Numbers that are not the
      lecture's are marked "chosen for this question".
@@ -74,10 +75,10 @@ Multiple Choice (Questions 1 to 14)
 .. admonition:: Question 2
    :class: hint
 
-   The AV heads along the lane, the same way as the parked car. Its front
-   bumper is 3.6 m ahead of its base link; the parked car is 4.5 m long. The
+   The AV heads along the lane, the same way as the obstacle. Its front
+   bumper is 3.6 m ahead of its base link; the obstacle is 4.5 m long. The
    two bodies overlap from behind when the base link is less than how far
-   behind the parked car's center?
+   behind the obstacle's center?
 
    A. 3.15 m
 
@@ -92,27 +93,27 @@ Multiple Choice (Questions 1 to 14)
 
    **C**.
 
-   The car's rear is 4.5 / 2 = 2.25 m behind its center. The AV's front
+   The obstacle's rear is 4.5 / 2 = 2.25 m behind its center. The AV's front
    reaches it when the base link is less than 2.25 + 3.6 = 5.85 m behind the
-   center. 3.15 m (**A**) is the limit ahead of the car, from the AV's rear
-   (2.25 + 0.9). 9.0 m (**D**) is the whole length of the region,
-   5.85 + 3.15. See "Step 1: Grow the Parked Car" in :doc:`l9_lecture`.
+   center. 3.15 m (**A**) is the limit ahead of the obstacle, from the AV's
+   rear (2.25 + 0.9). 9.0 m (**D**) is the whole length of the region,
+   5.85 + 3.15. See "Step 1: Grow the Obstacle" in :doc:`l9_lecture`.
 
 
 .. admonition:: Question 3
    :class: hint
 
    The region the AV's base link must avoid reaches 5.85 m behind the
-   parked car's center but only 3.15 m ahead of it. Why?
+   obstacle's center but only 3.15 m ahead of it. Why?
 
-   A. The parked car faces the other way.
+   A. The obstacle faces the other way.
 
    B. The base link sits near the AV's rear, 0.9 m from the rear bumper and
       3.6 m from the front bumper.
 
-   C. The 0.3 m margin is added only behind the car.
+   C. The 0.3 m margin is added only behind the obstacle.
 
-   D. The AV is wider than the parked car.
+   D. The AV is wider than the obstacle.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
@@ -123,7 +124,7 @@ Multiple Choice (Questions 1 to 14)
    stay farther back. Coming from ahead, only the 0.9 m behind the base
    link matters. Both cars face the same way (**A** is wrong), the margin
    is not part of this region (**C** is wrong), and both are 1.9 m wide
-   (**D** is wrong). See "Step 1: Grow the Parked Car" in :doc:`l9_lecture`.
+   (**D** is wrong). See "Step 1: Grow the Obstacle" in :doc:`l9_lecture`.
 
 
 .. admonition:: Question 4
@@ -210,8 +211,8 @@ Multiple Choice (Questions 1 to 14)
    :class: hint
 
    At 10 m/s, the candidate that moves 3.5 m sideways over 20 m has a peak
-   sideways acceleration of 4.91 m/s², and its smallest gap to the parked
-   car is 1.36 m (both measured by the hands-on script). What does the
+   sideways acceleration of 4.91 m/s², and its smallest gap to the obstacle
+   is 1.36 m (both measured by the hands-on script). What does the
    planner do with it?
 
    A. It keeps it and scores it.
@@ -320,7 +321,7 @@ Multiple Choice (Questions 1 to 14)
 
    A. Only the error in the AV's own position.
 
-   B. Only the error in where perception places the parked car.
+   B. Only the error in where perception places the obstacle.
 
    C. Only the error in prediction for a moving car.
 
@@ -332,7 +333,7 @@ Multiple Choice (Questions 1 to 14)
    **A**.
 
    A published requirement allows at most 0.29 m of error in the AV's own
-   position on a local street, rounded to 0.3 m. The parked car's position
+   position on a local street, rounded to 0.3 m. The obstacle's position
    comes from perception, and a moving car's from prediction, with more
    error; a margin for them would add to the 0.3 m. See "The Margin: How
    Close Counts as a Collision" in :doc:`l9_lecture`.
@@ -343,7 +344,7 @@ Multiple Choice (Questions 1 to 14)
 
    The behavior layer closes the left lane, so the sampler keeps
    :math:`d_\text{end}` ≤ 0.5 m. Why does the AV then wait behind the
-   parked car?
+   obstacle?
 
    A. Stop behind is always the cheapest candidate.
 
@@ -361,7 +362,7 @@ Multiple Choice (Questions 1 to 14)
    **B**.
 
    3 end offsets × 3 lengths + 1 = 10 candidates. At :math:`d_\text{end}` =
-   0.5 m the AV's circles are 0.5 + 0.3 = 0.8 m across from the car's,
+   0.5 m the AV's circles are 0.5 + 0.3 = 0.8 m across from the obstacle's,
    under 2 × 1.21 = 2.42 m, so they overlap; the smaller offsets are closer
    still. With the left lane open, stop behind ranks 8th at 11.54 (**A** is
    wrong). See "One Decision Changes the Cheapest Path" in
@@ -431,7 +432,7 @@ True or False (Questions 15 to 18)
    :class: hint
 
    The three-circle collision check can miss a real collision between the
-   AV and the parked car.
+   AV and the obstacle.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
@@ -502,7 +503,7 @@ Short Answer (Questions 19 to 20)
 .. admonition:: Question 19
    :class: hint
 
-   For the AV heading along the lane, the parked car becomes a 9.0 m by
+   For the AV heading along the lane, the obstacle becomes a 9.0 m by
    3.8 m box that the base link must avoid. Why do the planners not use
    this box for every pose along a path, and what do they do instead?
 
@@ -513,7 +514,8 @@ Short Answer (Questions 19 to 20)
    so the obstacle region depends on all three numbers
    :math:`(x, y, \theta)`; for a turned AV it is not even a box. So the
    planners do not build it. They place the AV's body at each pose along a
-   path, covered by three circles, and check it against the car's circles:
+   path, covered by three circles, and check it against the obstacle's
+   circles:
    4,332 poses for the 31 candidates. See "The Region Changes with the
    Heading" and the Collision Checking section in :doc:`l9_lecture`.
 

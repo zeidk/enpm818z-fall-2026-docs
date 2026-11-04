@@ -13,7 +13,7 @@ Exercises
 
 Seven take-home exercises, then three in-class ones, built on the Lecture 9 notes, :doc:`l9_lecture`,
 and on the lecture's Town03 road and garage. They use only the lecture,
-never :doc:`Going Further <l9_appendix>`. Exercise 1 grows the parked car
+never :doc:`Going Further <l9_appendix>`. Exercise 1 grows the obstacle
 for another AV. Exercise 2 converts points between the map and the Frenet
 frame. Exercises 3 and 4 check and score candidate paths, and Exercise 5
 checks poses with circles. Exercise 6 runs the valet's state machine, and
@@ -30,14 +30,15 @@ spreadsheet, a cost term in Python, and a game.
    **The scene:** one road of Town03, two lanes each way, 3.5 m wide. The
    reference path is the right lane's center; :math:`s` is the distance
    along it and :math:`d` the distance across it, positive to the left. The
-   AV drives at 10 m/s on the right lane's center at :math:`s` = 60 m. A car
-   is parked at :math:`s` = 118 m, :math:`d` = −0.3 m. Both are 4.5 m long
-   and 1.9 m wide; the AV's base link is 0.9 m in from its rear bumper. The
+   AV drives at 10 m/s on the right lane's center at :math:`s` = 60 m. The
+   obstacle, a parked car, is at :math:`s` = 118 m, :math:`d` = −0.3 m. Both
+   are 4.5 m long and 1.9 m wide; the AV's base link is 0.9 m in from its
+   rear bumper. The
    lecture chose these values. Numbers that are not the lecture's are marked
    "chosen for this exercise".
 
 
-.. dropdown:: Exercise 1. Grow the Parked Car for Another AV
+.. dropdown:: Exercise 1. Grow the Obstacle for Another AV
    :icon: number
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
@@ -55,8 +56,8 @@ spreadsheet, a cost term in Python, and a game.
 
    The new AV is 5.0 m long and 2.0 m wide, with its base link 1.0 m in from
    its rear bumper (all chosen for this exercise). It heads along the lane,
-   the same way as the lecture's parked car (4.5 m by 1.9 m). Use the three
-   overlap conditions of "Step 1: Grow the Parked Car" in the lecture: from
+   the same way as the lecture's obstacle (4.5 m by 1.9 m). Use the three
+   overlap conditions of "Step 1: Grow the Obstacle" in the lecture: from
    behind, from ahead and across.
 
    .. raw:: html
@@ -67,7 +68,7 @@ spreadsheet, a cost term in Python, and a game.
 
    1. How far ahead of the base link is the new AV's front bumper? How far
       is each side from its center line?
-   2. How far behind and how far ahead of the parked car's center does the
+   2. How far behind and how far ahead of the obstacle's center does the
       region reach, and how far to either side? How long and how wide is
       it?
 
@@ -230,7 +231,7 @@ spreadsheet, a cost term in Python, and a game.
       1. :math:`x` = 155.686 + 1.75 × (−0.0141) = 155.686 − 0.025 = 155.661 m.
       2. :math:`y` = −207.135 + 1.75 × 0.9999 = −207.135 + 1.750 = −205.385 m.
 
-      This is the lane line beside the parked car. The script gives
+      This is the lane line beside the obstacle. The script gives
       (155.661, −205.385); the title rounds it to (155.66, −205.39).
 
       Question 5: 1 − 5.25 / 61.9 = 1 − 0.085 = 0.915, well above 0.
@@ -258,7 +259,7 @@ spreadsheet, a cost term in Python, and a game.
 
    ``candidates.csv``, the file of the lecture's spreadsheet exercise,
    gives each candidate's peak sideways acceleration and its smallest gap
-   to the parked car, as the hands-on script measured them at 10 m/s. A
+   to the obstacle, as the hands-on script measured them at 10 m/s. A
    candidate over 3 m/s² is dropped as too sharp; one whose gap falls under
    0.3 m is dropped as a collision. The rows used here:
 
@@ -442,7 +443,7 @@ spreadsheet, a cost term in Python, and a game.
       Question 5: A's terms other than clearance add up to 2.51 + 2.00 =
       4.51. It ties with 5.86 when the clearance term is 5.86 − 4.51 = 1.35,
       so at a weight of 1.35 / 0.141 = 9.6. Above about 9.6, the AV moves
-      farther from the car and pays for it on the lane.
+      farther from the obstacle and pays for it on the lane.
 
 
 .. dropdown:: Exercise 5. Circles by Hand
@@ -453,7 +454,7 @@ spreadsheet, a cost term in Python, and a game.
    **Goal**
 
    Place the AV's circles for a turned pose, and use gaps to see which
-   candidates beside the car collide.
+   candidates beside the obstacle collide.
 
    .. raw:: html
 
@@ -464,7 +465,7 @@ spreadsheet, a cost term in Python, and a game.
    The AV's three circles have radius 1.21 m. For a pose
    :math:`(x, y, \theta)`, circle :math:`k` is centered at
    :math:`(x + o_k \cos\theta,\ y + o_k \sin\theta)`, with :math:`o_k` =
-   −0.15, 1.35 and 2.85 m. The parked car has the same circles around its
+   −0.15, 1.35 and 2.85 m. The obstacle has the same circles around its
    own body. The gap is the distance between two centers minus the two
    radii; a gap under 0.3 m is a collision.
 
@@ -481,10 +482,10 @@ spreadsheet, a cost term in Python, and a game.
 
       <hr>
 
-   **Part B. Beside the car**
+   **Part B. Beside the obstacle**
 
-   The AV passes the car with its middle circle lined up with the car's, as
-   in "Step 2: One Pose, Checked by Hand".
+   The AV passes the obstacle with its middle circle lined up with the
+   obstacle's, as in "Step 2: One Pose, Checked by Hand".
 
    2. Find the gap between the two middle circles for :math:`d_\text{end}` =
       3.0, 2.5 and 2.0 m.
@@ -497,10 +498,11 @@ spreadsheet, a cost term in Python, and a game.
 
    **Part C. Stop behind**
 
-   4. Stop behind leaves 2.0 m between the AV's front bumper and the car's
-      rear bumper. The AV's base link stops at :math:`s` = 110.15 m, at
-      :math:`d` = 0. Where along the road are the AV's front circle center
-      and the car's rear circle center? What is their gap, taking the
+   4. Stop behind leaves 2.0 m between the AV's front bumper and the
+      obstacle's rear bumper. The AV's base link stops at :math:`s` =
+      110.15 m, at :math:`d` = 0. Where along the road are the AV's front
+      circle center and the obstacle's rear circle center? What is their
+      gap, taking the
       0.3 m offset across into account?
 
    .. raw:: html
@@ -521,7 +523,7 @@ spreadsheet, a cost term in Python, and a game.
       2. :math:`o` = 1.35: (10 + 1.169, 5 + 0.675) = (11.169, 5.675).
       3. :math:`o` = 2.85: (10 + 2.468, 5 + 1.425) = (12.468, 6.425).
 
-      Question 2: the car's center is 0.3 m right of the reference, so the
+      Question 2: the obstacle's center is 0.3 m right of the reference, so the
       centers are :math:`d_\text{end}` + 0.3 apart across.
 
       1. 3.0 m: 3.3 − 2.42 = 0.88 m.
@@ -540,7 +542,7 @@ spreadsheet, a cost term in Python, and a game.
 
       1. The AV's front circle center is 2.85 m ahead of the base link:
          110.15 + 2.85 = 113.00 m.
-      2. The car's rear circle center is 1.5 m behind its center:
+      2. The obstacle's rear circle center is 1.5 m behind its center:
          118 − 1.5 = 116.50 m.
       3. Along: 116.50 − 113.00 = 3.50 m. Across: 0.3 m. The distance is
          :math:`\sqrt{3.50^2 + 0.3^2} = \sqrt{12.25 + 0.09}` = 3.51 m.
@@ -738,7 +740,7 @@ name them. Their answers are here for after class.
    repository, in Excel, Google Sheets or LibreOffice Calc. It has one row
    per candidate from the AV at :math:`s` = 60 m: its end offset and
    maneuver length, its peak sideways acceleration, its smallest gap to the
-   parked car, the lanes it ends away from the route's lane, how far it ends
+   obstacle, the lanes it ends away from the route's lane, how far it ends
    from a lane center, and the meters of the 70 m it does not cover. The
    ``dropped`` column names the 22 paths the planner removes before scoring.
    The weights are the lecture's: comfort 2, clearance 4, lane 2 per lane
@@ -765,7 +767,7 @@ name them. Their answers are here for after class.
 
       Question 5: stop behind wins, at 1.62: with no cost for lost progress,
       its only term is clearance, 4 × (1.5 − 1.096) = 1.62. Every pass costs
-      at least 2.00 for the lane, so the AV waits behind the parked car.
+      at least 2.00 for the lane, so the AV waits behind the obstacle.
 
 .. dropdown:: Exercise 9. In Class: A Fifth Cost Term
    :icon: number
@@ -814,7 +816,7 @@ name them. Their answers are here for after class.
 
       Question 3: with ``W_EDGE`` at 10, A costs 5.07 + 10 × 0.70 = 12.07,
       and 3.0 m over 40 m wins at 7.72 + 10 × 0.20 = 9.72. To keep 1.30 m
-      from oncoming traffic instead of 0.80 m, the AV passes the parked car
+      from oncoming traffic instead of 0.80 m, the AV passes the obstacle
       with a smallest gap of 0.86 m instead of 1.36 m: it trades one
       clearance for the other.
 
@@ -835,7 +837,7 @@ name them. Their answers are here for after class.
    **Specification**
 
    The AV chooses to go (move into the left lane now) or wait (stop behind
-   the parked car). The car coming up in the left lane chooses to keep its
+   the obstacle). The car coming up in the left lane chooses to keep its
    speed or yield (slow down and let the AV in). Each cell gives the AV's
    delay, then the other car's, in seconds; a crash costs 100. All numbers
    are chosen for the lecture.

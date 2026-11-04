@@ -36,23 +36,23 @@ finds the path for the next few seconds that follows the route and stays
 clear of every object, through the next lane if needed.
 
 .. figure:: /_static/images/L9/l7_to_l9.png
-   :alt: Two top views of the same two-lane road, one above the other, x and y in meters. In each, the AV, a black car, drives to the right in the lower lane, and a blue parked car stands about 58 meters ahead in the same lane. Top view, tag 1: a black dotted line along the center of the AV's lane runs straight through the parked car. Bottom view, tag 2: a green path leaves the AV's lane, moves into the upper lane and passes the parked car.
+   :alt: Two top views of the same two-lane road, one above the other, x and y in meters. In each, the AV, a black car, drives to the right in the lower lane, and the obstacle, a blue parked car, stands about 58 meters ahead in the same lane. Top view, tag 1: a black dotted line along the center of the AV's lane runs straight through the obstacle. Bottom view, tag 2: a green path leaves the AV's lane, moves into the upper lane and passes the obstacle.
    :width: 95%
    :align: center
 
-   The route's lane, and a path that passes the parked car.
+   The route's lane, and a path that passes the obstacle.
 
 .. admonition:: Reading the figure
    :class: tip
 
    Both views show the same stretch of road from above, :math:`x` and
-   :math:`y` in meters. The AV is the black car on the left; the blue car is
-   parked about 58 m ahead in the AV's lane.
+   :math:`y` in meters. The AV is the black car on the left; the obstacle,
+   a parked car, is about 58 m ahead in the AV's lane.
 
    - **Top, tag 1:** the reference path from the route, the center of the
-     AV's lane (black dots). It runs straight through the parked car.
+     AV's lane (black dots). It runs straight through the obstacle.
    - **Bottom, tag 2:** a path from today's planner (green). It moves into
-     the upper lane and passes the parked car.
+     the upper lane and passes the obstacle.
 
 
 .. _l9-lec-route-path:
@@ -139,8 +139,8 @@ This is a reading slide in the deck. After this lecture, you can:
 The Scene
 ---------
 
-We take one road from CARLA's Town03 map, with a car parked in the AV's
-lane.
+We take one road from CARLA's Town03 map, with the obstacle, a parked car,
+in the AV's lane.
 
 **What it is for:** every road method today runs on this one scene, with
 distances read from the map.
@@ -152,7 +152,7 @@ Town03, Road 67, Read from the Map
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/scene_overview.png
-   :alt: A top view of every lane of CARLA's Town03 map as thin gray lines, x and y in meters: a grid of streets, a roundabout near the middle and a ring road around the edge. A thick black line follows the bottom edge of the ring to the right, then curves up the right side. Tag 1 marks the AV, a white dot with a dark edge on the straight part; tag 2 marks the parked car, a blue square where the curve begins; tag 3 marks the end of the black line.
+   :alt: A top view of every lane of CARLA's Town03 map as thin gray lines, x and y in meters: a grid of streets, a roundabout near the middle and a ring road around the edge. A thick black line follows the bottom edge of the ring to the right, then curves up the right side. Tag 1 marks the AV, a white dot with a dark edge on the straight part; tag 2 marks the obstacle, a blue square where the curve begins; tag 3 marks the end of the black line.
    :width: 60%
    :align: center
 
@@ -166,16 +166,15 @@ Town03, Road 67, Read from the Map
    right side.
 
    - **Tag 1:** the AV (white dot).
-   - **Tag 2:** the parked car (blue square), where the curve begins.
+   - **Tag 2:** the obstacle (blue square), where the curve begins.
    - **Tag 3:** the end of the stretch.
 
 **We measured** these from the waypoints in CARLA's map file, with no CARLA
 server:
 
 - two lanes in each direction, 3.5 m wide;
-- our stretch: 237.9 m of the right lane's center, driven to the right;
-- straight up to 116.5 m, then two left curves, of radius 111 m and then
-  62 m.
+- the stretch: 237.9 m of the right lane;
+- straight for 116.5 m, then two left curves.
 
 GP4 drives only Town01, which has one lane each way. Its A* tests also plan
 two trips on Town03's graph, lane changes included.
@@ -183,15 +182,15 @@ two trips on Town03's graph, lane changes included.
 
 .. _l9-lec-av-car:
 
-The AV, the Parked Car and the Two Lanes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The AV, the Obstacle and the Two Lanes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/scene_top.png
-   :alt: A top view, to scale, of the start of the stretch, x and y in meters: two lanes, the lower one with a dotted center line, the lane line between them dashed. Tag 1 below the AV, a black car in the lower lane at the left. Tag 2 below the parked car, blue, about 58 meters ahead in the same lane. Tag 3 in the upper lane. On the right the road starts to curve upward.
+   :alt: A top view, to scale, of the start of the stretch, x and y in meters: two lanes, the lower one with a dotted center line, the lane line between them dashed. Tag 1 below the AV, a black car in the lower lane at the left. Tag 2 below the obstacle, a blue parked car, about 58 meters ahead in the same lane. Tag 3 in the upper lane. On the right the road starts to curve upward.
    :width: 95%
    :align: center
 
-   The AV, the parked car and the two lanes, to scale.
+   The AV, the obstacle and the two lanes, to scale.
 
 .. admonition:: Reading the figure
    :class: tip
@@ -201,7 +200,7 @@ The AV, the Parked Car and the Two Lanes
    lane line between the two lanes.
 
    - **Tag 1:** the AV, black, in the right (lower) lane.
-   - **Tag 2:** the parked car, blue, about 58 m ahead in the same lane.
+   - **Tag 2:** the obstacle, blue, about 58 m ahead in the same lane.
    - **Tag 3:** the left lane, which goes the same direction.
 
 On the right, the road starts to curve upward.
@@ -212,11 +211,13 @@ On the right, the road starts to curve upward.
    :class: compact-table
 
    * - **1: the AV (chosen)**
-     - **2: the parked car (chosen)**
+     - **2: the obstacle, a parked car (chosen)**
    * - on the right lane's center, at 10 m/s
      - 58 m ahead, 0.3 m right of the lane's center
    * - 4.5 m long, 1.9 m wide
      - 4.5 m long, 1.9 m wide
+   * - position: its base link, the middle of its rear axle
+     - position: its center
 
 The plan covers 70 m ahead (chosen): 70 / 10 = 7 s at 10 m/s.
 
@@ -234,11 +235,11 @@ cases:
   a waypoint ahead;
 - the AV is more than 2.0 m from the path.
 
-**On our road:** the parked car's center is 0.3 m from the right lane's
-center. The waypoints there are 2 m apart, so the car's center is within
-about 1 m of one of them. That is under 3.0 m, so GP4 plans again.
+**On our road:** the obstacle's center is 0.3 m from the right lane's
+center. The waypoints there are 2 m apart, so the obstacle's center is
+within about 1 m of one of them. That is under 3.0 m, so GP4 plans again.
 
-If the route ran down the left lane instead, the car's center would be
+If the route ran down the left lane instead, the obstacle's center would be
 3.5 + 0.3 = 3.8 m from that lane's center, so at least 3.8 m from every
 waypoint. That is over 3.0 m, so GP4 would not plan again.
 
@@ -271,8 +272,8 @@ controller. The course Final Report can discuss where one would help.
 Configuration Space
 -------------------
 
-We describe the AV by three numbers, and turn the parked car into a region
-that the AV's base link (the middle of its rear axle) must stay out of.
+We describe the AV by three numbers, and turn the obstacle into a region
+that the AV's base link must stay out of.
 
 **What it is for:** every planner today searches over these three numbers.
 
@@ -286,19 +287,27 @@ Three Numbers Place the Whole AV
    :class: note
 
    A **configuration** of the AV, :math:`q = (x, y, \theta)`, fixes where
-   every point of its body is: the base link (the middle of the rear axle)
-   at :math:`(x, y)` in the map frame, and the heading :math:`\theta`,
+   every point of its body is: the base link at :math:`(x, y)` in the map frame, and the heading :math:`\theta`,
    counterclockwise from the map's :math:`x` axis.
 
-- The body is rigid. Once :math:`q` is known, the rear bumper is 0.9 m
-  behind the base link (chosen), the front bumper 4.5 − 0.9 = 3.6 m ahead of
-  it along :math:`\theta`, and each side 1.9 / 2 = 0.95 m from the center
-  line.
-- Our AV at the start: :math:`q` = (97.69 m, −207.29 m, 0.14°), read from
-  the map's lane center at 60 m along the stretch.
-- Localization estimates these three numbers as the pose. GP4's EKF gives
-  them for the vehicle's origin, 1.0 to 1.4 m ahead of the rear axle. A
-  planner asks which poses are free.
+.. figure:: /_static/images/L9/config_pose.png
+   :alt: A top view of a black car facing up and to the right, at 30 degrees from a dashed horizontal arrow labeled map x; a dashed vertical arrow labeled map y crosses it at a small white circle near the rear of the car, the base link, with tag 1 beside it. An arc between the map x arrow and the car's dotted center line, ahead of the car, is labeled theta, tag 2. Beside the car's right side, two arrows along its length run from the rear bumper to the base link, 0.9 m, and from the base link to the front bumper, 3.6 m, tag 3. Ahead of the front bumper, a short arrow across the car's direction, labeled 0.95 m, runs from the center line to the side, tag 4.
+   :width: 60%
+   :align: center
+
+   The three numbers of a configuration, on the AV.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   - **Tag 1:** the base link at :math:`(x, y)`.
+   - **Tag 2:** the heading :math:`\theta`, drawn at 30° so it shows.
+   - **Tag 3:** the body is rigid, so :math:`q` places all of it: the rear
+     bumper 0.9 m behind the base link (chosen), the front bumper
+     4.5 − 0.9 = 3.6 m ahead.
+   - **Tag 4:** each side 1.9 / 2 = 0.95 m out from the center line.
+
+Our AV at the start: :math:`q` = (97.69 m, −207.29 m, 0.14°).
 
 
 .. _l9-lec-cspace-def:
@@ -315,34 +324,99 @@ Configuration Space and Its Obstacle Region
    :math:`\mathcal{O}`. The rest of :math:`\mathcal{C}` is the **free
    space**.
 
-For our AV, :math:`\mathcal{A}(q)` is its body placed at pose :math:`q`, and
-:math:`\mathcal{O}` is the parked car, a 4.5 m by 1.9 m box. A path is
-collision free when every pose along it is in the free space.
+.. figure:: /_static/images/L9/cspace_idea.png
+   :alt: A top view of two lanes, gray, with a dashed line between them. In the lower lane, a blue car points right, tag 1. Behind it in the same lane, a black car, tag 2, points right with its front over the blue car's rear; the part where the two bodies overlap is outlined in rust and hatched. In the upper lane, a second black car, tag 3, at the same distance behind, is clear of the blue car. Each black car has a small white circle near its rear, its base link.
+   :width: 60%
+   :align: center
+
+   The AV's body at two poses behind the obstacle.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   - **Tag 1:** :math:`\mathcal{O}`, the obstacle, a 4.5 m by 1.9 m box.
+   - **Tag 2:** :math:`\mathcal{A}(q)` overlaps :math:`\mathcal{O}` (hatched):
+     this :math:`q` is in the obstacle region.
+   - **Tag 3:** :math:`\mathcal{A}(q)` is clear of :math:`\mathcal{O}`: this
+     :math:`q` is free.
+
+A path is collision free when every pose along it is free.
+
+
+.. _l9-lec-cspace-plan:
+
+Fast Collision Check: Grow the Obstacle, Then Test One Point
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Goal: the planner checks the AV's future poses, one every 0.5 m along each
+path it considers. At each pose :math:`q`, decide quickly whether the AV
+would hit the obstacle.
+
+.. figure:: /_static/images/L9/cspace_plan.png
+   :alt: Two panels side by side, split by a dashed line. Left: a black car behind a blue car, its front over the blue car's rear. Right: the blue car, faded, inside a rust hatched box much larger than it; a small white circle sits inside the box where the black car's base link was.
+   :width: 85%
+   :align: center
+
+   Two bodies to compare, or one point and a box.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   - **Left, the direct check**: compare the AV's body with the obstacle at
+     every future pose: two shapes to compare each time.
+   - **Right, grow, then test a point** (for one AV heading):
+
+     - **Step 1**, once per heading: grow the obstacle by the AV's shape
+       (hatched). It holds every position of the AV's base link at which the
+       AV's body would touch the obstacle.
+     - **Step 2**, at each pose: keep only the AV's base link (white dot). The
+       pose collides when that point is inside the grown obstacle, as here.
+
+   Both figures show the same pose. On the left the two bodies overlap: the
+   pose collides, and the white dot on the right is inside the grown obstacle.
 
 
 .. _l9-lec-grow:
 
-Step 1: Grow the Parked Car, for One AV Heading
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 1: Grow the Obstacle, for One AV Heading
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Take the AV heading along the lane, the same way as the parked car. Measure
-from the parked car's center, along its length and across it. The two bodies
+.. figure:: /_static/images/L9/cspace_grow.png
+   :alt: A top view of a blue car, its center marked with a white cross, and three gray cars heading the same way, each just touching it: tag 1 behind it, tag 2 ahead of it, tag 3 beside it on its left. Each gray car has a white circle at its base link, near its rear. A rust box joins the three circles: its back edge 5.85 m behind the blue car's center, its front edge 3.15 m ahead, its side 1.9 m out from the center line.
+   :width: 75%
+   :align: center
+
+   The AV at the three poses where it just touches the obstacle.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   Slide the AV, heading along the lane, around the obstacle until it just
+   touches; its base link (white circle) marks the edge of the grown
+   obstacle.
+
+   - **Tag 1, behind:** 5.85 m behind the obstacle's center.
+   - **Tag 2, ahead:** 3.15 m ahead.
+   - **Tag 3, beside:** 1.9 m out.
+
+Take the AV heading along the lane, the same way as the obstacle. Measure
+from the obstacle's center, along its length and across it. The two bodies
 overlap when all three of these hold:
 
 1. **From behind:** the AV's front, 3.6 m ahead of its base link, reaches
-   the car's rear, 4.5 / 2 = 2.25 m behind its center. So the base link is
-   less than 2.25 + 3.6 = 5.85 m behind the center.
+   the obstacle's rear, 4.5 / 2 = 2.25 m behind its center. So the base
+   link is less than 2.25 + 3.6 = 5.85 m behind the center.
 2. **From ahead:** the AV's rear, 0.9 m behind its base link, has not
-   cleared the car's front, 2.25 m ahead. So the base link is less than
-   2.25 + 0.9 = 3.15 m ahead of the center.
+   cleared the obstacle's front, 2.25 m ahead. So the base link is less
+   than 2.25 + 0.9 = 3.15 m ahead of the center.
 3. **Across:** the half widths add up. The base link is less than
    0.95 + 0.95 = 1.9 m to either side.
 
 .. important::
 
    The region the base link must avoid is 5.85 + 3.15 = 9.0 m long and
-   1.9 + 1.9 = 3.8 m wide. It reaches farther behind the car than ahead,
-   because the base link sits near the AV's rear.
+   1.9 + 1.9 = 3.8 m wide. It reaches farther behind the obstacle than
+   ahead, because the base link sits near the AV's rear.
 
 .. tip::
 
@@ -355,38 +429,35 @@ overlap when all three of these hold:
 Step 2: the AV Becomes a Point
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Step 2 keeps only the AV's base link: a pose collides when that point is inside
+the grown obstacle. This section works out where the grown obstacle is on our
+road.
+
 .. figure:: /_static/images/L9/cspace_region.png
-   :alt: A top view in the parked car's own frame, along the car to the right and across it upward, in meters. The blue parked car sits at the center. A rust hatched box 9.0 meters long and 3.8 meters wide surrounds it, reaching from minus 5.85 to plus 3.15 along and from minus 1.9 to plus 1.9 across. Two copies of the AV touch the car: tag 1, behind it and left of its rear bumper, its base link (a white dot) on the box's left edge; tag 2, beside it, its base link on the box's top edge. The vertical axis reads across, to the car's left.
+   :alt: A top view in the obstacle's own frame, along it to the right and across it upward, in meters. The obstacle, the blue car, sits at the center. A rust hatched box 9.0 meters long and 3.8 meters wide surrounds it, reaching from minus 5.85 to plus 3.15 along and from minus 1.9 to plus 1.9 across. Four white dots mark the AV's base link at four poses: tag 1 inside the box, behind the car and to its left; tag 2 inside the box, beside the car on its right; tag 3 outside the box, behind it; tag 4 outside the box, 3.8 meters to the car's left.
    :width: 70%
    :align: center
 
-   The region the base link must avoid, for the AV heading along the car.
+   The region the base link must avoid, for the AV heading along the
+   obstacle.
 
 .. admonition:: Reading the figure
    :class: tip
 
-   The axes follow the parked car: along it to the right, across it to the
-   car's left upward, both in meters, with the car's center at 0. The rust
-   hatched box is the region the AV's base link must avoid: 9.0 m long
-   (from −5.85 to +3.15) and 3.8 m wide (from −1.9 to +1.9).
+   The axes follow the obstacle: along it to the right, across it to the
+   obstacle's left upward, both in meters, with the obstacle's center at 0.
+   The rust hatched box is the region the AV's base link must avoid: 9.0 m
+   long (from −5.85 to +3.15) and 3.8 m wide (from −1.9 to +1.9).
 
-   - **Tag 1:** the AV touching the car from behind. Its base link (white
-     dot) is on the box's left edge.
-   - **Tag 2:** the AV touching the car from the side. Its base link is on
-     the box's top edge.
+   Each white dot is the AV's base link at one pose; the AV's body is not
+   drawn.
 
-   Each time the AV just touches the car, its base link sits on the rust
-   edge. Inside the box, the bodies overlap.
+   - **Tags 1 and 2:** inside the box, so those poses collide.
+   - **Tags 3 and 4:** outside the box, so those poses are free. Tag 4 is on
+     the left lane's center, 3.8 m to the obstacle's left.
 
-**On our road,** the car is at 60 + 58 = 118 m along the stretch, 0.3 m
-right of center. So the base link must avoid:
-
-- 118 − 5.85 = 112.15 m to 118 + 3.15 = 121.15 m along the stretch;
-- 0.3 + 1.9 = 2.2 m right to 1.9 − 0.3 = 1.6 m left of the right lane's
-  center.
-
-The left lane's center is 3.5 m left, so it is 3.5 − 1.6 = 1.9 m clear of
-the region.
+Where the grown obstacle lies on our road, in meters along the stretch and
+across the lane, is worked out in the appendix: :ref:`l9-app-cspace-road`.
 
 
 .. _l9-lec-heading:
@@ -394,8 +465,11 @@ the region.
 The Region Changes with the Heading
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+The grown obstacle from Step 1 holds for the AV heading along the obstacle. Turn
+the AV by 30° and the grown obstacle changes shape.
+
 .. figure:: /_static/images/L9/cspace_heading.png
-   :alt: The same top view, along the parked car and across it in meters. The solid rust box is the region for the AV heading along the car. A dashed rust outline, wider and slanted, is the region for the AV turned 30 degrees: it reaches lower and farther to the right. Tag 1: the AV turned 30 degrees, above the car, its base link on the dashed outline. Tag 2 sits beside the dashed outline on the right.
+   :alt: The same top view, along the obstacle and across it in meters. The solid rust box is the region for the AV heading along the obstacle. A dashed rust outline, wider and slanted, is the region for the AV turned 30 degrees: it reaches lower and farther to the right. Tag 1: the AV turned 30 degrees, above the obstacle, its base link on the dashed outline. Tag 2 sits beside the dashed outline on the right.
    :width: 70%
    :align: center
 
@@ -406,18 +480,18 @@ The Region Changes with the Heading
 
    The same axes as the figure before.
 
-   - **Solid rust box:** the region for the AV heading along the car, as
-     before.
+   - **Solid rust box:** the region for the AV heading along the obstacle,
+     as before.
    - **Tag 2, dashed rust outline:** the region for the AV turned 30° to its
      left. It reaches lower and farther to the right than the box.
-   - **Tag 1:** the turned AV touching the car. Its base link is on the
+   - **Tag 1:** the turned AV touching the obstacle. Its base link is on the
      dashed outline.
 
 - Each heading gives its own region, so the obstacle region depends on all
   three numbers :math:`(x, y, \theta)`.
-- For a turned AV the region is no longer a box. So the next sections do not
-  build it: they place the AV's body at each pose along a path and check it
-  against the car.
+- For a turned AV the grown obstacle is no longer a box, and each heading needs
+  its own. So the next sections use the direct check, made cheap: three circles
+  cover the AV's body at each pose.
 
 
 .. _l9-lec-sideways:
@@ -425,29 +499,61 @@ The Region Changes with the Heading
 The AV Cannot Move Sideways
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The wheels roll; they do not slide. So the base link, the middle of the rear
-axle, always moves along the heading, and the AV turns only by steering. Two
-limits follow:
+The wheels roll; they do not slide. So the base link always moves along the heading, and the AV turns only by steering. Two
+limits follow.
 
-1. **The tightest turn.** The next class derives it from the bicycle model:
-   radius :math:`R = L / \tan\delta_\text{max}`, with :math:`L` the
-   wheelbase and :math:`\delta_\text{max}` the largest steering angle. We
-   take :math:`L` = 2.875 m (chosen; GP4's vehicles have 2.3 to 3.0 m) and
-   GP4's steering limit, :math:`\delta_\text{max}` = 0.7 rad (40.1°):
+.. figure:: /_static/images/L9/turn_limits.png
+   :alt: A top view of the AV, a black car heading right, its base link a white dot near the rear. Tag 1: two dashed arcs start at the base link and curve forward, one to the left and one to the right, each around a center marked with a plus sign beside the AV; an arrow marked 3.41 m runs from the upper center to the end of the left arc. Tag 2: an arrow pointing straight up from the AV's left side.
+   :width: 40%
+   :align: center
+
+   What the AV can do, and what it cannot.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   - **Tag 1:** the base link's path in the tightest turn, to the left and to
+     the right. Each arc turns around a center (plus sign) 3.41 m to the side.
+   - **Tag 2:** a sideways move, which the AV cannot make.
+
+1. **The tightest turn:** radius :math:`R = L / \tan\delta_\text{max}`,
+   with :math:`L` the wheelbase and :math:`\delta_\text{max}` the largest
+   steering angle. With :math:`L` = 2.875 m and :math:`\delta_\text{max}` =
+   0.7 rad (40.1°):
 
    1. tan 0.7 = 0.842;
    2. :math:`R` = 2.875 / 0.842 = 3.41 m.
 
-2. **A comfortable turn.** At speed :math:`v` on a curve of radius
+2. **A comfortable turn:** at speed :math:`v` on a curve of radius
    :math:`R`, the sideways acceleration is :math:`v^2 / R`. With a limit of
-   3 m/s² (chosen) at 10 m/s: :math:`R` ≥ 10² / 3 = 33.3 m. GP4 uses
-   2.0 m/s², a stricter limit.
+   3 m/s² at 10 m/s: :math:`R` ≥ 10² / 3 = 33.3 m.
+
+The wheelbase and the 3 m/s² limit are chosen; the 0.7 rad steering limit is
+GP4's. GP4's vehicles have wheelbases of 2.3 to 3.0 m, and GP4 uses a
+stricter 2.0 m/s².
+
+
+.. _l9-lec-rule-out:
+
+What the Two Limits Rule Out
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The planners later in this lecture keep both limits.
 
 .. important::
 
    A drivable path has no corners (the heading never jumps), and no turn has
    a radius under 3.41 m. At 10 m/s, comfort needs a radius of 33.3 m or
    more: 33.3 / 3.41 = 9.8, about ten times the tightest turn.
+
+1. **Sampling drops every candidate that turns harder than 3 m/s²:** 4 of
+   the 31 on our road (:ref:`l9-lec-drop`).
+2. **A path with corners cannot be driven as it is.** RRT's garage path has
+   them (:ref:`l9-lec-rrt-garage`). Hybrid A* builds its path from arcs no
+   tighter than 3.41 m (:ref:`l9-lec-hybrid`).
+3. **The AV cannot slide into a parking spot.** Hybrid A*'s path drives
+   24.0 m forward, switches once, and backs 6.6 m into the spot
+   (:ref:`l9-lec-hybrid-garage`).
 
 
 .. _l9-lec-cspace-summary:
@@ -458,10 +564,10 @@ Where Configuration Space Leaves Us
 .. admonition:: Where configuration space leaves us
    :class: tip
 
-   - The AV is one point :math:`(x, y, \theta)`; the parked car is the
+   - The AV is one point :math:`(x, y, \theta)`; the obstacle is the
      region that point must avoid.
-   - For the AV heading along the lane: 9.0 m by 3.8 m, from 112.15 m to
-     121.15 m along the stretch. The left lane's center clears it by 1.9 m.
+   - For the AV heading along the lane, that region is 9.0 m by 3.8 m. The
+     left lane's center is outside it.
    - A path has no corners, and no turn radius under 3.41 m (steering). At
      10 m/s, comfort needs 33.3 m or more.
 
@@ -471,8 +577,9 @@ Where Configuration Space Leaves Us
 The Frenet Frame
 ----------------
 
-We measure positions along the road and across it, instead of the map's
-:math:`x` and :math:`y`.
+We keep configuration space: every pose is still :math:`(x, y, \theta)`, and
+it is still checked for collisions. We add a second way to write positions:
+along the road and across it, instead of the map's :math:`x` and :math:`y`.
 
 **What it is for:** "stay in the lane" and "move one lane left" become
 statements about one number, :math:`d`.
@@ -520,7 +627,7 @@ The Road Becomes Straight in (s, d)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/frenet_unrolled.png
-   :alt: Two plots. Top: the whole stretch on the map, x and y in meters, two lanes going right and curving up, with ticks at s = 100, 150 and 200, the AV as a black dot and the parked car as a blue square. Bottom: the same road in s and d, both in meters: three straight horizontal lines at d = minus 1.75, 1.75 (dashed) and 5.25, the AV at s = 60, d = 0 and the parked car at s = 118, just below d = 0.
+   :alt: Two plots. Top: the whole stretch on the map, x and y in meters, two lanes going right and curving up, with ticks at s = 100, 150 and 200, the AV as a black dot and the obstacle as a blue square. Bottom: the same road in s and d, both in meters: three straight horizontal lines at d = minus 1.75, 1.75 (dashed) and 5.25, the AV at s = 60, d = 0 and the obstacle at s = 118, just below d = 0.
    :width: 75%
    :align: center
 
@@ -531,11 +638,11 @@ The Road Becomes Straight in (s, d)
 
    - **Top, a top view:** the whole stretch on the map, with ticks at
      :math:`s` = 100, 150 and 200 m. The black dot is the AV; the blue
-     square is the parked car.
+     square is the obstacle.
    - **Bottom, a graph, not a picture of the road:** the same road with
      :math:`s` along and :math:`d` across. Its :math:`d` axis is stretched,
      and curves do not show. The lane edges become straight lines. The AV is
-     at :math:`s` = 60 m, :math:`d` = 0; the parked car at :math:`s` = 118
+     at :math:`s` = 60 m, :math:`d` = 0; the obstacle at :math:`s` = 118
      m, just below :math:`d` = 0.
 
 In :math:`(s, d)`, every lane edge is a line of constant :math:`d`:
@@ -553,7 +660,7 @@ bring :math:`d` to 3.5 m.
 Step 1: Find the Nearest Point on the Reference
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The parked car's center in the map frame (chosen for this example) is
+The obstacle's center in the map frame (chosen for this example) is
 :math:`P` = (155.690, −207.435) m. The reference is a chain of points, about
 0.5 m apart.
 
@@ -589,7 +696,7 @@ sign.
 
 .. important::
 
-   The parked car is at :math:`s` = 118.00 m, :math:`d` = −0.30 m: 0.3 m to
+   The obstacle is at :math:`s` = 118.00 m, :math:`d` = −0.30 m: 0.3 m to
    the right of the right lane's center, 58 m ahead of the AV at
    :math:`s` = 60 m.
 
@@ -601,7 +708,7 @@ Back from (s, d) to the Map
 
 A planner works in :math:`(s, d)`, but the controller and the collision
 check need map coordinates. Example: the left lane's center beside the
-parked car, :math:`(s, d)` = (118, 3.5).
+obstacle, :math:`(s, d)` = (118, 3.5).
 
 1. The reference at :math:`s` = 118 m: :math:`r` = (155.686, −207.135),
    heading 0.81°. The script averages the heading over nearby points; the
@@ -690,7 +797,7 @@ Where the Frenet Frame Leaves Us
 
    - :math:`s` along the route's reference path, :math:`d` across it, left
      positive.
-   - The parked car: :math:`s` = 118.00 m, :math:`d` = −0.30 m (nearest
+   - The obstacle: :math:`s` = 118.00 m, :math:`d` = −0.30 m (nearest
      point, then distance along, then signed distance across).
    - Lanes are lines of constant :math:`d`: the right lane at 0, the left
      lane at 3.5 m.
@@ -706,7 +813,7 @@ Sampling Paths
 We draw 31 candidate paths in :math:`(s, d)`, drop the ones that collide,
 score the rest and keep the cheapest.
 
-**What it is for:** it gives a path around the parked car that is
+**What it is for:** it gives a path around the obstacle that is
 comfortable, keeps its distance and stays on the route.
 
 
@@ -773,8 +880,8 @@ Step 1: the Candidate Set
 
 - 10 end offsets: :math:`d_\text{end}` from −0.5 m to 4.0 m, every 0.5 m;
 - 3 maneuver lengths: 20, 30 and 40 m;
-- 1 more: keep the lane and **stop behind** the parked car, the AV's front
-  bumper 2.0 m short of the car's rear.
+- 1 more: keep the lane and **stop behind** the obstacle, the AV's front
+  bumper 2.0 m short of the obstacle's rear.
 
 In all: 10 × 3 + 1 = 31 candidates. The 30 shifts are each 70 m long.
 
@@ -791,7 +898,7 @@ Step 2: Drop Paths That Collide or Turn Too Hard
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/candidates_frenet.png
-   :alt: A graph of d against s, both in meters, with all 31 candidates from the AV at s = 60. The parked car is a blue box at s = 116 to 120, d around 0. Thin rust curves end at d from minus 0.5 to 2.0 and run into or beside the car: they collide. Purple dashed curves rise steeply to 2.5 to 4.0 within 20 meters: too sharp. Gray curves end at 2.5 to 4.0 after 30 or 40 meters. One thick green curve ends at 3.5 after 40 meters. A black dotted line stays at d = 0 and ends with a bar at s = 110: stop behind. A legend names cheapest, kept, stop behind, collides and too sharp.
+   :alt: A graph of d against s, both in meters, with all 31 candidates from the AV at s = 60. The obstacle is a blue box at s = 116 to 120, d around 0. Thin rust curves end at d from minus 0.5 to 2.0 and run into or beside the obstacle: they collide. Purple dashed curves rise steeply to 2.5 to 4.0 within 20 meters: too sharp. Gray curves end at 2.5 to 4.0 after 30 or 40 meters. One thick green curve ends at 3.5 after 40 meters. A black dotted line stays at d = 0 and ends with a bar at s = 110: stop behind. A legend names cheapest, kept, stop behind, collides and too sharp.
    :width: 90%
    :align: center
 
@@ -801,19 +908,19 @@ Step 2: Drop Paths That Collide or Turn Too Hard
    :class: tip
 
    A graph, not a picture of the road: :math:`d` against :math:`s`, with the
-   :math:`d` axis stretched. The blue box is the parked car, at :math:`s` =
+   :math:`d` axis stretched. The blue box is the obstacle, at :math:`s` =
    116 to 120 m.
 
    - **Rust, collides:** the curves that end at :math:`d` from −0.5 to
-     2.0 m. They run into the car or too close beside it.
+     2.0 m. They run into the obstacle or too close beside it.
    - **Purple dashed, too sharp:** the 20 m moves to 2.5 to 4.0 m.
    - **Gray, kept:** the 30 m and 40 m moves to 2.5 to 4.0 m.
    - **Green, cheapest:** 3.5 m over 40 m (Step 4).
    - **Black dotted, stop behind:** stays at :math:`d` = 0 and ends with a
      bar at :math:`s` = 110 m.
 
-- **18 collide** (rust): the AV on them comes within 0.3 m of the car (see
-  the Collision Checking section).
+- **18 collide** (rust): the AV on them comes within 0.3 m of the obstacle
+  (see the Collision Checking section).
 - **4 are too sharp** (purple): over 3 m/s² sideways.
 - **9 are kept**, stop behind included.
 
@@ -843,7 +950,7 @@ Each kept candidate gets a cost; lower is better. All weights are
      - the peak sideways acceleration along the path
      - 2 per m/s²
    * - Clearance
-     - how far the smallest gap to the car falls under 1.5 m
+     - how far the smallest gap to the obstacle falls under 1.5 m
      - 4 per m
    * - Lane
      - lanes away from the route's lane; meters off a lane center
@@ -881,8 +988,8 @@ steps are the script's, rounded.
 
 .. _l9-lec-score-b:
 
-Step 3: Score Candidate B, Closer to the Car
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 3: Score Candidate B, Closer to the Obstacle
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Candidate B: :math:`d_\text{end}` = 3.0 m, maneuver 40 m. It moves 0.5 m
 less, so it bends less, but it passes closer.
@@ -905,9 +1012,9 @@ Step 3: Score Candidate C, Stop Behind
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Candidate C keeps the right lane and stops its front bumper 2.0 m short of
-the car's rear. Its base link stops at 118 − 2.25 − 2.0 − 3.6 = 110.15 m:
-from the car's center, back by half the car's 4.5 m, by the gap, and by the
-distance from the AV's front to its base link.
+the obstacle's rear. Its base link stops at 118 − 2.25 − 2.0 − 3.6 = 110.15 m:
+from the obstacle's center, back by half the obstacle's 4.5 m, by the gap,
+and by the distance from the AV's front to its base link.
 
 1. **Comfort:** the path is straight. 2 × 0.000 = 0.00.
 2. **Clearance:** 2.0 m lie between the bumpers, but the collision check
@@ -951,7 +1058,7 @@ Step 4: the Cheapest Path, on the Map
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/candidates_map.png
-   :alt: A top view, to scale, of the 31 candidates on the road from the AV at the left to past the parked car, x and y in meters. Rust lines run into the parked car; purple dashed lines bend sharply into the left lane; gray lines move into the left lane more gently; a black dotted line stops behind the parked car; one thick green line moves into the left lane and passes the car. A legend names cheapest, kept, stop behind, collides and too sharp.
+   :alt: A top view, to scale, of the 31 candidates on the road from the AV at the left to past the obstacle, x and y in meters. Rust lines run into the obstacle; purple dashed lines bend sharply into the left lane; gray lines move into the left lane more gently; a black dotted line stops behind the obstacle; one thick green line moves into the left lane and passes the obstacle. A legend names cheapest, kept, stop behind, collides and too sharp.
    :width: 95%
    :align: center
 
@@ -961,10 +1068,10 @@ Step 4: the Cheapest Path, on the Map
    :class: tip
 
    The same candidates as in Step 2, now drawn on the road to scale, with
-   the same colors. Rust lines run into the parked car; purple dashed lines
+   the same colors. Rust lines run into the obstacle; purple dashed lines
    bend sharply into the left lane; gray lines move into it more gently; the
-   black dotted line stops behind the car. The thick green line, the
-   cheapest, moves into the left lane and passes the car.
+   black dotted line stops behind the obstacle. The thick green line, the
+   cheapest, moves into the left lane and passes the obstacle.
 
 .. list-table::
    :widths: 14 62 24
@@ -1003,7 +1110,7 @@ Step 5: Plan Again Every 0.5 s
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/drive_snapshots.png
-   :alt: Three top views of the stretch, one above the other, tagged 1 to 3, x and y in meters. In each, the parked car is blue in the lower lane and the AV is black; both are drawn about twice their true size so they show. 1: the AV at the start, its green path moving into the upper lane. 2: the AV halfway into the upper lane, a dotted trail behind it, its green path continuing in the upper lane into the curve. 3: the AV beside the parked car in the upper lane, its green path moving back into the lower lane in the curve.
+   :alt: Three top views of the stretch, one above the other, tagged 1 to 3, x and y in meters. In each, the obstacle is blue in the lower lane and the AV is black; both are drawn about twice their true size so they show. 1: the AV at the start, its green path moving into the upper lane. 2: the AV halfway into the upper lane, a dotted trail behind it, its green path continuing in the upper lane into the curve. 3: the AV beside the obstacle in the upper lane, its green path moving back into the lower lane in the curve.
    :width: 70%
    :align: center
 
@@ -1012,7 +1119,7 @@ Step 5: Plan Again Every 0.5 s
 .. admonition:: Reading the figure
    :class: tip
 
-   Three moments of the same drive, from above. The parked car (blue) and
+   Three moments of the same drive, from above. The obstacle (blue) and
    the AV (black) are drawn about twice their true size so they show. The
    green line is the cheapest path at that moment; the dotted line is where
    the AV has been.
@@ -1021,7 +1128,7 @@ Step 5: Plan Again Every 0.5 s
      (left) lane.
    - **Tag 2, at 3 s:** the AV halfway into the left lane. Its path goes on
      in that lane into the curve.
-   - **Tag 3, at 6 s:** the AV beside the parked car, in the left lane. Its
+   - **Tag 3, at 6 s:** the AV beside the obstacle, in the left lane. Its
      path moves back into the right lane, in the curve.
 
 Every 0.5 s the AV drives the first 0.5 s of the cheapest path, then plans
@@ -1029,9 +1136,10 @@ again from where it is.
 
 - The AV is in the left lane (:math:`d` > 1.75 m) from about :math:`s` = 85
   to 135 m.
-- From :math:`s` = 115 m, still beside the car, the cheapest path already
-  heads back to :math:`d` = 0. The AV crosses the lane line after the car
-  is behind it. It is back on its lane's center by :math:`s` = 160 m.
+- From :math:`s` = 115 m, still beside the obstacle, the cheapest path
+  already heads back to :math:`d` = 0. The AV crosses the lane line after
+  the obstacle is behind it. It is back on its lane's center by
+  :math:`s` = 160 m.
 
 
 .. _l9-lec-demo:
@@ -1041,7 +1149,7 @@ Demo: the Same Planner in CARLA
 
 The ROS 2 package ``l9_planning_demo``, in the course's ROS repository
 (`its README <https://github.com/rubixcubic/enpm818z-fall-2026-carla-ros/blob/main/l9_planning_demo/README.md>`__),
-runs this planner on the same stretch of Town03, with the parked car at
+runs this planner on the same stretch of Town03, with the obstacle at
 :math:`s` = 118 m:
 
 .. code-block:: bash
@@ -1072,7 +1180,7 @@ plans again every 0.5 s. The commands are on :doc:`the Code page
 
    1. In ``sample``, read the table: do A, B and C have the costs of the
       last sections?
-   2. Move the parked car to :math:`s` = 90 m. How many candidates survive?
+   2. Move the obstacle to :math:`s` = 90 m. How many candidates survive?
    3. In ``drive``, step through the plans: when does the AV start back?
 
 .. dropdown:: Answers, from the script
@@ -1118,8 +1226,8 @@ Where Sampling Leaves Us
 
    - 31 candidates: 18 collide, 4 turn too hard (over 3 m/s²), 9 are
      scored.
-   - Cheapest: A, the left lane over 40 m, cost 5.07. B (closer to the car)
-     7.72; C (stop behind) 11.54.
+   - Cheapest: A, the left lane over 40 m, cost 5.07. B (closer to the
+     obstacle) 7.72; C (stop behind) 11.54.
    - Planned again every 0.5 s, the AV passes in the left lane from about
      85 m to 135 m and is back on its lane's center by 160 m.
 
@@ -1129,7 +1237,7 @@ Where Sampling Leaves Us
 Collision Checking
 ------------------
 
-We build a quick test of whether the AV's body overlaps the parked car at
+We build a quick test of whether the AV's body overlaps the obstacle at
 one pose.
 
 **What it is for:** the sampling planner's Step 2 runs this test at every
@@ -1169,7 +1277,7 @@ than the sum of their radii. The **gap** is the distance between the centers
 minus the two radii; under 0, the circles overlap. Each pair needs one
 distance, whatever the headings.
 
-Three circles on the AV and three on the parked car give 3 × 3 = 9 distances
+Three circles on the AV and three on the obstacle give 3 × 3 = 9 distances
 per pose.
 
 
@@ -1214,7 +1322,7 @@ References page <l9_references>`). We round it to 0.3 m.
 
 .. important::
 
-   The 0.3 m covers only the AV's own position. The parked car's position
+   The 0.3 m covers only the AV's own position. The obstacle's position
    comes from perception, and a moving car's from prediction, with more
    error. A margin for them would add to it.
 
@@ -1225,29 +1333,29 @@ Step 2: One Pose, Checked by Hand
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/circle_check.png
-   :alt: A close top view beside the parked car, x and y in meters. The AV, black with three black circles, is in the upper lane; the parked car, blue with three blue circles, is in the lower lane right below it, the circles side by side. A dark double arrow spans the gap between the two middle circles, across the dashed lane line. Tag 1 sits just right of the arrow, below the dashed lane line.
+   :alt: A close top view beside the obstacle, x and y in meters. The AV, black with three black circles, is in the upper lane; the obstacle, blue with three blue circles, is in the lower lane right below it, the circles side by side. A dark double arrow spans the gap between the two middle circles, across the dashed lane line. Tag 1 sits just right of the arrow, below the dashed lane line.
    :width: 70%
    :align: center
 
-   The AV on candidate A, beside the parked car.
+   The AV on candidate A, beside the obstacle.
 
 .. admonition:: Reading the figure
    :class: tip
 
    A close top view, :math:`x` and :math:`y` in meters. The AV (black, with
-   its three black circles) is in the upper lane; the parked car (blue, with
+   its three black circles) is in the upper lane; the obstacle (blue, with
    its three blue circles) is right below it in the lower lane. Their
    circles line up in pairs.
 
    - **Tag 1:** the gap between the two middle circles (the double arrow),
      across the dashed lane line.
 
-The AV on candidate A, beside the car: base link at :math:`s` = 116.65 m,
-:math:`d` = 3.5 m. Its middle circle is at 116.65 + 1.35 = 118 m, the car's
-center, so the circles line up.
+The AV on candidate A, beside the obstacle: base link at :math:`s` = 116.65 m,
+:math:`d` = 3.5 m. Its middle circle is at 116.65 + 1.35 = 118 m, the
+obstacle's center, so the circles line up.
 
-1. Centers across: the AV is 3.5 m left of the reference and the car 0.3 m
-   right of it, so they are 3.5 + 0.3 = 3.8 m apart.
+1. Centers across: the AV is 3.5 m left of the reference and the obstacle
+   0.3 m right of it, so they are 3.5 + 0.3 = 3.8 m apart.
 2. Gap (tag 1): 3.8 − 2 × 1.21 = 1.38 m.
 3. The gap is over the 0.3 m margin, so this pose is free.
 
@@ -1261,7 +1369,7 @@ Circles Can Report a Collision That Is Not There
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/circles_conservative.png
-   :alt: Two cars side by side from above, the AV black on top and a blue car below, each with its three circles. Tag 1 marks the gap between the two bodies on the right: 0.4 meters, the bodies do not touch. Small rust lens shapes show where each black circle overlaps the blue circle below it; tag 2, left of the cars at the height of the lenses, marks them.
+   :alt: Two cars side by side from above, the AV black on top and the obstacle, a blue car, below, each with its three circles. Tag 1 marks the gap between the two bodies on the right: 0.4 meters, the bodies do not touch. Small rust lens shapes show where each black circle overlaps the blue circle below it; tag 2, left of the cars at the height of the lenses, marks them.
    :width: 60%
    :align: center
 
@@ -1270,8 +1378,8 @@ Circles Can Report a Collision That Is Not There
 .. admonition:: Reading the figure
    :class: tip
 
-   Two cars side by side from above: the AV (black) on top and a blue car
-   below, each with its three circles.
+   Two cars side by side from above: the AV (black) on top and the
+   obstacle, a blue car, below, each with its three circles.
 
    - **Tag 1:** the gap between the two bodies, 0.4 m. The bodies do not
      touch.
@@ -1304,8 +1412,8 @@ Where Collision Checking Leaves Us
 
    - Three circles of radius 1.21 m, at −0.15, 1.35 and 2.85 m from the base
      link, cover the AV; 9 distances per pose.
-   - Beside the car on A: centers 3.8 m apart, gap 1.38 m by hand (1.36 m
-     smallest along A).
+   - Beside the obstacle on A: centers 3.8 m apart, gap 1.38 m by hand
+     (1.36 m smallest along A).
    - Conservative: bodies 0.4 m apart already count as overlapping.
    - On the road, a gap under 0.3 m is a collision: a 0.29 m bound on the
      AV's position error, rounded.
@@ -1351,7 +1459,7 @@ One Decision Changes the Cheapest Path
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/behavior_restricted.png
-   :alt: A top view of the road with the AV at the left and the parked car ahead in the lower lane, x and y in meters. The upper lane is cross-hatched in gray: not allowed. Thin rust candidate lines stay in the lower lane and run into the parked car. A thick green line stays in the lower lane and ends with a bar behind the parked car. A legend names cheapest: stop behind, and collides.
+   :alt: A top view of the road with the AV at the left and the obstacle ahead in the lower lane, x and y in meters. The upper lane is cross-hatched in gray: not allowed. Thin rust candidate lines stay in the lower lane and run into the obstacle. A thick green line stays in the lower lane and ends with a bar behind the obstacle. A legend names cheapest: stop behind, and collides.
    :width: 95%
    :align: center
 
@@ -1360,11 +1468,12 @@ One Decision Changes the Cheapest Path
 .. admonition:: Reading the figure
    :class: tip
 
-   The road from above, the AV at the left and the parked car ahead in the
+   The road from above, the AV at the left and the obstacle ahead in the
    lower (right) lane. The upper (left) lane is cross-hatched: the behavior
    layer has closed it. The thin rust lines are candidates that stay in the
-   right lane and collide with the car. The thick green line, the cheapest,
-   is stop behind: it stays in the lane and ends with a bar behind the car.
+   right lane and collide with the obstacle. The thick green line, the
+   cheapest, is stop behind: it stays in the lane and ends with a bar behind
+   the obstacle.
 
 Suppose prediction says a fast car is coming up in the left lane, and the
 behavior layer closes that lane (hatched). The sampler keeps
@@ -1388,7 +1497,7 @@ it. That car has a driver who chooses too, and each choice changes what is
 best for the other.
 
 - The AV chooses: **go** (move into the left lane now) or **wait** (stop
-  behind the parked car).
+  behind the obstacle).
 - The other car chooses: **keep** its speed, or **yield** (slow down and let
   the AV in).
 - Each pair of choices costs each of them seconds of delay; a crash costs
@@ -1588,7 +1697,7 @@ Where Behavior Leaves Us
    - The behavior layer picks the task; the local planner finds the path for
      it.
    - On our road, closing the left lane leaves 10 candidates; 9 collide, and
-     the AV stops behind the car (cost 11.54).
+     the AV stops behind the obstacle (cost 11.54).
    - The lane change is a game with two Nash equilibria: the AV goes first
      only when prediction says the other car will yield.
    - An FSM: states, transitions, one condition each; two thresholds against
@@ -1613,7 +1722,7 @@ The Garage: No Lane to Follow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/garage_scene.png
-   :alt: A top view of a garage 36 by 18 meters, x and y in meters: a row of parking spots along the top wall and one along the bottom wall, with an aisle between them. Blue parked cars fill most spots. Tag 1: the AV, black, at the left end of the aisle facing right. Tag 2 below a light gray car drawn in the free spot of the top row, facing down: the goal pose. Tag 3 in the aisle, above two empty spots in the bottom row.
+   :alt: A top view of a garage 36 by 18 meters, x and y in meters: a row of parking spots along the top wall and one along the bottom wall, with an aisle between them. Blue parked cars, the obstacles, fill most spots. Tag 1: the AV, black, at the left end of the aisle facing right. Tag 2 below a light gray car drawn in the free spot of the top row, facing down: the goal pose. Tag 3 in the aisle, above two empty spots in the bottom row.
    :width: 75%
    :align: center
 
@@ -1624,15 +1733,15 @@ The Garage: No Lane to Follow
 
    The garage from above, :math:`x` and :math:`y` in meters: a row of spots
    along the top wall, a row along the bottom wall, and the aisle between
-   them. Blue cars fill most spots.
+   them. Blue cars, the obstacles, fill most spots.
 
    - **Tag 1:** the AV (black), at the left end of the aisle, facing right.
    - **Tag 2:** the goal pose (light gray car), backed into the free spot of
      the top row.
    - **Tag 3:** two more free spots, in the bottom row.
 
-Garage 36 m by 18 m, aisle 7 m, spots 2.6 m by 5.5 m, 19 parked cars (all
-chosen). To compare them, each planner below plans the drive from tag 1
+Garage 36 m by 18 m, aisle 7 m, spots 2.6 m by 5.5 m, 19 parked cars, the
+obstacles (all chosen). To compare them, each planner below plans the drive from tag 1
 along the aisle.
 
 .. tip::

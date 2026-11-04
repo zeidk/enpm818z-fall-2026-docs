@@ -11,8 +11,8 @@ Going Further
    Each section picks up a topic from the :doc:`lecture <l9_lecture>` and
    adds the math, the worked steps or the sources behind it. The sections
    follow the deck's order. Read the one you need, when you need it. The
-   running examples are the lecture's: the AV passing a car parked in its
-   lane on Town03's road 67, and the AV parking in a garage.
+   running examples are the lecture's: the AV passing the obstacle, a parked
+   car, in its lane on Town03's road 67, and the AV parking in a garage.
 
 .. list-table::
    :widths: 35 65
@@ -49,7 +49,7 @@ The sources for these sections are on :doc:`the References page
 C-Space for Two Boxes
 ---------------------
 
-This section continues "Step 1: Grow the Parked Car, for One AV Heading" in
+This section continues "Step 1: Grow the Obstacle, for One AV Heading" in
 the Configuration Space section of the :doc:`lecture <l9_lecture>`.
 
 The Region the Base Link Must Avoid, in General
@@ -78,6 +78,23 @@ from −1.9 to +1.9 m.
 For another heading the region is no longer a box (the dashed outline in
 "The Region Changes with the Heading"), so the class sections check circles
 instead.
+
+.. _l9-app-cspace-road:
+
+The Grown Obstacle on Our Road
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The obstacle's center is 60 + 58 = 118 m along the stretch and 0.3 m right of
+the right lane's center. The region reaches 5.85 m behind it and 3.15 m ahead,
+and 1.9 m to each side. So the base link must avoid:
+
+- along the stretch: 118 − 5.85 = 112.15 m to 118 + 3.15 = 121.15 m;
+- across: 0.3 + 1.9 = 2.2 m right to 1.9 − 0.3 = 1.6 m left of the right
+  lane's center.
+
+The left lane's center is 3.5 m left of the right lane's center: 3.5 − 1.6 =
+1.9 m clear of the region. So a pose on the left lane's center, beside the
+obstacle, is free.
 
 
 .. _l9-app-frenet:
@@ -259,7 +276,7 @@ Grid Search on the Whole Garage
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/garage_grid.png
-   :alt: The garage top view, x and y in meters, with a light rust band around every parked car and along the walls: cells the AV's base link may not enter. A green line of small squares leaves the AV at the left along the aisle, steps up in short diagonal pieces, then turns straight up into the free spot of the top row and ends where the goal is.
+   :alt: The garage top view, x and y in meters, with a light rust band around every obstacle, the parked cars and the walls: cells the AV's base link may not enter. A green line of small squares leaves the AV at the left along the aisle, steps up in short diagonal pieces, then turns straight up into the free spot of the top row and ends where the goal is.
    :width: 70%
    :align: center
 
@@ -268,8 +285,8 @@ Grid Search on the Whole Garage
 .. admonition:: Reading the figure
    :class: tip
 
-   - **Light rust band,** around every parked car and along the walls: the
-     cells the AV's base link may not enter.
+   - **Light rust band,** around every obstacle, the parked cars and the
+     walls: the cells the AV's base link may not enter.
    - **Green line of small squares:** the path, one square per cell. It
      leaves the AV along the aisle, steps up in short diagonal pieces, then
      turns straight up into the free spot and ends at the goal.
@@ -277,7 +294,7 @@ Grid Search on the Whole Garage
 Grid search moves from cell to cell. The settings:
 
 - cells of 0.5 m;
-- each car and wall grown by 1.05 m (rust): half the AV's width plus a
+- each obstacle and wall grown by 1.05 m (rust): half the AV's width plus a
   0.1 m margin, chosen for the garage;
 - eight neighbors per cell;
 - A* with the straight-line distance to the goal as its estimate.
@@ -285,16 +302,16 @@ Grid search moves from cell to cell. The settings:
 Result: 514 cells expanded, a 27.4 m path.
 
 - The path has 9 corners of 45°: the heading would jump at each one.
-- The search knows no heading, so it cannot place the 4.5 m body. The cars
-  grow only by half the AV's width, and the path ends nose first, not backed
-  in.
+- The search knows no heading, so it cannot place the 4.5 m body. The
+  obstacles grow only by half the AV's width, and the path ends nose first,
+  not backed in.
 
 
 Grid Search, Step 1: Count the Steps from the Start
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/toy_wavefront.png
-   :alt: A grid of 5 rows and 7 columns. Blue cells are parked cars: the top two rows except the fourth column, and the bottom row except the third and fourth columns. White cells hold numbers. Tag 1 marks the start cell, row 4 at the left, holding a bold 0. Its row reads 0 to 6 from left to right; the row above reads 1 to 7. The bottom row's free cells read 3 and 4. The fourth column above reads 5, then a bold 6 at the top: the goal, tag 2.
+   :alt: A grid of 5 rows and 7 columns. Blue cells are obstacles (parked cars): the top two rows except the fourth column, and the bottom row except the third and fourth columns. White cells hold numbers. Tag 1 marks the start cell, row 4 at the left, holding a bold 0. Its row reads 0 to 6 from left to right; the row above reads 1 to 7. The bottom row's free cells read 3 and 4. The fourth column above reads 5, then a bold 6 at the top: the goal, tag 2.
    :width: 55%
    :align: center
 
@@ -303,7 +320,7 @@ Grid Search, Step 1: Count the Steps from the Start
 .. admonition:: Reading the figure
    :class: tip
 
-   A grid of 5 rows and 7 columns. Blue cells are taken by parked cars;
+   A grid of 5 rows and 7 columns. Blue cells are obstacles (parked cars);
    each white cell holds its number of steps from the start.
 
    - **Tag 1:** the start cell, holding a bold 0. Its row reads 0 to 6 from
@@ -363,8 +380,8 @@ Hybrid A*, Steps 1 to 3: Expand a Pose and Check It
    in A*.
 2. Drive the 10 arcs from it (5 steering angles, forward and reverse),
    0.75 m each.
-3. Check each new pose with the three circles; drop the ones that hit a car
-   or a wall.
+3. Check each new pose with the three circles; drop the ones that hit an
+   obstacle (a car or a wall).
 
 
 .. _l9-app-hybrid-4-6:
@@ -405,7 +422,7 @@ Dolgov et al. (2008): "Our search algorithm is guided by two heuristics".
    goal pose, forward and backward, tried as one piece.
 
 **The course's version** uses the larger of two estimates: the straight-line
-distance, and a 2-D grid distance around the cars. It tries a straight
+distance, and a 2-D grid distance around the obstacles. It tries a straight
 reverse onto the goal instead of Reeds and Shepp's curves. On an 8-neighbor
 grid the second estimate can be a little long, so the path found is not
 guaranteed shortest.
