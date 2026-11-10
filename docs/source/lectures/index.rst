@@ -55,7 +55,7 @@ slides are finished; the table shows the plan.
      - Configuration space; the Frenet frame; sampling and scoring candidate paths; collision checking with circles; behavior as a finite state machine; grid search, hybrid A* and RRT; on one Town03 road and a parking garage
    * - L10
      - Trajectory Generation & Control
-     - Path vs. trajectory, polynomial and spline generation, optimization-based planning, MPC, Pure Pursuit, Stanley controller, real-time replanning
+     - The controller's five input topics, seen live in Town03; the behavior layer beyond one FSM for road driving (why a flat FSM grows too fast, superstates and parallel regions, behavior trees, built and run in Python); the kinematic bicycle model; trajectories: a speed profile in time and a quintic speed change that keeps the jerk small; PID speed control, windup and clamping; Pure Pursuit and its lookahead distance; the Stanley controller; what MPC adds (a model, a horizon, limits, and only the first input applied); on one Town03 right turn
    * - L11
      - End-to-End Driving, VLA & Imitation Learning
      - UniAD, DriveTransformer, Vision-Language-Action (VLA) models, DriveVLM, modular vs. end-to-end debate, behavior cloning, distribution shift, DAgger

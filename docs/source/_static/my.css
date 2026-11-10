@@ -416,3 +416,26 @@ html[data-theme="dark"] {
     display: none;
   }
 }
+
+/* ============================================================
+ * More detail box: extra detail beside the text it explains
+ *
+ * Usage:
+ *   .. dropdown:: More detail: ``command``
+ *      :class-container: more-detail
+ *      :icon: info
+ *
+ * Closed by default. It holds what a deck would once have put in
+ * its appendix, such as the meaning of each argument of a command.
+ * Quizzes and exercises never test it. A muted rail and title set
+ * it apart from the colored dropdowns of the lecture pages.
+ * ============================================================ */
+
+details.sd-dropdown.more-detail {
+  border-left: 4px solid var(--pst-color-text-muted) !important;
+}
+
+details.sd-dropdown.more-detail > summary.sd-summary-title {
+  color: var(--pst-color-text-muted);
+  font-weight: 600;
+}

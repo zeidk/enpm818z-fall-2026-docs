@@ -5,15 +5,16 @@ L10: Trajectory Generation & Control
 Overview
 --------
 
-This lecture bridges motion planning and vehicle execution by adding
-the time dimension to geometric paths and designing feedback
-controllers that follow the resulting trajectories. You will learn
-how polynomial and spline methods generate smooth, feasible
-trajectories, how Model Predictive Control (MPC) optimizes a
-receding-horizon plan in real time, and how Pure Pursuit, Stanley,
-and PID controllers translate trajectory references into steering
-and throttle commands. The lecture concludes with a CARLA exercise
-implementing lane-following and obstacle avoidance.
+This lecture takes the path the planners hand over and turns it into
+steering and speed commands. It opens with the behavior layer: for an AV that
+drives city streets, one flat finite state machine (FSM) grows too fast as
+behaviors are added, and superstates, parallel regions and behavior trees keep
+that layer small. A short Python script builds and runs a behavior tree for
+four road behaviors. Then it follows one right turn in Town03: the kinematic
+bicycle model, a trajectory (a path with a speed profile in time), a PID
+controller for the speed, Pure Pursuit and Stanley for the steering, and what
+Model Predictive Control (MPC) adds. The controller node it describes reads
+five ROS topics and sends one command, and a demo shows those topics live.
 
 
 Learning Objectives
@@ -21,43 +22,48 @@ Learning Objectives
 
 By the end of this lecture, you will be able to:
 
-- Distinguish between a path (geometry only) and a trajectory
-  (geometry plus time / velocity profile).
-- Generate smooth trajectories using quintic polynomial and cubic
-  spline methods.
-- Formulate an MPC problem with prediction horizon, cost function,
-  and constraints, and explain the receding-horizon principle.
-- Implement the Pure Pursuit controller and derive the relationship
-  between lookahead distance and lateral error.
-- Implement the Stanley controller combining cross-track error and
-  heading error for path following.
-- Design a PID controller for longitudinal speed control.
-- Select among Pure Pursuit, Stanley, MPC, and PID given task
-  requirements, speed regime, and computational constraints.
-- Implement lane-following and obstacle avoidance in CARLA using
-  a trajectory planner and feedback controller.
+- Say why one flat FSM grows too fast, and how a **superstate**, parallel
+  regions and a **behavior tree** keep the behavior layer small.
+- Write the **kinematic bicycle model** and find the steering angle that follows a curvature.
+- Give a path a speed profile and a time (a **trajectory**), and say why a
+  quintic speed change keeps the **jerk** small.
+- Read a **PID** speed response: what P, I and D each do, what **windup** is
+  and how clamping stops it.
+- Work **Pure Pursuit**'s geometry by hand, from the lookahead circle to the
+  steering angle.
+- Predict how the **lookahead distance** changes Pure Pursuit, and compare it
+  with **Stanley**.
+- Say what **MPC** adds: a model, a horizon, limits, and only the first input
+  applied.
 
 
-.. admonition:: Materials in revision
-   :class: note
+Lecture Materials
+-----------------
 
-   The lecture notes, exercises, quiz and references for this lecture are
-   being revised against the current slide deck and are not published yet.
-   This page will link to them once they are ready.
+- :doc:`l10_lecture`: the notes, following the slides shown in class, with
+  four worked steps cut from class in closed "More detail" boxes.
+- :doc:`Going Further <l10_appendix>`: the deck's appendix (the bicycle
+  model, the quintic, Pure Pursuit's arc, Stanley, and MPC).
+- :doc:`l10_exercises`, :doc:`l10_quiz` and :doc:`l10_references`.
+
+.. toctree::
+   :hidden:
+   :maxdepth: 2
+   :titlesonly:
+
+   l10_lecture
+   l10_appendix
+   l10_exercises
+   l10_quiz
+   l10_references
 
 
 Next Steps
 ----------
 
-- In the next lecture, we will cover **End-to-End Driving, VLA &
-  Imitation Learning**:
-
-  - End-to-end driving stacks (UniAD, DriveTransformer)
-  - Vision-Language-Action models (DriveVLM) and foundation models
-    for AV
-  - Imitation learning and DAgger for behavioral cloning
-  - The modular vs. end-to-end debate
-
-- Complete the CARLA trajectory following exercise from this lecture.
-- Review the MPC tutorial in *Model Predictive Control: Theory and
-  Design* (Rawlings & Mayne) Chapter 1.
+- In the next lecture, **L11: End-to-End Driving, VLA and Imitation
+  Learning**, one network goes from the sensors to a trajectory or to the
+  controls, in place of the whole stack.
+- Before then, run the four hands-on parts of this lecture,
+  ``behavior_tree.py`` (with and without ``--no-pass``), and the topics demo
+  if you have CARLA.

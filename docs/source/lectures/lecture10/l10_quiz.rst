@@ -10,563 +10,598 @@ Quiz
    The graded quizzes are the **five in-class quizzes** listed in the
    :doc:`syllabus </syllabus/index>`. Those are closed-notes, given at the
    start of class, and they **use different questions from these**. Working
-   through this page is good preparation for one. Memorising the answers
+   through this page is good preparation for one. Memorizing the answers
    below is not.
 
-This quiz covers the key concepts from Lecture 10: Trajectory
-Generation & Control, including path vs. trajectory, quintic
-polynomial and spline methods, optimization-based trajectory
-planning, MPC formulation and receding-horizon control, Pure
-Pursuit, Stanley, and PID controllers, and emergency maneuver
-synthesis.
+This quiz covers Lecture 10: the behavior layer beyond one flat FSM
+(superstates, parallel regions and behavior trees), the test turn and its
+speed profile, the kinematic bicycle model, trajectories and jerk, PID speed
+control and windup, Pure Pursuit and its lookahead distance, the Stanley
+law, and what MPC adds. Every question can be answered from the lecture
+notes, :doc:`l10_lecture`. Nothing on this page needs
+:doc:`Going Further <l10_appendix>` or the lecture's "More detail" boxes.
 
 .. note::
 
    **Instructions:**
 
-   - Answer all questions to the best of your ability.
    - Multiple choice questions have exactly one correct answer.
-   - True/False questions require you to determine if the statement
-     is correct.
-   - Essay questions require short written responses (2-4 sentences).
+   - True or false questions ask whether the statement holds as stated in
+     the lecture.
+   - Short answer questions want two to four sentences.
    - Click the dropdown after each question to reveal the answer.
+   - The lecture's example is one right turn in Town03, driven in a numpy
+     simulation of the bicycle model: wheelbase :math:`L` = 2.875 m, the
+     controller's steering limit of 0.7 rad, 20 controller steps a second
+     (:math:`\Delta t` = 0.05 s), and a cap of 2.0 m/s² on the sideways
+     acceleration. Numbers that are not the lecture's are marked "chosen
+     for this question".
 
 
 ----
 
 
-Multiple Choice
-===============
+Multiple Choice (Questions 1 to 15)
+===================================
 
 .. admonition:: Question 1
    :class: hint
 
-   What is the minimum polynomial degree required to match position,
-   velocity, **and** acceleration at both the start and end of a
-   trajectory segment?
+   The AV has the lecture's five road behaviors. You add a safety monitor
+   with 4 states (chosen for this question). How many states does one flat
+   FSM need, and how many states do two parallel regions draw?
 
-   A. 3rd degree (cubic)
+   A. 9 and 9
 
-   B. 4th degree (quartic)
+   B. 20 and 9
 
-   C. 5th degree (quintic)
+   C. 20 and 20
 
-   D. 6th degree (sextic)
+   D. 9 and 20
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- 5th degree (quintic).
+   **B**.
 
-   A degree-:math:`n` polynomial has :math:`n+1` coefficients.
-   Matching position, velocity, and acceleration at two endpoints
-   gives 6 constraints. The minimum degree satisfying 6 constraints
-   is :math:`n = 5` (quintic), yielding exactly 6 coefficients.
-   Cubic polynomials (4 coefficients) can match only position and
-   velocity at both ends; quartics (5 coefficients) are
-   over-constrained by the 6 boundary conditions.
+   The AV is in one behavior and one monitor state at once, so one flat FSM
+   needs a state for every pair: 5 × 4 = 20. Parallel regions keep the two
+   machines apart, and the AV is in one state of each: 5 + 4 = 9 states
+   drawn. The lecture's monitor has 3 states: 5 × 3 = 15 against
+   5 + 3 = 8. See "Step 1, the Problem: One Flat FSM Multiplies Its States"
+   and "Step 3, Fewer States: Parallel Regions Add Instead of Multiply" in
+   :doc:`l10_lecture`.
 
 
 .. admonition:: Question 2
    :class: hint
 
-   In MPC, the **receding horizon** principle means that:
+   The AV must be able to make an emergency stop from each of its five road
+   behaviors (Lane keep, Follow, Change lane, Stop at the line, Cross the
+   intersection). With the superstate Driving around those five, how many
+   arrows go to Emergency stop?
 
-   A. The prediction horizon :math:`N` shrinks as the vehicle
-      approaches the goal.
+   A. 1
 
-   B. Only the first control action from the optimized sequence is
-      applied; the optimization is then re-solved at the next
-      time step.
+   B. 3
 
-   C. The vehicle predicts the future states of surrounding agents
-      over horizon :math:`N`.
+   C. 5
 
-   D. The cost function is evaluated backwards from the terminal
-      state to the current state.
+   D. 15
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Only the first control action is applied; the
-   optimization is re-solved at the next time step.
+   **A**.
 
-   The receding horizon principle is what makes MPC a *feedback*
-   controller rather than an open-loop trajectory tracker. By
-   re-solving at every time step with the current measured state,
-   MPC corrects for disturbances, model errors, and state
-   estimation noise. The horizon "recedes" because the planning
-   window always starts from the current time.
+   An arrow that leaves a superstate stands for that arrow leaving every
+   state inside it. So one arrow from Driving replaces the 5 arrows a flat
+   FSM needs (**C**). Harel calls this "the main way statecharts economize
+   in the number of arrows". See "Step 2, Fewer Arrows: One Superstate Arrow
+   Replaces Five" in :doc:`l10_lecture`.
 
 
 .. admonition:: Question 3
    :class: hint
 
-   In the Pure Pursuit controller, if the lookahead distance
-   :math:`L_d` is doubled while speed remains constant, the
-   steering response becomes:
+   In a behavior tree, when does a Fallback node return Failure?
 
-   A. More aggressive (tighter turns)
+   A. When its first child returns Failure.
 
-   B. Less aggressive (smoother, cutting corners more)
+   B. When any one of its children returns Failure.
 
-   C. Identical, because only :math:`\alpha` determines steering
+   C. Only when all its children return Failure.
 
-   D. Unstable, because the lookahead point leaves the path
+   D. Never: a Fallback always returns Running.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Less aggressive (smoother, cutting corners more).
+   **C**.
 
-   From the steering equation
-   :math:`\delta = \arctan(2L\sin\alpha / L_d)`, increasing
-   :math:`L_d` (denominator) reduces :math:`\delta` for the same
-   angular error :math:`\alpha`. A larger lookahead point is
-   further ahead on the path, requiring less steering to reach it.
-   The result is smoother tracking but larger corner-cutting at
-   high curvature.
+   A Fallback tries its children in order and stops at the first that
+   succeeds or runs. In Colledanchise and Ögren's words, "It returns Failure
+   if and only if all its children return Failure". A Sequence is the node
+   that stops at the first child that fails (**A**). See "Read a Behavior
+   Tree: Ticks, Three Statuses, Four Node Types" in :doc:`l10_lecture`.
 
 
 .. admonition:: Question 4
    :class: hint
 
-   The Stanley controller steering command
-   :math:`\delta = \psi_e + \arctan(ke/v)` divides the cross-track
-   correction by speed :math:`v` because:
+   The lecture's road tree is ticked. No stop line is within 30 m. A car is
+   25 m ahead in our lane, driving at 7 m/s, and the left lane is free
+   (chosen for this question). Which action does the tree run?
 
-   A. The steering actuator has a velocity-dependent deadband.
+   A. Stop at the line
 
-   B. At higher speeds, the same steering angle produces a larger
-      lateral displacement per unit time, so less correction is
-      needed to achieve the same path convergence rate.
+   B. Change lane
 
-   C. The cross-track error :math:`e` grows proportionally to
-      speed.
+   C. Follow
 
-   D. The heading error :math:`\psi_e` is inversely proportional
-      to speed.
+   D. Lane keep
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- At higher speeds, the same steering angle produces
-   larger lateral displacement per unit time, requiring less
-   proportional correction.
+   **C**.
 
-   The :math:`1/v` factor normalizes the cross-track correction
-   by time-to-travel: at high speed the vehicle is moving
-   quickly toward the path anyway, so a smaller steering angle
-   suffices. Without this factor, the controller would oversteer
-   at high speed and understeer at low speed.
+   The root Fallback tries its branches from the left. Condition 1 (a stop
+   line within 30 m) fails, so the first Sequence fails. Condition 2 (the
+   car ahead under 6 m/s for 3 s) fails, because the car drives at 7 m/s, so
+   the second Sequence fails at its first child and condition 3 is never
+   checked: a free left lane does not start a pass (**B**). Condition 4 (a
+   car ahead within 40 m) succeeds at 25 m, so the third Sequence ticks
+   Follow. The Fallback stops at this branch, because it did not fail, so
+   Lane keep is not ticked. See "Pass a Slow Car or Follow It: Four Road
+   Behaviors as a Behavior Tree" in :doc:`l10_lecture`.
 
 
 .. admonition:: Question 5
    :class: hint
 
-   Integrator windup in a PID speed controller occurs when:
+   A curve has radius 12.5 m (chosen for this question). With the lecture's
+   cap on the sideways acceleration, 2.0 m/s², what is the highest speed in
+   the curve?
 
-   A. The derivative term grows too large due to measurement noise.
+   A. 3.54 m/s
 
-   B. The integral accumulates error during actuator saturation,
-      causing large overshoot when the saturation constraint
-      is released.
+   B. 5.0 m/s
 
-   C. The proportional gain is set too high, causing the system
-      to become underdamped.
+   C. 6.25 m/s
 
-   D. The reference speed changes faster than the vehicle can
-      accelerate.
+   D. 25 m/s
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- The integral accumulates error during actuator
-   saturation.
+   **B**.
 
-   When the throttle or brake is saturated (clamped at its
-   physical limit), the PID output is clipped but the integrator
-   continues to add the current error at every time step. When
-   the constraint is eventually released (e.g., vehicle reaches
-   the speed range), the large accumulated integral causes the
-   output to shoot far beyond the target. Anti-windup strategies
-   prevent accumulation during saturation.
+   On a circle of radius :math:`R` at speed :math:`v`, the sideways
+   acceleration is :math:`v^2 / R`. From :math:`v^2 / R \le 2.0`, the
+   highest speed is :math:`v = \sqrt{2.0 \times 12.5} = \sqrt{25}` =
+   5.0 m/s. 3.54 (**A**) is :math:`\sqrt{12.5}`, without the 2.0; 6.25
+   (**C**) is 12.5 / 2.0, and 25 (**D**) is :math:`2.0 \times 12.5` before
+   the square root. See "Speed Profile, Step
+   1: a Curve Caps the Speed" in :doc:`l10_lecture`.
 
 
 .. admonition:: Question 6
    :class: hint
 
-   A natural cubic spline minimizes which quantity over the
-   interpolated curve?
+   The AV drives at 8 m/s and must be at 4 m/s (chosen for this question)
+   when a curve starts. It brakes at the lecture's constant 2.0 m/s². How far
+   before the curve must braking start?
 
-   A. Maximum curvature along the curve
+   A. 2.0 m
 
-   B. Total arc length
+   B. 8.0 m
 
-   C. Integral of the squared second derivative (bending energy)
+   C. 12.0 m
 
-   D. Sum of squared interpolation errors at the waypoints
+   D. 24.0 m
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- Integral of the squared second derivative (bending
-   energy).
+   **C**.
 
-   The natural cubic spline is the unique minimum-bending-energy
-   interpolant through the given waypoints:
+   Slowing from :math:`v_1` to :math:`v_2` at a constant deceleration
+   :math:`a` takes :math:`d = (v_1^2 - v_2^2) / (2a)`:
 
-   .. math::
+   1. :math:`8^2 - 4^2` = 64 − 16 = 48.
+   2. :math:`2a` = 2 × 2.0 = 4.0.
+   3. :math:`d` = 48 / 4.0 = 12.0 m.
 
-      \min \int_{t_0}^{t_n} \left[S''(t)\right]^2 dt
-
-   This is why cubic splines produce visually smooth curves --
-   they distribute curvature as evenly as possible. This property
-   also relates to the physical deflection of a thin elastic beam
-   (a "spline" in the engineering sense).
+   24.0 m (**D**) forgets the 2 in :math:`2a`. On the lecture's turn, the
+   same rule gives 11.0 m for 8 to 4.47 m/s. See "Speed Profile, Step 2:
+   Brake Before the Curve, Speed Up After It" in :doc:`l10_lecture`.
 
 
 .. admonition:: Question 7
    :class: hint
 
-   In linear MPC for vehicle trajectory tracking, the bicycle
-   model is **linearized** around the reference trajectory because:
+   In the kinematic bicycle model, which equation is where the steering
+   angle :math:`\delta` enters?
 
-   A. The full nonlinear model cannot represent vehicle dynamics.
+   A. :math:`\dot x = v\cos\theta`
 
-   B. Linearization converts the nonlinear optimization problem
-      into a quadratic program (QP), which can be solved in
-      milliseconds at real-time rates.
+   B. :math:`\dot y = v\sin\theta`
 
-   C. The bicycle model is already linear; no approximation is
-      needed.
+   C. :math:`\dot\theta = \frac{v}{L}\tan\delta`
 
-   D. Linearization eliminates the need for a prediction horizon.
+   D. :math:`\dot v = a`
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Linearization converts the NLP to a QP solvable in
-   milliseconds.
+   **C**.
 
-   The bicycle model is nonlinear (trigonometric functions of
-   heading). Linearizing around the reference trajectory yields
-   linear state equations, and if the cost is quadratic the
-   resulting optimization is a QP. QPs have polynomial-time
-   algorithms (active-set, interior-point) and can be solved
-   in under 1 ms with code-generated solvers, enabling
-   real-time MPC at 50 Hz.
+   The first two equations move the rear axle along the heading (**A**,
+   **B**); the fourth changes the speed (**D**). The turn rate grows with
+   speed and with steering: :math:`\dot\theta = v\tan\delta / L`. An EKF
+   predicts with the gyro's measured turn rate instead; a controller chooses
+   :math:`\delta`, so here the turn rate comes from it. See "Write the
+   Model: the State, the Inputs and Four Equations" in :doc:`l10_lecture`.
 
 
 .. admonition:: Question 8
    :class: hint
 
-   A B-spline trajectory has the **local support** property,
-   meaning:
+   The path has a curvature of 0.15 /m (chosen for this question). With the
+   lecture's wheelbase, 2.875 m, which steering angle follows it?
 
-   A. The curve passes through all control points.
+   A. 0.150 rad
 
-   B. Moving one control point affects only a local portion
-      of the curve (at most :math:`k+1` spans for degree
-      :math:`k`).
+   B. 0.408 rad
 
-   C. The curve is supported (lies above) the convex hull of
-      the control points.
+   C. 0.431 rad
 
-   D. The spline can only be evaluated at the knot locations.
+   D. 1.164 rad
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Moving one control point affects only the local
-   portion of the curve (at most :math:`k+1` spans).
+   **B**.
 
-   Local support is a key advantage of B-splines over global
-   polynomials. It means that local adjustments to the trajectory
-   (e.g., routing around a newly detected obstacle) require
-   modifying only a few control points, and the change affects
-   only the nearby portion of the path. This is critical for
-   efficient online trajectory editing.
+   To follow a curvature :math:`\kappa`, steer
+   :math:`\delta = \arctan(L\kappa)`:
+
+   1. :math:`L\kappa` = 2.875 × 0.15 = 0.431.
+   2. :math:`\delta` = arctan(0.431) = 0.408 rad.
+
+   0.431 (**C**) forgets the arctan; 0.150 (**A**) is the curvature itself;
+   1.164 (**D**) is :math:`\arctan(1 / (L\kappa))`, the angle the wrong way
+   up. 0.408 rad is under the 0.7 rad limit, so the AV can follow this
+   curve. See "Steer for a Curvature: a Fixed Angle Drives a Circle" in
+   :doc:`l10_lecture`.
 
 
 .. admonition:: Question 9
    :class: hint
 
-   In Frenet-frame trajectory planning, generating multiple
-   candidate quintic polynomials by varying the terminal lateral
-   offset :math:`d_f` serves what purpose?
+   The AV brakes at a constant 2.0 m/s². The lecture samples its jerk 20
+   times a second and gets 40 m/s³ where braking starts. What happens to
+   that number if you sample 100 times a second?
 
-   A. It guarantees that at least one candidate is kinematically
-      feasible.
+   A. It stays 40 m/s³: jerk does not depend on the sampling.
 
-   B. It produces a discrete set of trajectory options that can
-      be evaluated for cost and safety, with the best feasible
-      candidate selected.
+   B. It drops to 8 m/s³.
 
-   C. It reduces the computation time by parallelizing the
-      coefficient calculation.
+   C. It grows to 200 m/s³: a true jump in acceleration has no finite jerk.
 
-   D. It ensures the trajectory converges to the road centerline
-      within one planning step.
+   D. It drops to 0, because the deceleration is constant.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- It produces a discrete set of options evaluated for
-   cost and safety.
+   **C**.
 
-   By sampling a grid of terminal conditions
-   :math:`(d_f, \dot{d}_f, T)`, the planner generates many
-   candidate trajectories covering different lateral positions
-   and durations. Each is evaluated for collision clearance and
-   cost. The lowest-cost collision-free candidate is selected.
-   This sampling-then-scoring approach is efficient and handles
-   multi-modal situations (e.g., passing on either side of
-   an obstacle).
+   The acceleration jumps by 2.0 m/s² within one step. At 20 samples a
+   second that is 2.0 / 0.05 = 40 m/s³; at 100 samples a second,
+   2.0 / 0.01 = 200 m/s³. A true jump has no finite jerk, so the number
+   grows the faster we sample. The deceleration is constant only between
+   the two jumps (**D**). See "Measure Comfort: Jerk, How Fast the
+   Acceleration Changes" in :doc:`l10_lecture`.
 
 
 .. admonition:: Question 10
    :class: hint
 
-   Emergency braking distance at :math:`v_0 = 20` m/s with maximum
-   deceleration :math:`a_{\max} = 6` m/s² is:
+   In the lecture's speed test, a P controller alone with
+   :math:`K_p` = 0.5 settles at 7.58 m/s for an 8 m/s target. Why does a
+   gap stay?
 
-   A. 20 m
+   A. The throttle sits at its 0.75 limit the whole time.
 
-   B. 33.3 m
+   B. P makes throttle only from an error, and holding the speed against
+      drag needs some throttle.
 
-   C. 60 m
+   C. The engine lag of 0.3 s never ends.
 
-   D. 66.7 m
+   D. The I term winds up.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Approximately 33.3 m.
+   **B**.
 
-   .. math::
+   1. At 7.58 m/s the drag is :math:`0.15 + 0.012 \times 7.58^2` =
+      0.84 m/s², so holding the speed needs throttle 0.84 / 4 = 0.21.
+   2. P gives :math:`u = 0.5\,e`, so 0.5 × :math:`e` = 0.21 needs
+      :math:`e` = 0.42 m/s.
 
-      d_{\text{stop}} = \frac{v_0^2}{2 a_{\max}}
-      = \frac{20^2}{2 \times 6} = \frac{400}{12} \approx 33.3 \text{ m}
+   With no error, P gives no throttle, and drag slows the AV. A P
+   controller alone has no I term to wind up (**D**). See "Try P Alone: the
+   AV Settles 0.42 m/s Short" in :doc:`l10_lecture`.
 
-   At 72 km/h, an autonomous vehicle must begin emergency braking
-   at least 33 m before an obstacle (plus any perception and
-   actuation latency). Typical system latency of 100--200 ms adds
-   2--4 m to the required detection range.
-
-
-----
-
-
-True / False
-============
 
 .. admonition:: Question 11
    :class: hint
 
-   **True or False:** A path and a trajectory contain the same
-   information; the terms can be used interchangeably in motion
-   planning.
+   With :math:`K_i` = 0.3 and no clamp, the PI run peaks at 12.18 m/s for
+   an 8 m/s target. What causes the overshoot?
+
+   A. The D term reacts to the target jump.
+
+   B. The I term keeps adding the large early errors while the throttle sits
+      at its limit, and the stored sum then pushes the AV past the target.
+
+   C. :math:`K_p` is too small.
+
+   D. The drag is larger at high speed.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **B**.
 
-   A path specifies only the geometric shape of the route (as a
-   function of arc length or an arbitrary parameter). A trajectory
-   adds a time parameterization: it specifies where the vehicle is
-   at every point in time, implicitly defining velocity and
-   acceleration profiles. Controllers that handle speed regulation
-   (throttle, brake) require a trajectory, not just a path.
+   This is integrator windup. The throttle is at its 0.75 limit from the
+   start, so a larger command cannot open it further, but the sum keeps
+   growing: by the time the AV reaches 8 m/s (3.45 s), the sum is 14.29 m
+   and the I term 0.3 × 14.29 = 4.29. The sum shrinks only while the AV is
+   too fast. This run has no D term (**A**). See "Explain the Overshoot:
+   Windup" in :doc:`l10_lecture`.
 
 
 .. admonition:: Question 12
    :class: hint
 
-   **True or False:** The Stanley controller produces a non-zero
-   steady-state lateral error on a straight road at constant speed.
+   In the lecture's road tree, you delete the pass branch (the Sequence of
+   conditions 2 and 3 and Change lane). What else must change?
+
+   A. The other three branches, because control passes between branches
+      along arrows.
+
+   B. Nothing else: each parent ticks a child and gets a status back, so the
+      other branches do not depend on the pass branch.
+
+   C. The root must become a Sequence.
+
+   D. Condition 4 must move into the pass branch's place.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **B**.
 
-   On a straight road at constant speed with zero initial
-   cross-track error, the Stanley controller produces zero
-   steady-state lateral error. The heading-error term
-   :math:`\psi_e` drives the vehicle parallel to the path,
-   and the :math:`\arctan(ke/v)` term drives cross-track error
-   :math:`e` to zero. Unlike Pure Pursuit, Stanley has no
-   geometry-induced steady-state error on straight or
-   gently curved roads.
+   A tree's parent ticks a child and gets a status back, as from a function
+   call: Colledanchise and Ögren call this a "two-way control transfer".
+   Remove the pass branch, and nothing else changes. An FSM's arrow hands
+   control to the next state for good, a "one-way control transfer", so
+   removing Change lane from an FSM means changing the arrows into and out
+   of it. A tree has no such arrows between its branches (**A**). See "Choose a Tree Over an FSM: a Change Stays in One
+   Branch" in :doc:`l10_lecture`.
 
 
 .. admonition:: Question 13
    :class: hint
 
-   **True or False:** In MPC, increasing the prediction horizon
-   :math:`N` always improves closed-loop performance.
+   Pure Pursuit, :math:`L_d` = 5 m. In the AV's own frame, the goal point
+   is 4.0 m forward and 3.0 m to the right (chosen for this question):
+   :math:`g_x` = 4.0 m, :math:`g_y` = −3.0 m. What is the curvature of the
+   arc through the goal?
+
+   A. −0.12 /m
+
+   B. −0.24 /m
+
+   C. −0.375 /m
+
+   D. −0.6 /m
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **B**.
 
-   Increasing :math:`N` provides better foresight (the optimizer
-   can plan further ahead, avoiding locally greedy actions), but
-   it also increases the size of the QP or NLP, requiring more
-   computation time per solve. If the solve time exceeds the
-   control period, the controller misses its real-time deadline
-   and performance degrades. There is an optimal :math:`N` that
-   balances foresight and computational feasibility.
+   1. :math:`\alpha = \arctan(g_y / g_x) = \arctan(-3.0 / 4.0)` =
+      −0.644 rad.
+   2. :math:`\sin\alpha` = −0.6.
+   3. :math:`\kappa = 2\sin\alpha / L_d` = 2 × (−0.6) / 5 = −0.24 /m.
+      Negative: a right turn.
+
+   −0.12 (**A**) forgets the 2; −0.6 (**D**) is :math:`\sin\alpha` alone.
+   The steering is then :math:`\arctan(2.875 \times (-0.24))` = −0.604 rad,
+   under the 0.7 rad limit. See "Step 3: Find the Angle α and the Arc
+   Through the Goal" and "Step 4: Turn the Arc into a Steering Command" in
+   :doc:`l10_lecture`.
 
 
 .. admonition:: Question 14
    :class: hint
 
-   **True or False:** The convex hull property of B-splines
-   guarantees that the trajectory lies within the convex hull of
-   its control points, which is useful for conservative collision
-   checking.
+   Pure Pursuit asks for :math:`\delta` = 0.5 rad (chosen for this
+   question). The controller node turns it into a ``VehicleCmd`` steer from
+   −1 to 1. Which command is right?
+
+   A. 0.5 / 0.7 = 0.714
+
+   B. 0.5 / 1.222 = 0.409
+
+   C. 0.5 × 1.222 = 0.611
+
+   D. −0.409, because CARLA's steer is positive to the right
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **True**
+   **B**.
 
-   The B-spline convex hull property states that every point on
-   the curve lies within the convex hull of its local control
-   points. For collision checking, this means: if the convex hull
-   of the control polygon is collision-free, the curve itself is
-   guaranteed to be collision-free -- a fast and conservative
-   check without evaluating the curve densely.
+   The node divides by 1.222 rad, the wheel angle at full steering
+   (measured in CARLA): 0.5 / 1.222 = 0.409. Dividing by 0.7 (**A**), the
+   most the controller asks for, turns the wheels 1.75 times too far.
+   ``VehicleCmd`` steer is positive to the left, as :math:`\delta` is; the
+   sign flip for CARLA happens in the node that steps CARLA, not here
+   (**D**). See
+   "Step 4: Turn the Arc into a Steering Command" in :doc:`l10_lecture`.
 
 
 .. admonition:: Question 15
    :class: hint
 
-   **True or False:** The Ziegler-Nichols tuning method for PID
-   controllers produces gains that are optimal in the
-   :math:`H_\infty` sense.
+   The lookahead scales with the speed: :math:`L_d = \max(3\ \mathrm{m},\
+   k_v v)` with :math:`k_v` = 0.75 s. What is :math:`L_d` at 6 m/s and at
+   2 m/s (speeds chosen for this question)?
+
+   A. 4.5 m and 1.5 m
+
+   B. 4.5 m and 3 m
+
+   C. 6 m and 3 m
+
+   D. 3 m and 3 m
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **B**.
 
-   Ziegler-Nichols is a heuristic tuning method based on
-   observing the system's response at the stability boundary
-   (ultimate gain and period). It provides a practical starting
-   point for tuning but does not produce :math:`H_\infty`-optimal
-   or even :math:`H_2`-optimal gains. The resulting controller
-   typically has approximately 25% overshoot and adequate
-   disturbance rejection, which is acceptable for many applications
-   but suboptimal for comfort-critical AV control.
+   At 6 m/s: 0.75 × 6 = 4.5 m, longer than 3 m. At 2 m/s: 0.75 × 2 = 1.5 m,
+   raised to 3 m. On the lecture's turn, this rule gave the smallest corner
+   error of the runs tried: 0.07 m. See "A Lookahead for Every Speed: Scale
+   It with the Speed" in :doc:`l10_lecture`.
 
 
-----
-
-
-Essay Questions
-===============
+True or False (Questions 16 to 19)
+==================================
 
 .. admonition:: Question 16
    :class: hint
 
-   **Compare Model Predictive Control with the Stanley controller
-   for autonomous vehicle lateral control.** What are the
-   key advantages of MPC over Stanley, and in what scenarios
-   would Stanley be preferred?
+   True or false: in the lecture's runs, a 3 m lookahead makes the AV weave
+   on the straight approach, and the weave needs both the steering's delay
+   and its lag.
 
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
+.. dropdown:: Answer
    :class-container: sd-border-success
 
-   *Key points to include:*
+   **True.**
 
-   - MPC optimizes a multi-step cost function that incorporates
-     future predictions, allowing it to anticipate upcoming curves
-     and constraints, respect actuator limits explicitly, and
-     trade off multiple objectives (comfort, tracking, safety)
-     simultaneously.
-   - Stanley is a reactive, single-step controller: it responds
-     to current cross-track and heading error without planning
-     ahead. This makes it simpler but unable to proactively
-     adjust for upcoming trajectory features.
-   - MPC advantages: constraint handling (curvature limits,
-     speed bounds), look-ahead, comfort optimization, and the
-     ability to incorporate obstacle avoidance directly.
-   - Stanley is preferred in resource-constrained systems
-     (embedded microcontrollers), low-speed applications, or
-     as a baseline where MPC's computational cost is unjustified.
-     Stanley's O(1) compute cost makes it deterministic and
-     latency-free.
+   With the delay and the lag, the 3 m run's swings grow to 3.07 m, out of
+   the 3.5 m lane. The same run crosses by only 0.05 m with instant
+   steering, and by 0.32 m with the lag alone, then settles. See "Choose the
+   Lookahead: Too Short, and the AV Weaves" in :doc:`l10_lecture`.
 
 
 .. admonition:: Question 17
    :class: hint
 
-   **Explain why quintic polynomials are preferred over cubic
-   polynomials for trajectory segment generation.** What
-   additional property does the quintic provide, and why does it
-   matter for passenger comfort?
+   True or false: the quintic slow-down from 8 to 3.46 m/s that never
+   passes 2.0 m/s² needs a shorter braking distance than braking at a
+   constant 2.0 m/s².
 
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
+.. dropdown:: Answer
    :class-container: sd-border-success
 
-   *Key points to include:*
+   **False.**
 
-   - A cubic polynomial has 4 coefficients, which can be uniquely
-     determined by 4 boundary conditions: position and velocity at
-     both endpoints. It cannot simultaneously match acceleration at
-     both endpoints.
-   - A quintic polynomial has 6 coefficients, allowing it to match
-     position, velocity, **and** acceleration at both endpoints.
-     This ensures :math:`C^2` continuity across trajectory
-     segments.
-   - Continuity of acceleration means there are no impulsive
-     changes in acceleration when the vehicle transitions between
-     trajectory segments. Without this, passengers experience a
-     jerk spike at every segment boundary.
-   - Jerk (rate of change of acceleration) is the primary
-     perceptual discomfort metric; bounding it through :math:`C^2`
-     continuity is essential for a smooth passenger experience.
+   Constant deceleration takes 2.27 s over 13.0 m; the quintic takes
+   3.41 s over 19.5 m, so it starts braking 19.5 − 13.0 = 6.5 m earlier. In
+   return, its jerk stays at most 2.3 m/s³, against 40 m/s³ twice for the
+   constant braking at 20 samples a second. See "Slow Down for the Turn:
+   Two Ways Between the Same Speeds" in :doc:`l10_lecture`.
 
 
 .. admonition:: Question 18
    :class: hint
 
-   **Describe the Frenet-frame approach to trajectory planning.**
-   Why is the Frenet frame more convenient than Cartesian
-   coordinates for road-following trajectories, and how is a
-   Frenet trajectory converted back to a Cartesian plan for
-   execution?
+   True or false: in Stanley's law, :math:`e` is the cross-track error of
+   the rear axle, as in Pure Pursuit.
 
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
+.. dropdown:: Answer
    :class-container: sd-border-success
 
-   *Key points to include:*
+   **False.**
 
-   - The Frenet frame decomposes vehicle motion into longitudinal
-     (:math:`s`, along the road centerline) and lateral
-     (:math:`d`, perpendicular to it) components. This decouples
-     the planning problem: longitudinal and lateral trajectories
-     can be planned independently as 1-D polynomial problems.
-   - In Cartesian coordinates, a lane-following trajectory on a
-     curved road is a complex 2-D curve; in Frenet coordinates,
-     it is simply :math:`d(t) \approx 0` -- a nearly trivial
-     1-D problem.
-   - Conversion back to Cartesian: for each time sample, evaluate
-     :math:`s(t)` and :math:`d(t)`, look up the Cartesian position
-     of the road centerline at arc length :math:`s(t)`, and offset
-     perpendicular to the centerline by :math:`d(t)`.
-   - The Frenet frame is only valid where the road centerline
-     curvature is non-singular. At very sharp turns or
-     intersections, the frame may become ill-conditioned and
-     Cartesian planning must be used instead.
+   Stanley measures :math:`e` at the **front** axle:
+   :math:`\delta = \psi_e - \arctan\big(k e / (v + k_s)\big)`. Pure Pursuit
+   works from the rear axle. With the lecture's signs, an AV left of the
+   path (:math:`e > 0`) must steer right, so the term is subtracted. See
+   "Steer from the Front Axle: Stanley's Heading and Cross-Track Terms" in
+   :doc:`l10_lecture`.
+
+
+.. admonition:: Question 19
+   :class: hint
+
+   True or false: at each step, MPC applies the whole sequence of inputs it
+   found over the horizon, then plans again at the end of the horizon.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False.**
+
+   MPC applies only the first input, then plans again from the newly
+   measured state at the next step (every 0.05 s here). The horizon slides
+   forward with the AV, so MPC is a feedback controller: each plan starts
+   from the measured pose. See "Plan Ahead with MPC: Predict, Score, Apply
+   the First Input, Repeat" in :doc:`l10_lecture`.
+
+
+Short Answer (Questions 20 to 21)
+=================================
+
+.. admonition:: Question 20
+   :class: hint
+
+   On the lecture's turn, a 10 m lookahead crosses the center by only
+   0.07 m after the 1 m start, but a 5 m lookahead is the best of the eight
+   tried. Explain the trade-off with the two errors the lecture measures.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   A long lookahead aims at a point far ahead, so after the 1 m start it
+   steers gently and barely crosses the center (0.07 m at 10 m). In the
+   corner, the same far point is already around the bend, so the AV turns
+   early: 0.98 m inside the center, then 0.95 m outside on the exit. A
+   short lookahead tracks the corner more closely, but at 4 m and below the
+   AV weaves. 5 m balances the two: it crosses by 0.32 m after the start and
+   stays within 0.25 m of the center in the turn. See
+   "Choose the Lookahead: a Trade-Off Between the Two" in
+   :doc:`l10_lecture`.
+
+
+.. admonition:: Question 21
+   :class: hint
+
+   In the lecture's road tree, tick 1 runs Change lane. At tick 2, 0.1 s
+   later, a car is 20 m behind in the left lane, and the tree runs Follow.
+   Explain how the tree switches with no arrow from Change lane to Follow,
+   and what a flat FSM would need for the same switch.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   At every tick the root Fallback checks the conditions again from the
+   left, and the first branch that does not fail picks the action. At tick
+   2, condition 1 (a stop line within 30 m) still fails. Condition 2 (the
+   car ahead under 6 m/s for 3 s) still holds, but condition 3 (the left
+   lane free) fails, because a car is within 30 m behind, so the second
+   Sequence fails. The Fallback moves on to the third branch: condition 4 (a
+   car ahead within 40 m) holds at 25 m, so Follow runs. A flat FSM would
+   need an explicit arrow from Change lane to Follow, with the left lane's
+   state as its condition. See "Switch Behaviors with No Arrow: a Car in
+   the Left Lane Stops the Pass" in :doc:`l10_lecture`.

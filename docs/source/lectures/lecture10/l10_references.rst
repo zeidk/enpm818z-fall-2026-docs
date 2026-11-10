@@ -1,341 +1,330 @@
+====================================================
 References
-==========
+====================================================
 
+These are the sources of the L10 deck, grouped by the lecture's sections, in
+the order the lecture first uses each one. A source used in several
+sections is listed once, where the lecture first uses it. Three sources are
+quoted only in a "More detail" box of the lecture; their cards say so. One
+source is used only in the appendix (:doc:`l10_appendix`); it has its own
+group at the end. The deck also lists four background sources that no slide
+quotes; each sits in the section its subject belongs to, and its card says
+so.
 
-.. dropdown:: Lecture 10
-    :class-container: sd-border-secondary
-    :open:
 
-    .. card::
-        :class-card: sd-border-secondary
+.. dropdown:: Scaling the Behavior Layer
+   :class-container: sd-border-secondary
+   :open:
 
-        **ENPM818Z -- L10: Trajectory Generation & Control**
+   Statecharts, behavior trees, and how real stacks organize their behavior
+   layer.
 
-        Covers path vs. trajectory (time parameterization),
-        trajectory requirements (continuity, feasibility, comfort,
-        safety), quintic polynomial trajectory generation in the
-        Frenet frame, natural cubic splines and B-splines, optimization-
-        based trajectory planning with QP/NLP cost functions,
-        Model Predictive Control (MPC formulation, receding horizon,
-        prediction horizon tuning, real-time QP solving), Pure
-        Pursuit controller (lookahead distance, adaptive gain),
-        Stanley controller (cross-track + heading error), PID
-        longitudinal speed control with anti-windup, and CARLA
-        lane-following implementation.
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
+      .. grid-item-card:: Statecharts: superstates and parallel regions
+         :class-card: sd-border-secondary
 
-.. dropdown:: Trajectory Planning
-    :class-container: sd-border-secondary
+         **Harel, D. (1987)**
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+         "Statecharts: A Visual Formalism for Complex Systems". *Science of
+         Computer Programming*, 8, 231 to 274.
 
-        .. grid-item-card:: Werling et al. -- Frenet-Frame Planner (ICRA 2010)
-            :class-card: sd-border-secondary
+         Why one flat FSM grows too fast: "two components with one thousand
+         states each would result in one million states in the product".
+         Superstates, "the main way statecharts economize in the number of
+         arrows". Orthogonal (parallel) regions that talk by broadcast.
 
-            **ICRA 2010**
+      .. grid-item-card:: Behavior trees
+         :link: https://ar5iv.arxiv.org/html/1709.00084
+         :class-card: sd-border-secondary
 
-            Seminal paper on Frenet-frame quintic polynomial
-            trajectory generation for highway driving, including
-            candidate sampling and cost-function-based selection.
+         **Colledanchise, M. and Ögren, P. (2018)**
 
-            +++
+         *Behavior Trees in Robotics and AI: An Introduction.* Chapman &
+         Hall/CRC. arXiv:1709.00084. Accessed 7 November 2026.
 
-            - Frenet frame formulation
-            - Quintic polynomial candidates
-            - Cost function design
+         The definition of a behavior tree, quoted in "Define a Behavior
+         Tree". Ticks, the three statuses (Running, Success, Failure), and
+         the Sequence, Fallback, Parallel and Decorator nodes, quoted in
+         "Read a Behavior Tree". What a tree gains over an FSM (a "two-way
+         control transfer", modular, reactive, reusable) and what it costs,
+         quoted in "Choose a Tree Over an FSM".
 
-        .. grid-item-card:: Ziegler et al. -- AV Berlin (2014)
-            :class-card: sd-border-secondary
+      .. grid-item-card:: Nav2's behavior tree navigator
+         :link: https://github.com/ros-navigation/navigation2/tree/main/nav2_bt_navigator
+         :class-card: sd-border-secondary
 
-            **IEEE Intelligent Transportation Systems, 2014**
+         **Nav2 contributors (2026)**
 
-            Describes the full trajectory planning and control
-            stack of the Bertha-Benz Memorial Route autonomous
-            vehicle (Mercedes-Benz research).
+         *nav2_bt_navigator and nav2_behavior_tree README files, and
+         nav2_params.yaml.* Accessed 7 November 2026.
 
-            +++
+         Nav2, ROS 2's navigation stack, runs a behavior tree (the Scaling
+         the Behavior Layer section's opening). In the "More detail" box
+         "What real stacks use": the navigator reads a behavior tree from an
+         XML file and "uses the Behavior-Tree.CPP library to dynamically
+         create and execute the BT". Its default tree for driving to a pose
+         is ``navigate_to_pose_w_replanning_and_recovery.xml``.
 
-            - End-to-end AV trajectory system
-            - Spline-based path representation
-            - Emergency maneuver handling
+      .. grid-item-card:: Autoware's behavior path planner, older design
+         :link: https://autowarefoundation.github.io/autoware.universe_planning/pr-5562/planning/behavior_path_planner
+         :class-card: sd-border-secondary
 
-        .. grid-item-card:: Brezak & Petrovic -- Spline Path Planning
-            :class-card: sd-border-secondary
+         **Autoware Foundation (2023)**
 
-            **IEEE T-ITS, 2014**
+         *behavior_path_planner (older documentation build, pull request
+         5562).* Documentation build for pull request 5562, opened 13
+         November 2023. Accessed 7 November 2026.
 
-            Comparison of cubic and quintic spline methods for
-            smooth path planning under kinematic constraints.
+         Quoted only in the "More detail" box "What real stacks use". The
+         planner once ran its modules from a behavior tree, chosen for its
+         "high scalability compared to the state machine".
 
-            +++
+      .. grid-item-card:: Autoware's Planner Manager
+         :link: https://autowarefoundation.github.io/autoware_universe/main/planning/behavior_path_planner/autoware_behavior_path_planner/
+         :class-card: sd-border-secondary
 
-            - Curvature continuity analysis
-            - Spline vs. polynomial trade-offs
-            - Constraint satisfaction
+         **Autoware Foundation (2026)**
 
-        .. grid-item-card:: Farin -- NURBS and B-Splines
-            :class-card: sd-border-secondary
+         *autoware_behavior_path_planner: Planner Manager design.* Accessed
+         7 November 2026.
 
-            **A K Peters / CRC Press, 5th Ed.**
+         Used only in the "More detail" box "What real stacks use". Today a
+         Planner Manager runs the modules: candidate modules run in parallel
+         until they are approved, and approved modules run in series.
 
-            Comprehensive reference for B-spline and NURBS
-            theory, including knot insertion, degree elevation,
-            and the convex hull and local support properties.
+      .. grid-item-card:: Apollo's scenarios and stages
+         :link: https://github.com/ApolloAuto/apollo/blob/master/modules/planning/planning_interface_base/scenario_base/scenario.h
+         :class-card: sd-border-secondary
 
-            +++
+         **Apollo Auto (2026)**
 
-            - B-spline basis functions
-            - Convex hull property
-            - Knot vector design
+         *Apollo planning: scenario.h and scenario_manager.cc.* Accessed 7
+         November 2026.
 
+         Quoted only in the "More detail" box "What real stacks use". Apollo
+         plans by scenarios made of stages. Each scenario has its own
+         transfer condition, and the result of each stage "determines the
+         transition from one stage to another".
 
-.. dropdown:: Model Predictive Control
-    :class-container: sd-border-secondary
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+.. dropdown:: Bicycle Model
+   :class-container: sd-border-secondary
+   :open:
 
-        .. grid-item-card:: Rawlings & Mayne -- MPC: Theory and Design
-            :class-card: sd-border-secondary
+   Kinematic and dynamic vehicle models.
 
-            **Nob Hill Publishing, 2nd Ed.**
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-            The definitive graduate-level MPC textbook covering
-            stability theory, constraint handling, and real-time
-            implementation.
+      .. grid-item-card:: Kinematic and dynamic vehicle models
+         :link: https://doi.org/10.1109/IVS.2015.7225830
+         :class-card: sd-border-secondary
 
-            +++
+         **Kong, J., Pfeiffer, M., Schildbach, G. and Borrelli, F. (2015)**
 
-            - Receding horizon optimality
-            - Terminal cost and constraint design
-            - Stability guarantees
+         "Kinematic and Dynamic Vehicle Models for Autonomous Driving
+         Control Design". *2015 IEEE Intelligent Vehicles Symposium (IV)*,
+         1094 to 1099. doi:10.1109/IVS.2015.7225830.
 
-        .. grid-item-card:: Kong et al. -- Kinematic and Dynamic MPC (2015)
-            :class-card: sd-border-secondary
+         Background reading: the deck lists this paper, and no slide quotes
+         it.
 
-            **IV 2015**
 
-            Comparison of kinematic and dynamic bicycle model
-            MPC for vehicle trajectory tracking across speed
-            regimes.
+.. dropdown:: Trajectories
+   :class-container: sd-border-secondary
+   :open:
 
-            +++
+   Trajectory generation.
 
-            - Kinematic vs. dynamic MPC
-            - Speed-regime suitability
-            - Experimental validation
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-        .. grid-item-card:: OSQP Solver
-            :link: https://osqp.org/
-            :class-card: sd-border-secondary
+      .. grid-item-card:: Trajectories in the Frenet frame
+         :link: https://doi.org/10.1109/ROBOT.2010.5509799
+         :class-card: sd-border-secondary
 
-            **OSQP (Operator Splitting QP)**
+         **Werling, M., Ziegler, J., Kammel, S. and Thrun, S. (2010)**
 
-            Open-source QP solver well-suited to MPC due to
-            its warm-starting capability and predictable
-            real-time performance.
+         "Optimal Trajectory Generation for Dynamic Street Scenarios in a
+         Frenét Frame". *2010 IEEE International Conference on Robotics and
+         Automation (ICRA)*, 987 to 993. doi:10.1109/ROBOT.2010.5509799.
 
-            +++
+         Background reading: the deck lists this paper, and no slide quotes
+         it.
 
-            - Warm-starting for MPC
-            - Embedded C code generation
-            - Real-time performance
 
-        .. grid-item-card:: acados -- Real-Time NMPC
-            :link: https://docs.acados.org/
-            :class-card: sd-border-secondary
+.. dropdown:: Speed Control
+   :class-container: sd-border-secondary
+   :open:
 
-            **acados**
+   Feedback control.
 
-            Fast C library for nonlinear MPC with code
-            generation for embedded automotive controllers.
-            Supports SQP with Gauss-Newton Hessian approximation.
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-            +++
+      .. grid-item-card:: Feedback systems
+         :class-card: sd-border-secondary
 
-            - Nonlinear MPC formulation
-            - Code generation
-            - ROS 2 integration examples
+         **Åström, K. J. and Murray, R. M. (2021)**
 
+         *Feedback Systems: An Introduction for Scientists and Engineers*,
+         2nd edition. Princeton University Press. ISBN 978-0-691-19398-4.
 
-.. dropdown:: Path-Following Controllers
-    :class-container: sd-border-secondary
+         Background reading: the deck lists this book, and no slide quotes
+         it.
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
 
-        .. grid-item-card:: Coulter -- Pure Pursuit (1992)
-            :class-card: sd-border-secondary
+.. dropdown:: Pure Pursuit
+   :class-container: sd-border-secondary
+   :open:
 
-            **CMU Technical Report, 1992**
+   The lookahead trade-off, Autoware's Pure Pursuit controller, and CARLA's
+   vehicle command.
 
-            Original Pure Pursuit algorithm from the CMU
-            Navlab project. Includes derivation of the
-            lookahead-to-curvature relationship and
-            experimental results.
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-            +++
+      .. grid-item-card:: Steering methods compared
+         :class-card: sd-border-secondary
 
-            - Geometric derivation
-            - Lookahead distance analysis
-            - Experimental validation
+         **Snider, J. M. (2009)**
 
-        .. grid-item-card:: Thrun et al. -- Stanley Controller (2006)
-            :class-card: sd-border-secondary
+         *Automatic Steering Methods for Autonomous Automobile Path
+         Tracking.* Technical report CMU-RI-TR-09-08, Robotics Institute,
+         Carnegie Mellon University, Pittsburgh, PA.
 
-            **JAIR, 2006 (DARPA Grand Challenge)**
+         The lookahead trade-off, in the lecture's own words: a short
+         lookahead tracks the path more closely, a long one drives more
+         smoothly.
 
-            Describes the Stanley controller used on the
-            Stanford entry in the DARPA Urban Challenge, with
-            analysis of heading and cross-track error behavior.
+      .. grid-item-card:: Autoware's Pure Pursuit controller
+         :link: https://autowarefoundation.github.io/autoware_universe/main/control/autoware_pure_pursuit/
+         :class-card: sd-border-secondary
 
-            +++
+         **Autoware Foundation (2026)**
 
-            - Stanley derivation
-            - Heading + cross-track error
-            - Urban challenge results
+         *autoware_pure_pursuit.* Accessed 14 October 2026.
 
-        .. grid-item-card:: Snider -- Path Tracking Survey (2009)
-            :class-card: sd-border-secondary
+         Autoware offers a Pure Pursuit steering controller, beside its MPC
+         one (see "Weigh MPC" in the lecture).
 
-            **CMU Technical Report, 2009**
+      .. grid-item-card:: CARLA's vehicle command
+         :link: https://carla.readthedocs.io/en/latest/python_api/
+         :class-card: sd-border-secondary
 
-            Comprehensive comparison of path-tracking controllers
-            (Pure Pursuit, Stanley, and variants) on the same
-            test tracks and conditions.
+         **CARLA Team (2026)**
 
-            +++
+         *Python API Reference: carla.VehicleControl.* Accessed 14 October
+         2026.
 
-            - Side-by-side comparison
-            - Speed-regime analysis
-            - Implementation details
+         The command CARLA takes for steering, throttle and brake. In
+         "Step 4: Turn the Arc into a Steering Command", CARLA's steer is
+         positive to the right, so the node that steps CARLA flips the sign
+         of ``VehicleCmd``'s steer.
 
 
-.. dropdown:: PID Control
-    :class-container: sd-border-secondary
+.. dropdown:: Stanley
+   :class-container: sd-border-secondary
+   :open:
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+   The Stanford team's steering law and its gain :math:`k_s`.
 
-        .. grid-item-card:: Astrom & Hagglund -- PID Controllers
-            :class-card: sd-border-secondary
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-            **ISA, 2nd Ed.**
+      .. grid-item-card:: Stanley, the robot
+         :link: https://doi.org/10.1002/rob.20147
+         :class-card: sd-border-secondary
 
-            Standard reference for PID control covering
-            Ziegler-Nichols tuning, anti-windup, derivative
-            filtering, and practical implementation.
+         **Thrun, S. et al. (2006)**
 
-            +++
+         "Stanley: The Robot that Won the DARPA Grand Challenge". *Journal
+         of Field Robotics*, 23(9), 661 to 692. doi:10.1002/rob.20147.
 
-            - Ziegler-Nichols tuning
-            - Anti-windup strategies
-            - Bumpless transfer
+         The steering law of Stanford's DARPA Grand Challenge car. The paper
+         writes the cross-track term with a plus sign, with its own signs;
+         the lecture subtracts it, with steering and :math:`e` positive to
+         the left. Also used in Going Further, "Why the Cross-Track Term
+         Pulls e to Zero": the sideways speed
+         :math:`\dot e = v\sin\delta`, as Thrun et al. write it.
 
-        .. grid-item-card:: Franklin, Powell, Emami-Naeini
-            :class-card: sd-border-secondary
+      .. grid-item-card:: The gain k_s
+         :link: https://doi.org/10.1109/ACC.2007.4282788
+         :class-card: sd-border-secondary
 
-            **Feedback Control of Dynamic Systems (8th Ed.)**
+         **Hoffmann, G. M., Tomlin, C. J., Montemerlo, M. and Thrun, S.
+         (2007)**
 
-            Undergraduate-level control systems textbook with
-            in-depth coverage of PID design, root locus, and
-            frequency-domain stability analysis.
+         "Autonomous Automobile Trajectory Tracking for Off-Road Driving:
+         Controller Design, Experimental Validation and Racing". *2007
+         American Control Conference*, 2296 to 2301. IEEE.
+         doi:10.1109/ACC.2007.4282788.
 
-            +++
+         :math:`k_s` = 1 m/s: the authors found 1 m/s "appropriate" in
+         experiments (p. 2299).
 
-            - PID design methodology
-            - Stability margins
-            - Digital implementation
 
+.. dropdown:: MPC
+   :class-container: sd-border-secondary
+   :open:
 
-.. dropdown:: CARLA Simulator
-    :class-container: sd-border-secondary
+   Autoware's MPC steering controller, and a textbook on MPC.
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-        .. grid-item-card:: CARLA Documentation
-            :link: https://carla.readthedocs.io/
-            :class-card: sd-border-secondary
+      .. grid-item-card:: Autoware's MPC lateral controller
+         :link: https://autowarefoundation.github.io/autoware_universe/main/control/autoware_mpc_lateral_controller/
+         :class-card: sd-border-secondary
 
-            **carla.readthedocs.io**
+         **Autoware Foundation (2026)**
 
-            Official CARLA Python API documentation including
-            vehicle control interfaces, waypoint API, sensor
-            mounting, and traffic management.
+         *autoware_mpc_lateral_controller.* Accessed 14 October 2026.
 
-            +++
+         Autoware's steering controller that tracks the path with a linear
+         MPC. Also used in Going Further, "The Problem Written Out": with
+         the model linearized around the path and a squared score, each step
+         is a quadratic program.
 
-            - VehicleControl API
-            - Map and waypoint access
-            - Sensor blueprint library
+      .. grid-item-card:: Model predictive control
+         :class-card: sd-border-secondary
 
-        .. grid-item-card:: Dosovitskiy et al. -- CARLA (CoRL 2017)
-            :class-card: sd-border-secondary
+         **Rawlings, J. B., Mayne, D. Q. and Diehl, M. M. (2017)**
 
-            **CoRL 2017**
+         *Model Predictive Control: Theory, Computation, and Design*, 2nd
+         edition. Nob Hill Publishing. ISBN 978-0-9759377-3-0.
 
-            Original CARLA paper describing the simulator
-            architecture, sensor models, and evaluation metrics.
+         Background reading: the deck lists this book, and no slide quotes
+         it.
 
-            +++
 
-            - Simulator design
-            - Benchmark scenarios
-            - Sensor simulation fidelity
+.. dropdown:: Used Only in the Appendix
+   :class-container: sd-border-secondary
 
-        .. grid-item-card:: Leaderboard 2.0
-            :link: https://leaderboard.carla.org/
-            :class-card: sd-border-secondary
+   Pure Pursuit's original form, from :doc:`l10_appendix`.
 
-            **CARLA Autonomous Driving Leaderboard**
+   .. grid:: 1 1 2 2
+      :gutter: 2
 
-            Official benchmark for evaluating autonomous driving
-            agents in CARLA, including town routes, traffic
-            scenarios, and scoring methodology.
+      .. grid-item-card:: Pure Pursuit
+         :class-card: sd-border-secondary
 
-            +++
+         **Coulter, R. C. (1992)**
 
-            - Route completion metric
-            - Infraction taxonomy
-            - Submission guidelines
+         *Implementation of the Pure Pursuit Path Tracking Algorithm.*
+         Technical report CMU-RI-TR-92-01, Robotics Institute, Carnegie
+         Mellon University, Pittsburgh, PA.
 
+         The curvature of the arc through the goal point in Coulter's form,
+         :math:`\kappa = 2 g_y / L_d^2`, used in "Pure Pursuit's Arc" on the
+         Going Further page.
 
-.. dropdown:: Benchmarks
-    :class-container: sd-border-secondary
 
-    .. grid:: 1 1 2 2
-        :gutter: 2
+.. rubric:: Map data and images
 
-        .. grid-item-card:: nuPlan
-            :link: https://nuplan.org/
-            :class-card: sd-border-secondary
-
-            **nuPlan Planning Benchmark**
-
-            Closed-loop planning benchmark with 1300+ hours
-            of real-world data. Used to evaluate MPC and
-            learning-based trajectory planners.
-
-            +++
-
-            - Closed-loop reactive simulation
-            - Standardized metrics (PDMs score)
-            - Real-world driving scenarios
-
-        .. grid-item-card:: CommonRoad
-            :link: https://commonroad.in.tum.de/
-            :class-card: sd-border-secondary
-
-            **CommonRoad (TU Munich)**
-
-            Benchmark and scenario format for trajectory
-            planning evaluation with standardized kinematic
-            feasibility checks.
-
-            +++
-
-            - Standardized scenario format
-            - Feasibility checkers
-            - Planning solution library
+The road in every top view is CARLA's ``Town03.xodr``, read offline with the
+CARLA Python API (`carla.org <https://carla.org>`_). The vehicle icon in the
+figures was created by Stone from the `Noun Project
+<https://thenounproject.com>`_.

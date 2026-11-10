@@ -3076,8 +3076,7 @@ L9 (not yet published)
       The layer that finds the path for the next few seconds that follows
       the route and stays clear of every object, and plans it again as the
       AV moves. L9's local planner samples 31 candidate paths every 0.5 s,
-      checks them, scores them, and keeps the cheapest. GP4 does not ask
-      for one. L9
+      checks them, scores them, and keeps the cheapest. L9
 
    Nash Equilibrium
       A choice for each player of a game such that no player can lower its
@@ -3126,49 +3125,139 @@ L10 (not yet published)
 
 .. glossary::
 
-   B-Spline
-      A piecewise polynomial curve with local control point support, used
-      for smooth trajectory representation in motion planning. Changes to
-      one control point only affect a local segment of the curve. L10
+   Behavior Tree
+      "A directed rooted tree where the internal nodes are called control
+      flow nodes and leaf nodes are called execution nodes" (Colledanchise
+      and Ögren, 2018). The root sends a **tick** down the tree, and each
+      ticked node answers Running, Success or Failure. A Sequence runs its
+      children in order and stops at the first that fails or runs; a
+      Fallback tries its children in order and stops at the first that
+      succeeds or runs. Condition leaves check a fact; action leaves run a
+      behavior. L10 writes four road behaviors as a tree with four
+      conditions: when a car enters the left lane, the next tick stops the
+      pass and runs Follow, with no arrow between the two. Nav2, ROS 2's
+      navigation stack, runs a behavior tree. L10
 
    Cross-Track Error
-      The lateral distance between the vehicle (typically measured at the
-      front axle for Stanley, rear axle for Pure Pursuit) and the nearest
-      point on the reference path. Drives the steering correction in both
-      controllers. L10
+      The AV's distance from the path, measured square to the path at the
+      nearest path point, positive to the left. L10 measures it at the rear
+      axle for Pure Pursuit (the rear axle's :math:`d` in the Frenet frame);
+      the Stanley law uses the front axle's. L10's runs start with a
+      cross-track error of 1.0 m. L10
+
+   Feedback Controller
+      A program that, at every cycle, compares what the AV should be doing
+      with what it measures it is doing, and sends a command that shrinks
+      the difference. In L10, Pure Pursuit, Stanley and MPC steer (lateral
+      control) and a PID holds the speed (longitudinal control). L10
+
+   Goal Point
+      In Pure Pursuit, the point where the path leaves the lookahead circle
+      around the rear axle, ahead of the AV. In L10's worked example, with
+      a 5 m lookahead, it is (87.56, −1.18) m, 4.912 m forward and 0.933 m
+      to the right of the rear axle. See Lookahead Distance. L10
+
+   Heading Error
+      The angle between the AV's heading and the path's direction at the
+      nearest path point. The Stanley law steers by the heading error
+      :math:`\psi_e` plus a cross-track term. L10
+
+   Integrator Windup
+      The I term of a PID keeps growing while the actuator is at its limit
+      and cannot act on it; the stored sum then drives the output past the
+      target once the limit is released. In L10's speed test, with
+      :math:`K_i` = 0.3 and the throttle at its 0.75 limit, the AV peaks at
+      12.18 m/s for an 8 m/s target. Anti-windup holds the sum within a
+      clamp (±1 m in L10: peak 8.25 m/s); :math:`K_i` × clamp must still
+      exceed the throttle the steady speed needs. L10
+
+   Jerk
+      The rate of change of acceleration, in m/s³. Passengers feel a jump
+      in acceleration as a jolt; a small jerk feels smooth. In L10, braking
+      at a constant 2.0 m/s² gives 40 m/s³ twice, sampled 20 times a
+      second; a quintic slow-down keeps it at most 2.3 m/s³. L10
+
+   Lateral Acceleration
+      On a circle of radius :math:`R` at speed :math:`v`, the acceleration
+      toward the circle's center, :math:`v^2 / R` (m/s²); the tires must
+      push the AV sideways that hard. L10 caps it at 2.0 m/s² (the
+      controller node's ``a_lat``), so the highest speed in a curve is
+      :math:`\sqrt{2.0\,R}`: 3.46 m/s on the 5.98 m arc of L10's Town03
+      turn. L10
+
+   Lookahead Distance
+      The radius :math:`L_d` of Pure Pursuit's circle around the rear axle;
+      the goal point is where the path leaves it. On L10's turn, 3 m makes
+      the AV weave, 10 m cuts the corner by 0.98 m, and 5 m (the controller
+      node's ``lookahead_distance``) is the best of the eight tried. Scaled
+      with the speed, :math:`L_d = \max(3\ \mathrm{m},\ 0.75\ \mathrm{s}
+      \times v)`, the corner error drops to 0.07 m. L10
 
    MPC
-      Model Predictive Control. A receding-horizon optimization-based
-      controller that solves a finite-horizon optimal control problem at
-      each time step, applying only the first control action. Dominant
-      controller in production AV systems. L10
+      Model Predictive Control. At every step, choose the sequence of inputs
+      over a fixed horizon that a model predicts will score best, within the
+      limits; apply only the first input; repeat from the newly measured
+      state. It sees a curvature jump coming and puts the limits inside the
+      problem, at the cost of an optimization at every step and a model
+      good enough to predict with. Autoware offers a linear MPC steering
+      controller. L10
+
+   Parallel Regions
+      Two or more machines inside one state; the system is in one state of
+      each at the same time, and the regions can talk by broadcast events
+      (Harel's orthogonal regions). The states add instead of multiply: in
+      L10, five road behaviors and a safety monitor (3 states) draw
+      5 + 3 = 8 states, against 5 × 3 = 15 for one flat FSM. L10
 
    PID Controller
-      Proportional-Integral-Derivative controller. A classical feedback
-      controller used for longitudinal speed control in AVs. The three
-      terms correct present error (P), accumulated past error (I), and
-      predicted future error (D). L10
+      Proportional, integral, derivative controller. The command is
+      :math:`u = K_p e + K_i \sum e\,\Delta t + K_d \Delta e / \Delta t`,
+      from the error :math:`e` between the target and the measured value.
+      In L10's speed test: P alone settles 0.42 m/s short at
+      :math:`K_p` = 0.5; I closes the gap but winds up; D trimmed the peak
+      from 8.25 to 8.12 m/s. L10's controller node holds the speed with a
+      PID with anti-windup. See Integrator Windup. L10
 
    Pure Pursuit
-      A geometric path-following controller that steers the vehicle toward
-      a lookahead point on the reference path. The steering angle is
-      computed from the curvature of the arc connecting the rear axle to
-      the lookahead point. L10
+      A steering controller that, at every cycle, finds the goal point on a
+      circle of radius :math:`L_d` around the rear axle, writes it in the
+      AV's frame, finds the arc from the rear axle through it,
+      :math:`\kappa = 2\sin\alpha / L_d`, and steers
+      :math:`\delta = \arctan(L\kappa)`. On L10's turn, with 5 m: −0.211 rad,
+      a ``VehicleCmd`` steer of −0.173. See Lookahead Distance. L10
 
    Quintic Polynomial Trajectory
-      A 5th-degree polynomial trajectory that matches position, velocity,
-      and acceleration boundary conditions at start and end points,
-      producing smooth, jerk-minimized motion profiles for comfort. L10
+      A speed change whose distance along the path is a polynomial of
+      degree five in time. Its six numbers are fixed by the distance, speed
+      and acceleration at both ends; zero acceleration at both ends means
+      no jolt where braking starts or ends. In L10, slowing from 8 to
+      3.46 m/s without passing 2.0 m/s² takes 3.41 s over 19.5 m, with jerk
+      at most 2.3 m/s³. L10
 
    Stanley Controller
-      A lateral path-following controller (developed for the DARPA Grand
-      Challenge) that computes steering based on both heading error and
-      cross-track error measured at the front axle. More aggressive
-      correction than Pure Pursuit at high cross-track errors. L10
+      The steering law of Stanford's DARPA Grand Challenge car. With
+      steering and :math:`e` positive to the left,
+      :math:`\delta = \psi_e - \arctan\big(k e / (v + k_s)\big)`: the
+      heading error plus a cross-track term, both measured at the **front**
+      axle. :math:`k_s` = 1 m/s keeps the fraction finite when the AV stands
+      still (Hoffmann et al., 2007). L10
+
+   Superstate
+      A state that holds other states. One arrow that leaves it stands for
+      that arrow leaving every state inside it, "the main way statecharts
+      economize in the number of arrows" (Harel, 1987). In L10, the
+      superstate Driving holds the five road behaviors, and one arrow to
+      Emergency stop replaces five. L10
+
+   Tick
+      The signal a behavior tree's root sends down the tree, again and
+      again: "A node is executed if and only if it receives ticks"
+      (Colledanchise and Ögren, 2018). A ticked node answers Running,
+      Success or Failure. L10's road tree ticks every 0.1 s. L10
 
 .. raw:: html
 
-   <p class="glossary-also">Also used here: <a href="#term-Bicycle-Model" target="_blank" rel="noopener">Bicycle Model</a> (L9), <a href="#term-Frenet-Frame" target="_blank" rel="noopener">Frenet Frame</a> (L9).</p>
+   <p class="glossary-also">Also used here: <a href="#term-Base-Link" target="_blank" rel="noopener">Base Link</a> (L3), <a href="#term-Behavior-Layer" target="_blank" rel="noopener">Behavior Layer</a> (L9), <a href="#term-Bicycle-Model" target="_blank" rel="noopener">Bicycle Model</a> (L9), <a href="#term-Curvature" target="_blank" rel="noopener">Curvature</a> (L7), <a href="#term-Finite-State-Machine-FSM" target="_blank" rel="noopener">Finite State Machine (FSM)</a> (L9), <a href="#term-Frenet-Frame" target="_blank" rel="noopener">Frenet Frame</a> (L9), <a href="#term-Lateral-Control" target="_blank" rel="noopener">Lateral Control</a> (L1), <a href="#term-Longitudinal-Control" target="_blank" rel="noopener">Longitudinal Control</a> (L1), <a href="#term-Path" target="_blank" rel="noopener">Path</a> (L7), <a href="#term-Trajectory" target="_blank" rel="noopener">Trajectory</a> (L7).</p>
 
 
 .. _g-l11:
@@ -3469,6 +3558,11 @@ Other Terms
 ===========
 
 .. glossary::
+
+   B-Spline
+      A piecewise polynomial curve with local control point support, used
+      for smooth trajectory representation in motion planning. Changes to
+      one control point only affect a local segment of the curve.
 
    Diffusion-Based Planning
       Motion planning via iterative denoising of trajectories, learned
