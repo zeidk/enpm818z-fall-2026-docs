@@ -4,9 +4,9 @@ References
 
 These are the sources of the L9 deck, grouped by the lecture's sections, in
 the order the lecture first uses each one. A source used in several
-sections is listed once, where the lecture first uses it. The Behavior
-section uses no new source. One source is used only in the appendix
-(:doc:`l9_appendix`); it has its own group at the end.
+sections is listed once, where the lecture first uses it. Two sources are
+used only in the appendix (:doc:`l9_appendix`); they have their own group at
+the end.
 
 .. dropdown:: Introduction
    :class-container: sd-border-secondary
@@ -32,7 +32,9 @@ section uses no new source. One source is used only in the appendix
          together with the car's heading". Route planning: the AV "must
          select a route through the road network from its current position
          to the requested destination". The survey separates a path from a
-         trajectory, which adds times.
+         trajectory, which adds times. The lecture's title, motion planning,
+         is what the survey calls the local planner's job: finding a path
+         the AV can drive, free of collisions.
 
       .. grid-item-card:: A*
          :link: https://doi.org/10.1109/TSSC.1968.300136
@@ -111,6 +113,31 @@ section uses no new source. One source is used only in the appendix
          obstacle region.
 
 
+.. dropdown:: Collision Checking
+   :class-container: sd-border-secondary
+   :open:
+
+   The localization error bound behind the 0.3 m margin.
+
+   .. grid:: 1 1 2 2
+      :gutter: 2
+
+      .. grid-item-card:: Localization requirements
+         :link: https://doi.org/10.4271/12-02-03-0012
+         :class-card: sd-border-secondary
+
+         **Reid, T. G. R., Houts, S. E., Cammarata, R., Mills, G., Agarwal,
+         S., Vora, A. and Pandey, G. (2019)**
+
+         "Localization Requirements for Autonomous Vehicles". *SAE
+         International Journal of Connected and Automated Vehicles*, 2(3),
+         173 to 190. doi:10.4271/12-02-03-0012. arXiv:1906.01061.
+
+         The error bound, "the allowable maximum position error of the
+         vehicle to ensure it is within the lane": 0.29 m on a local street.
+         The lecture rounds it to 0.3 m, the margin of the collision check.
+
+
 .. dropdown:: The Frenet Frame
    :class-container: sd-border-secondary
    :open:
@@ -133,7 +160,10 @@ section uses no new source. One source is used only in the appendix
 
          Trajectories for street driving, planned in a Frenet frame along
          the road: the frame of the Frenet Frame and Sampling Paths
-         sections.
+         sections. The authors "generate a one-dimensional trajectory for
+         both the root point :math:`\vec{r}` along the center line and the
+         perpendicular offset :math:`d`"; their root point is the lecture's
+         foot point.
 
 
 .. dropdown:: Sampling Paths
@@ -164,31 +194,6 @@ section uses no new source. One source is used only in the appendix
          center and shifted sideways; its behavior layer was a finite state
          machine with 13 states (Behavior); and it used hybrid A* in parking
          lots (Garage Planners).
-
-
-.. dropdown:: Collision Checking
-   :class-container: sd-border-secondary
-   :open:
-
-   The localization error bound behind the 0.3 m margin.
-
-   .. grid:: 1 1 2 2
-      :gutter: 2
-
-      .. grid-item-card:: Localization requirements
-         :link: https://doi.org/10.4271/12-02-03-0012
-         :class-card: sd-border-secondary
-
-         **Reid, T. G. R., Houts, S. E., Cammarata, R., Mills, G., Agarwal,
-         S., Vora, A. and Pandey, G. (2019)**
-
-         "Localization Requirements for Autonomous Vehicles". *SAE
-         International Journal of Connected and Automated Vehicles*, 2(3),
-         173 to 190. doi:10.4271/12-02-03-0012. arXiv:1906.01061.
-
-         The error bound, "the allowable maximum position error of the
-         vehicle to ensure it is within the lane": 0.29 m on a local street.
-         The lecture rounds it to 0.3 m, the margin of the collision check.
 
 
 .. dropdown:: Behavior
@@ -262,15 +267,55 @@ section uses no new source. One source is used only in the appendix
          International Journal of Robotics Research*, 30(7), 846 to 894.
          doi:10.1177/0278364911406761. arXiv:1105.1186.
 
-         Used in the appendix: the two proved results of "RRT*: the Path
-         Keeps Getting Shorter", and "Theorem 33 (Non-optimality of RRT) The
-         RRT algorithm is not asymptotically optimal".
+         The two proved results of "RRT*: the Path Keeps Getting Shorter",
+         and, in "RRT and RRT* in Words", the "nearby" radius that shrinks as
+         the tree grows and "Theorem 33 (Non-optimality of RRT) The RRT
+         algorithm is not asymptotically optimal".
+
+
+.. dropdown:: Next Class
+   :class-container: sd-border-secondary
+   :open:
+
+   Where learning fits in the lecture's picture.
+
+   .. grid:: 1 1 2 2
+      :gutter: 2
+
+      .. grid-item-card:: End-to-end driving
+         :link: https://doi.org/10.1109/TPAMI.2024.3435937
+         :class-card: sd-border-secondary
+
+         **Chen, L., Wu, P., Chitta, K., Jaeger, B., Geiger, A. and Li, H.
+         (2024)**
+
+         "End-to-End Autonomous Driving: Challenges and Frontiers". *IEEE
+         Transactions on Pattern Analysis and Machine Intelligence*, 46(12),
+         10164 to 10183. doi:10.1109/TPAMI.2024.3435937. arXiv:2306.16927.
+
+         The definition of end-to-end driving: "We define end-to-end
+         autonomous driving systems as fully differentiable programs that
+         take raw sensor data as input and produce a plan and/or low-level
+         control actions as output".
+
+      .. grid-item-card:: Tesla's end-to-end FSD
+         :link: https://digitalassets.tesla.com/tesla-contents/image/upload/IR/TSLA-Q1-2024-Update.pdf
+         :class-card: sd-border-secondary
+
+         **Tesla (2024)**
+
+         *Q1 2024 Update.* Shareholder update, 23 April 2024. Accessed 24
+         October 2026.
+
+         The source for "In 2024, Tesla said its FSD runs on end-to-end
+         neural networks".
 
 
 .. dropdown:: Used Only in the Appendix
    :class-container: sd-border-secondary
 
-   The curves hybrid A* tries at the goal, from :doc:`l9_appendix`.
+   Markov decision processes and the curves hybrid A* tries at the goal,
+   from :doc:`l9_appendix`.
 
    .. grid:: 1 1 2 2
       :gutter: 2
@@ -288,6 +333,19 @@ section uses no new source. One source is used only in the appendix
          The shortest curve to a goal pose for a car that drives forward
          and backward. Hybrid A* tries one as a single piece near the goal;
          the course's version tries a straight reverse instead.
+
+      .. grid-item-card:: Markov decision processes
+         :link: http://incompleteideas.net/book/the-book-2nd.html
+         :class-card: sd-border-secondary
+
+         **Sutton, R. S. and Barto, A. G. (2018)**
+
+         *Reinforcement Learning: An Introduction*, 2nd edition. The MIT
+         Press, Cambridge, Massachusetts.
+
+         The definition of a Markov decision process (p. 47) and of a
+         partially observable one (p. 467), used in "Behavior as an MDP" on
+         the Going Further page.
 
 
 
