@@ -5,10 +5,27 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.26.4: GP3 Dates Moved (2026-11-02)
+.. dropdown:: v2.27.0: Lecture 9 Topics and Two Glossary Terms (2026-11-11)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **Lectures table:** the L9 row now lists the limits on how the AV
+     moves, the lane change as a game (Nash equilibrium), MDPs beside finite
+     state machines, and RRT* beside RRT.
+
+   .. rubric:: Glossary
+
+   - **End-to-End Driving:** moved to the L9 section, with the definition
+     from Chen et al. (2024). L11 links to it.
+   - **Markov Decision Process (MDP):** new, in the L9 section.
+
+
+.. dropdown:: v2.26.4: GP3 Dates Moved (2026-11-02)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Assignments
 
