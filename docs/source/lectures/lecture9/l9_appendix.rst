@@ -22,23 +22,23 @@ Going Further
    * - **Section**
      - **What it adds to the lecture**
    * - :ref:`l9-app-cspace`
-     - The region the base link must avoid, worked for two boxes.
+     - The region the base link must avoid, worked for two boxes, and where
+       it lies on our road.
    * - :ref:`l9-app-frenet`
      - A path's position, heading and curvature from :math:`(s, d)`.
+   * - :ref:`l9-app-frenet-fails`
+     - Tight turns, and what to do there.
    * - :ref:`l9-app-scurve`
      - How hard a candidate turns, by hand; the S curve's polynomial, and
        where 5.77 comes from.
    * - :ref:`l9-app-circles`
      - How the radius changes with the number of circles.
-   * - :ref:`l9-app-grid`
-     - Grid search in the garage, with no heading, and on a small grid,
-       step by step.
+   * - :ref:`l9-app-mdp`
+     - The lane change with a chance that the other car yields, and when the
+       AV should go.
    * - :ref:`l9-app-hybrid`
-     - Hybrid A*'s six steps, its estimates of cost to go, and the direct
-       try at the goal.
-   * - :ref:`l9-app-rrt`
-     - How RRT* shortens the path; RRT's goal test and settings, and why RRT
-       is not optimal.
+     - The two estimates of cost to go, and the direct try at the goal, from
+       Dolgov et al.
 
 The sources for these sections are on :doc:`the References page
 <l9_references>`.
@@ -49,8 +49,9 @@ The sources for these sections are on :doc:`the References page
 C-Space for Two Boxes
 ---------------------
 
-This section continues "Step 1: Grow the Obstacle, for One AV Heading" in
-the Configuration Space section of the :doc:`lecture <l9_lecture>`.
+This section continues "Step 1: Grow the Obstacle, for One AV Heading" and
+"Step 2: the AV Becomes a Point" in the Configuration Space section of the
+:doc:`lecture <l9_lecture>`.
 
 The Region the Base Link Must Avoid, in General
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -102,8 +103,9 @@ obstacle, is free.
 The Frenet Formulas
 -------------------
 
-This section continues "Back from (s, d) to the Map" and "Where the Frenet
-Frame Fails" in the Frenet Frame section of the :doc:`lecture <l9_lecture>`.
+This section continues "Back from (s, d) to the Map" in the Frenet Frame
+section of the :doc:`lecture <l9_lecture>`. The next section, "Where the
+Frenet Frame Fails", uses its formulas.
 
 Position, Heading and Curvature of a Path in (s, d)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -132,10 +134,109 @@ Two special cases:
 - Straight reference (:math:`\kappa` = 0):
   :math:`\kappa_p = d'' / (1 + d'^2)^{3/2}`.
 
+The sign of :math:`d` in Step 3, by hand: :math:`P - F` = (0.004, −0.300) m;
+the piece :math:`AB` heads 0.705°, so its left direction is :math:`n` =
+(−0.012, 1.000), and :math:`d = n \cdot (P - F)` = (−0.012)(0.004) +
+(1.000)(−0.300) = −0.300 m.
+
 In class, Step 3 used the direction of the piece :math:`AB` (0.705°). The
 way back used the reference's heading at :math:`s` = 118 m, smoothed over
 its neighbors (0.81°). The difference moves the point by
 3.5 × sin 0.1° = 0.006 m.
+
+
+.. _l9-app-frenet-fails:
+
+Where the Frenet Frame Fails
+----------------------------
+
+This section continues "Where the Frenet Frame Leaves Us" at the end of the
+Frenet Frame section of the :doc:`lecture <l9_lecture>`.
+
+Where the Frenet Frame Fails
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+On a curve, the lines across the road (constant :math:`s`) all meet at the
+curve's center.
+
+.. figure:: /_static/images/L9/frenet_fails.png
+   :alt: A tight left turn drawn to scale: a straight piece of the two lanes, the right lane pale yellow with the reference as a thick black line, the left lane pale purple, then a quarter circle turning left. Dashed lines cross the road every 2 meters of the reference: vertical and parallel on the straight, and on the curve all running to one black dot, the curve's center, tag 1. Three white circles sit on the reference, each on one of those lines, at the same distance from the center; past the road's edge, their labels read F, s = 2 m, F, s = 6 m and F, s = 10 m. An arrow labeled R = 8 m runs from the center down to the reference. An orange box on the inside of the left lane, near its inner edge, holds the part where the dashed lines are closest together; tag 2 points at it.
+   :width: 70%
+   :align: center
+
+   A tight left turn in the Frenet frame.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   A turn with :math:`R` = 8 m, chosen for the example, drawn to scale. The
+   right lane is pale yellow, with the reference as a thick black line; the
+   left lane is pale purple.
+
+   - **Dashed lines:** a line across the road every 2 m of :math:`s`,
+     counted from the start of the turn. On the straight they are parallel;
+     on the curve they all run to one point.
+   - **Tag 1:** the curve's center, 8 m from the reference (the arrow
+     labeled :math:`R` = 8 m).
+   - **White circles,** labeled :math:`F`: three points of the reference, at
+     :math:`s` = 2, 6 and 10 m.
+   - **Tag 2,** the orange box: the inside of the left lane, near its inner
+     edge, where the dashed lines are closest together.
+
+1. Tag 1 is the curve's center. Every point of the curved reference is
+   :math:`R` from it, so every one of them is its foot point (its nearest
+   point on the reference). The figure marks three of them as :math:`F`, at
+   :math:`s` = 2, 6 and 10 m. The center's :math:`s` could be any of them,
+   so the frame cannot place it.
+2. Tag 2: closer to tag 1, the lines across crowd together. The formulas for
+   a path's heading and curvature divide by their spacing, the factor
+   :math:`1 - d/R`, written :math:`1 - \kappa d` with :math:`\kappa = 1/R`
+   in :ref:`l9-app-frenet`. The factor shrinks to 0 at tag 1, and the
+   formulas break.
+3. On our road the paths stay far from the curves' centers, so the frame
+   works everywhere.
+
+.. admonition:: When the Frenet frame fails
+   :class: important
+
+   A tight turn with a path far to its inside, as at a junction.
+
+.. _l9-app-frenet-fix:
+
+On a Tight Turn: Change the Reference, or Drop It
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Goal: keep :math:`1 - d/R` well above 0 where the road turns tightly.
+
+.. figure:: /_static/images/L9/frenet_fix.png
+   :alt: The tight left turn of the last figure, drawn twice side by side, to scale, with the curve's center as a black dot. Panel 1: the reference is a thick black line on the right lane's center; the AV's path, green, runs on the left lane's center; an arrow labeled d = 3.5 m goes across from the reference to the path in the middle of the turn. Panel 2: the reference, thick black, now runs on the left lane's center, and the green path lies on it, dashed over it; label d = 0.
+   :width: 90%
+   :align: center
+
+   The same path with two references.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   The turn of the last figure, :math:`R` = 8 m (chosen). The thick black
+   line is the reference, the green line is the AV's path, and the dot is
+   the curve's center.
+
+   - **Tag 1:** the reference on the right lane's center; the path on the
+     left lane's center, :math:`d` = 3.5 m from it.
+   - **Tag 2:** the reference on the left lane's center; the path lies on
+     it, :math:`d` = 0.
+
+1. **Change the reference.** In tag 1, the reference is the right lane's
+   center and the AV turns in the left lane, 3.5 m to the side:
+   1 − 3.5 / 8 = 0.56, and it falls toward 0 as :math:`d` nears 8 m. In
+   tag 2, the reference is the left lane's own center line (the map stores
+   one for every lane), with radius 8 − 3.5 = 4.5 m. The same path is now at
+   :math:`d` = 0: 1 − 0 / 4.5 = 1.
+2. **Drop the reference.** Plan in :math:`(x, y, \theta)` directly, as the
+   :ref:`garage planners <l9-lec-garage>` do. It works anywhere, but a lane
+   is no longer a band of :math:`d`: the search must follow the road's shape
+   itself.
 
 
 .. _l9-app-scurve:
@@ -144,8 +245,9 @@ The S Curve
 -----------
 
 This section continues "Step 1: One Candidate, a Smooth Move Sideways" and
-"How Hard a Candidate Turns, by Hand" in the Sampling Paths section of the
-:doc:`lecture <l9_lecture>`.
+"Step 2: Drop Paths That Collide or Turn Too Hard" in the Sampling Paths
+section of the :doc:`lecture <l9_lecture>`. The Next Class section asks you
+to read it before the next lecture.
 
 .. _l9-app-how-hard:
 
@@ -217,8 +319,9 @@ a bend. The code then fits a fifth-degree polynomial to :math:`d`,
 More or Fewer Circles
 ---------------------
 
-This section continues "Step 1: the Radius and the Centers, by Hand" in the
-Collision Checking section of the :doc:`lecture <l9_lecture>`.
+This section continues "Cover the AV with Three Circles" and "Step 1: the
+Radius and the Centers, by Hand" in the Collision Checking section of the
+:doc:`lecture <l9_lecture>`.
 
 The Radius for n Circles, and What Each Circle Costs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -262,146 +365,55 @@ One circle would make the AV 4.9 m wide. Going from 3 to 4 circles saves
 0.106 m per side for 7 more distances.
 
 
-.. _l9-app-grid:
+.. _l9-app-mdp:
 
-Grid Search
------------
+Behavior as an MDP
+------------------
 
-This section continues "The Garage: No Lane to Follow" in the Garage
-Planners section of the :doc:`lecture <l9_lecture>`.
+This section continues "Two Equilibria: the AV Goes First Only When It Is
+Sure" and "FSM, Game and MDP: Three Tools That Work Together" in the Behavior
+section of the :doc:`lecture <l9_lecture>`.
 
-.. _l9-app-grid-garage:
-
-Grid Search on the Whole Garage
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. figure:: /_static/images/L9/garage_grid.png
-   :alt: The garage top view, x and y in meters, with a light rust band around every obstacle, the parked cars and the walls: cells the AV's base link may not enter. A green line of small squares leaves the AV at the left along the aisle, steps up in short diagonal pieces, then turns straight up into the free spot of the top row and ends where the goal is.
-   :width: 70%
-   :align: center
-
-   Grid search's path through the garage.
-
-.. admonition:: Reading the figure
-   :class: tip
-
-   - **Light rust band,** around every obstacle, the parked cars and the
-     walls: the cells the AV's base link may not enter.
-   - **Green line of small squares:** the path, one square per cell. It
-     leaves the AV along the aisle, steps up in short diagonal pieces, then
-     turns straight up into the free spot and ends at the goal.
-
-Grid search moves from cell to cell. The settings:
-
-- cells of 0.5 m;
-- each obstacle and wall grown by 1.05 m (rust): half the AV's width plus a
-  0.1 m margin, chosen for the garage;
-- eight neighbors per cell;
-- A* with the straight-line distance to the goal as its estimate.
-
-Result: 514 cells expanded, a 27.4 m path.
-
-- The path has 9 corners of 45°: the heading would jump at each one.
-- The search knows no heading, so it cannot place the 4.5 m body. The
-  obstacles grow only by half the AV's width, and the path ends nose first,
-  not backed in.
-
-
-Grid Search, Step 1: Count the Steps from the Start
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. figure:: /_static/images/L9/toy_wavefront.png
-   :alt: A grid of 5 rows and 7 columns. Blue cells are obstacles (parked cars): the top two rows except the fourth column, and the bottom row except the third and fourth columns. White cells hold numbers. Tag 1 marks the start cell, row 4 at the left, holding a bold 0. Its row reads 0 to 6 from left to right; the row above reads 1 to 7. The bottom row's free cells read 3 and 4. The fourth column above reads 5, then a bold 6 at the top: the goal, tag 2.
-   :width: 55%
-   :align: center
-
-   The number of steps from the start, in every free cell.
-
-.. admonition:: Reading the figure
-   :class: tip
-
-   A grid of 5 rows and 7 columns. Blue cells are obstacles (parked cars);
-   each white cell holds its number of steps from the start.
-
-   - **Tag 1:** the start cell, holding a bold 0. Its row reads 0 to 6 from
-     left to right, and the row above reads 1 to 7.
-   - **Tag 2:** the goal, at the top of the fourth column, holding a bold 6.
-
-A piece of the garage as a grid, chosen for this example. Blue cells are
-taken. The AV may step to one of the four neighbors of its cell.
-
-1. Write 0 in the start cell (tag 1).
-2. Write 1 in each free neighbor of a 0, then 2 in each empty free neighbor
-   of a 1, and so on.
-3. Stop when the goal cell (tag 2) gets a number: 6.
-
-This is Dijkstra's algorithm with every step costing 1.
-
-Grid Search, Step 2: Walk Back from the Goal
+The Lane Change as a Markov Decision Process
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. figure:: /_static/images/L9/toy_path.png
-   :alt: The same grid with the path shaded green: from the start cell 0 right through 1, 2 and 3 along the row, then up through 4, 5 and 6 to the goal in the top row.
-   :width: 55%
-   :align: center
+.. admonition:: Definition: Markov decision process (MDP)
+   :class: note
 
-   The path, read back from the goal.
+   States, actions, and, for each state and action, the chances of each next
+   state and its reward. The next state depends only on the current state and
+   action. "MDPs are a classical formalization of sequential decision making,
+   where actions influence not just immediate rewards, but also subsequent
+   situations, or states, and through those future rewards" (Sutton and
+   Barto, 2018, p. 47; see :doc:`the References page <l9_references>`).
 
-.. admonition:: Reading the figure
-   :class: tip
+The game assumed the AV knows nothing about the other car. In an MDP,
+prediction gives the chance :math:`p` that the other car yields. Costs are the
+game's delays, in seconds (chosen).
 
-   The same grid. The green cells are the path: from the start (0) right
-   through 1, 2 and 3 along the row, then up through 4, 5 and 6 to the goal.
+1. Wait: 3, whatever the other car does.
+2. Go: 0 if the car yields (chance :math:`p`), 100 if it keeps its speed
+   (chance :math:`1 - p`). On average: 100 × (1 − :math:`p`).
+3. Go costs less on average when 100 × (1 − :math:`p`) < 3, so when
+   :math:`p` > 1 − 3 / 100 = 0.97.
 
-4. From the goal (6), step to a neighbor holding 5, then 4, and so on down
-   to 0. Where two neighbors tie, either one gives a 6-step path.
-5. Read it forward: right 3 cells, then up 3 cells.
+So "go first only when sure" means: go only when prediction gives the yield
+more than a 97 % chance. This counts one decision; a longer MDP also weighs
+waiting a second to see.
 
-.. important::
-
-   The path turns 90° inside one cell. A cell has no heading, so the search
-   does not know that the AV cannot turn on the spot.
+The other driver's intent is a state the AV never sees, only its effects. An
+MDP with such a state is a partially observable MDP (POMDP): the true state
+"underlies and produces the environment's observations, but is never
+available to the agent" (Sutton and Barto, 2018, p. 467).
 
 
 .. _l9-app-hybrid:
 
-Hybrid A*
----------
+Hybrid A*'s Estimates
+---------------------
 
 This section continues "Hybrid A*, Steps 1 to 3: Expand a Pose and Check It"
 in the Garage Planners section of the :doc:`lecture <l9_lecture>`.
-
-.. _l9-app-hybrid-1-3:
-
-Hybrid A*, Steps 1 to 3: Expand a Pose and Check It
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-1. Take the pose with the lowest cost so far plus estimated cost to go, as
-   in A*.
-2. Drive the 10 arcs from it (5 steering angles, forward and reverse),
-   0.75 m each.
-3. Check each new pose with the three circles; drop the ones that hit an
-   obstacle (a car or a wall).
-
-
-.. _l9-app-hybrid-4-6:
-
-Hybrid A*, Steps 4 to 6: Cells, Cost and the Goal
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-4. Find the new pose's cell: 0.5 m by 0.5 m by 7.5° of heading. If the cell
-   already holds an expanded pose, drop the new one; if not, store the
-   **exact** pose there.
-5. Its cost: the length driven, doubled in reverse, plus 4 (as much as 4 m
-   driven) for each change of direction (all chosen).
-6. Near the goal, try to reverse straight onto the goal pose; if the circles
-   say it is free, stop.
-
-.. important::
-
-   The cells only keep the search from expanding the same place again. The
-   path is made of the stored exact poses, so it has no jumps.
-
 
 The Estimates of Cost to Go, and the Direct Try at the Goal
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -422,63 +434,10 @@ Dolgov et al. (2008): "Our search algorithm is guided by two heuristics".
    goal pose, forward and backward, tried as one piece.
 
 **The course's version** uses the larger of two estimates: the straight-line
-distance, and a 2-D grid distance around the obstacles. It tries a straight
+distance, and a 2-D grid distance around the cars. It tries a straight
 reverse onto the goal instead of Reeds and Shepp's curves. On an 8-neighbor
 grid the second estimate can be a little long, so the path found is not
 guaranteed shortest.
 
 Settings: 0.75 m arcs, 5 steering angles, cells of 0.5 m and 7.5°; reverse
 length counts double, plus 4 per change of direction.
-
-
-.. _l9-app-rrt:
-
-RRT and RRT*
-------------
-
-This section continues "RRT*: the Path Keeps Getting Shorter" in the Garage
-Planners section of the :doc:`lecture <l9_lecture>`.
-
-.. _l9-app-rrt-star:
-
-RRT*: the Path Keeps Getting Shorter
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Two proved results (Karaman and Frazzoli, 2011, on :doc:`the References page
-<l9_references>`):
-
-- As plain RRT adds nodes, its path's length settles on a value above the
-  shortest.
-- With RRT*, the path's length tends to the shortest as the tree grows.
-
-What RRT* adds to each new node:
-
-1. **Choose a parent:** among the tree's nodes near it, connect it to the
-   one that gives it the shortest path from the start, not just the nearest.
-2. **Rewire:** for each nearby node, if going through the new node is
-   shorter, change that node's parent.
-
-.. important::
-
-   RRT keeps the first path it finds. RRT* pays for a shorter path with more
-   distance checks per node.
-
-
-RRT and RRT* in Words
-~~~~~~~~~~~~~~~~~~~~~
-
-**RRT**, one try, as in class, with the garage run's settings:
-
-1. The random point is the goal itself 5 times in 100; a step is at most
-   1.5 m.
-2. A free step's new node keeps the node it grew from as its parent.
-3. Once a new node is within 1.5 m of the goal, follow the parents back to
-   the start.
-
-**RRT\*** chooses a parent and rewires, as in class, among the nodes within a
-"nearby" radius that shrinks as the tree grows (Karaman and Frazzoli, 2011).
-
-.. important::
-
-   "Theorem 33 (Non-optimality of RRT) The RRT algorithm is not
-   asymptotically optimal" (Karaman and Frazzoli, 2011).

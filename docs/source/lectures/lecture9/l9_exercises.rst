@@ -11,15 +11,15 @@ Exercises
    work, which is the five in-class quizzes and the four group projects
    listed in the :doc:`syllabus </syllabus/index>`.
 
-Seven take-home exercises, then three in-class ones, built on the Lecture 9 notes, :doc:`l9_lecture`,
-and on the lecture's Town03 road and garage. They use only the lecture,
+Seven take-home exercises, then three in-class ones, built on the Lecture 9
+notes, :doc:`l9_lecture`, and on the lecture's Town03 road and garage. They use only the lecture,
 never :doc:`Going Further <l9_appendix>`. Exercise 1 grows the obstacle
 for another AV. Exercise 2 converts points between the map and the Frenet
 frame. Exercises 3 and 4 check and score candidate paths, and Exercise 5
 checks poses with circles. Exercise 6 runs the valet's state machine, and
 Exercise 7 compares the garage planners. Two exercises end with a check in
 the lecture's hands-on window. Exercises 8 to 10 are done in class: a
-spreadsheet, a cost term in Python, and a game.
+spreadsheet and two games.
 
 .. note::
 
@@ -27,7 +27,8 @@ spreadsheet, a cost term in Python, and a game.
    ``l9_handson.py`` and ``l9common.py`` from folder ``lecture9`` of the
    course's Python repository, and no CARLA server (see :doc:`l9_code`).
 
-   **The scene:** one road of Town03, two lanes each way, 3.5 m wide. The
+   **The scene:** one road of Town03, with two lanes, 3.5 m wide,
+   that run the same way. The
    reference path is the right lane's center; :math:`s` is the distance
    along it and :math:`d` the distance across it, positive to the left. The
    AV drives at 10 m/s on the right lane's center at :math:`s` = 60 m. The
@@ -57,8 +58,8 @@ spreadsheet, a cost term in Python, and a game.
    The new AV is 5.0 m long and 2.0 m wide, with its base link 1.0 m in from
    its rear bumper (all chosen for this exercise). It heads along the lane,
    the same way as the lecture's obstacle (4.5 m by 1.9 m). Use the three
-   overlap conditions of "Step 1: Grow the Obstacle" in the lecture: from
-   behind, from ahead and across.
+   overlap conditions of "Step 1: Grow the Obstacle, for One AV Heading"
+   in the lecture: from behind, from ahead and across.
 
    .. raw:: html
 
@@ -137,7 +138,7 @@ spreadsheet, a cost term in Python, and a game.
    **Goal**
 
    Convert a point from the map to :math:`(s, d)` and another one back, with
-   the lecture's three steps, and check where the frame holds.
+   the lecture's three steps.
 
    .. raw:: html
 
@@ -179,21 +180,9 @@ spreadsheet, a cost term in Python, and a game.
 
       <hr>
 
-   **Part C. Where the frame holds**
-
-   5. On the lecture's tightest curve, :math:`R` = 61.9 m, what is
-      :math:`1 - \kappa d` at the left lane's left edge, :math:`d` = 5.25 m?
-   6. At a junction, a left turn has :math:`R` = 10 m (chosen for this
-      exercise). What is :math:`1 - \kappa d` at :math:`d` = 3.5 m? At which
-      :math:`d` does the frame fail?
-
-   .. raw:: html
-
-      <hr>
-
    **Deliverable**
 
-   The answers to questions 1 to 6, with the arithmetic, and the hands-on
+   The answers to questions 1 to 4, with the arithmetic, and the hands-on
    check below.
 
    **Check in the hands-on.** Run ``python3 l9_handson.py --part scene``,
@@ -233,12 +222,6 @@ spreadsheet, a cost term in Python, and a game.
 
       This is the lane line beside the obstacle. The script gives
       (155.661, −205.385); the title rounds it to (155.66, −205.39).
-
-      Question 5: 1 − 5.25 / 61.9 = 1 − 0.085 = 0.915, well above 0.
-
-      Question 6: 1 − 3.5 / 10 = 0.65, still above 0. The frame fails at
-      :math:`d` = 10 m, the curve's center, and the factor gets small well
-      before that: tight turns are where to check it.
 
 
 .. dropdown:: Exercise 3. Which Candidates Turn Too Hard
@@ -717,8 +700,8 @@ spreadsheet, a cost term in Python, and a game.
 In-Class Exercises
 ==================
 
-The three exercises below are done in class, in pairs, at the slides that
-name them. Their answers are here for after class.
+The three exercises below are done in class, at the slides that name them.
+Their answers are here for after class.
 
 .. dropdown:: Exercise 8. In Class: Score Every Candidate in a Spreadsheet
    :icon: number
@@ -727,8 +710,8 @@ name them. Their answers are here for after class.
 
    **Goal**
 
-   Score every candidate the planner keeps, and see how one weight changes
-   the winner.
+   Compute the cost of each candidate yourself, then see how the weights
+   decide which path the AV drives. Work in pairs.
 
    .. raw:: html
 
@@ -736,48 +719,150 @@ name them. Their answers are here for after class.
 
    **Specification**
 
-   Open ``candidates.csv``, in folder ``lecture9`` of the course's Python
-   repository, in Excel, Google Sheets or LibreOffice Calc. It has one row
-   per candidate from the AV at :math:`s` = 60 m: its end offset and
-   maneuver length, its peak sideways acceleration, its smallest gap to the
-   obstacle, the lanes it ends away from the route's lane, how far it ends
-   from a lane center, and the meters of the 70 m it does not cover. The
-   ``dropped`` column names the 22 paths the planner removes before scoring.
-   The weights are the lecture's: comfort 2, clearance 4, lane 2 per lane
-   and 2 per m off center, progress 0.5.
+   Open ``candidates.csv`` (folder ``lecture9`` of the course's Python
+   repository, see :doc:`l9_code`) in Excel, Google Sheets or LibreOffice
+   Calc. It has 31 rows, one per candidate from the AV at :math:`s` = 60 m,
+   with the numbers the cost needs and no costs. Candidate A is the row named
+   ``d_end 3.5 m, 40 m``. Know each column before you score with it:
 
-   1. Put the five weights in cells of their own.
-   2. Add one column per cost term and a total, for the 9 rows the planner
-      keeps.
-   3. Sort by the total. Is A (3.5 m over 40 m) first, at 5.07?
-   4. Set the clearance weight to 10 and sort again. Which path wins, and
-      where does it end?
-   5. Set the progress weight to 0. What does the AV do now, and why?
+   .. list-table::
+      :widths: 26 44 14 16
+      :header-rows: 1
+      :class: compact-table
 
-   .. dropdown:: Guidance
+      * - **Column**
+        - **What it holds**
+        - **Cost term**
+        - **Row of A**
+      * - ``name``
+        - the end offset and length, or ``stop behind``
+        -
+        - ``d_end 3.5 m, 40 m``
+      * - ``d_end_m``
+        - where the path ends across the road (m)
+        -
+        - 3.5
+      * - ``maneuver_m``
+        - the maneuver length (m); empty for stop behind
+        -
+        - 40.0
+      * - ``peak_lat_accel_mps2``
+        - the largest sideways acceleration (m/s²)
+        - comfort
+        - 1.253
+      * - ``smallest_gap_m``
+        - the smallest circle-to-circle gap (m); under 0: overlap
+        - clearance
+        - 1.359
+      * - ``lanes_away``
+        - 0 if the path ends in the route's lane, 1 if one lane over
+        - lane
+        - 1
+      * - ``off_center_m``
+        - meters from the nearest lane center, at the end
+        - lane
+        - 0.0
+      * - ``not_covered_m``
+        - meters of the 70 m ahead not covered
+        - progress
+        - 0.0
+      * - ``dropped``
+        - ``collision``, ``too sharp``, or empty (kept)
+        -
+        - empty
+
+   .. raw:: html
+
+      <hr>
+
+   **Part 1. Score every candidate**
+
+   1. Delete the 22 rows whose ``dropped`` column is not empty
+      (``collision`` or ``too sharp``): the planner never scores them. 9 rows
+      remain.
+   2. Type the five weights in cells of their own, outside the 9 rows:
+      comfort 2, clearance 4, lane 2, center 2, progress 0.5. In formulas,
+      refer to them with ``$`` (``$L$2``, not ``L2``), so sorting the rows
+      does not break the totals.
+   3. Add five columns; each formula uses the weight cells and the row's
+      columns:
+
+   .. list-table::
+      :widths: 20 80
+      :header-rows: 1
+      :class: compact-table
+
+      * - **Column**
+        - **Formula**
+      * - comfort
+        - comfort weight × ``peak_lat_accel_mps2``
+      * - clearance
+        - clearance weight × the larger of 0 and (1.5 − ``smallest_gap_m``)
+      * - lane
+        - lane weight × ``lanes_away`` + center weight × ``off_center_m``
+      * - progress
+        - progress weight × ``not_covered_m``
+      * - total
+        - comfort + clearance + lane + progress
+
+   .. raw:: html
+
+      <hr>
+
+   **Part 2. Change the weights, see who wins**
+
+   4. Sort the rows by total, smallest first (LibreOffice Calc: click a cell
+      of the total column, then Data, Sort Ascending). Is the row
+      ``d_end 3.5 m, 40 m`` (candidate A) first, at 5.07?
+   5. Change the clearance weight from 4 to 10 and sort again. Which row is
+      first now? At what :math:`d_\text{end}` does that path end, and why
+      does a larger clearance weight favor it?
+   6. Put the clearance weight back to 4. Change the progress weight from
+      0.5 to 0 and sort again. Which row is first now? What would the AV do,
+      and why?
+
+   .. dropdown:: Answer
       :color: success
 
-      Question 3: yes. A costs 2 × 1.253 + 4 × (1.5 − 1.359) + 2 × 1 +
-      0 = 2.51 + 0.56 + 2.00 + 0 = 5.07.
+      Question 4: yes. A costs 2 × 1.253 + 4 × (1.5 − 1.359) + 2 × 1 +
+      2 × 0 + 0.5 × 0 = 2.51 + 0.56 + 2.00 + 0 = 5.07. The sorted totals are
+      the lecture's ranking: 5.07, 5.86, 6.99, 7.72, 8.04, 9.37, 10.40,
+      11.54 (stop behind) and 11.74.
 
-      Question 4: 4.0 m over 40 m wins at 5.86; A now costs 5.92 (Exercise 4
-      works it out). The winner ends at :math:`d` = 4.0 m, so the AV's left
-      side, 0.95 m to its left, is 5.25 − 4.95 = 0.30 m from the road's
-      center line.
+      Question 5: the row ``d_end 4.0 m, 40 m`` is first, at 5.86; A is
+      second, at 5.92. That path ends at :math:`d_\text{end}` = 4.0 m, 0.5 m
+      left of the left lane's center.
 
-      Question 5: stop behind wins, at 1.62: with no cost for lost progress,
-      its only term is clearance, 4 × (1.5 − 1.096) = 1.62. Every pass costs
-      at least 2.00 for the lane, so the AV waits behind the obstacle.
+      1. Its smallest gap is 1.858 m, over 1.5 m, so it pays no clearance at
+         any weight: 2 × 1.428 + 0 + (2 × 1 + 2 × 0.5) = 2.86 + 3.00 = 5.86.
+      2. A's smallest gap, 1.359 m, is 0.141 m short of 1.5 m, so its
+         clearance term grows with the weight: 10 × 0.141 = 1.41, and A costs
+         2.51 + 1.41 + 2.00 = 5.92.
 
-.. dropdown:: Exercise 9. In Class: A Fifth Cost Term
+      A larger clearance weight makes a small gap more expensive, so it
+      favors the path that passes farther from the obstacle, even though that
+      path ends 0.5 m off a lane center and bends a little harder.
+
+      Question 6: ``stop behind`` is first, at 1.62. With a progress weight of
+      0, its 19.85 m of lost progress costs nothing, and its only term is
+      clearance: 4 × (1.5 − 1.096) = 1.62. Every other kept row ends one lane
+      over, so its lane term alone is 2 × 1 = 2.00. The AV would stop behind
+      the obstacle and wait. The progress weight is what makes it pass: at
+      0.5 per meter, stopping costs 0.5 × 19.85 = 9.93.
+
+      All the numbers above come from ``candidates.csv``, scored with the
+      formulas of Part 1.
+
+
+.. dropdown:: Exercise 9. In Class: Find the Nash Equilibria of the Lane Change
    :icon: number
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Add a cost term the planner does not have: keep the AV away from the
-   road's center line, where traffic comes the other way.
+   Find the Nash equilibria of the lane change between the AV and another
+   car, and say what they mean for the AV.
 
    .. raw:: html
 
@@ -785,62 +870,11 @@ name them. Their answers are here for after class.
 
    **Specification**
 
-   The left lane's left edge, at :math:`d` = 3.5 + 1.75 = 5.25 m, is the
-   road's center line. Write ``edge_cost(path)`` in ``l9_exercise.py``, the
-   same way the clearance term works: 4 per meter that the gap from the
-   AV's left side to the center line falls under 1.5 m, at the path's worst
-   point. ``path["d"]`` holds the AV's :math:`d` at every point of the path;
-   the AV's left side is half its width, 0.95 m, to the left of it.
-
-   1. Run ``python3 l9_check.py`` until its five checks pass.
-   2. Run ``python3 l9_handson.py --part sample --extra``. Which path wins,
-      and at what cost?
-   3. Set ``W_EDGE`` to 10 and run it again. Which path wins now, and what
-      does the AV give up for it?
-
-   .. dropdown:: Guidance
-      :color: success
-
-      One way to write it:
-
-      .. code-block:: python
-
-         def edge_cost(path):
-             gap = EDGE_D - (float(np.max(path["d"])) + HALF_WIDTH)
-             return W_EDGE * max(0.0, EDGE_SOFT - gap)
-
-      Question 2: A still wins. Its left side ends 5.25 − (3.5 + 0.95) =
-      0.80 m from the line, so its edge cost is 4 × (1.5 − 0.80) = 2.80 and
-      its total 5.07 + 2.80 = 7.87. Next comes 3.0 m over 40 m, at 7.72 +
-      4 × (1.5 − 1.30) = 8.52.
-
-      Question 3: with ``W_EDGE`` at 10, A costs 5.07 + 10 × 0.70 = 12.07,
-      and 3.0 m over 40 m wins at 7.72 + 10 × 0.20 = 9.72. To keep 1.30 m
-      from oncoming traffic instead of 0.80 m, the AV passes the obstacle
-      with a smallest gap of 0.86 m instead of 1.36 m: it trades one
-      clearance for the other.
-
-.. dropdown:: Exercise 10. In Class: The Lane Change as a Game
-   :icon: number
-   :class-container: sd-border-primary
-   :class-title: sd-font-weight-bold
-
-   **Goal**
-
-   Find the Nash equilibria of the lane change, and say what they mean for
-   the behavior layer.
-
-   .. raw:: html
-
-      <hr>
-
-   **Specification**
-
-   The AV chooses to go (move into the left lane now) or wait (stop behind
-   the obstacle). The car coming up in the left lane chooses to keep its
-   speed or yield (slow down and let the AV in). Each cell gives the AV's
-   delay, then the other car's, in seconds; a crash costs 100. All numbers
-   are chosen for the lecture.
+   The AV chooses to **go** (move into the left lane now) or **wait** (stop
+   behind the obstacle). The other car, coming up in the left lane, chooses
+   to **keep** its speed or **yield** (slow down and let the AV in). Each
+   cell gives the AV's delay, then the other car's, in seconds; a crash
+   costs 100. All numbers are chosen for the lecture.
 
    .. list-table::
       :widths: 30 35 35
@@ -857,30 +891,114 @@ name them. Their answers are here for after class.
         - 3, 0
         - 3, 2
 
-   A cell is a **Nash equilibrium** when neither the AV nor the other car
-   can lower its own delay by changing only its own choice.
+   A **Nash equilibrium** is "a strategy pair in which no player can
+   achieve a better outcome by changing their strategy while the other
+   player keeps theirs unchanged". Here a strategy is a choice, and the
+   outcome is the delay: lower is better.
 
-   1. For each cell, can the AV lower its delay by switching its row, the
-      other car's choice fixed?
-   2. For each cell, can the other car lower its delay by switching its
-      column, the AV's choice fixed?
-   3. How many Nash equilibria does the game have? What does that mean for
-      the AV?
+   .. raw:: html
 
-   .. dropdown:: Guidance
+      <hr>
+
+   **Instructions**
+
+   For each cell:
+
+   1. Keep the other car's choice as it is. If the AV made its other choice
+      (wait instead of go, or go instead of wait), would its delay be lower?
+   2. Keep the AV's choice as it is. If the other car made its other choice
+      (yield instead of keep, or keep instead of yield), would its delay be
+      lower?
+
+   A cell where both answers are no is a Nash equilibrium. How many does
+   this game have?
+
+   .. dropdown:: Answer
       :color: success
 
-      - (goes, keeps): the AV gains by waiting (3 instead of 100). Not an
-        equilibrium.
-      - (goes, yields): waiting would cost the AV 3 instead of 0, and keeping
-        its speed would cost the other car 100 instead of 2. An equilibrium.
-      - (waits, keeps): going would cost the AV 100 instead of 3, and
-        yielding would cost the other car 2 instead of 0. An equilibrium.
-      - (waits, yields): the other car gains by keeping its speed (0 instead
-        of 2). Not an equilibrium.
+      Two: **AV goes, car yields** and **AV waits, car keeps**.
 
-      Two equilibria, so the game alone does not say which one happens. If
-      the AV moves first and the other car sees it, the car's best answer is
-      to yield, and the AV gets 0; if the car keeps its speed anyway, they
-      crash. So the behavior layer goes first only when prediction says the
-      other car will yield; otherwise it waits, at a cost of 3.
+      - AV goes, car keeps (a crash): the AV gets 3 instead of 100 by
+        waiting, and the car 2 instead of 100 by yielding. Not an
+        equilibrium.
+      - **AV goes, car yields:** if the AV waits instead, its delay goes from
+        0 to 3 s; if the car keeps its speed instead, they crash. Both
+        answers are no: an equilibrium.
+      - **AV waits, car keeps:** if the AV goes instead, they crash; if the
+        car yields instead, its delay goes from 0 to 2 s. Both answers are
+        no: an equilibrium.
+      - AV waits, car yields: the AV gets 0 instead of 3 by going, and the
+        car 0 instead of 2 by keeping its speed. Not an equilibrium.
+
+      Going first is a bet: 0 s if the car yields, but a crash if it keeps
+      its speed. So the AV goes first only when prediction says the car will
+      yield; otherwise it waits, 3 s.
+
+
+.. dropdown:: Exercise 10. In Class: The Prisoner's Dilemma
+   :icon: number
+   :class-container: sd-border-primary
+   :class-title: sd-font-weight-bold
+
+   **Goal**
+
+   Find the Nash equilibrium of the Prisoner's Dilemma, and compare it with
+   the best outcome for the two players together. The same check as in
+   Exercise 9 works on any game of two players.
+
+   .. raw:: html
+
+      <hr>
+
+   **Specification**
+
+   Two suspects, A and B, are questioned in separate rooms. Each one either
+   stays **silent** or **confesses**. Each cell gives their sentences: A's
+   years, then B's (fewer is better).
+
+   .. list-table::
+      :widths: 30 35 35
+      :header-rows: 1
+      :class: compact-table
+
+      * -
+        - **B stays silent**
+        - **B confesses**
+      * - **A stays silent**
+        - A 1, B 1
+        - A 10, B 0
+      * - **A confesses**
+        - A 0, B 10
+        - A 5, B 5
+
+   .. raw:: html
+
+      <hr>
+
+   **Instructions**
+
+   With your neighbor:
+
+   1. For each cell: keep B's choice as it is; would A get fewer years with
+      its other choice? Then keep A's choice as it is; would B? A cell where
+      both answers are no is a Nash equilibrium.
+   2. Which cell is the equilibrium? Is it the best cell for the two of them
+      together?
+
+   .. dropdown:: Answer
+      :color: success
+
+      Both confess, A 5 and B 5: the only Nash equilibrium.
+
+      - Both silent: not an equilibrium. Each suspect gets 0 years instead
+        of 1 by confessing.
+      - A silent, B confesses: A gets 5 years instead of 10 by confessing.
+        Not an equilibrium.
+      - A confesses, B silent: B gets 5 years instead of 10 by confessing.
+        Not an equilibrium.
+      - **Both confess:** if A stays silent instead, A gets 10, not 5; if B
+        does, B gets 10, not 5. Neither gains: an equilibrium.
+
+      It is not the best cell for the two together. Both would get 1 year if
+      both stayed silent, but neither gets there alone: the one who switches
+      to silent alone gets 10.

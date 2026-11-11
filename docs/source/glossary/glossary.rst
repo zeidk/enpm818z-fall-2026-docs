@@ -3041,6 +3041,14 @@ L9 (not yet published)
       :math:`x` axis. L9's AV starts at (97.69 m, −207.29 m, 0.14°). See
       Configuration Space. L9
 
+   End-to-End Driving
+      "We define end-to-end autonomous driving systems as fully
+      differentiable programs that take raw sensor data as input and produce
+      a plan and/or low-level control actions as output" (Chen et al.,
+      2024). An end-to-end driver is one network from the sensors to the
+      plan. In 2024, Tesla said its FSD runs on end-to-end neural networks.
+      L9 · L11
+
    Finite State Machine (FSM)
       A fixed list of states, of which the system is in exactly one at a
       time, and a list of transitions: each one moves the system from one
@@ -3077,6 +3085,13 @@ L9 (not yet published)
       the route and stays clear of every object, and plans it again as the
       AV moves. L9's local planner samples 31 candidate paths every 0.5 s,
       checks them, scores them, and keeps the cheapest. L9
+
+   Markov Decision Process (MDP)
+      States, actions, and, for each state and action, the chances of each
+      next state and its reward. The next state depends only on the current
+      state and action. In L9's lane change, prediction gives the chance
+      :math:`p` that the other car yields: going first costs less on
+      average than waiting 3 s only when :math:`p` > 0.97. L9
 
    Nash Equilibrium
       A choice for each player of a game such that no player can lower its
@@ -3296,11 +3311,6 @@ L11 (not yet published)
       driving policy, producing chain-of-thought scene descriptions
       alongside action outputs. L11
 
-   End-to-End Driving
-      An approach where a single neural network maps raw sensor input
-      directly to driving actions, bypassing the traditional modular
-      pipeline (perception -> planning -> control). L11
-
    Reinforcement Learning (RL)
       Learning by optimizing a reward function through trial and error.
       Used in AV systems for planner fine-tuning (e.g., NVIDIA's
@@ -3320,7 +3330,7 @@ L11 (not yet published)
 
 .. raw:: html
 
-   <p class="glossary-also">Also used here: <a href="#term-Foundation-Model" target="_blank" rel="noopener">Foundation Model</a> (L4).</p>
+   <p class="glossary-also">Also used here: <a href="#term-End-to-End-Driving" target="_blank" rel="noopener">End-to-End Driving</a> (L9), <a href="#term-Foundation-Model" target="_blank" rel="noopener">Foundation Model</a> (L4).</p>
 
 
 .. _g-l12:

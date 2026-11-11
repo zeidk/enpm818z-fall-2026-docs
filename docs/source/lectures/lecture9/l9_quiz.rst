@@ -15,9 +15,10 @@ Quiz
 
 This quiz covers Lecture 9: route, path and trajectory, configuration space
 and the region an obstacle becomes, the tightest and the comfortable turn,
-the Frenet frame and where it fails, sampling and scoring candidate paths,
-collision checking with circles and its margin, the behavior layer and its
-finite state machine, and the garage planners (hybrid A* and RRT). Every question can be answered from the lecture notes,
+collision checking with circles and its margin, the Frenet frame, sampling
+and scoring candidate paths, the behavior layer (the lane change as a game
+and the finite state machine), and the garage planners (grid search, hybrid
+A*, RRT and RRT*). Every question can be answered from the lecture notes,
 :doc:`l9_lecture`. Nothing on this page needs
 :doc:`Going Further <l9_appendix>`.
 
@@ -30,9 +31,9 @@ finite state machine, and the garage planners (hybrid A* and RRT). Every questio
      the lecture.
    - Short answer questions want two to four sentences.
    - Click the dropdown after each question to reveal the answer.
-   - The lecture's scene is one road of CARLA's Town03 map, two lanes each
-     way, 3.5 m wide. The AV drives at 10 m/s on the right lane's center,
-     at :math:`s` = 60 m. The obstacle, a parked car, is 58 m ahead, at
+   - The lecture's scene is one road of CARLA's Town03 map, with two
+     lanes, 3.5 m wide, that run the same way. The AV drives at 10 m/s on
+     the right lane's center, at :math:`s` = 60 m. The obstacle, a parked car, is 58 m ahead, at
      :math:`s` = 118 m, 0.3 m right of the lane's center. Both are 4.5 m
      long and 1.9 m wide.
      :math:`s` is the distance along the right lane's center, :math:`d` the
@@ -43,7 +44,7 @@ finite state machine, and the garage planners (hybrid A* and RRT). Every questio
 ----
 
 
-Multiple Choice (Questions 1 to 14)
+Multiple Choice (Questions 1 to 15)
 ===================================
 
 .. admonition:: Question 1
@@ -97,7 +98,7 @@ Multiple Choice (Questions 1 to 14)
    reaches it when the base link is less than 2.25 + 3.6 = 5.85 m behind the
    center. 3.15 m (**A**) is the limit ahead of the obstacle, from the AV's
    rear (2.25 + 0.9). 9.0 m (**D**) is the whole length of the region,
-   5.85 + 3.15. See "Step 1: Grow the Obstacle" in :doc:`l9_lecture`.
+   5.85 + 3.15. See "Step 1: Grow the Obstacle, for One AV Heading" in :doc:`l9_lecture`.
 
 
 .. admonition:: Question 3
@@ -124,7 +125,7 @@ Multiple Choice (Questions 1 to 14)
    stay farther back. Coming from ahead, only the 0.9 m behind the base
    link matters. Both cars face the same way (**A** is wrong), the margin
    is not part of this region (**C** is wrong), and both are 1.9 m wide
-   (**D** is wrong). See "Step 1: Grow the Obstacle" in :doc:`l9_lecture`.
+   (**D** is wrong). See "Step 1: Grow the Obstacle, for One AV Heading" in :doc:`l9_lecture`.
 
 
 .. admonition:: Question 4
@@ -149,11 +150,66 @@ Multiple Choice (Questions 1 to 14)
    The sideways acceleration on a curve of radius :math:`R` is
    :math:`v^2 / R`. It must stay at or under 3 m/s², so
    :math:`R` ≥ 10² / 3 = 100 / 3 = 33.3 m. 3.41 m (**A**) is the tightest
-   turn the steering allows, about ten times smaller. See "The AV Cannot
-   Move Sideways" in :doc:`l9_lecture`.
+   turn the steering allows, about ten times smaller. See "Comfort Limit:
+   Wider Turns at Higher Speed" in :doc:`l9_lecture`.
 
 
 .. admonition:: Question 5
+   :class: hint
+
+   Two cars stand side by side, their centers 2.6 m apart across (chosen
+   for this question). Each is covered by the lecture's circles of radius
+   1.21 m. What does the check report, with the 0.3 m margin?
+
+   A. Gap 0.18 m: under 0.3 m, a collision.
+
+   B. Gap 0.18 m: over 0, so the pose is free.
+
+   C. Gap 0.70 m: free.
+
+   D. Gap −0.12 m: a collision.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **A**.
+
+   The gap is the distance between the centers minus the two radii:
+   2.6 − 2 × 1.21 = 2.6 − 2.42 = 0.18 m. The check calls a pose a collision
+   when the gap is under 0.3 m, not only under 0 (**B** is wrong). 0.70 m
+   (**C**) is the gap between the bodies, 2.6 − 1.9; the circles reach
+   0.26 m past each side. −0.12 m (**D**) is the lecture's case with the
+   bodies 0.4 m apart. See "The Margin: How Close Counts as a Collision"
+   and "Circles Can Report a Collision That Is Not There" in
+   :doc:`l9_lecture`.
+
+
+.. admonition:: Question 6
+   :class: hint
+
+   What does the 0.3 m margin of the collision check cover?
+
+   A. Only the error in the AV's own position.
+
+   B. Only the error in where perception places the obstacle.
+
+   C. Only the error in prediction for a moving car.
+
+   D. All three errors together.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **A**.
+
+   A published requirement allows at most 0.29 m of error in the AV's own
+   position on a local street, rounded to 0.3 m. The obstacle's position
+   comes from perception, and a moving car's from prediction, with more
+   error; a margin for them would add to the 0.3 m. See "The Margin: How
+   Close Counts as a Collision" in :doc:`l9_lecture`.
+
+
+.. admonition:: Question 7
    :class: hint
 
    With the right lane's center as the reference, where is the point
@@ -180,34 +236,7 @@ Multiple Choice (Questions 1 to 14)
    P of "Two Coordinates That Follow the Road" in :doc:`l9_lecture`.
 
 
-.. admonition:: Question 6
-   :class: hint
-
-   A path runs at :math:`d` = 4.0 m beside a left curve of radius 20 m
-   (chosen for this question). What is the factor :math:`1 - \kappa d`, and
-   does the Frenet frame hold there?
-
-   A. 0.2; it fails.
-
-   B. 0.8; it holds.
-
-   C. 0.935; it holds.
-
-   D. 1.2; it holds.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **B**.
-
-   :math:`\kappa = 1 / R` = 1 / 20, so :math:`1 - \kappa d` = 1 − 4.0 / 20 =
-   0.8. It is above 0, so the frame holds. It would fail at :math:`d` =
-   20 m, the curve's center. 0.935 (**C**) is the lecture's value on its
-   tightest curve, :math:`R` = 61.9 m. See "Where the Frenet Frame Fails" in
-   :doc:`l9_lecture`.
-
-
-.. admonition:: Question 7
+.. admonition:: Question 8
    :class: hint
 
    At 10 m/s, the candidate that moves 3.5 m sideways over 20 m has a peak
@@ -235,7 +264,7 @@ Multiple Choice (Questions 1 to 14)
    :doc:`l9_lecture`.
 
 
-.. admonition:: Question 8
+.. admonition:: Question 9
    :class: hint
 
    With the lecture's weights (comfort 2 per m/s², progress 0.5 per m),
@@ -260,7 +289,7 @@ Multiple Choice (Questions 1 to 14)
    :doc:`l9_lecture`.
 
 
-.. admonition:: Question 9
+.. admonition:: Question 10
    :class: hint
 
    Candidate C keeps the lane and stops; its path covers 50.15 m of the
@@ -282,64 +311,10 @@ Multiple Choice (Questions 1 to 14)
    It leaves 70 − 50.15 = 19.85 m uncovered, and progress costs 0.5 per
    meter: 0.5 × 19.85 = 9.93. 19.85 (**C**) forgets the weight; 25.08
    (**D**) is 0.5 × 50.15, the meters covered. See "Step 3: Score Candidate
-   C" in :doc:`l9_lecture`.
-
-
-.. admonition:: Question 10
-   :class: hint
-
-   Two cars stand side by side, their centers 2.6 m apart across (chosen
-   for this question). Each is covered by the lecture's circles of radius
-   1.21 m. What does the check report, with the 0.3 m margin?
-
-   A. Gap 0.18 m: under 0.3 m, a collision.
-
-   B. Gap 0.18 m: over 0, so the pose is free.
-
-   C. Gap 0.70 m: free.
-
-   D. Gap −0.12 m: a collision.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **A**.
-
-   The gap is the distance between the centers minus the two radii:
-   2.6 − 2 × 1.21 = 2.6 − 2.42 = 0.18 m. The check calls a pose a collision
-   when the gap is under 0.3 m, not only under 0 (**B** is wrong). 0.70 m
-   (**C**) is the gap between the bodies, 2.6 − 1.9; the circles reach
-   0.26 m past each side. −0.12 m (**D**) is the lecture's case with the
-   bodies 0.4 m apart. See "The Margin" and "Circles Can Report a Collision
-   That Is Not There" in :doc:`l9_lecture`.
+   C, Stop Behind" in :doc:`l9_lecture`.
 
 
 .. admonition:: Question 11
-   :class: hint
-
-   What does the 0.3 m margin of the collision check cover?
-
-   A. Only the error in the AV's own position.
-
-   B. Only the error in where perception places the obstacle.
-
-   C. Only the error in prediction for a moving car.
-
-   D. All three errors together.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **A**.
-
-   A published requirement allows at most 0.29 m of error in the AV's own
-   position on a local street, rounded to 0.3 m. The obstacle's position
-   comes from perception, and a moving car's from prediction, with more
-   error; a margin for them would add to the 0.3 m. See "The Margin: How
-   Close Counts as a Collision" in :doc:`l9_lecture`.
-
-
-.. admonition:: Question 12
    :class: hint
 
    The behavior layer closes the left lane, so the sampler keeps
@@ -366,6 +341,38 @@ Multiple Choice (Questions 1 to 14)
    under 2 × 1.21 = 2.42 m, so they overlap; the smaller offsets are closer
    still. With the left lane open, stop behind ranks 8th at 11.54 (**A** is
    wrong). See "One Decision Changes the Cheapest Path" in
+   :doc:`l9_lecture`.
+
+
+.. admonition:: Question 12
+   :class: hint
+
+   The lane change as a game. Each cell gives the AV's delay, then the other
+   car's, in seconds: AV goes and car keeps, a crash, 100 and 100; AV goes
+   and car yields, 0 and 2; AV waits and car keeps, 3 and 0; AV waits and car
+   yields, 3 and 2. Why is the cell "AV waits, car yields" not a Nash
+   equilibrium?
+
+   A. Both drivers wait for each other, so neither one moves.
+
+   B. Each driver can lower its own delay by switching alone: the AV by
+      going, the other car by keeping its speed.
+
+   C. Its total delay, 5 s, is the largest of the four cells.
+
+   D. Only the AV can lower its delay by switching; the other car cannot.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **B**.
+
+   With the car still yielding, the AV that goes gets 0 s instead of 3 s.
+   With the AV still waiting, the car that keeps its speed gets 0 s instead
+   of 2 s. One such switch is enough to rule the cell out, and here the car
+   can switch too (**D** is wrong). The crash cell has the largest total, 200 s (**C** is wrong).
+   The game has two equilibria: AV goes and car yields, and AV waits and car
+   keeps. See "Two Equilibria: the AV Goes First Only When It Is Sure" in
    :doc:`l9_lecture`.
 
 
@@ -399,6 +406,36 @@ Multiple Choice (Questions 1 to 14)
 .. admonition:: Question 14
    :class: hint
 
+   The lecture's grid search finds a 27.4 m path through the garage. Why
+   can the AV not drive that path as it is?
+
+   A. The path runs through a parked car.
+
+   B. The path has corners of 45°, where the heading would jump, and the AV
+      cannot turn on the spot.
+
+   C. The path is longer than hybrid A*'s.
+
+   D. The cells, 0.5 m, are smaller than the AV.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **B**.
+
+   The grid search steps from cell to cell, and a cell has no heading. Its
+   path has 9 corners of 45°. At a corner the AV would have to turn on the
+   spot, and it cannot: a path it can drive has no corners. Each car and
+   wall was grown by 1.05 m before the search, so the path does not enter a
+   car (**A** is wrong). It is shorter than hybrid A*'s 30.6 m (**C** is
+   wrong). The cell size is not the problem (**D**). See "Grid Search on
+   the Whole Garage" and "Drivable Paths: No Corners, No Tight Bends" in
+   :doc:`l9_lecture`.
+
+
+.. admonition:: Question 15
+   :class: hint
+
    What does hybrid A* keep in each :math:`(x, y, \theta)` cell?
 
    A. The cell's center, as plain A* does.
@@ -417,18 +454,20 @@ Multiple Choice (Questions 1 to 14)
 
    Plain A* visits only the cell centers (**A**). Hybrid A* keeps in each
    cell one exact pose, one the AV reaches by driving from the pose before
-   it, not every pose that reached the cell (**C**). The path is made of
-   these exact poses, so it has no jumps. See "Hybrid A*: An Exact Pose in
-   Every Cell" in :doc:`l9_lecture`.
+   it. It does not keep every pose that reaches the cell (**C**): if the
+   cell already holds a pose, the new one is dropped. The path is made of
+   these exact poses, so it has no jumps. See "Hybrid A*: an Exact Pose in
+   Every Cell" and "Hybrid A*, Steps 4 to 6: Cells, Cost and the Goal" in
+   :doc:`l9_lecture`.
 
 
 ----
 
 
-True or False (Questions 15 to 18)
+True or False (Questions 16 to 19)
 ==================================
 
-.. admonition:: Question 15
+.. admonition:: Question 16
    :class: hint
 
    The three-circle collision check can miss a real collision between the
@@ -445,7 +484,24 @@ True or False (Questions 15 to 18)
    a Collision That Is Not There" in :doc:`l9_lecture`.
 
 
-.. admonition:: Question 16
+.. admonition:: Question 17
+   :class: hint
+
+   With the right lane's center as the reference, the lane line between the
+   two lanes is the line :math:`d` = +1.75 m.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **True**.
+
+   The lanes are 3.5 m wide, so the lane line is 3.5 / 2 = 1.75 m left of
+   the right lane's center. In :math:`(s, d)` every lane edge is a line of
+   constant :math:`d`: −1.75, +1.75 and +5.25 m. See "The Big Idea: the Road
+   Becomes Straight in (s, d)" in :doc:`l9_lecture`.
+
+
+.. admonition:: Question 18
    :class: hint
 
    If a path to the goal exists, hybrid A* always finds it.
@@ -460,47 +516,31 @@ True or False (Questions 15 to 18)
    in :doc:`l9_lecture`.
 
 
-.. admonition:: Question 17
+.. admonition:: Question 19
    :class: hint
 
-   GP4 asks you to write a local planner that samples candidate paths in
-   :math:`(s, d)`.
+   As plain RRT keeps adding nodes, the length of its path tends to the
+   length of the shortest path.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False**.
 
-   GP4 asks for A* on a lane graph with a node every 2 m, which plans again
-   when one of two triggers fires. It does not ask for a local planner; one
-   would sit between your A* and your controller. See "What a Local Planner
-   Adds to GP4's Planner" in :doc:`l9_lecture`.
-
-
-.. admonition:: Question 18
-   :class: hint
-
-   With the right lane's center as the reference, the lane line between the
-   two lanes is the line :math:`d` = +1.75 m.
-
-.. dropdown:: Answer
-   :class-container: sd-border-success
-
-   **True**.
-
-   The lanes are 3.5 m wide, so the lane line is 3.5 / 2 = 1.75 m left of
-   the right lane's center. In :math:`(s, d)` every lane edge is a line of
-   constant :math:`d`: −1.75, +1.75 and +5.25 m. See "The Road Becomes
-   Straight in (s, d)" in :doc:`l9_lecture`.
+   As plain RRT adds nodes, its path's length settles on a value above the
+   shortest. RRT keeps the first path it finds. RRT*, which chooses each new
+   node's parent and rewires the nodes near it, is the one whose path length
+   tends to the shortest as the tree grows. See "RRT*: the Path Keeps
+   Getting Shorter" in :doc:`l9_lecture`.
 
 
 ----
 
 
-Short Answer (Questions 19 to 20)
+Short Answer (Questions 20 to 21)
 =================================
 
-.. admonition:: Question 19
+.. admonition:: Question 20
    :class: hint
 
    For the AV heading along the lane, the obstacle becomes a 9.0 m by
@@ -516,11 +556,12 @@ Short Answer (Questions 19 to 20)
    planners do not build it. They place the AV's body at each pose along a
    path, covered by three circles, and check it against the obstacle's
    circles:
-   4,332 poses for the 31 candidates. See "The Region Changes with the
-   Heading" and the Collision Checking section in :doc:`l9_lecture`.
+   4,332 poses for the 31 candidates, every 0.5 s. See "The Region Changes
+   with the Heading" and "How Often the Check Runs: 4,332 Poses Every
+   0.5 s" in :doc:`l9_lecture`.
 
 
-.. admonition:: Question 20
+.. admonition:: Question 21
    :class: hint
 
    Set the progress weight to 0 and keep the other weights. Which candidate
@@ -531,7 +572,9 @@ Short Answer (Questions 19 to 20)
 
    Stop behind (C) wins. Without the progress term, its cost is
    0 + 1.62 + 0 = 1.62 (1.61 unrounded): it pays only for clearance. A still
-   costs 2.51 + 0.56 + 2.00 = 5.07, because it never lost any progress. The
+   costs 2.51 + 0.56 + 2.00 = 5.07, because it never lost any progress, and
+   every other kept candidate ends one lane over, so its lane term alone is
+   at least 2.00. The
    weight of 0.5 per meter is what makes the AV pass: it prices the 19.85 m
-   that stopping gives up at 9.93. See "Step 3: Score Candidate C" in
-   :doc:`l9_lecture`.
+   that stopping gives up at 9.93. See "Step 3: Score Candidate C, Stop
+   Behind" in :doc:`l9_lecture`.
