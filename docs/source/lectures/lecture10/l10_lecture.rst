@@ -128,8 +128,9 @@ which it writes.
      - ``throttle`` 0 to 0.75, ``steer`` −1 to 1 (positive turns left),
        ``brake`` 0 to 1
 
-Each ``/behavior/target_speed`` message starts one control step: the node
-answers it with one ``VehicleCmd`` that carries the same time stamp.
+The node runs no timer. Each ``/behavior/target_speed`` message makes it
+compute one ``VehicleCmd``, which copies that message's time stamp. The node
+that steps CARLA waits for this command before its next tick.
 
 
 .. _l10-lec-topics-demo:
@@ -209,6 +210,23 @@ Follow the Path at the Right Speed: Two Controllers Side by Side
    * - Today
      - Pure Pursuit, Stanley, MPC
      - PID
+
+
+.. _l10-lec-map:
+
+Today's Map: From the Inputs to a Steering Command
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Each section of this lecture fills in one box of this flowchart. In the deck, each
+section's divider shows it again with that box highlighted, and the boxes link to
+their sections.
+
+.. figure:: /_static/images/L10/l10_pipeline.png
+   :alt: The lecture's flowchart. Top row: the inputs (the path with its points and curvature, the AV's pose and speed, the limits), then the behavior layer (an FSM or a tree picks a target speed), the speed profile (curves cap the speed) and the trajectory (a speed and a time). Below, a green dashed frame, the controller node: the bicycle model (how steering turns the AV, dashed), the speed PID (throttle, brake), fed the target speed from the trajectory, and a row of three steering methods, one of which is used: Pure Pursuit, Stanley, MPC, fed the path from the inputs; the bicycle model points down to them. Both loops lead to the output (steer, throttle, brake, every 0.05 s), which goes to the AV in CARLA; a dashed line takes the measured pose and speed back to the inputs.
+   :width: 100%
+   :align: center
+
+   The lecture's flowchart: from the inputs to a steering command.
 
 
 .. _l10-lec-objectives:
@@ -710,11 +728,19 @@ Measure How the Turn Bends: Its Curvature Jumps
 
    The curvature of the test path.
 
-.. admonition:: Reading the figure
+.. figure:: /_static/images/L10/turn_road.png
+   :alt: The same turn from above, x from 60 to 112 meters along the approach and y from minus 18 to 12 meters to the left. Each kind of lane has its own pale color. The AV's lane is yellow: it runs right along y = 0, turns right through the junction near x = 90 and runs down. Above it on the approach road, three more lanes: purple (the other lane in the AV's direction), green (the two-way center lane) and blue (the nearer oncoming lane), cut by the top edge. On the exit road, an oncoming blue lane to the right of the AV's lane and a gray parking lane on each side. The junction's other lanes are very light gray. A dashed line marks the lane center, with an arrow for the driving direction; two thick dark curves on it mark the two arcs; tags 1 and 2 sit left of the junction, each joined to its arc by a thin line.
+   :width: 70%
+   :align: center
+
+   The same turn from above, each kind of lane in its own color; ours is yellow.
+
+.. admonition:: Reading the figures
    :class: tip
 
-   A graph, not a map: the curvature against the distance :math:`s` along
-   the path. The junction lane is shaded orange.
+   The first figure is a graph, not a map: the curvature against the distance
+   :math:`s` along the path. The junction lane is shaded orange. The second
+   shows the same turn from above, with the two arcs drawn thick.
 
    - **Tag 1:** the first arc, :math:`\kappa` = 0.1000 /m, so
      :math:`R` = 1 / 0.1000 = 10.00 m.
