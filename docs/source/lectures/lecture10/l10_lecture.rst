@@ -278,6 +278,42 @@ needs 5 arrows to Emergency stop.
    economize in the number of arrows" (Harel, 1987).
 
 
+.. _l10-lec-fsm-left:
+
+Step 3, What Is Left: the Arrows Between the Behaviors
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Goal:** see which problem the superstate leaves, and when it matters.
+
+.. list-table::
+   :widths: 50 50
+   :header-rows: 1
+   :class: compact-table
+
+   * - **The superstate fixes**
+     - **It leaves**
+   * - An arrow that **every** behavior shares: Emergency stop, 5 arrows
+       become 1
+     - The **7 arrows between** the five behaviors, each with its own
+       condition (Lane keep to Follow: a slower car ahead)
+
+Example (chosen): add a sixth behavior, **Pull over** for an ambulance,
+from Lane keep or Follow, then back to Lane keep.
+
+- **FSM:** 3 new arrows, each with its condition, written into Lane keep and
+  Follow. Not every behavior leaves for it, so the superstate cannot stand
+  for them.
+- **Behavior tree** (next): one new branch, at its place in the order. No
+  other branch changes.
+
+.. important::
+
+   An FSM is fine while the behaviors are few and stay the same: it is
+   "intuitive and easy to understand". In a hierarchical FSM, "adding or
+   removing states is still hard" (Colledanchise and Ögren, 2018): a
+   behavior tree pays off when behaviors are added, removed or reordered.
+
+
 .. _l10-lec-bt:
 
 Behavior Trees

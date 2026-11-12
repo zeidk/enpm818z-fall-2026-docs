@@ -20,6 +20,10 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
      from the Program to the Wheels". The actuators, the command chain, the
      ECUs, CAN, the 8-byte layout and fail safe are in its "More detail"
      box.
+   - **L10, "Step 3, What Is Left":** a new section after the superstate.
+     The superstate removes the arrows every behavior shares, not the 7
+     arrows between the behaviors; adding a behavior shows when a behavior
+     tree pays off.
    - **L10 order:** Control-to-Actuator Interface is now the last section,
      after CARLA Implementation. "Measure the Steering Delay" moved into Test
      Turn and Speed Profile, before the simulation whose steering delay it
