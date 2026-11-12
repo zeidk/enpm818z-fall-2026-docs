@@ -208,19 +208,99 @@ The slope of :math:`q`, :math:`30u^2(1 - u)^2`, is 0 at :math:`u = 0` and
 :math:`u = 1`: the curve is flat at both ends. So the AV leaves its lane and
 enters the next one parallel to the lane.
 
-.. dropdown:: More detail: find 10, −15 and 6
+.. dropdown:: More detail: why a polynomial, and where 10, −15 and 6 come from
    :class-container: more-detail
    :icon: info
    :name: l10-more-quintic-numbers
 
-   :math:`q` is a polynomial of degree five, with six numbers to find:
-   :math:`q(u) = a_0 + a_1 u + a_2 u^2 + a_3 u^3 + a_4 u^4 + a_5 u^5`. Six
-   conditions fix them, three at each end: the value :math:`q`, the slope
-   :math:`q'` (how fast :math:`q` grows) and the bend :math:`q''` (how fast
-   the slope changes).
+   .. rubric:: What the curve must do
 
-   1. At :math:`u = 0`: :math:`q = 0`, :math:`q' = 0`, :math:`q'' = 0`. They
-      give :math:`a_0 = 0`, :math:`a_1 = 0`, :math:`a_2 = 0`.
+   The lane change needs a formula that turns :math:`u`, how far through the
+   move the AV is (0 at the start, 1 at the end), into :math:`q`, the share
+   of the sideways move done. The formula must meet three demands at each
+   end:
+
+   1. **The right value:** :math:`q = 0` at the start and :math:`q = 1` at
+      the end.
+   2. **Flat:** before the move the AV drives straight along its lane, and
+      after it too. A curve that left the lane at an angle would make the
+      AV turn its wheels all at once.
+   3. **No bend:** the bend of the path is its curvature, and the curvature
+      sets the steering angle (:math:`\delta = \arctan(L\kappa)`, with
+      :math:`L` the wheelbase, in Vehicle Modeling). A bend that starts all
+      at once is a steering angle set in no time.
+
+   .. rubric:: Why a polynomial
+
+   A polynomial is a sum of powers of :math:`u`, each multiplied by a
+   number:
+
+   .. math::
+      q(u) = a_0 + a_1 u + a_2 u^2 + a_3 u^3 + \dots
+
+   It suits a planner for three reasons:
+
+   - **It is quick to compute:** only multiplications and additions. The
+     L9 planner writes 31 candidates every 0.5 s.
+   - **It is smooth:** it has no corners, and its slope and its bend are
+     polynomials too, with exact formulas.
+   - **Its numbers set its shape:** by choosing :math:`a_0, a_1, \dots`, we
+     make the curve pass through chosen values, with chosen slopes and
+     bends.
+
+   .. figure:: /_static/images/L10/poly_powers.png
+      :alt: A graph of value against u from 0 to 1, with four dark curves: u, a straight dotted line from 0 to 1; u squared, dashed; u cubed, dash-dotted; and u to the fifth, solid. All four start at 0 and end at 1. The higher the power, the longer the curve stays near 0 before it rises.
+      :width: 55%
+      :align: center
+
+      The building blocks: :math:`u`, :math:`u^2`, :math:`u^3` and
+      :math:`u^5`.
+
+   .. admonition:: Reading the figure
+      :class: tip
+
+      Each power of :math:`u` goes from 0 at :math:`u = 0` to 1 at
+      :math:`u = 1`. The higher the power, the longer it stays flat near 0.
+      Adding powers, each times the right number, shapes the S curve.
+
+   .. rubric:: Why degree five, a quintic
+
+   Each demand is one equation, and each number :math:`a_k` is one unknown.
+   Three demands at each end make six equations, so the formula needs six
+   numbers, :math:`a_0` to :math:`a_5`: powers up to :math:`u^5`. A formula
+   with fewer numbers cannot meet all six.
+
+   .. figure:: /_static/images/L10/poly_compare.png
+      :alt: Three graphs side by side, each against u from 0 to 1, with three curves: a dotted line, u; a dashed purple cubic, 3 u squared minus 2 u cubed; and a solid green quintic, 10 u cubed minus 15 u to the fourth plus 6 u to the fifth. Left, the curves themselves: all go from 0 to 1, the line straight, the other two S shaped. Middle, their slopes: the line's is 1 everywhere; the cubic's and the quintic's start and end at 0 and peak at 1.5 and about 1.9 at u = 0.5. Right, their bends: the line's is 0; the cubic's falls in a straight line from 6 to minus 6; the quintic's starts at 0, rises to about 5.8, falls through 0 at u = 0.5 to about minus 5.8 and ends at 0.
+      :width: 100%
+      :align: center
+
+      Three curves from 0 to 1, with their slopes and their bends.
+
+   .. admonition:: Reading the figure
+      :class: tip
+
+      - **The line** :math:`u` (two numbers) reaches 1, but its slope is 1
+        at both ends: the path leaves the lane at an angle.
+      - **The cubic** :math:`3u^2 - 2u^3` (four numbers) starts and ends
+        flat, but its bend is 6 at the start. For candidate A
+        (:math:`\Delta d` = 3.5 m over 40 m), the curvature would jump from
+        0 to 3.5 × 6 / 40² = 0.013 /m at once: with the wheelbase of
+        2.875 m, a steering angle of arctan(2.875 × 0.013) = 0.038 rad, set
+        in no time. (On a straight road the curvature is about the bend of
+        :math:`d`, as in L9, and :math:`d'' = \Delta d\, q'' / 40^2`.)
+      - **The quintic** :math:`10u^3 - 15u^4 + 6u^5` (six numbers) has slope
+        0 and bend 0 at both ends.
+
+   .. rubric:: Find the six numbers
+
+   Write :math:`q(u) = a_0 + a_1 u + a_2 u^2 + a_3 u^3 + a_4 u^4 + a_5 u^5`.
+   Its slope :math:`q'` says how fast :math:`q` grows, and its bend
+   :math:`q''` says how fast the slope changes.
+
+   1. At :math:`u = 0`: :math:`q = 0`, :math:`q' = 0`, :math:`q'' = 0`.
+      Every term with a :math:`u` is 0 there, so these give
+      :math:`a_0 = 0`, :math:`a_1 = 0`, :math:`a_2 = 0`.
    2. At :math:`u = 1`: :math:`q = 1`, :math:`q' = 0`, :math:`q'' = 0`, with
       :math:`q' = 3a_3u^2 + 4a_4u^3 + 5a_5u^4` and
       :math:`q'' = 6a_3u + 12a_4u^2 + 20a_5u^3`. Every power of 1 is 1, so
@@ -236,8 +316,8 @@ enters the next one parallel to the lane.
       :math:`a_5 = 6`. Then :math:`a_4 = -3 - 2 \times 6 = -15` and
       :math:`a_3 = 1 + 15 - 6 = 10`.
 
-   The six conditions are equations: we solve them for the numbers. The
-   result, :math:`q(u) = 10u^3 - 15u^4 + 6u^5`, is a formula: give it
+   The six demands are **equations**: we solve them for the numbers. The
+   result, :math:`q(u) = 10u^3 - 15u^4 + 6u^5`, is a **formula**: give it
    :math:`u`, and it returns :math:`q`.
 
 
@@ -636,7 +716,7 @@ Finite State Machines
 Step 1, the Problem: One Flat FSM Multiplies Its States
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The goal is to see why one flat FSM grows too fast. Our AV drives city
+**Goal:** see why one flat FSM grows too fast. Our AV drives city
 streets with five behaviors: Lane keep, Follow a slower car, Change lane,
 Stop at the line and Cross the intersection. A safety monitor adds three
 states: Nominal, Caution, Emergency. Both lists are chosen for this example.
@@ -644,7 +724,7 @@ The AV is in one behavior and one monitor state at once, so one flat FSM
 needs a state for every pair: 5 × 3 = 15.
 
 .. figure:: /_static/images/L10/beh_flat.png
-   :alt: A grid of 15 rounded boxes in three rows and five columns. Each box names one road behavior and one monitor state: the columns are Lane keep, Follow, Change lane, Stop at line and Cross, the rows Nominal, Caution and Emergency. Three orange arrows go from Lane keep to Follow, one in each row; dark tag 1 marks the top one. Five blue arrows go down from each Nominal box to the Caution box below it; dark tag 2 marks the leftmost one.
+   :alt: A grid of 15 rounded boxes in three rows and five columns. Each box shows a road behavior in bold above a line and a monitor state below it: the columns are Lane keep, Follow, Change lane, Stop at line and Cross, the rows Nominal, Caution and Emergency. Three orange arrows go from Lane keep to Follow, one in each row; dark tag 1 marks the top one. Five blue arrows go down from each Nominal box to the Caution box below it; dark tag 2 marks the leftmost one.
    :width: 85%
    :align: center
 
@@ -653,28 +733,27 @@ needs a state for every pair: 5 × 3 = 15.
 .. admonition:: Reading the figure
    :class: tip
 
-   Each box is one state of the flat FSM: a road behavior (the column: Lane
-   keep, Follow, Change lane, Stop at line, Cross) paired with a monitor
-   state (the row: Nominal, Caution, Emergency).
+   Each box is one state of the flat FSM: a road behavior (bold, above the
+   line; the column: Lane keep, Follow, Change lane, Stop at line, Cross)
+   paired with a monitor state (below the line; the row: Nominal, Caution,
+   Emergency).
 
-   - **Tag 1:** Lane keep to Follow, drawn once per monitor state: 3 arrows
-     (orange).
-   - **Tag 2:** the monitor's Nominal to Caution, drawn once per behavior:
-     5 arrows (blue).
+   Only two transitions are drawn, each in every copy it needs: a full flat
+   FSM has 3 copies of every behavior arrow and 5 of every monitor arrow.
 
-.. important::
-
-   Harel: "two components with one thousand states each would result in one
-   million states in the product" (Harel, 1987). That is
-   1000 × 1000 = 1,000,000.
-
+   - **Tag 1:** Lane keep (Nominal) to Follow (Nominal): a slower car is
+     ahead, so the AV starts following; the monitor stays Nominal. Copied in
+     Caution and Emergency: 3 arrows (orange).
+   - **Tag 2:** Lane keep (Nominal) to Lane keep (Caution): the monitor
+     raises Caution, and the AV keeps its lane. Copied under each behavior,
+     as Follow (Nominal) to Follow (Caution): 5 arrows (blue).
 
 .. _l10-lec-superstate:
 
 Step 2, Fewer Arrows: One Superstate Arrow Replaces Five
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The goal is to add an emergency stop without an arrow from every state. The
+**Goal:** add an emergency stop without an arrow from every state. The
 AV must be able to stop from any of its five behaviors, so one flat FSM
 needs 5 arrows to Emergency stop.
 
@@ -718,7 +797,7 @@ parts, then write our road behaviors as a tree.
 Define a Behavior Tree: a Root, Control Nodes and Leaves
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The goal is to name the parts of a behavior tree before we read one.
+**Goal:** name the parts of a behavior tree before we read one.
 
 .. admonition:: Definition: Behavior tree (BT)
    :class: note
@@ -740,10 +819,10 @@ In plain words, with our road behaviors:
 
 .. _l10-lec-bt-read:
 
-Read a Behavior Tree: Ticks, Three Statuses, Four Node Types
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Read a Behavior Tree: Ticks, Three Statuses, Six Node Types
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The goal is to learn how a tree runs. A tick goes down from the root: "A
+**Goal:** learn how a tree runs. A tick goes down from the root: "A
 node is executed if and only if it receives ticks". A ticked node returns
 Running, Success or Failure (Colledanchise and Ögren, 2018).
 
@@ -755,36 +834,37 @@ Running, Success or Failure (Colledanchise and Ögren, 2018).
    * - **Node**
      - **What it does when ticked**
    * - Sequence (→)
-     - Ticks its children one at a time, from the left. A child that
-       succeeds: tick the next one. A child that fails or is still running:
-       stop there and return that status. So it succeeds only if every
-       child succeeds. In our road tree (next slide): the pass branch
-       checks that the car ahead is slow, then that the left lane is free,
-       then runs Change lane.
+     - Ticks its children from the left while they **succeed**; stops at
+       the first that fails or is running. **Succeeds only if every child
+       succeeds.** Our pass branch (next section): car ahead slow? left lane
+       free? then Change lane.
    * - Fallback (?)
-     - Ticks its children one at a time, from the left. A child that fails:
-       try the next one. A child that succeeds or is still running: stop
-       there and return that status. So it fails only if every child fails.
-       In our road tree: the root, which tries stop, pass, follow and keep
-       lane, in that order.
+     - Ticks its children from the left while they **fail**; stops at the
+       first that succeeds or is running. **Fails only if every child
+       fails.** Our root: stop, pass, follow, keep lane, in that order.
    * - Parallel
-     - Ticks all its children at every tick. It succeeds once :math:`M` of
-       its :math:`N` children succeed, fails once :math:`N - M + 1` fail
-       (then :math:`M` successes can no longer happen), and is running
-       otherwise. :math:`M` is set by the designer.
+     - Ticks **all** its children at every tick. **Succeeds once**
+       :math:`M` **of its** :math:`N` **children succeed**, fails once
+       :math:`N - M + 1` fail (then :math:`M` successes can no longer
+       happen). :math:`M` is set by the designer.
    * - Decorator
-     - Has one child. A rule set by the designer changes the status the
-       child returns, and decides when the child is ticked at all.
-
+     - **One child.** A rule set by the designer changes the status the
+       child returns, and when the child is ticked.
+   * - Condition (oval)
+     - A leaf: **checks one fact** and returns Success or Failure. Ours: a
+       stop line within 30 m, a car ahead within 40 m.
+   * - Action (gray box)
+     - A leaf: **runs a behavior**; returns Running while it is ongoing.
+       Ours: Lane keep, Follow, Change lane, Stop at the line.
 
 .. _l10-lec-road-bt:
 
 Pass a Slow Car or Follow It: Four Road Behaviors as a Behavior Tree
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The goal is to write four of the road behaviors as a tree. The root
+**Goal:** write four of the road behaviors as a tree. The root
 Fallback (?) tries its branches from the left: stop for a line, pass a slow
-car, follow a car, keep the lane. Ellipses are conditions, gray boxes are
+car, follow a car, keep the lane. Ovals are conditions, gray boxes are
 actions; each tag is one condition (thresholds chosen for this example).
 
 .. figure:: /_static/images/L10/beh_road_bt.png
@@ -811,12 +891,39 @@ actions; each tag is one condition (thresholds chosen for this example).
 Cross the intersection is left out to keep the tree small.
 
 
+.. _l10-lec-bt-scene:
+
+Set the Scene: a Slow Car Ahead, Then a Car in the Left Lane
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Goal:** see the road at the two ticks the next section checks, 0.1 s apart
+(chosen for this example). The AV drives right, in the right lane.
+
+.. figure:: /_static/images/L10/bt_scene.png
+   :alt: Two top views of a straight two-lane road, to scale, one above the other, titled Tick 1, t = 4.0 s, and Tick 2, t = 4.1 s. In both, the black AV drives right in the lower, yellow lane, and a blue car is 25 meters ahead of it in the same lane, labeled 5 m/s with dark tag 2; a double arrow under the road marks the 25 m, with dark tag 4. In the upper, purple lane, a dashed box, dark tag 3, covers the lane from 30 meters behind the AV to 40 meters ahead. In Tick 2 only, a second blue car sits in the purple lane inside the box, labeled 20 m behind.
+   :width: 100%
+   :align: center
+
+   The road at the two ticks.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   To scale. The tags are the tree's conditions.
+
+   - **Tags 2 and 4:** the car ahead, 25 m away, has driven under 6 m/s
+     (5 m/s) for 3 s.
+   - **Tag 3:** the stretch of the left lane that condition 3 checks, from
+     30 m behind the AV to 40 m ahead.
+   - **Tick 2:** a car enters that stretch, 20 m behind the AV.
+
+
 .. _l10-lec-bt-ticks:
 
 Switch Behaviors with No Arrow: a Car in the Left Lane Stops the Pass
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The goal is to watch the tree switch behaviors with no arrow, at two ticks
+**Goal:** watch the tree switch behaviors with no arrow, at two ticks
 chosen for this example. The root ticks every 0.1 s (chosen); each tick
 checks the conditions again from the left, and the first branch that does
 not fail picks the action.
@@ -1004,39 +1111,10 @@ in :math:`s`.
    one of six end offsets: :math:`-0.5`, 0, 0.5, 3, 3.5 or 4 m. Solid curves
    level off at 3 s, dashed at 4 s, dotted at 5 s.
 
-.. dropdown:: More detail: a quartic to keep a speed, the quintic's six conditions, and the equations for a slow-down
+.. dropdown:: More detail: the quintic's six conditions, and the equations for a slow-down
    :class-container: more-detail
    :icon: info
    :name: l10-more-quintic
-
-   .. rubric:: Plan along the road: keep a speed with a quartic, stop with a quintic
-
-   **Keep a speed.** No end position is asked, so five conditions:
-   :math:`s`, :math:`\dot s`, :math:`\ddot s` at :math:`t = 0`, and the end
-   speed :math:`\dot s_1` with :math:`\ddot s = 0` at :math:`T`. A
-   **quartic** (degree four, five numbers) meets them (Werling et al.,
-   2010).
-
-   - Samples: :math:`\dot s_1` = 4, 6, 8, 10 or 12 m/s; :math:`T` = 3, 4 or
-     5 s: 15.
-
-   **Stop at a point.** The end position counts too: :math:`s =
-   s_\text{stop}`, :math:`\dot s = 0`, :math:`\ddot s = 0`. Six conditions,
-   a quintic.
-
-   - :math:`s_\text{stop}` = 110.15 m, last class's stop behind the parked
-     car; :math:`T` = 8, 10 or 12 s: 3.
-
-   In all 15 + 3 = 18 along, so 18 × 18 = 324 candidates: every pair
-   (Werling et al. combine the two sets the same way).
-
-   .. figure:: /_static/images/L10/traj_lon_set.png
-      :alt: A graph of the speed along the road, in meters per second, against time from 0 to 7 seconds. All curves start at 10. Thin curves change smoothly to 4, 6, 8, 10 or 12 and stay there; solid ones arrive at 3 seconds, dashed at 4, dotted at 5. Thick curves, the stops, fall slowly and are still between 1 and 2.5 meters per second at 7 seconds.
-      :width: 65%
-      :align: center
-
-      The 18 speed-along-the-road candidates: 15 that keep a speed, 3 that
-      stop.
 
    .. rubric:: The quintic: six conditions fix six numbers
 
@@ -1094,6 +1172,39 @@ in :math:`s`.
    3. Then :math:`a(t) = 6a_3 t + 12 a_4 t^2` is largest in size at
       :math:`t = T/2`: :math:`1.5\,\Delta v / T = 1.5 \times 4.54 / 3.41 =
       2.0` m/s².
+
+
+.. _l10-lec-traj-lon:
+
+Plan Along the Road: Keep a Speed with a Quartic, Stop with a Quintic
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Keep a speed.** No end position is asked, so five conditions:
+:math:`s`, :math:`\dot s`, :math:`\ddot s` at :math:`t = 0`, and the end
+speed :math:`\dot s_1` with :math:`\ddot s = 0` at :math:`T`. A
+**quartic** (degree four, five numbers) meets them (Werling et al.,
+2010).
+
+- Samples: :math:`\dot s_1` = 4, 6, 8, 10 or 12 m/s; :math:`T` = 3, 4 or
+  5 s: 15.
+
+**Stop at a point.** The end position counts too: :math:`s =
+s_\text{stop}`, :math:`\dot s = 0`, :math:`\ddot s = 0`. Six conditions,
+a quintic.
+
+- :math:`s_\text{stop}` = 110.15 m, last class's stop behind the parked
+  car; :math:`T` = 8, 10 or 12 s: 3.
+
+In all 15 + 3 = 18 along, so 18 × 18 = 324 candidates: every pair
+(Werling et al. combine the two sets the same way).
+
+.. figure:: /_static/images/L10/traj_lon_set.png
+   :alt: A graph of the speed along the road, in meters per second, against time from 0 to 7 seconds. All curves start at 10. Thin curves change smoothly to 4, 6, 8, 10 or 12 and stay there; solid ones arrive at 3 seconds, dashed at 4, dotted at 5. Thick curves, the stops, fall slowly and are still between 1 and 2.5 meters per second at 7 seconds.
+   :width: 65%
+   :align: center
+
+   The 18 speed-along-the-road candidates: 15 that keep a speed, 3 that
+   stop.
 
 
 .. _l10-lec-traj-jerk:
@@ -1155,8 +1266,8 @@ within ±2.0 m/s² (chosen) and across within 3 m/s² (last class's comfort
 limit); the circle gap at least 0.3 m, to the parked car and to **car B
 where prediction puts it at that same moment**.
 
-- 54 too hard; 90 hit the parked car; 135 hit car B: every one that ends in
-  the left lane.
+- 54 too hard; 90 hit the parked car; 135 hit car B. None of the 162 that
+  end in the left lane is kept: 135 hit car B, 27 are too hard.
 - A graph with no time: a line into car B's lane is dropped only if the AV
   is there when car B is.
 
@@ -1243,8 +1354,8 @@ Where Trajectory Generation Leaves Us
      quartic :math:`s(t)` to keep a speed, a quintic to stop at a point.
      18 × 18 = 324 pairs.
    - **Checked in time:** each candidate against car B where prediction puts
-     it at the same moment. At the start, all 135 into the left lane hit
-     car B.
+     it at the same moment. At the start, no candidate into the left lane is
+     kept: 135 hit car B, 27 are too hard.
    - **Scored for comfort:** squared jerk, time and the end state (Werling
      et al.). Planned again every 0.5 s, the AV slows to 7.00 m/s, lets car
      B pass and goes around the parked car; last class's planner waited.
@@ -3060,7 +3171,9 @@ Plan Ahead with MPC: Predict, Score, Apply the First Input, Repeat
    - **Green cell:** the one input applied before the next plan.
    - **Gray cells:** the rest of the plan, predicted but not applied.
 
-The figure is drawn with 8 steps; our example uses 60. The horizon slides
+The figure is drawn with 8 steps; our example uses 60 steps of 0.05 s, with
+each input held for 1 s: 3 values per candidate, :math:`9^3` = 729
+candidates. The horizon slides
 forward with the AV, so MPC is a feedback controller: each plan starts from
 the measured pose.
 
@@ -3198,8 +3311,9 @@ Same start (1 m left, 8 m/s), same speed PID, same steering delay and lag:
      - 22.37
 
 - Distances: the largest from the lane center; jerk in m/s³. Pure Pursuit
-  holds the rear axle on the path, Stanley the front: the axles, 2.875 m
-  apart, cannot both be on it.
+  steers the rear axle onto the path, Stanley the front; Stanley's front
+  error is the smaller only at :math:`k` = 1 (0.38 against 0.45 m). The
+  axles, 2.875 m apart, cannot both be on the path.
 - Not run here: LQR and MPC. Snider found geometric trackers "achieve the
   majority of the path tracking performance demonstrated by the other
   trackers until speeds are significantly increased" (Snider, 2009).
@@ -3673,9 +3787,10 @@ Production stacks split speed control into two layers:
 
 .. important::
 
-   The course uses a PID in CARLA to build intuition (our gains, chosen
-   from the runs: :math:`K_p` = 0.5, :math:`K_i` = 0.3, :math:`K_d` = 0.1,
-   clamp 1 m); the layer above it may be an MPC.
+   The course uses a PID to build intuition. Our simulation's gains
+   (chosen): :math:`K_p` = 0.5, :math:`K_i` = 0.3, :math:`K_d` = 0.1, clamp
+   1 m; the controller node in CARLA defaults to :math:`K_i` = 0.05 and a
+   clamp of 2.0 (its config). The layer above the PID may be an MPC.
 
 .. dropdown:: More detail: PID in labs, MPC above
    :class-container: more-detail
@@ -3689,8 +3804,9 @@ Production stacks split speed control into two layers:
    - enough for CARLA's scenes;
    - builds intuition for feedback.
 
-   Our gains (chosen, from the runs): :math:`K_p` = 0.5, :math:`K_i` = 0.3,
-   :math:`K_d` = 0.1, clamp 1 m.
+   Our simulation's gains (chosen, from the runs): :math:`K_p` = 0.5,
+   :math:`K_i` = 0.3, :math:`K_d` = 0.1, clamp 1 m. The controller node in
+   CARLA defaults to :math:`K_i` = 0.05 and a clamp of 2.0.
 
    **MPC: at the Planner Level**
 
@@ -3718,7 +3834,8 @@ Where Speed Control Leaves Us
    - **I** removes the gap, but winds up while the throttle sits at its
      limit: 12.18 m/s for an 8 m/s target.
    - **Clamping the sum** stops it: peak 8.25 m/s.
-   - **D** trimmed the peak to 8.12 m/s here.
+   - **D** trims the peak a little more: 8.12 m/s (in a More detail box
+     above).
 
 
 .. _l10-lec-carla:
@@ -3891,7 +4008,7 @@ A dynamic model needs more measurements and gains that change with speed.
 
    .. _l10-lec-messages:
 
-   The goal is to know which fields of each message the controller reads,
+   **Goal:** know which fields of each message the controller reads,
    and which it writes.
 
    .. list-table::
@@ -3965,7 +4082,7 @@ Today's Two Controllers: One Node, Five Inputs, One Command
 See the Five Inputs Live: CARLA on Autopilot in Town03
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The goal is to see what each input topic carries while the AV drives. The
+**Goal:** see what each input topic carries while the AV drives. The
 package is ``l10_topics_demo`` in the course's ROS repository (`README
 <https://github.com/rubixcubic/enpm818z-fall-2026-carla-ros/blob/main/l10_topics_demo/README.md>`__).
 
