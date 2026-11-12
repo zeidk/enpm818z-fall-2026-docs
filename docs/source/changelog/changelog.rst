@@ -5,10 +5,29 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.28.3: Lecture 10 Checked and Reordered (2026-11-12)
+.. dropdown:: v2.28.4: Lecture 10 Worked Trajectory and New Figures (2026-11-12)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10, "Read a Trajectory: Where and When, Second by Second":** a worked
+     example that reads one trajectory second by second. "Compare Path
+     Tracking and Trajectory Tracking" now follows it, inside Trajectory
+     Generation.
+   - **L10, drive-by-wire:** one section, "Let a Computer Drive: One Command,
+     from the Program to the Wheels". The actuators, the command chain, the
+     ECUs, CAN, the 8-byte layout and fail safe are in its "More detail"
+     box.
+   - **L10:** "The Turn" is now "Test Turn and Speed Profile".
+   - **L10, Ackermann and bicycle model figures:** redrawn for the course,
+     with numbered tags.
+
+
+.. dropdown:: v2.28.3: Lecture 10 Checked and Reordered (2026-11-12)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

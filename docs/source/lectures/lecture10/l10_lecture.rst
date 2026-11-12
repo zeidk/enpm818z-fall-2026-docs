@@ -49,126 +49,6 @@ steering, throttle and brake.
      and turns the path into steering, throttle and brake.
 
 
-.. _l10-lec-tracking-compare:
-
-Compare Path Tracking and Trajectory Tracking
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Snider: "Path tracking refers to a vehicle executing a globally defined
-geometric path by applying appropriate steering motions that guide the
-vehicle along the path" (Snider, 2009).
-
-.. list-table::
-   :widths: 22 39 39
-   :header-rows: 1
-   :class: compact-table
-
-   * -
-     - **Path tracking**
-     - **Trajectory tracking**
-   * - Follows
-     - points :math:`(x, y)`: where to be
-     - points :math:`(x, y)`, each with a time: where to be, and when
-   * - Speed comes from
-     - a separate speed profile
-     - the times in the reference
-   * - If the AV is 1 s late
-     - no error, as long as it is on the path
-     - an error: it is behind where it should be
-   * - Used today by
-     - Pure Pursuit and Stanley, each with a speed PID
-     - MPC can track it: its horizon has times
-
-Our turn uses path tracking: the path, plus a speed profile for the speed
-PID.
-
-.. dropdown:: More detail: the same lane change as two references; the Frenet frame to control
-   :class-container: more-detail
-   :icon: info
-   :name: l10-more-tracking
-
-   .. rubric:: The same lane change, two references
-
-   The same lane change, written two ways (numbers chosen for the example).
-   As a **trajectory**, where and when:
-
-   .. list-table::
-      :widths: 25 25 25 25
-      :header-rows: 1
-      :class: compact-table
-
-      * - :math:`t` (s)
-        - :math:`x` (m)
-        - :math:`y` (m)
-        - :math:`v` (m/s)
-      * - 0.0
-        - 0.0
-        - 0.0
-        - 15.0
-      * - 1.0
-        - 15.0
-        - 0.9
-        - 15.0
-      * - 2.0
-        - 30.0
-        - 2.8
-        - 15.0
-      * - 3.0
-        - 45.0
-        - 3.5
-        - 15.0
-
-   Drop :math:`t` and :math:`v` and a **path** is left, where only:
-
-   .. list-table::
-      :widths: 50 50
-      :header-rows: 1
-      :class: compact-table
-
-      * - :math:`x` (m)
-        - :math:`y` (m)
-      * - 0.0
-        - 0.0
-      * - 15.0
-        - 0.9
-      * - 30.0
-        - 2.8
-      * - 45.0
-        - 3.5
-
-   A trajectory must reach each point at its time: needed when the timing
-   matters, as when merging or crossing ahead of another car. Drop the
-   path's time and speed, and the speed then comes from a separate profile.
-
-   .. rubric:: From the Frenet frame to control: the offset d is the cross-track error
-
-   The planner works in the Frenet frame :math:`(s, d)`; the controllers
-   need map points and errors.
-
-   .. list-table::
-      :widths: 28 72
-      :header-rows: 1
-      :class: compact-table
-
-      * - **Controller**
-        - **What it needs**
-      * - Pure Pursuit
-        - path points :math:`(x_i, y_i)`, plus a speed profile
-      * - Stanley
-        - path points and the path's heading
-      * - PID on steering
-        - the cross-track error
-      * - LQR, MPC
-        - the path, its heading and curvature, the speed: a model's
-          reference
-
-   - Back to the map: :math:`x = x_r(s) - d\sin\theta_r(s)`,
-     :math:`y = y_r(s) + d\cos\theta_r(s)`: the point on the reference and
-     then :math:`d` meters to its left.
-   - The AV's own :math:`d` **is** its cross-track error: its signed
-     distance from the path, positive to the left.
-
-
 .. _l10-lec-two-controllers:
 
 Follow the Path at the Right Speed: Two Controllers Side by Side
@@ -1153,6 +1033,57 @@ B's by 0.98 m. Slowed to 7 m/s first, the smallest gap to car B on the whole
 run is 1.04 m.
 
 
+.. _l10-lec-traj-where-when:
+
+Read a Trajectory: Where and When, Second by Second
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Goal:** read the two timings as trajectories: where the AV is
+(:math:`s`, :math:`d`) at each time :math:`t`. Car B is at
+45 + 15 :math:`t` m.
+
+.. list-table::
+   :widths: 10 20 35 35
+   :header-rows: 1
+   :class: compact-table
+
+   * - :math:`t` (s)
+     - car B: :math:`s` (m)
+     - **timing 1**, 10 m/s: :math:`s`, :math:`d` (m)
+     - **timing 2**, slow to 7 m/s: :math:`s`, :math:`d` (m)
+   * - 0
+     - 45
+     - 60, 0
+     - 60, 0
+   * - 1
+     - 60
+     - 70, 0
+     - 69.44, 0
+   * - 2
+     - 75
+     - 80, 0
+     - 77, 0
+   * - 3
+     - 90
+     - 90, 0.36
+     - 84, 0.03
+   * - 4
+     - 105
+     - 100, 1.75
+     - 91, 0.46
+
+- **Same where:** both pass :math:`s` = 90 m at :math:`d` = 0.36 m and
+  :math:`s` = 100 m at :math:`d` = 1.75 m, the lane line.
+- **Different when:** timing 1 is on the lane line at 4.00 s, beside car B
+  (105 m); timing 2 gets there at 5.29 s, when car B is at
+  45 + 15 × 5.29 = 124.35 m.
+
+.. important::
+
+   A path gives only the where; a trajectory adds the when, and the when
+   decides whether the AV meets car B.
+
+
 .. _l10-lec-traj-quintic-d:
 
 Plan Across the Road: the Offset d(t) as a Quintic
@@ -1423,6 +1354,127 @@ B. Back on the right lane's center at :math:`s` = 181 m, once the behavior
 layer picks it again (5 m past the parked car, chosen).
 
 
+.. _l10-lec-tracking-compare:
+
+Compare Path Tracking and Trajectory Tracking
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Snider: "Path tracking refers to a vehicle executing a globally defined
+geometric path by applying appropriate steering motions that guide the
+vehicle along the path" (Snider, 2009).
+
+.. list-table::
+   :widths: 22 39 39
+   :header-rows: 1
+   :class: compact-table
+
+   * -
+     - **Path tracking**
+     - **Trajectory tracking**
+   * - Follows
+     - points :math:`(x, y)`: where to be
+     - points :math:`(x, y)`, each with a time: where to be, and when
+   * - Speed comes from
+     - a separate speed profile
+     - the times in the reference
+   * - If the AV is 1 s late
+     - no error, as long as it is on the path
+     - an error: timing 2 wants 84 m at 3 s; 1 s late, the AV is at 77 m,
+       7 m behind
+   * - Used today by
+     - Pure Pursuit and Stanley, each with a speed PID
+     - MPC can track it: its horizon has times
+
+Our controllers use path tracking: the path, plus a speed profile for the
+speed PID.
+
+.. dropdown:: More detail: the same lane change as two references; the Frenet frame to control
+   :class-container: more-detail
+   :icon: info
+   :name: l10-more-tracking
+
+   .. rubric:: The same lane change, two references
+
+   The same lane change, written two ways (numbers chosen for the example).
+   As a **trajectory**, where and when:
+
+   .. list-table::
+      :widths: 25 25 25 25
+      :header-rows: 1
+      :class: compact-table
+
+      * - :math:`t` (s)
+        - :math:`x` (m)
+        - :math:`y` (m)
+        - :math:`v` (m/s)
+      * - 0.0
+        - 0.0
+        - 0.0
+        - 15.0
+      * - 1.0
+        - 15.0
+        - 0.9
+        - 15.0
+      * - 2.0
+        - 30.0
+        - 2.8
+        - 15.0
+      * - 3.0
+        - 45.0
+        - 3.5
+        - 15.0
+
+   Drop :math:`t` and :math:`v` and a **path** is left, where only:
+
+   .. list-table::
+      :widths: 50 50
+      :header-rows: 1
+      :class: compact-table
+
+      * - :math:`x` (m)
+        - :math:`y` (m)
+      * - 0.0
+        - 0.0
+      * - 15.0
+        - 0.9
+      * - 30.0
+        - 2.8
+      * - 45.0
+        - 3.5
+
+   A trajectory must reach each point at its time: needed when the timing
+   matters, as when merging or crossing ahead of another car. Drop the
+   path's time and speed, and the speed then comes from a separate profile.
+
+   .. rubric:: From the Frenet frame to control: the offset d is the cross-track error
+
+   The planner works in the Frenet frame :math:`(s, d)`; the controllers
+   need map points and errors.
+
+   .. list-table::
+      :widths: 28 72
+      :header-rows: 1
+      :class: compact-table
+
+      * - **Controller**
+        - **What it needs**
+      * - Pure Pursuit
+        - path points :math:`(x_i, y_i)`, plus a speed profile
+      * - Stanley
+        - path points and the path's heading
+      * - PID on steering
+        - the cross-track error
+      * - LQR, MPC
+        - the path, its heading and curvature, the speed: a model's
+          reference
+
+   - Back to the map: :math:`x = x_r(s) - d\sin\theta_r(s)`,
+     :math:`y = y_r(s) + d\cos\theta_r(s)`: the point on the reference and
+     then :math:`d` meters to its left.
+   - The AV's own :math:`d` **is** its cross-track error: its signed
+     distance from the path, positive to the left.
+
+
 .. _l10-lec-traj-summary:
 
 Where Trajectory Generation Leaves Us
@@ -1449,12 +1501,12 @@ Where Trajectory Generation Leaves Us
 Control-to-Actuator Interface
 -------------------------------
 
-The trajectory planner hands the controller where to be and when. Before we
-build controllers, we follow one of their commands to the wheels: the
-planner is set aside, and the next sections use what this one finds.
+The planner hands the controller a path. Before we build controllers, we
+follow one command to the wheels.
 
-**In this section:** drive-by-wire, and how long the chain takes from the
-command to the wheel.
+**In this section:** drive-by-wire, the CAN bus, the control units, how long
+the chain takes, and how it fails safe. Our simulation's steering delay
+(0.1 s) and lag (0.2 s) come from here.
 
 **What it is for:** our simulation delays the steering by 0.1 s and lags it
 by 0.2 s; this section shows where such numbers come from, and why every
@@ -1463,8 +1515,8 @@ controller today must live with them.
 
 .. _l10-lec-actuators:
 
-Let a Computer Drive: Drive-by-Wire Actuators
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Let a Computer Drive: One Command, from the Program to the Wheels
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. admonition:: Definition: Drive-by-wire
    :class: note
@@ -1472,73 +1524,6 @@ Let a Computer Drive: Drive-by-Wire Actuators
    Electronic signals replace the mechanical links between the driver's
    controls and the actuators: a computer can then steer, accelerate and
    brake.
-
-.. list-table::
-   :widths: 34 33 33
-   :header-rows: 1
-   :class: compact-table
-
-   * - **Electronic power steering**
-     - **Electronic throttle**
-     - **Brake-by-wire**
-   * - an electric motor on the steering column or rack
-     - a motor sets the throttle plate (or the electric motor's torque)
-     - electro-hydraulic valves; an EV also brakes with its motor
-   * - takes an angle or a torque
-     - takes a torque or a pedal position
-     - takes a pressure or a deceleration
-
-- The motors have limits. Apollo's Lincoln MKZ file allows the steering
-  wheel 6.98 rad/s, 6.98 × 180 / :math:`\pi` = 400 °/s; with a steering
-  ratio of 16, 400 / 16 = 25 °/s at the road wheels (a configuration value,
-  not a measurement).
-
-.. _l10-lec-command-chain:
-
-Follow One Steering Command: from the Program to the Motor
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-On a Lincoln MKZ research car, Xu et al. trace the steering command:
-"generated by the control app, checked by the Mcity safeguard module,
-sent to the by-wire control ROS driver, USB-CAN ROS driver, USB-CAN tool,
-Dataspeed steering module, the onboard CAN network, steering system and
-finally the power steering motor actuates the front tires" (Xu et al.,
-2021).
-
-.. admonition:: Definition: Controller Area Network (CAN)
-   :class: note
-
-   The serial bus a car's control units share. Each message, a frame,
-   carries an identifier and from 0 to 8 bytes of data (Bosch, 1991).
-
-- Identifier: 11 bits (29 in the extended format). It sets the message's
-  priority.
-- Two units send at once: bit by bit, a 0 overrides a 1, and the unit
-  that sent the 1 stops. So the lower identifier wins.
-- A 15-bit check code (CRC) lets the receiver catch a corrupted frame.
-- Bosch: CAN runs "with bitrates up to 1 Mbit/s" in automotive
-  electronics.
-
-.. _l10-lec-ecus:
-
-Execute a Command: the Electronic Control Units
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-An ECU (electronic control unit) is an embedded computer that runs one
-subsystem. It takes commands from the CAN bus and turns them into
-actuator signals (solid arrows: commands; dashed: feedback).
-
-What it does with each command:
-
-1. receive it from the CAN bus;
-2. check it (range, rate, safety);
-3. drive the actuator;
-4. read its own sensors;
-5. send feedback back on the CAN bus.
-
-The ones a controller talks to: the steering ECU (power steering motor),
-the engine or motor ECU (throttle) and the brake ECU (valves, ABS,
-stability control).
 
 .. figure:: /_static/images/L10/ecu_chain.png
    :alt: A block diagram from top to bottom. A gray box, Driving computer, planning and control. Below it a box, CAN bus: a solid arrow labeled command goes down to it and a dashed arrow labeled feedback goes up from it. Below that a green box, Electronic control units (ECUs), with the same pair of arrows from the CAN bus. At the bottom left a box, Actuator, reached by a solid arrow labeled drive from the ECUs; at the bottom right a box, Sensor, with a dashed arrow labeled reading up into the ECUs.
@@ -1555,84 +1540,179 @@ stability control).
    drives its actuator and reads its sensor, then sends feedback back up
    the same bus.
 
-.. _l10-lec-can:
+1. The driving computer sends a command on the **CAN bus**, the serial bus a
+   car's control units share (Bosch, 1991).
+2. An **ECU** (electronic control unit) checks it and drives its actuator:
+   the steering motor, the throttle or the brakes.
+3. The ECU reads its sensor and sends **feedback** back on the bus (dashed).
 
-Share One Bus: Commands and Feedback on CAN
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. dropdown:: More detail: the actuators, the command chain, ECUs, CAN, a message layout and fail safe
+   :class-container: more-detail
+   :icon: info
+   :name: l10-more-actuators
 
-.. figure:: /_static/images/L10/can_bus.png
-   :alt: A diagram. A thick horizontal line, the CAN bus (example: 500 kbit/s). Above it a gray box, Driving computer, planning and control, sends a solid arrow labeled command down to the bus and gets a dashed arrow labeled feedback back up. Below the bus three green boxes, each with a solid arrow down from the bus and a dashed arrow up to it: Steering ECU (command: angle or torque; feedback: angle, torque, status), Throttle ECU (command: pedal percent; feedback: position, engine speed) and Brake ECU (command: pressure or deceleration; feedback: pressure, wheel speed, ABS). Under each ECU a white box, joined the same way: EPS motor and its angle sensor, Throttle body and its position sensor, Brake actuator and its pressure sensor.
-   :width: 80%
-   :align: center
+   .. rubric:: The three actuators
 
-   Three ECUs on one CAN bus.
+   .. list-table::
+      :widths: 34 33 33
+      :header-rows: 1
+      :class: compact-table
 
-.. admonition:: Reading the figure
-   :class: tip
+      * - **Electronic power steering**
+        - **Electronic throttle**
+        - **Brake-by-wire**
+      * - an electric motor on the steering column or rack
+        - a motor sets the throttle plate (or the electric motor's torque)
+        - electro-hydraulic valves; an EV also brakes with its motor
+      * - takes an angle or a torque
+        - takes a torque or a pedal position
+        - takes a pressure or a deceleration
 
-   The thick line is the bus. Each ECU takes its command from the bus
-   (solid arrow down) and puts its feedback on it (dashed arrow up). Under
-   each ECU, its actuator with the sensor that reports back: the electric
-   power steering (EPS) motor, the throttle body and the brake actuator.
+   - The motors have limits. Apollo's Lincoln MKZ file allows the steering
+     wheel 6.98 rad/s, 6.98 × 180 / :math:`\pi` = 400 °/s; with a steering
+     ratio of 16, 400 / 16 = 25 °/s at the road wheels (a configuration value,
+     not a measurement).
 
-One bus carries the commands down (solid arrows) and the feedback up
-(dashed). The 500 kbit/s is
-an example rate; the Bosch specification allows "bitrates up to 1
-Mbit/s" (Bosch, 1991).
+   .. rubric:: Follow One Steering Command: from the Program to the Motor
 
-.. _l10-lec-can-layout:
+   On a Lincoln MKZ research car, Xu et al. trace the steering command:
+   "generated by the control app, checked by the Mcity safeguard module,
+   sent to the by-wire control ROS driver, USB-CAN ROS driver, USB-CAN tool,
+   Dataspeed steering module, the onboard CAN network, steering system and
+   finally the power steering motor actuates the front tires" (Xu et al.,
+   2021).
 
-Pack a Steering Command into 8 Bytes: an Example Layout
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   .. admonition:: Definition: Controller Area Network (CAN)
+      :class: note
 
-An example layout of one steering command in the 8 data bytes (chosen for
-the example; each car maker defines its own):
+      The serial bus a car's control units share. Each message, a frame,
+      carries an identifier and from 0 to 8 bytes of data (Bosch, 1991).
 
-.. list-table::
-   :widths: 10 10 22 30 28
-   :header-rows: 1
-   :class: compact-table
+   - Identifier: 11 bits (29 in the extended format). It sets the message's
+     priority.
+   - Two units send at once: bit by bit, a 0 overrides a 1, and the unit
+     that sent the 1 stops. So the lower identifier wins.
+   - A 15-bit check code (CRC) lets the receiver catch a corrupted frame.
+   - Bosch: CAN runs "with bitrates up to 1 Mbit/s" in automotive
+     electronics.
 
-   * - **Byte**
-     - **Bits**
-     - **Signal**
-     - **Scale, offset**
-     - **Range**
-   * - 0 to 1
-     - 0 to 15
-     - steering angle
-     - 0.01°, -327.68°
-     - ±327.67°
-   * - 2 to 3
-     - 0 to 15
-     - steering rate
-     - 0.1 °/s, 0
-     - 0 to 6553.5 °/s
-   * - 4
-     - 0 to 1
-     - enable flag
-     - on or off
-     - 0 or 1
-   * - 4
-     - 2 to 3
-     - control mode
-     - angle or torque
-     - 0 or 1
-   * - 5 to 6
-     - 0 to 15
-     - torque command
-     - 0.01 N m, -327.68
-     - ±327.67 N m
-   * - 7
-     - 0 to 3
-     - rolling counter
-     - +1 per message
-     - 0 to 15
+   .. rubric:: Execute a Command: the Electronic Control Units
 
-1. A 16-bit field holds 0 to 65535. Angle = raw × 0.01 - 327.68: raw 0
-   gives -327.68°, raw 65535 gives 327.67°.
-2. The rolling counter goes up by one with every message, so the
-   receiver can tell a message was missed.
+   An ECU (electronic control unit) is an embedded computer that runs one
+   subsystem. It takes commands from the CAN bus and turns them into
+   actuator signals (solid arrows: commands; dashed: feedback).
+
+   What it does with each command:
+
+   1. receive it from the CAN bus;
+   2. check it (range, rate, safety);
+   3. drive the actuator;
+   4. read its own sensors;
+   5. send feedback back on the CAN bus.
+
+   The ones a controller talks to: the steering ECU (power steering motor),
+   the engine or motor ECU (throttle) and the brake ECU (valves, ABS,
+   stability control).
+
+   .. rubric:: Share One Bus: Commands and Feedback on CAN
+
+   .. figure:: /_static/images/L10/can_bus.png
+      :alt: A diagram. A thick horizontal line, the CAN bus (example: 500 kbit/s). Above it a gray box, Driving computer, planning and control, sends a solid arrow labeled command down to the bus and gets a dashed arrow labeled feedback back up. Below the bus three green boxes, each with a solid arrow down from the bus and a dashed arrow up to it: Steering ECU (command: angle or torque; feedback: angle, torque, status), Throttle ECU (command: pedal percent; feedback: position, engine speed) and Brake ECU (command: pressure or deceleration; feedback: pressure, wheel speed, ABS). Under each ECU a white box, joined the same way: EPS motor and its angle sensor, Throttle body and its position sensor, Brake actuator and its pressure sensor.
+      :width: 80%
+      :align: center
+
+      Three ECUs on one CAN bus.
+
+   .. admonition:: Reading the figure
+      :class: tip
+
+      The thick line is the bus. Each ECU takes its command from the bus
+      (solid arrow down) and puts its feedback on it (dashed arrow up). Under
+      each ECU, its actuator with the sensor that reports back: the electric
+      power steering (EPS) motor, the throttle body and the brake actuator.
+
+   One bus carries the commands down (solid arrows) and the feedback up
+   (dashed). The 500 kbit/s is
+   an example rate; the Bosch specification allows "bitrates up to 1
+   Mbit/s" (Bosch, 1991).
+
+   .. rubric:: Pack a Steering Command into 8 Bytes: an Example Layout
+
+   An example layout of one steering command in the 8 data bytes (chosen for
+   the example; each car maker defines its own):
+
+   .. list-table::
+      :widths: 10 10 22 30 28
+      :header-rows: 1
+      :class: compact-table
+
+      * - **Byte**
+        - **Bits**
+        - **Signal**
+        - **Scale, offset**
+        - **Range**
+      * - 0 to 1
+        - 0 to 15
+        - steering angle
+        - 0.01°, -327.68°
+        - ±327.67°
+      * - 2 to 3
+        - 0 to 15
+        - steering rate
+        - 0.1 °/s, 0
+        - 0 to 6553.5 °/s
+      * - 4
+        - 0 to 1
+        - enable flag
+        - on or off
+        - 0 or 1
+      * - 4
+        - 2 to 3
+        - control mode
+        - angle or torque
+        - 0 or 1
+      * - 5 to 6
+        - 0 to 15
+        - torque command
+        - 0.01 N m, -327.68
+        - ±327.67 N m
+      * - 7
+        - 0 to 3
+        - rolling counter
+        - +1 per message
+        - 0 to 15
+
+   1. A 16-bit field holds 0 to 65535. Angle = raw × 0.01 - 327.68: raw 0
+      gives -327.68°, raw 65535 gives 327.67°.
+   2. The rolling counter goes up by one with every message, so the
+      receiver can tell a message was missed.
+
+   .. rubric:: Fail Safe: What the Chain Checks Before It Moves the Car
+
+   **Message integrity**
+
+   - the 15-bit CRC of every CAN frame (Bosch, 1991);
+   - a rolling counter catches missed messages.
+
+   **Command checks**
+
+   - against physical limits (angle, rate);
+   - reject sequences that make no sense.
+
+   **Watchdog (heartbeat)**
+
+   - no valid command in time: fail safe;
+   - give control back to the driver, or stop safely.
+
+   **Enable protocol**
+
+   - a valid heartbeat first;
+   - the vehicle in a fitting state, with no active fault.
+
+   Our lock step is a watchdog of its own: the node that steps CARLA waits
+   for each command; if the controller does not answer, the simulation does
+   not advance.
+
 
 .. _l10-lec-delay:
 
@@ -1673,39 +1753,10 @@ Xu et al. sent the MKZ a step in the steering command and watched the wheel
    short.
 
 
-.. _l10-lec-fail-safe:
-
-Fail Safe: What the Chain Checks Before It Moves the Car
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-**Message integrity**
-
-- the 15-bit CRC of every CAN frame (Bosch, 1991);
-- a rolling counter catches missed messages.
-
-**Command checks**
-
-- against physical limits (angle, rate);
-- reject sequences that make no sense.
-
-**Watchdog (heartbeat)**
-
-- no valid command in time: fail safe;
-- give control back to the driver, or stop safely.
-
-**Enable protocol**
-
-- a valid heartbeat first;
-- the vehicle in a fitting state, with no active fault.
-
-Our lock step is a watchdog of its own: the node that steps CARLA waits
-for each command; if the controller does not answer, the simulation does
-not advance.
-
 .. _l10-lec-turn:
 
-The Turn
---------
+Test Turn and Speed Profile
+---------------------------
 
 The behavior layer picks a behavior and a target speed for it, for example
 8 m/s to keep the lane and 0 to stop at the line (chosen). This section sets
@@ -1915,33 +1966,36 @@ When a four-wheeled vehicle turns, every wheel should roll around one common
 point, the instantaneous center of rotation (ICR). A wheel that does not
 point square to the line to the ICR slides sideways: a tire scrub.
 
-.. figure:: /_static/images/L10/l7_ackermann.png
-   :alt: A top view of a car turning left, drawn in light gray with its four wheels in blue, in an X Y frame. Dashed lines run from each front wheel to a red point labeled ICR at the top left; the angles between the lines at the ICR are labeled delta o and delta i. The front wheels are turned by delta i and delta o. A line from the ICR to the rear axle's middle is labeled R; the wheelbase is labeled L and the track W; the center of gravity is marked CG.
+.. figure:: /_static/images/L10/ackermann_geom.png
+   :alt: A top view of a car facing up and turning left, drawn in faint gray, with its two axles and center line in dark lines and its four wheels as thick dark bars. The rear wheels point straight ahead. Thin gray lines run from the rear axle and from each front wheel to a green point at the far left, dark tag 3; a small square mark at each front wheel shows the wheel is square to its line. The left front wheel, dark tag 1, is turned by the orange angle delta i from a dashed straight-ahead line; the right front wheel, dark tag 2, is turned by the smaller orange angle delta o. A green double arrow R runs from the green point to the middle of the rear axle. L marks the wheelbase on the right and W the track behind the car.
    :width: 55%
    :align: center
 
-   Ackermann steering geometry.
-
-*Figure: Theers and Singh (2026), CC BY 4.0.*
+   Ackermann steering geometry, for a car turning left.
 
 .. admonition:: Reading the figure
    :class: tip
 
-   A top view of a car turning left, with its four wheels in blue. Dashed
-   lines run from each front wheel to the ICR (red), at the top left.
+   A top view of a car turning left. Thin gray lines run from the rear axle
+   and from each front wheel to the ICR (green), at the far left. A small
+   square mark at each front wheel shows that the wheel is square to its
+   line.
 
-   - The angle at the ICR between the two dashed lines, split into
-     :math:`\delta_o` (to the outer front wheel) and :math:`\delta_i` (to
-     the inner front wheel); the front wheels are turned by these angles.
-   - :math:`R`: the line from the ICR to the rear axle's middle.
-   - :math:`L`: the wheelbase. :math:`W`: the track (left wheel to right
-     wheel). CG: the center of gravity.
+   - Tag 1: the inner front wheel, turned by :math:`\delta_i` from straight
+     ahead (dashed).
+   - Tag 2: the outer front wheel, turned by the smaller :math:`\delta_o`.
+   - Tag 3: the ICR.
+   - :math:`R`: from the ICR to the rear axle's middle. :math:`L`: the
+     wheelbase. :math:`W`: the track (left wheel to right wheel).
 
-- **Inner wheel:** the one on the inside of the turn, closer to the ICR (the
-  left front wheel in a left turn).
-- It rolls on a smaller circle, so it steers more: "the inner wheel has a
-  bigger steer angle than the outer wheel, because is closer to the centre
-  of rotation" (Moldovanu et al., 2019).
+- **Tag 1, the inner wheel:** closer to the ICR. It rolls on a smaller
+  circle, so it steers more: "the inner wheel has a bigger steer angle than
+  the outer wheel, because is closer to the centre of rotation" (Moldovanu
+  et al., 2019).
+- **Tag 2, the outer wheel:** farther from the ICR, so
+  :math:`\delta_o < \delta_i`.
+- **Tag 3, the ICR:** on the rear axle's line, because the rear wheels do
+  not steer.
 - :math:`L`: wheelbase. :math:`W`: track. :math:`R`: turn radius, to the
   rear axle's middle.
 
@@ -1973,25 +2027,25 @@ model, like a bicycle" (Snider, 2009).
    * - the path's shape
      - inner and outer
 
-.. figure:: /_static/images/L10/l7_bicycle.png
-   :alt: The same turning car as on the Ackermann slide, drawn in light gray in an X Y frame, now with one blue front wheel and one blue rear wheel on the car's center line. A dashed line from the front wheel and one from the rear wheel meet at a red point labeled ICR; the angle between them is delta. R runs from the ICR to the rear wheel; the wheelbase is L; the heading theta is drawn at the rear wheel, and the direction (cos theta, sin theta) is labeled in pink.
+.. figure:: /_static/images/L10/bicycle_collapse.png
+   :alt: The same car, axles and green point as on the Ackermann figure, now drawn as a bicycle: one dark rear wheel, dark tag 1, at the middle of the rear axle, pointing straight ahead, and one dark front wheel, dark tag 2, at the middle of the front axle, joined by a dark center line. The four wheels of the Ackermann figure stay in light gray. The front wheel is turned by the orange angle delta from a dashed straight-ahead line, and is square to the thin gray line to the green point, dark tag 3. A green double arrow R runs from the green point to the rear wheel; L marks the wheelbase on the right.
    :width: 55%
    :align: center
 
    The same car, collapsed to the bicycle model.
 
-*Figure: Theers and Singh (2026), CC BY 4.0.*
-
 .. admonition:: Reading the figure
    :class: tip
 
-   The same car as the Ackermann figure, now with one front wheel and one
-   rear wheel on the car's center line (blue). Dashed lines from each wheel
-   meet at the ICR (red); the angle between them is :math:`\delta`.
+   The same car as the Ackermann figure. Its four wheels stay in light gray;
+   the bicycle's two wheels sit on the car's center line.
 
+   - Tag 1: the rear wheel, at the rear axle's middle, pointing straight
+     ahead.
+   - Tag 2: the front wheel, turned by :math:`\delta` from straight ahead
+     (dashed), square to its line to the ICR.
+   - Tag 3: the same ICR.
    - :math:`R`: from the ICR to the rear wheel. :math:`L`: the wheelbase.
-   - :math:`\theta`: the heading, drawn at the rear wheel; the direction
-     :math:`(\cos\theta, \sin\theta)` is labeled in pink.
 
 The one angle that gives the same :math:`R`:
 :math:`\delta = \arctan(L/R)`; for our first arc, 0.280 rad, between the
@@ -3258,7 +3312,8 @@ The figure is drawn with 8 steps; our example uses 60 steps of 0.05 s, with
 each input held for 1 s: 3 values per candidate, :math:`9^3` = 729
 candidates. The horizon slides
 forward with the AV, so MPC is a feedback controller: each plan starts from
-the measured pose.
+the measured pose. Its horizon has times: it can track a trajectory (timing
+2, in Trajectory Generation).
 
 .. dropdown:: More detail: one MPC step on our turn, drawn, and the problem written out
    :class-container: more-detail

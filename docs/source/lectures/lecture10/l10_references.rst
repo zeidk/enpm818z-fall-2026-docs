@@ -453,5 +453,4 @@ are quoted only in a "More detail" box of the lecture; their cards say so.
 The road in every top view is CARLA's ``Town03.xodr``, read offline with the
 CARLA Python API (`carla.org <https://carla.org>`_). The vehicle icon in the
 figures was created by Stone from the `Noun Project
-<https://thenounproject.com>`_. The Ackermann and bicycle model figures are
-from Theers and Singh (2026), CC BY 4.0.
+<https://thenounproject.com>`_.
