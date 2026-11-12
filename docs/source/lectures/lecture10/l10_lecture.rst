@@ -1090,8 +1090,11 @@ moment, against where prediction puts car B at that same moment.
 
 .. _l10-lec-traj-timings:
 
-Same Path, Two Timings: One Meets Car B, the Other Does Not
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 1: Make a Trajectory from a Path and a Speed
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Goal:** find out whether the AV can move to the left lane without
+hitting car B. For that we need to know **when** the AV is **where**.
 
 .. admonition:: Definition: Trajectory
    :class: note
@@ -1099,122 +1102,118 @@ Same Path, Two Timings: One Meets Car B, the Other Does Not
    A path with a time at each point: where the AV should be, and when. A
    **path** says only where.
 
+To make one, take a path and pick a speed: the speed says how far along the
+road (:math:`s`) the AV is at each time :math:`t`; the path says how far
+left (:math:`d`) it is at that :math:`s`.
+
+- The path: keep the lane to :math:`s` = 80 m, then last class's S curve
+  into the left lane over 40 m.
+- Two speeds (chosen): (1) keep 10 m/s; (2) slow to 7 m/s in the first
+  2 s, then keep 7 m/s.
+
+.. list-table::
+   :widths: 16 12 12 12 12 12 12 12
+   :header-rows: 1
+   :class: compact-table
+
+   * - :math:`t` (s)
+     - 0
+     - 1
+     - 2
+     - 3
+     - 4
+     - 5
+     - 6
+   * - (1) :math:`s` (m)
+     - 60
+     - 70
+     - 80
+     - 90
+     - 100
+     - 110
+     - 120
+   * - (1) :math:`d` (m)
+     - 0
+     - 0
+     - 0
+     - 0.36
+     - 1.75
+     - 3.14
+     - 3.5
+   * - (2) :math:`s` (m)
+     - 60
+     - 69.44
+     - 77
+     - 84
+     - 91
+     - 98
+     - 105
+   * - (2) :math:`d` (m)
+     - 0
+     - 0
+     - 0
+     - 0.03
+     - 0.46
+     - 1.42
+     - 2.54
+
+
+.. _l10-lec-traj-timings-compare:
+
+Step 2: Check Both Trajectories Against Car B, Moment by Moment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Car B starts at :math:`s` = 45 m (15 m behind the AV) and prediction keeps
+it at 15 m/s: its :math:`s` is 45 + 15 :math:`t`. Every 0.05 s, the check
+compares the AV's three circles with car B's (last class).
+
 .. figure:: /_static/images/L10/traj_two_timings.png
    :alt: Two views of the same stretch of road, to scale, one above the other, dark tags 1 and 2, drawn along the road: s in meters along the right lane's center on the horizontal axis, from 62 to 128, and d in meters to its left on the vertical axis. Short gray lines trail behind each moving car to show that it moves; the parked car has none. Three circles cover each car, the ones the collision check compares: at tag 1 the AV's front circle overlaps car B's rear circle; at tag 2 they are far apart. Both show the same black line: it keeps the right lane, then curves smoothly into the left lane's center. Black dots on the line mark each second. Top, tag 1: the dots are evenly spaced; the black AV is crossing the dashed lane line, and the dark red car B is right beside and slightly ahead of it, the two bodies touching. Bottom, tag 2: the dots are closer together at first; the AV is still in the right lane, well behind car B, which is in the left lane. The blue parked car is in the right lane at the right of both views.
    :width: 90%
    :align: center
 
-   Two timings of the same path: one meets car B, the other does not.
+   Both trajectories at :math:`t` = 3.95 s.
 
-.. admonition:: Reading the figure
-   :class: tip
+Both views are at :math:`t` = 3.95 s, the moment trajectory (1) comes
+closest to car B.
 
-   Both views show the same path, with a dot marking each second, along the
-   road: :math:`s` across the page, :math:`d` up, as in the tables that
-   follow. Both are drawn at :math:`t` = 3.95 s, when car B is at :math:`s` = 104.25 m. Three
-   circles cover each car: the ones the collision check compares (last
-   class).
-
-   - **Tag 1:** 10 m/s all the way. The AV is at :math:`s` = 99.5 m, almost
-     on the lane line, right beside car B.
-   - **Tag 2:** slow to 7 m/s first. The AV is at :math:`s` = 90.65 m, still
-     in its own lane, well behind car B.
-
-.. _l10-lec-traj-timings-compare:
-
-Compare the Two Timings at t = 3.95 s: Only Timing 2 Stays Clear of Car B
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Both follow the same path: keep the lane to :math:`s` = 80 m, then last
-class's S curve into the left lane over 40 m. Only the times differ.
-
-.. list-table::
-   :widths: 26 37 37
-   :header-rows: 1
-   :class: compact-table
-
-   * -
-     - **Timing 1** (tag 1)
-     - **Timing 2** (tag 2)
-   * - Speed
-     - 10 m/s all the way
-     - slows to 7 m/s first
-   * - The AV at :math:`t` = 3.95 s
-     - :math:`s` = 99.5 m, almost on the lane line
-     - :math:`s` = 90.65 m, still in its lane
-   * - Car B at :math:`t` = 3.95 s
-     - :math:`s` = 104.25 m
-     - :math:`s` = 104.25 m
-   * - Result
-     - the AV's circles overlap car B's by 0.98 m
-     - the smallest gap to car B on the whole run is 1.04 m
-
-.. important::
-
-   Same path, different times: the times alone decide whether the AV meets
-   car B. A path cannot show this; a trajectory can.
+- (1) Keep 10 m/s: the circles overlap by 0.98 m. **A crash.**
+- (2) Slow to 7 m/s first: the circles never come closer than 1.04 m (at
+  2.8 s). **Safe.**
 
 
 .. _l10-lec-traj-where-when:
 
-Read a Trajectory: Where and When, Second by Second
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 3: See Why: the AV Reaches Car B's Lane at Different Times
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Goal:** read the two timings as trajectories: where the AV is
-(:math:`s`, :math:`d`) at each time :math:`t`.
+Both trajectories follow the same path, so both pass the lane line,
+:math:`s` = 100 m, :math:`d` = 1.75 m, where the AV's center crosses into
+car B's lane. They get there at different times:
 
 .. list-table::
-   :widths: 10 20 35 35
+   :widths: 24 24 36 16
    :header-rows: 1
    :class: compact-table
 
-   * - :math:`t` (s)
-     - car B: :math:`s` (m)
-     - **timing 1**, 10 m/s: :math:`s`, :math:`d` (m)
-     - **timing 2**, slow to 7 m/s: :math:`s`, :math:`d` (m)
-   * - 0
-     - 45
-     - 60, 0
-     - 60, 0
-   * - 1
-     - 60
-     - 70, 0
-     - 69.44, 0
-   * - 2
-     - 75
-     - 80, 0
-     - 77, 0
-   * - 3
-     - 90
-     - 90, 0.36
-     - 84, 0.03
-   * - 4
-     - 105
-     - **100, 1.75**
-     - 91, 0.46
-
-The point in bold is the lane line, :math:`s` = 100 m, :math:`d` = 1.75 m:
-there the AV's center crosses into car B's lane. Timing 2 reaches it later,
-at 5.29 s: not a whole second, so not in the table. Car B starts at
-:math:`s` = 45 m (15 m behind the AV) and prediction keeps it at 15 m/s, so
-its :math:`s` is 45 + 15 :math:`t`: at 5.29 s, 45 + 15 × 5.29 = 124.35 m.
-
-.. list-table::
-   :widths: 30 35 35
-   :header-rows: 1
-   :class: compact-table
-
-   * - **The point both timings pass:** :math:`s`, :math:`d` (m)
-     - **When timing 1 gets there**
-     - **When timing 2 gets there**
-   * - **100, 1.75**: the lane line
-     - 4.00 s; car B at :math:`s` = 105 m, beside the AV
-     - 5.29 s; car B at :math:`s` = 124.35 m, already past
+   * -
+     - **On the lane line at**
+     - **Car B's** :math:`s` **then**
+     - **Result**
+   * - (1) Keep 10 m/s
+     - 4.00 s
+     - 45 + 15 × 4 = 105 m: beside the AV
+     - crash
+   * - (2) Slow to 7 m/s
+     - 5.29 s (between 5 and 6 s in step 1)
+     - 45 + 15 × 5.29 = 124.35 m: already past
+     - safe
 
 .. important::
 
-   Same point, different times. A trajectory gives the time at each point
-   of the path, and that time decides whether the AV meets car B.
+   Same path, different times, different outcome. A path cannot tell the two
+   apart; a trajectory can. Next, the planner makes many trajectories itself
+   and checks each one this way.
 
 
 .. _l10-lec-traj-lat-goal:
@@ -1225,8 +1224,8 @@ Plan Across the Road in Time: What the Offset d(t) Must Do
 **Goal:** write each candidate's sideways move as a function of time,
 :math:`d(t)`, so that every candidate is a trajectory, not a path.
 
-The last sections read two trajectories we were given. Now the planner makes
-them. Werling et al. build each candidate in two parts (Werling et al.,
+The last sections made two trajectories by hand, from one path and two
+speeds. Now the planner makes them itself. Werling et al. build each candidate in two parts (Werling et al.,
 2010): the offset across the road, :math:`d(t)`, and the distance along it,
 :math:`s(t)`. This section and the next: :math:`d(t)`.
 
