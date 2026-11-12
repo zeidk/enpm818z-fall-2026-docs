@@ -550,7 +550,7 @@ section's divider shows it again with that box highlighted, and the boxes
 link to their sections.
 
 .. figure:: /_static/images/L10/l10_pipeline.png
-   :alt: The lecture's flowchart. Top row: the inputs (the path with its points and curvature, the AV's pose and speed, the limits), then the behavior layer (an FSM or a tree picks a target speed), the trajectory (d and s in time) and the speed profile (curves cap the speed). Below, a green dashed frame, the controller node: the bicycle model (how steering turns the AV, dashed), the speed PID (throttle, brake), fed the target speed from the speed profile, and a row of three steering methods, one of which is used (the section also covers PID and LQR): Pure Pursuit, Stanley, MPC, fed the path from the inputs; the bicycle model points down to them. Both loops lead to the output (steer, throttle, brake, every 0.05 s, to the actuators), which goes to the AV in CARLA; a dashed line takes the measured pose and speed back to the inputs. Each box links to its section.
+   :alt: The lecture's flowchart. Top row, as in L9: the inputs (the route from the route planner, L7; the AV's pose and speed; other cars and obstacles; their predicted paths; the map), the behavior layer (picks the task and a target speed), the local planner (a path, as in L9; with times, a trajectory) and its output, a path or a trajectory. Below, a green dashed frame, the controller node: the behavior layer's target speed goes into the speed profile (curves cap the target speed), which feeds the speed PID (throttle, brake); the path goes into a row of three steering methods, one of which is used (the section also covers PID and LQR): Pure Pursuit, Stanley, MPC; a dashed bicycle model (how steering turns the AV) points down to them. The steering methods and the PID lead to the output (steer, throttle, brake, every 0.05 s, to the actuators), which goes to the AV in CARLA; a dashed line takes the measured pose and speed back to the inputs. Each box links to its section.
    :width: 100%
    :align: center
 
@@ -561,23 +561,21 @@ link to their sections.
 
    Each box is covered in one section of these notes.
 
-   - **Inputs** (gray): the path with its points and curvature, the AV's
-     pose and speed, the limits.
-   - **Behavior layer** (green, top row): an FSM or a tree picks a target
-     speed. See :ref:`l10-lec-behavior`.
-   - **Trajectory** and **Speed profile** (top row): :math:`d` and :math:`s`
-     in time, then curves that cap the speed. See
-     :ref:`l10-lec-trajectory`.
-   - **Controller node** (green dashed frame): the bicycle model (how
-     steering turns the AV), the speed PID, and a row of three steering
-     methods, Pure Pursuit, Stanley and MPC, one of which is used (the
-     section also covers PID and LQR on steering). These boxes are covered
-     later in the lecture.
-   - **Output** (gray): steer, throttle and brake, every 0.05 s, to the
-     actuators. See :ref:`l10-lec-control-interface`.
-   - A dashed line takes the measured pose and speed from the AV in CARLA
-     back to the inputs.
-
+   - **Top row, as in L9:** the inputs (the route from the route planner,
+     L7; the AV's pose and speed; other cars and obstacles; their predicted
+     paths; the map), the behavior layer, which picks the task and a target
+     speed, and the local planner. In L9 the local planner gave a path; in
+     :ref:`Trajectory Generation <l10-lec-trajectory>` it adds times, a
+     trajectory. Its output goes to the controller node.
+   - **Controller node** (green dashed frame), the node of this lecture: it
+     takes the path and the behavior layer's target speed. The speed profile
+     caps the target speed in the curves, and the speed PID holds it with
+     throttle and brake. One steering method follows the path: Pure Pursuit,
+     Stanley or MPC (the section also covers PID and LQR on steering). The
+     bicycle model (dashed) says how steering turns the AV.
+   - **Output:** steer, throttle and brake every 0.05 s, to the actuators,
+     then the AV in CARLA, whose measured pose and speed go back to the
+     inputs.
 
 .. _l10-lec-objectives:
 

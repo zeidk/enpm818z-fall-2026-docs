@@ -12,8 +12,11 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
 
    .. rubric:: Lectures
 
-   - **L10 flowchart:** the controller node sits lower, clear of the top
-     row; the section is now titled "From the Inputs to a Steering Command".
+   - **L10 flowchart, corrected:** it now uses L9's boxes. The behavior layer
+     and the local planner come first; the planner's path, and the behavior
+     layer's target speed, go to the controller node, which caps the speed
+     in the curves (the speed profile) and steers along the path. The
+     section is now titled "From the Inputs to a Steering Command".
    - **L10, Longitudinal Control and CARLA Implementation:** "In this
      section" lists only what the section covers in class.
 
