@@ -665,7 +665,7 @@ Candidate A, the cheapest (green), on last class's road; the :math:`d` axis
 is stretched.
 
 .. figure:: /_static/images/L10/scurve_setup.png
-   :alt: A graph of d against s, s from 50 to 123 meters, the right lane pale yellow from minus 1.75 to 1.75 and the left lane pale purple from 1.75 to 5.25, the right lane's center a thick black line at d = 0 and the left lane's center dotted at 3.5. A black AV icon at s = 60, d = 0; a blue parked car at s = 118, just below d = 0. A thick green S curve leaves the AV, crosses the dashed lane line near s = 80, reaches d = 3.5 at a green dot at s = 100 and runs straight on. Two dotted vertical guides at s = 60 and s = 100, labeled s0 = 60 m and s0 + L = 100 m near the bottom. Above the road, a double arrow between the guides is labeled L = 40 m. Near the AV, the label d0 = 0. A vertical double arrow at s = 107, from d = 0 up to 3.5, is labeled Delta d = 3.5 m. A top axis, u = (s minus s0) / L, reads 0 above s = 60, 0.5 above s = 80 and 1 above s = 100.
+   :alt: A graph of d against s, s from 50 to 123 meters, the right lane pale yellow from minus 1.75 to 1.75 and the left lane pale purple from 1.75 to 5.25, the right lane's center a thick black line at d = 0 and the left lane's center dotted at 3.5. A black AV icon at s = 60, d = 0, with short gray lines behind it to show that it moves; a blue parked car at s = 118, just below d = 0. A thick green S curve leaves the AV, crosses the dashed lane line near s = 80, reaches d = 3.5 at a green dot at s = 100 and runs straight on. Two dotted vertical guides at s = 60 and s = 100, labeled s0 = 60 m and s0 + L = 100 m near the bottom. Above the road, a double arrow between the guides is labeled L = 40 m. Near the AV, the label d0 = 0. A vertical double arrow at s = 107, from d = 0 up to 3.5, is labeled Delta d = 3.5 m. A top axis, u = (s minus s0) / L, reads 0 above s = 60, 0.5 above s = 80 and 1 above s = 100.
    :width: 80%
    :align: center
 
@@ -902,7 +902,7 @@ move:
       d(s) = d_0 + \Delta d\; q(u), \qquad u = \frac{s - s_0}{L}
 
 .. figure:: /_static/images/L10/dformula.png
-   :alt: A graph of d against s for candidate A, s from 50 to 123 meters, the right lane pale yellow and the left lane pale purple, with the black AV at s = 60 on d = 0 and the blue parked car near s = 118. A green curve leaves the AV, rises in an S shape and levels off at d = 3.5 at s = 100, then stays flat. Dotted vertical lines mark s = 60 and s = 100. Dark tag 1 sits next to the AV. At s = 80, a double arrow, dark tag 2, runs from d = 0 up to a dot on the curve at d = 1.75, on the lane line. A dot marks the curve at s = 100, d = 3.5, and dark tag 3 sits above the flat part after it.
+   :alt: A graph of d against s for candidate A, s from 50 to 123 meters, the right lane pale yellow and the left lane pale purple, with the black AV at s = 60 on d = 0, short gray lines behind it to show that it moves, and the blue parked car near s = 118. A green curve leaves the AV, rises in an S shape and levels off at d = 3.5 at s = 100, then stays flat. Dotted vertical lines mark s = 60 and s = 100. Dark tag 1 sits next to the AV. At s = 80, a double arrow, dark tag 2, runs from d = 0 up to a dot on the curve at d = 1.75, on the lane line. A dot marks the curve at s = 100, d = 3.5, and dark tag 3 sits above the flat part after it.
    :width: 85%
    :align: center
 
@@ -962,7 +962,7 @@ Two of the 9 candidates that pass the checks, both from :math:`s_0` = 60 m
 over :math:`L` = 40 m.
 
 .. figure:: /_static/images/L10/two_candidates.png
-   :alt: A graph of d against s, s from 56 to 132 meters, the right lane pale yellow from minus 1.75 to 1.75 and the left lane pale purple from 1.75 to 5.25, the right lane's center a thick black line at d = 0 and the left lane's center dotted at 3.5. A black AV icon at s = 60, d = 0; a blue parked car at s = 118, just below d = 0. Two S curves leave the AV together: a green one, labeled A, levels off at d = 3.5 near s = 100; a gray one, labeled B, levels off just below it at d = 3. Both then run straight to s = 132.
+   :alt: A graph of d against s, s from 50 to 132 meters, the right lane pale yellow from minus 1.75 to 1.75 and the left lane pale purple from 1.75 to 5.25, the right lane's center a thick black line at d = 0 and the left lane's center dotted at 3.5. A black AV icon at s = 60, d = 0, with short gray lines behind it to show that it moves; a blue parked car at s = 118, just below d = 0. Two S curves leave the AV together: a green one, labeled A, levels off at d = 3.5 near s = 100; a gray one, labeled B, levels off just below it at d = 3. Both then run straight to s = 132.
    :width: 90%
    :align: center
 
@@ -1026,6 +1026,34 @@ chosen in L9; lower is better. A and B from the last section, with
    7, the stop behind (11.54) included.
 
 
+.. _l10-lec-path-steps:
+
+From 31 Candidates to One Path: the Steps So Far
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 40 60
+   :header-rows: 1
+   :class: compact-table
+
+   * - **Step**
+     - **On our road**
+   * - 1. Describe a lane change with four numbers
+     - :math:`s_0` = 60 m, :math:`d_0` = 0, :math:`\Delta d` and :math:`L`
+   * - 2. Read how far through the move: :math:`u = (s - s_0)/L`
+     - 0 where the move starts, 1 where it ends
+   * - 3. Shape the move: :math:`q(u) = 10u^3 - 15u^4 + 6u^5`
+     - the share of :math:`\Delta d` done at :math:`u`
+   * - 4. Write every candidate: :math:`d(s) = d_0 + \Delta d\, q(u)`
+     - 10 end offsets × 3 lengths, plus 1 stop behind: 31 candidates
+   * - 5. Check each one
+     - 18 collide, 4 turn too hard: 9 are left
+   * - 6. Apply the costs, keep the cheapest
+     - A, the left lane over 40 m: cost 5.07
+
+The result is one **path**, :math:`d(s)`: where the AV goes, with no times.
+
+
 .. _l10-lec-traj-scene:
 
 Plan Around a Car That Moves: Last Class Closed the Lane Instead
@@ -1071,7 +1099,7 @@ Same Path, Two Timings: One Meets Car B, the Other Does Not
    **path** says only where.
 
 .. figure:: /_static/images/L10/traj_two_timings.png
-   :alt: Two top views of the same stretch of road, to scale, one above the other, dark tags 1 and 2. Both show the same black line: it keeps the right lane, then curves smoothly into the left lane's center. Black dots on the line mark each second. Top, tag 1: the dots are evenly spaced; the black AV is crossing the dashed lane line, and the blue car B is right beside and slightly ahead of it, the two bodies touching. Bottom, tag 2: the dots are closer together at first; the AV is still in the right lane, well behind car B, which is in the left lane. The blue parked car is in the right lane at the right of both views.
+   :alt: Two top views of the same stretch of road, to scale, one above the other, dark tags 1 and 2. Short gray lines trail behind each moving car to show that it moves; the parked car has none. Both show the same black line: it keeps the right lane, then curves smoothly into the left lane's center. Black dots on the line mark each second. Top, tag 1: the dots are evenly spaced; the black AV is crossing the dashed lane line, and the blue car B is right beside and slightly ahead of it, the two bodies touching. Bottom, tag 2: the dots are closer together at first; the AV is still in the right lane, well behind car B, which is in the left lane. The blue parked car is in the right lane at the right of both views.
    :width: 90%
    :align: center
 
@@ -1088,10 +1116,39 @@ Same Path, Two Timings: One Meets Car B, the Other Does Not
    - **Tag 2:** slow to 7 m/s first. The AV is at :math:`s` = 90.65 m, still
      in its own lane, well behind car B.
 
-Both paths keep the lane to :math:`s` = 80 m, then last class's S curve into
-the left lane over 40 m. At 10 m/s all the way, the AV's circles overlap car
-B's by 0.98 m. Slowed to 7 m/s first, the smallest gap to car B on the whole
-run is 1.04 m.
+.. _l10-lec-traj-timings-compare:
+
+Compare the Two Timings at t = 3.95 s: Only Timing 2 Stays Clear of Car B
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Both follow the same path: keep the lane to :math:`s` = 80 m, then last
+class's S curve into the left lane over 40 m. Only the times differ.
+
+.. list-table::
+   :widths: 26 37 37
+   :header-rows: 1
+   :class: compact-table
+
+   * -
+     - **Timing 1** (tag 1)
+     - **Timing 2** (tag 2)
+   * - Speed
+     - 10 m/s all the way
+     - slows to 7 m/s first
+   * - The AV at :math:`t` = 3.95 s
+     - :math:`s` = 99.5 m, almost on the lane line
+     - :math:`s` = 90.65 m, still in its lane
+   * - Car B at :math:`t` = 3.95 s
+     - :math:`s` = 104.25 m
+     - :math:`s` = 104.25 m
+   * - Result
+     - the AV's circles overlap car B's by 0.98 m
+     - the smallest gap to car B on the whole run is 1.04 m
+
+.. important::
+
+   Same path, different times: the times alone decide whether the AV meets
+   car B. A path cannot show this; a trajectory can.
 
 
 .. _l10-lec-traj-where-when:
@@ -1322,7 +1379,7 @@ Check Each Candidate at Its Own Time: 45 of 324 Are Kept
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L10/traj_first_plan.png
-   :alt: A graph, d against s, with the right lane yellow and the left lane purple. The black AV at s = 60 meters, the blue parked car in the right lane at 118 meters, car B's blue icon at the left edge of the left lane. A fan of 324 lines leaves the AV. Every line that reaches the left lane is orange-red or dashed purple. In the right lane, gray lines end between about 105 and 110 meters, and one thick green line rises slightly to d = 0.5 and runs to about 110 meters. Orange-red lines in the right lane run on past 120 meters.
+   :alt: A graph, d against s, with the right lane yellow and the left lane purple. The black AV at s = 60 meters, with short gray lines behind it to show that it moves, and the blue parked car in the right lane at 118 meters; car B is behind, out of view. A fan of 324 lines leaves the AV. Every line that reaches the left lane is orange-red or dashed purple. In the right lane, gray lines end between about 105 and 110 meters, and one thick green line rises slightly to d = 0.5 and runs to about 110 meters. Orange-red lines in the right lane run on past 120 meters.
    :width: 85%
    :align: center
 
@@ -1384,7 +1441,7 @@ Plan Again Every 0.5 s: Wait for Car B, Then Pass
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L10/traj_drive.png
-   :alt: Three top views of the road, to scale, dark tags 1 to 3, each with the AV in black, car B and the parked car in blue, a dotted line where the AV has been and a thick green line for its plan. 1: car B beside the AV in the left lane; the green plan stays in the right lane and ends with a short bar well before the parked car. 2: car B level with the AV; the green plan curves into the left lane. 3: the AV in the left lane beside the parked car; car B far ahead; the green plan goes on along the left lane.
+   :alt: Three top views of the road, to scale, dark tags 1 to 3, each with the AV in black, car B and the parked car in blue, a dotted line where the AV has been and a thick green line for its plan. Short gray lines trail behind each moving car to show that it moves; the parked car has none. 1: car B beside the AV in the left lane; the green plan stays in the right lane and ends with a short bar well before the parked car. 2: car B level with the AV; the green plan curves into the left lane. 3: the AV in the left lane beside the parked car; car B far ahead; the green plan goes on along the left lane.
    :width: 70%
    :align: center
 

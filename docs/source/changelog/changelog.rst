@@ -28,7 +28,11 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
      :math:`d_0`, :math:`\Delta d\, q(u)` at :math:`s` = 80 m and the flat
      part after :math:`s_0 + L`; writing all 31 candidates is now its own
      section.
-   - **L10, the recap figures:** motion lines behind the moving cars.
+   - **L10, figures:** motion lines behind every moving car.
+   - **L10, "From 31 Candidates to One Path":** a summary of the six steps
+     that pick last class's path, before the moving car.
+   - **L10, "Compare the Two Timings":** the two timings' numbers in a table,
+     in their own section after the figure.
    - **L10 order:** Control-to-Actuator Interface is now the last section,
      after CARLA Implementation. "Measure the Steering Delay" moved into Test
      Turn and Speed Profile, before the simulation whose steering delay it
