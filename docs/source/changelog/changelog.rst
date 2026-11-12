@@ -28,7 +28,11 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
      :math:`d_0`, :math:`\Delta d\, q(u)` at :math:`s` = 80 m and the flat
      part after :math:`s_0 + L`; writing all 31 candidates is now its own
      section.
-   - **L10, figures:** motion lines behind every moving car.
+   - **L10, figures:** motion lines behind every moving car; car B, the
+     moving car in the left lane, in dark red; the two timings drawn along
+     the road in :math:`s` and :math:`d`, with the collision circles.
+   - **L10, "Read a Trajectory":** a second table shows when each timing
+     passes the same two points.
    - **L10, "From 31 Candidates to One Path":** a summary of the six steps
      that pick last class's path, before the moving car.
    - **L10, "Compare the Two Timings":** the two timings' numbers in a table,
