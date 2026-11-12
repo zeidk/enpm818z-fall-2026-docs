@@ -1060,7 +1060,7 @@ Plan Around a Car That Moves: Last Class Closed the Lane Instead
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L10/traj_scene.png
-   :alt: A top view of the two-lane road, to scale: the right lane light yellow, the left lane light purple, a dashed line between them. In the left lane, at the left, a blue car, dark tag 1. A blue dashed line runs ahead of it along the left lane's center, with a blue dot every second for four seconds, dark tag 2 above the second dot. In the right lane the black AV, tag 3, below the first dots, and far ahead a blue parked car, tag 4. Short gray lines trail behind car B and the AV to show that they move; the parked car has none.
+   :alt: A top view of the two-lane road, to scale: the right lane light yellow, the left lane light purple, a dashed line between them. In the left lane, at the left, an amber car, car B, dark tag 1. An amber dashed line runs ahead of it along the left lane's center, with an amber dot every second for four seconds, dark tag 2 above the second dot. In the right lane the black AV, tag 3, below the first dots, and far ahead a blue parked car, tag 4. Short gray lines trail behind car B and the AV to show that they move; the parked car has none.
    :width: 95%
    :align: center
 
@@ -1100,7 +1100,7 @@ Same Path, Two Timings: One Meets Car B, the Other Does Not
    **path** says only where.
 
 .. figure:: /_static/images/L10/traj_two_timings.png
-   :alt: Two top views of the same stretch of road, to scale, one above the other, dark tags 1 and 2. Short gray lines trail behind each moving car to show that it moves; the parked car has none. Three circles cover each car, the ones the collision check compares: at tag 1 the AV's front circle overlaps car B's rear circle; at tag 2 they are far apart. Both show the same black line: it keeps the right lane, then curves smoothly into the left lane's center. Black dots on the line mark each second. Top, tag 1: the dots are evenly spaced; the black AV is crossing the dashed lane line, and the blue car B is right beside and slightly ahead of it, the two bodies touching. Bottom, tag 2: the dots are closer together at first; the AV is still in the right lane, well behind car B, which is in the left lane. The blue parked car is in the right lane at the right of both views.
+   :alt: Two top views of the same stretch of road, to scale, one above the other, dark tags 1 and 2. Short gray lines trail behind each moving car to show that it moves; the parked car has none. Three circles cover each car, the ones the collision check compares: at tag 1 the AV's front circle overlaps car B's rear circle; at tag 2 they are far apart. Both show the same black line: it keeps the right lane, then curves smoothly into the left lane's center. Black dots on the line mark each second. Top, tag 1: the dots are evenly spaced; the black AV is crossing the dashed lane line, and the amber car B is right beside and slightly ahead of it, the two bodies touching. Bottom, tag 2: the dots are closer together at first; the AV is still in the right lane, well behind car B, which is in the left lane. The blue parked car is in the right lane at the right of both views.
    :width: 90%
    :align: center
 
@@ -1444,7 +1444,7 @@ Plan Again Every 0.5 s: Wait for Car B, Then Pass
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L10/traj_drive.png
-   :alt: Three top views of the road, to scale, dark tags 1 to 3, each with the AV in black, car B and the parked car in blue, a dotted line where the AV has been and a thick green line for its plan. Short gray lines trail behind each moving car to show that it moves; the parked car has none. 1: car B beside the AV in the left lane; the green plan stays in the right lane and ends with a short bar well before the parked car. 2: car B level with the AV; the green plan curves into the left lane. 3: the AV in the left lane beside the parked car; car B far ahead; the green plan goes on along the left lane.
+   :alt: Three top views of the road, to scale, dark tags 1 to 3, each with the AV in black, car B in amber and the parked car in blue, a dotted line where the AV has been and a thick green line for its plan. Short gray lines trail behind each moving car to show that it moves; the parked car has none. 1: car B beside the AV in the left lane; the green plan stays in the right lane and ends with a short bar well before the parked car. 2: car B level with the AV; the green plan curves into the left lane. 3: the AV in the left lane beside the parked car; car B far ahead; the green plan goes on along the left lane.
    :width: 70%
    :align: center
 
