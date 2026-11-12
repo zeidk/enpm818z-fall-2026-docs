@@ -432,7 +432,7 @@ Set the Scene: a Slow Car Ahead, Then a Car in the Left Lane
 (chosen for this example). The AV drives right, in the right lane.
 
 .. figure:: /_static/images/L10/bt_scene.png
-   :alt: Two top views of a straight two-lane road, to scale, one above the other, titled Tick 1, t = 4.0 s, and Tick 2, t = 4.1 s. In both, the black AV drives right in the lower, yellow lane, and a blue car is 25 meters ahead of it in the same lane, labeled 5 m/s with dark tag 2; a double arrow under the road marks the 25 m, with dark tag 4. In the upper, purple lane, a dashed box, dark tag 3, covers the lane from 30 meters behind the AV to 40 meters ahead. In Tick 2 only, a second blue car sits in the purple lane inside the box, labeled 20 m behind.
+   :alt: Two top views of a straight two-lane road, to scale, one above the other, titled Tick 1, t = 4.0 s, and Tick 2, t = 4.1 s. In both, the black AV drives right in the lower, yellow lane, and a blue car is 25 meters ahead of it in the same lane, labeled 5 m/s with dark tag 2; a double arrow under the road marks the 25 m, with dark tag 4. Short gray lines trail behind each car to show that it moves. In the upper, purple lane, a dashed box, dark tag 3, covers the lane from 30 meters behind the AV to 40 meters ahead. In Tick 2 only, a second blue car sits in the purple lane inside the box, labeled 20 m behind.
    :width: 100%
    :align: center
 
