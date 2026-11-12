@@ -1556,8 +1556,9 @@ from where it is.
   center.
 
 Lowest speed 7.00 m/s; smallest gaps 0.93 m to the parked car, 0.48 m to car
-B. Back on the right lane's center at :math:`s` = 181 m, once the behavior
-layer picks it again (5 m past the parked car, chosen).
+B. The behavior layer picks the right lane again once the
+AV's rear is 5 m past the parked car's front (chosen); the AV is back on its
+center at :math:`s` = 181 m.
 
 
 .. _l10-lec-tracking-compare:
