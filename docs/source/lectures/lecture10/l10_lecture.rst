@@ -1204,17 +1204,17 @@ its :math:`s` is 45 + 15 :math:`t`: at 5.29 s, 45 + 15 × 5.29 = 124.35 m.
    :header-rows: 1
    :class: compact-table
 
-   * - **Same where:** a point of the path, :math:`s`, :math:`d` (m)
-     - **Different when:** timing 1
-     - **Different when:** timing 2
+   * - **The point both timings pass:** :math:`s`, :math:`d` (m)
+     - **When timing 1 gets there**
+     - **When timing 2 gets there**
    * - **100, 1.75**: the lane line
      - 4.00 s; car B at :math:`s` = 105 m, beside the AV
      - 5.29 s; car B at :math:`s` = 124.35 m, already past
 
 .. important::
 
-   A path gives only the where; a trajectory adds the when, and the when
-   decides whether the AV meets car B.
+   Same point, different times. A trajectory gives the time at each point
+   of the path, and that time decides whether the AV meets car B.
 
 
 .. _l10-lec-traj-lat-goal:
