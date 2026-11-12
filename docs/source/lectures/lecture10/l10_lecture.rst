@@ -1083,8 +1083,9 @@ Plan Around a Car That Moves: Last Class Closed the Lane Instead
 
 Last class's planner checked **paths**, which have no time. It could not
 tell whether the AV would reach the left lane before car B or after it, so
-the behavior layer closed the lane. To decide, the check needs where the AV
-is at each moment, and where car B will be then.
+the behavior layer closed the lane. To keep that lane open, the local
+planner must check each candidate itself: where the AV will be at each
+moment, against where prediction puts car B at that same moment.
 
 
 .. _l10-lec-traj-timings:
