@@ -49,6 +49,655 @@ steering, throttle and brake.
      and turns the path into steering, throttle and brake.
 
 
+.. _l10-lec-tracking-compare:
+
+Compare Path Tracking and Trajectory Tracking
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Snider: "Path tracking refers to a vehicle executing a globally defined
+geometric path by applying appropriate steering motions that guide the
+vehicle along the path" (Snider, 2009).
+
+.. list-table::
+   :widths: 22 39 39
+   :header-rows: 1
+   :class: compact-table
+
+   * -
+     - **Path tracking**
+     - **Trajectory tracking**
+   * - Follows
+     - points :math:`(x, y)`: where to be
+     - points :math:`(x, y)`, each with a time: where to be, and when
+   * - Speed comes from
+     - a separate speed profile
+     - the times in the reference
+   * - If the AV is 1 s late
+     - no error, as long as it is on the path
+     - an error: it is behind where it should be
+   * - Used today by
+     - Pure Pursuit and Stanley, each with a speed PID
+     - MPC can track it: its horizon has times
+
+Our turn uses path tracking: the path, plus a speed profile for the speed
+PID.
+
+.. dropdown:: More detail: the same lane change as two references; the Frenet frame to control
+   :class-container: more-detail
+   :icon: info
+   :name: l10-more-tracking
+
+   .. rubric:: The same lane change, two references
+
+   The same lane change, written two ways (numbers chosen for the example).
+   As a **trajectory**, where and when:
+
+   .. list-table::
+      :widths: 25 25 25 25
+      :header-rows: 1
+      :class: compact-table
+
+      * - :math:`t` (s)
+        - :math:`x` (m)
+        - :math:`y` (m)
+        - :math:`v` (m/s)
+      * - 0.0
+        - 0.0
+        - 0.0
+        - 15.0
+      * - 1.0
+        - 15.0
+        - 0.9
+        - 15.0
+      * - 2.0
+        - 30.0
+        - 2.8
+        - 15.0
+      * - 3.0
+        - 45.0
+        - 3.5
+        - 15.0
+
+   Drop :math:`t` and :math:`v` and a **path** is left, where only:
+
+   .. list-table::
+      :widths: 50 50
+      :header-rows: 1
+      :class: compact-table
+
+      * - :math:`x` (m)
+        - :math:`y` (m)
+      * - 0.0
+        - 0.0
+      * - 15.0
+        - 0.9
+      * - 30.0
+        - 2.8
+      * - 45.0
+        - 3.5
+
+   A trajectory must reach each point at its time: needed when the timing
+   matters, as when merging or crossing ahead of another car. Drop the
+   path's time and speed, and the speed then comes from a separate profile.
+
+   .. rubric:: From the Frenet frame to control: the offset d is the cross-track error
+
+   The planner works in the Frenet frame :math:`(s, d)`; the controllers
+   need map points and errors.
+
+   .. list-table::
+      :widths: 28 72
+      :header-rows: 1
+      :class: compact-table
+
+      * - **Controller**
+        - **What it needs**
+      * - Pure Pursuit
+        - path points :math:`(x_i, y_i)`, plus a speed profile
+      * - Stanley
+        - path points and the path's heading
+      * - PID on steering
+        - the cross-track error
+      * - LQR, MPC
+        - the path, its heading and curvature, the speed: a model's
+          reference
+
+   - Back to the map: :math:`x = x_r(s) - d\sin\theta_r(s)`,
+     :math:`y = y_r(s) + d\cos\theta_r(s)`: the point on the reference and
+     then :math:`d` meters to its left.
+   - The AV's own :math:`d` **is** its cross-track error: its signed
+     distance from the path, positive to the left.
+
+
+.. _l10-lec-two-controllers:
+
+Follow the Path at the Right Speed: Two Controllers Side by Side
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. admonition:: Definition: Feedback controller
+   :class: note
+
+   A program that, at every cycle, compares what the AV should be doing with
+   what it measures it is doing, and sends a command that shrinks the
+   difference.
+
+.. list-table::
+   :widths: 22 43 35
+   :header-rows: 1
+   :class: compact-table
+
+   * -
+     - **Lateral (steering)**
+     - **Longitudinal (speed)**
+   * - Should be
+     - on the path
+     - at the profile's speed
+   * - Measures
+     - distance and angle to the path
+     - speed
+   * - Sends
+     - a steering angle
+     - throttle or brake
+   * - Today
+     - Pure Pursuit, Stanley, MPC
+     - PID
+
+
+.. _l10-lec-map:
+
+From the Inputs to a Steering Command
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Each section today fills in one box of this flowchart. In the deck, each
+section's divider shows it again with that box highlighted, and the boxes
+link to their sections.
+
+.. figure:: /_static/images/L10/l10_pipeline.png
+   :alt: The lecture's flowchart. Top row, as in L9: the inputs (the route from the route planner, L7; the AV's pose and speed; other cars and obstacles; their predicted paths; the map), the behavior layer (picks the task and a target speed), the local planner (a path in L9; today's version adds times) and its output, a path, which our controller node uses. Below, a green dashed frame, the controller node: the behavior layer's target speed goes into the speed profile (curves cap the target speed), which feeds the speed PID (throttle, brake); the path goes into a row of three steering methods, one of which is used (the section also covers PID and LQR): Pure Pursuit, Stanley, MPC; a dashed bicycle model (how steering turns the AV) points down to them. The steering methods and the PID lead to the output (steer, throttle, brake, every 0.05 s, to the actuators), which goes to the AV in CARLA; a dashed line takes the measured pose and speed back to the inputs. Each box links to its section.
+   :width: 100%
+   :align: center
+
+   The lecture's flowchart: from the inputs to a steering command.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   Each box is covered in one section of these notes.
+
+   - **Top row, as in L9:** the inputs (the route from the route planner,
+     L7; the AV's pose and speed; other cars and obstacles; their predicted
+     paths; the map), the behavior layer, which picks the task and a target
+     speed, and the local planner. In L9 the local planner gave a path, and
+     that path is what our controller node uses. :ref:`Trajectory
+     Generation <l10-lec-trajectory>` shows a version of the planner that
+     adds times, a trajectory; a controller that follows a trajectory must
+     track the times too.
+   - **Controller node** (green dashed frame), the node of this lecture: it
+     takes the path and the behavior layer's target speed. The speed profile
+     caps the target speed in the curves, and the speed PID holds it with
+     throttle and brake. One steering method follows the path: Pure Pursuit,
+     Stanley or MPC (the section also covers PID and LQR on steering). The
+     bicycle model (dashed) says how steering turns the AV.
+   - **Output:** steer, throttle and brake every 0.05 s, to the actuators,
+     then the AV in CARLA, whose measured pose and speed go back to the
+     inputs.
+
+.. _l10-lec-objectives:
+
+Learning Objectives
+~~~~~~~~~~~~~~~~~~~
+
+This is a reading slide in the deck. After this lecture, you can:
+
+1. say why one flat FSM grows too fast, and how a **superstate** and a
+   **behavior tree** keep the behavior layer small;
+2. write the **kinematic bicycle model** and find the steering angle that follows a curvature;
+3. give a path a speed profile and a time (a **trajectory**), and say why a
+   quintic speed change keeps the **jerk** small;
+4. read a **PID** speed response: what P, I and D each do, what **windup**
+   is and how clamping stops it;
+5. work **Pure Pursuit**'s geometry by hand, from the lookahead circle to
+   the steering angle;
+6. predict how the **lookahead distance** changes Pure Pursuit, and compare
+   it with **Stanley**;
+7. say what **MPC** adds: a model, a horizon, limits, and only the first
+   input applied.
+
+
+.. _l10-lec-behavior:
+
+Scaling the Behavior Layer
+---------------------------
+
+Last class showed one finite state machine (FSM) for a valet that parks
+itself in a garage. Here we use the same tools on an AV that drives city
+streets.
+
+**In this section:** two parts. Finite State Machines: five road behaviors
+and a safety monitor need 5 × 3 = 15 states in one flat FSM, and a
+superstate cuts its arrows. Behavior Trees: what a tree is, how it
+runs, and our road behaviors as a tree.
+
+**What it is for:** real stacks face the same growth: Nav2, ROS 2's
+navigation stack, runs a behavior tree (Nav2 contributors). The behavior
+layer's output, such as a target speed, is the input to the rest of today.
+
+
+.. _l10-lec-recap-behavior:
+
+Recap L9, the Behavior Layer: It Picks the Task, the Planner Finds the Path
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Last class split the job in two: the behavior layer says **what** to do;
+the local planner works out **how**, as a path.
+
+.. list-table::
+   :widths: 36 64
+   :header-rows: 1
+   :class: compact-table
+
+   * - **The behavior layer decides**
+     - **On our road (L9)**
+   * - which lanes the AV may use
+     - both open: 31 candidates; left lane closed: 10, and the AV stops
+       behind the parked car (cost 11.54)
+   * - where the AV must stop, and by when
+     - nowhere: the paths run the full 70 m
+   * - a speed limit
+     - 10 m/s: every bend needs a radius of 33.3 m or more
+
+- Its tools: a **finite state machine** (FSM) picks one behavior at a time,
+  as for the valet in the garage; a **game** decides the lane change: the AV
+  goes first only when prediction says the other car will yield.
+- Today: one FSM grows too fast for city streets (Scaling the Behavior
+  Layer), and the path gets times (Trajectory Generation).
+
+
+.. _l10-lec-fsm:
+
+Finite State Machines
+~~~~~~~~~~~~~~~~~~~~~
+
+.. admonition:: Definition: Finite state machine (FSM)
+   :class: note
+
+   A fixed list of **states**, of which the system is in exactly one at a
+   time, and a list of **transitions**: each one moves the system from one
+   state to another when its condition becomes true.
+
+
+.. _l10-lec-flat-fsm:
+
+Step 1, the Problem: One Flat FSM Multiplies Its States
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Goal:** see why one flat FSM grows too fast. Our AV drives city
+streets with five behaviors: Lane keep, Follow a slower car, Change lane,
+Stop at the line and Cross the intersection. A safety monitor adds three
+states: Nominal, Caution, Emergency. Both lists are chosen for this example.
+The AV is in one behavior and one monitor state at once, so one flat FSM
+needs a state for every pair: 5 × 3 = 15.
+
+.. figure:: /_static/images/L10/beh_flat.png
+   :alt: A grid of 15 rounded boxes in three rows and five columns. Each box shows a road behavior in bold above a line and a monitor state below it: the columns are Lane keep, Follow, Change lane, Stop at line and Cross, the rows Nominal, Caution and Emergency. Three orange arrows go from Lane keep to Follow, one in each row; dark tag 1 marks the top one. Five blue arrows go down from each Nominal box to the Caution box below it; dark tag 2 marks the leftmost one.
+   :width: 85%
+   :align: center
+
+   The road behaviors and the monitor as one flat FSM: 15 states.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   Each box is one state of the flat FSM: a road behavior (bold, above the
+   line; the column: Lane keep, Follow, Change lane, Stop at line, Cross)
+   paired with a monitor state (below the line; the row: Nominal, Caution,
+   Emergency).
+
+   Only two transitions are drawn, each in every copy it needs: a full flat
+   FSM has 3 copies of every behavior arrow and 5 of every monitor arrow.
+
+   - **Tag 1:** Lane keep (Nominal) to Follow (Nominal): a slower car is
+     ahead, so the AV starts following. The same change needs its own arrow
+     in the Caution row and in the Emergency row: 3 arrows (orange).
+   - **Tag 2:** Lane keep (Nominal) to Lane keep (Caution): the monitor
+     raises Caution. The same change needs its own arrow in every
+     behavior's column, Follow's included, as Follow (Nominal) to Follow
+     (Caution): 5 arrows (blue).
+
+.. _l10-lec-superstate:
+
+Step 2, Fewer Arrows: One Superstate Arrow Replaces Five
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Goal:** add an emergency stop without an arrow from every state. The
+AV must be able to stop from any of its five behaviors, so one flat FSM
+needs 5 arrows to Emergency stop.
+
+.. figure:: /_static/images/L10/beh_hier.png
+   :alt: A state diagram. A large green rounded box labeled Driving, dark tag 1 at its top-left corner, holds five states: Lane keep, Follow and Change lane in a top row, Stop at the line and Cross the intersection below. An arrow from the left enters Lane keep. Lane keep and Follow go to each other; Follow goes to Change lane; Change lane goes back to Lane keep by an arc over the top. Lane keep goes down to Stop at the line, which goes to Cross the intersection, which goes back up to Lane keep. One red arrow, dark tag 2, leaves the bottom edge of the Driving box and goes down to Emergency stop.
+   :width: 75%
+   :align: center
+
+   The road behaviors inside the superstate Driving.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   - **Tag 1:** the **superstate** Driving, a state that holds the five
+     behaviors (green box). Their own arrows stay as they were: Lane keep
+     and Follow go to each other, Follow goes to Change lane and back to
+     Lane keep, and Lane keep goes to Stop at the line, then to Cross the
+     intersection, then back to Lane keep.
+   - **Tag 2:** one arrow (red) leaves Driving for Emergency stop. It stands
+     for 5 arrows, one from each state inside.
+
+.. important::
+
+   Harel lets a transition that leaves a superstate stand for that
+   transition leaving every state inside it: "the main way statecharts
+   economize in the number of arrows" (Harel, 1987).
+
+
+.. _l10-lec-bt:
+
+Behavior Trees
+~~~~~~~~~~~~~~
+
+A behavior tree has no arrows between behaviors: at every tick it checks its
+conditions again and runs the first branch that does not fail. We read its
+parts, then write our road behaviors as a tree.
+
+
+.. _l10-lec-bt-def:
+
+Define a Behavior Tree: a Root, Control Nodes and Leaves
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Goal:** name the parts of a behavior tree before we read one.
+
+.. admonition:: Definition: Behavior tree (BT)
+   :class: note
+
+   "A directed rooted tree where the internal nodes are called control flow
+   nodes and leaf nodes are called execution nodes" (Colledanchise and
+   Ögren, 2018).
+
+In plain words, with our road behaviors:
+
+- The **root** is the one node with no parent. Every tick starts there.
+- **Control flow nodes**, such as Sequence and Fallback, sit inside the tree
+  and decide which child is ticked next.
+- A **Condition** leaf checks a fact and returns Success or Failure: a stop
+  line within 30 m, a car ahead within 40 m.
+- An **Action** leaf runs a behavior: "While the action is ongoing it
+  returns Running". Ours: Lane keep, Follow, Change lane, Stop at the line.
+
+
+.. _l10-lec-bt-read:
+
+Read a Behavior Tree: Ticks, Three Statuses, Six Node Types
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Goal:** learn how a tree runs. A tick goes down from the root: "A
+node is executed if and only if it receives ticks". A ticked node returns
+Running, Success or Failure (Colledanchise and Ögren, 2018).
+
+.. list-table::
+   :widths: 17 83
+   :header-rows: 1
+   :class: compact-table
+
+   * - **Node**
+     - **What it does when ticked**
+   * - Sequence (→)
+     - Ticks its children from the left while they **succeed**; stops at
+       the first that fails or is running. **Succeeds only if every child
+       succeeds.** Our pass branch (next section): car ahead slow? left lane
+       free? then Change lane.
+   * - Fallback (?)
+     - Ticks its children from the left while they **fail**; stops at the
+       first that succeeds or is running. **Fails only if every child
+       fails.** Our root: stop, pass, follow, keep lane, in that order.
+   * - Parallel
+     - Ticks **all** its children at every tick. **Succeeds once**
+       :math:`M` **of its** :math:`N` **children succeed**, fails once
+       :math:`N - M + 1` fail (then :math:`M` successes can no longer
+       happen). :math:`M` is set by the designer.
+   * - Decorator
+     - **One child.** A rule set by the designer changes the status the
+       child returns, and when the child is ticked.
+   * - Condition (oval)
+     - A leaf: **checks one fact** and returns Success or Failure. Ours: a
+       stop line within 30 m, a car ahead within 40 m.
+   * - Action (gray box)
+     - A leaf: **runs a behavior**; returns Running while it is ongoing.
+       Ours: Lane keep, Follow, Change lane, Stop at the line.
+
+.. _l10-lec-road-bt:
+
+Pass a Slow Car or Follow It: Four Road Behaviors as a Behavior Tree
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Goal:** write four of the road behaviors as a tree. The root
+Fallback (?) tries its branches from the left: stop for a line, pass a slow
+car, follow a car, keep the lane. Ovals are conditions, gray boxes are
+actions; each tag is one condition (thresholds chosen for this example).
+
+.. figure:: /_static/images/L10/beh_road_bt.png
+   :alt: A behavior tree. The root, a Fallback box marked with a question mark, has four children from left to right: three Sequence boxes marked with an arrow, and a gray action box, Lane keep. The first Sequence holds condition 1, an ellipse with dark tag 1, and the action Stop at the line. The second holds conditions 2 and 3 and the action Change lane. The third holds condition 4 and the action Follow.
+   :width: 90%
+   :align: center
+
+   Four road behaviors as a behavior tree.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   The root is a Fallback (box with a question mark). Its children, from
+   left to right: a Sequence (box with an arrow) of condition 1 and Stop at
+   the line; a Sequence of conditions 2 and 3 and Change lane; a Sequence of
+   condition 4 and Follow; and the action Lane keep.
+
+   - **Tag 1:** a stop line is within 30 m ahead.
+   - **Tag 2:** the car ahead has driven under 6 m/s for 3 s.
+   - **Tag 3:** the left lane is free: no car within 30 m behind or 40 m
+     ahead.
+   - **Tag 4:** a car is ahead in our lane, within 40 m.
+
+Cross the intersection is left out to keep the tree small.
+
+
+.. _l10-lec-bt-scene:
+
+Set the Scene: a Slow Car Ahead, Then a Car in the Left Lane
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Goal:** see the road at the two ticks the next section checks, 0.1 s apart
+(chosen for this example). The AV drives right, in the right lane.
+
+.. figure:: /_static/images/L10/bt_scene.png
+   :alt: Two top views of a straight two-lane road, to scale, one above the other, titled Tick 1, t = 4.0 s, and Tick 2, t = 4.1 s. In both, the black AV drives right in the lower, yellow lane, and a blue car is 25 meters ahead of it in the same lane, labeled 5 m/s with dark tag 2; a double arrow under the road marks the 25 m, with dark tag 4. In the upper, purple lane, a dashed box, dark tag 3, covers the lane from 30 meters behind the AV to 40 meters ahead. In Tick 2 only, a second blue car sits in the purple lane inside the box, labeled 20 m behind.
+   :width: 100%
+   :align: center
+
+   The road at the two ticks.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   To scale. The tags are the tree's conditions.
+
+   - **Tags 2 and 4:** the car ahead, 25 m away, has driven under 6 m/s
+     (5 m/s) for 3 s.
+   - **Tag 3:** the stretch of the left lane that condition 3 checks, from
+     30 m behind the AV to 40 m ahead.
+   - **Tick 2:** a car enters that stretch, 20 m behind the AV.
+
+
+.. _l10-lec-bt-ticks:
+
+Switch Behaviors with No Arrow: a Car in the Left Lane Stops the Pass
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Goal:** watch the tree switch behaviors with no arrow, at two ticks
+chosen for this example. The root ticks every 0.1 s (chosen); each tick
+checks the conditions again from the left, and the first branch that does
+not fail picks the action.
+
+.. list-table::
+   :widths: 50 25 25
+   :header-rows: 1
+   :class: compact-table
+
+   * - **Condition**
+     - **Tick 1**
+     - **Tick 2**
+   * - 1: a stop line within 30 m
+     - no
+     - no
+   * - 2: the car ahead under 6 m/s for 3 s
+     - yes: 5 m/s
+     - yes
+   * - 3: the left lane free
+     - yes
+     - no: a car 20 m behind
+   * - 4: a car ahead within 40 m
+     - yes: 25 m
+     - yes
+   * - The tree runs
+     - Change lane
+     - Follow
+
+No arrow goes from Change lane to Follow: at tick 2, condition 3 fails, so
+the second Sequence fails, and the Fallback moves on to the third branch,
+Follow. Tick 2 comes before the AV has left its lane.
+
+.. dropdown:: More detail: what real stacks use, and what they hand down
+   :class-container: more-detail
+   :icon: info
+   :name: l10-more-real-stacks
+
+   Real driving and robot stacks use these structures:
+
+   - **Nav2**, ROS 2's navigation stack: its navigator reads a behavior tree
+     from an XML file and "uses the Behavior-Tree.CPP library to dynamically
+     create and execute the BT" (Nav2 contributors). The default tree for
+     driving to a pose is
+     ``navigate_to_pose_w_replanning_and_recovery.xml``.
+   - **Autoware**'s behavior path planner once ran its modules from a
+     behavior tree, chosen for its "high scalability compared to the state
+     machine" (Autoware Foundation, older documentation). Today a Planner
+     Manager runs them: candidate modules run in parallel until they are
+     approved, and approved modules run in series (Autoware Foundation,
+     current documentation).
+   - **Apollo** plans by scenarios made of stages: each scenario has its own
+     transfer condition, and the result of each stage "determines the
+     transition from one stage to another" (Apollo Auto, ``scenario.h``).
+
+   Whichever structure picks the behavior, its output is a maneuver, a
+   target lane, a speed or a stop point. That output is the input to the
+   rest of today.
+
+
+.. _l10-lec-bt-summary:
+
+FSM or Behavior Tree: What Each Gains and Costs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. admonition:: Where behavior trees leave us
+   :class: tip
+
+   .. list-table::
+      :widths: 14 40 46
+      :header-rows: 1
+      :class: compact-table
+
+      * -
+        - **FSM**
+        - **Behavior tree**
+      * - **Gains**
+        - "Intuitive and easy to understand"; "easy to implement"; very
+          common.
+        - **Modular** (each subtree is a module, the statuses its
+          interface); **reactive** (each tick checks the conditions again);
+          reusable subtrees; human readable.
+      * - **Costs**
+        - Reacting needs **many transitions**: adding or removing a state
+          means checking many of them again.
+        - The tick engine is complex to build (libraries exist); checking
+          every condition each tick can cost too much; a new mindset:
+          **tick driven**, not event driven.
+      * - **On our road**
+        - 5 × 3 = 15 states; one change of behavior drawn 3 times.
+        - A car in the left lane switched Change lane to Follow at the next
+          tick, with no arrow.
+
+   Colledanchise and Ögren, Sec. 2.1.1 and 2.6 (Colledanchise and Ögren,
+   2018).
+
+
+.. _l10-lec-bt-code:
+
+Code a Behavior Tree: Our Script, Then Python and ROS 2 Libraries
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Goal:** know what to use when a tree grows past our short script.
+
+.. list-table::
+   :widths: 25 17 58
+   :header-rows: 1
+   :class: compact-table
+
+   * - **Code**
+     - **Language**
+     - **What it is**
+   * - ``behavior_tree.py``, ``behavior_tree_gui.py``
+     - Python, no library
+     - Ours: the four node types and the road tree. The GUI changes the
+       tree (branches on or off, their order, each condition's threshold)
+       and the road, and shows each tick.
+   * - ``py_trees``
+     - Python
+     - "pythonic implementation of behaviour trees" (py_trees, 2026);
+       ``pip install py_trees``.
+   * - ``py_trees_ros``
+     - Python, ROS 2
+     - "Behaviours, trees, and utilities that extend PyTrees for use with
+       ROS" (py_trees_ros, 2026).
+   * - BehaviorTree.CPP
+     - C++17, ROS 2
+     - "a framework to create BehaviorTrees" (BehaviorTree.CPP, 2026);
+       Groot2 is its editor. Nav2 reads its tree from XML and runs it with
+       this library (Nav2 contributors, 2026).
+
+.. code-block:: bash
+
+   python3 behavior_tree_gui.py    # carla-python, lecture10/
+
+The window and its controls are described in the hands-on
+`README <https://github.com/rubixcubic/enpm818z-fall-2026-carla-python/blob/main/lecture10/README.md>`_.
+
+
+.. _l10-lec-trajectory:
+
+Trajectory Generation
+----------------------
+
+The behavior layer picks the task. Last class, the local planner then found
+a path around a parked car; for a fast car coming up in the left lane, the
+behavior layer closed that lane, and the AV waited behind the parked car
+(cost 11.54). This section builds on that planner: the same road, the same
+three circles and the same 0.3 m margin, plus time.
+
+**In this section:** first last class's path as one formula,
+:math:`d(s)`; then trajectories: :math:`d` and :math:`s` as polynomials in
+time, sampled, checked against where the other car will be, and scored for
+comfort.
+
+**What it is for:** the AV passes a moving car when the timing works,
+instead of waiting behind the parked car.
+
+
 .. _l10-lec-recap-path:
 
 Recap L9, the Path: Sample 31 Candidates, Keep the Cheapest
@@ -434,572 +1083,6 @@ chosen in L9; lower is better. A and B from the last section, with
    B ends 0.5 m closer to the parked car: it saves 0.36 on comfort but pays
    2.00 more on clearance and 1.00 more on the lane. A also beats the other
    7, the stop behind (11.54) included.
-
-
-.. _l10-lec-recap-behavior:
-
-Recap L9, the Behavior Layer: It Picks the Task, the Planner Finds the Path
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Last class split the job in two: the behavior layer says **what** to do;
-the local planner works out **how**, as a path.
-
-.. list-table::
-   :widths: 36 64
-   :header-rows: 1
-   :class: compact-table
-
-   * - **The behavior layer decides**
-     - **On our road (L9)**
-   * - which lanes the AV may use
-     - both open: 31 candidates; left lane closed: 10, and the AV stops
-       behind the parked car (cost 11.54)
-   * - where the AV must stop, and by when
-     - nowhere: the paths run the full 70 m
-   * - a speed limit
-     - 10 m/s: every bend needs a radius of 33.3 m or more
-
-- Its tools: a **finite state machine** (FSM) picks one behavior at a time,
-  as for the valet in the garage; a **game** decides the lane change: the AV
-  goes first only when prediction says the other car will yield.
-- Today: one FSM grows too fast for city streets (Scaling the Behavior
-  Layer), and the path gets times (Trajectory Generation).
-
-
-.. _l10-lec-tracking-compare:
-
-Compare Path Tracking and Trajectory Tracking
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Snider: "Path tracking refers to a vehicle executing a globally defined
-geometric path by applying appropriate steering motions that guide the
-vehicle along the path" (Snider, 2009).
-
-.. list-table::
-   :widths: 22 39 39
-   :header-rows: 1
-   :class: compact-table
-
-   * -
-     - **Path tracking**
-     - **Trajectory tracking**
-   * - Follows
-     - points :math:`(x, y)`: where to be
-     - points :math:`(x, y)`, each with a time: where to be, and when
-   * - Speed comes from
-     - a separate speed profile
-     - the times in the reference
-   * - If the AV is 1 s late
-     - no error, as long as it is on the path
-     - an error: it is behind where it should be
-   * - Used today by
-     - Pure Pursuit and Stanley, each with a speed PID
-     - MPC can track it: its horizon has times
-
-Our turn uses path tracking: the path, plus a speed profile for the speed
-PID.
-
-.. dropdown:: More detail: the same lane change as two references; the Frenet frame to control
-   :class-container: more-detail
-   :icon: info
-   :name: l10-more-tracking
-
-   .. rubric:: The same lane change, two references
-
-   The same lane change, written two ways (numbers chosen for the example).
-   As a **trajectory**, where and when:
-
-   .. list-table::
-      :widths: 25 25 25 25
-      :header-rows: 1
-      :class: compact-table
-
-      * - :math:`t` (s)
-        - :math:`x` (m)
-        - :math:`y` (m)
-        - :math:`v` (m/s)
-      * - 0.0
-        - 0.0
-        - 0.0
-        - 15.0
-      * - 1.0
-        - 15.0
-        - 0.9
-        - 15.0
-      * - 2.0
-        - 30.0
-        - 2.8
-        - 15.0
-      * - 3.0
-        - 45.0
-        - 3.5
-        - 15.0
-
-   Drop :math:`t` and :math:`v` and a **path** is left, where only:
-
-   .. list-table::
-      :widths: 50 50
-      :header-rows: 1
-      :class: compact-table
-
-      * - :math:`x` (m)
-        - :math:`y` (m)
-      * - 0.0
-        - 0.0
-      * - 15.0
-        - 0.9
-      * - 30.0
-        - 2.8
-      * - 45.0
-        - 3.5
-
-   A trajectory must reach each point at its time: needed when the timing
-   matters, as when merging or crossing ahead of another car. Drop the
-   path's time and speed, and the speed then comes from a separate profile.
-
-   .. rubric:: From the Frenet frame to control: the offset d is the cross-track error
-
-   The planner works in the Frenet frame :math:`(s, d)`; the controllers
-   need map points and errors.
-
-   .. list-table::
-      :widths: 28 72
-      :header-rows: 1
-      :class: compact-table
-
-      * - **Controller**
-        - **What it needs**
-      * - Pure Pursuit
-        - path points :math:`(x_i, y_i)`, plus a speed profile
-      * - Stanley
-        - path points and the path's heading
-      * - PID on steering
-        - the cross-track error
-      * - LQR, MPC
-        - the path, its heading and curvature, the speed: a model's
-          reference
-
-   - Back to the map: :math:`x = x_r(s) - d\sin\theta_r(s)`,
-     :math:`y = y_r(s) + d\cos\theta_r(s)`: the point on the reference and
-     then :math:`d` meters to its left.
-   - The AV's own :math:`d` **is** its cross-track error: its signed
-     distance from the path, positive to the left.
-
-
-.. _l10-lec-two-controllers:
-
-Follow the Path at the Right Speed: Two Controllers Side by Side
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. admonition:: Definition: Feedback controller
-   :class: note
-
-   A program that, at every cycle, compares what the AV should be doing with
-   what it measures it is doing, and sends a command that shrinks the
-   difference.
-
-.. list-table::
-   :widths: 22 43 35
-   :header-rows: 1
-   :class: compact-table
-
-   * -
-     - **Lateral (steering)**
-     - **Longitudinal (speed)**
-   * - Should be
-     - on the path
-     - at the profile's speed
-   * - Measures
-     - distance and angle to the path
-     - speed
-   * - Sends
-     - a steering angle
-     - throttle or brake
-   * - Today
-     - Pure Pursuit, Stanley, MPC
-     - PID
-
-
-.. _l10-lec-map:
-
-From the Inputs to a Steering Command
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Each section today fills in one box of this flowchart. In the deck, each
-section's divider shows it again with that box highlighted, and the boxes
-link to their sections.
-
-.. figure:: /_static/images/L10/l10_pipeline.png
-   :alt: The lecture's flowchart. Top row, as in L9: the inputs (the route from the route planner, L7; the AV's pose and speed; other cars and obstacles; their predicted paths; the map), the behavior layer (picks the task and a target speed), the local planner (a path, as in L9; with times, a trajectory) and its output, a path or a trajectory. Below, a green dashed frame, the controller node: the behavior layer's target speed goes into the speed profile (curves cap the target speed), which feeds the speed PID (throttle, brake); the path goes into a row of three steering methods, one of which is used (the section also covers PID and LQR): Pure Pursuit, Stanley, MPC; a dashed bicycle model (how steering turns the AV) points down to them. The steering methods and the PID lead to the output (steer, throttle, brake, every 0.05 s, to the actuators), which goes to the AV in CARLA; a dashed line takes the measured pose and speed back to the inputs. Each box links to its section.
-   :width: 100%
-   :align: center
-
-   The lecture's flowchart: from the inputs to a steering command.
-
-.. admonition:: Reading the figure
-   :class: tip
-
-   Each box is covered in one section of these notes.
-
-   - **Top row, as in L9:** the inputs (the route from the route planner,
-     L7; the AV's pose and speed; other cars and obstacles; their predicted
-     paths; the map), the behavior layer, which picks the task and a target
-     speed, and the local planner. In L9 the local planner gave a path; in
-     :ref:`Trajectory Generation <l10-lec-trajectory>` it adds times, a
-     trajectory. Its output goes to the controller node.
-   - **Controller node** (green dashed frame), the node of this lecture: it
-     takes the path and the behavior layer's target speed. The speed profile
-     caps the target speed in the curves, and the speed PID holds it with
-     throttle and brake. One steering method follows the path: Pure Pursuit,
-     Stanley or MPC (the section also covers PID and LQR on steering). The
-     bicycle model (dashed) says how steering turns the AV.
-   - **Output:** steer, throttle and brake every 0.05 s, to the actuators,
-     then the AV in CARLA, whose measured pose and speed go back to the
-     inputs.
-
-.. _l10-lec-objectives:
-
-Learning Objectives
-~~~~~~~~~~~~~~~~~~~
-
-This is a reading slide in the deck. After this lecture, you can:
-
-1. say why one flat FSM grows too fast, and how a **superstate** and a
-   **behavior tree** keep the behavior layer small;
-2. write the **kinematic bicycle model** and find the steering angle that follows a curvature;
-3. give a path a speed profile and a time (a **trajectory**), and say why a
-   quintic speed change keeps the **jerk** small;
-4. read a **PID** speed response: what P, I and D each do, what **windup**
-   is and how clamping stops it;
-5. work **Pure Pursuit**'s geometry by hand, from the lookahead circle to
-   the steering angle;
-6. predict how the **lookahead distance** changes Pure Pursuit, and compare
-   it with **Stanley**;
-7. say what **MPC** adds: a model, a horizon, limits, and only the first
-   input applied.
-
-
-.. _l10-lec-behavior:
-
-Scaling the Behavior Layer
----------------------------
-
-Last class showed one finite state machine (FSM) for a valet that parks
-itself in a garage. Here we use the same tools on an AV that drives city
-streets.
-
-**In this section:** two parts. Finite State Machines: five road behaviors
-and a safety monitor need 5 × 3 = 15 states in one flat FSM, and a
-superstate cuts its arrows. Behavior Trees: what a tree is, how it
-runs, and our road behaviors as a tree.
-
-**What it is for:** real stacks face the same growth: Nav2, ROS 2's
-navigation stack, runs a behavior tree (Nav2 contributors). The behavior
-layer's output, such as a target speed, is the input to the rest of today.
-
-
-.. _l10-lec-fsm:
-
-Finite State Machines
-~~~~~~~~~~~~~~~~~~~~~
-
-.. admonition:: Definition: Finite state machine (FSM)
-   :class: note
-
-   A fixed list of **states**, of which the system is in exactly one at a
-   time, and a list of **transitions**: each one moves the system from one
-   state to another when its condition becomes true.
-
-
-.. _l10-lec-flat-fsm:
-
-Step 1, the Problem: One Flat FSM Multiplies Its States
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-**Goal:** see why one flat FSM grows too fast. Our AV drives city
-streets with five behaviors: Lane keep, Follow a slower car, Change lane,
-Stop at the line and Cross the intersection. A safety monitor adds three
-states: Nominal, Caution, Emergency. Both lists are chosen for this example.
-The AV is in one behavior and one monitor state at once, so one flat FSM
-needs a state for every pair: 5 × 3 = 15.
-
-.. figure:: /_static/images/L10/beh_flat.png
-   :alt: A grid of 15 rounded boxes in three rows and five columns. Each box shows a road behavior in bold above a line and a monitor state below it: the columns are Lane keep, Follow, Change lane, Stop at line and Cross, the rows Nominal, Caution and Emergency. Three orange arrows go from Lane keep to Follow, one in each row; dark tag 1 marks the top one. Five blue arrows go down from each Nominal box to the Caution box below it; dark tag 2 marks the leftmost one.
-   :width: 85%
-   :align: center
-
-   The road behaviors and the monitor as one flat FSM: 15 states.
-
-.. admonition:: Reading the figure
-   :class: tip
-
-   Each box is one state of the flat FSM: a road behavior (bold, above the
-   line; the column: Lane keep, Follow, Change lane, Stop at line, Cross)
-   paired with a monitor state (below the line; the row: Nominal, Caution,
-   Emergency).
-
-   Only two transitions are drawn, each in every copy it needs: a full flat
-   FSM has 3 copies of every behavior arrow and 5 of every monitor arrow.
-
-   - **Tag 1:** Lane keep (Nominal) to Follow (Nominal): a slower car is
-     ahead, so the AV starts following; the monitor stays Nominal. Copied in
-     Caution and Emergency: 3 arrows (orange).
-   - **Tag 2:** Lane keep (Nominal) to Lane keep (Caution): the monitor
-     raises Caution, and the AV keeps its lane. Copied under each behavior,
-     as Follow (Nominal) to Follow (Caution): 5 arrows (blue).
-
-.. _l10-lec-superstate:
-
-Step 2, Fewer Arrows: One Superstate Arrow Replaces Five
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-**Goal:** add an emergency stop without an arrow from every state. The
-AV must be able to stop from any of its five behaviors, so one flat FSM
-needs 5 arrows to Emergency stop.
-
-.. figure:: /_static/images/L10/beh_hier.png
-   :alt: A state diagram. A large green rounded box labeled Driving, dark tag 1 at its top-left corner, holds five states: Lane keep, Follow and Change lane in a top row, Stop at the line and Cross the intersection below. An arrow from the left enters Lane keep. Lane keep and Follow go to each other; Follow goes to Change lane; Change lane goes back to Lane keep by an arc over the top. Lane keep goes down to Stop at the line, which goes to Cross the intersection, which goes back up to Lane keep. One red arrow, dark tag 2, leaves the bottom edge of the Driving box and goes down to Emergency stop.
-   :width: 75%
-   :align: center
-
-   The road behaviors inside the superstate Driving.
-
-.. admonition:: Reading the figure
-   :class: tip
-
-   - **Tag 1:** the **superstate** Driving, a state that holds the five
-     behaviors (green box). Their own arrows stay as they were: Lane keep
-     and Follow go to each other, Follow goes to Change lane and back to
-     Lane keep, and Lane keep goes to Stop at the line, then to Cross the
-     intersection, then back to Lane keep.
-   - **Tag 2:** one arrow (red) leaves Driving for Emergency stop. It stands
-     for 5 arrows, one from each state inside.
-
-.. important::
-
-   Harel lets a transition that leaves a superstate stand for that
-   transition leaving every state inside it: "the main way statecharts
-   economize in the number of arrows" (Harel, 1987).
-
-
-.. _l10-lec-bt:
-
-Behavior Trees
-~~~~~~~~~~~~~~
-
-A behavior tree has no arrows between behaviors: at every tick it checks its
-conditions again and runs the first branch that does not fail. We read its
-parts, then write our road behaviors as a tree.
-
-
-.. _l10-lec-bt-def:
-
-Define a Behavior Tree: a Root, Control Nodes and Leaves
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-**Goal:** name the parts of a behavior tree before we read one.
-
-.. admonition:: Definition: Behavior tree (BT)
-   :class: note
-
-   "A directed rooted tree where the internal nodes are called control flow
-   nodes and leaf nodes are called execution nodes" (Colledanchise and
-   Ögren, 2018).
-
-In plain words, with our road behaviors:
-
-- The **root** is the one node with no parent. Every tick starts there.
-- **Control flow nodes**, such as Sequence and Fallback, sit inside the tree
-  and decide which child is ticked next.
-- A **Condition** leaf checks a fact and returns Success or Failure: a stop
-  line within 30 m, a car ahead within 40 m.
-- An **Action** leaf runs a behavior: "While the action is ongoing it
-  returns Running". Ours: Lane keep, Follow, Change lane, Stop at the line.
-
-
-.. _l10-lec-bt-read:
-
-Read a Behavior Tree: Ticks, Three Statuses, Six Node Types
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-**Goal:** learn how a tree runs. A tick goes down from the root: "A
-node is executed if and only if it receives ticks". A ticked node returns
-Running, Success or Failure (Colledanchise and Ögren, 2018).
-
-.. list-table::
-   :widths: 17 83
-   :header-rows: 1
-   :class: compact-table
-
-   * - **Node**
-     - **What it does when ticked**
-   * - Sequence (→)
-     - Ticks its children from the left while they **succeed**; stops at
-       the first that fails or is running. **Succeeds only if every child
-       succeeds.** Our pass branch (next section): car ahead slow? left lane
-       free? then Change lane.
-   * - Fallback (?)
-     - Ticks its children from the left while they **fail**; stops at the
-       first that succeeds or is running. **Fails only if every child
-       fails.** Our root: stop, pass, follow, keep lane, in that order.
-   * - Parallel
-     - Ticks **all** its children at every tick. **Succeeds once**
-       :math:`M` **of its** :math:`N` **children succeed**, fails once
-       :math:`N - M + 1` fail (then :math:`M` successes can no longer
-       happen). :math:`M` is set by the designer.
-   * - Decorator
-     - **One child.** A rule set by the designer changes the status the
-       child returns, and when the child is ticked.
-   * - Condition (oval)
-     - A leaf: **checks one fact** and returns Success or Failure. Ours: a
-       stop line within 30 m, a car ahead within 40 m.
-   * - Action (gray box)
-     - A leaf: **runs a behavior**; returns Running while it is ongoing.
-       Ours: Lane keep, Follow, Change lane, Stop at the line.
-
-.. _l10-lec-road-bt:
-
-Pass a Slow Car or Follow It: Four Road Behaviors as a Behavior Tree
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-**Goal:** write four of the road behaviors as a tree. The root
-Fallback (?) tries its branches from the left: stop for a line, pass a slow
-car, follow a car, keep the lane. Ovals are conditions, gray boxes are
-actions; each tag is one condition (thresholds chosen for this example).
-
-.. figure:: /_static/images/L10/beh_road_bt.png
-   :alt: A behavior tree. The root, a Fallback box marked with a question mark, has four children from left to right: three Sequence boxes marked with an arrow, and a gray action box, Lane keep. The first Sequence holds condition 1, an ellipse with dark tag 1, and the action Stop at the line. The second holds conditions 2 and 3 and the action Change lane. The third holds condition 4 and the action Follow.
-   :width: 90%
-   :align: center
-
-   Four road behaviors as a behavior tree.
-
-.. admonition:: Reading the figure
-   :class: tip
-
-   The root is a Fallback (box with a question mark). Its children, from
-   left to right: a Sequence (box with an arrow) of condition 1 and Stop at
-   the line; a Sequence of conditions 2 and 3 and Change lane; a Sequence of
-   condition 4 and Follow; and the action Lane keep.
-
-   - **Tag 1:** a stop line is within 30 m ahead.
-   - **Tag 2:** the car ahead has driven under 6 m/s for 3 s.
-   - **Tag 3:** the left lane is free: no car within 30 m behind or 40 m
-     ahead.
-   - **Tag 4:** a car is ahead in our lane, within 40 m.
-
-Cross the intersection is left out to keep the tree small.
-
-
-.. _l10-lec-bt-scene:
-
-Set the Scene: a Slow Car Ahead, Then a Car in the Left Lane
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-**Goal:** see the road at the two ticks the next section checks, 0.1 s apart
-(chosen for this example). The AV drives right, in the right lane.
-
-.. figure:: /_static/images/L10/bt_scene.png
-   :alt: Two top views of a straight two-lane road, to scale, one above the other, titled Tick 1, t = 4.0 s, and Tick 2, t = 4.1 s. In both, the black AV drives right in the lower, yellow lane, and a blue car is 25 meters ahead of it in the same lane, labeled 5 m/s with dark tag 2; a double arrow under the road marks the 25 m, with dark tag 4. In the upper, purple lane, a dashed box, dark tag 3, covers the lane from 30 meters behind the AV to 40 meters ahead. In Tick 2 only, a second blue car sits in the purple lane inside the box, labeled 20 m behind.
-   :width: 100%
-   :align: center
-
-   The road at the two ticks.
-
-.. admonition:: Reading the figure
-   :class: tip
-
-   To scale. The tags are the tree's conditions.
-
-   - **Tags 2 and 4:** the car ahead, 25 m away, has driven under 6 m/s
-     (5 m/s) for 3 s.
-   - **Tag 3:** the stretch of the left lane that condition 3 checks, from
-     30 m behind the AV to 40 m ahead.
-   - **Tick 2:** a car enters that stretch, 20 m behind the AV.
-
-
-.. _l10-lec-bt-ticks:
-
-Switch Behaviors with No Arrow: a Car in the Left Lane Stops the Pass
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-**Goal:** watch the tree switch behaviors with no arrow, at two ticks
-chosen for this example. The root ticks every 0.1 s (chosen); each tick
-checks the conditions again from the left, and the first branch that does
-not fail picks the action.
-
-.. list-table::
-   :widths: 50 25 25
-   :header-rows: 1
-   :class: compact-table
-
-   * - **Condition**
-     - **Tick 1**
-     - **Tick 2**
-   * - 1: a stop line within 30 m
-     - no
-     - no
-   * - 2: the car ahead under 6 m/s for 3 s
-     - yes: 5 m/s
-     - yes
-   * - 3: the left lane free
-     - yes
-     - no: a car 20 m behind
-   * - 4: a car ahead within 40 m
-     - yes: 25 m
-     - yes
-   * - The tree runs
-     - Change lane
-     - Follow
-
-No arrow goes from Change lane to Follow: at tick 2, condition 3 fails, so
-the second Sequence fails, and the Fallback moves on to the third branch,
-Follow. Tick 2 comes before the AV has left its lane.
-
-.. dropdown:: More detail: what real stacks use, and what they hand down
-   :class-container: more-detail
-   :icon: info
-   :name: l10-more-real-stacks
-
-   Real driving and robot stacks use these structures:
-
-   - **Nav2**, ROS 2's navigation stack: its navigator reads a behavior tree
-     from an XML file and "uses the Behavior-Tree.CPP library to dynamically
-     create and execute the BT" (Nav2 contributors). The default tree for
-     driving to a pose is
-     ``navigate_to_pose_w_replanning_and_recovery.xml``.
-   - **Autoware**'s behavior path planner once ran its modules from a
-     behavior tree, chosen for its "high scalability compared to the state
-     machine" (Autoware Foundation, older documentation). Today a Planner
-     Manager runs them: candidate modules run in parallel until they are
-     approved, and approved modules run in series (Autoware Foundation,
-     current documentation).
-   - **Apollo** plans by scenarios made of stages: each scenario has its own
-     transfer condition, and the result of each stage "determines the
-     transition from one stage to another" (Apollo Auto, ``scenario.h``).
-
-   Whichever structure picks the behavior, its output is a maneuver, a
-   target lane, a speed or a stop point. That output is the input to the
-   rest of today.
-
-
-.. _l10-lec-trajectory:
-
-Trajectory Generation
-----------------------
-
-The behavior layer picks the task. Last class, the local planner then found
-a path around a parked car; for a fast car coming up in the left lane, the
-behavior layer closed that lane, and the AV waited behind the parked car
-(cost 11.54). This section builds on that planner: the same road, the same
-three circles and the same 0.3 m margin, plus time.
-
-**In this section:** we plan trajectories, not paths: the sideways offset
-:math:`d` and the distance :math:`s` as polynomials in time, sampled,
-checked against where the other car will be, and scored for comfort.
-
-**What it is for:** the AV passes a moving car when the timing works,
-instead of waiting behind the parked car.
 
 
 .. _l10-lec-traj-scene:

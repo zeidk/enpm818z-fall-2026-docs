@@ -5,10 +5,39 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.28.2: Lecture 10 Flowchart and Section Openings (2026-11-12)
+.. dropdown:: v2.28.3: Lecture 10 Checked and Reordered (2026-11-12)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10 corrections:** the speed PID's gains in the course's simulation
+     (:math:`K_i` = 0.3, clamp 1 m) are kept apart from the CARLA controller
+     node's defaults (:math:`K_i` = 0.05, clamp 2.0); of the 162 trajectory
+     candidates that end in the left lane, 135 hit car B and 27 are too
+     hard; Stanley's front axle tracks closer than its rear only at
+     :math:`k` = 1; each MPC input is held for 1 s (729 candidates).
+   - **L10 order:** the recap of last class's path now opens Trajectory
+     Generation, and the recap of the behavior layer opens Scaling the
+     Behavior Layer.
+   - **L10, behavior trees:** a road scene before the two ticks; the two
+     leaf types in the node table; what an FSM and a behavior tree each gain
+     and cost; our script and its new GUI, and the libraries for Python and
+     ROS 2 (py_trees, py_trees_ros, BehaviorTree.CPP).
+   - **L10, "why a polynomial":** the box that finds 10, −15 and 6 now starts
+     from what the curve must do, with two new figures.
+   - **L10:** "Plan Along the Road" is back in the notes as a section; every
+     "Goal:" is in bold.
+
+   .. rubric:: References
+
+   - **L10:** py_trees, py_trees_ros and BehaviorTree.CPP.
+
+
+.. dropdown:: v2.28.2: Lecture 10 Flowchart and Section Openings (2026-11-12)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

@@ -86,6 +86,39 @@ are quoted only in a "More detail" box of the lecture; their cards say so.
          Behavior-Tree.CPP library to dynamically create and execute the
          BT".
 
+      .. grid-item-card:: py_trees
+         :link: https://github.com/splintered-reality/py_trees
+         :class-card: sd-border-secondary
+
+         **Splintered Reality (2026)**
+
+         *py_trees: pythonic implementation of behaviour trees.* PyPI
+         package py-trees, version 2.6.0. Accessed 12 November 2026.
+
+         Named in "Code a Behavior Tree" as the Python library.
+
+      .. grid-item-card:: py_trees_ros
+         :link: https://github.com/splintered-reality/py_trees_ros
+         :class-card: sd-border-secondary
+
+         **Splintered Reality (2026)**
+
+         *py_trees_ros: Behaviours, trees, and utilities that extend PyTrees
+         for use with ROS.* Accessed 12 November 2026.
+
+         Named in "Code a Behavior Tree" as the library for ROS 2.
+
+      .. grid-item-card:: BehaviorTree.CPP
+         :link: https://github.com/BehaviorTree/BehaviorTree.CPP
+         :class-card: sd-border-secondary
+
+         **BehaviorTree.CPP contributors (2026)**
+
+         *BehaviorTree.CPP.* C++17 library; graphical editor Groot2.
+         Accessed 12 November 2026.
+
+         Named in "Code a Behavior Tree": Nav2 runs its trees with it.
+
       .. grid-item-card:: Autoware's behavior path planner, older design
          :link: https://autowarefoundation.github.io/autoware.universe_planning/pr-5562/planning/behavior_path_planner
          :class-card: sd-border-secondary
