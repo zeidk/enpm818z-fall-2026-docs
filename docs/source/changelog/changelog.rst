@@ -34,6 +34,9 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
    - **L10, the two timings, in three steps:** make a trajectory from a
      path and a speed; check both against car B, moment by moment; see why
      one crashes, from when each reaches the lane line.
+   - **L10, "Let the Planner Sample Trajectories":** last class's loop for
+     paths beside Werling et al.'s loop for trajectories (sample, score,
+     check, pick, repeat); each section after it opens with its step.
    - **L10, the quintic:** split in two sections. The first says what
      :math:`d(t)` must do; the second says why a quintic meets it, from
      Werling et al. and last class's S curve.

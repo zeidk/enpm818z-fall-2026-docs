@@ -1216,6 +1216,47 @@ car B's lane. They get there at different times:
    and checks each one this way.
 
 
+.. _l10-lec-traj-loop:
+
+Let the Planner Sample Trajectories, as Last Class It Sampled Paths
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Goal:** replace the two trajectories made by hand with many, made and
+checked by the planner itself. Werling et al. do this (Werling et al.,
+2010), with last class's loop:
+
+.. list-table::
+   :widths: 17 38 45
+   :header-rows: 1
+   :class: compact-table
+
+   * -
+     - **Last class: paths**
+     - **Today, Werling et al.: trajectories**
+   * - 1. Sample
+     - 31 paths :math:`d(s)`: 10 end offsets × 3 lengths, plus 1 stop
+     - 324: 18 moves across, :math:`d(t)`, × 18 moves along, :math:`s(t)`
+   * - 2. Score
+     - comfort, clearance, lane, progress
+     - squared jerk, time, end state
+   * - 3. Check
+     - the parked car, and turns too sharp; car B's lane closed by the
+       behavior layer
+     - the parked car, and car B where prediction puts it **at the same
+       moment**; moves too hard
+   * - 4. Pick
+     - the cheapest
+     - the cheapest
+   * - 5. Repeat
+     - every 0.5 s
+     - every 0.5 s
+
+.. important::
+
+   Only row 3 changes what the AV can do: a trajectory can be checked
+   against a car that moves. The next sections follow rows 1 to 5.
+
+
 .. _l10-lec-traj-lat-goal:
 
 Plan Across the Road in Time: What the Offset d(t) Must Do
@@ -1224,10 +1265,10 @@ Plan Across the Road in Time: What the Offset d(t) Must Do
 **Goal:** write each candidate's sideways move as a function of time,
 :math:`d(t)`, so that every candidate is a trajectory, not a path.
 
-The last sections made two trajectories by hand, from one path and two
-speeds. Now the planner makes them itself. Werling et al. build each candidate in two parts (Werling et al.,
-2010): the offset across the road, :math:`d(t)`, and the distance along it,
-:math:`s(t)`. This section and the next: :math:`d(t)`.
+**1. Sample, across the road.** Werling et al. build each candidate in two
+parts (Werling et al., 2010): the offset across the road, :math:`d(t)`, and
+the distance along it, :math:`s(t)`. This section and the next:
+:math:`d(t)`.
 
 What :math:`d(t)` must do:
 
@@ -1353,6 +1394,9 @@ Samples (chosen): :math:`d_1` at each lane's center and 0.5 m to each side;
 Plan Along the Road: Keep a Speed with a Quartic, Stop with a Quintic
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+**1. Sample, along the road.** :math:`s(t)` says how far along the AV is at
+each time; with :math:`d(t)` it makes one trajectory.
+
 **Keep a speed.** No end position is asked, so five conditions:
 :math:`s`, :math:`\dot s`, :math:`\ddot s` at :math:`t = 0`, and the end
 speed :math:`\dot s_1` with :math:`\ddot s = 0` at :math:`T`. A
@@ -1392,7 +1436,7 @@ Score Comfort with Jerk: Werling's Cost
    The rate of change of acceleration, in m/s³. Passengers feel a jump in
    acceleration as a jolt; a small jerk feels smooth.
 
-Werling et al.: "ease and comfort can be best described by the jerk". Each
+**2. Score.** Werling et al.: "ease and comfort can be best described by the jerk". Each
 direction gets three terms (Werling et al., 2010), each weighted by a
 number :math:`k` (all 1 here, chosen):
 
@@ -1435,7 +1479,8 @@ Check Each Candidate at Its Own Time: 45 of 324 Are Kept
    - Gray lines stay in the right lane and are kept; the thick green line is
      the cheapest of them.
 
-Checks, at a point every 0.1 s for 7 s: the acceleration along the road
+**3. Check**, as Step 2 did by hand for two, now for all 324, at a point
+every 0.1 s for 7 s: the acceleration along the road
 within ±2.0 m/s² (chosen) and across within 3 m/s² (last class's comfort
 limit); the circle gap at least 0.3 m, to the parked car and to **car B
 where prediction puts it at that same moment**.
@@ -1498,7 +1543,8 @@ Plan Again Every 0.5 s: Wait for Car B, Then Pass
    - **3:** the AV is beside the parked car, in the left lane; car B is far
      ahead.
 
-The AV drives the first 0.5 s of the cheapest candidate, then plans again
+**4. Pick, 5. repeat.** The AV drives the first 0.5 s of the cheapest
+candidate, then plans again
 from where it is.
 
 - :math:`t` = 2.0 s: car B beside the AV. All 27 kept stay in the lane; the
