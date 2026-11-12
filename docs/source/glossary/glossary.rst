@@ -3024,7 +3024,7 @@ L9 (not yet published)
    Bicycle Model
       A simplified kinematic vehicle model that merges the two front wheels
       and two rear wheels into single virtual wheels. Used as the foundation
-      for motion planning and control. L9 · L10
+      for motion planning and control. L9 · :doc:`L10 </lectures/lecture10/l10_index>`
 
    Collision Check
       A test of whether the AV's body overlaps an obstacle at one pose. L9
@@ -3071,7 +3071,7 @@ L9 (not yet published)
       constant :math:`d`: in L9, with the right lane's center as the
       reference, the left lane's center is :math:`d` = 3.5 m. The frame
       fails where :math:`1 - \kappa d` reaches 0, at the center of a curve.
-      L9 · L10
+      L9 · :doc:`L10 </lectures/lecture10/l10_index>`
 
    Hybrid A*
       A* over a grid of :math:`(x, y, \theta)` cells that keeps in each cell
@@ -3135,8 +3135,8 @@ L9 (not yet published)
 
 .. _g-l10:
 
-L10 (not yet published)
-=======================
+L10: Trajectory Generation & Control
+====================================
 
 .. glossary::
 
@@ -3151,31 +3151,47 @@ L10 (not yet published)
       behavior. L10 writes four road behaviors as a tree with four
       conditions: when a car enters the left lane, the next tick stops the
       pass and runs Follow, with no arrow between the two. Nav2, ROS 2's
-      navigation stack, runs a behavior tree. L10
+      navigation stack, runs a behavior tree. :doc:`L10 </lectures/lecture10/l10_index>`
+
+   Controller Area Network (CAN)
+      The serial bus a car's control units share. Each message, a frame,
+      "carries an identifier and from 0 to 8 bytes of data" and runs "with
+      bitrates up to 1 Mbit/s" (Bosch, 1991). In L10, the steering, throttle
+      and brake electronic control units (ECUs) send commands and read
+      feedback on one CAN bus. :doc:`L10 </lectures/lecture10/l10_index>`
 
    Cross-Track Error
       The AV's distance from the path, measured square to the path at the
       nearest path point, positive to the left. L10 measures it at the rear
       axle for Pure Pursuit (the rear axle's :math:`d` in the Frenet frame);
       the Stanley law uses the front axle's. L10's runs start with a
-      cross-track error of 1.0 m. L10
+      cross-track error of 1.0 m. :doc:`L10 </lectures/lecture10/l10_index>`
+
+   Drive-by-Wire
+      Electronic signals replace the mechanical links between the driver's
+      controls and the actuators, so a computer can steer, accelerate and
+      brake. In L10, electronic power steering, electronic throttle and
+      brake-by-wire each take a signal (an angle or torque, a torque or
+      pedal position, a pressure or deceleration) instead of a mechanical
+      pull; on a measured research car the steering wheel starts to turn
+      about 0.2 s after the command. :doc:`L10 </lectures/lecture10/l10_index>`
 
    Feedback Controller
       A program that, at every cycle, compares what the AV should be doing
       with what it measures it is doing, and sends a command that shrinks
       the difference. In L10, Pure Pursuit, Stanley and MPC steer (lateral
-      control) and a PID holds the speed (longitudinal control). L10
+      control) and a PID holds the speed (longitudinal control). :doc:`L10 </lectures/lecture10/l10_index>`
 
    Goal Point
       In Pure Pursuit, the point where the path leaves the lookahead circle
       around the rear axle, ahead of the AV. In L10's worked example, with
       a 5 m lookahead, it is (87.56, −1.18) m, 4.912 m forward and 0.933 m
-      to the right of the rear axle. See Lookahead Distance. L10
+      to the right of the rear axle. See Lookahead Distance. :doc:`L10 </lectures/lecture10/l10_index>`
 
    Heading Error
       The angle between the AV's heading and the path's direction at the
       nearest path point. The Stanley law steers by the heading error
-      :math:`\psi_e` plus a cross-track term. L10
+      :math:`\psi_e` plus a cross-track term. :doc:`L10 </lectures/lecture10/l10_index>`
 
    Integrator Windup
       The I term of a PID keeps growing while the actuator is at its limit
@@ -3184,13 +3200,13 @@ L10 (not yet published)
       :math:`K_i` = 0.3 and the throttle at its 0.75 limit, the AV peaks at
       12.18 m/s for an 8 m/s target. Anti-windup holds the sum within a
       clamp (±1 m in L10: peak 8.25 m/s); :math:`K_i` × clamp must still
-      exceed the throttle the steady speed needs. L10
+      exceed the throttle the steady speed needs. :doc:`L10 </lectures/lecture10/l10_index>`
 
    Jerk
       The rate of change of acceleration, in m/s³. Passengers feel a jump
       in acceleration as a jolt; a small jerk feels smooth. In L10, braking
       at a constant 2.0 m/s² gives 40 m/s³ twice, sampled 20 times a
-      second; a quintic slow-down keeps it at most 2.3 m/s³. L10
+      second; a quintic slow-down keeps it at most 2.3 m/s³. :doc:`L10 </lectures/lecture10/l10_index>`
 
    Lateral Acceleration
       On a circle of radius :math:`R` at speed :math:`v`, the acceleration
@@ -3198,7 +3214,7 @@ L10 (not yet published)
       push the AV sideways that hard. L10 caps it at 2.0 m/s² (the
       controller node's ``a_lat``), so the highest speed in a curve is
       :math:`\sqrt{2.0\,R}`: 3.46 m/s on the 5.98 m arc of L10's Town03
-      turn. L10
+      turn. :doc:`L10 </lectures/lecture10/l10_index>`
 
    Lookahead Distance
       The radius :math:`L_d` of Pure Pursuit's circle around the rear axle;
@@ -3206,7 +3222,7 @@ L10 (not yet published)
       the AV weave, 10 m cuts the corner by 0.98 m, and 5 m (the controller
       node's ``lookahead_distance``) is the best of the eight tried. Scaled
       with the speed, :math:`L_d = \max(3\ \mathrm{m},\ 0.75\ \mathrm{s}
-      \times v)`, the corner error drops to 0.07 m. L10
+      \times v)`, the corner error drops to 0.07 m. :doc:`L10 </lectures/lecture10/l10_index>`
 
    MPC
       Model Predictive Control. At every step, choose the sequence of inputs
@@ -3215,14 +3231,7 @@ L10 (not yet published)
       state. It sees a curvature jump coming and puts the limits inside the
       problem, at the cost of an optimization at every step and a model
       good enough to predict with. Autoware offers a linear MPC steering
-      controller. L10
-
-   Parallel Regions
-      Two or more machines inside one state; the system is in one state of
-      each at the same time, and the regions can talk by broadcast events
-      (Harel's orthogonal regions). The states add instead of multiply: in
-      L10, five road behaviors and a safety monitor (3 states) draw
-      5 + 3 = 8 states, against 5 × 3 = 15 for one flat FSM. L10
+      controller. :doc:`L10 </lectures/lecture10/l10_index>`
 
    PID Controller
       Proportional, integral, derivative controller. The command is
@@ -3231,7 +3240,7 @@ L10 (not yet published)
       In L10's speed test: P alone settles 0.42 m/s short at
       :math:`K_p` = 0.5; I closes the gap but winds up; D trimmed the peak
       from 8.25 to 8.12 m/s. L10's controller node holds the speed with a
-      PID with anti-windup. See Integrator Windup. L10
+      PID with anti-windup. See Integrator Windup. :doc:`L10 </lectures/lecture10/l10_index>`
 
    Pure Pursuit
       A steering controller that, at every cycle, finds the goal point on a
@@ -3239,7 +3248,7 @@ L10 (not yet published)
       AV's frame, finds the arc from the rear axle through it,
       :math:`\kappa = 2\sin\alpha / L_d`, and steers
       :math:`\delta = \arctan(L\kappa)`. On L10's turn, with 5 m: −0.211 rad,
-      a ``VehicleCmd`` steer of −0.173. See Lookahead Distance. L10
+      a ``VehicleCmd`` steer of −0.173. See Lookahead Distance. :doc:`L10 </lectures/lecture10/l10_index>`
 
    Quintic Polynomial Trajectory
       A speed change whose distance along the path is a polynomial of
@@ -3247,7 +3256,7 @@ L10 (not yet published)
       and acceleration at both ends; zero acceleration at both ends means
       no jolt where braking starts or ends. In L10, slowing from 8 to
       3.46 m/s without passing 2.0 m/s² takes 3.41 s over 19.5 m, with jerk
-      at most 2.3 m/s³. L10
+      at most 2.3 m/s³. :doc:`L10 </lectures/lecture10/l10_index>`
 
    Stanley Controller
       The steering law of Stanford's DARPA Grand Challenge car. With
@@ -3255,20 +3264,20 @@ L10 (not yet published)
       :math:`\delta = \psi_e - \arctan\big(k e / (v + k_s)\big)`: the
       heading error plus a cross-track term, both measured at the **front**
       axle. :math:`k_s` = 1 m/s keeps the fraction finite when the AV stands
-      still (Hoffmann et al., 2007). L10
+      still (Hoffmann et al., 2007). :doc:`L10 </lectures/lecture10/l10_index>`
 
    Superstate
       A state that holds other states. One arrow that leaves it stands for
       that arrow leaving every state inside it, "the main way statecharts
       economize in the number of arrows" (Harel, 1987). In L10, the
       superstate Driving holds the five road behaviors, and one arrow to
-      Emergency stop replaces five. L10
+      Emergency stop replaces five. :doc:`L10 </lectures/lecture10/l10_index>`
 
    Tick
       The signal a behavior tree's root sends down the tree, again and
       again: "A node is executed if and only if it receives ticks"
       (Colledanchise and Ögren, 2018). A ticked node answers Running,
-      Success or Failure. L10's road tree ticks every 0.1 s. L10
+      Success or Failure. L10's road tree ticks every 0.1 s. :doc:`L10 </lectures/lecture10/l10_index>`
 
 .. raw:: html
 

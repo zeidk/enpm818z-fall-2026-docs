@@ -5,10 +5,29 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.27.0: Lecture 9 Topics and Two Glossary Terms (2026-11-11)
+.. dropdown:: v2.28.0: Lecture 10 Published (2026-11-12)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10, Trajectory Generation & Control:** the lecture notes, exercises,
+     quiz and references are online. The notes follow the slides in class
+     order. What was cut from class for time sits in closed **More detail**
+     boxes right after the part it explains; the quiz and the exercises do
+     not use them.
+   - **More detail links:** a slide's "More detail" link opens the notes at
+     its box, and the box opens by itself.
+
+   .. rubric:: Glossary
+
+   - **L10 section:** its terms now link to the L10 page.
+
+
+.. dropdown:: v2.27.0: Lecture 9 Topics and Two Glossary Terms (2026-11-11)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

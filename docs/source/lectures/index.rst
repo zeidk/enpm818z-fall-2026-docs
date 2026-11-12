@@ -55,7 +55,7 @@ slides are finished; the table shows the plan.
      - Configuration space and the limits on how the AV moves; collision checking with circles; the Frenet frame; sampling and scoring candidate paths; behavior: the lane change as a game (Nash equilibrium), finite state machines and MDPs; grid search, hybrid A*, RRT and RRT*; on one Town03 road and a parking garage
    * - L10
      - Trajectory Generation & Control
-     - The controller's five input topics, seen live in Town03; the behavior layer beyond one FSM for road driving (why a flat FSM grows too fast, superstates and parallel regions, behavior trees, built and run in Python); the kinematic bicycle model; trajectories: a speed profile in time and a quintic speed change that keeps the jerk small; PID speed control, windup and clamping; Pure Pursuit and its lookahead distance; the Stanley controller; what MPC adds (a model, a horizon, limits, and only the first input applied); on one Town03 right turn
+     - The controller's five input topics, seen live in Town03; the behavior layer beyond one FSM for road driving (why a flat FSM grows too fast, a superstate, behavior trees, built and run in Python); trajectory generation (a quintic offset in time, checked against a moving car and scored for jerk); drive-by-wire actuators and the steering chain's 0.2 s delay; the kinematic bicycle model and Ackermann steering; a speed profile with a quintic slow-down; PID speed control, windup and clamping; Pure Pursuit and its lookahead distance; the Stanley controller; what MPC adds (a model, a horizon, limits, and only the first input applied); on one Town03 right turn
    * - L11
      - End-to-End Driving, VLA & Imitation Learning
      - UniAD, DriveTransformer, Vision-Language-Action (VLA) models, DriveVLM, modular vs. end-to-end debate, behavior cloning, distribution shift, DAgger
@@ -79,12 +79,12 @@ slides are finished; the table shows the plan.
    lecture6/l6_index
    lecture7/l7_index
    lecture8/l8_index
+   lecture10/l10_index
 
 ..
    Hidden until each deck is finished (see HIDDEN_LECTURES in conf.py).
    To reopen a lecture, move its line back into the toctree above.
    lecture9/l9_index
-   lecture10/l10_index
    lecture11/l11_index
    lecture12/l12_index
    lecture13/l13_index

@@ -13,13 +13,13 @@ Quiz
    through this page is good preparation for one. Memorizing the answers
    below is not.
 
-This quiz covers Lecture 10: the behavior layer beyond one flat FSM
-(superstates, parallel regions and behavior trees), the test turn and its
-speed profile, the kinematic bicycle model, trajectories and jerk, PID speed
+This quiz covers Lecture 10: the behavior layer beyond one flat FSM (a
+superstate and behavior trees), trajectory generation, drive-by-wire, the
+test turn and its speed profile, the kinematic bicycle model, PID speed
 control and windup, Pure Pursuit and its lookahead distance, the Stanley
 law, and what MPC adds. Every question can be answered from the lecture
-notes, :doc:`l10_lecture`. Nothing on this page needs
-:doc:`Going Further <l10_appendix>` or the lecture's "More detail" boxes.
+notes, :doc:`l10_lecture`. This quiz tests only what the deck teaches in
+class: nothing on this page needs the lecture's "More detail" boxes.
 
 .. note::
 
@@ -49,27 +49,25 @@ Multiple Choice (Questions 1 to 15)
 
    The AV has the lecture's five road behaviors. You add a safety monitor
    with 4 states (chosen for this question). How many states does one flat
-   FSM need, and how many states do two parallel regions draw?
+   FSM need for the behaviors and the monitor together?
 
-   A. 9 and 9
+   A. 9
 
-   B. 20 and 9
+   B. 15
 
-   C. 20 and 20
+   C. 20
 
-   D. 9 and 20
+   D. 24
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B**.
+   **C**.
 
    The AV is in one behavior and one monitor state at once, so one flat FSM
-   needs a state for every pair: 5 × 4 = 20. Parallel regions keep the two
-   machines apart, and the AV is in one state of each: 5 + 4 = 9 states
-   drawn. The lecture's monitor has 3 states: 5 × 3 = 15 against
-   5 + 3 = 8. See "Step 1, the Problem: One Flat FSM Multiplies Its States"
-   and "Step 3, Fewer States: Parallel Regions Add Instead of Multiply" in
+   needs a state for every pair: 5 × 4 = 20. The lecture's own monitor has
+   3 states, for 5 × 3 = 15 (**B**); 9 (**A**) is 5 + 4, not a flat FSM's
+   count. See "Step 1, the Problem: One Flat FSM Multiplies Its States" in
    :doc:`l10_lecture`.
 
 
@@ -280,29 +278,32 @@ Multiple Choice (Questions 1 to 15)
 .. admonition:: Question 9
    :class: hint
 
-   The AV brakes at a constant 2.0 m/s². The lecture samples its jerk 20
-   times a second and gets 40 m/s³ where braking starts. What happens to
-   that number if you sample 100 times a second?
+   Recall last class's candidate A: :math:`s_0` = 60 m, :math:`L` = 40 m,
+   :math:`\Delta d` = 3.5 m. At :math:`s` = 90 m (chosen for this
+   question), what is :math:`u`, and how far sideways, :math:`d`, has
+   candidate A moved?
 
-   A. It stays 40 m/s³: jerk does not depend on the sampling.
+   A. :math:`u` = 0.75, :math:`d` = 3.15 m
 
-   B. It drops to 8 m/s³.
+   B. :math:`u` = 0.75, :math:`d` = 2.63 m
 
-   C. It grows to 200 m/s³: a true jump in acceleration has no finite jerk.
+   C. :math:`u` = 0.60, :math:`d` = 2.10 m
 
-   D. It drops to 0, because the deceleration is constant.
+   D. :math:`u` = 1.00, :math:`d` = 3.50 m
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C**.
+   **A**.
 
-   The acceleration jumps by 2.0 m/s² within one step. At 20 samples a
-   second that is 2.0 / 0.05 = 40 m/s³; at 100 samples a second,
-   2.0 / 0.01 = 200 m/s³. A true jump has no finite jerk, so the number
-   grows the faster we sample. The deceleration is constant only between
-   the two jumps (**D**). See "Measure Comfort: Jerk, How Fast the
-   Acceleration Changes" in :doc:`l10_lecture`.
+   1. :math:`u = (s - s_0)/L = (90 - 60)/40` = 0.75.
+   2. :math:`q(0.75)` = 0.90 (the lecture's own value at :math:`u` = 0.75).
+   3. :math:`d = \Delta d\, q(u) = 3.5 \times 0.90` = 3.15 m.
+
+   2.63 m (**B**) comes from :math:`d = \Delta d \times u` (skipping
+   :math:`q`); 1.00 (**D**) is :math:`u` past the move's end. See "Read u:
+   How Far Through the Move a Point s Is" and "Shape the Move with q(u)" in
+   :doc:`l10_lecture`.
 
 
 .. admonition:: Question 10
@@ -367,31 +368,29 @@ Multiple Choice (Questions 1 to 15)
 .. admonition:: Question 12
    :class: hint
 
-   In the lecture's road tree, you delete the pass branch (the Sequence of
-   conditions 2 and 3 and Change lane). What else must change?
+   Last class scored two of the nine kept candidates: A (:math:`d` =
+   3.5 m) costs 5.07; B (:math:`d` = 3.0 m) costs 7.71. B saves 0.36 on
+   comfort but costs more on the other terms and still loses. Which term
+   adds B's largest extra cost over A?
 
-   A. The other three branches, because control passes between branches
-      along arrows.
+   A. Progress
 
-   B. Nothing else: each parent ticks a child and gets a status back, so the
-      other branches do not depend on the pass branch.
+   B. Lane
 
-   C. The root must become a Sequence.
+   C. Clearance
 
-   D. Condition 4 must move into the pass branch's place.
+   D. Comfort
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B**.
+   **C**.
 
-   A tree's parent ticks a child and gets a status back, as from a function
-   call: Colledanchise and Ögren call this a "two-way control transfer".
-   Remove the pass branch, and nothing else changes. An FSM's arrow hands
-   control to the next state for good, a "one-way control transfer", so
-   removing Change lane from an FSM means changing the arrows into and out
-   of it. A tree has no such arrows between its branches (**A**). See "Choose a Tree Over an FSM: a Change Stays in One
-   Branch" in :doc:`l10_lecture`.
+   Clearance: B pays 4 × (1.5 − 0.859) = 2.56 against A's
+   4 × (1.5 − 1.359) = 0.56, 2.00 more. Lane costs B 1.00 more
+   (3.00 against 2.00) (**B**); Progress costs both 0 (**A**); Comfort is
+   where B is cheaper, by 0.36, not more expensive (**D**). See "Apply the
+   Costs: A Is the Cheapest" in :doc:`l10_lecture`.
 
 
 .. admonition:: Question 13
@@ -423,38 +422,33 @@ Multiple Choice (Questions 1 to 15)
 
    −0.12 (**A**) forgets the 2; −0.6 (**D**) is :math:`\sin\alpha` alone.
    The steering is then :math:`\arctan(2.875 \times (-0.24))` = −0.604 rad,
-   under the 0.7 rad limit. See "Step 3: Find the Angle α and the Arc
-   Through the Goal" and "Step 4: Turn the Arc into a Steering Command" in
-   :doc:`l10_lecture`.
+   under the 0.7 rad limit. See "Steer for the Arc: Pure Pursuit's Steering
+   Law" in :doc:`l10_lecture`.
 
 
 .. admonition:: Question 14
    :class: hint
 
-   Pure Pursuit asks for :math:`\delta` = 0.5 rad (chosen for this
-   question). The controller node turns it into a ``VehicleCmd`` steer from
-   −1 to 1. Which command is right?
+   The trajectory planner checks all 324 candidates (18 across the road
+   times 18 along it) against the checks and against car B. 54 are too
+   hard, 90 hit the parked car, and 135 hit car B (every one that ends in
+   the left lane). How many are kept?
 
-   A. 0.5 / 0.7 = 0.714
+   A. 27
 
-   B. 0.5 / 1.222 = 0.409
+   B. 45
 
-   C. 0.5 × 1.222 = 0.611
+   C. 90
 
-   D. −0.409, because CARLA's steer is positive to the right
+   D. 135
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **B**.
 
-   The node divides by 1.222 rad, the wheel angle at full steering
-   (measured in CARLA): 0.5 / 1.222 = 0.409. Dividing by 0.7 (**A**), the
-   most the controller asks for, turns the wheels 1.75 times too far.
-   ``VehicleCmd`` steer is positive to the left, as :math:`\delta` is; the
-   sign flip for CARLA happens in the node that steps CARLA, not here
-   (**D**). See
-   "Step 4: Turn the Arc into a Steering Command" in :doc:`l10_lecture`.
+   324 − (54 + 90 + 135) = 324 − 279 = 45. See "Check Each Candidate at Its
+   Own Time: 45 of 324 Are Kept" in :doc:`l10_lecture`.
 
 
 .. admonition:: Question 15
@@ -498,29 +492,27 @@ True or False (Questions 16 to 19)
 
    **True.**
 
-   With the delay and the lag, the 3 m run's swings grow to 3.07 m, out of
-   the 3.5 m lane. The same run crosses by only 0.05 m with instant
-   steering, and by 0.32 m with the lag alone, then settles. See "Choose the
-   Lookahead: Too Short, and the AV Weaves" in :doc:`l10_lecture`.
+   At 3 m, 8 m/s, the AV weaves because the steering is both delayed and
+   lags: its swings grow to 3.07 m, out of the 3.5 m lane. See "Choose the
+   Lookahead: Too Short Weaves, Too Long Cuts the Corner" in
+   :doc:`l10_lecture`.
 
 
 .. admonition:: Question 17
    :class: hint
 
-   True or false: the quintic slow-down from 8 to 3.46 m/s that never
-   passes 2.0 m/s² needs a shorter braking distance than braking at a
-   constant 2.0 m/s².
+   True or false: during the measured 0.2 s steering delay, at the test
+   path's 8 m/s starting speed, the AV drives 2.0 m on its old steering
+   before the wheel begins to turn.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
    **False.**
 
-   Constant deceleration takes 2.27 s over 13.0 m; the quintic takes
-   3.41 s over 19.5 m, so it starts braking 19.5 − 13.0 = 6.5 m earlier. In
-   return, its jerk stays at most 2.3 m/s³, against 40 m/s³ twice for the
-   constant braking at 20 samples a second. See "Slow Down for the Turn:
-   Two Ways Between the Same Speeds" in :doc:`l10_lecture`.
+   The AV drives :math:`8 \times 0.2` = 1.6 m on its old steering during
+   the 0.2 s delay, not 2.0 m. See "Measure the Chain's Delay: the Wheel
+   Turns 0.2 s after the Command" in :doc:`l10_lecture`.
 
 
 .. admonition:: Question 18
@@ -580,7 +572,7 @@ Short Answer (Questions 20 to 21)
    short lookahead tracks the corner more closely, but at 4 m and below the
    AV weaves. 5 m balances the two: it crosses by 0.32 m after the start and
    stays within 0.25 m of the center in the turn. See
-   "Choose the Lookahead: a Trade-Off Between the Two" in
+   "Choose the Lookahead: Too Short Weaves, Too Long Cuts the Corner" in
    :doc:`l10_lecture`.
 
 

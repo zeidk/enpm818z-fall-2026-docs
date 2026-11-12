@@ -12,14 +12,14 @@ Exercises
    listed in the :doc:`syllabus </syllabus/index>`.
 
 Seven take-home exercises, built on the Lecture 10 notes,
-:doc:`l10_lecture`, and on the lecture's Town03 turn. They use only the
-lecture, never :doc:`Going Further <l10_appendix>` or the lecture's "More
-detail" boxes. Exercise 1 counts the states and arrows of the behavior
-layer, and Exercise 2 ticks the road behavior tree. Exercise 3 builds a
-speed profile for another curve, and Exercise 4 finds the bicycle model's
-turn rate and circle. Exercise 5 works the PID by hand, Exercise 6 runs Pure
-Pursuit's four steps, and Exercise 7 applies the Stanley law. Exercise 4
-ends with a check in the lecture's hands-on window.
+:doc:`l10_lecture`, and on the lecture's Town03 turn. They test only what
+the deck teaches in class, never the lecture's "More detail" boxes.
+Exercise 1 counts the states and arrows of the behavior layer, and
+Exercise 2 ticks the road behavior tree. Exercise 3 builds a speed profile
+for another curve, and Exercise 4 finds the bicycle model's turn rate and
+circle. Exercise 5 works the PID by hand, Exercise 6 applies Pure Pursuit's
+steering law, and Exercise 7 applies the Stanley law. Exercise 4 ends with a
+check in the lecture's hands-on window.
 
 .. note::
 
@@ -44,8 +44,8 @@ ends with a check in the lecture's hands-on window.
 
    **Goal**
 
-   See how a flat FSM, a superstate and parallel regions grow when the
-   behavior layer gets more concerns.
+   See how a flat FSM and a superstate grow differently when the behavior
+   layer gets more concerns.
 
    .. raw:: html
 
@@ -84,13 +84,13 @@ ends with a check in the lecture's hands-on window.
 
       <hr>
 
-   **Part C. Parallel regions**
+   **Part C. A third concern**
 
-   5. Go back to the five road behaviors. How many states do two parallel
-      regions, the road behaviors and the four-state monitor, draw?
-   6. Add a third concern, the lights, with two states (chosen for this
-      exercise): Off, On. How many states does one flat FSM need for all
-      three, and how many do three parallel regions draw?
+   5. Add a third concern, the lights, with two states (chosen for this
+      exercise): Off, On. How many states does one flat FSM need for the
+      road behaviors, the monitor and the lights together?
+   6. Compare that with question 1's count. By what factor did adding the
+      lights multiply the state count, and why that factor?
 
    .. raw:: html
 
@@ -115,13 +115,12 @@ ends with a check in the lecture's hands-on window.
       and stands for the 6. Adding a behavior inside Driving adds no arrow
       to Emergency stop.
 
-      Question 5: 5 + 4 = 9 states, against 20.
+      Question 5: 5 × 4 × 2 = 40 states.
 
-      Question 6: flat: 5 × 4 × 2 = 40 states. Three parallel regions:
-      5 + 4 + 2 = 11 states. Each new concern multiplies the flat FSM's
-      states and only adds to the regions' states, as in Harel's example of
-      two components with 1000 states each: 1000 × 1000 = 1,000,000 in the
-      product.
+      Question 6: 40 / 20 = 2, the lights' own state count. Each new
+      concern multiplies the flat FSM's states by its own count, as in
+      Harel's example of two components with 1000 states each:
+      1000 × 1000 = 1,000,000 in the product.
 
 
 .. dropdown:: Exercise 2. Tick the Road Behavior Tree
@@ -453,15 +452,15 @@ ends with a check in the lecture's hands-on window.
          0.40, under 0.75.
 
 
-.. dropdown:: Exercise 6. Pure Pursuit's Four Steps by Hand
+.. dropdown:: Exercise 6. Pure Pursuit's Steering Law
    :icon: number
    :class-container: sd-border-primary
    :class-title: sd-font-weight-bold
 
    **Goal**
 
-   Run Pure Pursuit's four steps on a new pose, from the goal point to the
-   ``VehicleCmd`` steer.
+   Apply Pure Pursuit's formula for the lookahead, the curvature and the
+   steering angle, and see how the lookahead changes the curvature.
 
    .. raw:: html
 
@@ -469,26 +468,28 @@ ends with a check in the lecture's hands-on window.
 
    **Specification**
 
-   The rear axle at (0, 0) m in the map, heading :math:`\theta` = 0.1 rad
-   (:math:`\cos\theta` = 0.9950, :math:`\sin\theta` = 0.0998), speed
-   6 m/s. The lookahead is :math:`L_d` = 5 m, and the path leaves the
-   lookahead circle ahead of the AV at the map point (4.8, −1.4) m. All
-   chosen for this exercise.
+   The AV drives at :math:`v` = 7 m/s (chosen for this exercise). The
+   lookahead scales with the speed, :math:`L_d = \max(3\ \mathrm{m},\
+   0.75\ \mathrm{s} \times v)`, as in the lecture. The angle from the AV's
+   heading to the lookahead point is :math:`\alpha` = −18° (chosen for this
+   exercise).
 
    .. raw:: html
 
       <hr>
 
-   **Steps**
+   **Questions**
 
-   1. Step 1: check that the goal point is on the lookahead circle.
-   2. Step 2: write the goal point in the AV's frame: :math:`g_x` (forward)
-      and :math:`g_y` (left).
-   3. Step 3: find :math:`\alpha`, the arc's curvature :math:`\kappa` and
-      its radius. Does the AV turn left or right?
-   4. Step 4: find :math:`\delta` and the ``VehicleCmd`` steer. What steer
-      would you send if you divided by 0.7 instead?
-   5. At 6 m/s, which lookahead would the controller node use?
+   1. What is :math:`L_d` at this speed?
+   2. What is the curvature of the arc, :math:`\kappa = 2\sin\alpha / L_d`?
+      Does the AV turn left or right?
+   3. With the lecture's wheelbase, :math:`L` = 2.875 m, what is the
+      steering angle, :math:`\delta = \arctan(L\kappa)`? Is it within the
+      controller's 0.7 rad limit?
+   4. If the lookahead were fixed at 3 m instead (same :math:`\alpha`),
+      would :math:`|\delta|` be larger or smaller? Compute it to check.
+   5. At what speed does the scaled lookahead first exceed the fixed 3 m
+      value?
 
    .. raw:: html
 
@@ -496,42 +497,28 @@ ends with a check in the lecture's hands-on window.
 
    **Deliverable**
 
-   The answers to questions 1 to 5, with the arithmetic, and a sketch of the
-   AV, the circle and the goal point in the map.
+   The answers to questions 1 to 5, with the arithmetic.
 
    .. dropdown:: Guidance
       :color: success
 
-      Question 1: :math:`\sqrt{4.8^2 + 1.4^2} = \sqrt{23.04 + 1.96} =
-      \sqrt{25}` = 5.0 m, the lookahead.
+      Question 1: :math:`0.75 \times 7` = 5.25 m, longer than 3 m, so
+      :math:`L_d` = 5.25 m.
 
-      Question 2: from the rear axle to the goal, :math:`\Delta x` = 4.8 m,
-      :math:`\Delta y` = −1.4 m. Turn by :math:`-\theta`:
+      Question 2: :math:`\sin(-18°)` = −0.309, so
+      :math:`\kappa = 2 \times (-0.309) / 5.25` = −0.1177 /m. Negative: a
+      right turn.
 
-      1. :math:`g_x = \cos\theta\,\Delta x + \sin\theta\,\Delta y` =
-         0.9950 × 4.8 + 0.0998 × (−1.4) = 4.776 − 0.140 = 4.636 m.
-      2. :math:`g_y = -\sin\theta\,\Delta x + \cos\theta\,\Delta y` =
-         −0.0998 × 4.8 + 0.9950 × (−1.4) = −0.479 − 1.393 = −1.872 m:
-         1.872 m to the right.
+      Question 3: :math:`\delta = \arctan(2.875 \times (-0.1177)) =
+      \arctan(-0.3384)` = −0.326 rad (−18.7°), under the 0.7 rad limit.
 
-      Question 3:
+      Question 4: a shorter lookahead gives a larger magnitude. At
+      :math:`L_d` = 3 m: :math:`\kappa = 2 \times (-0.309) / 3` =
+      −0.206 /m, and :math:`\delta = \arctan(2.875 \times (-0.206))` =
+      −0.535 rad (−30.6°), larger in magnitude than question 3's −0.326 rad.
 
-      1. :math:`\alpha = \arctan(-1.872 / 4.636) = \arctan(-0.404)` =
-         −0.384 rad (−22.0°).
-      2. :math:`\sin\alpha` = −0.3744, so
-         :math:`\kappa` = 2 × (−0.3744) / 5 = −0.1498 /m.
-      3. :math:`R` = 1 / 0.1498 = 6.68 m. Negative: a right turn.
-
-      Question 4:
-
-      1. :math:`\delta = \arctan(2.875 \times (-0.1498)) = \arctan(-0.431)` =
-         −0.407 rad (−23.3°), under the 0.7 rad limit.
-      2. Steer: −0.407 / 1.222 = −0.333.
-      3. Divided by 0.7: −0.407 / 0.7 = −0.581, which turns the wheels
-         1.75 times too far.
-
-      Question 5: the controller node uses 5 m or 1 s × :math:`v`,
-      whichever is longer: 1 × 6 = 6 m.
+      Question 5: :math:`0.75 v` = 3 m at :math:`v` = 4 m/s; above that
+      speed the scaled lookahead is longer than 3 m.
 
 
 .. dropdown:: Exercise 7. The Stanley Law by Hand
