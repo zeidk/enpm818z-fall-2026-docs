@@ -246,8 +246,10 @@ enters the next one parallel to the lane.
 Write Every Candidate with One Formula: d(s) = d0 + Δd q(u)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The offset at a point :math:`s` is the start offset plus the share
-:math:`q(u)` of the sideways move:
+Here :math:`d(s)` is the path's sideways offset at a point :math:`s` on the
+road: how far left of the right lane's center, in meters, the path is
+there. It is the start offset plus the share :math:`q(u)` of the sideways
+move:
 
 .. important::
 
@@ -256,24 +258,55 @@ The offset at a point :math:`s` is the start offset plus the share
 
    After :math:`s_0 + L`, :math:`d` stays at :math:`d_0 + \Delta d`.
 
-The planner writes all 31 candidates this way before it checks or scores
-any. The 30 shifts share :math:`s_0` = 60 m and :math:`d_0` = 0, and differ
-only in :math:`\Delta d` (their :math:`d_\text{end}`) and :math:`L`. The
-stop behind uses the same formula with :math:`d_\text{end} = 0`, so
-:math:`\Delta d = 0` and :math:`d(s) = 0`: it keeps the lane and ends 2.0 m
-short of the parked car (:math:`s` = 110.15 m, as in L9). The cheapest, A:
-:math:`\Delta d` = 3.5 m, :math:`L` = 40 m.
+The planner writes all 31 candidates with this formula, then checks and
+scores them:
 
-1. :math:`s` = 60 m: :math:`u = 0`, :math:`q = 0`, so
-   :math:`d = 0 + 3.5 \times 0 = 0`: on the right lane's center.
-2. :math:`s` = 80 m: :math:`u = 20/40 = 0.5`, :math:`q = 0.5`, so
+- 30 lane shifts: the same :math:`s_0` = 60 m and :math:`d_0` = 0; only
+  :math:`\Delta d` and :math:`L` change.
+- 1 stop behind: :math:`\Delta d = 0`, so :math:`d(s) = 0`. It ends 2.0 m
+  short of the parked car (:math:`s` = 110.15 m, as in L9).
+
+Candidate A, with :math:`\Delta d` = 3.5 m and :math:`L` = 40 m, at three
+points:
+
+1. :math:`s` = 60 m: :math:`u = 0`, :math:`q = 0`, :math:`d = 0`: on the
+   right lane's center.
+2. :math:`s` = 80 m: :math:`u = 20/40 = 0.5`, :math:`q = 0.5`,
    :math:`d = 3.5 \times 0.5 = 1.75` m: on the lane line.
-3. :math:`s` = 100 m: :math:`u = 1`, :math:`q = 1`, so
-   :math:`d = 3.5 \times 1 = 3.5` m: on the left lane's center.
+3. :math:`s` = 100 m: :math:`u = 1`, :math:`q = 1`, :math:`d` = 3.5 m: on
+   the left lane's center.
 
-Only :math:`s` appears, never a time: that makes it a path. Later today,
-Trajectory Generation writes :math:`d` as a polynomial in the time
-:math:`t`.
+.. important::
+
+   Only :math:`s` appears, never a time: that makes it a path. Later today,
+   Trajectory Generation writes :math:`d` as a polynomial in the time
+   :math:`t`.
+
+
+.. _l10-lec-two-candidates:
+
+See Two Candidates on the Road Before Scoring Them: A and B
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Two of the 9 candidates that pass the checks, both from :math:`s_0` = 60 m
+over :math:`L` = 40 m.
+
+.. figure:: /_static/images/L10/two_candidates.png
+   :alt: A graph of d against s, s from 56 to 132 meters, the right lane pale yellow from minus 1.75 to 1.75 and the left lane pale purple from 1.75 to 5.25, the right lane's center a thick black line at d = 0 and the left lane's center dotted at 3.5. A black AV icon at s = 60, d = 0; a blue parked car at s = 118, just below d = 0. Two S curves leave the AV together: a green one, labeled A, levels off at d = 3.5 near s = 100; a gray one, labeled B, levels off just below it at d = 3. Both then run straight to s = 132.
+   :width: 90%
+   :align: center
+
+   Candidates A and B on the road.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   A graph, not a map: the :math:`d` axis is stretched.
+
+   - **A** (green): :math:`d(s) = 3.5\; q\big((s - 60)/40\big)`, to the
+     left lane's center.
+   - **B** (gray): :math:`d(s) = 3.0\; q\big((s - 60)/40\big)`, 0.5 m short
+     of it: it ends 0.5 m closer to the parked car's lane.
 
 
 .. _l10-lec-apply-costs:
@@ -283,7 +316,8 @@ Apply the Costs: A Is the Cheapest
 
 Once the planner has all the candidates, it applies the costs to the 9 that
 pass the checks. Each term is a number read off the curve times a weight
-chosen in L9; lower is better. Two of the 9, with :math:`u = (s - 60)/40`:
+chosen in L9; lower is better. A and B from the last section, with
+:math:`u = (s - 60)/40`:
 
 .. list-table::
    :widths: 15 35 25 25
@@ -369,18 +403,18 @@ vehicle along the path" (Snider, 2009).
    * -
      - **Path tracking**
      - **Trajectory tracking**
-   * - Told
-     - points :math:`(x, y)`
-     - points :math:`(x, y)`, each with a time
-   * - Speed
-     - from a separate speed profile
-     - part of the reference
-   * - Late by 1 s
+   * - Follows
+     - points :math:`(x, y)`: where to be
+     - points :math:`(x, y)`, each with a time: where to be, and when
+   * - Speed comes from
+     - a separate speed profile
+     - the times in the reference
+   * - If the AV is 1 s late
      - no error, as long as it is on the path
-     - an error along the road
-   * - Today
-     - Pure Pursuit, Stanley, with a speed PID
-     - MPC can do it (its horizon has times)
+     - an error: it is behind where it should be
+   * - Used today by
+     - Pure Pursuit and Stanley, each with a speed PID
+     - MPC can track it: its horizon has times
 
 Our turn uses path tracking: the path, plus a speed profile for the speed
 PID.

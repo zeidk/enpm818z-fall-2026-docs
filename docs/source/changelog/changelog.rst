@@ -5,10 +5,26 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.28.0: Lecture 10 Published (2026-11-12)
+.. dropdown:: v2.28.1: Lecture 10 Recap Made Clearer (2026-11-12)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10, "Write Every Candidate with One Formula":** says what
+     :math:`d(s)` is, the path's sideways offset at a point :math:`s`, and
+     lists the lane shifts and the stop behind separately.
+   - **L10, new section "See Two Candidates on the Road":** candidates A and
+     B drawn on the road before the costs are applied.
+   - **L10, path tracking against trajectory tracking:** the table's rows
+     say what each controller follows, where its speed comes from, what
+     happens when the AV is 1 s late, and which controllers use it today.
+
+
+.. dropdown:: v2.28.0: Lecture 10 Published (2026-11-12)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 
