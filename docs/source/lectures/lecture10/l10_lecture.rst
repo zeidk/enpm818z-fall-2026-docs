@@ -624,7 +624,7 @@ road, with the AV at 10 m/s. It worked in the Frenet frame: :math:`s` is the
 distance along the right lane's center, :math:`d` the offset to its left.
 
 .. figure:: /_static/images/L10/candidate_set.png
-   :alt: A graph of d against s, s from 57 to 132 meters, the right lane pale yellow and the left lane pale purple. A black car icon, the AV, at s = 60 and d = 0. Thirty thin dark curves leave it, solid, dashed or dotted, and level off at ten values of d from minus 0.5 to 4 meters, every 0.5; a dot marks where each one levels off, at s = 80 for the solid ones, 90 for the dashed ones and 100 for the dotted ones. A thick dark line stays at d = 0 and ends with a bar at s = 110. A blue car icon, the obstacle, at s = 118 just below d = 0. A legend names the line styles 20 m, 30 m and 40 m, and the thick line stop behind.
+   :alt: A graph of d against s, s from 48 to 132 meters, the right lane pale yellow and the left lane pale purple. A black car icon, the AV, at s = 60 and d = 0. Short gray lines trail behind it to show that it moves. Thirty thin dark curves leave it, solid, dashed or dotted, and level off at ten values of d from minus 0.5 to 4 meters, every 0.5; a dot marks where each one levels off, at s = 80 for the solid ones, 90 for the dashed ones and 100 for the dotted ones. A thick dark line stays at d = 0 and ends with a bar at s = 110. A blue car icon, the obstacle, at s = 118 just below d = 0. A legend names the line styles 20 m, 30 m and 40 m, and the thick line stop behind.
    :width: 85%
    :align: center
 
