@@ -5,10 +5,22 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.28.1: Lecture 10 Recap Made Clearer (2026-11-12)
+.. dropdown:: v2.28.2: Lecture 10 Flowchart and Section Openings (2026-11-12)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10 flowchart:** the controller node sits lower, clear of the top
+     row; the section is now titled "From the Inputs to a Steering Command".
+   - **L10, Longitudinal Control and CARLA Implementation:** "In this
+     section" lists only what the section covers in class.
+
+
+.. dropdown:: v2.28.1: Lecture 10 Recap Made Clearer (2026-11-12)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

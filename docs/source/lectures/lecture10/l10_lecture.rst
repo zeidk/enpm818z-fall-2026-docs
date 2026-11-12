@@ -542,8 +542,8 @@ Follow the Path at the Right Speed: Two Controllers Side by Side
 
 .. _l10-lec-map:
 
-Today's Map: From the Inputs to a Steering Command
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+From the Inputs to a Steering Command
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Each section today fills in one box of this flowchart. In the deck, each
 section's divider shows it again with that box highlighted, and the boxes
@@ -3248,9 +3248,8 @@ covers the acceleration: the PID that holds the AV at the turn's speed
 profile, the same speed controller every steering run in the last section
 used.
 
-**In this section:** the profile becomes a trajectory, a smooth slow-down
-compares with a sudden one, and a PID turns the speed error into throttle
-and brake.
+**In this section:** a PID that turns the speed error into throttle and
+brake.
 
 **What it is for:** the controller node's speed control is a PID with
 anti-windup; this section shows why it needs the anti-windup.
@@ -3733,8 +3732,8 @@ Every run so far was a numpy simulation of the bicycle model. This section
 moves the same two controllers, Pure Pursuit and the speed PID, into the
 course's ROS 2 node, which drives CARLA.
 
-**In this section:** the node's five inputs and one command, their message
-types, and a live look at the topics.
+**In this section:** one control step, the node's five inputs and one
+command, a live look at the topics, and tuning by symptom.
 
 **What it is for:** reading each topic while CARLA drives shows the numbers
 the node works with.
