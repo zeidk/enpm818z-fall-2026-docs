@@ -1161,8 +1161,7 @@ Read a Trajectory: Where and When, Second by Second
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **Goal:** read the two timings as trajectories: where the AV is
-(:math:`s`, :math:`d`) at each time :math:`t`. Car B is at
-45 + 15 :math:`t` m.
+(:math:`s`, :math:`d`) at each time :math:`t`.
 
 .. list-table::
    :widths: 10 20 35 35
@@ -1194,9 +1193,10 @@ Read a Trajectory: Where and When, Second by Second
      - **100, 1.75**
      - 91, 0.46
 
-Timing 2 passes the same two points (in bold) later, between the rows
-above. Car B is at 45 + 15 :math:`t` m: 45 + 15 × 3.86 = 102.9 and
-45 + 15 × 5.29 = 124.35.
+Timing 2 reaches the points in bold later, at 3.86 s and 5.29 s: not whole
+seconds, so not in the table. Car B starts at :math:`s` = 45 m (15 m behind
+the AV) and prediction keeps it at 15 m/s, so it is at 45 + 15 :math:`t`:
+45 + 15 × 3.86 = 102.9 m, 45 + 15 × 5.29 = 124.35 m.
 
 .. list-table::
    :widths: 30 35 35
