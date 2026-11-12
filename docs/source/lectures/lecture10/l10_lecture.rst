@@ -888,8 +888,8 @@ enters the next one parallel to the lane.
 
 .. _l10-lec-candidate-formula:
 
-Write Every Candidate with One Formula: d(s) = d0 + Δd q(u)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Read the Formula on Candidate A: d(s) = d0 + Δd q(u)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Here :math:`d(s)` is the path's sideways offset at a point :math:`s` on the
 road: how far left of the right lane's center, in meters, the path is
@@ -901,10 +901,35 @@ move:
    .. math::
       d(s) = d_0 + \Delta d\; q(u), \qquad u = \frac{s - s_0}{L}
 
-   After :math:`s_0 + L`, :math:`d` stays at :math:`d_0 + \Delta d`.
+.. figure:: /_static/images/L10/dformula.png
+   :alt: A graph of d against s for candidate A, s from 50 to 123 meters, the right lane pale yellow and the left lane pale purple, with the black AV at s = 60 on d = 0 and the blue parked car near s = 118. A green curve leaves the AV, rises in an S shape and levels off at d = 3.5 at s = 100, then stays flat. Dotted vertical lines mark s = 60 and s = 100. Dark tag 1 sits next to the AV. At s = 80, a double arrow, dark tag 2, runs from d = 0 up to a dot on the curve at d = 1.75, on the lane line. A dot marks the curve at s = 100, d = 3.5, and dark tag 3 sits above the flat part after it.
+   :width: 85%
+   :align: center
 
-The planner writes all 31 candidates with this formula, then checks and
-scores them:
+   The formula read on candidate A.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   Candidate A: :math:`s_0` = 60 m, :math:`d_0` = 0, :math:`\Delta d` =
+   3.5 m, :math:`L` = 40 m (a graph: the :math:`d` axis is stretched).
+
+   - **Tag 1:** :math:`d_0 = 0`: the move starts on the right lane's center,
+     at :math:`s_0`.
+   - **Tag 2:** at :math:`s` = 80 m, :math:`u = 20/40 = 0.5` and
+     :math:`q = 0.5`: the curve is :math:`\Delta d\, q(u) = 3.5 \times 0.5
+     = 1.75` m above :math:`d_0`.
+   - **Tag 3:** after :math:`s_0 + L` = 100 m, :math:`u` stops at 1:
+     :math:`d` stays at :math:`d_0 + \Delta d` = 3.5 m.
+
+
+.. _l10-lec-candidate-all:
+
+Write Every Candidate with the Formula: 30 Lane Shifts and 1 Stop
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The planner writes all 31 candidates with
+:math:`d(s) = d_0 + \Delta d\, q(u)`, then checks and scores them:
 
 - 30 lane shifts: the same :math:`s_0` = 60 m and :math:`d_0` = 0; only
   :math:`\Delta d` and :math:`L` change.
