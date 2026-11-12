@@ -20,7 +20,13 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
      from the Program to the Wheels". The actuators, the command chain, the
      ECUs, CAN, the 8-byte layout and fail safe are in its "More detail"
      box.
-   - **L10:** "The Turn" is now "Test Turn and Speed Profile".
+   - **L10 order:** Control-to-Actuator Interface is now the last section,
+     after CARLA Implementation. "Measure the Steering Delay" moved into Test
+     Turn and Speed Profile, before the simulation whose steering delay it
+     explains.
+   - **L10:** "The Turn" is now "Test Turn and Speed Profile". The test
+     path's map has no tags, and the curvature section says what the steps
+     mean for the controllers.
    - **L10, Ackermann and bicycle model figures:** redrawn for the course,
      with numbered tags.
 
