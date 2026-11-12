@@ -1186,17 +1186,18 @@ Read a Trajectory: Where and When, Second by Second
      - 77, 0
    * - 3
      - 90
-     - **90, 0.36**
+     - 90, 0.36
      - 84, 0.03
    * - 4
      - 105
      - **100, 1.75**
      - 91, 0.46
 
-Timing 2 reaches the points in bold later, at 3.86 s and 5.29 s: not whole
-seconds, so not in the table. Car B starts at :math:`s` = 45 m (15 m behind
-the AV) and prediction keeps it at 15 m/s, so it is at 45 + 15 :math:`t`:
-45 + 15 × 3.86 = 102.9 m, 45 + 15 × 5.29 = 124.35 m.
+The point in bold is the lane line, :math:`s` = 100 m, :math:`d` = 1.75 m:
+there the AV's center crosses into car B's lane. Timing 2 reaches it later,
+at 5.29 s: not a whole second, so not in the table. Car B starts at
+:math:`s` = 45 m (15 m behind the AV) and prediction keeps it at 15 m/s, so
+its :math:`s` is 45 + 15 :math:`t`: at 5.29 s, 45 + 15 × 5.29 = 124.35 m.
 
 .. list-table::
    :widths: 30 35 35
@@ -1206,12 +1207,9 @@ the AV) and prediction keeps it at 15 m/s, so it is at 45 + 15 :math:`t`:
    * - **Same where:** a point of the path, :math:`s`, :math:`d` (m)
      - **Different when:** timing 1
      - **Different when:** timing 2
-   * - **90, 0.36**
-     - 3.00 s; car B at 90 m
-     - 3.86 s; car B at 102.9 m
    * - **100, 1.75**: the lane line
-     - 4.00 s; car B at 105 m, beside the AV
-     - 5.29 s; car B at 124.35 m, already past
+     - 4.00 s; car B at :math:`s` = 105 m, beside the AV
+     - 5.29 s; car B at :math:`s` = 124.35 m, already past
 
 .. important::
 
@@ -1219,13 +1217,40 @@ the AV) and prediction keeps it at 15 m/s, so it is at 45 + 15 :math:`t`:
    decides whether the AV meets car B.
 
 
+.. _l10-lec-traj-lat-goal:
+
+Plan Across the Road in Time: What the Offset d(t) Must Do
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Goal:** write each candidate's sideways move as a function of time,
+:math:`d(t)`, so that every candidate is a trajectory, not a path.
+
+The last sections read two trajectories we were given. Now the planner makes
+them. Werling et al. build each candidate in two parts (Werling et al.,
+2010): the offset across the road, :math:`d(t)`, and the distance along it,
+:math:`s(t)`. This section and the next: :math:`d(t)`.
+
+What :math:`d(t)` must do:
+
+1. **Start from the AV's motion now:** at :math:`t = 0`, its offset
+   :math:`d`, its sideways speed :math:`\dot d` and its sideways
+   acceleration :math:`\ddot d`. The planner plans again every 0.5 s;
+   starting from the AV's own motion leaves no jump between two plans.
+2. **End parallel to the lane:** at time :math:`T`, on the target offset
+   :math:`d_1`, with :math:`\dot d = 0` and :math:`\ddot d = 0`.
+3. **Be as smooth as possible in between:** the least **jerk**, how fast the
+   acceleration changes (m/s³), which the passengers feel.
+
+.. important::
+
+   Points 1 and 2 are six conditions: three at the start, three at the end.
+   Many curves meet them; point 3 picks one.
+
+
 .. _l10-lec-traj-quintic-d:
 
-Plan Across the Road: the Offset d(t) as a Quintic
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Werling et al. plan across and along apart (Werling et al., 2010), as last
-class did, but in time: :math:`d(t)` across, :math:`s(t)` along.
+Why a Quintic: It Meets Six Conditions, as Smoothly as Possible
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. admonition:: Definition: Quintic
    :class: note
@@ -1235,16 +1260,17 @@ class did, but in time: :math:`d(t)` across, :math:`s(t)` along.
    .. math::
       d(t) = a_0 + a_1 t + a_2 t^2 + a_3 t^3 + a_4 t^4 + a_5 t^5
 
-Six numbers meet six conditions:
-
-- at :math:`t = 0`: the AV's own :math:`d`, :math:`\dot d` and
-  :math:`\ddot d`;
-- at :math:`t = T`: the end offset :math:`d_1`, with
-  :math:`\dot d = \ddot d = 0`, parallel to the lane.
+- **Six conditions, six numbers:** a quintic has six, :math:`a_0` to
+  :math:`a_5`, so it can meet all six.
+- **The smoothest:** "quintic polynomials are the jerk-optimal connection
+  between a start state [...] and an end state" (Werling et al., 2010,
+  citing Takahashi et al.).
+- **Last class's S curve:** :math:`q(u) = 10u^3 - 15u^4 + 6u^5` is this
+  quintic for a move that starts and ends straight, with :math:`u = t/T` in
+  place of :math:`u = (s - s_0)/L`.
 
 Samples (chosen): :math:`d_1` at each lane's center and 0.5 m to each side;
-:math:`T` = 3, 4 or 5 s: 6 × 3 = 18. Last class's S curve was this quintic,
-in :math:`s`.
+:math:`T` = 3, 4 or 5 s: 6 × 3 = 18.
 
 .. figure:: /_static/images/L10/traj_lat_set.png
    :alt: A graph of the sideways offset d, in meters, against time t from 0 to 7 seconds, over two horizontal bands: the right lane in yellow from minus 1.75 to 1.75, the left lane in purple from 1.75 to 5.25, a dashed line between them. Eighteen black S-shaped curves start at d = 0 at time 0 and level off at minus 0.5, 0, 0.5, 3, 3.5 or 4 meters; solid curves level off at 3 seconds, dashed at 4, dotted at 5.

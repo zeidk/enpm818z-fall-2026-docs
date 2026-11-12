@@ -32,7 +32,10 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
      moving car in the left lane, in dark red; the two timings drawn along
      the road in :math:`s` and :math:`d`, with the collision circles.
    - **L10, "Read a Trajectory":** a second table shows when each timing
-     passes the same two points.
+     reaches the lane line, the point where the AV enters car B's lane.
+   - **L10, the quintic:** split in two sections. The first says what
+     :math:`d(t)` must do; the second says why a quintic meets it, from
+     Werling et al. and last class's S curve.
    - **L10, "From 31 Candidates to One Path":** a summary of the six steps
      that pick last class's path, before the moving car.
    - **L10, "Compare the Two Timings":** the two timings' numbers in a table,
