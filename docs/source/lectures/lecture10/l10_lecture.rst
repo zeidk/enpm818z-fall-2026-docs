@@ -1442,6 +1442,63 @@ each side; :math:`T` = 3, 4 or 5 s: 6 × 3 = 18.
    one of six end offsets: :math:`-0.5`, 0, 0.5, 3, 3.5 or 4 m. Solid curves
    level off at 3 s, dashed at 4 s, dotted at 5 s.
 
+.. _l10-lec-traj-dt-example:
+
+Work One d(t): to the Left Lane's Center in 4 s
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+One of the 18, chosen: end at :math:`d_1` = 3.5 m (the left lane's center)
+at :math:`T` = 4 s. The AV now drives straight on its lane's center:
+:math:`d = 0`, :math:`\dot d = 0`, :math:`\ddot d = 0`.
+
+1. **Start**, :math:`t = 0`: :math:`d(0) = a_0 = 0`,
+   :math:`\dot d(0) = a_1 = 0`, :math:`\ddot d(0) = 2a_2 = 0`. So
+   :math:`a_0 = a_1 = a_2 = 0`.
+2. **End**, :math:`t` = 4 s: :math:`d = 3.5`, :math:`\dot d = 0`,
+   :math:`\ddot d = 0`. Three equations in :math:`a_3`, :math:`a_4`,
+   :math:`a_5`; solved: :math:`a_3 = 10 \times 3.5/4^3 = 0.547`,
+   :math:`a_4 = -15 \times 3.5/4^4 = -0.205`,
+   :math:`a_5 = 6 \times 3.5/4^5 = 0.0205` (the 10, −15 and 6 of
+   :math:`q(u)`).
+3. **So** :math:`d(t) = 0.547\,t^3 - 0.205\,t^4 + 0.0205\,t^5`. Check at
+   :math:`t = 4`: 0.547 × 64 − 0.205 × 256 + 0.0205 × 1024 = 35 − 52.5 + 21
+   = 3.5 m.
+
+.. list-table::
+   :widths: 20 16 16 16 16 16
+   :header-rows: 1
+   :class: compact-table
+
+   * - :math:`t` (s)
+     - 0
+     - 1
+     - 2
+     - 3
+     - 4
+   * - :math:`d` (m)
+     - 0
+     - 0.36
+     - 1.75
+     - 3.14
+     - 3.5
+   * - :math:`\dot d` (m/s)
+     - 0
+     - 0.92
+     - 1.64
+     - 0.92
+     - 0
+   * - :math:`\ddot d` (m/s²)
+     - 0
+     - 1.23
+     - 0
+     - −1.23
+     - 0
+
+It crosses the lane line (:math:`d` = 1.75 m) at :math:`t` = 2 s, at its
+top sideways speed, and starts and ends with no sideways speed or
+acceleration.
+
+
 .. _l10-lec-traj-lon:
 
 Plan Along the Road: Keep a Speed with a Quartic, Stop with a Quintic

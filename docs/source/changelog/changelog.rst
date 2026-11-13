@@ -35,6 +35,9 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
    - **L10, "Notation":** how to read :math:`d`, :math:`\dot d`,
      :math:`\ddot d`, :math:`\dddot d` and the same for :math:`s`, before
      the sections that use them.
+   - **L10, "Work One d(t)":** one lateral quintic worked with numbers:
+     its six coefficients, and d, its speed and its acceleration second by
+     second.
    - **L10, the quintic:** why Werling et al. use it, right after its
      definition; the 18 samples across in their own section; where the two
      counts of 18 come from.
