@@ -3538,9 +3538,12 @@ come in three kinds, by how they pick the steering angle:
 
 .. important::
 
-   No kind wins everywhere. Today we try two geometric controllers, Pure
-   Pursuit and Stanley, and one model-based, MPC, on our turn. PID and LQR
-   are in the box below.
+   Each kind gives up something. Geometric: one formula, but its one
+   setting is tuned by hand. Feedback: no model, but it acts only once an
+   error appears. Model-based: sees the curve coming and keeps the limits,
+   but needs a good model and an optimization at every step. So the best
+   kind depends on the car and the road. Today: Pure Pursuit, Stanley and
+   MPC on our turn; PID and LQR are in the box below.
 
 .. dropdown:: More detail: PID on steering, LQR, and the sources
    :class-container: more-detail
