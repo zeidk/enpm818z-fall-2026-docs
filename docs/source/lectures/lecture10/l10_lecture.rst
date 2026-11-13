@@ -3524,36 +3524,50 @@ and MPC show what other choices gain and cost.
 Sort the Steering Controllers: Geometric, Feedback, Model-Based
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Lateral control answers: how do I steer to stay on this path?
+**Goal:** choose how to steer the AV along the path. Steering controllers
+come in three kinds, by what they steer from:
 
 .. list-table::
-   :widths: 33 33 34
+   :widths: 19 27 27 27
    :header-rows: 1
    :class: compact-table
 
-   * - **Geometric**
+   * -
+     - **Geometric**
      - **Feedback**
      - **Model-based**
-   * - steer from the path's shape
-     - steer from the measured error
-     - steer from a predicted response
-   * - Pure Pursuit, Stanley
+   * - Steers from
+     - the path's shape
+     - the measured error
+     - a predicted response
+   * - Examples
+     - Pure Pursuit, Stanley
      - PID
      - LQR, MPC
-   * - wheelbase only
-     - no vehicle model
-     - a dynamic (LQR) or kinematic (MPC) model
+   * - Knows about the car
+     - its wheelbase only
+     - nothing
+     - a model of how it moves
 
-- Snider groups path trackers the same way: geometric, then model-based
-  with a kinematic or a dynamic model (Snider, 2009); MPC on the kinematic
-  model runs on a real car in Kong et al. (2015).
-- Snider's verdict: "no method is perfect and all of the methods can work
-  well in some applications" (Snider, 2009).
+.. important::
 
-.. dropdown:: More detail: PID on steering, and LQR
+   No kind wins everywhere. Today we try two geometric controllers, Pure
+   Pursuit and Stanley, and one model-based, MPC, on our turn. PID and LQR
+   are in the box below.
+
+.. dropdown:: More detail: PID on steering, LQR, and the sources
    :class-container: more-detail
    :icon: info
    :name: l10-more-pid-lqr
+
+   .. rubric:: Where the Grouping Comes From
+
+   - Snider groups path trackers the same way: geometric, then model-based
+     with a kinematic or a dynamic model (Snider, 2009). Among the
+     model-based ones, LQR uses a dynamic model and MPC a kinematic one;
+     MPC on the kinematic model runs on a real car in Kong et al. (2015).
+   - Snider's verdict: "no method is perfect and all of the methods can
+     work well in some applications" (Snider, 2009).
 
    .. rubric:: PID on Steering
 
