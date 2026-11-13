@@ -2819,23 +2819,21 @@ Speed Profile, Step 2: Brake Before the Curve, Speed Up After It
 
    - **Tag 1:** braking, before the first arc.
    - **Tag 2:** the first arc's cap, 4.47 m/s.
-   - **Tag 3:** the second arc's cap, 3.46 m/s.
+   - **Tag 3:** braking again to the second arc's cap, 3.46 m/s.
    - **Tag 4:** speeding up again, after the second arc.
 
-The caps (dotted) drop at once at each arc; the AV cannot. Slowing from
-:math:`v_1` to :math:`v_2` at a constant deceleration :math:`a` takes the
-distance :math:`d = (v_1^2 - v_2^2) / (2a)`, so the profile (blue) spreads
-each change out:
+**Goal:** a speed the AV can really drive. The caps of step 1 (dotted) jump
+down at each arc, but a car cannot change its speed in an instant. A graph,
+not a map: speed against the distance along the path. The profile (blue):
 
-1. Tag 1: brake before the curve, at the node's braking rate (chosen),
-   starting early enough to reach the first cap right where the first arc
-   begins.
-2. Tags 2 and 3: hold each arc's cap.
-3. Tag 4: speed up after the curve, at a gentler rate (chosen), back to the
-   target speed.
-
-The faster the AV drives or the gentler it brakes, the earlier braking must
-start.
+1. Tag 1: brakes before the curve, starting early enough to be at the first
+   arc's cap where that arc begins. Braking from :math:`v_1` to :math:`v_2`
+   at a steady deceleration :math:`a` takes
+   :math:`d = (v_1^2 - v_2^2) / (2a)` meters.
+2. Tag 2: holds the first arc's cap; tag 3: brakes again to the tighter
+   arc's lower cap, and holds it.
+3. Tag 4: speeds up after the curve, more gently than it braked, back to
+   the target speed.
 
 .. dropdown:: More detail: the two distances, worked
    :class-container: more-detail
