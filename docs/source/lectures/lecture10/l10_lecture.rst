@@ -627,8 +627,9 @@ candidate.
    - **Set beforehand:** both are constants in the planner's code. Every
      0.5 s it samples the same set again, from where the AV is.
    - **No speed:** a path says where to go, not how fast. The speed comes
-     from elsewhere: last class, the AV kept a constant 10 m/s; in our node,
-     the controller's speed profile sets it.
+     from elsewhere: last class, the AV kept a constant 10 m/s; in the
+     course's CARLA code, the controller sets it from a speed profile (later
+     in this lecture).
 
 
 .. _l10-lec-recap-path:
