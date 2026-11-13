@@ -1704,6 +1704,31 @@ anywhere along the road at time :math:`T`. So it has five conditions, one
 fewer than :math:`d(t)`. A stop asks where, so it has six.
 
 
+.. _l10-lec-traj-lon-example:
+
+Plan Along the Road: Where s(t) Starts and Where It Must End
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+One move of each kind, picked for this example. The AV now: at
+:math:`s` = 60 m, driving at 10 m/s, not speeding up or slowing down.
+
+.. figure:: /_static/images/L10/st_example.png
+   :alt: Two graphs side by side of the distance along the road s, in meters, against the time t from now, in seconds. Both start the same way: a thick black line rising steeply up to a dot at t = 0 and s = 60, dark tag 1 below and to the right of it. Left graph, titled keep a speed: a gray curve rises from the dot and bends to a gentler slope at t = 4 s, marked by a dotted vertical line, with no dot there; a thick black straight line goes on at that gentler slope, dark tag 2 below it. Right graph, titled stop at a point: a gray curve rises from the dot and levels off at a second dot at t = 10 s and s = 110.15, marked by a dotted vertical line; a thick black flat line goes on from it, dark tag 2 below it.
+   :width: 95%
+   :align: center
+
+   Where :math:`s(t)` starts and where it must end, for one move of each
+   kind.
+
+1. Now: :math:`s` = 60 m, at 10 m/s, no acceleration (the steeper the
+   line, the faster the AV).
+2. Left: at :math:`T` = 4 s, 6 m/s and no acceleration; where along the
+   road is not asked, so no dot. Right: at :math:`T` = 10 s, stopped at
+   :math:`s_\text{stop}` = 110.15 m.
+
+Gray: the curve between.
+
+
 .. _l10-lec-traj-quartic:
 
 Why a Quartic to Keep a Speed: Five Numbers Meet the Five Conditions
