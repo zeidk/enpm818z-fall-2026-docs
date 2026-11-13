@@ -2920,8 +2920,8 @@ Test Controllers Without CARLA: Our Simulation and Its Values
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **Goal:** test every controller the same way, in seconds, with no CARLA. A
-small Python program moves the AV with the bicycle model (next section) 100
-times a second, and runs the controller 20 times a second. The values it
+small Python program moves the AV with the bicycle model (next section; in
+full with MPC) 100 times a second, and runs the controller 20 times a second. The values it
 uses:
 
 .. list-table::
@@ -3176,35 +3176,33 @@ Predict the AV's Motion: the Bicycle Model, One Wheel per Axle
 
 .. _l10-lec-bicycle-eq:
 
-Write the Model: the State, the Inputs and Four Equations
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Predict How Steering Turns the AV: the Turn Rate
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Goal:** predict where the AV will be, given its steering and pedals. The
-model tracks four numbers at the rear axle, the **state**: position
-:math:`x, y` (m), heading :math:`\theta` (rad, counterclockwise from
-:math:`x`) and speed :math:`v` (m/s). The controller sets two **inputs**:
-the front wheel angle :math:`\delta` (rad, positive turns left) and the
-acceleration :math:`a` (m/s²). Each equation says how fast one state number
-changes (a dot is a rate of change in time):
+**Goal:** know how fast a steering angle turns the AV. Its heading
+:math:`\theta` (rad, counterclockwise from :math:`x`) changes at the **turn
+rate** :math:`\dot\theta` (a dot is a rate of change in time). With the
+speed :math:`v` (m/s), the front wheel angle :math:`\delta` (rad, positive
+turns left) and the wheelbase :math:`L`:
 
 .. math::
 
-   \dot x = v\cos\theta, \qquad \dot y = v \sin\theta, \qquad
-   \dot\theta = \frac{v}{L}\tan\delta, \qquad \dot v = a
+   \dot\theta = \frac{v}{L}\tan\delta
 
-1. :math:`\dot x`, :math:`\dot y`: the AV moves along its heading. Its
-   speed :math:`v` splits into a part along :math:`x` and a part along
-   :math:`y`.
-2. :math:`\dot\theta`: the heading turns faster at a higher speed and with
-   more steering, and slower on a longer car (:math:`L`, the wheelbase).
-   This is where the steering enters.
-3. :math:`\dot v`: the speed changes by the acceleration the pedals give.
+- Faster, or more steering: the heading turns faster.
+- A longer car (larger :math:`L`) turns slower at the same angle.
+- Per meter driven, the heading turns
+  :math:`\dot\theta / v = \tan\delta / L`: that is the curvature
+  :math:`\kappa`, the turn per meter from the curvature section. So a fixed
+  :math:`\delta` drives a circle (next section).
 
 .. note::
 
    L6's EKF took the turn rate :math:`\dot\theta` from the gyro, which
    measures it. Here it comes from :math:`\delta`: the controller chooses
-   :math:`\delta`, so the model must say what :math:`\delta` does.
+   :math:`\delta`, so the model must say what :math:`\delta` does. The full
+   model, with position and speed, comes with MPC, which predicts with it
+   (:ref:`l10-lec-bicycle-full`).
 
 .. dropdown:: More detail: why tan δ = L/R
    :class-container: more-detail
@@ -3492,8 +3490,8 @@ sideways a little when the AV turns, and more the harder it turns.
 .. admonition:: Where the bicycle model leaves us
    :class: tip
 
-   - **State at the rear axle:** :math:`x, y, \theta, v`. **Inputs:**
-     :math:`\delta`, :math:`a`. The turn rate is :math:`v\tan\delta / L`.
+   - **Turn rate:** :math:`\dot\theta = v\tan\delta / L`. Per meter,
+     :math:`\tan\delta / L`: the curvature.
    - **Steering for a curvature:** :math:`\delta = \arctan(L\kappa)`:
      0.280 rad and 0.448 rad for our two arcs, under the 0.7 rad limit.
    - **Sideways acceleration** on our turn: at most 2.0 m/s², the profile's
@@ -4351,6 +4349,37 @@ steering sequence tracks the path best, within my limits?"
 - Kong et al.: MPC "can handle Multi-Input Multi-Output systems with input
   and state constraints while taking into account the nonlinear dynamics of
   the vehicle" (Kong et al., 2015).
+
+
+.. _l10-lec-bicycle-full:
+
+Predict with the Full Model: the State, the Inputs and Four Equations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Goal:** predict where the AV will be over the next seconds, MPC's step 1.
+The turn rate alone is not enough. The model tracks four numbers at the rear
+axle, the **state**: position :math:`x, y` (m), heading :math:`\theta` (rad)
+and speed :math:`v` (m/s). The controller sets two **inputs**: the front
+wheel angle :math:`\delta` (rad) and the acceleration :math:`a` (m/s²). Each
+equation says how fast one state number changes:
+
+.. math::
+
+   \dot x = v\cos\theta, \qquad \dot y = v \sin\theta, \qquad
+   \dot\theta = \frac{v}{L}\tan\delta, \qquad \dot v = a
+
+1. :math:`\dot x`, :math:`\dot y`: the AV moves along its heading. Its
+   speed :math:`v` splits into a part along :math:`x` and a part along
+   :math:`y`.
+2. :math:`\dot\theta`: the turn rate, from
+   :ref:`Vehicle Modeling <l10-lec-bicycle-eq>`.
+3. :math:`\dot v`: the speed changes by the acceleration the pedals give.
+
+.. note::
+
+   Step the four equations forward 0.05 s at a time from the measured state,
+   and MPC knows where each candidate steering sequence takes the AV. Our
+   simulation moves the AV with the same equations, 100 times a second.
 
 
 .. _l10-lec-mpc-def:
