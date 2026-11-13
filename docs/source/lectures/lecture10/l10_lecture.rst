@@ -1459,8 +1459,9 @@ result they take from Takahashi et al. (Werling et al., 2010).
 .. important::
 
    Last class's S curve, :math:`q(u) = 10u^3 - 15u^4 + 6u^5`, is this
-   quintic for a move that starts and ends straight, with :math:`u = t/T` in
-   place of :math:`u = (s - s_0)/L`.
+   quintic for a move that starts and ends straight, with :math:`u = t/T` (the share of the move's time
+   :math:`T` gone by) in place of :math:`u = (s - s_0)/L` (the share of the
+   move's length :math:`L` covered).
 
 .. _l10-lec-traj-lat-set:
 
