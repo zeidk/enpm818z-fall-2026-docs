@@ -1722,8 +1722,8 @@ One move of each kind, picked for this example. The AV now: at
 
 1. Now: :math:`s` = 60 m, at 10 m/s, no acceleration (the steeper the
    line, the faster the AV).
-2. Left: at :math:`T` = 4 s, 6 m/s and no acceleration; where along the
-   road is not asked, so no dot. Right: at :math:`T` = 10 s, stopped at
+2. Left: at :math:`T` = 4 s, 6 m/s and no acceleration. No condition sets
+   :math:`s(T)`, so no dot. Right: at :math:`T` = 10 s, stopped at
    :math:`s_\text{stop}` = 110.15 m.
 
 Gray: the curve between.
