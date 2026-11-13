@@ -61,6 +61,10 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
    - **L10, the drive in three sections:** the plans at 2.0 s (stop), 2.5 s
      (go behind car B) and 7.0 s (pass), each with its own figure. Car B is
      7.5 m/s faster than the AV at 2.5 s, not 5 m/s.
+   - **L10, Test Turn and Speed Profile:** the section opens with the two
+     ways to tell the controllers where and how fast (a trajectory, or a
+     path plus a speed profile), and a new section says why we use the
+     second.
    - **L10, Trajectory Generation in subsections:** Step 1: Sample, Step 2:
      Score, Step 3: Check, Steps 4 and 5: Pick and Repeat, Explain the
      Result, and Track a Path or a Trajectory.

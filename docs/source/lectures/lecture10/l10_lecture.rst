@@ -2596,16 +2596,53 @@ Where Trajectory Generation Leaves Us
 Test Turn and Speed Profile
 ---------------------------
 
-The behavior layer picks a behavior and a target speed for it, for example
-8 m/s to keep the lane and 0 to stop at the line (chosen). This section sets
-that choice aside and builds the one example that every controller, steering
-and speed, runs on.
+There are two ways to tell the controllers where to drive and how fast: a
+**trajectory** (last section) or a **path plus a speed profile**. We use the
+second; the next section says why. From here on we test controllers, on one
+example they all share.
 
-**In this section:** we take one right turn in Town03, find its curvature,
-give it a speed profile, and measure how late real steering answers.
+**In this section:** one right turn in Town03, its curvature, its speed
+profile and the steering delay. Every controller drives this path, at the
+same speeds, from the same start.
 
 **What it is for:** every controller today drives this same path, at the
 same speeds, from the same start, so their results can be compared.
+
+
+.. _l10-lec-two-ways:
+
+Pick What the Controllers Follow: a Path Plus a Speed Profile
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Two ways to tell the controllers where to drive and how fast:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 18 38 44
+   :class: compact-table
+
+   * -
+     - **1. A trajectory**
+     - **2. A path plus a speed profile**
+   * - Says
+     - where to be, and when
+     - where to be; how fast at each point
+   * - Made by
+     - trajectory generation (last section)
+     - the path (route or L9's planner); the speed profile (this section)
+   * - Followed by
+     - MPC: its horizon has times
+     - Pure Pursuit or Stanley (steering), a speed PID (pedals)
+
+**Why way 2 here:**
+
+1. Nothing else moves on our test turn. A trajectory's times are for timing
+   a move around another car, as with car B; here there is none.
+2. Our controller node takes a path and a target speed, which is what Pure
+   Pursuit, Stanley and the speed PID follow.
+3. Running late is no error: 1 s behind, the AV is still on its path (last
+   section's table). A trajectory tracker would see an error: 7 m in that
+   table's example.
 
 
 .. _l10-lec-test-path:
