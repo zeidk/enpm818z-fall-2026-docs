@@ -1890,8 +1890,8 @@ Score Comfort with Jerk: Werling's Cost
    acceleration as a jolt; a small jerk feels smooth.
 
 Werling et al.: "ease and comfort can be best described by the jerk". Each
-direction gets three terms (Werling et al., 2010), each weighted by a
-number :math:`k` (all 1 here, chosen):
+candidate gets one cost across the road and one along it (Werling et al.,
+2010); lower is better:
 
 .. math::
    C_d = k_j \!\int_0^{T}\! \dddot d^{\,2}\,dt \;+\; k_t\,T \;+\;
@@ -1900,16 +1900,266 @@ number :math:`k` (all 1 here, chosen):
    C_s = k_j \!\int_0^{T}\! \dddot s^{\,2}\,dt \;+\; k_t\,T \;+\;
    k_{\dot s}\,(\dot s_1 - \dot s_\text{d})^2
 
-- The squared jerk, added up over the maneuver: comfort. A quintic gives the
-  least for given end states, which is why the polynomials are quintics
-  (their Proposition 1).
-- :math:`T`: a slow maneuver costs more.
-- The end: :math:`d_\text{lane}` is the center of the lane the behavior
-  layer picks (3.5 m, the left lane, to pass); :math:`\dot s_\text{d}` is
-  the speed it asks for, 10 m/s. A stop is scored with end speed 0.
+- **Across,** :math:`C_d`: how much the AV jerks sideways, plus how long
+  the move takes, plus how far it ends from the center of the lane the
+  behavior layer picked.
+- **Along,** :math:`C_s`: the same jerk and time along the road, plus how
+  far the end speed misses the speed the behavior layer asked for.
 
-The total is :math:`C_d + C_s`; the cheapest candidate that passes the
-checks wins.
+Each penalty has a weight :math:`k` (all 1 here, chosen). The total is
+:math:`C_d + C_s`; the cheapest candidate that passes the checks wins.
+
+.. dropdown:: More detail: the two costs, term by term
+   :class-container: more-detail
+   :icon: info
+   :name: l10-more-cost-terms
+
+   Each cost adds three penalties. Each penalty answers one question about
+   the candidate, and its weight :math:`k` says how much that answer counts.
+
+   .. rubric:: 1. How much does the move jerk?
+
+   :math:`\int_0^T \dddot d^{\,2}\,dt` takes the jerk across the road at
+   every moment of the move, squares it, and adds it up from the start
+   (:math:`t = 0`) to the end (:math:`t = T`). On a graph of
+   :math:`\dddot d^{\,2}` against :math:`t`, it is the area under the curve.
+   :math:`\int_0^T \dddot s^{\,2}\,dt` does the same along the road.
+
+   - **Why squared:** a jolt to the left and a jolt to the right both count,
+     and a big jolt counts much more than a small one (twice the jerk, four
+     times the penalty).
+   - **Why the moves are quintics:** for a given start and end, a quintic
+     makes this term as small as it can be (Werling et al., Proposition 1).
+     That is why every :math:`d(t)` here is a quintic.
+   - **How it grows:** for the moves in this lecture it has a short formula.
+     Across the road, from rest to rest over :math:`d_1`, it is
+     :math:`720\,d_1^2/T^5`. Along the road, a speed change :math:`\Delta v`
+     with no acceleration at either end gives :math:`12\,\Delta v^2/T^3`.
+     Twice the distance or twice the speed change: four times the jerk
+     penalty. Twice the time: 1/32 of it across, 1/8 of it along.
+
+   Where 720 and 12 come from:
+
+   1. Across: the move is :math:`d(t) = d_1\,q(t/T)`, with last class's
+      :math:`q(u) = 10u^3 - 15u^4 + 6u^5`. Its jerk is
+      :math:`\dddot d = (d_1/T^3)\,q'''(u)`, with
+      :math:`q'''(u) = 60 - 360u + 360u^2`. Squared and added up over the
+      move: :math:`(d_1^2/T^5) \int_0^1 q'''(u)^2\,du`, and that integral is
+      720.
+   2. Along: the speed-change quartic of the worked example has jerk
+      :math:`\dddot s = (6\,\Delta v/T^2)(1 - 2u)`. Squared and added up:
+      :math:`(36\,\Delta v^2/T^3) \int_0^1 (1 - 2u)^2\,du`, and that integral
+      is 1/3, so :math:`12\,\Delta v^2/T^3`.
+
+   .. rubric:: 2. How long does the move take?
+
+   :math:`k_t\,T` is a fixed price for each second the move lasts. Without
+   it, the jerk penalty alone would always pick the longest :math:`T`: the
+   slower the move, the smoother it is. This term pushes back toward
+   quicker moves.
+
+   .. rubric:: 3. Where does the move end?
+
+   - **Across,** :math:`(d_1 - d_\text{lane})^2`: how far the end offset is
+     from the center of the lane the behavior layer picked, squared. To
+     pass, it picks the left lane, :math:`d_\text{lane}` = 3.5 m. Ending
+     0.5 m off costs 0.25; ending 3 m off (at 0.5 m, still in the right lane)
+     costs 9.
+   - **Along,** :math:`(\dot s_1 - \dot s_\text{d})^2`: how far the end
+     speed is from the speed the behavior layer asked for, squared. It asks
+     for :math:`\dot s_\text{d}` = 10 m/s. Slowing to 6 m/s costs 16; a stop
+     is scored with end speed 0, so it costs 100.
+
+   .. rubric:: Adding the penalties
+
+   The three penalties have different units: m²/s⁵ (jerk), s (time), and
+   m² or m²/s² (the end). The weights turn each into a plain number so they
+   can be added; with all :math:`k = 1`, one unit of each counts the same.
+   The same :math:`k_j` and :math:`k_t` weigh both directions. Werling et
+   al. also weigh the two sums before adding them, :math:`k_\text{lat}\,C_d
+   + k_\text{lon}\,C_s`; both are 1 here, so the total is
+   :math:`C_d + C_s`.
+
+
+.. _l10-lec-traj-tune:
+
+Tune the Cost: Raise a Weight, and Its Penalty Counts More
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The weights decide which candidate is the cheapest. Raise one, and the
+planner gives up something else to cut that penalty:
+
+- **Raise** :math:`k_j`: gentler moves win. They take longer, since the
+  jerk shrinks fast as :math:`T` grows.
+- **Raise** :math:`k_t`: quicker moves win, with more jerk.
+- **Raise** :math:`k_d`: the move ends closer to the lane's center.
+  With all :math:`k = 1`, ending 0.5 m short of it costs less than ending
+  on it: the smaller move jerks less.
+- **Raise** :math:`k_{\dot s}`: the end speed stays closer to the speed
+  asked for.
+
+.. note::
+
+   A stop misses the asked 10 m/s by all of it: :math:`(0 - 10)^2 = 100`.
+   In the first plan, every stop costs more than every candidate that keeps
+   moving, so a stop wins only when all of those fail the checks.
+
+.. dropdown:: More detail: two candidates scored, each weight tried
+   :class-container: more-detail
+   :icon: info
+   :name: l10-more-cost-example
+
+   The start of the first plan: the AV at :math:`s` = 60 m on its lane's
+   center, driving at 10 m/s, with no acceleration either way. The behavior
+   layer asks for the left lane (:math:`d_\text{lane}` = 3.5 m) at
+   :math:`\dot s_\text{d}` = 10 m/s. All :math:`k = 1`. Every number below
+   is what ``ref_trajectory.candidates`` computes for this start (the jerk
+   integral by the trapezoid rule, matching the formulas above to 0.01).
+
+   .. rubric:: Score the two worked examples
+
+   The :math:`d(t)` worked earlier: to 3.5 m in 4 s.
+
+   1. Jerk: :math:`720 \times 3.5^2 / 4^5` = 720 × 12.25 / 1024 = 8.61.
+   2. Time: 4.
+   3. End: :math:`(3.5 - 3.5)^2` = 0.
+   4. :math:`C_d` = 8.61 + 4 + 0 = 12.61.
+
+   The :math:`s(t)` worked earlier: from 10 to 6 m/s in 4 s.
+
+   1. Jerk: :math:`12 \times 4^2 / 4^3` = 12 × 16 / 64 = 3.00.
+   2. Time: 4.
+   3. End: :math:`(6 - 10)^2` = 16.
+   4. :math:`C_s` = 3 + 4 + 16 = 23.00.
+
+   The pair costs 12.61 + 23.00 = 35.61. Step 3 drops it: it hits car B.
+   The cheapest kept candidate costs 35.74 (scored by hand in Step 3's
+   "More detail" box).
+
+   .. rubric:: Raise k_t: a quicker move wins
+
+   :math:`C_d` for :math:`d_1` = 3.5 m, each duration:
+
+   .. list-table::
+      :header-rows: 1
+      :class: compact-table
+
+      * - :math:`T`
+        - Jerk
+        - Time
+        - :math:`C_d`, all :math:`k = 1`
+        - :math:`C_d`, :math:`k_t = 10`
+      * - 3 s
+        - 36.30
+        - 3
+        - 39.30
+        - 66.30
+      * - 4 s
+        - 8.61
+        - 4
+        - 12.61
+        - **48.61**
+      * - 5 s
+        - 2.82
+        - 5
+        - **7.82**
+        - 52.82
+
+   With all :math:`k = 1`, the slowest move, 5 s, is the cheapest: one more
+   second costs 1, and it cuts the jerk by 5.79. With :math:`k_t = 10`, one
+   more second costs 10, more than the jerk it saves, so 4 s wins. Raising
+   :math:`k_j` works the other way: it makes the jerk count more, so the
+   slower moves win by more.
+
+   .. rubric:: Raise k_d: the move ends on the lane's center
+
+   :math:`C_d` for :math:`T` = 5 s, each end offset:
+
+   .. list-table::
+      :header-rows: 1
+      :class: compact-table
+
+      * - :math:`d_1`
+        - Jerk
+        - Time
+        - End, :math:`(d_1 - 3.5)^2`
+        - :math:`C_d`, all :math:`k = 1`
+        - :math:`C_d`, :math:`k_d = 10`
+      * - 3.0 m
+        - 2.07
+        - 5
+        - 0.25
+        - **7.32**
+        - 9.57
+      * - 3.5 m
+        - 2.82
+        - 5
+        - 0
+        - 7.82
+        - **7.82**
+      * - 4.0 m
+        - 3.69
+        - 5
+        - 0.25
+        - 8.94
+        - 11.19
+
+   With all :math:`k = 1`, ending 0.5 m short of the lane's center is the
+   cheapest: the smaller move saves 0.75 of jerk and pays only 0.25 for the
+   miss. The same holds for :math:`T` = 3 s (29.92 against 39.30) and 4 s
+   (10.58 against 12.61). With :math:`k_d = 10`, the miss costs 2.5, and the
+   lane's center wins.
+
+   .. rubric:: Raise k_ṡ: the end speed stays near 10 m/s
+
+   :math:`C_s` for :math:`T` = 4 s, each end speed, all :math:`k = 1`:
+
+   .. list-table::
+      :header-rows: 1
+      :class: compact-table
+
+      * - :math:`\dot s_1`
+        - Jerk
+        - Time
+        - End, :math:`(\dot s_1 - 10)^2`
+        - :math:`C_s`
+      * - 4 m/s
+        - 6.75
+        - 4
+        - 36
+        - 46.75
+      * - 6 m/s
+        - 3.00
+        - 4
+        - 16
+        - 23.00
+      * - 8 m/s
+        - 0.75
+        - 4
+        - 4
+        - 8.75
+      * - 10 m/s
+        - 0
+        - 4
+        - 0
+        - 4.00
+      * - 12 m/s
+        - 0.75
+        - 4
+        - 4
+        - 8.75
+
+   The further the end speed is from 10 m/s, the larger the end term: 4 at
+   2 m/s off, 16 at 4 m/s off, 36 at 6 m/s off. Raise :math:`k_{\dot s}`
+   and those rows cost more; the 10 m/s row does not change.
+
+   .. rubric:: The stops
+
+   A stop pays 100 for its end speed. Its jerk is small, since it slows over
+   8 to 12 s: :math:`C_s` = 4.61 + 8 + 100 = 112.61, 1.20 + 10 + 100 =
+   111.20 and 0.98 + 12 + 100 = 112.98. In the first plan, the dearest
+   candidate that keeps moving totals 105.66; the cheapest stop totals
+   118.52.
 
 
 .. _l10-lec-traj-check-sub:

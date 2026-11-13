@@ -54,6 +54,10 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
      quartic keeps a speed; the 18 samples along. A "More detail" box works
      one quartic, from 10 to 6 m/s in 4 s. A new figure shows where
      :math:`s(t)` starts and where it must end, for one move of each kind.
+   - **L10, Werling's cost in two sections:** each cost read in words, then
+     what raising each weight does. Two "More detail" boxes: the costs term
+     by term (where 720 and 12 come from), and the two worked examples scored
+     with each weight tried.
    - **L10, Trajectory Generation in subsections:** Step 1: Sample, Step 2:
      Score, Step 3: Check, Steps 4 and 5: Pick and Repeat, Explain the
      Result, and Track a Path or a Trajectory.
