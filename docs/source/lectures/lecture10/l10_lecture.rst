@@ -614,6 +614,27 @@ comfort.
 instead of waiting behind the parked car.
 
 
+.. _l10-lec-path-key:
+
+Plan a Path: the Horizon Is a Distance, the Samples Are Lengths
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Goal:** see what a path planner fixes before it samples a single
+candidate.
+
+.. admonition:: A path planner works in meters
+   :class: important
+
+   - **Horizon, a distance:** each path reaches 70 m ahead of the AV.
+   - **Samples, maneuver lengths:** the lane change takes 20, 30 or 40 m
+     (chosen). At the AV's 10 m/s that is 2, 3 or 4 s; at another speed,
+     other times.
+   - **Set beforehand:** both are constants in the planner's code. Every
+     0.5 s it samples the same set again, from where the AV is.
+   - **No speed:** a path has none. Last class's AV drives at 10 m/s; in our
+     node, the controller's speed profile sets the speed.
+
+
 .. _l10-lec-recap-path:
 
 Recap L9, the Path: Sample 31 Candidates, Keep the Cheapest
@@ -1214,6 +1235,32 @@ car B's lane. They get there at different times:
    Same path, different times, different outcome. A path cannot tell the two
    apart; a trajectory can. Next, the planner makes many trajectories itself
    and checks each one this way.
+
+
+.. _l10-lec-traj-key:
+
+Plan a Trajectory: the Horizon Is a Time, the Samples Are Durations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Goal:** see what a trajectory planner fixes before it samples, next to
+last class's path planner.
+
+.. admonition:: A trajectory planner works in seconds
+   :class: important
+
+   - **Horizon, a time:** each trajectory reaches 7 s ahead (last class's
+     70 m at 10 m/s).
+   - **Samples, durations:** each move takes :math:`T` = 3, 4 or 5 s
+     (chosen), across and along; along, the end speed is 4, 6, 8, 10 or
+     12 m/s.
+   - **Set beforehand:** constants in the planner's code. Every 0.5 s it
+     samples the same set again, from the AV's state: :math:`s`, speed,
+     acceleration, :math:`d`, sideways speed and sideways acceleration.
+   - **A speed in each candidate:** so the speed can change from one plan to
+     the next.
+
+Last class: 70 m ahead, lengths of 20, 30, 40 m. Today: 7 s ahead, durations
+of 3, 4, 5 s.
 
 
 .. _l10-lec-traj-loop:

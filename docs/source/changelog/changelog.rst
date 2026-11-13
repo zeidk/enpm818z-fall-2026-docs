@@ -35,6 +35,9 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
    - **L10, the two timings, in three steps:** make a trajectory from a
      path and a speed; check both against car B, moment by moment; see why
      one crashes, from when each reaches the lane line.
+   - **L10, two key boxes:** a path planner works in meters (a distance
+     ahead, maneuver lengths); a trajectory planner works in seconds (a time
+     ahead, durations). Both sample sets are fixed beforehand.
    - **L10, "Let the Planner Sample Trajectories":** last class's loop for
      paths beside Werling et al.'s loop for trajectories (sample, score,
      check, pick, repeat); each section after it opens with its step.
