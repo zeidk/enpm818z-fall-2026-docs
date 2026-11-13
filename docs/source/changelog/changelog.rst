@@ -39,6 +39,9 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
      section; Trajectory Generation starts at the moving car and says why a
      path cannot plan around it. In the flowchart, the local planner box
      reads "a path (L9) or a trajectory (today)".
+   - **L10, last class's candidates:** the figure marks both lane centers;
+     why no candidate passes on the right; a 60 m lane change, never
+     sampled, would have been cheaper than the one picked.
    - **L10, two key boxes:** a path planner works in meters (a distance
      ahead, maneuver lengths); a trajectory planner works in seconds (a time
      ahead, durations). Both sample sets are fixed beforehand.

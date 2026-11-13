@@ -642,7 +642,7 @@ road, with the AV at 10 m/s. It worked in the Frenet frame: :math:`s` is the
 distance along the right lane's center, :math:`d` the offset to its left.
 
 .. figure:: /_static/images/L10/candidate_set.png
-   :alt: A graph of d against s, s from 48 to 132 meters, the right lane pale yellow and the left lane pale purple. A black car icon, the AV, at s = 60 and d = 0. Short gray lines trail behind it to show that it moves. Thirty thin dark curves leave it, solid, dashed or dotted, and level off at ten values of d from minus 0.5 to 4 meters, every 0.5; a dot marks where each one levels off, at s = 80 for the solid ones, 90 for the dashed ones and 100 for the dotted ones. A thick dark line stays at d = 0 and ends with a bar at s = 110. A blue car icon, the obstacle, at s = 118 just below d = 0. A legend names the line styles 20 m, 30 m and 40 m, and the thick line stop behind.
+   :alt: A graph of d against s, s from 48 to 132 meters, the right lane pale yellow and the left lane pale purple. A black car icon, the AV, at s = 60 and d = 0. Short gray lines trail behind it to show that it moves. Thirty thin dark curves leave it, solid, dashed or dotted, and level off at ten values of d from minus 0.5 to 4 meters, every 0.5; a dot marks where each one levels off, at s = 80 for the solid ones, 90 for the dashed ones and 100 for the dotted ones. A thick dark line stays at d = 0 and ends with a bar at s = 110. A blue car icon, the obstacle, at s = 118 just below d = 0. Gray dash-dot lines mark the two lane centers, d = 0 and d = 3.5. A legend names the line styles 20 m, 30 m and 40 m, the thick line stop behind, and the dash-dot line lane center.
    :width: 85%
    :align: center
 
@@ -666,7 +666,11 @@ distance along the right lane's center, :math:`d` the offset to its left.
 2. **Check**: 18 collide, 4 turn too hard (over 3 m/s²).
 3. **Score** the 9 left and keep the cheapest: the left lane over 40 m, cost
    5.07.
-4. **Repeat** every 0.5 s.
+
+None passes on the right: the right lane is the last one. To clear the
+parked car (:math:`d` = −0.3) by 0.3 m, the AV would need
+:math:`d \le -0.3 - 2 \times 1.21 - 0.3 = -3.02` m (1.21 m: the radius of
+each car's circles), off the road, whose edge is at −1.75 m.
 
 .. important::
 
@@ -1041,7 +1045,8 @@ chosen in L9; lower is better. A and B from the last section, with
 
    B ends 0.5 m closer to the parked car: it saves 0.36 on comfort but pays
    2.00 more on clearance and 1.00 more on the lane. A also beats the other
-   7, the stop behind (11.54) included.
+   7, the stop behind (11.54) included. The planner picks only among its
+   samples: a 60 m lane change, never sampled, would cost 4.39.
 
 
 .. _l10-lec-path-steps:
