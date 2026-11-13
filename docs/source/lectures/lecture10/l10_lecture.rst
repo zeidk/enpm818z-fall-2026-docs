@@ -1009,7 +1009,8 @@ Apply the Costs: A Is the Cheapest
 Once the planner has all the candidates, it applies the costs to the 9 that
 pass the checks. Each term is a number read off the curve times a weight
 chosen in L9; lower is better. A and B from the last section, with
-:math:`u = (s - 60)/40`:
+:math:`u = (s - 60)/40`; in bold, the lower cost in each row (green on the
+slide):
 
 .. list-table::
    :widths: 15 35 25 25
@@ -1023,23 +1024,23 @@ chosen in L9; lower is better. A and B from the last section, with
    * - Comfort
      - peak sideways acceleration (m/s²), times 2
      - 2 × 1.253 = 2.51
-     - 2 × 1.076 = 2.15
+     - **2 × 1.076 = 2.15**
    * - Clearance
      - 1.5 m minus the smallest gap, times 4
-     - 4 × (1.5 − 1.359) = 0.56
+     - **4 × (1.5 − 1.359) = 0.56**
      - 4 × (1.5 − 0.859) = 2.56
    * - Lane
      - lanes off the route, times 2; meters off a lane center, times 2
-     - 2 × 1 + 2 × 0 = 2.00
+     - **2 × 1 + 2 × 0 = 2.00**
      - 2 × 1 + 2 × 0.5 = 3.00
    * - Progress
      - meters of the 70 m not covered, times 0.5
-     - 0
-     - 0
+     - **0**
+     - **0**
    * - **Cost**
      - sum of the four
      - **5.07**
-     - **7.71** (7.72 unrounded)
+     - 7.71 (7.72 unrounded)
 
 .. important::
 
