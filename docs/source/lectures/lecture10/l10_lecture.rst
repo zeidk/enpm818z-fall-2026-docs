@@ -3179,22 +3179,32 @@ Predict the AV's Motion: the Bicycle Model, One Wheel per Axle
 Write the Model: the State, the Inputs and Four Equations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**State**, at the rear axle: the configuration, position :math:`x, y` (m)
-and heading :math:`\theta` (rad, counterclockwise from :math:`x`), plus the
-speed :math:`v` (m/s). **Inputs:** the front wheel angle :math:`\delta`
-(rad, positive turns left) and the acceleration :math:`a` (m/s²).
+**Goal:** predict where the AV will be, given its steering and pedals. The
+model tracks four numbers at the rear axle, the **state**: position
+:math:`x, y` (m), heading :math:`\theta` (rad, counterclockwise from
+:math:`x`) and speed :math:`v` (m/s). The controller sets two **inputs**:
+the front wheel angle :math:`\delta` (rad, positive turns left) and the
+acceleration :math:`a` (m/s²). Each equation says how fast one state number
+changes (a dot is a rate of change in time):
 
 .. math::
 
    \dot x = v\cos\theta, \qquad \dot y = v \sin\theta, \qquad
    \dot\theta = \frac{v}{L}\tan\delta, \qquad \dot v = a
 
-- The first two: the rear axle moves along the heading.
-- The third: the turn rate grows with speed and with steering. This is where
-  the steering enters.
-- An EKF predicts with the gyro's measured turn rate instead; here the turn
-  rate comes from :math:`\delta`, because a controller chooses
-  :math:`\delta`.
+1. :math:`\dot x`, :math:`\dot y`: the AV moves along its heading. Its
+   speed :math:`v` splits into a part along :math:`x` and a part along
+   :math:`y`.
+2. :math:`\dot\theta`: the heading turns faster at a higher speed and with
+   more steering, and slower on a longer car (:math:`L`, the wheelbase).
+   This is where the steering enters.
+3. :math:`\dot v`: the speed changes by the acceleration the pedals give.
+
+.. note::
+
+   L6's EKF took the turn rate :math:`\dot\theta` from the gyro, which
+   measures it. Here it comes from :math:`\delta`: the controller chooses
+   :math:`\delta`, so the model must say what :math:`\delta` does.
 
 .. dropdown:: More detail: why tan δ = L/R
    :class-container: more-detail
