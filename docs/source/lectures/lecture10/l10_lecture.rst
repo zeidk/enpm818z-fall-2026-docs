@@ -2665,12 +2665,13 @@ One Test Path for Every Controller: a Right Turn in Town03
    dashed line is its center. The AV starts at the left end, facing right.
    The junction lane is shaded orange.
 
-The path: 80 m of road 3 (the approach), the 17.5 m junction lane of road
-817 (orange), which turns right by 91°, then 40 m of road 19 (the exit). We
-read it from ``Town03.xodr`` with ``carla.Map``, with no CARLA server.
+Our path is the lane's center, as the route planner gives it: 80 m
+straight, a right turn of 91° (orange), then 40 m straight. The controller
+follows it directly, with no local planner in between.
 
-Our path is the lane center, as the route planner gives it. Our controller
-follows that path, with no local planner in between.
+In CARLA's terms: 80 m of road 3 (the approach), the 17.5 m junction lane of
+road 817 (orange), then 40 m of road 19 (the exit). We read it from
+``Town03.xodr`` with ``carla.Map``, with no CARLA server.
 
 
 .. _l10-lec-curvature:
@@ -2683,7 +2684,9 @@ Measure How the Turn Bends: Fit a Circle to Each Arc
 
    How sharply a path bends at a point: :math:`\kappa = 1/R`, where
    :math:`R` is the radius of the circle that fits the path there. A
-   straight road has :math:`\kappa = 0`.
+   straight road has :math:`\kappa = 0`. On that circle, each meter driven
+   turns the heading by :math:`1/R` radians: :math:`\kappa` is the turn per
+   meter.
 
 .. figure:: /_static/images/L10/turn_arcs.png
    :alt: The corner of the test path from above, x from 72 to 99 meters, y from minus 21 to 4, the lane drawn by two black edges with a gray dashed center line, coming from the left and turning right, down. Two pieces of the center line in the corner are thick: a blue one first, then a purple one. A blue dashed circle of radius 10 meters fits the blue piece, with its center, a blue dot near x = 83, y = minus 10, and a blue radius line to the piece, dark tag 1. A smaller purple dashed circle, radius about 6 meters, fits the purple piece, with its center near x = 85, y = minus 7 and a purple radius line, dark tag 2.
@@ -2695,14 +2698,44 @@ Measure How the Turn Bends: Fit a Circle to Each Arc
 The corner is two arcs, each part of a circle (dashed):
 
 - **Tag 1, first arc** (blue): :math:`R` = 10.00 m, so
-  :math:`\kappa` = 1/10.00 = 0.1000 per meter.
-- **Tag 2, second arc**, tighter (purple): :math:`R` = 5.98 m, so
-  :math:`\kappa` = 1/5.98 = 0.1673 per meter.
+  :math:`\kappa` = 1/10.00 = 0.1000 per meter: each meter, the heading
+  turns 0.1000 rad (5.7°).
+- **Tag 2, second arc**, tighter (purple): :math:`R` = 5.98 m (5.979
+  unrounded), so :math:`\kappa` = 1/5.979 = 0.1673 per meter: 9.6° each
+  meter.
 
-**Where the radii come from:** CARLA's map, ``Town03.xodr``, draws this
-corner as two arcs of radius 11.75 and 7.73 m. Our path, the lane's center,
-runs 1.75 m (half the 3.5 m lane) inside them: 11.75 − 1.75 = 10.00 m and
-7.73 − 1.75 = 5.98 m.
+Both radii come from CARLA's map, ``Town03.xodr``, whose two arcs run 1.75 m
+outside our lane's center.
+
+.. dropdown:: More detail: where the radii come from
+   :class-container: more-detail
+   :icon: info
+   :name: l10-more-radii
+
+   ``Town03.xodr`` is CARLA's map of Town03, in the OpenDRIVE format. It
+   draws each road as a **reference line** made of pieces, each a straight
+   line or an arc, and each arc has one curvature. The lanes sit beside the
+   reference line, at fixed widths.
+
+   Our turn is road 817, a junction lane. Its reference line is: straight
+   pieces, an arc of curvature 0.12938 per meter, an arc of curvature
+   0.08513 per meter, then straight pieces again. The file lists them from
+   the exit's end, so we drive the 0.08513 arc first.
+
+   1. **The arcs' radii:** :math:`R = 1/\kappa`: 1/0.08513 = 11.746 m and
+      1/0.12938 = 7.729 m.
+   2. **Our lane's center:** our lane is 3.5 m wide and lies on the inside
+      of the turn, so its center runs 3.5 / 2 = 1.75 m inside the reference
+      line: 11.746 − 1.75 = 9.996 m and 7.729 − 1.75 = 5.979 m.
+   3. **The curvature of our path:** 1/9.996 = 0.1000 and
+      1/5.979 = 0.1673 per meter.
+
+   ``export_curve.py``, which writes the path the hands-on uses, measures
+   the same two values from the waypoints: the change of heading per meter.
+
+   Every road in Town03 is drawn this way, from 1083 straight pieces and 595
+   arcs. Each piece has one curvature, so the curvature of any path in
+   Town03 jumps where two pieces meet: the steps of the next figure.
 
 
 .. _l10-lec-curvature-graph:
@@ -2723,14 +2756,17 @@ A graph, not a map: the curvature :math:`\kappa` against the distance
   0.1673 on the second (purple), from 89.6 m.
 - 0 again on the exit, from 94.8 m.
 
-Each change is a **step**: no gradual part between.
+Each change is a **step**, not our choice: CARLA's map draws the corner
+from lines and arcs, each with one curvature, so :math:`\kappa` jumps where
+two meet (see "where the radii come from" above).
 
 **What it means for the controllers:**
 
 1. A tighter arc needs a lower speed: :ref:`l10-lec-profile-1`, right
    below, turns :math:`\kappa` into a speed cap.
-2. At a step, the steering needed changes at once. No steering can, so the
-   AV leaves the path for a moment, whatever the controller.
+2. At a step, the path asks for a new steering angle at once. Real steering
+   takes time to turn (0.2 s late, measured below), so for that moment the AV
+   drifts off the path, whatever the controller.
 
 
 .. _l10-lec-profile-1:

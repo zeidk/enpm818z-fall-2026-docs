@@ -65,6 +65,10 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
      ways to tell the controllers where and how fast (a trajectory, or a
      path plus a speed profile), and a new section says why we use the
      second.
+   - **L10, the test turn:** a shorter path description; curvature read as
+     the heading's turn per meter (0.1000 rad, 5.7°); a "More detail" box on
+     where the radii come from in ``Town03.xodr``; the steps in curvature
+     come from the map, which draws corners from lines and arcs.
    - **L10, Trajectory Generation in subsections:** Step 1: Sample, Step 2:
      Score, Step 3: Check, Steps 4 and 5: Pick and Repeat, Explain the
      Result, and Track a Path or a Trajectory.
