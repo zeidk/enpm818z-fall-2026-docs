@@ -2695,14 +2695,15 @@ Measure How the Turn Bends: Fit a Circle to Each Arc
 
    The corner: two arcs, each part of a circle.
 
-The corner is two arcs, each part of a circle (dashed):
+CARLA's map draws this corner as two arcs, not one, each part of a circle
+(dashed). The smaller the radius, the tighter the arc:
 
 - **Tag 1, first arc** (blue): :math:`R` = 10.00 m, so
   :math:`\kappa` = 1/10.00 = 0.1000 per meter: each meter, the heading
   turns 0.1000 rad (5.7°).
-- **Tag 2, second arc**, tighter (purple): :math:`R` = 5.98 m (5.979
-  unrounded), so :math:`\kappa` = 1/5.979 = 0.1673 per meter: 9.6° each
-  meter.
+- **Tag 2, second arc** (purple): :math:`R` = 5.98 m (5.979 unrounded),
+  smaller, so tighter: :math:`\kappa` = 1/5.979 = 0.1673 per meter, 9.6°
+  each meter.
 
 Both radii come from CARLA's map, ``Town03.xodr``, whose two arcs run 1.75 m
 outside our lane's center.
