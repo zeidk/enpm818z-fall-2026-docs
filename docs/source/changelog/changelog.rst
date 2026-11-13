@@ -32,9 +32,10 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
      moving car in the left lane, in dark red; the moving-car scene and the
      two timings drawn along the road in :math:`s` and :math:`d`, the timings
      with the collision circles.
-   - **L10, the two timings, in three steps:** make a trajectory from a
-     path and a speed; check both against car B, moment by moment; see why
-     one crashes, from when each reaches the lane line.
+   - **L10, the two timings, in three steps, after the planner:** the same
+     path at two speeds; both checked against car B, moment by moment; why
+     one crashes. They explain the planner's result (slow to 7 m/s, let car B
+     pass); the trajectory definition now opens the planner part.
    - **L10, Path Generation:** last class's path planner is now its own
      section; Trajectory Generation starts at the moving car and says why a
      path cannot plan around it. In the flowchart, the local planner box
