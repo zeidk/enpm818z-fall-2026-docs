@@ -1229,7 +1229,8 @@ candidates, made and checked by the planner itself. Werling et al. do this
      - **Today, Werling et al.: trajectories**
    * - 1. Sample
      - 31 paths :math:`d(s)`: 10 end offsets × 3 lengths, plus 1 stop
-     - 324: 18 moves across, :math:`d(t)`, × 18 moves along, :math:`s(t)`
+     - 324: 18 moves across, :math:`d(t)` (6 × 3), × 18 moves along,
+       :math:`s(t)` (5 × 3 + 3)
    * - 2. Score
      - comfort, clearance, lane, progress
      - squared jerk, time, end state
@@ -1253,12 +1254,11 @@ candidates, made and checked by the planner itself. Werling et al. do this
 
 .. _l10-lec-traj-dots:
 
-Read the Dots: a Dot Is a Rate of Change in Time
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Notation: a Dot Is a Rate of Change in Time
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Goal:** read the symbols of the next sections aloud. A dot over a symbol is
-its rate of change in time, its derivative with respect to :math:`t`; each
-extra dot is one more.
+**Goal:** A dot over a symbol is its rate of change in time, its derivative
+with respect to :math:`t`; each extra dot is one more.
 
 .. list-table::
    :widths: 15 26 59
@@ -1268,6 +1268,9 @@ extra dot is one more.
    * - **Symbol**
      - **Read aloud**
      - **What it is**
+   * - :math:`d`
+     - "d"
+     - sideways offset from the right lane's center (m)
    * - :math:`\dot d`
      - "d dot"
      - sideways speed (m/s)
@@ -1277,6 +1280,9 @@ extra dot is one more.
    * - :math:`\dddot d`
      - "d triple dot"
      - sideways jerk (m/s³), in the cost
+   * - :math:`s`
+     - "s"
+     - distance along the right lane's center (m)
    * - :math:`\dot s`
      - "s dot"
      - speed along the road (m/s)
@@ -1293,8 +1299,10 @@ extra dot is one more.
 Step 1: Sample
 ~~~~~~~~~~~~~~
 
-Build the candidates in two parts: 18 moves across the road, :math:`d(t)`,
-and 18 along it, :math:`s(t)`. Every pair is one trajectory: 18 × 18 = 324.
+Build the candidates in two parts: moves across the road, :math:`d(t)`:
+6 end offsets × 3 durations = 18; moves along it, :math:`s(t)`: 5 end speeds
+× 3 durations, plus 3 stops = 18 (the same count by chance). Every pair is
+one trajectory: 18 × 18 = 324.
 
 
 .. _l10-lec-traj-lat-goal:
@@ -1340,31 +1348,21 @@ Why a Quintic: It Meets Six Conditions, as Smoothly as Possible
    .. math::
       d(t) = a_0 + a_1 t + a_2 t^2 + a_3 t^3 + a_4 t^4 + a_5 t^5
 
-- **Six conditions, six numbers:** a quintic has six, :math:`a_0` to
-  :math:`a_5`, so it can meet all six.
-- **The smoothest:** "quintic polynomials are the jerk-optimal connection
-  between a start state [...] and an end state" (Werling et al., 2010,
-  citing Takahashi et al.).
-- **Last class's S curve:** :math:`q(u) = 10u^3 - 15u^4 + 6u^5` is this
-  quintic for a move that starts and ends straight, with :math:`u = t/T` in
-  place of :math:`u = (s - s_0)/L`.
+**Why we use it**, from Werling et al. (Werling et al., 2010), who build
+every :math:`d(t)` as a quintic:
 
-Samples (chosen): :math:`d_1` at each lane's center and 0.5 m to each side;
-:math:`T` = 3, 4 or 5 s: 6 × 3 = 18.
+1. **It can meet the six conditions:** it has six numbers, :math:`a_0` to
+   :math:`a_5`, one per condition.
+2. **It is the smoothest that does:** "quintic polynomials are the
+   jerk-optimal connection between a start state [...] and an end state", a
+   result Werling et al. take from Takahashi et al. Of all the curves that
+   meet the six conditions, the quintic has the least jerk.
 
-.. figure:: /_static/images/L10/traj_lat_set.png
-   :alt: A graph of the sideways offset d, in meters, against time t from 0 to 7 seconds, over two horizontal bands: the right lane in yellow from minus 1.75 to 1.75, the left lane in purple from 1.75 to 5.25, a dashed line between them. Eighteen black S-shaped curves start at d = 0 at time 0 and level off at minus 0.5, 0, 0.5, 3, 3.5 or 4 meters; solid curves level off at 3 seconds, dashed at 4, dotted at 5.
-   :width: 80%
-   :align: center
+.. important::
 
-   Eighteen quintic candidates for the sideways offset d(t).
-
-.. admonition:: Reading the figure
-   :class: tip
-
-   Every curve starts at :math:`d` = 0 at :math:`t` = 0 and levels off at
-   one of six end offsets: :math:`-0.5`, 0, 0.5, 3, 3.5 or 4 m. Solid curves
-   level off at 3 s, dashed at 4 s, dotted at 5 s.
+   Last class's S curve, :math:`q(u) = 10u^3 - 15u^4 + 6u^5`, is this
+   quintic for a move that starts and ends straight, with :math:`u = t/T` in
+   place of :math:`u = (s - s_0)/L`.
 
 .. dropdown:: More detail: the quintic's six conditions, and the equations for a slow-down
    :class-container: more-detail
@@ -1428,6 +1426,30 @@ Samples (chosen): :math:`d_1` at each lane's center and 0.5 m to each side;
       :math:`t = T/2`: :math:`1.5\,\Delta v / T = 1.5 \times 4.54 / 3.41 =
       2.0` m/s².
 
+
+.. _l10-lec-traj-lat-set:
+
+Sample the Moves Across: 18 Quintics d(t)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Each candidate's :math:`d(t)` is one quintic, from the AV's :math:`d`,
+:math:`\dot d`, :math:`\ddot d` now to an end offset :math:`d_1` at time
+:math:`T`. Samples (chosen): :math:`d_1` at each lane's center and 0.5 m to
+each side; :math:`T` = 3, 4 or 5 s: 6 × 3 = 18.
+
+.. figure:: /_static/images/L10/traj_lat_set.png
+   :alt: A graph of the sideways offset d, in meters, against time t from 0 to 7 seconds, over two horizontal bands: the right lane in yellow from minus 1.75 to 1.75, the left lane in purple from 1.75 to 5.25, a dashed line between them. Eighteen black S-shaped curves start at d = 0 at time 0 and level off at minus 0.5, 0, 0.5, 3, 3.5 or 4 meters; solid curves level off at 3 seconds, dashed at 4, dotted at 5.
+   :width: 80%
+   :align: center
+
+   Eighteen quintic candidates for the sideways offset d(t).
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   Every curve starts at :math:`d` = 0 at :math:`t` = 0 and levels off at
+   one of six end offsets: :math:`-0.5`, 0, 0.5, 3, 3.5 or 4 m. Solid curves
+   level off at 3 s, dashed at 4 s, dotted at 5 s.
 
 .. _l10-lec-traj-lon:
 
