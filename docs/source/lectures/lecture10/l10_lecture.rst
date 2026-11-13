@@ -1535,7 +1535,8 @@ Work One d(t): Find Its Six Numbers
       3a_3T^2 + 4a_4T^3 + 5a_5T^4 = 0, \qquad
       6a_3T + 12a_4T^2 + 20a_5T^3 = 0
 
-3. **Solve** them:
+3. **Solve** them: with :math:`T = 4`, they are three linear equations in
+   three unknowns, solved by elimination (or ``numpy.linalg.solve``):
 
    .. math::
 
@@ -1551,6 +1552,51 @@ Work One d(t): Find Its Six Numbers
    :math:`d(t) = d_1\,q(t/T)`, with last class's
    :math:`q(u) = 10u^3 - 15u^4 + 6u^5`: each coefficient of :math:`q`, times
    :math:`d_1`, over :math:`T^3`, :math:`T^4` or :math:`T^5`.
+
+
+.. dropdown:: More detail: the three equations, solved step by step
+   :class-container: more-detail
+   :icon: info
+   :name: l10-more-quintic-solve
+
+   With :math:`T = 4` and :math:`d_1 = 3.5`, the three end equations (powers
+   of 4 worked out) are:
+
+   .. math::
+
+      \begin{aligned}
+      \text{(E1)}\quad 64a_3 + 256a_4 + 1024a_5 &= 3.5\\
+      \text{(E2)}\quad 48a_3 + 256a_4 + 1280a_5 &= 0\\
+      \text{(E3)}\quad 24a_3 + 192a_4 + 1280a_5 &= 0
+      \end{aligned}
+
+   They are **linear**: each unknown appears alone, times a number. Solve
+   by **elimination**: subtract one equation from another to remove an
+   unknown, then substitute back.
+
+   1. E2 − E3 removes :math:`a_5`: :math:`24a_3 + 64a_4 = 0`, so
+      :math:`a_3 = -\tfrac{8}{3}a_4`.
+   2. Put that into E2: :math:`-128a_4 + 256a_4 + 1280a_5 = 0`, so
+      :math:`128a_4 = -1280a_5` and :math:`a_4 = -10\,a_5`. Then
+      :math:`a_3 = -\tfrac{8}{3}(-10\,a_5) = \tfrac{80}{3}a_5`.
+   3. E1 − E2 removes :math:`a_4`: :math:`16a_3 - 256a_5 = 3.5`. With
+      :math:`a_3 = \tfrac{80}{3}a_5`:
+      :math:`\left(\tfrac{1280}{3} - 256\right)a_5 = \tfrac{512}{3}a_5 = 3.5`,
+      so :math:`a_5 = 3.5 \times 3/512 = 0.0205`.
+   4. Back: :math:`a_4 = -10 \times 0.0205 = -0.205` and
+      :math:`a_3 = \tfrac{80}{3} \times 0.0205 = 0.547`.
+
+   Check: all three equations hold (E1: 35 − 52.5 + 21 = 3.5; E2:
+   26.25 − 52.5 + 26.25 = 0; E3: 13.125 − 39.375 + 26.25 = 0).
+
+   With ``numpy``, the same three equations as a matrix:
+
+   .. code-block:: python
+
+      import numpy as np
+      A = np.array([[64, 256, 1024], [48, 256, 1280], [24, 192, 1280]])
+      b = np.array([3.5, 0.0, 0.0])
+      a3, a4, a5 = np.linalg.solve(A, b)   # 0.547, -0.205, 0.0205
 
 
 .. _l10-lec-traj-dt-table:

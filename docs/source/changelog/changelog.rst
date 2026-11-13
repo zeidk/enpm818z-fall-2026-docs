@@ -40,7 +40,8 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
      (``Town03.xodr``'s arcs, 1.75 m outside the lane's center); then the
      curvature graph, zoomed on the corner, in the same colors.
    - **L10, "Work One d(t)":** a figure of where it starts and where it must
-     end; then one lateral quintic worked with numbers:
+     end; then one lateral quintic worked with numbers (a "More detail"
+     box solves its three equations step by step):
      its six coefficients, and d, its speed and its acceleration second by
      second.
    - **L10, the quintic:** why Werling et al. use it, in two sections right
