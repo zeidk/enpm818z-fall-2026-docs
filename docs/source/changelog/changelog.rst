@@ -69,6 +69,14 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
      the heading's turn per meter (0.1000 rad, 5.7°); a "More detail" box on
      where the radii come from in ``Town03.xodr``; the steps in curvature
      come from the map, which draws corners from lines and arcs.
+   - **L10, speed profile step 2:** explained in words; the two distances
+     are worked in a "More detail" box.
+   - **L10, the steering delay:** a new figure of the wheel's answer to a jump
+     in the command (the delay, then the lag); the other steering models
+     moved to a "More detail" box.
+   - **L10, our simulation:** each value says why it was chosen.
+   - **L10, Ackermann steering geometry:** a box names the model's two
+     issues: one angle per front wheel, and no sideways sliding.
    - **L10, Trajectory Generation in subsections:** Step 1: Sample, Step 2:
      Score, Step 3: Check, Steps 4 and 5: Pick and Repeat, Explain the
      Result, and Track a Path or a Trajectory.

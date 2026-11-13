@@ -2821,18 +2821,35 @@ Speed Profile, Step 2: Brake Before the Curve, Speed Up After It
    - **Tag 3:** the second arc's cap, 3.46 m/s.
    - **Tag 4:** speeding up again, after the second arc.
 
-The AV cannot drop to 4.47 m/s at once: slowing from :math:`v_1` to
-:math:`v_2` at a constant deceleration :math:`a` takes the distance
-:math:`d = (v_1^2 - v_2^2) / (2a)`.
+The caps (dotted) drop at once at each arc; the AV cannot. Slowing from
+:math:`v_1` to :math:`v_2` at a constant deceleration :math:`a` takes the
+distance :math:`d = (v_1^2 - v_2^2) / (2a)`, so the profile (blue) spreads
+each change out:
 
-1. Braking (tag 1), at 2.0 m/s² (chosen; the node's ``a_brake``):
-   :math:`d = (8^2 - 4.47^2) / (2 \times 2.0)` = 11.0 m. The first arc
-   starts at :math:`s` = 83.2 m, so braking starts at 83.2 minus 11.0,
-   which is 72.2 m.
-2. Speeding up (tag 4), at 1.5 m/s² (chosen), from 3.46 m/s after the
-   second arc ends at :math:`s` = 94.8 m:
-   :math:`(8^2 - 3.46^2) / (2 \times 1.5)` = 17.3 m, so the AV is at 8 m/s
-   again at 94.8 plus 17.3, which is 112.1 m.
+1. Tag 1: brake before the curve, at the node's braking rate (chosen),
+   starting early enough to reach the first cap right where the first arc
+   begins.
+2. Tags 2 and 3: hold each arc's cap.
+3. Tag 4: speed up after the curve, at a gentler rate (chosen), back to the
+   target speed.
+
+The faster the AV drives or the gentler it brakes, the earlier braking must
+start.
+
+.. dropdown:: More detail: the two distances, worked
+   :class-container: more-detail
+   :icon: info
+   :name: l10-more-profile-numbers
+
+   1. **Braking** (tag 1), at 2.0 m/s² (chosen; the node's ``a_brake``),
+      from the target 8 m/s to the first arc's cap, 4.47 m/s:
+      :math:`d = (8^2 - 4.47^2) / (2 \times 2.0)` = 11.0 m. The first arc
+      starts at :math:`s` = 83.2 m, so braking starts at 83.2 minus 11.0,
+      which is 72.2 m.
+   2. **Speeding up** (tag 4), at 1.5 m/s² (chosen), from the second arc's
+      cap, 3.46 m/s, after that arc ends at :math:`s` = 94.8 m:
+      :math:`(8^2 - 3.46^2) / (2 \times 1.5)` = 17.3 m, so the AV is at
+      8 m/s again at 94.8 plus 17.3, which is 112.1 m.
 
 
 .. _l10-lec-delay:
@@ -2840,38 +2857,63 @@ The AV cannot drop to 4.47 m/s at once: slowing from :math:`v_1` to
 Measure the Steering Delay: the Wheel Turns 0.2 s after the Command
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Xu et al. sent the MKZ a step in the steering command and watched the wheel
-(Xu et al., 2021):
+**Goal:** know how late real steering answers a command. Xu et al. tested a
+Lincoln MKZ, a research car: they changed the steering command in one jump
+and watched the wheel (Xu et al., 2021).
 
-1. "The steering wheel starts to rotate roughly 0.2 s after the command
-   :math:`\delta` is delivered": a **delay** of 0.2 s.
-2. Then the angle catches up gradually, as a first-order **lag**; a time
-   constant of 0.2 s fits the measured angle.
+.. figure:: /_static/images/L10/steer_delay.png
+   :alt: A graph of the steering angle, as a share of the new commanded angle from 0 to 1, against the time t from the command, marked from 0 to 1.2 seconds; the lines start a little before 0. A gray dashed line, the command, jumps from 0 to 1 at t = 0. A thick black line, the wheel's angle, stays at 0 until t = 0.2 s, with a double arrow from 0 to 0.2 s and dark tag 1 above it; then it rises, quickly at first and then more slowly, toward 1. A dot marks it at t = 0.4 s and 0.63, with dotted guides to both axes and dark tag 2 beside it.
+   :width: 70%
+   :align: center
 
-.. list-table::
-   :widths: 46 18 36
-   :header-rows: 1
-   :class: compact-table
+   Gray dashed: the command. Black: the wheel's angle (their model, fit to
+   the test).
 
-   * - **Steering model**
-     - **Delay**
-     - **Lag (time constant)**
-   * - MKZ research car, measured
-     - 0.2 s
-     - 0.2 s
-   * - Autoware's MPC, default values (no vehicle named)
-     - 0.24 s
-     - 0.27 s
-   * - Our simulation (chosen)
-     - 0.1 s
-     - 0.2 s
+- **Tag 1, delay:** nothing moves for 0.2 s. "The steering wheel starts to
+  rotate roughly 0.2 s after the command [...] is delivered".
+- **Tag 2, lag:** then the wheel catches up gradually. After one **time
+  constant**, 0.2 s (their fit), it has covered 63% of the way.
 
 .. important::
 
-   During a 0.2 s delay at 8 m/s the AV drives 8 × 0.2 = 1.6 m on its old
-   steering. A controller that ignores this steers late; in the Lateral
-   section, the delay and the lag make the AV weave when the lookahead is
-   short.
+   At 8 m/s, the AV drives 8 × 0.2 = 1.6 m before the wheel even starts to
+   turn. A controller that ignores this steers late.
+
+.. dropdown:: More detail: other steering delays
+   :class-container: more-detail
+   :icon: info
+   :name: l10-more-steer-delays
+
+   Xu et al. model the steering as a delay followed by a first-order lag:
+   :math:`\tau\,\dot\delta_r(t) = -\delta_r(t) + \delta(t - \tau_d)`, where
+   :math:`\delta` is the command, :math:`\delta_r` the real angle,
+   :math:`\tau_d` the delay and :math:`\tau` the time constant. They set
+   :math:`\tau` = 0.2 s "based on trial and error tests" and checked the
+   model against a second test with a back-and-forth command at 17 m/s.
+   After a jump in the command, the angle covers :math:`1 - e^{-1}` = 63%
+   of the way one time constant after it starts to move, and 95% after
+   three.
+
+   .. list-table::
+      :widths: 46 18 36
+      :header-rows: 1
+      :class: compact-table
+
+      * - **Steering model**
+        - **Delay**
+        - **Lag (time constant)**
+      * - Lincoln MKZ research car, measured (Xu et al., 2021)
+        - 0.2 s
+        - 0.2 s
+      * - Autoware's MPC, default values (no vehicle named)
+        - 0.24 s
+        - 0.27 s
+      * - Our simulation (chosen)
+        - 0.1 s
+        - 0.2 s
+
+   In the Lateral section, the delay and the lag make the AV weave when the
+   lookahead is short.
 
 
 .. _l10-lec-simulation:
@@ -2879,41 +2921,42 @@ Xu et al. sent the MKZ a step in the steering command and watched the wheel
 Test Controllers Without CARLA: Our Simulation and Its Values
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Every controller today drives this path in a numpy simulation of the
-bicycle model (next section). The values:
+**Goal:** test every controller the same way, in seconds, with no CARLA. A
+small Python program moves the AV with the bicycle model (next section) 100
+times a second, and runs the controller 20 times a second. The values it
+uses:
 
 .. list-table::
-   :widths: 28 24 48
+   :widths: 30 24 46
    :header-rows: 1
    :class: compact-table
 
    * - **Value**
      - **Number**
-     - **From**
-   * - Wheelbase :math:`L`
+     - **Why**
+   * - Wheelbase :math:`L` (axle to axle)
      - 2.875 m
-     - chosen; a real vehicle has its own (2.3 to 3.0 m)
+     - GP4's setting; real cars have 2.3 to 3.0 m
    * - Largest steering angle
      - 0.7 rad
-     - chosen: the most the controller commands (``steer_limit``; the
-       wheels can turn 1.222 rad)
-   * - Steering: delay, then lag
+     - GP4's ``steer_limit``; the wheels could turn 1.222 rad
+   * - Steering delay, then lag
      - 0.1 s, then 0.2 s
-     - chosen, near the measured car (last section)
-   * - Controller rate
-     - 20 per second
-     - set by the lock step
+     - close to the measured car (last section)
+   * - Controller
+     - 20 times a second
+     - as on CARLA: our node steps it every 0.05 s
    * - Start
-     - 1 m left of center, 8 m/s
-     - chosen, to see the AV correct
+     - 1 m left of the lane's center, 8 m/s
+     - chosen, so we see each controller correct
    * - Speed model
      - see :ref:`Longitudinal Control <l10-lec-speed>`
      - chosen
 
 .. important::
 
-   These are not CARLA's dynamics. The numbers show how each controller
-   behaves; tune the gains on CARLA itself.
+   These are not CARLA's dynamics. Use the runs to see how each controller
+   behaves; tune its gains on CARLA itself.
 
 
 .. _l10-lec-vehicle-modeling:
@@ -2972,6 +3015,12 @@ point square to the line to the ICR slides sideways: a tire scrub.
   not steer.
 - :math:`L`: wheelbase. :math:`W`: track. :math:`R`: turn radius, to the
   rear axle's middle.
+
+.. important::
+
+   **The issue:** each front wheel needs its own angle, and both change with
+   the turn, but a controller sends one. The model also assumes no tire
+   slides sideways: true only while the sideways acceleration stays low.
 
 
 .. _l10-lec-bicycle-collapse:
