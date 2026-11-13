@@ -1261,27 +1261,36 @@ Notation: a Dot Is a Rate of Change in Time
 with respect to :math:`t`; each extra dot is one more.
 
 .. list-table::
-   :widths: 15 85
+   :widths: 13 30 57
    :header-rows: 1
    :class: compact-table
 
    * - **Symbol**
+     - **Derivative of**
      - **What it is**
    * - :math:`d`
+     - none
      - sideways offset from the right lane's center (m)
    * - :math:`\dot d`
+     - :math:`d`: :math:`\dot d = \mathrm{d}d/\mathrm{d}t`
      - sideways speed (m/s)
    * - :math:`\ddot d`
+     - :math:`\dot d`: :math:`\ddot d = \mathrm{d}\dot d/\mathrm{d}t`
      - sideways acceleration (m/s²)
    * - :math:`\dddot d`
+     - :math:`\ddot d`: :math:`\dddot d = \mathrm{d}\ddot d/\mathrm{d}t`
      - sideways jerk (m/s³), in the cost
    * - :math:`s`
+     - none
      - distance along the right lane's center (m)
    * - :math:`\dot s`
+     - :math:`s`: :math:`\dot s = \mathrm{d}s/\mathrm{d}t`
      - speed along the road (m/s)
    * - :math:`\ddot s`
+     - :math:`\dot s`: :math:`\ddot s = \mathrm{d}\dot s/\mathrm{d}t`
      - acceleration along the road (m/s²)
    * - :math:`\dddot s`
+     - :math:`\ddot s`: :math:`\dddot s = \mathrm{d}\ddot s/\mathrm{d}t`
      - jerk along the road (m/s³), in the cost
 
 
