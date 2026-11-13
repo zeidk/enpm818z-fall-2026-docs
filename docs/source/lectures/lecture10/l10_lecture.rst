@@ -3525,29 +3525,16 @@ Sort the Steering Controllers: Geometric, Feedback, Model-Based
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **Goal:** choose how to steer the AV along the path. Steering controllers
-come in three kinds, by what they steer from:
+come in three kinds, by how they pick the steering angle:
 
-.. list-table::
-   :widths: 19 27 27 27
-   :header-rows: 1
-   :class: compact-table
-
-   * -
-     - **Geometric**
-     - **Feedback**
-     - **Model-based**
-   * - Steers from
-     - the path's shape
-     - the measured error
-     - a predicted response
-   * - Examples
-     - Pure Pursuit, Stanley
-     - PID
-     - LQR, MPC
-   * - Knows about the car
-     - its wheelbase only
-     - nothing
-     - a model of how it moves
+1. **Geometric** (Pure Pursuit, Stanley): compute the angle from where the
+   path lies around the car, a point ahead or the offset at the front axle,
+   and the wheelbase. One formula; no model of how the car moves.
+2. **Feedback** (PID): turn the measured error, how far the AV is off the
+   path, into an angle: steer harder the farther off. It knows nothing about
+   the car.
+3. **Model-based** (LQR, MPC): predict with a model how the car responds to
+   each steering choice, and pick the best one.
 
 .. important::
 
