@@ -1198,8 +1198,9 @@ To make one, take a path and pick a speed: the speed says how far along the
 road (:math:`s`) the AV is at each time :math:`t`; the path says how far
 left (:math:`d`) it is at that :math:`s`.
 
-- The path: keep the lane to :math:`s` = 80 m, then last class's S curve
-  into the left lane over 40 m.
+- The path: candidate A's formula, :math:`d(s) = 3.5\,q(u)`, but with the
+  move starting at :math:`s_0` = 80 m instead of 60 m (chosen):
+  :math:`u = (s - 80)/40`.
 - Two speeds (chosen): (1) keep 10 m/s; (2) slow to 7 m/s in the first
   2 s, then keep 7 m/s.
 
