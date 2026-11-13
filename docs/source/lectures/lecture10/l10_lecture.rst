@@ -1261,36 +1261,27 @@ Notation: a Dot Is a Rate of Change in Time
 with respect to :math:`t`; each extra dot is one more.
 
 .. list-table::
-   :widths: 15 26 59
+   :widths: 15 85
    :header-rows: 1
    :class: compact-table
 
    * - **Symbol**
-     - **Read aloud**
      - **What it is**
    * - :math:`d`
-     - "d"
      - sideways offset from the right lane's center (m)
    * - :math:`\dot d`
-     - "d dot"
      - sideways speed (m/s)
    * - :math:`\ddot d`
-     - "d double dot"
      - sideways acceleration (m/s²)
    * - :math:`\dddot d`
-     - "d triple dot"
      - sideways jerk (m/s³), in the cost
    * - :math:`s`
-     - "s"
      - distance along the right lane's center (m)
    * - :math:`\dot s`
-     - "s dot"
      - speed along the road (m/s)
    * - :math:`\ddot s`
-     - "s double dot"
      - acceleration along the road (m/s²)
    * - :math:`\dddot s`
-     - "s triple dot"
      - jerk along the road (m/s³), in the cost
 
 
