@@ -3531,8 +3531,8 @@ come in three kinds, by how they pick the steering angle:
    path lies around the car, a point ahead or the offset at the front axle,
    and the wheelbase. One formula; no model of how the car moves.
 2. **Feedback** (PID): turn the measured error, how far the AV is off the
-   path, into an angle: steer harder the farther off. It knows nothing about
-   the car.
+   path, into an angle: steer harder the farther off. It uses that error
+   alone: not the car's speed, heading or wheelbase.
 3. **Model-based** (LQR, MPC): predict with a model how the car responds to
    each steering choice, and pick the best one.
 
