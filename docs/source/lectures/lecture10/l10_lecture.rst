@@ -1517,10 +1517,15 @@ each side; :math:`T` = 3, 4 or 5 s: 6 × 3 = 18.
 Work One d(t): Where It Starts and Where It Must End
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-One of the 18 options, picked for this example: be on the left lane's
-center (:math:`d_1` = 3.5 m), driving parallel to it, 4 s from now
-(:math:`T` = 4 s). It says only where across the road; how far along comes
-from :math:`s(t)`. The AV now, sideways: on its lane's center
+One of the 18 options, picked for this example:
+
+.. important::
+
+   *Be on the left lane's center* (:math:`d_1` = 3.5 m), *driving parallel
+   to it, 4 s from now* (:math:`T` = 4 s).
+
+It says only where across the road; how far along comes from
+:math:`s(t)`. The AV now, sideways: on its lane's center
 (:math:`d = 0`), not drifting (:math:`\dot d = 0`), not starting to
 (:math:`\ddot d = 0`); along the road it drives at 10 m/s.
 
@@ -1709,8 +1714,13 @@ fewer than :math:`d(t)`. A stop asks where, so it has six.
 Plan Along the Road: Where s(t) Starts and Where It Must End
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-One move of each kind, picked for this example. The AV now: at
-:math:`s` = 60 m, driving at 10 m/s, not speeding up or slowing down.
+One move of each kind, picked for this example:
+
+.. important::
+
+   *Keep a speed: drive at 6 m/s* (:math:`\dot s_1` = 6 m/s), *not speeding
+   up or slowing down, 4 s from now* (:math:`T` = 4 s). *Stop: be stopped at
+   110.15 m* (:math:`s_\text{stop}`), *10 s from now* (:math:`T` = 10 s).
 
 .. figure:: /_static/images/L10/st_example.png
    :alt: Two graphs side by side of the distance along the road s, in meters, against the time t from now, in seconds. Both start the same way: a thick black line rising steeply up to a red round marker at t = 0 and s = 60, dark tag 1 below and to the right of it. Left graph, titled keep a speed: a gray curve rises from the red round marker and bends to a gentler slope at t = 4 s, marked by a dotted vertical line, with no red round marker there; a thick black straight line goes on at that gentler slope, dark tag 2 below it. Right graph, titled stop at a point: a gray curve rises from the red round marker and levels off at a second red round marker at t = 10 s and s = 110.15, marked by a dotted vertical line; a thick black flat line goes on from it, dark tag 2 below it.
@@ -1793,8 +1803,14 @@ Werling et al. combine them.
    :icon: info
    :name: l10-more-quartic-example
 
-   One of the 15, picked for this example: slow to :math:`\dot s_1` = 6 m/s
-   in :math:`T` = 4 s. The AV now: at :math:`s` = 60 m, driving at 10 m/s,
+   One of the 15, picked for this example:
+
+   .. important::
+
+      *Drive at 6 m/s* (:math:`\dot s_1` = 6 m/s), *not speeding up or
+      slowing down, 4 s from now* (:math:`T` = 4 s).
+
+   The AV now: at :math:`s` = 60 m, driving at 10 m/s,
    not speeding up or slowing down (:math:`\ddot s = 0`).
 
    1. **Start:** :math:`b_0 = 60`, :math:`b_1 = 10`, :math:`b_2 = 0/2 = 0`.
