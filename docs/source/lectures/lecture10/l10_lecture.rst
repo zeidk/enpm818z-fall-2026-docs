@@ -2689,7 +2689,7 @@ Measure How the Turn Bends: Fit a Circle to Each Arc
    meter.
 
 .. figure:: /_static/images/L10/turn_arcs.png
-   :alt: The corner of the test path from above, x from 72 to 99 meters, y from minus 21 to 4, the lane drawn by two black edges with a gray dashed center line, coming from the left and turning right, down. Two pieces of the center line in the corner are thick: a blue one first, then a purple one. A blue dashed circle of radius 10 meters fits the blue piece, with its center, a blue dot near x = 83, y = minus 10, and a blue radius line to the piece, dark tag 1. A smaller purple dashed circle, radius about 6 meters, fits the purple piece, with its center near x = 85, y = minus 7 and a purple radius line, dark tag 2.
+   :alt: The corner of the test path from above, x from 72 to 99 meters, y from minus 21 to 4, the lane drawn by two black edges with a gray dashed center line, coming from the left and turning right, down. Two pieces of the center line in the corner are thick: a blue one first, then a purple one that starts where the blue one ends. A blue dashed circle of radius 10 meters fits the blue piece, with its center, a blue dot near x = 83, y = minus 10, and a blue radius line to the piece, dark tag 1. A smaller purple dashed circle, radius about 6 meters, fits the purple piece, with its center near x = 85, y = minus 7 and a purple radius line, dark tag 2.
    :width: 60%
    :align: center
 
