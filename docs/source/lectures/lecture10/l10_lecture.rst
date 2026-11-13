@@ -1196,14 +1196,14 @@ Plan a Trajectory: the Horizon Is a Time, the Samples Are Durations
 .. admonition:: A trajectory planner works in seconds
    :class: important
 
-   - **Horizon, a time:** each trajectory reaches 7 s ahead (last class's
-     70 m at 10 m/s).
+   - **Horizon, a time:** 7 s ahead (last class's 70 m at 10 m/s).
    - **Samples, durations:** each move takes :math:`T` = 3, 4 or 5 s
-     (chosen), across and along; along, the end speed is 4, 6, 8, 10 or
-     12 m/s.
+     (chosen). Across, it ends at one of 6 offsets: each lane's center and
+     0.5 m to each side (−0.5, 0, 0.5, 3, 3.5, 4 m). Along, at one of 5
+     speeds (4, 6, 8, 10, 12 m/s), or it stops behind the parked car over 8,
+     10 or 12 s (3 stops).
    - **Set beforehand:** constants in the planner's code. Every 0.5 s it
-     samples the same set again, from the AV's state: :math:`s`, speed,
-     acceleration, :math:`d`, sideways speed and sideways acceleration.
+     samples the same set again, from the AV's current motion.
    - **A speed in each candidate:** so the speed can change from one plan to
      the next.
    - **No path needed first:** where and when are planned together.
