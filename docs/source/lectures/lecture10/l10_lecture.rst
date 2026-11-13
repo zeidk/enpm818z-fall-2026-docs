@@ -3318,29 +3318,39 @@ steer :math:`\delta = \arctan(L\kappa)`.
 Know Where the Model Stops: Tires Slide at High Sideways Acceleration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The model assumes each wheel rolls where it points. A real tire slides a
-little sideways when it carries a sideways force, and more as the force
-grows.
+The model assumes each wheel rolls where it points. A real tire slides
+sideways a little when the AV turns, and more the harder it turns.
 
-- Polack et al. compared the model with a 9-degree-of-freedom vehicle in
-  simulation: keep the sideways acceleration "lower than 0.5 μg" (Polack et
-  al., 2017). On a dry road (:math:`\mu` = 1): 0.5 × 9.81 = 4.9 m/s².
-- Our profile caps it at 2.0 m/s²: on the second arc,
-  :math:`3.46^2 \times 0.1673 = 2.0` m/s², well inside.
-- Kong et al. drove a car with an MPC built on this model: 0.41 m mean error
-  on a test path at 10 m/s, 1.08 m at 15 m/s. "When the lateral acceleration
-  grows larger, it becomes more critical to use a model which takes into
-  consideration slip, such as a dynamic bicycle model" (Kong et al., 2015).
+1. The model holds while the sideways acceleration :math:`v^2\kappa` stays
+   under half of what the tires can give:
+   :math:`0.5\,\mu g` = 0.5 × 9.81 = 4.9 m/s² on a dry road
+   (:math:`\mu` = 1).
+2. Our turn: at most :math:`3.46^2 \times 0.1673` = 2.0 m/s², the profile's
+   cap. Well inside.
+3. Harder turns need a model with tire slip: the dynamic bicycle model
+   (below).
 
 .. important::
 
-   A speed alone does not set the limit: the sideways acceleration is
+   Speed alone does not set the limit: the sideways acceleration is
    :math:`v^2/R`, so a gentle curve allows more speed than a tight one.
 
 .. dropdown:: More detail: the dynamic bicycle model, when tires slide
    :class-container: more-detail
    :icon: info
    :name: l10-more-dynamic
+
+   .. rubric:: Where the Limit Comes From: Two Studies
+
+   - Polack et al. compared the kinematic bicycle model with a
+     9-degree-of-freedom vehicle in simulation: keep the sideways
+     acceleration "lower than 0.5 μg" (Polack et al., 2017). On a dry road
+     (:math:`\mu` = 1): 0.5 × 9.81 = 4.9 m/s².
+   - Kong et al. drove a car with an MPC built on this model: 0.41 m mean
+     error on a test path at 10 m/s, 1.08 m at 15 m/s. "When the lateral
+     acceleration grows larger, it becomes more critical to use a model
+     which takes into consideration slip, such as a dynamic bicycle model"
+     (Kong et al., 2015).
 
    .. rubric:: Let the Tires Slide: the Dynamic Bicycle Model
 
@@ -3487,7 +3497,7 @@ grows.
    - **Steering for a curvature:** :math:`\delta = \arctan(L\kappa)`:
      0.280 rad and 0.448 rad for our two arcs, under the 0.7 rad limit.
    - **Sideways acceleration** on our turn: at most 2.0 m/s², the profile's
-     cap. Polack et al.: keep it under 0.5 μg, 4.9 m/s² on a dry road.
+     cap. The model holds under 0.5 μg, 4.9 m/s² on a dry road.
 
 A 10-minute break follows in class.
 
