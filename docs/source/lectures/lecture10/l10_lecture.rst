@@ -1251,15 +1251,24 @@ candidates, made and checked by the planner itself. Werling et al. do this
    against a car that moves. The next sections follow rows 1 to 5.
 
 
+.. _l10-lec-traj-sample:
+
+Step 1: Sample
+~~~~~~~~~~~~~~
+
+Build the candidates in two parts: 18 moves across the road, :math:`d(t)`,
+and 18 along it, :math:`s(t)`. Every pair is one trajectory: 18 × 18 = 324.
+
+
 .. _l10-lec-traj-lat-goal:
 
 Plan Across the Road in Time: What the Offset d(t) Must Do
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Goal:** write each candidate's sideways move as a function of time,
 :math:`d(t)`, so that every candidate is a trajectory, not a path.
 
-**1. Sample, across the road.** Werling et al. build each candidate in two
+Werling et al. build each candidate in two
 parts (Werling et al., 2010): the offset across the road, :math:`d(t)`, and
 the distance along it, :math:`s(t)`. This section and the next:
 :math:`d(t)`.
@@ -1284,7 +1293,7 @@ What :math:`d(t)` must do:
 .. _l10-lec-traj-quintic-d:
 
 Why a Quintic: It Meets Six Conditions, as Smoothly as Possible
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. admonition:: Definition: Quintic
    :class: note
@@ -1386,9 +1395,9 @@ Samples (chosen): :math:`d_1` at each lane's center and 0.5 m to each side;
 .. _l10-lec-traj-lon:
 
 Plan Along the Road: Keep a Speed with a Quartic, Stop with a Quintic
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**1. Sample, along the road.** :math:`s(t)` says how far along the AV is at
+Here :math:`s(t)` says how far along the AV is at
 each time; with :math:`d(t)` it makes one trajectory.
 
 **Keep a speed.** No end position is asked, so five conditions:
@@ -1419,10 +1428,19 @@ In all 15 + 3 = 18 along, so 18 × 18 = 324 candidates: every pair
    stop.
 
 
+.. _l10-lec-traj-score:
+
+Step 2: Score
+~~~~~~~~~~~~~
+
+Give every candidate a cost; lower is better. Werling et al. score comfort
+with the jerk.
+
+
 .. _l10-lec-traj-jerk:
 
 Score Comfort with Jerk: Werling's Cost
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. admonition:: Definition: Jerk
    :class: note
@@ -1430,7 +1448,7 @@ Score Comfort with Jerk: Werling's Cost
    The rate of change of acceleration, in m/s³. Passengers feel a jump in
    acceleration as a jolt; a small jerk feels smooth.
 
-**2. Score.** Werling et al.: "ease and comfort can be best described by the jerk". Each
+Werling et al.: "ease and comfort can be best described by the jerk". Each
 direction gets three terms (Werling et al., 2010), each weighted by a
 number :math:`k` (all 1 here, chosen):
 
@@ -1453,10 +1471,19 @@ The total is :math:`C_d + C_s`; the cheapest candidate that passes the
 checks wins.
 
 
+.. _l10-lec-traj-check-sub:
+
+Step 3: Check
+~~~~~~~~~~~~~
+
+Drop every candidate that hits the parked car or car B, checked at the same
+moment, or that moves too hard.
+
+
 .. _l10-lec-traj-check:
 
 Check Each Candidate at Its Own Time: 45 of 324 Are Kept
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L10/traj_first_plan.png
    :alt: A graph, d against s, with the right lane yellow and the left lane purple. The black AV at s = 60 meters, with short gray lines behind it to show that it moves, and the blue parked car in the right lane at 118 meters; car B is behind, out of view. A fan of 324 lines leaves the AV. Every line that reaches the left lane is orange-red or dashed purple. In the right lane, gray lines end between about 105 and 110 meters, and one thick green line rises slightly to d = 0.5 and runs to about 110 meters. Orange-red lines in the right lane run on past 120 meters.
@@ -1473,7 +1500,7 @@ Check Each Candidate at Its Own Time: 45 of 324 Are Kept
    - Gray lines stay in the right lane and are kept; the thick green line is
      the cheapest of them.
 
-**3. Check** all 324, at a point every 0.1 s for 7 s: the acceleration along the road
+Check all 324, at a point every 0.1 s for 7 s: the acceleration along the road
 within ±2.0 m/s² (chosen) and across within 3 m/s² (last class's comfort
 limit); the circle gap at least 0.3 m, to the parked car and to **car B
 where prediction puts it at that same moment**.
@@ -1515,10 +1542,19 @@ where prediction puts it at that same moment**.
    edging 0.5 m toward the lane line.
 
 
+.. _l10-lec-traj-pick:
+
+Steps 4 and 5: Pick and Repeat
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Drive the first 0.5 s of the cheapest candidate, then plan again from where
+the AV is.
+
+
 .. _l10-lec-traj-replan:
 
 Plan Again Every 0.5 s: Wait for Car B, Then Pass
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L10/traj_drive.png
    :alt: Three top views of the road, to scale, dark tags 1 to 3, each with the AV in black, car B in dark red and the parked car in blue, a dotted line where the AV has been and a thick green line for its plan. Short gray lines trail behind each moving car to show that it moves; the parked car has none. 1: car B beside the AV in the left lane; the green plan stays in the right lane and ends with a short bar well before the parked car. 2: car B level with the AV; the green plan curves into the left lane. 3: the AV in the left lane beside the parked car; car B far ahead; the green plan goes on along the left lane.
@@ -1536,7 +1572,7 @@ Plan Again Every 0.5 s: Wait for Car B, Then Pass
    - **3:** the AV is beside the parked car, in the left lane; car B is far
      ahead.
 
-**4. Pick, 5. repeat.** The AV drives the first 0.5 s of the cheapest
+The AV drives the first 0.5 s of the cheapest
 candidate, then plans again
 from where it is.
 
@@ -1554,10 +1590,19 @@ AV's rear is 5 m past the parked car's front (chosen); the AV is back on its
 center at :math:`s` = 181 m.
 
 
+.. _l10-lec-traj-explain:
+
+Explain the Result
+~~~~~~~~~~~~~~~~~~
+
+The planner slowed to 7 m/s and let car B pass. Why does that work? One
+path, driven at two speeds.
+
+
 .. _l10-lec-traj-timings:
 
-Explain the Result, Step 1: the Same Path at Two Speeds
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Same Path, Two Speeds: Keep 10 m/s or Slow to 7 m/s First
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Goal:** see why the planner's choice works: slow down first, then change
 lanes. Take one path and drive it at two speeds.
@@ -1621,8 +1666,8 @@ A path and a speed make a trajectory: the speed says how far along the road
 
 .. _l10-lec-traj-timings-compare:
 
-Explain the Result, Step 2: Check Both Against Car B, Moment by Moment
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Check Both Against Car B, Moment by Moment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Car B starts at :math:`s` = 45 m (15 m behind the AV) and prediction keeps
 it at 15 m/s: its :math:`s` is 45 + 15 :math:`t`. Every 0.05 s, the check
@@ -1645,8 +1690,8 @@ closest to car B.
 
 .. _l10-lec-traj-where-when:
 
-Explain the Result, Step 3: They Reach Car B's Lane at Different Times
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+See Why: They Reach Car B's Lane at Different Times
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Both trajectories follow the same path, so both pass the lane line,
 :math:`s` = 100 m, :math:`d` = 1.75 m, where the AV's center crosses into
@@ -1666,7 +1711,7 @@ car B's lane. They get there at different times:
      - 45 + 15 × 4 = 105 m: beside the AV
      - crash
    * - (2) Slow to 7 m/s
-     - 5.29 s (between 5 and 6 s in step 1)
+     - 5.29 s (between 5 and 6 s in the first table)
      - 45 + 15 × 5.29 = 124.35 m: already past
      - safe
 
@@ -1677,10 +1722,19 @@ car B's lane. They get there at different times:
    slow to 7 m/s, let car B pass.
 
 
+.. _l10-lec-tracking:
+
+Track a Path or a Trajectory
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Our controller node follows a path; a trajectory adds times the controller
+must meet. The two compared.
+
+
 .. _l10-lec-tracking-compare:
 
 Compare Path Tracking and Trajectory Tracking
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Snider: "Path tracking refers to a vehicle executing a globally defined
 geometric path by applying appropriate steering motions that guide the
