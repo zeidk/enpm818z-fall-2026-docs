@@ -2745,17 +2745,14 @@ Read the Curvature Along the Path: It Steps Up, Then Down
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L10/turn_curvature.png
-   :alt: A graph, not a map: curvature in 1 per meter against the distance along the path, zoomed on 60 to 120 meters. The curve is zero up to about 83 meters, steps up to 0.100, where a blue plateau runs to about 89 meters with dark tag 1 above it, steps again to 0.167, where a purple plateau runs to about 95 meters with dark tag 2 above it, and drops back to zero. The junction lane, from 80 to 97.5 meters, is shaded orange.
-   :width: 80%
+   :alt: Two graphs, not maps, one above the other, against the distance along the path, zoomed on 60 to 120 meters, with the junction lane from 80 to 97.5 meters shaded orange and three dotted vertical lines at about 83, 90 and 95 meters. Top: the curvature in 1 per meter, zero up to about 83 meters, a blue plateau at 0.100 with dark tag 1 above it, a purple plateau at 0.167 to about 95 meters with dark tag 2 above it, then zero. Bottom: how far the AV is off the path, in meters, in one run: a blue line that stays under 0.06 meters, with small bumps just after the first two dotted lines, rises to a peak of about 0.25 meters at 97 meters, just after the third dotted line, marked by a dot with dark tag 3, and falls back under 0.05 meters by about 102 meters.
+   :width: 70%
    :align: center
 
-A graph, not a map: the curvature :math:`\kappa` against the distance
-:math:`s` along the path. Shaded: the junction lane.
-
-- 0 on the straight approach, up to :math:`s` = 83.2 m.
-- Tag 1: 0.1000 on the first arc (blue, as in the last figure), then tag 2:
-  0.1673 on the second (purple), from 89.6 m.
-- 0 again on the exit, from 94.8 m.
+Graphs, not maps: both against the distance :math:`s` along the path.
+Shaded: the junction lane. **Top**, the curvature: 0 on the approach, tag 1:
+0.1000 from :math:`s` = 83.2 m (first arc, blue), tag 2: 0.1673 from
+89.6 m (second arc, purple), 0 again from 94.8 m (dotted lines).
 
 Each change is a **step**, not our choice: CARLA's map draws the corner
 from lines and arcs, each with one curvature, so :math:`\kappa` jumps where
@@ -2767,7 +2764,9 @@ two meet (see "where the radii come from" above).
    below, turns :math:`\kappa` into a speed cap.
 2. At a step, the path asks for a new steering angle at once. Real steering
    takes time to turn (0.2 s late, measured below), so for that moment the AV
-   drifts off the path, whatever the controller.
+   drifts off the path, whatever the controller. **Bottom:** one of today's
+   runs (Pure Pursuit, the node's 5 m lookahead): tag 3, 0.25 m off, 2 m
+   after the last step. It is back within 0.05 m by :math:`s` = 102 m.
 
 
 .. _l10-lec-profile-1:
