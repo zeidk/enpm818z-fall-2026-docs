@@ -1318,21 +1318,27 @@ parts (Werling et al., 2010): the offset across the road, :math:`d(t)`, and
 the distance along it, :math:`s(t)`. This section and the next:
 :math:`d(t)`.
 
-What :math:`d(t)` must do:
+What :math:`d(t)` must do: six conditions.
 
-1. **Start from the AV's motion now:** at :math:`t = 0`, its offset
-   :math:`d`, its sideways speed :math:`\dot d` and its sideways
-   acceleration :math:`\ddot d`. The planner plans again every 0.5 s;
-   starting from the AV's own motion leaves no jump between two plans.
-2. **End parallel to the lane:** at time :math:`T`, on the target offset
-   :math:`d_1`, with :math:`\dot d = 0` and :math:`\ddot d = 0`.
-3. **Be as smooth as possible in between:** the least **jerk**, how fast the
-   acceleration changes (m/s³), which the passengers feel.
+**Start from the AV's motion now**, at :math:`t = 0`:
+
+1. :math:`d(0)` = the AV's offset now
+2. :math:`\dot d(0)` = its sideways speed now
+3. :math:`\ddot d(0)` = its sideways acceleration now
+
+**End parallel to the target lane**, at :math:`t = T`:
+
+4. :math:`d(T) = d_1`, the target offset
+5. :math:`\dot d(T) = 0`
+6. :math:`\ddot d(T) = 0`
+
+Starting from the AV's own motion leaves no jump between two plans, 0.5 s
+apart. And in between: be as smooth as possible, with the least **jerk**,
+how fast the acceleration changes (m/s³), which the passengers feel.
 
 .. important::
 
-   Points 1 and 2 are six conditions: three at the start, three at the end.
-   Many curves meet them; point 3 picks one.
+   Many curves meet conditions 1 to 6; being smooth picks one.
 
 
 .. _l10-lec-traj-quintic-d:
@@ -1349,8 +1355,8 @@ Why a Quintic: Six Numbers Meet the Six Conditions
       d(t) = a_0 + a_1 t + a_2 t^2 + a_3 t^3 + a_4 t^4 + a_5 t^5
 
 Werling et al. build every :math:`d(t)` as a quintic (Werling et al., 2010),
-for two reasons. The first: its six numbers can meet the six conditions of
-the last sections.
+for two reasons. The first: its six numbers can meet conditions 1 to 6 of
+the last section.
 
 .. list-table::
    :widths: 40 20 20 20
@@ -1361,21 +1367,21 @@ the last sections.
      - :math:`d`
      - :math:`\dot d`
      - :math:`\ddot d`
-   * - Start, :math:`t = 0`: the AV now
+   * - 1 to 3: start, :math:`t = 0`, the AV now
      - the AV's
      - the AV's
      - the AV's
-   * - End, :math:`t = T`: parallel to the lane
+   * - 4 to 6: end, :math:`t = T`, parallel to the lane
      - :math:`d_1`
      - 0
      - 0
 
 At :math:`t = 0` every term with a :math:`t` is zero, whatever its number:
 :math:`d(0) = a_0 + a_1 \cdot 0 + a_2 \cdot 0^2 + a_3 \cdot 0^3 + a_4 \cdot 0^4 + a_5 \cdot 0^5 = a_0`.
-So the three start conditions fix only :math:`a_0`, :math:`a_1`,
+So conditions 1 to 3 fix only :math:`a_0`, :math:`a_1`,
 :math:`a_2` (:math:`d(0) = a_0`, :math:`\dot d(0) = a_1`,
-:math:`\ddot d(0) = 2a_2`). At :math:`t = T` no term is zero: the three end
-conditions fix :math:`a_3`, :math:`a_4`, :math:`a_5`.
+:math:`\ddot d(0) = 2a_2`). At :math:`t = T` no term is zero: conditions 4 to 6
+fix :math:`a_3`, :math:`a_4`, :math:`a_5`.
 
 .. dropdown:: More detail: the quintic's six conditions, and the equations for a slow-down
    :class-container: more-detail
