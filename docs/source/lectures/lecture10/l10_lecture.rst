@@ -3717,6 +3717,53 @@ vehicle:
    (Snider, 2009).
 
 
+.. _l10-lec-pp-step1:
+
+Pure Pursuit, Step 1: Pick the Point on the Path L_d Ahead
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. figure:: /_static/images/L10/pp_step_1.png
+   :alt: A top view to scale, x and y in meters, of the start of our right turn: the lane between two black edges, its center dashed gray, bending right after x = 83. A faint gray AV in the lane, its rear axle a black dot near x = 82.7 with a short black arrow along its heading. A blue dashed circle of radius 5 meters around the rear axle; where it crosses the lane center ahead, a blue dot, dark tag 1.
+   :width: 70%
+   :align: center
+
+One moment of our run: the AV at :math:`s` = 82.7 m, just before the first
+arc, at 5.22 m/s, with the node's lookahead :math:`L_d` = 5 m. Tag 1, the
+lookahead point: where the path crosses the circle of radius :math:`L_d`
+around the rear axle (dashed).
+
+
+.. _l10-lec-pp-step2:
+
+Pure Pursuit, Step 2: Find the Arc from the Rear Axle to That Point
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. figure:: /_static/images/L10/pp_step_2.png
+   :alt: A top view to scale, x and y in meters, of the start of our right turn: the lane between two black edges, its center dashed gray, bending right after x = 83. A faint gray AV in the lane, its rear axle a black dot near x = 82.7 with a short black arrow along its heading. A blue dashed circle of radius 5 meters around the rear axle; where it crosses the lane center ahead, a blue dot, dark tag 1. A thick green arc runs from the rear axle, along the heading, to the blue dot, dark tag 2 below it.
+   :width: 70%
+   :align: center
+
+Tag 2: the arc starts at the rear axle, heading the way the AV heads
+(arrow), and passes through the lookahead point. Only one circle does both;
+here its radius is :math:`R` = 13.39 m. The next sections compute it.
+
+
+.. _l10-lec-pp-step3:
+
+Pure Pursuit, Step 3: Steer to Drive That Arc
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. figure:: /_static/images/L10/pp_step_3.png
+   :alt: A top view to scale, x and y in meters, of the start of our right turn: the lane between two black edges, its center dashed gray, bending right after x = 83. A faint gray AV in the lane, its rear axle a black dot near x = 82.7 with a short black arrow along its heading. A blue dashed circle of radius 5 meters around the rear axle; where it crosses the lane center ahead, a blue dot, dark tag 1. A thick green arc runs from the rear axle, along the heading, to the blue dot, dark tag 2 below it. At the front axle, a short thick black bar, the front wheel, turned slightly right from a gray dotted straight-ahead line; a thin black line joins it to dark tag 3, above and to the left inside the lane.
+   :width: 70%
+   :align: center
+
+Tag 3: a fixed angle drives a circle (the bicycle model):
+:math:`\delta = \arctan(L/R) = \arctan(2.875/13.39)` = 0.211 rad, 12.1° to
+the right. The AV holds it for one step, 0.05 s, then picks a new point and
+starts again.
+
+
 .. _l10-lec-pp-law:
 
 Steer for the Arc: Pure Pursuit's Steering Law
