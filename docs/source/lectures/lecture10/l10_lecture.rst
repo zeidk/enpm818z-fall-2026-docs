@@ -78,7 +78,7 @@ Follow the Path at the Right Speed: Two Controllers Side by Side
    * - Sends
      - a steering angle
      - throttle or brake
-   * - Today
+   * - Approaches
      - Pure Pursuit, Stanley, MPC
      - PID
 
