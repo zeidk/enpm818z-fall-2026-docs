@@ -2244,41 +2244,68 @@ the AV is.
 
 .. _l10-lec-traj-replan:
 
-Plan Again Every 0.5 s: Wait for Car B, Then Pass
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Plan Again at 2.0 s: Car B Is Beside the AV, So the Plan Stops
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. figure:: /_static/images/L10/traj_drive.png
-   :alt: Three top views of the road, to scale, dark tags 1 to 3, each with the AV in black, car B in dark red and the parked car in blue, a dotted line where the AV has been and a thick green line for its plan. Short gray lines trail behind each moving car to show that it moves; the parked car has none. 1: car B beside the AV in the left lane; the green plan stays in the right lane and ends with a short bar well before the parked car. 2: car B level with the AV; the green plan curves into the left lane. 3: the AV in the left lane beside the parked car; car B far ahead; the green plan goes on along the left lane.
-   :width: 70%
+The AV drives the first 0.5 s of the cheapest candidate, then plans again
+from where it is. Three of those plans, one per section.
+
+.. figure:: /_static/images/L10/traj_drive_1.png
+   :alt: A top view of the road, to scale, x and y in meters: the right lane yellow, the left lane purple, a dashed line between them, the road bending left after x = 160. In the left lane, the dark red car B, with short gray lines behind it to show that it moves. In the right lane, just ahead of car B, the black AV, with short gray lines behind it and a dotted line behind it where it has been. A thick green line leaves the AV along the right lane and ends with a short green bar near x = 148, before the blue parked car near x = 157.
+   :width: 100%
    :align: center
 
-   Three moments of the drive: wait behind car B, then pass.
+   Black: the AV. Dark red: car B. Blue: the parked car. Green: the plan
+   made now. Dotted: where the AV has been.
 
-.. admonition:: Reading the figure
-   :class: tip
+1. Car B is beside the AV, 3.6 m behind it, at 15 m/s; the AV drives at
+   8.14 m/s.
+2. Every candidate into the left lane hits car B. The 27 kept stay in the
+   right lane.
+3. The cheapest of them stops behind the parked car, at :math:`s` =
+   110.15 m (cost 121.43). The AV drives its first 0.5 s, then plans again.
 
-   - **1:** car B is beside the AV; the plan (green) stays in the lane and
-     stops short of the parked car.
-   - **2:** car B is level with the AV; the plan curves into the left lane.
-   - **3:** the AV is beside the parked car, in the left lane; car B is far
-     ahead.
 
-The AV drives the first 0.5 s of the cheapest
-candidate, then plans again
-from where it is.
+.. _l10-lec-traj-replan-go:
 
-- :math:`t` = 2.0 s: car B beside the AV. All 27 kept stay in the lane; the
-  cheapest stops at 110.15 m (cost 121.43).
-- :math:`t` = 2.5 s: car B level with the AV and 5 m/s faster. The cheapest
-  goes left behind it, back to 10 m/s (cost 14.78). The AV crosses the lane
-  line at 5.1 s, 20 m behind car B.
-- :math:`t` = 7.0 s: beside the parked car, 3.12 m left of the right lane's
-  center.
+Plan Again at 2.5 s: Car B Is Level and Faster, So Go Behind It
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Lowest speed 7.00 m/s; smallest gaps 0.93 m to the parked car, 0.48 m to car
-B. The behavior layer picks the right lane again once the
-AV's rear is 5 m past the parked car's front (chosen); the AV is back on its
-center at :math:`s` = 181 m.
+.. figure:: /_static/images/L10/traj_drive_2.png
+   :alt: The same top view, 0.5 seconds later. The dark red car B in the left lane and the black AV in the right lane, side by side, both with short gray lines behind them; a dotted line behind the AV. A thick green line leaves the AV, curves across the dashed line into the left lane near x = 140, runs along the left lane past the blue parked car and follows the bend up to near x = 180.
+   :width: 100%
+   :align: center
+
+   Same colors as above.
+
+1. In 0.5 s car B gained 3.6 m: it is level with the AV, at 15 m/s against
+   the AV's 7.49 m/s.
+2. 123 candidates are kept. The cheapest moves 3.0 m left in 5 s, 0.5 m
+   short of the lane's center (the cheaper end, as in Step 2), and speeds
+   back up to 10 m/s (cost 14.78).
+3. Car B pulls ahead: the AV crosses the lane line at 5.1 s, 20 m behind it.
+
+
+.. _l10-lec-traj-replan-pass:
+
+At 7.0 s: the AV Passes the Parked Car, in the Left Lane
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. figure:: /_static/images/L10/traj_drive_3.png
+   :alt: The same top view at 7 seconds. The dotted line shows where the AV has been: along the right lane, then across the dashed line into the left lane after x = 130. The black AV in the left lane beside the blue parked car, near x = 157, with short gray lines behind it. A thick green line goes on from the AV along the left lane through the bend. Far ahead on that line, near x = 185, the dark red car B, with short gray lines behind it.
+   :width: 100%
+   :align: center
+
+   Same colors as above.
+
+1. The AV is 3.12 m left of the right lane's center, beside the parked
+   car. The green line runs through car B's spot now; by the time the AV
+   gets there, car B is further on.
+2. Over the drive: lowest speed 7.00 m/s; smallest gaps 0.93 m to the
+   parked car and 0.48 m to car B.
+3. Once the AV's rear is 5 m past the parked car's front (chosen), the
+   behavior layer picks the right lane again; the AV is back on its center
+   at :math:`s` = 181 m.
 
 
 .. _l10-lec-traj-explain:
