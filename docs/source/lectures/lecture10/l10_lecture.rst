@@ -1376,12 +1376,8 @@ the last section.
      - 0
      - 0
 
-At :math:`t = 0` every term with a :math:`t` is zero, whatever its number:
-:math:`d(0) = a_0 + a_1 \cdot 0 + a_2 \cdot 0^2 + a_3 \cdot 0^3 + a_4 \cdot 0^4 + a_5 \cdot 0^5 = a_0`.
-So conditions 1 to 3 fix only :math:`a_0`, :math:`a_1`,
-:math:`a_2` (:math:`d(0) = a_0`, :math:`\dot d(0) = a_1`,
-:math:`\ddot d(0) = 2a_2`). At :math:`t = T` no term is zero: conditions 4 to 6
-fix :math:`a_3`, :math:`a_4`, :math:`a_5`.
+Conditions 1 to 3 fix :math:`a_0`, :math:`a_1`, :math:`a_2`; conditions 4 to
+6 fix :math:`a_3`, :math:`a_4`, :math:`a_5`. The next section shows why.
 
 .. dropdown:: More detail: the quintic's six conditions, and the equations for a slow-down
    :class-container: more-detail
@@ -1444,6 +1440,35 @@ fix :math:`a_3`, :math:`a_4`, :math:`a_5`.
    3. Then :math:`a(t) = 6a_3 t + 12 a_4 t^2` is largest in size at
       :math:`t = T/2`: :math:`1.5\,\Delta v / T = 1.5 \times 4.54 / 3.41 =
       2.0` m/s².
+
+
+.. _l10-lec-traj-quintic-which:
+
+Which Numbers Each Condition Fixes: the Start a0 to a2, the End a3 to a5
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Write the offset, its speed and its acceleration in full (each line is the
+derivative of the one above):
+
+.. math::
+
+   \begin{aligned}
+   d(t) &= a_0 + a_1 t + a_2 t^2 + a_3 t^3 + a_4 t^4 + a_5 t^5\\
+   \dot d(t) &= a_1 + 2a_2 t + 3a_3 t^2 + 4a_4 t^3 + 5a_5 t^4\\
+   \ddot d(t) &= 2a_2 + 6a_3 t + 12a_4 t^2 + 20a_5 t^3
+   \end{aligned}
+
+1. **Start,** :math:`t = 0` **(conditions 1 to 3):** every term with a
+   :math:`t` is 0, whatever its number, so :math:`d(0) = a_0`,
+   :math:`\dot d(0) = a_1`, :math:`\ddot d(0) = 2a_2`. These three fix
+   :math:`a_0`, :math:`a_1`, :math:`a_2` from the AV's motion now.
+   :math:`a_3`, :math:`a_4`, :math:`a_5` drop out: the start says nothing
+   about them.
+2. **End,** :math:`t = T` **(conditions 4 to 6):** no term is 0, and
+   :math:`a_0`, :math:`a_1`, :math:`a_2` are now known numbers. Setting
+   :math:`d(T) = d_1`, :math:`\dot d(T) = 0`, :math:`\ddot d(T) = 0` leaves
+   three equations in three unknowns, :math:`a_3`, :math:`a_4`, :math:`a_5`,
+   solved by elimination.
 
 
 .. _l10-lec-traj-quintic-smooth:
