@@ -35,6 +35,10 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
    - **L10, "Notation":** how to read :math:`d`, :math:`\dot d`,
      :math:`\ddot d`, :math:`\dddot d` and the same for :math:`s`, before
      the sections that use them.
+   - **L10, curvature in two sections:** a top view of the corner with the
+     circle that fits each arc, and where 0.1000 and 0.1673 come from
+     (``Town03.xodr``'s arcs, 1.75 m outside the lane's center); then the
+     curvature graph, zoomed on the corner, in the same colors.
    - **L10, "Work One d(t)":** one lateral quintic worked with numbers:
      its six coefficients, and d, its speed and its acceleration second by
      second.

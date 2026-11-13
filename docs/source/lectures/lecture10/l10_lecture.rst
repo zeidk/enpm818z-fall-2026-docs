@@ -2075,8 +2075,8 @@ follows that path, with no local planner in between.
 
 .. _l10-lec-curvature:
 
-Measure How the Turn Bends: Its Curvature Jumps
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Measure How the Turn Bends: Fit a Circle to Each Arc
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. admonition:: Definition: Curvature
    :class: note
@@ -2085,26 +2085,45 @@ Measure How the Turn Bends: Its Curvature Jumps
    :math:`R` is the radius of the circle that fits the path there. A
    straight road has :math:`\kappa = 0`.
 
+.. figure:: /_static/images/L10/turn_arcs.png
+   :alt: The corner of the test path from above, x from 72 to 99 meters, y from minus 21 to 4, the lane drawn by two black edges with a gray dashed center line, coming from the left and turning right, down. Two pieces of the center line in the corner are thick: a blue one first, then a purple one. A blue dashed circle of radius 10 meters fits the blue piece, with its center, a blue dot near x = 83, y = minus 10, and a blue radius line to the piece, dark tag 1. A smaller purple dashed circle, radius about 6 meters, fits the purple piece, with its center near x = 85, y = minus 7 and a purple radius line, dark tag 2.
+   :width: 60%
+   :align: center
+
+   The corner: two arcs, each part of a circle.
+
+The corner is two arcs, each part of a circle (dashed):
+
+- **Tag 1, first arc** (blue): :math:`R` = 10.00 m, so
+  :math:`\kappa` = 1/10.00 = 0.1000 per meter.
+- **Tag 2, second arc**, tighter (purple): :math:`R` = 5.98 m, so
+  :math:`\kappa` = 1/5.98 = 0.1673 per meter.
+
+**Where the radii come from:** CARLA's map, ``Town03.xodr``, draws this
+corner as two arcs of radius 11.75 and 7.73 m. Our path, the lane's center,
+runs 1.75 m (half the 3.5 m lane) inside them: 11.75 − 1.75 = 10.00 m and
+7.73 − 1.75 = 5.98 m.
+
+
+.. _l10-lec-curvature-graph:
+
+Read the Curvature Along the Path: It Steps Up, Then Down
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. figure:: /_static/images/L10/turn_curvature.png
-   :alt: A graph, not a map: curvature in 1 per meter against the distance along the path from 0 to 137.5 meters. The curve is zero up to about 83 meters, jumps to 0.100 (dark tag 1), jumps again near 89.5 meters to 0.167 (dark tag 2), and drops back to zero near 95 meters. The junction lane, from 80 to 97.5 meters, is shaded orange.
+   :alt: A graph, not a map: curvature in 1 per meter against the distance along the path, zoomed on 60 to 120 meters. The curve is zero up to about 83 meters, steps up to 0.100, where a blue plateau runs to about 89 meters with dark tag 1 above it, steps again to 0.167, where a purple plateau runs to about 95 meters with dark tag 2 above it, and drops back to zero. The junction lane, from 80 to 97.5 meters, is shaded orange.
    :width: 80%
    :align: center
 
-   The curvature of the test path.
+A graph, not a map: the curvature :math:`\kappa` against the distance
+:math:`s` along the path. Shaded: the junction lane.
 
-.. admonition:: Reading the figure
-   :class: tip
+- 0 on the straight approach, up to :math:`s` = 83.2 m.
+- Tag 1: 0.1000 on the first arc (blue, as in the last figure), then tag 2:
+  0.1673 on the second (purple), from 89.6 m.
+- 0 again on the exit, from 94.8 m.
 
-   A graph, not a map: the curvature against the distance :math:`s` along
-   the path. The junction lane is shaded orange.
-
-   - **Tag 1:** from 83.2 m, the first arc, :math:`\kappa` = 0.1000 /m, so
-     :math:`R` = 1 / 0.1000 = 10.00 m.
-   - **Tag 2:** from 89.6 m, the second, tighter arc, :math:`\kappa` =
-     0.1673 /m, so :math:`R` = 1 / 0.1673 = 5.98 m.
-
-   Zero on the straight parts. Each change is a step, with no gradual part
-   between.
+Each change is a **step**: no gradual part between.
 
 **What it means for the controllers:**
 
