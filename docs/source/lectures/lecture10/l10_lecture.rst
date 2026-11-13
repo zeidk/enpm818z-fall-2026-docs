@@ -3643,13 +3643,22 @@ Measure How Far Off the Path: Two Errors
    nearest path point. We measure it at the rear axle, positive to the left:
    the rear axle's :math:`d` in the Frenet frame.
 
-- **Heading error:** the angle between the AV's heading and the path's
-  direction at that nearest point.
-- Our runs start with a cross-track error of 1.0 m and a heading error of 0:
-  the AV parallel to the lane, 1 m left of its center.
-- A steering controller turns these two into a steering angle. Pure Pursuit
-  does it by looking ahead along the path; Stanley (below) uses both errors
-  directly.
+.. figure:: /_static/images/L10/track_errors.png
+   :alt: A top view to scale, x and y in meters. A gray dashed path curves gently down to the right, with an arrow showing its direction. A faint gray AV, turned slightly toward the path, has its rear axle marked by a dot 1 meter above the path's point at x = 0, which is a dark dot with a small square mark, dark tag 1. A black two-headed arrow joins the two dots, square to the path, dark tag 2. From the rear axle, a gray dotted line runs along the path's direction and a black arrow along the AV's heading, 15 degrees below it; an arc between them carries dark tag 3.
+   :width: 75%
+   :align: center
+
+   The two errors, drawn to scale.
+
+- **Tag 1:** the nearest path point.
+- **Tag 2:** the cross-track error, square to the path: 1.0 m, as our runs
+  start.
+- **Tag 3:** the **heading error**: the angle between the AV's heading
+  (arrow) and the path's direction there (dotted). Drawn at 15° so it shows;
+  our runs start at 0, the AV parallel to the lane, 1 m left of its center.
+
+A steering controller turns these two into a steering angle: Pure Pursuit by
+looking ahead along the path; Stanley (below) from both errors directly.
 
 
 .. dropdown:: More detail: steer into the turn, the steering must jump too
