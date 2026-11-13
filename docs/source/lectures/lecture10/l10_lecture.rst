@@ -1045,8 +1045,52 @@ chosen in L9; lower is better. A and B from the last section, with
 
    B ends 0.5 m closer to the parked car: it saves 0.36 on comfort but pays
    2.00 more on clearance and 1.00 more on the lane. A also beats the other
-   7, the stop behind (11.54) included. The planner picks only among its
-   samples: a 60 m lane change, never sampled, would cost 4.39.
+   7, the stop behind (11.54) included.
+
+
+.. _l10-lec-lengths:
+
+Compare Lengths: the Same Lane Change over 20, 30, 40 and 60 m
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Goal:** see what the length :math:`L` changes: same end offset (3.5 m),
+same :math:`q(u)`, the S curve stretched.
+
+.. figure:: /_static/images/L10/lengths_compare.png
+   :alt: A graph of d against s, s from 50 to 132 meters, the right lane pale yellow and the left lane pale purple, the black AV at s = 60 with short gray lines behind it and the blue parked car near s = 118. Four S curves leave the AV and level off at d = 3.5, each with a dot where it levels off and a dark tag above: tag 1, a purple dashed curve, at s = 80; tag 2, a gray curve, at s = 90; tag 3, a thick green curve, at s = 100; tag 4, a black dashed curve, at s = 120. The shorter the curve, the steeper it rises.
+   :width: 85%
+   :align: center
+
+   The same lane change over four lengths.
+
+.. list-table::
+   :widths: 10 18 26 46
+   :header-rows: 1
+   :class: compact-table
+
+   * -
+     - :math:`L`
+     - **Peak sideways acceleration**
+     - **Cost**
+   * - 1
+     - 20 m
+     - 4.91 m/s²
+     - dropped: too sharp (over 3 m/s²)
+   * - 2
+     - 30 m
+     - 2.21 m/s²
+     - 6.99
+   * - 3
+     - 40 m (A)
+     - 1.25 m/s²
+     - 5.07, the cheapest of the samples
+   * - 4
+     - 60 m
+     - 0.93 m/s²
+     - 4.39, but **never sampled**
+
+Only comfort changes much with :math:`L`. The planner tried 20, 30 and 40 m
+and kept 40; it picks only among its samples.
 
 
 .. _l10-lec-path-steps:
