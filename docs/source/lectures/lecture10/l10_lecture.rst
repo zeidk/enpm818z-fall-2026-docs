@@ -1065,33 +1065,39 @@ same :math:`q(u)`, the S curve stretched.
    The same lane change over four lengths.
 
 .. list-table::
-   :widths: 10 18 26 46
+   :widths: 6 14 22 20 38
    :header-rows: 1
    :class: compact-table
 
    * -
      - :math:`L`
      - **Peak sideways acceleration**
-     - **Cost**
+     - **Comfort** (× 2)
+     - **Total cost** (four terms)
    * - 1
      - 20 m
      - 4.91 m/s²
+     - 9.81
      - dropped: too sharp (over 3 m/s²)
    * - 2
      - 30 m
      - 2.21 m/s²
+     - 4.43
      - 6.99
    * - 3
      - 40 m (A)
      - 1.25 m/s²
+     - 2.51
      - 5.07, the cheapest of the samples
    * - 4
      - 60 m
      - 0.93 m/s²
+     - 1.86
      - 4.39, but **never sampled**
 
-Only comfort changes much with :math:`L`. The planner tried 20, 30 and 40 m
-and kept 40; it picks only among its samples.
+Only comfort changes much with :math:`L`: clearance (0.57; 0.53 at 60 m)
+and lane (2.00) are about the same for all. The planner tried 20, 30 and
+40 m and kept 40; it picks only among its samples.
 
 
 .. _l10-lec-path-steps:
