@@ -1456,8 +1456,10 @@ each side; :math:`T` = 3, 4 or 5 s: 6 × 3 = 18.
 Work One d(t): Find Its Six Numbers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-One of the 18, chosen: end at :math:`d_1` = 3.5 m (the left lane's center)
-after :math:`T` = 4 s. The AV now drives straight on its lane's center.
+One of the 18 options, picked for this example: be on the left lane's
+center (:math:`d_1` = 3.5 m), driving parallel to it, 4 s from now
+(:math:`T` = 4 s). It says only where across the road; how far along comes
+from :math:`s(t)`. The AV now drives straight on its own lane's center.
 
 1. **Start**, :math:`t = 0`: :math:`d = 0`, :math:`\dot d = 0`,
    :math:`\ddot d = 0` give :math:`a_0 = 0`, :math:`a_1 = 0`,
