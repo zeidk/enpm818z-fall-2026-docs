@@ -3252,12 +3252,21 @@ Hold :math:`\delta` and the AV drives a circle of radius
 :math:`R = L / \tan\delta`. So, to follow a curvature :math:`\kappa = 1/R`,
 steer :math:`\delta = \arctan(L\kappa)`.
 
-1. First arc: :math:`\delta = \arctan(2.875 \times 0.1000) = \arctan(0.288)`
+.. figure:: /_static/images/L10/steer_circles.png
+   :alt: A top view to scale, x and y in meters from the AV's rear axle. The black AV at the origin, facing up. Three half circles start at its rear axle and curve right, each around a dot on the x axis: a blue one of radius 10 meters around x = 10, dark tag 1 above it; a purple one of radius about 6 meters around x = 6, dark tag 2; and a black dashed one of radius about 3.4 meters around x = 3.4, dark tag 3.
+   :width: 70%
+   :align: center
+
+   To scale, from the AV's rear axle. Each circle is one fixed
+   :math:`\delta`, turning right as our corner does; dots: the point it
+   turns about.
+
+1. Tag 1, first arc: :math:`\delta = \arctan(2.875 \times 0.1000) = \arctan(0.288)`
    = 0.280 rad (16.0°).
-2. Second arc:
+2. Tag 2, second arc:
    :math:`\delta = \arctan(2.875 \times 0.1673) = \arctan(0.481)` =
    0.448 rad (25.7°).
-3. The controller's steering limit, 0.7 rad (``steer_limit``): the smallest
+3. Tag 3, the controller's steering limit, 0.7 rad (``steer_limit``): the smallest
    circle is :math:`R = 2.875 / \tan 0.7` = 3.41 m.
 
 .. important::
