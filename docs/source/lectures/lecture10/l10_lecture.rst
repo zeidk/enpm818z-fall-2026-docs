@@ -1251,6 +1251,43 @@ candidates, made and checked by the planner itself. Werling et al. do this
    against a car that moves. The next sections follow rows 1 to 5.
 
 
+.. _l10-lec-traj-dots:
+
+Read the Dots: a Dot Is a Rate of Change in Time
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Goal:** read the symbols of the next sections aloud. A dot over a symbol is
+its rate of change in time, its derivative with respect to :math:`t`; each
+extra dot is one more.
+
+.. list-table::
+   :widths: 15 26 59
+   :header-rows: 1
+   :class: compact-table
+
+   * - **Symbol**
+     - **Read aloud**
+     - **What it is**
+   * - :math:`\dot d`
+     - "d dot"
+     - sideways speed (m/s)
+   * - :math:`\ddot d`
+     - "d double dot"
+     - sideways acceleration (m/s²)
+   * - :math:`\dddot d`
+     - "d triple dot"
+     - sideways jerk (m/s³), in the cost
+   * - :math:`\dot s`
+     - "s dot"
+     - speed along the road (m/s)
+   * - :math:`\ddot s`
+     - "s double dot"
+     - acceleration along the road (m/s²)
+   * - :math:`\dddot s`
+     - "s triple dot"
+     - jerk along the road (m/s³), in the cost
+
+
 .. _l10-lec-traj-sample:
 
 Step 1: Sample

@@ -32,6 +32,9 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
      moving car in the left lane, in dark red; the moving-car scene and the
      two timings drawn along the road in :math:`s` and :math:`d`, the timings
      with the collision circles.
+   - **L10, "Read the Dots":** how to read :math:`\dot d`, :math:`\ddot d`,
+     :math:`\dddot d` and the same for :math:`s`, before the sections that
+     use them.
    - **L10, Trajectory Generation in subsections:** Step 1: Sample, Step 2:
      Score, Step 3: Check, Steps 4 and 5: Pick and Repeat, Explain the
      Result, and Track a Path or a Trajectory.
