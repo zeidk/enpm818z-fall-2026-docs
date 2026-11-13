@@ -1778,15 +1778,15 @@ Samples (chosen). Keep a speed: :math:`\dot s_1` = 4, 6, 8, 10 or 12 m/s,
 
 .. figure:: /_static/images/L10/traj_lon_set.png
    :alt: A graph of the speed along the road, in meters per second, against time from 0 to 7 seconds. All curves start at 10. Thin curves change smoothly to 4, 6, 8, 10 or 12 and stay there; solid ones arrive at 3 seconds, dashed at 4, dotted at 5. Thick curves, the stops, fall slowly and are still between 1 and 2.5 meters per second at 7 seconds.
-   :width: 65%
+   :width: 95%
    :align: center
 
    The 18 speed-along-the-road candidates: 15 that keep a speed, 3 that
    stop.
 
 The stops last 8 to 12 s, longer than the 7 s plan, so at 7 s they still
-move. In all, 15 + 3 = 18 along and 18 across: 18 × 18 = 324 candidates,
-every pair (Werling et al. combine the two sets the same way).
+move. 18 along and 18 across: 18 × 18 = 324 candidates, every pair, as
+Werling et al. combine them.
 
 .. dropdown:: More detail: one quartic worked, from 10 to 6 m/s in 4 s
    :class-container: more-detail
