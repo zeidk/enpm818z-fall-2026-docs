@@ -1453,8 +1453,8 @@ each side; :math:`T` = 3, 4 or 5 s: 6 × 3 = 18.
 
 .. _l10-lec-traj-dt-example:
 
-Work One d(t): Find Its Six Numbers
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Work One d(t): Where It Starts and Where It Must End
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 One of the 18 options, picked for this example: be on the left lane's
 center (:math:`d_1` = 3.5 m), driving parallel to it, 4 s from now
@@ -1462,6 +1462,28 @@ center (:math:`d_1` = 3.5 m), driving parallel to it, 4 s from now
 from :math:`s(t)`. The AV now, sideways: on its lane's center
 (:math:`d = 0`), not drifting (:math:`\dot d = 0`), not starting to
 (:math:`\ddot d = 0`); along the road it drives at 10 m/s.
+
+.. figure:: /_static/images/L10/dt_example.png
+   :alt: A graph of the sideways offset d, in meters, against the time t from now, in seconds, over two bands: the right lane in yellow from minus 1.75 to 1.75 and the left lane in purple from 1.75 to 5.25. A thick black flat line at d = 0 ends at a dot at t = 0, dark tag 1 below it. A gray S curve rises from that dot to a second dot at t = 4 s and d = 3.5, dark tag 2 above it, crossing the dashed lane line at t = 2 s. From the second dot a thick black flat line goes on at d = 3.5. A dotted vertical line marks t = 4 s.
+   :width: 75%
+   :align: center
+
+   The worked d(t): where it starts and where it must end.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   - **Tag 1:** now, :math:`t = 0`: :math:`d = 0`, :math:`\dot d = 0`,
+     :math:`\ddot d = 0` (flat: on its lane, not drifting).
+   - **Tag 2:** at :math:`T` = 4 s: :math:`d = 3.5`, :math:`\dot d = 0`,
+     :math:`\ddot d = 0` (flat: parallel to the left lane).
+   - Gray: the quintic between them, found in the next section.
+
+
+.. _l10-lec-traj-dt-numbers:
+
+Work One d(t): Find Its Six Numbers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1. **Start**, :math:`t = 0`: every term with a :math:`t` is zero, so
    :math:`d(0) = a_0`, :math:`\dot d(0) = a_1`, :math:`\ddot d(0) = 2a_2`.
