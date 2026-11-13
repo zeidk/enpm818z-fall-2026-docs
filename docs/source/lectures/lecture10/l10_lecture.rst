@@ -676,6 +676,8 @@ each car's circles), off the road, whose edge is at −1.75 m.
 
    Each candidate is a **path**: a curve :math:`d(s)`, positions with no
    times.
+   How each curve is computed: right below, from four numbers and a formula
+   (:ref:`l10-lec-lane-change-numbers`).
 
 
 .. _l10-lec-lane-change-numbers:
