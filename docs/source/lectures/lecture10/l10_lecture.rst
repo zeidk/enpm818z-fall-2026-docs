@@ -1337,8 +1337,8 @@ What :math:`d(t)` must do:
 
 .. _l10-lec-traj-quintic-d:
 
-Why a Quintic: It Meets Six Conditions, as Smoothly as Possible
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Why a Quintic: Six Numbers Meet the Six Conditions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. admonition:: Definition: Quintic
    :class: note
@@ -1348,21 +1348,34 @@ Why a Quintic: It Meets Six Conditions, as Smoothly as Possible
    .. math::
       d(t) = a_0 + a_1 t + a_2 t^2 + a_3 t^3 + a_4 t^4 + a_5 t^5
 
-**Why we use it**, from Werling et al. (Werling et al., 2010), who build
-every :math:`d(t)` as a quintic:
+Werling et al. build every :math:`d(t)` as a quintic (Werling et al., 2010),
+for two reasons. The first: its six numbers can meet the six conditions of
+the last sections.
 
-1. **It can meet the six conditions:** it has six numbers, :math:`a_0` to
-   :math:`a_5`, one per condition.
-2. **It is the smoothest that does:** "quintic polynomials are the
-   jerk-optimal connection between a start state [...] and an end state", a
-   result Werling et al. take from Takahashi et al. Of all the curves that
-   meet the six conditions, the quintic has the least jerk.
+.. list-table::
+   :widths: 40 20 20 20
+   :header-rows: 1
+   :class: compact-table
 
-.. important::
+   * - **Condition**
+     - :math:`d`
+     - :math:`\dot d`
+     - :math:`\ddot d`
+   * - Start, :math:`t = 0`: the AV now
+     - the AV's
+     - the AV's
+     - the AV's
+   * - End, :math:`t = T`: parallel to the lane
+     - :math:`d_1`
+     - 0
+     - 0
 
-   Last class's S curve, :math:`q(u) = 10u^3 - 15u^4 + 6u^5`, is this
-   quintic for a move that starts and ends straight, with :math:`u = t/T` in
-   place of :math:`u = (s - s_0)/L`.
+At :math:`t = 0` every term with a :math:`t` is zero, whatever its number:
+:math:`d(0) = a_0 + a_1 \cdot 0 + a_2 \cdot 0^2 + a_3 \cdot 0^3 + a_4 \cdot 0^4 + a_5 \cdot 0^5 = a_0`.
+So the three start conditions fix only :math:`a_0`, :math:`a_1`,
+:math:`a_2` (:math:`d(0) = a_0`, :math:`\dot d(0) = a_1`,
+:math:`\ddot d(0) = 2a_2`). At :math:`t = T` no term is zero: the three end
+conditions fix :math:`a_3`, :math:`a_4`, :math:`a_5`.
 
 .. dropdown:: More detail: the quintic's six conditions, and the equations for a slow-down
    :class-container: more-detail
@@ -1426,6 +1439,22 @@ every :math:`d(t)` as a quintic:
       :math:`t = T/2`: :math:`1.5\,\Delta v / T = 1.5 \times 4.54 / 3.41 =
       2.0` m/s².
 
+
+.. _l10-lec-traj-quintic-smooth:
+
+Why a Quintic: the Smoothest Curve That Meets Them
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The second reason: of all the curves that meet the six conditions, the
+quintic has the least jerk. Werling et al.: "quintic polynomials are the
+jerk-optimal connection between a start state [...] and an end state", a
+result they take from Takahashi et al. (Werling et al., 2010).
+
+.. important::
+
+   Last class's S curve, :math:`q(u) = 10u^3 - 15u^4 + 6u^5`, is this
+   quintic for a move that starts and ends straight, with :math:`u = t/T` in
+   place of :math:`u = (s - s_0)/L`.
 
 .. _l10-lec-traj-lat-set:
 

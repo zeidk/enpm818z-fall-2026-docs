@@ -43,8 +43,10 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
      end; then one lateral quintic worked with numbers:
      its six coefficients, and d, its speed and its acceleration second by
      second.
-   - **L10, the quintic:** why Werling et al. use it, right after its
-     definition; the 18 samples across in their own section; where the two
+   - **L10, the quintic:** why Werling et al. use it, in two sections right
+     after its definition: the six conditions as a table, and why the start
+     fixes :math:`a_0` to :math:`a_2` and the end :math:`a_3` to :math:`a_5`;
+     then the least jerk; the 18 samples across in their own section; where the two
      counts of 18 come from.
    - **L10, Trajectory Generation in subsections:** Step 1: Sample, Step 2:
      Score, Step 3: Check, Steps 4 and 5: Pick and Repeat, Explain the
