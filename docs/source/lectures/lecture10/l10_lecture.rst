@@ -1713,7 +1713,7 @@ One move of each kind, picked for this example. The AV now: at
 :math:`s` = 60 m, driving at 10 m/s, not speeding up or slowing down.
 
 .. figure:: /_static/images/L10/st_example.png
-   :alt: Two graphs side by side of the distance along the road s, in meters, against the time t from now, in seconds. Both start the same way: a thick black line rising steeply up to a dot at t = 0 and s = 60, dark tag 1 below and to the right of it. Left graph, titled keep a speed: a gray curve rises from the dot and bends to a gentler slope at t = 4 s, marked by a dotted vertical line, with no dot there; a thick black straight line goes on at that gentler slope, dark tag 2 below it. Right graph, titled stop at a point: a gray curve rises from the dot and levels off at a second dot at t = 10 s and s = 110.15, marked by a dotted vertical line; a thick black flat line goes on from it, dark tag 2 below it.
+   :alt: Two graphs side by side of the distance along the road s, in meters, against the time t from now, in seconds. Both start the same way: a thick black line rising steeply up to a red round marker at t = 0 and s = 60, dark tag 1 below and to the right of it. Left graph, titled keep a speed: a gray curve rises from the red round marker and bends to a gentler slope at t = 4 s, marked by a dotted vertical line, with no red round marker there; a thick black straight line goes on at that gentler slope, dark tag 2 below it. Right graph, titled stop at a point: a gray curve rises from the red round marker and levels off at a second red round marker at t = 10 s and s = 110.15, marked by a dotted vertical line; a thick black flat line goes on from it, dark tag 2 below it.
    :width: 95%
    :align: center
 
@@ -1722,12 +1722,12 @@ One move of each kind, picked for this example. The AV now: at
 
 1. Now: :math:`s` = 60 m, at 10 m/s, no acceleration (the steeper the
    line, the faster the AV).
-2. Left: at :math:`T` = 4 s, 6 m/s and no acceleration. A dot marks a
-   position the conditions fix; none fixes :math:`s(T)` here, so the AV
-   ends wherever the curve takes it (92 m). Right: at :math:`T` = 10 s, stopped at
+2. Left: at :math:`T` = 4 s, 6 m/s and no acceleration. No condition fixes
+   the position :math:`s(T)`, so no red round marker: the AV ends wherever
+   the curve takes it (92 m). Right: at :math:`T` = 10 s, stopped at
    :math:`s_\text{stop}` = 110.15 m.
 
-Gray: the curve between.
+Red round markers: positions the conditions fix. Gray: the curve between.
 
 
 .. _l10-lec-traj-quartic:
