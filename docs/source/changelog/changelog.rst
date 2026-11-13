@@ -29,8 +29,9 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
      part after :math:`s_0 + L`; writing all 31 candidates is now its own
      section.
    - **L10, figures:** motion lines behind every moving car; car B, the
-     moving car in the left lane, in dark red; the two timings drawn along
-     the road in :math:`s` and :math:`d`, with the collision circles.
+     moving car in the left lane, in dark red; the moving-car scene and the
+     two timings drawn along the road in :math:`s` and :math:`d`, the timings
+     with the collision circles.
    - **L10, the two timings, in three steps:** make a trajectory from a
      path and a speed; check both against car B, moment by moment; see why
      one crashes, from when each reaches the lane line.

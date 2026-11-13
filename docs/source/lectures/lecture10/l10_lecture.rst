@@ -1060,7 +1060,7 @@ Plan Around a Car That Moves: Last Class Closed the Lane Instead
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L10/traj_scene.png
-   :alt: A top view of the two-lane road, to scale: the right lane light yellow, the left lane light purple, a dashed line between them. In the left lane, at the left, a dark red car, car B, dark tag 1. A dark red dashed line runs ahead of it along the left lane's center, with a dark red dot every second for four seconds, dark tag 2 above the second dot. In the right lane the black AV, tag 3, below the first dots, and far ahead a blue parked car, tag 4. Short gray lines trail behind car B and the AV to show that they move; the parked car has none.
+   :alt: The two-lane road drawn along its length, to scale: s in meters along the right lane's center, from 35 to 135, across; d in meters to its left, up. The right lane light yellow, the left lane light purple, a dashed line between them. In the left lane, at s = 45, a dark red car, car B, dark tag 1. A dark red dashed line runs ahead of it along the left lane's center, with a dark red dot every second for four seconds, at s = 60, 75, 90 and 105, dark tag 2 above the second dot. In the right lane the black AV at s = 60, tag 3, below the first dot, and far ahead a blue parked car at s = 118, tag 4. Short gray lines trail behind car B and the AV to show that they move; the parked car has none.
    :width: 95%
    :align: center
 
