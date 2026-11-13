@@ -626,8 +626,9 @@ candidate.
      other times.
    - **Set beforehand:** both are constants in the planner's code. Every
      0.5 s it samples the same set again, from where the AV is.
-   - **No speed:** a path has none. Last class's AV drives at 10 m/s; in our
-     node, the controller's speed profile sets the speed.
+   - **No speed:** a path says where to go, not how fast. The speed comes
+     from elsewhere: last class, the AV kept a constant 10 m/s; in our node,
+     the controller's speed profile sets it.
 
 
 .. _l10-lec-recap-path:
