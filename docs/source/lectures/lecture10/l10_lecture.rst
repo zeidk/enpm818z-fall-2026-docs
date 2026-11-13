@@ -1459,7 +1459,9 @@ Work One d(t): Find Its Six Numbers
 One of the 18 options, picked for this example: be on the left lane's
 center (:math:`d_1` = 3.5 m), driving parallel to it, 4 s from now
 (:math:`T` = 4 s). It says only where across the road; how far along comes
-from :math:`s(t)`. The AV now drives straight on its own lane's center.
+from :math:`s(t)`. The AV now, sideways: on its lane's center
+(:math:`d = 0`), not drifting (:math:`\dot d = 0`), not starting to
+(:math:`\ddot d = 0`); along the road it drives at 10 m/s.
 
 1. **Start**, :math:`t = 0`: every term with a :math:`t` is zero, so
    :math:`d(0) = a_0`, :math:`\dot d(0) = a_1`, :math:`\ddot d(0) = 2a_2`.
@@ -1476,7 +1478,7 @@ from :math:`s(t)`. The AV now drives straight on its own lane's center.
       3a_3T^2 + 4a_4T^3 + 5a_5T^4 = 0, \qquad
       6a_3T + 12a_4T^2 + 20a_5T^3 = 0
 
-3. **Solve** them (by hand or with ``numpy``):
+3. **Solve** them:
 
    .. math::
 
@@ -1489,10 +1491,9 @@ from :math:`s(t)`. The AV now drives straight on its own lane's center.
 .. important::
 
    Why 10, −15 and 6: with a straight start and end,
-   :math:`d(t) = d_1\,q(t/T)`, last class's
-   :math:`q(u) = 10u^3 - 15u^4 + 6u^5` with :math:`u = t/T`. Each coefficient
-   of :math:`q` is multiplied by :math:`d_1` and divided by :math:`T^3`,
-   :math:`T^4` or :math:`T^5`.
+   :math:`d(t) = d_1\,q(t/T)`, with last class's
+   :math:`q(u) = 10u^3 - 15u^4 + 6u^5`: each coefficient of :math:`q`, times
+   :math:`d_1`, over :math:`T^3`, :math:`T^4` or :math:`T^5`.
 
 
 .. _l10-lec-traj-dt-table:
