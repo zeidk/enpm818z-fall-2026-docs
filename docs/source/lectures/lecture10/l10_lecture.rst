@@ -1499,7 +1499,7 @@ Each candidate's :math:`d(t)` is one quintic, from the AV's :math:`d`,
 each side; :math:`T` = 3, 4 or 5 s: 6 × 3 = 18.
 
 .. figure:: /_static/images/L10/traj_lat_set.png
-   :alt: A graph of the sideways offset d, in meters, against time t from 0 to 7 seconds, over two horizontal bands: the right lane in yellow from minus 1.75 to 1.75, the left lane in purple from 1.75 to 5.25, a dashed line between them. Eighteen black S-shaped curves start at d = 0 at time 0 and level off at minus 0.5, 0, 0.5, 3, 3.5 or 4 meters; solid curves level off at 3 seconds, dashed at 4, dotted at 5.
+   :alt: A graph of the sideways offset d, in meters, against time t from 0 to 7 seconds, over two horizontal bands: the right lane in yellow from minus 1.75 to 1.75, the left lane in purple from 1.75 to 5.25, a dashed line between them. Eighteen S-shaped curves start at d = 0 at time 0 and level off at minus 0.5, 0, 0.5, 3, 3.5 or 4 meters; solid black curves level off at 3 seconds, dashed red at 4, dotted blue at 5.
    :width: 80%
    :align: center
 
@@ -1787,16 +1787,16 @@ Samples (chosen). Keep a speed: :math:`\dot s_1` = 4, 6, 8, 10 or 12 m/s,
 :math:`T` = 8, 10 or 12 s: 3.
 
 .. figure:: /_static/images/L10/traj_lon_set.png
-   :alt: A graph of the speed along the road, in meters per second, against time from 0 to 7 seconds. All curves start at 10. Thin curves change smoothly to 4, 6, 8, 10 or 12 and stay there; solid ones arrive at 3 seconds, dashed at 4, dotted at 5. Thick curves, the stops, fall slowly and are still between 1 and 2.5 meters per second at 7 seconds.
+   :alt: A graph of the speed along the road, in meters per second, against time from 0 to 12 seconds. All curves start at 10. Thin curves change smoothly to 4, 6, 8, 10 or 12 and stay there; solid black ones arrive at 3 seconds, dashed red at 4, dotted blue at 5. Three thick curves, the stops, fall slowly and reach 0 at 8, 10 and 12 seconds. A dotted vertical line at 7 seconds; to its right the background is gray, with dark tag 1.
    :width: 95%
    :align: center
 
    The 18 speed-along-the-road candidates: 15 that keep a speed, 3 that
    stop.
 
-The stops last 8 to 12 s, longer than the 7 s plan, so at 7 s they still
-move. 18 along and 18 across: 18 × 18 = 324 candidates, every pair, as
-Werling et al. combine them.
+Tag 1, after the 7 s plan: drawn only to show the stops (8 to 12 s)
+reach 0; the planner uses each curve up to 7 s. 18 along and 18 across:
+18 × 18 = 324 candidates, every pair, as Werling et al. combine them.
 
 .. dropdown:: More detail: one quartic worked, from 10 to 6 m/s in 4 s
    :class-container: more-detail
