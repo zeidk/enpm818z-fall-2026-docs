@@ -1453,25 +1453,57 @@ each side; :math:`T` = 3, 4 or 5 s: 6 × 3 = 18.
 
 .. _l10-lec-traj-dt-example:
 
-Work One d(t): to the Left Lane's Center in 4 s
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Work One d(t): Find Its Six Numbers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 One of the 18, chosen: end at :math:`d_1` = 3.5 m (the left lane's center)
-at :math:`T` = 4 s. The AV now drives straight on its lane's center:
-:math:`d = 0`, :math:`\dot d = 0`, :math:`\ddot d = 0`.
+after :math:`T` = 4 s. The AV now drives straight on its lane's center.
 
-1. **Start**, :math:`t = 0`: :math:`d(0) = a_0 = 0`,
-   :math:`\dot d(0) = a_1 = 0`, :math:`\ddot d(0) = 2a_2 = 0`. So
-   :math:`a_0 = a_1 = a_2 = 0`.
-2. **End**, :math:`t` = 4 s: :math:`d = 3.5`, :math:`\dot d = 0`,
-   :math:`\ddot d = 0`. Three equations in :math:`a_3`, :math:`a_4`,
-   :math:`a_5`; solved: :math:`a_3 = 10 \times 3.5/4^3 = 0.547`,
-   :math:`a_4 = -15 \times 3.5/4^4 = -0.205`,
-   :math:`a_5 = 6 \times 3.5/4^5 = 0.0205` (the 10, −15 and 6 of
-   :math:`q(u)`).
-3. **So** :math:`d(t) = 0.547\,t^3 - 0.205\,t^4 + 0.0205\,t^5`. Check at
-   :math:`t = 4`: 0.547 × 64 − 0.205 × 256 + 0.0205 × 1024 = 35 − 52.5 + 21
-   = 3.5 m.
+1. **Start**, :math:`t = 0`: :math:`d = 0`, :math:`\dot d = 0`,
+   :math:`\ddot d = 0` give :math:`a_0 = 0`, :math:`a_1 = 0`,
+   :math:`2a_2 = 0`.
+2. **End**, :math:`t = T`: :math:`d = d_1`, :math:`\dot d = 0`,
+   :math:`\ddot d = 0` give three equations in :math:`a_3`, :math:`a_4`,
+   :math:`a_5`:
+
+   .. math::
+
+      a_3T^3 + a_4T^4 + a_5T^5 = d_1, \qquad
+      3a_3T^2 + 4a_4T^3 + 5a_5T^4 = 0, \qquad
+      6a_3T + 12a_4T^2 + 20a_5T^3 = 0
+
+3. **Solve** them (by hand or with ``numpy``):
+
+   .. math::
+
+      \begin{aligned}
+      a_3 &= 10\,d_1/T^3 = 10 \times 3.5/4^3 = 0.547\\
+      a_4 &= -15\,d_1/T^4 = -15 \times 3.5/4^4 = -0.205\\
+      a_5 &= 6\,d_1/T^5 = 6 \times 3.5/4^5 = 0.0205
+      \end{aligned}
+
+.. important::
+
+   Why 10, −15 and 6: with a straight start and end,
+   :math:`d(t) = d_1\,q(t/T)`, last class's
+   :math:`q(u) = 10u^3 - 15u^4 + 6u^5` with :math:`u = t/T`. Each coefficient
+   of :math:`q` is multiplied by :math:`d_1` and divided by :math:`T^3`,
+   :math:`T^4` or :math:`T^5`.
+
+
+.. _l10-lec-traj-dt-table:
+
+Work One d(t): Read It Second by Second
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+With the six numbers, :math:`a_0 = a_1 = a_2 = 0`, so
+
+.. math::
+
+   d(t) = 0.547\,t^3 - 0.205\,t^4 + 0.0205\,t^5
+
+Check at :math:`t` = 4 s: 0.547 × 64 − 0.205 × 256 + 0.0205 × 1024 = 35 −
+52.5 + 21 = 3.5 m, the end offset.
 
 .. list-table::
    :widths: 20 16 16 16 16 16
@@ -1503,9 +1535,11 @@ at :math:`T` = 4 s. The AV now drives straight on its lane's center:
      - −1.23
      - 0
 
-It crosses the lane line (:math:`d` = 1.75 m) at :math:`t` = 2 s, at its
-top sideways speed, and starts and ends with no sideways speed or
-acceleration.
+.. important::
+
+   It crosses the lane line (:math:`d` = 1.75 m) at :math:`t` = 2 s, at its
+   top sideways speed, and starts and ends with no sideways speed or
+   acceleration.
 
 
 .. _l10-lec-traj-lon:
