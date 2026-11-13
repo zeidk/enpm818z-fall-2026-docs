@@ -1461,11 +1461,13 @@ center (:math:`d_1` = 3.5 m), driving parallel to it, 4 s from now
 (:math:`T` = 4 s). It says only where across the road; how far along comes
 from :math:`s(t)`. The AV now drives straight on its own lane's center.
 
-1. **Start**, :math:`t = 0`: :math:`d = 0`, :math:`\dot d = 0`,
-   :math:`\ddot d = 0` give :math:`a_0 = 0`, :math:`a_1 = 0`,
-   :math:`2a_2 = 0`.
-2. **End**, :math:`t = T`: :math:`d = d_1`, :math:`\dot d = 0`,
-   :math:`\ddot d = 0` give three equations in :math:`a_3`, :math:`a_4`,
+1. **Start**, :math:`t = 0`: every term with a :math:`t` is zero, so
+   :math:`d(0) = a_0`, :math:`\dot d(0) = a_1`, :math:`\ddot d(0) = 2a_2`.
+   The AV's :math:`d = \dot d = \ddot d = 0` give
+   :math:`a_0 = a_1 = a_2 = 0`.
+2. **End**, :math:`t = T`: no term is zero, but :math:`a_0`, :math:`a_1`,
+   :math:`a_2` are known now, so :math:`d = d_1`, :math:`\dot d = 0`,
+   :math:`\ddot d = 0` leave three equations in :math:`a_3`, :math:`a_4`,
    :math:`a_5`:
 
    .. math::
