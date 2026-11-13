@@ -49,6 +49,10 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
      fixes :math:`a_0` to :math:`a_2` and the end :math:`a_3` to :math:`a_5`;
      then the least jerk; the 18 samples across in their own section; where the two
      counts of 18 come from.
+   - **L10, planning along the road in three sections:** what :math:`s(t)`
+     must do (five numbered conditions to keep a speed, six to stop); why a
+     quartic keeps a speed; the 18 samples along. A "More detail" box works
+     one quartic, from 10 to 6 m/s in 4 s.
    - **L10, Trajectory Generation in subsections:** Step 1: Sample, Step 2:
      Score, Step 3: Check, Steps 4 and 5: Pick and Repeat, Explain the
      Result, and Track a Path or a Trajectory.

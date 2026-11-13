@@ -1678,30 +1678,77 @@ Check at :math:`t` = 4 s: 0.547 × 64 − 0.205 × 256 + 0.0205 × 1024 = 35 −
 
 .. _l10-lec-traj-lon:
 
-Plan Along the Road: Keep a Speed with a Quartic, Stop with a Quintic
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Plan Along the Road: What s(t) Must Do
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Here :math:`s(t)` says how far along the AV is at
-each time; with :math:`d(t)` it makes one trajectory.
+Here :math:`s(t)` says how far along the road the AV is at each time; with
+:math:`d(t)` it makes one trajectory. Werling et al. plan two kinds of move
+along the road (Werling et al., 2010), each with its own conditions.
 
-**Keep a speed.** No end position is asked, so five conditions:
-:math:`s`, :math:`\dot s`, :math:`\ddot s` at :math:`t = 0`, and the end
-speed :math:`\dot s_1` with :math:`\ddot s = 0` at :math:`T`. A
-**quartic** (degree four, five numbers) meets them (Werling et al.,
-2010).
+**Keep a speed**: five conditions.
 
-- Samples: :math:`\dot s_1` = 4, 6, 8, 10 or 12 m/s; :math:`T` = 3, 4 or
-  5 s: 15.
+1. :math:`s(0)` = the AV's position now
+2. :math:`\dot s(0)` = its speed now
+3. :math:`\ddot s(0)` = its acceleration now
+4. :math:`\dot s(T) = \dot s_1`, the end speed
+5. :math:`\ddot s(T) = 0`
 
-**Stop at a point.** The end position counts too: :math:`s =
-s_\text{stop}`, :math:`\dot s = 0`, :math:`\ddot s = 0`. Six conditions,
-a quintic.
+**Stop at a point**: six conditions, 1 to 3 the same as above, then:
 
-- :math:`s_\text{stop}` = 110.15 m, last class's stop behind the parked
-  car; :math:`T` = 8, 10 or 12 s: 3.
+4. :math:`s(T) = s_\text{stop}`, the stop point
+5. :math:`\dot s(T) = 0`
+6. :math:`\ddot s(T) = 0`
 
-In all 15 + 3 = 18 along, so 18 × 18 = 324 candidates: every pair
-(Werling et al. combine the two sets the same way).
+Keeping a speed asks no end position: a car that keeps 6 m/s may be
+anywhere along the road at time :math:`T`. So it has five conditions, one
+fewer than :math:`d(t)`. A stop asks where, so it has six.
+
+
+.. _l10-lec-traj-quartic:
+
+Why a Quartic to Keep a Speed: Five Numbers Meet the Five Conditions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. admonition:: Definition: Quartic
+   :class: note
+
+   A polynomial of degree four:
+
+   .. math::
+
+      s(t) = b_0 + b_1 t + b_2 t^2 + b_3 t^3 + b_4 t^4
+
+Werling et al. keep a speed with a quartic (Werling et al., 2010). Its
+speed and acceleration:
+
+.. math::
+
+   \begin{aligned}
+   \dot s(t) &= b_1 + 2b_2 t + 3b_3 t^2 + 4b_4 t^3\\
+   \ddot s(t) &= 2b_2 + 6b_3 t + 12b_4 t^2
+   \end{aligned}
+
+1. **Start,** :math:`t = 0` **(conditions 1 to 3):** :math:`s(0) = b_0`,
+   :math:`\dot s(0) = b_1`, :math:`\ddot s(0) = 2b_2`. The AV's motion now
+   fixes :math:`b_0`, :math:`b_1`, :math:`b_2`, as it fixed :math:`a_0`,
+   :math:`a_1`, :math:`a_2` for :math:`d(t)`.
+2. **End,** :math:`t = T` **(conditions 4 and 5):**
+   :math:`\dot s(T) = \dot s_1` and :math:`\ddot s(T) = 0` leave two
+   equations in two unknowns, :math:`b_3` and :math:`b_4`.
+
+A stop has six conditions, so it needs six numbers: a quintic, solved as
+for :math:`d(t)`.
+
+
+.. _l10-lec-traj-lon-set:
+
+Sample the Moves Along: 15 + 3 = 18
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Samples (chosen). Keep a speed: :math:`\dot s_1` = 4, 6, 8, 10 or 12 m/s,
+:math:`T` = 3, 4 or 5 s: 5 × 3 = 15. Stop: at
+:math:`s_\text{stop}` = 110.15 m, last class's stop behind the parked car,
+:math:`T` = 8, 10 or 12 s: 3.
 
 .. figure:: /_static/images/L10/traj_lon_set.png
    :alt: A graph of the speed along the road, in meters per second, against time from 0 to 7 seconds. All curves start at 10. Thin curves change smoothly to 4, 6, 8, 10 or 12 and stay there; solid ones arrive at 3 seconds, dashed at 4, dotted at 5. Thick curves, the stops, fall slowly and are still between 1 and 2.5 meters per second at 7 seconds.
@@ -1710,6 +1757,74 @@ In all 15 + 3 = 18 along, so 18 × 18 = 324 candidates: every pair
 
    The 18 speed-along-the-road candidates: 15 that keep a speed, 3 that
    stop.
+
+The stops last 8 to 12 s, longer than the 7 s plan, so at 7 s they still
+move. In all, 15 + 3 = 18 along and 18 across: 18 × 18 = 324 candidates,
+every pair (Werling et al. combine the two sets the same way).
+
+.. dropdown:: More detail: one quartic worked, from 10 to 6 m/s in 4 s
+   :class-container: more-detail
+   :icon: info
+   :name: l10-more-quartic-example
+
+   One of the 15, picked for this example: slow to :math:`\dot s_1` = 6 m/s
+   in :math:`T` = 4 s. The AV now: at :math:`s` = 60 m, driving at 10 m/s,
+   not speeding up or slowing down (:math:`\ddot s = 0`).
+
+   1. **Start:** :math:`b_0 = 60`, :math:`b_1 = 10`, :math:`b_2 = 0/2 = 0`.
+   2. **End,** with :math:`T = 4` (powers of 4 worked out):
+
+      .. math::
+
+         \begin{aligned}
+         \text{(E1)}\quad \dot s(4) = 10 + 48b_3 + 256b_4 &= 6\\
+         \text{(E2)}\quad \ddot s(4) = 24b_3 + 192b_4 &= 0
+         \end{aligned}
+
+   3. **Solve by elimination.** E2 gives :math:`b_3 = -8b_4`. Put that into
+      E1: :math:`10 - 384b_4 + 256b_4 = 6`, so :math:`128b_4 = 4` and
+      :math:`b_4 = 0.03125`. Back: :math:`b_3 = -8 \times 0.03125 = -0.25`.
+
+   So
+
+   .. math::
+
+      s(t) = 60 + 10t - 0.25\,t^3 + 0.03125\,t^4
+
+   Check: E1 gives 10 − 12 + 8 = 6; E2 gives −6 + 6 = 0. The reference code
+   (``quartic_t``) gives the same five numbers.
+
+   .. list-table::
+      :header-rows: 1
+
+      * - :math:`t` (s)
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+      * - :math:`s` (m)
+        - 60
+        - 69.78
+        - 78.5
+        - 85.78
+        - 92
+      * - :math:`\dot s` (m/s)
+        - 10
+        - 9.375
+        - 8
+        - 6.625
+        - 6
+      * - :math:`\ddot s` (m/s²)
+        - 0
+        - −1.125
+        - −1.5
+        - −1.125
+        - 0
+
+   It slows hardest at 2 s, by 1.5 m/s², inside the ±2.0 m/s² that Step 3
+   checks. It starts and ends with no acceleration; after 4 s it goes on at
+   6 m/s.
 
 
 .. _l10-lec-traj-score:
