@@ -2803,7 +2803,7 @@ Speed Profile, Step 2: Brake Before the Curve, Speed Up After It
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L10/speed_profile.png
-   :alt: A graph of speed in meters per second against the distance along the path. A dotted gray limit line sits at 8, drops to about 4.5 on the first arc and 3.46 on the second, and returns to 8. The blue profile holds 8, falls along a curve from about 72 meters (dark tag 1), holds 4.47 on the first arc (tag 2) and 3.46 on the second (tag 3), then rises back to 8 by about 112 meters (tag 4). The junction lane is shaded orange.
+   :alt: A graph of speed in meters per second against the distance along the path. A dotted gray limit line sits at 8, drops to about 4.5 on the first arc and 3.46 on the second, and returns to 8. The blue profile holds 8, falls along a curve from about 72 meters (dark tag 1), holds 4.47 on the first arc and 3.46 on the second; dark tags 2 and 3 sit below the dip, each joined by a thin line to the middle of its level stretch, then rises back to 8 by about 112 meters (tag 4). The junction lane is shaded orange.
    :width: 85%
    :align: center
 
