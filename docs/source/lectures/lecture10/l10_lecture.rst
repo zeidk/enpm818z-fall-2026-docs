@@ -93,7 +93,7 @@ section's divider shows it again with that box highlighted, and the boxes
 link to their sections.
 
 .. figure:: /_static/images/L10/l10_pipeline.png
-   :alt: The lecture's flowchart. Top row, as in L9: the inputs (the route from the route planner, L7; the AV's pose and speed; other cars and obstacles; their predicted paths; the map), the behavior layer (picks the task and a target speed), the local planner (a path in L9; today's version adds times) and its output, a path, which our controller node uses. Below, a green dashed frame, the controller node: the behavior layer's target speed goes into the speed profile (curves cap the target speed), which feeds the speed PID (throttle, brake); the path goes into a row of three steering methods, one of which is used (the section also covers PID and LQR): Pure Pursuit, Stanley, MPC; a dashed bicycle model (how steering turns the AV) points down to them. The steering methods and the PID lead to the output (steer, throttle, brake, every 0.05 s, to the actuators), which goes to the AV in CARLA; a dashed line takes the measured pose and speed back to the inputs. Each box links to its section.
+   :alt: The lecture's flowchart. Top row, as in L9: the inputs (the route from the route planner, L7; the AV's pose and speed; other cars and obstacles; their predicted paths; the map), the behavior layer (picks the task and a target speed), the local planner (a path in L9, or a trajectory today) and its output, a path, which our controller node uses. Below, a green dashed frame, the controller node: the behavior layer's target speed goes into the speed profile (curves cap the target speed), which feeds the speed PID (throttle, brake); the path goes into a row of three steering methods, one of which is used (the section also covers PID and LQR): Pure Pursuit, Stanley, MPC; a dashed bicycle model (how steering turns the AV) points down to them. The steering methods and the PID lead to the output (steer, throttle, brake, every 0.05 s, to the actuators), which goes to the AV in CARLA; a dashed line takes the measured pose and speed back to the inputs. Each box links to its section.
    :width: 100%
    :align: center
 
@@ -107,11 +107,11 @@ link to their sections.
    - **Top row, as in L9:** the inputs (the route from the route planner,
      L7; the AV's pose and speed; other cars and obstacles; their predicted
      paths; the map), the behavior layer, which picks the task and a target
-     speed, and the local planner. In L9 the local planner gave a path, and
-     that path is what our controller node uses. :ref:`Trajectory
-     Generation <l10-lec-trajectory>` shows a version of the planner that
-     adds times, a trajectory; a controller that follows a trajectory must
-     track the times too.
+     speed, and the local planner. The local planner gives a path
+     (:ref:`Path Generation <l10-lec-path-generation>`, L9) or a trajectory
+     (:ref:`Trajectory Generation <l10-lec-trajectory>`, today): two designs
+     of the same box. Our controller node uses a path; a controller that
+     follows a trajectory must track the times too.
    - **Controller node** (green dashed frame), the node of this lecture: it
      takes the path and the behavior layer's target speed. The speed profile
      caps the target speed in the curves, and the speed PID holds it with
@@ -594,24 +594,19 @@ The window and its controls are described in the hands-on
 `README <https://github.com/rubixcubic/enpm818z-fall-2026-carla-python/blob/main/lecture10/README.md>`_.
 
 
-.. _l10-lec-trajectory:
+.. _l10-lec-path-generation:
 
-Trajectory Generation
-----------------------
+Path Generation
+---------------
 
-The behavior layer picks the task. Last class, the local planner then found
-a path around a parked car; for a fast car coming up in the left lane, the
-behavior layer closed that lane, and the AV waited behind the parked car
-(cost 11.54). This section builds on that planner: the same road, the same
-three circles and the same 0.3 m margin, plus time.
+The behavior layer picks the task and a target speed. The local planner
+works out where the AV goes; last class, as a path.
 
-**In this section:** first last class's path as one formula,
-:math:`d(s)`; then trajectories: :math:`d` and :math:`s` as polynomials in
-time, sampled, checked against where the other car will be, and scored for
-comfort.
+**In this section:** last class's path planner, recapped: one formula,
+:math:`d(s)`, for 31 paths; check them, keep the cheapest.
 
-**What it is for:** the AV passes a moving car when the timing works,
-instead of waiting behind the parked car.
+**What it is for:** the next section adds time to the same loop, and the
+comparison needs last class's planner in the same terms.
 
 
 .. _l10-lec-path-key:
@@ -1075,6 +1070,24 @@ From 31 Candidates to One Path: the Steps So Far
 The result is one **path**, :math:`d(s)`: where the AV goes, with no times.
 
 
+.. _l10-lec-trajectory:
+
+Trajectory Generation
+---------------------
+
+A path is picked before any times exist, so it cannot plan around a moving
+car: last class, the behavior layer closed the lane and the AV waited
+behind the parked car (cost 11.54). Path first, speed after (last class's
+planner, and our CARLA node) and where and when together (Werling et al.)
+are two designs of the same local planner; a stack uses one.
+
+**In this section:** trajectories: where and when, planned together and
+checked against car B. No path is needed first.
+
+**What it is for:** the AV passes a moving car when the timing works,
+instead of waiting behind the parked car.
+
+
 .. _l10-lec-traj-scene:
 
 Plan Around a Car That Moves: Last Class Closed the Lane Instead
@@ -1258,6 +1271,7 @@ last class's path planner.
      acceleration, :math:`d`, sideways speed and sideways acceleration.
    - **A speed in each candidate:** so the speed can change from one plan to
      the next.
+   - **No path needed first:** where and when are planned together.
 
 Last class: 70 m ahead, lengths of 20, 30, 40 m. Today: 7 s ahead, durations
 of 3, 4, 5 s.
@@ -2086,6 +2100,9 @@ model, like a bicycle" (Snider, 2009).
    - Tag 2: the front wheel, turned by :math:`\delta` from straight ahead
      (dashed), square to its line to the ICR.
    - Tag 3: the same ICR.
+
+   Drawn for a 5 m turn, tighter than our first arc's 10 m, so the angles
+   show.
    - :math:`R`: from the ICR to the rear wheel. :math:`L`: the wheelbase.
 
 The one angle that gives the same :math:`R`:
@@ -2354,9 +2371,9 @@ grows.
 
       F_{yf} = -c_f\,\alpha_f, \qquad F_{yr} = -c_r\,\alpha_r
 
-   .. figure:: /_static/images/L10/l7_dynamic.png
-      :alt: A dynamic bicycle model drawn vertically: a front wheel at the top and a rear wheel at the bottom on a dotted center line, the CG between them, Lf above it and Lr below. At each wheel a blue arrow, Tire Heading, along the wheel and a green arrow v for the wheel's velocity, the angle between them alpha f at the front and alpha r at the rear; red arrows Fyf and Fyr point sideways. At the CG the velocity v splits into vx along and vy across, with the angle beta.
-      :width: 28%
+   .. figure:: /_static/images/L10/dynamic_geom.png
+      :alt: A top view of the dynamic bicycle model, front up, over a faint gray car. A dark center line joins the rear wheel at the bottom, dark tag 3, to the front wheel at the top, dark tag 1, which is turned left by the orange angle delta from the dashed axis. Between them, nearer the rear, a white circle marks the center of gravity, dark tag 2. At each wheel a blue arrow points where the wheel points and a green arrow v shows where the wheel moves; the purple angle between them is alpha f at the front and alpha r at the rear. A red arrow at each wheel, F y f and F y r, points to the left, square to its wheel. At the center of gravity a green arrow v, at the angle beta from the axis, splits into dashed parts v x along the car and v y across it. On the right, l f marks the distance from the center of gravity to the front wheel and l r to the rear wheel.
+      :width: 45%
       :align: center
 
       The dynamic bicycle model, with slip angles and tire forces.
@@ -2364,16 +2381,22 @@ grows.
    .. admonition:: Reading the figure
       :class: tip
 
-      Drawn vertically: the front wheel at the top, the rear wheel at the
-      bottom, the CG between them, at distances :math:`\ell_f` and
-      :math:`\ell_r`.
+      Front up, turning left. Tag 1: the front wheel, turned by
+      :math:`\delta` (orange). Tag 2: the center of gravity (CG), at
+      :math:`\ell_f` from the front wheel and :math:`\ell_r` from the rear
+      one. Tag 3: the rear wheel.
 
-      - At each wheel, a blue arrow (tire heading) along the wheel and a
-        green arrow :math:`v` for the wheel's velocity; the angle between
-        them is :math:`\alpha_f` at the front and :math:`\alpha_r` at the
-        rear. Red arrows :math:`F_{yf}` and :math:`F_{yr}` point sideways.
+      - At each wheel, blue: where the wheel points; green :math:`v`: where
+        it moves. The purple angle between them is the slip angle,
+        :math:`\alpha_f` at the front and :math:`\alpha_r` at the rear.
+      - Red: the tire forces :math:`F_{yf}` and :math:`F_{yr}`, square to
+        their wheels.
       - At the CG, the velocity :math:`v` splits into :math:`v_x` along the
-        car and :math:`v_y` across it, with the angle :math:`\beta`.
+        car and :math:`v_y` across it, at the angle :math:`\beta`.
+      - The speeds are chosen for the drawing, larger than real so the
+        angles show, and they follow the formulas above: the front wheel
+        moves more to the left than the CG, the rear wheel more to the
+        right.
 
    - Force proportional to slip; :math:`c_f, c_r`: each axle's cornering
      stiffness. Snider's car: 155,495 N/rad per axle (Snider, 2009); a

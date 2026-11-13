@@ -35,6 +35,10 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
    - **L10, the two timings, in three steps:** make a trajectory from a
      path and a speed; check both against car B, moment by moment; see why
      one crashes, from when each reaches the lane line.
+   - **L10, Path Generation:** last class's path planner is now its own
+     section; Trajectory Generation starts at the moving car and says why a
+     path cannot plan around it. In the flowchart, the local planner box
+     reads "a path (L9) or a trajectory (today)".
    - **L10, two key boxes:** a path planner works in meters (a distance
      ahead, maneuver lengths); a trajectory planner works in seconds (a time
      ahead, durations). Both sample sets are fixed beforehand.
@@ -55,8 +59,9 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
    - **L10:** "The Turn" is now "Test Turn and Speed Profile". The test
      path's map has no tags, and the curvature section says what the steps
      mean for the controllers.
-   - **L10, Ackermann and bicycle model figures:** redrawn for the course,
-     with numbered tags.
+   - **L10, Ackermann, bicycle and dynamic bicycle model figures:** redrawn
+     for the course, with numbered tags; the bicycle figure says it is drawn
+     for a 5 m turn.
 
 
 .. dropdown:: v2.28.3: Lecture 10 Checked and Reordered (2026-11-12)
