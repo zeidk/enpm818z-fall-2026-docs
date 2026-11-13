@@ -2977,9 +2977,11 @@ simulation runs it.
 Turn Four Wheels About One Point: Ackermann Steering Geometry
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When a four-wheeled vehicle turns, every wheel should roll around one common
-point, the instantaneous center of rotation (ICR). A wheel that does not
-point square to the line to the ICR slides sideways: a tire scrub.
+When a four-wheeled vehicle turns, every wheel should roll on its own
+circle around one common point, the instantaneous center of rotation (ICR).
+So each wheel must point at a right angle to the line from the ICR to it
+(the small square marks). A wheel pointed any other way is dragged sideways:
+**tire scrub**.
 
 .. figure:: /_static/images/L10/ackermann_geom.png
    :alt: A top view of a car facing up and turning left, drawn in faint gray, with its two axles and center line in dark lines and its four wheels as thick dark bars. The rear wheels point straight ahead. Thin gray lines run from the rear axle and from each front wheel to a green point at the far left, dark tag 3; a small square mark at each front wheel shows the wheel is square to its line. The left front wheel, dark tag 1, is turned by the orange angle delta i from a dashed straight-ahead line; the right front wheel, dark tag 2, is turned by the smaller orange angle delta o. A green double arrow R runs from the green point to the middle of the rear axle. L marks the wheelbase on the right and W the track behind the car.
