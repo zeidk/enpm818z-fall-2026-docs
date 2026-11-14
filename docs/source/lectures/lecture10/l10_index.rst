@@ -47,6 +47,8 @@ Lecture Materials
 - :doc:`l10_lecture`: the notes, following the slides shown in class.
   Material cut from class sits in closed "More detail" boxes, right after
   the part it explains.
+- :doc:`l10_exercises`: four take-home exercises, not graded: a speed profile,
+  Pure Pursuit by hand, the speed PID at 12 m/s, and a quintic lane change.
 - :doc:`l10_quiz` and :doc:`l10_references`.
 
 .. toctree::
@@ -55,6 +57,7 @@ Lecture Materials
    :titlesonly:
 
    l10_lecture
+   l10_exercises
    l10_quiz
    l10_references
 

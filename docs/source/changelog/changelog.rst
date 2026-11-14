@@ -5,10 +5,23 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.30.0: Lecture 9 Published (2026-11-14)
+.. dropdown:: v2.31.0: Lecture 10 Exercises (2026-11-14)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10, Exercises:** a new page with four take-home exercises, not
+     graded, each with worked guidance: a speed profile for another curve,
+     one Pure Pursuit step by hand (and where the 0.7 rad limit cuts in),
+     the speed PID at a 12 m/s target (the gap P leaves, and how large the
+     clamp must be), and a quintic lane change over 5 s. Linked from the
+     L10 page.
+
+.. dropdown:: v2.30.0: Lecture 9 Published (2026-11-14)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 
