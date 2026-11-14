@@ -4531,29 +4531,32 @@ Plan Ahead with MPC: Predict, Score, Apply the First Input, Repeat
    input; repeat from the newly measured state.
 
 .. figure:: /_static/images/L10/mpc_loop.png
-   :alt: Three rows of eight cells, one row per control step k, k plus 1 and k plus 2, each row shifted one cell to the right. A brace over the first row says the horizon, N = 8 steps, predicted with the bicycle model. In each row only the first cell is green. A time arrow runs along the bottom.
-   :width: 80%
+   :alt: A timeline of MPC plans, with time t in seconds from 0 to 3 along the bottom. A brace over the top row says the horizon: 3 s, 60 steps of 0.05 s. The top row, the plan at t = 0, is split into three pieces with a small tick for each step: steps 1 to 20, delta = 0 rad; steps 21 to 40, delta = -0.4 rad; steps 41 to 60, delta = 0 rad. Below it, two plain bars, the plans at t = 0.05 s and t = 0.10 s, each starting one step later. Each row's first step is green, and a label says green is the step each plan applies.
+   :width: 90%
    :align: center
 
-   The horizon slides forward one step at a time.
+   One plan from our run, and the two plans after it.
 
 .. admonition:: Reading the figure
    :class: tip
 
-   Each row is the plan made at one control step: :math:`k`,
-   :math:`k + 1`, :math:`k + 2`. Each plan covers the horizon, :math:`N` = 8
-   steps here, predicted with the bicycle model. Each row starts one step
-   later than the one above; time runs to the right.
+   Time runs to the right, in seconds. Each row is one plan.
 
-   - **Green cell:** the one input applied before the next plan.
-   - **Gray cells:** the rest of the plan, predicted but not applied.
+   - **Top row:** the plan MPC makes at :math:`t` = 0, 2 m before the
+     curve. Its horizon is 3 s, cut into 60 steps of 0.05 s (the small
+     ticks). The input at each step is a steering angle :math:`\delta`.
+   - **Lower rows:** the next two plans, each made one step later from the
+     new measured pose.
+   - **Green:** the one step each plan applies before the next plan.
 
-The figure is drawn with 8 steps; our example uses 60 steps of 0.05 s, with
-each input held for 1 s: 3 values per candidate, :math:`9^3` = 729
-candidates. The horizon slides
-forward with the AV, so MPC is a feedback controller: each plan starts from
-the measured pose. Its horizon has times: it can track a trajectory (timing
-2, in Trajectory Generation).
+In our run, a step is 0.05 s and the input at each step is a steering angle.
+To keep the search small, our MPC holds each angle for 1 s (20 steps), from 9
+values: :math:`9^3` = 729 candidate plans. The best plan holds 0 rad, then
+−0.4 rad (right), then 0 rad, each for 20 steps. The AV applies only step
+1's input, 0 rad, for 0.05 s; then MPC plans again from the new measured
+pose. So MPC is a feedback controller: each plan starts from the measured
+pose. Its horizon has times: it can track a trajectory (timing 2, in
+Trajectory Generation).
 
 .. dropdown:: More detail: one MPC step on our turn, drawn, and the problem written out
    :class-container: more-detail
