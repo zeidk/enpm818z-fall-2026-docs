@@ -4551,10 +4551,12 @@ Plan Ahead with MPC: Predict, Score, Apply the First Input, Repeat
 
 In our run, a step is 0.05 s and the input at each step is a steering angle.
 To keep the search small, our MPC holds each angle for 1 s (20 steps), from 9
-values: :math:`9^3` = 729 candidate plans. The best plan holds 0 rad, then
-−0.4 rad (right), then 0 rad, each for 20 steps. The AV applies only step
-1's input, 0 rad, for 0.05 s; then MPC plans again from the new measured
-pose. So MPC is a feedback controller: each plan starts from the measured
+values: :math:`9^3` = 729 candidate plans. MPC scores whole 3 s plans and
+keeps the best one. The best plan holds 0 rad, then −0.4 rad (right), then
+0 rad, each for 20 steps. The AV applies only that plan's step 1 input,
+0 rad, for 0.05 s; then MPC plans again from the new measured pose. Step 1's
+angle is not chosen on its own: a plan that steers right at step 1 scores
+worse over the 3 s, because the AV is still on the straight. So MPC is a feedback controller: each plan starts from the measured
 pose. Its horizon has times: it can track a trajectory (timing 2, in
 Trajectory Generation).
 
