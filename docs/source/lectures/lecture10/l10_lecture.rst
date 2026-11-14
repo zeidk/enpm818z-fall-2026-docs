@@ -4033,21 +4033,21 @@ Choose the Lookahead: Too Short Weaves, Too Long Cuts the Corner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Goal:** pick the lookahead :math:`L_d`. The two measures above, the swing
-on the straight after the 1 m start and the error in the corner, for all
+on the straight after the 1 m start and the error on the curve, for all
 eight lookaheads we ran:
 
 .. figure:: /_static/images/L10/pp_tradeoff.png
-   :alt: A graph of distance from the lane center in meters against the lookahead distance from 4 to 12 meters. The orange line with round markers, dark tag 1, falls from 0.50 at 4 meters to 0.05 at 12. The dark line with square markers, tag 2, is 0.40 at 4 meters, lowest at 5 meters with 0.25, then rises to 0.39, 0.67, 0.98 and 1.53 at 6, 8, 10 and 12 meters.
+   :alt: A graph of distance from the lane center in meters against the lookahead distance from 4 to 12 meters, with a legend at the top left. The orange line with round markers, straight road, swing past the center, falls from 0.50 at 4 meters to 0.05 at 12. The dark line with square markers, curve, largest distance from the center, is 0.40 at 4 meters, lowest at 5 meters with 0.25, then rises to 0.39, 0.67, 0.98 and 1.53 at 6, 8, 10 and 12 meters.
    :width: 70%
    :align: center
 
    Two errors against the lookahead distance.
 
-- **Tag 1, orange, the straight:** how far the AV swings past the center
-  while it corrects the 1 m start: 0.50 m at 4 m, 0.07 m at 10 m. A near
-  point makes it steer back hard.
-- **Tag 2, black, the corner:** how far it strays from the center: least at
-  5 m (0.25 m); 0.98 m at 10 m, where it turns early and cuts inside.
+- **Straight road:** how far the AV swings past the center while it
+  corrects the 1 m start: 0.50 m at 4 m, 0.07 m at 10 m. A near point makes
+  it steer back hard.
+- **Curve:** how far it strays from the center: least at 5 m (0.25 m);
+  0.98 m at 10 m, where it turns early and cuts inside.
 
 .. important::
 
