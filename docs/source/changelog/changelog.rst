@@ -12,12 +12,14 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
 
    .. rubric:: Lectures
 
-   - **L10, MPC in three sections:** "Make MPC's First Plan" walks through
-     the 729 candidate plans 2 m before the curve; "Score a Plan" gives the
-     score (path error plus steering effort) for five of them; "Plan Ahead
-     with MPC" now draws the best plan's 60 steps and says why only step 1
-     is applied. Our MPC sets only the steering; the speed comes from the
-     speed profile.
+   - **L10, MPC by its four steps:** every MPC section uses the idea's four
+     steps, predict, optimize, apply, repeat. The definition opens the
+     part. "Step 1, Predict" covers the full bicycle model and the 729
+     candidate plans 2 m before the curve; "Step 2, Optimize" scores them
+     (path error plus steering effort) and keeps the lowest; "Steps 3 and 4,
+     Apply and Repeat" draws the best plan's 60 steps and says why only step
+     1 is applied; a new diagram puts the four steps together. Our MPC sets
+     only the steering; the speed comes from the speed profile.
    - **L10, "Choose a Steering Controller":** where Pure Pursuit, Stanley and
      MPC each fit. The five-run comparison table moved into the Snider
      "More detail" box.
@@ -25,6 +27,10 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
      the model rows say what they mean.
    - **L10, wording:** the test road's bend is a curve, not a turn; "jumps
      in the path" are breaks in the path.
+   - **L10, "Let a Computer Drive":** what a CAN bus and an ECU are, in one
+     sentence each.
+   - **L10, "Summary":** in a summary box, with the behavior layer and the
+     quintic; the "Today" box left "Next Class".
 
    .. rubric:: Removed
 

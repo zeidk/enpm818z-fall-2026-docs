@@ -4449,16 +4449,17 @@ MPC
    :align: center
 
    Gray: 9 of the 729 candidates, each holding one steering angle for 3 s.
-   Green: the cheapest of all 729.
+   Green: the plan with the lowest score of all 729.
 
 Pure Pursuit and Stanley steer from the path as it is now, with one formula.
-MPC looks ahead: from the AV now, it predicts with the bicycle model where
-each candidate steering takes it over the next 3 s (gray: 9 of the 729 it
-tries), scores them, and keeps the cheapest (green). The AV steers with the
-green plan's first angle for one control step, 0.05 s; then MPC measures
-where the AV is and makes a whole new 3 s plan. The rest of the old plan is
-never used. It does what the local planner did in path
-and trajectory generation: roll out candidates, score them, keep the best.
+MPC looks ahead. It **predicts** with the bicycle model where each candidate
+steering takes the AV over the next 3 s (gray: 9 of the 729 it tries), and
+**optimizes**: keeps the plan with the lowest score (green). It **applies**
+that plan's first angle for one control step, 0.05 s, then **repeats** from
+a new measurement. The rest of the old plan is never used. It does what the
+local planner did in path and trajectory generation: roll out candidates,
+score them, keep the best. Predict, optimize, apply, repeat: those four words
+organize the sections below.
 
 
 .. _l10-lec-mpc-idea:
@@ -4466,12 +4467,21 @@ and trajectory generation: roll out candidates, score them, keep the best.
 Look Ahead, Then Act: the Idea of MPC
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-MPC looks ahead: "if I simulate the car for the next seconds, which
-steering sequence tracks the path best, within my limits?"
+.. admonition:: Definition: Model predictive control (MPC)
+   :class: note
 
-1. **Predict:** run a vehicle model forward over a horizon.
-2. **Optimize:** find the input sequence that minimizes the tracking error.
-3. **Apply:** only the first input.
+   At every step, choose the sequence of inputs over a fixed horizon that a
+   model predicts will score best, within the limits; apply only the first
+   input; repeat from the newly measured state.
+
+MPC asks: "if I simulate the car for the next seconds, which steering
+sequence tracks the path best, within my limits?" Four steps, each in the
+sections below with our curve:
+
+1. **Predict:** run a vehicle model forward over a horizon, for each
+   candidate plan.
+2. **Optimize:** keep the plan with the lowest score.
+3. **Apply:** only the plan's first input, for one step.
 4. **Repeat:** at the next step, from the new measurement.
 
 Re-solving from each measurement is the feedback; looking ahead handles the
@@ -4490,8 +4500,8 @@ curve coming.
 
 .. _l10-lec-bicycle-full:
 
-Predict with the Full Model: the State, the Inputs and Four Equations
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 1, Predict: the Full Bicycle Model, Its State and Inputs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Goal:** predict where the AV will be over the next seconds, MPC's step 1.
 The turn rate alone is not enough. The model tracks four numbers at the rear
@@ -4525,11 +4535,11 @@ the speed from the speed profile, which the speed PID holds.
 
 .. _l10-lec-mpc-plan:
 
-Make MPC's First Plan: Try 729 Steering Plans, Keep the Best
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 1, Predict: 729 Steering Plans on Our Curve
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**Goal:** choose the steering for the next 3 s that keeps the AV closest to
-the path. The AV is 2 m before the curve, at 7.09 m/s.
+**Goal:** predict where each candidate plan takes the AV over the next 3 s.
+Measured now: the AV is 2 m before the curve, at 7.09 m/s.
 
 .. figure:: /_static/images/L10/mpc_candidates.png
    :alt: A top view of the right curve, x from 68 to 100 meters and y from minus 14 to 6. The lane comes in from the left along y = 0 and bends down; solid lines mark its edges and a dashed gray line its center. The AV is drawn faintly at about x = 78, with a dark dot at its rear axle. A fan of hundreds of thin gray curves leaves the rear axle: a few bend left, up to y = 6, and most bend right, down to about y = minus 12.7. One thick green curve runs straight along the lane center to a green dot near x = 83.5, bends right to a second green dot near x = 87.7 and y = minus 1.3, and ends inside the curve, at about x = 90.6 and y = minus 3.5.
@@ -4548,25 +4558,20 @@ the path. The AV is 2 m before the curve, at 7.09 m/s.
    - **Green:** the best plan's path; its dots mark 1 and 2 s, where the
      held angle changes.
 
-1. **Measure** the AV's pose and speed now.
-2. **List the plans:** a plan is three steering angles in a row, each held
-   for 1 s. Each angle is one of 9 values, −0.6 to 0.2 rad in steps of 0.1:
-   :math:`9^3` = 729 plans (gray).
-3. **Predict** each plan with the bicycle model, 60 steps of 0.05 s. Our MPC
-   chooses only the steering; at each step the speed comes from the speed
-   profile.
-4. **Score** each predicted path (next section) and keep the lowest: 0, then
-   −0.4 (a right steer), then 0 rad (green).
-
-No formula gives :math:`\delta` here, unlike Pure Pursuit and Stanley: MPC
-tries angles and keeps the plan whose predicted path scores best. Its only
-formulas are the model's, used to predict.
+- **The plans:** a plan is three steering angles in a row, each held for
+  1 s. Each angle is one of 9 values, −0.6 to 0.2 rad in steps of 0.1:
+  :math:`9^3` = 729 plans.
+- **Predict each** with the bicycle model, from the measured pose: 60 steps
+  of 0.05 s. Our MPC chooses only the steering; at each step the speed comes
+  from the speed profile (gray).
+- **Green:** the plan step 2 keeps: 0, then −0.4 (a right steer), then
+  0 rad.
 
 
 .. _l10-lec-mpc-score:
 
-Score a Plan: Path Error Plus Steering Effort
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 2, Optimize: Score Each Plan, Keep the Lowest
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Goal:** one number per plan, lower is better. Score = path error +
 steering effort.
@@ -4615,22 +4620,23 @@ The table shows five of the 729 plans:
      - 0
      - 6.631
 
-Steering for the best: :math:`0^2 + 0.4^2 + 0^2` = 0.16. Here the path error
-alone picks the same plan; the steering effort matters when two plans track
-about equally well, and then it favors the gentler one.
+Keep the lowest, 0.186 (steering: :math:`0^2 + 0.4^2 + 0^2` = 0.16). Here
+the path error alone picks the same plan; the steering effort matters when
+two plans track about equally well, and then it favors the gentler one.
+
+No formula gives :math:`\delta` here, unlike Pure Pursuit and Stanley: the
+plan with the lowest score sets it. MPC's only formulas are the model's,
+used to predict.
 
 
 .. _l10-lec-mpc-def:
 
-Plan Ahead with MPC: Predict, Score, Apply the First Input, Repeat
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Steps 3 and 4, Apply and Repeat: Use 0.05 s of the Plan, Then Plan Again
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. admonition:: Definition: Model predictive control (MPC)
-   :class: note
-
-   At every step, choose the sequence of inputs over a fixed horizon that a
-   model predicts will score best, within the limits; apply only the first
-   input; repeat from the newly measured state.
+**Apply:** the AV uses only step 1 of the best plan, 0 rad for 0.05 s
+(green). **Repeat:** 0.05 s later, MPC measures the AV, then predicts and
+optimizes again (the lower rows).
 
 .. figure:: /_static/images/L10/mpc_loop.png
    :alt: A timeline of MPC plans, with time t in seconds from 0 to 3 along the bottom. A brace over the top row says the horizon: 3 s, 60 steps of 0.05 s. The top row, the best plan at t = 0, score 0.186, is split into three pieces with a small tick for each step: steps 1 to 20, delta = 0 rad; steps 21 to 40, delta = -0.4 rad; steps 41 to 60, delta = 0 rad. Below it, two plain bars, the best plans at t = 0.05 s and t = 0.10 s, each starting one step later. Each row's first step is green, and a label says green is the step each plan applies.
@@ -4651,12 +4657,13 @@ Plan Ahead with MPC: Predict, Score, Apply the First Input, Repeat
      step later from the new measured pose.
    - **Green:** the one step each plan applies before the next plan.
 
-The top row is the score table's winner: MPC picked it by its score, and
-the AV uses its steering angles. **Why only step 1:** the plan is a
-prediction, and it is never exact. Our
+The top row is the winner of step 2, picked by its score; the AV uses its
+steering angles. **Why apply only step 1:** the plan is a prediction, and it
+is never exact. Our
 model leaves out the steering delay and lag that the simulated car has, so
 the real AV would not follow the plan exactly. After 0.05 s, MPC measures where the AV really
-is and picks a new best plan from there: the second row, then the third. That makes
+is, then predicts and optimizes again from there: the second row, then the
+third. That makes
 MPC a feedback controller. The other 59 steps still count: they are why
 step 1 is 0 rad (steering right 1 s early scored 3.308 instead of 0.186).
 Its horizon has times, so it can track a trajectory (timing 2, in
@@ -4700,28 +4707,28 @@ Trajectory Generation).
 
 .. _l10-lec-mpc-cycle:
 
-See MPC as One Loop: Measure, Plan, Score, Pick, Apply
+Put the Four Steps Together: One MPC Loop Every 0.05 s
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L10/mpc_cycle.png
-   :alt: A loop diagram of one MPC cycle in six numbered columns. 1, Measure: a box, the AV's pose and speed now, 7.09 m/s, 2 m before the curve. 2, List plans: three plans, (0, 0, 0) rad, (0, -0.4, 0) rad and (-0.1, -0.4, 0) rad, and 726 more. 3, Predict each: for each plan, a bar of three pieces with its three angles, under a brace saying 3 s horizon, each angle held 1 s, with 60 small ticks; a label says bicycle model, 60 steps of 0.05 s. 4, Score: an arrow from each bar to its score, 6.631, 0.186 in a green box, and 3.308; a label says path error plus steering. 5, Pick lowest: a green box, best plan (0, -0.4, 0) rad, score 0.186. 6, below it, a green box: apply step 1, delta = 0 rad for 0.05 s. A thick arrow runs from it back along the bottom to the Measure box, labeled 0.05 s later: measure again, make 729 new plans, pick a new best.
+   :alt: A loop diagram of one MPC cycle. On the left, under Measured, a box: the AV's pose and speed now, 7.09 m/s, 2 m before the curve. A header 1, Predict, spans two columns: each plan, with three plans, (0, 0, 0) rad, (0, -0.4, 0) rad and (-0.1, -0.4, 0) rad, and 726 more; and, for each plan, a bar of three pieces with its three angles, under a brace saying 3 s horizon, each angle held 1 s, with 60 small ticks and a label, bicycle model, 60 steps of 0.05 s. A header 2, Optimize, spans two more columns: score, an arrow from each bar to its score, 6.631, 0.186 in a green box, and 3.308, labeled path error plus steering; and keep the lowest, a green box, best plan (0, -0.4, 0) rad, score 0.186. Below it a green box: 3, Apply step 1, delta = 0 rad for 0.05 s. A thick arrow runs from it back along the bottom to the Measured box, labeled 4, Repeat: 0.05 s later, measure again, predict and optimize again.
    :width: 100%
    :align: center
 
    One MPC cycle on our curve, with three of the 729 plans.
 
-1. **Measure** the AV: 7.09 m/s, 2 m before the curve.
-2. **List the plans:** a plan is three steering angles, each held 1 s; the
-   figure shows three of the 729.
-3. **Predict** each plan with the bicycle model over the 3 s horizon, 60
-   steps of 0.05 s (the ticks).
-4. **Score** each predicted path, path error plus steering: 6.631 for going
-   straight, 0.186 for (0, −0.4, 0) rad, 3.308 for steering right 1 s early.
-5. **Pick** the lowest score, 0.186.
-6. **Apply** only its first step: 0 rad for 0.05 s.
+- **Measured:** the AV at 7.09 m/s, 2 m before the curve.
+- **1. Predict:** each plan, three steering angles each held 1 s, with the
+  bicycle model over the 3 s horizon, 60 steps of 0.05 s (the ticks); the
+  figure shows three of the 729.
+- **2. Optimize:** score each predicted path, path error plus steering:
+  6.631 for going straight, 0.186 for (0, −0.4, 0) rad, 3.308 for steering
+  right 1 s early. Keep the lowest, 0.186.
+- **3. Apply:** only its first step, 0 rad for 0.05 s.
+- **4. Repeat:** 0.05 s later, measure again, then predict and optimize
+  again.
 
-Every 0.05 s, MPC runs steps 1 to 6 again from a new measurement. Each plan
-looks 3 s ahead, but the AV uses only its first 0.05 s.
+Each plan looks 3 s ahead, but the AV uses only its first 0.05 s.
 
 
 .. _l10-lec-mpc-weigh:
@@ -5396,7 +5403,7 @@ Let a Computer Drive: One Command, from the Program to the Wheels
 
 .. figure:: /_static/images/L10/ecu_chain.png
    :alt: A block diagram from top to bottom. A gray box, Driving computer, planning and control. Below it a box, CAN bus: a solid arrow labeled command goes down to it and a dashed arrow labeled feedback goes up from it. Below that a green box, Electronic control units (ECUs), with the same pair of arrows from the CAN bus. At the bottom left a box, Actuator, reached by a solid arrow labeled drive from the ECUs; at the bottom right a box, Sensor, with a dashed arrow labeled reading up into the ECUs.
-   :width: 45%
+   :width: 30%
    :align: center
 
    One command's path through the car.
@@ -5409,10 +5416,15 @@ Let a Computer Drive: One Command, from the Program to the Wheels
    drives its actuator and reads its sensor, then sends feedback back up
    the same bus.
 
-1. The driving computer sends a command on the **CAN bus**, the serial bus a
-   car's control units share (Bosch, 1991).
-2. An **ECU** (electronic control unit) checks it and drives its actuator:
-   the steering motor, the throttle or the brakes.
+- **CAN bus** (Controller Area Network): the network all of a car's control
+  units share; any unit can send a message on it, and every unit reads it. A
+  message carries an identifier and up to 8 bytes of data (Bosch, 1991).
+- **ECU** (electronic control unit): a small embedded computer that runs one
+  part of the car, such as the steering, the engine or the brakes.
+
+1. The driving computer sends a command on the CAN bus.
+2. An ECU checks it and drives its actuator: the steering motor, the
+   throttle or the brakes.
 3. The ECU reads its sensor and sends **feedback** back on the bus (dashed).
 
 .. dropdown:: More detail: the actuators, the command chain, ECUs, CAN, a message layout and fail safe
@@ -5912,21 +5924,25 @@ From our runs on the curve (the Lateral and Longitudinal sections):
 Summary
 -------
 
-This closes the lecture: the six parts that turned a path into a steering,
-throttle and brake command.
+.. admonition:: Today: from a path to steering, throttle and brake
+   :class: important
 
-- **Trajectories**: sampled in time and checked against where a moving car
-  will be; the AV waited for car B, then passed.
-- **Vehicle models**: Ackermann for the wheels, the kinematic bicycle while
-  the sideways acceleration stays under :math:`0.5\mu g`, the dynamic one
-  beyond.
-- **Lateral**: Pure Pursuit chases a point, Stanley fixes heading and offset
-  at the front axle, MPC plans the next seconds.
-- **Longitudinal**: a PID with split pedals and anti-windup; production
-  adds a layer above it.
-- **Actuators**: by wire; the wheel turns about 0.2 s after the command on a
-  measured car.
-- **CARLA**: one node, five inputs, one command, 20 times a second.
+   - **Behavior layer**: a superstate or a behavior tree keeps it small.
+   - **Trajectories**: paths with times, sampled in time and checked against
+     where a moving car will be; the AV waited for car B, then passed. A
+     quintic changes speed with small jerk.
+   - **Vehicle models**: Ackermann for the wheels, the kinematic bicycle
+     while the sideways acceleration stays under :math:`0.5\mu g`, the
+     dynamic one beyond.
+   - **Lateral**: Pure Pursuit chases a point 5 m ahead (short weaves, long
+     cuts inside curves); Stanley fixes heading and offset at the front
+     axle; MPC predicts, optimizes, applies only the first input, and
+     repeats.
+   - **Longitudinal**: a PID with split pedals and anti-windup; production
+     adds a layer above it.
+   - **Actuators**: by wire; the wheel turns about 0.2 s after the command
+     on a measured car.
+   - **CARLA**: one node, five inputs, one command, 20 times a second.
 
 
 .. _l10-lec-equations:
@@ -6048,19 +6064,6 @@ The lecture's models and controllers condense to five equations:
 
 Next Class
 ----------
-
-.. admonition:: Today
-   :class: important
-
-   The planners hand over a path; **today we planned trajectories, paths
-   with times, and turned one into steering, throttle and brake.** A
-   superstate or a behavior tree keeps the behavior layer small. Sampled in
-   time and checked against a moving car, the AV waited for car B and
-   passed the parked car. The bicycle model predicts; a quintic changes
-   speed with small jerk; a PID holds the speed, with a clamp against
-   windup; Pure Pursuit steers toward a point 5 m ahead (short weaves, long
-   cuts inside curves); Stanley steers from the front axle; MPC plans the next
-   seconds and applies only the first input.
 
 - **L11, End-to-End Driving, VLA and Imitation Learning:** one network from
   the sensors to a trajectory or to the controls, in place of the whole

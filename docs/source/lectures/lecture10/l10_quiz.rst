@@ -240,8 +240,7 @@ Multiple Choice (Questions 1 to 17)
    **B**); the fourth changes the speed (**D**). The turn rate grows with
    speed and with steering: :math:`\dot\theta = v\tan\delta / L`. An EKF
    predicts with the gyro's measured turn rate instead; a controller chooses
-   :math:`\delta`, so here the turn rate comes from it. See "Predict with
-   the Full Model: the State, the Inputs and Four Equations" in
+   :math:`\delta`, so here the turn rate comes from it. See "Step 1, Predict: the Full Bicycle Model, Its State and Inputs" in
    :doc:`l10_lecture`.
 
 
@@ -507,8 +506,7 @@ Multiple Choice (Questions 1 to 17)
 
    0.031 (**A**) leaves out the steering; 0.191 (**B**) forgets the third
    angle; 0.531 (**D**) adds the angles without squaring them. It loses to
-   the best plan, 0.186. See "Score a Plan: Path Error Plus Steering
-   Effort" in :doc:`l10_lecture`.
+   the best plan, 0.186. See "Step 2, Optimize: Score Each Plan, Keep the Lowest" in :doc:`l10_lecture`.
 
 
 .. admonition:: Question 17
@@ -608,8 +606,7 @@ True or False (Questions 18 to 23)
    MPC applies only the first input, then plans again from the newly
    measured state at the next step (every 0.05 s here). The horizon slides
    forward with the AV, so MPC is a feedback controller: each plan starts
-   from the measured pose. See "Plan Ahead with MPC: Predict, Score, Apply
-   the First Input, Repeat" in :doc:`l10_lecture`.
+   from the measured pose. See "Steps 3 and 4, Apply and Repeat: Use 0.05 s of the Plan, Then Plan Again" in :doc:`l10_lecture`.
 
 
 .. admonition:: Question 22
@@ -626,8 +623,7 @@ True or False (Questions 18 to 23)
    No formula gives :math:`\delta` in MPC: it tries 729 plans, predicts each
    with the bicycle model, scores the predicted paths and keeps the plan
    with the lowest score. Its only formulas are the model's, used to
-   predict. See "Make MPC's First Plan: Try 729 Steering Plans, Keep the
-   Best" in :doc:`l10_lecture`.
+   predict. See "Step 1, Predict: 729 Steering Plans on Our Curve" in :doc:`l10_lecture`.
 
 
 .. admonition:: Question 23
@@ -643,8 +639,7 @@ True or False (Questions 18 to 23)
 
    The model takes both inputs, and a full MPC can choose both. The
    lecture's MPC chooses only the steering; at each predicted step the speed
-   comes from the speed profile, which the speed PID holds. See "Predict
-   with the Full Model: the State, the Inputs and Four Equations" in
+   comes from the speed profile, which the speed PID holds. See "Step 1, Predict: the Full Bicycle Model, Its State and Inputs" in
    :doc:`l10_lecture`.
 
 
@@ -711,6 +706,4 @@ Short Answer (Questions 24 to 26)
    0 rad for the first second, −0.4 rad for the second, then 0 rad, with a
    score of 0.186. Steering right one second early (−0.1, −0.4, 0 rad)
    scores 3.308. MPC applies only step 1, 0 rad for 0.05 s, then plans again
-   from the new measured pose. See "Score a Plan: Path Error Plus Steering
-   Effort" and "Plan Ahead with MPC: Predict, Score, Apply the First Input,
-   Repeat" in :doc:`l10_lecture`.
+   from the new measured pose. See "Step 2, Optimize: Score Each Plan, Keep the Lowest" and "Steps 3 and 4, Apply and Repeat: Use 0.05 s of the Plan, Then Plan Again" in :doc:`l10_lecture`.
