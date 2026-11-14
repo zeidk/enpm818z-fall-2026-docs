@@ -139,8 +139,9 @@ check in the lecture's hands-on window.
 
    **Specification**
 
-   Use the tree of "Pass a Slow Car or Follow It" in the lecture. Its root
-   Fallback tries four branches from the left: a Sequence of condition 1
+   Use the tree of "Pass a Slow Car or Follow It: Four Road Behaviors as a
+   Behavior Tree" in the lecture. Its root Fallback tries four branches from
+   the left: a Sequence of condition 1
    and Stop at the line; a Sequence of conditions 2 and 3 and Change lane; a
    Sequence of condition 4 and Follow; and Lane keep. Its four conditions:
 

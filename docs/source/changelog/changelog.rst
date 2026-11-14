@@ -77,6 +77,20 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
    - **L10, our simulation:** each value says why it was chosen.
    - **L10, Ackermann steering geometry:** a box names the model's two
      issues: one angle per front wheel, and no sideways sliding.
+   - **L10, the bicycle model in two places:** Vehicle Modeling keeps the
+     turn rate; the full state and four equations open MPC, which predicts
+     with them.
+   - **L10, Pure Pursuit:** three steps, one figure each, the last zoomed
+     on the car with δ, L and R; the steering law drawn on the AV and tied to
+     step 3's rule; the four steps the node runs; the 3, 5 and 10 m runs on
+     the road; the lookahead trade-off with a legend; the speed-scaled
+     lookahead is one rule for straight road and curve.
+   - **L10, Stanley:** the idea drawn at the front axle; the race facts and
+     Snider's comparison in a "More detail" box.
+   - **L10:** "curve" instead of "corner"; CARLA Implementation now follows
+     the Control-to-Actuator Interface.
+   - **L10 quiz and exercises:** section titles they point to match the
+     lecture again.
    - **L10, Trajectory Generation in subsections:** Step 1: Sample, Step 2:
      Score, Step 3: Check, Steps 4 and 5: Pick and Repeat, Explain the
      Result, and Track a Path or a Trajectory.

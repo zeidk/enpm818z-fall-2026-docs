@@ -121,7 +121,7 @@ Multiple Choice (Questions 1 to 15)
    succeeds or runs. In Colledanchise and Ögren's words, "It returns Failure
    if and only if all its children return Failure". A Sequence is the node
    that stops at the first child that fails (**A**). See "Read a Behavior
-   Tree: Ticks, Three Statuses, Four Node Types" in :doc:`l10_lecture`.
+   Tree: Ticks, Three Statuses, Six Node Types" in :doc:`l10_lecture`.
 
 
 .. admonition:: Question 4
@@ -239,8 +239,9 @@ Multiple Choice (Questions 1 to 15)
    **B**); the fourth changes the speed (**D**). The turn rate grows with
    speed and with steering: :math:`\dot\theta = v\tan\delta / L`. An EKF
    predicts with the gyro's measured turn rate instead; a controller chooses
-   :math:`\delta`, so here the turn rate comes from it. See "Write the
-   Model: the State, the Inputs and Four Equations" in :doc:`l10_lecture`.
+   :math:`\delta`, so here the turn rate comes from it. See "Predict with
+   the Full Model: the State, the Inputs and Four Equations" in
+   :doc:`l10_lecture`.
 
 
 .. admonition:: Question 8
@@ -302,8 +303,8 @@ Multiple Choice (Questions 1 to 15)
 
    2.63 m (**B**) comes from :math:`d = \Delta d \times u` (skipping
    :math:`q`); 1.00 (**D**) is :math:`u` past the move's end. See "Read u:
-   How Far Through the Move a Point s Is" and "Shape the Move with q(u)" in
-   :doc:`l10_lecture`.
+   How Far Through the Move a Point s Is" and "Shape the Move with q(u): How Much of Δd
+   Is Done at u" in :doc:`l10_lecture`.
 
 
 .. admonition:: Question 10
@@ -511,8 +512,8 @@ True or False (Questions 16 to 19)
    **False.**
 
    The AV drives :math:`8 \times 0.2` = 1.6 m on its old steering during
-   the 0.2 s delay, not 2.0 m. See "Measure the Chain's Delay: the Wheel
-   Turns 0.2 s after the Command" in :doc:`l10_lecture`.
+   the 0.2 s delay, not 2.0 m. See "Measure the Steering Delay: the
+   Wheel Turns 0.2 s after the Command" in :doc:`l10_lecture`.
 
 
 .. admonition:: Question 18
