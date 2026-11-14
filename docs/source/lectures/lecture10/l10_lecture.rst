@@ -2823,7 +2823,7 @@ Speed Profile, Step 2: Brake Before the Curve, Speed Up After It
    - **Tag 3:** braking again to the second arc's cap, 3.46 m/s.
    - **Tag 4:** speeding up again, after the second arc.
 
-**Goal:** a speed the AV can really drive. The caps of step 1 (dotted) jump
+**Goal:** a speed profile the AV can follow. The caps of step 1 (dotted) jump
 down at each arc, but a car cannot change its speed in an instant. A graph,
 not a map: speed against the distance along the path. The profile (blue):
 
