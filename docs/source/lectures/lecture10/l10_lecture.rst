@@ -5050,11 +5050,60 @@ Hold the Target Speed: the Speed Loop
 - The error :math:`e = v_{\mathrm{ref}} - v`. Three terms add to the
   command :math:`u`: P, the **proportional** term; I, the **integral** term;
   D, the **derivative** term. Together they make a **PID** controller.
-- Our speed model (chosen): full throttle gives 4 m/s², full brake 8 m/s²,
-  drag takes :math:`0.15 + 0.012\,v^2` m/s², and the engine lags by 0.3 s.
-  Throttle stops at 0.75, the node's ``max_throttle``.
+- The command :math:`u` is a number from −1 to 1: :math:`u > 0` presses the
+  throttle, :math:`u < 0` the brake. The car turns it into an acceleration:
+  the next two sections.
 - The test: the AV at rest; the target jumps to 8 m/s, as when a red light
   turns green.
+
+
+.. _l10-lec-speed-model:
+
+Model the Car: from the Command u to the AV's Acceleration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Goal:** know what the car does with :math:`u`. Our simulation takes four
+steps, every 0.01 s (all values chosen for the example):
+
+1. **Pedals:** throttle = :math:`u`, but never above 0.75: the controller
+   node's setting ``max_throttle`` caps it, so the node never asks for more
+   than 75 % of full throttle. Brake = :math:`-u`, up to full.
+2. **Ask for an acceleration:** 4 × throttle − 8 × brake (m/s²). Full
+   throttle would give 4 m/s²; with the cap, at most 0.75 × 4 = 3 m/s². Full
+   brake gives 8 m/s².
+3. **Engine lag:** the car does not answer at once. Its acceleration moves
+   toward the request with a 0.3 s lag: 63 % of the way after 0.3 s, as for
+   the steering.
+4. **Drag:** take away what slows a moving car with no pedal pressed: the
+   tires rolling, 0.15 m/s², and the air pushing back,
+   :math:`0.012\,v^2` m/s², which grows with the square of the speed.
+
+The AV's acceleration = the lagged request − drag.
+
+
+.. _l10-lec-speed-drag:
+
+Hold a Speed Against Drag: It Sets the Throttle Needed and the Top Speed
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L10/speed_model.png
+   :alt: A graph of acceleration in meters per second squared, from 0 to 3.9, against the speed v in meters per second, from 0 to 17. A dark curve, drag, 0.15 + 0.012 v squared, starts at 0.15 at v = 0, marked with a dark dot and dark tag 1, and rises ever faster. A red dashed horizontal line at 3 is the most push, 0.75 times 4 = 3 m/s^2. A dark dot on the curve at v = 8 and about 0.92, with a dotted line down to the axis, carries dark tag 2. A red dot where the curve meets the dashed line, at about v = 15.4, with a dotted line down to the axis, carries dark tag 3. A legend at the top left names the two lines.
+   :width: 70%
+   :align: center
+
+   Drag against speed, and the most the engine can push.
+
+To hold a speed, the engine must push exactly as hard as drag pulls.
+
+- **Tag 1:** at rest, drag is 0.15 m/s²: only the tires rolling.
+- **Tag 2:** at 8 m/s, :math:`0.15 + 0.012 \times 8^2` = 0.92 m/s². To hold
+  8 m/s, push 0.92: throttle 0.92 / 4 = 0.23.
+- **Tag 3:** the most push, 3 m/s², meets drag at
+  :math:`\sqrt{(3 - 0.15)/0.012}` = 15.4 m/s: our AV's top speed.
+
+So even at the target, the AV needs some throttle. A P controller makes
+throttle only from an error, so it must keep an error (see "Try P Alone",
+below).
 
 
 .. _l10-lec-pid-split:
