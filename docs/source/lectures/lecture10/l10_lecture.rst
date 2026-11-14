@@ -4574,19 +4574,21 @@ Step 1, Predict: Zoom In on One Branch of the Fan
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L10/mpc_branch.png
-   :alt: A close top view to scale of the start of the right curve, x from 75 to 99.5 meters and y from minus 9 to 5, with the lane edges and its dashed center. The AV is drawn faintly at x = 78 with a dark dot at its rear axle, labeled start: the measured pose. A thick green path with small dots runs straight to a large dark dot near x = 83.5, labeled at 1 s: 9 branches, one per second angle, -0.6 to 0.2 rad; the straight part is labeled steps 1 to 20 (first second): delta = 0 rad. From that dot nine gray curves fan out, from bending left to bending sharply right. The green path follows one of them, labeled steps 21 to 40: delta = -0.4 rad, to a second large dark dot near x = 87.7 and y = -1.3, labeled at 2 s: 9 twigs, one per third angle. From it nine shorter gray curves fan out, and the green path continues along one, labeled steps 41 to 60: delta = 0 rad; dots: the 60 steps of 0.05 s. It ends at a third large dark dot near x = 90.6 and y = -3.5, labeled at 3 s: the horizon ends; each twig's end ends one plan.
+   :alt: A close top view to scale of the start of the right curve, x from 75 to 99.5 meters and y from minus 9 to 5, with the lane edges and its dashed center. The AV is drawn faintly at x = 78 with a dark dot at its rear axle, labeled start: the measured pose. A thick green path with small dots runs straight to a large dark dot near x = 83.5; the straight part is labeled steps 1 to 20 (0 to 1 s): angle 1, delta = 0 rad, and the dot is labeled at 1 s, after step 20: 9 branches, one per value of angle 2 (-0.6 to 0.2 rad). From that dot nine gray curves fan out, from bending left to bending sharply right. The green path follows one of them, labeled steps 21 to 40 (1 to 2 s): angle 2, delta = -0.4 rad, to a second large dark dot near x = 87.7 and y = -1.3, labeled at 2 s, after step 40: 9 twigs, one per value of angle 3. From it nine shorter gray curves fan out, and the green path continues along one, labeled steps 41 to 60 (2 to 3 s): angle 3, delta = 0 rad (dots: the 60 steps of 0.05 s). It ends at a third large dark dot near x = 90.6 and y = -3.5, labeled at 3 s, after step 60: the horizon ends; each twig's end ends one plan.
    :width: 80%
    :align: center
 
    The plans that start with 0 rad, zoomed.
 
-The plans that start with 0 rad share their first second (steps 1 to 20),
-then split 9 ways at 1 s, one per second angle, and 9 ways again at 2 s, one
-per third angle: :math:`9 \times 9` = 81 plans. At 3 s the horizon ends:
-each twig's end is the end of one plan. Each of the 9 first angles
-grows such a tree: :math:`9 \times 81` = 729. One plan is one path from the
-start to the end of a twig (green). The small dots on the green path are the
-60 steps of 0.05 s the model predicts.
+A plan has three angles: angle 1 for 0 to 1 s, angle 2 for 1 to 2 s, angle 3
+for 2 to 3 s. The plans whose angle 1 is 0 rad share steps 1 to 20, then
+split 9 ways at 1 s, after step 20, one per value of angle 2, and 9 ways
+again at 2 s, after step 40, one per value of angle 3: :math:`9 \times 9` =
+81 plans. At 3 s, after step 60, the horizon ends: each twig's end is the end
+of one plan. Each of the 9 values of angle 1 grows such a tree:
+:math:`9 \times 81` = 729. One plan is one path from the start to a twig's
+end (green). The small dots on the green path are the 60 steps of 0.05 s the
+model predicts.
 
 
 .. _l10-lec-mpc-score:
