@@ -3772,29 +3772,26 @@ AV holds it for one step, 0.05 s, then picks a new point and starts again.
 Steer for the Arc: Pure Pursuit's Steering Law
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**Goal:** turn steps 1 to 3 into one formula for the steering angle:
+**Goal:** turn steps 1 to 3 into one formula for the steering angle.
+
+.. figure:: /_static/images/L10/pp_law.png
+   :alt: A close top view to scale, x and y in meters, of the AV on the lane at the start of the right turn. A faint gray AV, its rear axle a black dot. A two-headed arrow labeled L runs inside the car from the rear axle to the front axle. A dotted line runs straight ahead from the rear axle along the heading. A blue line labeled L d runs from the rear axle down to a blue dot on the lane center near x = 87.6; an arc between the dotted heading line and the blue line marks the angle alpha. At the front axle a thick black bar, the front wheel, with a dashed line along it and a small arc labeled delta between it and the dotted line. A thin green curve runs from the rear axle to the blue dot.
+   :width: 70%
+   :align: center
 
 .. math::
 
    \delta = \arctan\!\left(\frac{2L\sin\alpha}{L_d}\right)
 
-- :math:`\delta` (rad): the steering angle to command, step 3's angle.
-- :math:`L` (m): the wheelbase, from the rear axle to the front axle:
-  2.875 m.
-- :math:`L_d` (m): the lookahead distance, step 1's: 5 m in our run.
-- :math:`\alpha` (rad): the angle at the rear axle from the AV's heading to
-  the lookahead point: 0 when the point is straight ahead, larger as the
-  path bends away.
+- :math:`\delta` (rad): the angle to command, at the front wheel.
+- :math:`L` (m): the wheelbase, axle to axle: 2.875 m.
+- :math:`L_d` (m): the lookahead distance, from the rear axle to the
+  lookahead point (blue): 5 m.
+- :math:`\alpha` (rad): the angle from the heading (dotted) to the blue line.
 
 In our run, :math:`\alpha` = 0.1877 rad (10.8°) to the right:
 :math:`\delta = \arctan(2 \times 2.875 \times \sin 0.1877 / 5) = \arctan(0.2146)`
-= 0.211 rad to the right, step 3's angle.
-
-To look farther ahead at higher speed, set the lookahead from the speed
-:math:`v`: :math:`L_d = \max(L_{d,\min},\; k_v\, v)`, with :math:`k_v` (s)
-the seconds of driving to look ahead and :math:`L_{d,\min}` (m) the shortest
-lookahead. With :math:`k_v` = 0.75 s and :math:`L_{d,\min}` = 3 m: 6 m at
-8 m/s; 3 m on the second arc, where 0.75 × 3.46 = 2.6 m is too short.
+= 0.211 rad to the right, step 3's angle. Green: the arc that angle drives.
 
 .. dropdown:: More detail: why κ = 2 sin α / L_d
    :class-container: more-detail
@@ -3855,6 +3852,12 @@ Weigh Pure Pursuit: Simple, but It Cuts Corners
        jumps in the path (Snider, 2009)
      - no slip in the model; cuts corners, more as speed grows (Snider,
        2009); ignores the heading error
+
+To look farther ahead at higher speed, set the lookahead from the speed
+:math:`v`: :math:`L_d = \max(L_{d,\min},\; k_v\, v)`, with :math:`k_v` (s)
+the seconds of driving to look ahead and :math:`L_{d,\min}` (m) the shortest
+lookahead. With :math:`k_v` = 0.75 s and :math:`L_{d,\min}` = 3 m: 6 m at
+8 m/s; 3 m on the second arc, where 0.75 × 3.46 = 2.6 m is too short.
 
 On our turn (below): 5 m fixed, or :math:`\max(3\ \mathrm{m}, 0.75\ \mathrm{s}\times v)`.
 
