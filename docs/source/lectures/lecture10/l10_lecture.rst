@@ -5464,10 +5464,29 @@ and their feedback, and how the chain fails safe.
 reaches the wheels through this chain.
 
 
+.. _l10-lec-dbw-regular:
+
+See What Drive-by-Wire Replaces: Mechanical Links from the Driver
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L10/dbw_regular.png
+   :alt: A top view of a car pointing right, drawn faintly, with its four wheels as dark dots. A box in the cabin reads driver: wheel, pedals. A thick dark line runs from it to the front axle and along the axle between the front wheels, labeled steering column and rack: the wheel turns the front wheels. A gray line runs from it to a box past the front axle, engine, labeled throttle cable: the pedal opens the engine's throttle. Red lines run from it along the car to both axles and across each axle to the wheels, labeled brake lines: the pedal pushes fluid to all four brakes.
+   :width: 75%
+   :align: center
+
+   A car without drive-by-wire.
+
+Without drive-by-wire, each control is tied to its actuator by a mechanical
+link: the steering wheel to the front wheels (the steering column and the
+rack), the brake pedal to the brakes (the brake lines), the gas pedal to the
+engine's throttle (the throttle cable). A computer has no way to steer,
+accelerate or brake.
+
+
 .. _l10-lec-actuators:
 
-Let a Computer Drive: One Command, from the Program to the Wheels
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Let a Computer Drive: the CAN Bus and the ECUs Replace the Links
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. admonition:: Definition: Drive-by-wire
    :class: note
@@ -5476,31 +5495,20 @@ Let a Computer Drive: One Command, from the Program to the Wheels
    controls and the actuators: a computer can then steer, accelerate and
    brake.
 
-.. figure:: /_static/images/L10/ecu_chain.png
-   :alt: A block diagram from top to bottom. A gray box, Driving computer, planning and control. Below it a box, CAN bus: a solid arrow labeled command goes down to it and a dashed arrow labeled feedback goes up from it. Below that a green box, Electronic control units (ECUs), with the same pair of arrows from the CAN bus. At the bottom left a box, Actuator, reached by a solid arrow labeled drive from the ECUs; at the bottom right a box, Sensor, with a dashed arrow labeled reading up into the ECUs.
-   :width: 30%
+.. figure:: /_static/images/L10/dbw_av.png
+   :alt: A top view of the same car pointing right, drawn faintly, with its four wheels as dark dots. A box at the rear reads driving computer. A thick dark line, the CAN bus, runs from it along the car's middle to a green box at the front, engine ECU. Two thinner lines leave the bus: one up to a green box above the car, steering ECU, one down to a green box below it, brake ECU. Each ECU has a pair of arrows to its actuator, a solid one there and a dashed one back: the steering ECU to a box, steering motor (front wheels); the engine ECU down to a box, throttle; the brake ECU left to a box, brakes (all four wheels). A note at the bottom right reads solid: command; dashed: feedback.
+   :width: 75%
    :align: center
 
-   One command's path through the car.
-
-.. admonition:: Reading the figure
-   :class: tip
-
-   Solid arrows carry commands down; dashed arrows carry feedback up. The
-   driving computer sends a command over the CAN bus to the ECUs; an ECU
-   drives its actuator and reads its sensor, then sends feedback back up
-   the same bus.
+   The same car with drive-by-wire.
 
 - **CAN bus** (Controller Area Network): the network all of a car's control
   units share; any unit can send a message on it, and every unit reads it. A
   message carries an identifier and up to 8 bytes of data (Bosch, 1991).
 - **ECU** (electronic control unit): a small embedded computer that runs one
-  part of the car, such as the steering, the engine or the brakes.
-
-1. The driving computer sends a command on the CAN bus.
-2. An ECU checks it and drives its actuator: the steering motor, the
-   throttle or the brakes.
-3. The ECU reads its sensor and sends **feedback** back on the bus (dashed).
+  part of the car: the steering, the engine or the brakes. It checks each
+  command, drives its actuator, and sends feedback back on the bus (dashed
+  arrows).
 
 .. dropdown:: More detail: the actuators, the command chain, ECUs, CAN, a message layout and fail safe
    :class-container: more-detail
