@@ -3851,7 +3851,8 @@ Weigh Pure Pursuit: Simple, but It Cuts Inside Curves
    * - **Strengths**
      - **Limits**
    * - simple: one formula, the wheelbase only; robust to large errors and
-       jumps in the path (Snider, 2009)
+       to breaks in the path, where it steps sideways at once (Snider,
+       2009)
      - no slip in the model; cuts inside curves, more as speed grows (Snider,
        2009); ignores the heading error
 
@@ -4623,15 +4624,15 @@ Trajectory Generation).
 
 .. _l10-lec-mpc-weigh:
 
-Weigh MPC: What It Adds and What It Costs
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Weigh MPC Against Pure Pursuit and Stanley
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. list-table::
    :widths: 50 50
    :header-rows: 1
    :class: compact-table
 
-   * - **Adds**
+   * - **Gains over Pure Pursuit and Stanley**
      - **Costs**
    * - Sees the curvature jump coming: the horizon covers the next seconds
        of the path
@@ -4657,56 +4658,45 @@ Choosing a Controller
 
 .. _l10-lec-ctrl-compare:
 
-Compare the Steering Controllers on Our Curve
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Choose a Steering Controller: Match It to the Situation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Same start (1 m left, 8 m/s), same speed PID, same steering delay and lag:
+No controller is best everywhere. Each fits some situations better ("Good
+for" and the weaknesses: Snider, 2009):
 
 .. list-table::
-   :widths: 29 19 19 19 14
+   :widths: 15 28 28 29
    :header-rows: 1
    :class: compact-table
 
-   * - **Controller**
-     - **Crosses after start**
-     - **Rear axle, curve**
-     - **Front axle, curve**
-     - **Mean \|jerk\|**
-   * - Pure Pursuit, 5 m
-     - 0.32 m
-     - 0.25 m
-     - 0.67 m
-     - 1.79
-   * - Pure Pursuit, 0.75 s × :math:`v`
-     - 0.23 m
-     - 0.07 m
-     - 0.68 m
-     - 1.11
-   * - Stanley, :math:`k` = 0.5
-     - 0
-     - 0.27 m
-     - 0.43 m
-     - 0.38
-   * - Stanley, :math:`k` = 1
-     - 0
-     - 0.45 m
-     - 0.38 m
-     - 0.62
-   * - Stanley, :math:`k` = 4
-     - 0.79 m (weaves)
-     - 0.79 m
-     - 1.42 m
-     - 22.37
+   * -
+     - **Pure Pursuit**
+     - **Stanley**
+     - **MPC**
+   * - **Good for**
+     - slow driving; paths with breaks (a sudden sideways step)
+     - smooth highway driving; parking
+     - hard limits and delays; sharp changes ahead
+   * - **Strength**
+     - simple: one lookahead; copes with large errors
+     - corrects heading and offset at the front axle
+     - looks ahead; plans within the steering limit
+   * - **Weakness**
+     - cuts inside curves, more as speed grows
+     - less robust to large errors and to breaks or sharp kinks
+     - an optimization every step; needs a good model
+   * - **Our curve**
+     - 10 m lookahead cut 0.98 m inside; 0.75 s × :math:`v` stayed within
+       0.07 m
+     - :math:`k` = 1: front axle within 0.38 m; :math:`k` = 4 weaved 0.79 m
+     - not driven; one plan drawn
 
-- Distances: the largest from the lane center; jerk in m/s³. Pure Pursuit
-  steers the rear axle onto the path, Stanley the front; Stanley's front
-  error is the smaller only at :math:`k` = 1 (0.38 against 0.45 m). The
-  axles, 2.875 m apart, cannot both be on the path.
-- Not run here: LQR and MPC. Snider found geometric trackers "achieve the
-  majority of the path tracking performance demonstrated by the other
-  trackers until speeds are significantly increased" (Snider, 2009).
+- A **break** in a path is a place where the path steps sideways at once
+  instead of continuing smoothly; Snider calls such paths "discontinuous".
+- Our controller node (CARLA Implementation) uses Pure Pursuit, the simplest
+  of the three; its target speed is the road's 30 km/h limit, a low speed.
 
-.. dropdown:: More detail: Snider's guidelines for matching a controller to the job
+.. dropdown:: More detail: Snider's guidelines, and our five runs side by side
    :class-container: more-detail
    :icon: info
    :name: l10-more-snider
@@ -4735,6 +4725,54 @@ Same start (1 m left, 8 m/s), same speed PID, same steering delay and lag:
      0.98 m; Stanley's front axle stayed within 0.38 m.
    - MPC is the choice when limits must hold inside the plan: the steering
      angle and rate, the delay.
+
+   .. rubric:: Our Five Steering Runs Side by Side
+
+   Same start (1 m left, 8 m/s), same speed PID, same steering delay and lag:
+
+   .. list-table::
+      :widths: 29 19 19 19 14
+      :header-rows: 1
+      :class: compact-table
+
+      * - **Controller**
+        - **Crosses after start**
+        - **Rear axle, curve**
+        - **Front axle, curve**
+        - **Mean \|jerk\|**
+      * - Pure Pursuit, 5 m
+        - 0.32 m
+        - 0.25 m
+        - 0.67 m
+        - 1.79
+      * - Pure Pursuit, 0.75 s × :math:`v`
+        - 0.23 m
+        - 0.07 m
+        - 0.68 m
+        - 1.11
+      * - Stanley, :math:`k` = 0.5
+        - 0
+        - 0.27 m
+        - 0.43 m
+        - 0.38
+      * - Stanley, :math:`k` = 1
+        - 0
+        - 0.45 m
+        - 0.38 m
+        - 0.62
+      * - Stanley, :math:`k` = 4
+        - 0.79 m (weaves)
+        - 0.79 m
+        - 1.42 m
+        - 22.37
+
+   - Distances: the largest from the lane center; jerk in m/s³. Pure Pursuit
+     steers the rear axle onto the path, Stanley the front; Stanley's front
+     error is the smaller only at :math:`k` = 1 (0.38 against 0.45 m). The
+     axles, 2.875 m apart, cannot both be on the path.
+   - Not run here: LQR and MPC. Snider found geometric trackers "achieve the
+     majority of the path tracking performance demonstrated by the other
+     trackers until speeds are significantly increased" (Snider, 2009).
 
 
 .. _l10-lec-speed:
