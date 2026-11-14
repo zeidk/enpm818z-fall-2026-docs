@@ -4001,6 +4001,10 @@ cycle:
 Choose the Lookahead: Too Short Weaves, Too Long Cuts the Corner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+**Goal:** pick the lookahead :math:`L_d`. Every run tests it twice: first on
+the straight, where the AV starts 1 m left of the lane's center (chosen) and
+must steer back; then in the corner.
+
 .. figure:: /_static/images/L10/pp_tradeoff.png
    :alt: A graph of distance from the lane center in meters against the lookahead distance from 4 to 12 meters. The orange line with round markers, dark tag 1, falls from 0.50 at 4 meters to 0.05 at 12. The dark line with square markers, tag 2, is 0.40 at 4 meters, lowest at 5 meters with 0.25, then rises to 0.39, 0.67, 0.98 and 1.53 at 6, 8, 10 and 12 meters.
    :width: 70%
@@ -4008,26 +4012,18 @@ Choose the Lookahead: Too Short Weaves, Too Long Cuts the Corner
 
    Two errors against the lookahead distance.
 
-.. admonition:: Reading the figure
-   :class: tip
-
-   The distance from the lane center against the lookahead distance
-   :math:`L_d`, from 4 to 12 m.
-
-   - **Tag 1 (orange, round markers):** how far the AV crosses after the
-     1 m start. It falls as :math:`L_d` grows.
-   - **Tag 2 (dark, square markers):** the largest distance from the center
-     in the turn. It is lowest at :math:`L_d` = 5 m (0.25 m), then grows.
-
-At 4 m and below the AV weaves (4 m: about 0.4 m each way, and it does not
-stop; 3 m: the swings grow to 3.07 m, out of the 3.5 m lane). At 10 m it
-turns early and cuts 0.98 m inside the corner.
+- **Tag 1, orange, the straight:** how far the AV swings past the center
+  while it corrects the 1 m start: 0.50 m at 4 m, 0.07 m at 10 m. A near
+  point makes it steer back hard.
+- **Tag 2, black, the corner:** how far it strays from the center: least at
+  5 m (0.25 m); 0.98 m at 10 m, where it turns early and cuts inside.
 
 .. important::
 
-   Snider found the same trade-off: a short lookahead tracks the path more
-   closely, a long one drives more smoothly. On our turn, with our model,
-   5 m is the best of the eight we tried.
+   At 4 m the AV weaves about 0.4 m each way and never settles; at 3 m the
+   swings grow to 3.07 m, out of the 3.5 m lane. Short tracks closely, long
+   drives smoothly (Snider, 2009). On our turn, 5 m is the best of the eight
+   we tried.
 
 .. dropdown:: More detail: the 3 m and 10 m runs
    :class-container: more-detail
