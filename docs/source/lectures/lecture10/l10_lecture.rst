@@ -122,6 +122,40 @@ link to their sections.
      then the AV in CARLA, whose measured pose and speed go back to the
      inputs.
 
+.. _l10-lec-clocks:
+
+Keep Three Clocks Apart: Plan, Control, Simulate
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Goal:** know which clock a time belongs to. Three run in this lecture;
+later sections name the clock with its number.
+
+.. list-table::
+   :widths: 24 24 52
+   :header-rows: 1
+   :class: compact-table
+
+   * - **Clock**
+     - **Every**
+     - **What happens**
+   * - Planning cycle
+     - 0.5 s
+     - the local planner makes a new path or trajectory
+   * - Control step
+     - 0.05 s (20 a second)
+     - the controllers send steer, throttle and brake; CARLA moves one tick
+   * - Simulation step
+     - 0.01 s (100 a second)
+     - our Python simulation moves the AV, to test the controllers without
+       CARLA
+
+.. important::
+
+   Other times are not clocks: how late the car answers (steering and engine
+   delays and lags) and how far ahead a plan looks (a horizon, such as MPC's
+   3 s).
+
+
 .. _l10-lec-objectives:
 
 Learning Objectives
@@ -5074,9 +5108,10 @@ steps, every 0.01 s (all values chosen for the example):
 3. **Engine lag:** the car does not answer at once. Its acceleration moves
    toward the request with a 0.3 s lag: 63 % of the way after 0.3 s, as for
    the steering.
-4. **Drag:** take away what slows a moving car with no pedal pressed: the
-   tires rolling, 0.15 m/s², and the air pushing back,
-   :math:`0.012\,v^2` m/s², which grows with the square of the speed.
+4. **Drag:** take away what slows a moving car with no pedal pressed.
+   **Rolling resistance:** each tire flattens where it meets the road, which
+   costs 0.15 m/s² at any speed. **Air drag:** :math:`0.012\,v^2` m/s², which
+   grows with the square of the speed.
 
 The AV's acceleration = the lagged request − drag.
 
@@ -5095,7 +5130,8 @@ Hold a Speed Against Drag: It Sets the Throttle Needed and the Top Speed
 
 To hold a speed, the engine must push exactly as hard as drag pulls.
 
-- **Tag 1:** at rest, drag is 0.15 m/s²: only the tires rolling.
+- **Tag 1:** barely moving, drag is 0.15 m/s²: rolling resistance only; the
+  air adds almost nothing. At a full stop there is no drag.
 - **Tag 2:** at 8 m/s, :math:`0.15 + 0.012 \times 8^2` = 0.92 m/s². To hold
   8 m/s, push 0.92: throttle 0.92 / 4 = 0.23.
 - **Tag 3:** the most push, 3 m/s², meets drag at
