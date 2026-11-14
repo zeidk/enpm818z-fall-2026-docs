@@ -3772,7 +3772,10 @@ AV holds it for one step, 0.05 s, then picks a new point and starts again.
 Steer for the Arc: Pure Pursuit's Steering Law
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**Goal:** turn steps 1 to 3 into one formula for the steering angle.
+**Goal:** turn steps 1 to 3 into one formula for the steering angle. It is
+step 3's rule, :math:`\delta = \arctan(L/R)`, with :math:`R` written from
+what the AV can measure: the arc through the lookahead point has
+:math:`R = L_d / (2\sin\alpha)`. So:
 
 .. figure:: /_static/images/L10/pp_law.png
    :alt: A close top view to scale, x and y in meters, of the AV on the lane at the start of the right turn. A faint gray AV, its rear axle a black dot. A two-headed arrow labeled L runs inside the car from the rear axle to the front axle. A dotted line runs straight ahead from the rear axle along the heading. A blue line labeled L d runs from the rear axle down to a blue dot on the lane center near x = 87.6; an arc between the dotted heading line and the blue line marks the angle alpha. At the front axle a thick black bar, the front wheel, with a dashed line along it and a small arc labeled delta between it and the dotted line. A thin green curve runs from the rear axle to the blue dot.
@@ -3790,8 +3793,9 @@ Steer for the Arc: Pure Pursuit's Steering Law
 - :math:`\alpha` (rad): the angle from the heading (dotted) to the blue line.
 
 In our run, :math:`\alpha` = 0.1877 rad (10.8°) to the right:
-:math:`\delta = \arctan(2 \times 2.875 \times \sin 0.1877 / 5) = \arctan(0.2146)`
-= 0.211 rad to the right, step 3's angle. Green: the arc that angle drives.
+:math:`R = 5/(2\sin 0.1877)` = 13.40 m, step 3's circle, and
+:math:`\delta = \arctan(2 \times 2.875 \times \sin 0.1877 / 5)` = 0.211 rad
+to the right, step 3's angle. Green: the arc that angle drives.
 
 .. dropdown:: More detail: why κ = 2 sin α / L_d
    :class-container: more-detail
@@ -3864,29 +3868,27 @@ On our turn (below): 5 m fixed, or :math:`\max(3\ \mathrm{m}, 0.75\ \mathrm{s}\t
 
 .. _l10-lec-pp-steps:
 
-Steer with Pure Pursuit: Aim at a Point Ahead, Drive the Arc to It
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Code Pure Pursuit: Four Steps, Every 0.05 s
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Pure Pursuit chases a point that keeps moving ahead along the path. At every
-cycle:
+**Goal:** the recipe the controller node runs at every cycle (you write it in
+GP4).
 
-1. Draw a circle of radius :math:`L_d`, the **lookahead distance**, around
-   the rear axle. Where the path leaves it, ahead of the AV: the **goal
-   point**.
-2. Write the goal point in the AV's own frame: how far forward, how far
-   left.
-3. Find the circle arc that starts at the rear axle along the AV's heading
-   and passes through the goal point. Its curvature:
-   :math:`\kappa = 2\sin\alpha / L_d`.
-4. Steer for that curvature: :math:`\delta = \arctan(L\kappa)`, the bicycle
-   model's rule.
+1. **Find the lookahead point:** walk along the path from the AV and take the
+   first point :math:`L_d` from the rear axle.
+2. **Write it in the AV's own frame:** how far forward (:math:`x`) and how
+   far left (:math:`y`) of the rear axle, from the AV's position and heading.
+3. **Get the arc:** :math:`\alpha = \operatorname{atan2}(y, x)`, then the
+   curvature :math:`\kappa = 2\sin\alpha / L_d` (that is, :math:`1/R`).
+4. **Steer:** :math:`\delta = \arctan(L\kappa)`, the bicycle model's rule;
+   send it, and start again at the next cycle.
 
 .. important::
 
-   The controller node gets the pose of the car's origin and moves it back
-   to the rear axle with ``rear_offset``. The four steps by hand, on one
-   moment of our run with :math:`L_d` = 5 m (the node's
-   ``lookahead_distance``), are in the "More detail" box below.
+   The node gets the pose of the car's origin and moves it back to the rear
+   axle with ``rear_offset``; its lookahead is ``lookahead_distance``, 5 m.
+   The four steps by hand, on one moment of our run, are in the "More
+   detail" box below.
 
 .. dropdown:: More detail: the four steps by hand, on one moment of our run
    :class-container: more-detail
@@ -3996,14 +3998,41 @@ cycle:
    :math:`\delta = \arctan\big(2L\sin\alpha / L_d\big)`.
 
 
+.. _l10-lec-pp-road:
+
+Drive Three Lookaheads on Our Turn: 3, 5 and 10 m
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Every run starts 1 m left of the lane's center (chosen), so the straight
+shows how the AV corrects; the corner shows how it turns. Red: 3 m. Blue:
+5 m. Green, dashed: 10 m.
+
+.. figure:: /_static/images/L10/pp_road_straight.png
+   :alt: A long top view of the straight approach, to scale, x from 0 to 45 meters and y in meters: the lane between two black lines 1.75 meters either side of a gray dashed center line. A faint gray AV at the left, 1 meter left of the center. Three paths leave it. A red one swings across the center and back in waves that grow until they cross the lane's edges. A blue one swings once just past the center, marked by a blue dot with dark tag 1, then settles on the center. A green dashed one comes down to the center slowly with no visible swing.
+   :width: 100%
+   :align: center
+
+.. figure:: /_static/images/L10/pp_road_corner.png
+   :alt: A top view of the right turn, to scale, x from 74 to 97 meters and y from minus 18 to 3 meters, the lane between two black edges and its center dashed gray. A blue path follows the center closely through the turn. A green dashed path turns early, cutting toward the inner edge, marked by a green dot with dark tag 2, then swings out past the center after the corner.
+   :width: 45%
+   :align: center
+
+- **3 m:** the AV steers back so hard that it overshoots, and each swing is
+  wider: it leaves the 3.5 m lane (3.07 m off). Not drawn in the corner.
+- **5 m:** tag 1, one swing past the center, 0.32 m, then it settles; in the
+  corner, at most 0.25 m off.
+- **10 m:** it comes back slowly, 0.07 m past the center; in the corner it
+  turns early and, tag 2, cuts 0.98 m inside.
+
+
 .. _l10-lec-ld-tradeoff:
 
 Choose the Lookahead: Too Short Weaves, Too Long Cuts the Corner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**Goal:** pick the lookahead :math:`L_d`. Every run tests it twice: first on
-the straight, where the AV starts 1 m left of the lane's center (chosen) and
-must steer back; then in the corner.
+**Goal:** pick the lookahead :math:`L_d`. The two measures above, the swing
+on the straight after the 1 m start and the error in the corner, for all
+eight lookaheads we ran:
 
 .. figure:: /_static/images/L10/pp_tradeoff.png
    :alt: A graph of distance from the lane center in meters against the lookahead distance from 4 to 12 meters. The orange line with round markers, dark tag 1, falls from 0.50 at 4 meters to 0.05 at 12. The dark line with square markers, tag 2, is 0.40 at 4 meters, lowest at 5 meters with 0.25, then rises to 0.39, 0.67, 0.98 and 1.53 at 6, 8, 10 and 12 meters.
