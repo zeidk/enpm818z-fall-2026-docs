@@ -2595,15 +2595,15 @@ Where Trajectory Generation Leaves Us
 
 .. _l10-lec-turn:
 
-Test Turn and Speed Profile
----------------------------
+Test Curve and Speed Profile
+----------------------------
 
 There are two ways to tell the controllers where to drive and how fast: a
 **trajectory** (last section) or a **path plus a speed profile**. We use the
 second; the next section says why. From here on we test controllers, on one
 example they all share.
 
-**In this section:** one right turn in Town03, its curvature, its speed
+**In this section:** one right curve in Town03, its curvature, its speed
 profile and the steering delay. Every controller drives this path, at the
 same speeds, from the same start.
 
@@ -2638,7 +2638,7 @@ Two ways to tell the controllers where to drive and how fast:
 
 **Why way 2 here:**
 
-1. Nothing else moves on our test turn. A trajectory's times are for timing
+1. Nothing else moves on our test curve. A trajectory's times are for timing
    a move around another car, as with car B; here there is none.
 2. Our controller node takes a path and a target speed, which is what Pure
    Pursuit, Stanley and the speed PID follow.
@@ -2649,15 +2649,15 @@ Two ways to tell the controllers where to drive and how fast:
 
 .. _l10-lec-test-path:
 
-One Test Path for Every Controller: a Right Turn in Town03
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+One Test Path for Every Controller: a Right Curve in Town03
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L10/turn_map.png
    :alt: A top view, x along the approach to the right and y to the left, in meters. A single lane 3.5 meters wide, drawn by two black edges with a gray dashed center line, runs 80 meters to the right, turns right through a quarter circle near x = 80 to 92, and runs 40 meters down. The AV is drawn at the start, at the left end, facing right. An arrow under the lane says driving direction. The curve is shaded orange along the center line.
    :width: 90%
    :align: center
 
-   The test path: a right turn in Town03.
+   The test path: a right curve in Town03.
 
 .. admonition:: Reading the figure
    :class: tip
@@ -2668,7 +2668,7 @@ One Test Path for Every Controller: a Right Turn in Town03
    The junction lane is shaded orange.
 
 Our path is the lane's center, as the route planner gives it: 80 m
-straight, a right turn of 91° (orange), then 40 m straight. The controller
+straight, a right curve of 91° (orange), then 40 m straight. The controller
 follows it directly, with no local planner in between.
 
 In CARLA's terms: 80 m of road 3 (the approach), the 17.5 m junction lane of
@@ -2678,8 +2678,8 @@ road 817 (orange), then 40 m of road 19 (the exit). We read it from
 
 .. _l10-lec-curvature:
 
-Measure How the Turn Bends: Fit a Circle to Each Arc
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Measure How the Curve Bends: Fit a Circle to Each Arc
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. admonition:: Definition: Curvature
    :class: note
@@ -2720,7 +2720,7 @@ outside our lane's center.
    line or an arc, and each arc has one curvature. The lanes sit beside the
    reference line, at fixed widths.
 
-   Our turn is road 817, a junction lane. Its reference line is: straight
+   Our curve is road 817, a junction lane. Its reference line is: straight
    pieces, an arc of curvature 0.12938 per meter, an arc of curvature
    0.08513 per meter, then straight pieces again. The file lists them from
    the exit's end, so we drive the 0.08513 arc first.
@@ -2728,7 +2728,7 @@ outside our lane's center.
    1. **The arcs' radii:** :math:`R = 1/\kappa`: 1/0.08513 = 11.746 m and
       1/0.12938 = 7.729 m.
    2. **Our lane's center:** our lane is 3.5 m wide and lies on the inside
-      of the turn, so its center runs 3.5 / 2 = 1.75 m inside the reference
+      of the curve, so its center runs 3.5 / 2 = 1.75 m inside the reference
       line: 11.746 − 1.75 = 9.996 m and 7.729 − 1.75 = 5.979 m.
    3. **The curvature of our path:** 1/9.996 = 0.1000 and
       1/5.979 = 0.1673 per meter.
@@ -3095,7 +3095,7 @@ Ackermann angles :math:`\delta_o` = 0.260 and :math:`\delta_i` = 0.303 rad.
 
       \cot\delta_o - \cot\delta_i = \frac{w}{l}
 
-   Our turn's first arc, :math:`R` = 10.00 m to the rear axle's middle,
+   Our curve's first arc, :math:`R` = 10.00 m to the rear axle's middle,
    :math:`l` = 2.875 m, :math:`w` = 1.6 m (chosen):
 
    1. Inner wheel, :math:`R - w/2` = 9.2 m from the center:
@@ -3115,7 +3115,7 @@ Ackermann angles :math:`\delta_o` = 0.260 and :math:`\delta_i` = 0.303 rad.
 
    A controller outputs **one** steering command; Ackermann geometry has
    **two** angles, :math:`\delta_i \ne \delta_o`, and which wheel is inner
-   changes with the turn's direction.
+   changes with the curve's direction.
 
    .. list-table::
       :widths: 30 70
@@ -3325,7 +3325,7 @@ sideways a little when the AV turns, and more the harder it turns.
    under half of what the tires can give:
    :math:`0.5\,\mu g` = 0.5 × 9.81 = 4.9 m/s² on a dry road
    (:math:`\mu` = 1).
-2. Our turn: at most :math:`3.46^2 \times 0.1673` = 2.0 m/s², the profile's
+2. Our curve: at most :math:`3.46^2 \times 0.1673` = 2.0 m/s², the profile's
    cap. Well inside.
 3. Harder turns need a model with tire slip: the dynamic bicycle model
    (below).
@@ -3486,7 +3486,7 @@ sideways a little when the AV turns, and more the harder it turns.
      parking maneuvers" (Snider, 2009).
    - The dynamic model "starts to break down at very slow speeds and/or
      tight steering angles": the speed sits in a denominator.
-   - Our turn stays at 2.0 m/s² or less: the kinematic model fits.
+   - Our curve stays at 2.0 m/s² or less: the kinematic model fits.
 
 
 .. admonition:: Where the bicycle model leaves us
@@ -3496,7 +3496,7 @@ sideways a little when the AV turns, and more the harder it turns.
      :math:`\tan\delta / L`: the curvature.
    - **Steering for a curvature:** :math:`\delta = \arctan(L\kappa)`:
      0.280 rad and 0.448 rad for our two arcs, under the 0.7 rad limit.
-   - **Sideways acceleration** on our turn: at most 2.0 m/s², the profile's
+   - **Sideways acceleration** on our curve: at most 2.0 m/s², the profile's
      cap. The model holds under 0.5 μg, 4.9 m/s² on a dry road.
 
 
@@ -3507,11 +3507,11 @@ Lateral Control
 
 The vehicle model says how a steering angle moves the AV. This section
 builds on it: the controllers that choose the angle. In every run a speed
-PID (Longitudinal Control, next) holds the turn's speed profile.
+PID (Longitudinal Control, next) holds the curve's speed profile.
 
 **In this section:** two geometric controllers, Pure Pursuit and Stanley,
 and a model-based one, MPC. PID on steering and LQR are covered only in the
-"More detail" box below; we do not run them on our turn.
+"More detail" box below; we do not run them on our curve.
 
 **What it is for:** the controller node steers with Pure Pursuit; Stanley
 and MPC show what other choices gain and cost.
@@ -3541,7 +3541,7 @@ come in three kinds, by how they pick the steering angle:
    error appears. Model-based: sees the curve coming and keeps the limits,
    but needs a good model and an optimization at every step. So the best
    kind depends on the car and the road. Today: Pure Pursuit, Stanley and
-   MPC on our turn; PID and LQR are in the box below.
+   MPC on our curve; PID and LQR are in the box below.
 
 .. dropdown:: More detail: PID on steering, LQR, and the sources
    :class-container: more-detail
@@ -3579,7 +3579,7 @@ come in three kinds, by how they pick the steering angle:
    curve coming; the I term winds up while the steering sits at its limit,
    as the speed PID's did.
 
-   We do not run it on our turn: the geometric controllers above already
+   We do not run it on our curve: the geometric controllers above already
    use the path ahead.
 
    .. rubric:: LQR
@@ -3625,7 +3625,7 @@ come in three kinds, by how they pick the steering angle:
    it. And "the LQR tracker does not considerably outperform the Stanley or
    kinematic methods in many scenarios" (Snider, 2009).
 
-   We do not run LQR on our turn: our simulation has no tire model to
+   We do not run LQR on our curve: our simulation has no tire model to
    design it from.
 
 
@@ -3659,7 +3659,7 @@ A steering controller turns these two into a steering angle: Pure Pursuit by
 looking ahead along the path; Stanley (below) from both errors directly.
 
 
-.. dropdown:: More detail: steer into the turn, the steering must jump too
+.. dropdown:: More detail: steer into the curve, the steering must jump too
    :class-container: more-detail
    :icon: info
    :name: l10-more-steer-jump
@@ -3721,7 +3721,7 @@ Pure Pursuit, Step 1: Pick the Point on the Path L_d Ahead
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L10/pp_step_1.png
-   :alt: A top view to scale, x and y in meters, of the start of our right turn: the lane between two black edges, its center dashed gray, bending right after x = 83. A faint gray AV in the lane, its rear axle a black dot near x = 82.7 with a short black arrow along its heading. A blue dashed circle of radius 5 meters around the rear axle; where it crosses the lane center ahead, a blue dot, dark tag 1.
+   :alt: A top view to scale, x and y in meters, of the start of our right curve: the lane between two black edges, its center dashed gray, bending right after x = 83. A faint gray AV in the lane, its rear axle a black dot near x = 82.7 with a short black arrow along its heading. A blue dashed circle of radius 5 meters around the rear axle; where it crosses the lane center ahead, a blue dot, dark tag 1.
    :width: 70%
    :align: center
 
@@ -3776,7 +3776,7 @@ what the AV can measure: the arc through the lookahead point has
 :math:`R = L_d / (2\sin\alpha)`. So:
 
 .. figure:: /_static/images/L10/pp_law.png
-   :alt: A close top view to scale, x and y in meters, of the AV on the lane at the start of the right turn. A faint gray AV, its rear axle a black dot. A two-headed arrow labeled L runs inside the car from the rear axle to the front axle. A dotted line runs straight ahead from the rear axle along the heading. A blue line labeled L d runs from the rear axle down to a blue dot on the lane center near x = 87.6; an arc between the dotted heading line and the blue line marks the angle alpha. At the front axle a thick black bar, the front wheel, with a dashed line along it and a small arc labeled delta between it and the dotted line. A thin green curve runs from the rear axle to the blue dot.
+   :alt: A close top view to scale, x and y in meters, of the AV on the lane at the start of the right curve. A faint gray AV, its rear axle a black dot. A two-headed arrow labeled L runs inside the car from the rear axle to the front axle. A dotted line runs straight ahead from the rear axle along the heading. A blue line labeled L d runs from the rear axle down to a blue dot on the lane center near x = 87.6; an arc between the dotted heading line and the blue line marks the angle alpha. At the front axle a thick black bar, the front wheel, with a dashed line along it and a small arc labeled delta between it and the dotted line. A thin green curve runs from the rear axle to the blue dot.
    :width: 70%
    :align: center
 
@@ -3861,7 +3861,7 @@ the seconds of driving to look ahead and :math:`L_{d,\min}` (m) the shortest
 lookahead. With :math:`k_v` = 0.75 s and :math:`L_{d,\min}` = 3 m: 6 m at
 8 m/s; 3 m on the second arc, where 0.75 × 3.46 = 2.6 m is too short.
 
-On our turn (below): 5 m fixed, or :math:`\max(3\ \mathrm{m}, 0.75\ \mathrm{s}\times v)`.
+On our curve (below): 5 m fixed, or :math:`\max(3\ \mathrm{m}, 0.75\ \mathrm{s}\times v)`.
 
 
 .. _l10-lec-pp-steps:
@@ -3972,7 +3972,7 @@ GP4).
    2. The arc's curvature: :math:`\kappa = 2\sin\alpha / L_d`
       = 2 × (−0.1866) / 5 = −0.0746 /m.
    3. Its radius: :math:`R` = 1 / 0.0746 = 13.4 m, centered at tag 5.
-      Negative: a right turn.
+      Negative: a right curve.
 
    .. rubric:: Step 4: Turn the Arc into a Steering Command
 
@@ -3998,10 +3998,10 @@ GP4).
 
 .. _l10-lec-pp-road:
 
-Drive Three Lookaheads on Our Turn: 3, 5 and 10 m
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Drive Three Lookaheads on Our Curve: 3, 5 and 10 m
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Three runs of Pure Pursuit on our turn, each with a different lookahead
+Three runs of Pure Pursuit on our curve, each with a different lookahead
 :math:`L_d`: :math:`L_d` = 3 m (red); 5 m (blue); 10 m (green). Each starts
 1 m left of the lane's center (chosen), so the straight shows how the AV
 steers back, and the curve how it turns.
@@ -4012,7 +4012,7 @@ steers back, and the curve how it turns.
    :align: center
 
 .. figure:: /_static/images/L10/pp_road_corner.png
-   :alt: A top view of the right turn, to scale, x from 74 to 97 meters and y from minus 18 to 3 meters, the lane between two black edges and its center dashed gray. A thick blue path follows the center closely through the curve. A green dashed path turns early, cutting toward the inner edge, then swings out past the center after the curve.
+   :alt: A top view of the right curve, to scale, x from 74 to 97 meters and y from minus 18 to 3 meters, the lane between two black edges and its center dashed gray. A thick blue path follows the center closely through the curve. A green dashed path turns early, cutting toward the inner edge, then swings out past the center after the curve.
    :width: 45%
    :align: center
 
@@ -4051,7 +4051,7 @@ eight lookaheads we ran:
 
    With a 4 m lookahead the AV weaves about 0.4 m each way and never
    settles; with 3 m the swings grow to 3.07 m, out of the 3.5 m lane. Short
-   tracks closely, long drives smoothly (Snider, 2009). On our turn, a 5 m
+   tracks closely, long drives smoothly (Snider, 2009). On our curve, a 5 m
    lookahead is the best of the eight we tried.
 
 .. dropdown:: More detail: the 3 m and 10 m runs
@@ -4214,7 +4214,7 @@ Where Pure Pursuit Leaves Us
 
    - **Four steps:** goal point on the lookahead circle; goal in the AV's
      frame; :math:`\kappa = 2\sin\alpha / L_d`;
-     :math:`\delta = \arctan(L\kappa)`. On our turn: −0.211 rad, command
+     :math:`\delta = \arctan(L\kappa)`. On our curve: −0.211 rad, command
      −0.173.
    - **Short lookahead** (3 m at 8 m/s): the AV weaves, 3.07 m, because the
      steering is delayed and lags.
@@ -4282,7 +4282,7 @@ Steer from the Front Axle: Stanley's Heading and Cross-Track Terms
    \delta = \psi_e - \arctan\frac{k\,e}{v + k_s}
 
 .. figure:: /_static/images/L10/stanley_geom.png
-   :alt: A close top view to scale, x and y in meters, of the AV at the start of the right turn, drawn faintly, with the lane edges and the dashed lane center. A black dot at the rear axle, joined by a line to a purple dot at the front axle. A short purple double arrow joins the front axle to a gray dot on the lane center just below it; a thin purple line leads from it to the label e. From the gray dot a thick gray line runs along the path's direction, down to the right, with dark tag 1 joined to it by a thin line. From the front axle: a black arrow labeled v along the AV's heading, almost straight right; a dotted gray line parallel to the thick gray one, the path's direction; a red arc between the arrow and the dotted line labeled psi e; and the front wheel, a short thick black bar turned to the right, with a dashed line along it and a small black arc from the arrow labeled delta.
+   :alt: A close top view to scale, x and y in meters, of the AV at the start of the right curve, drawn faintly, with the lane edges and the dashed lane center. A black dot at the rear axle, joined by a line to a purple dot at the front axle. A short purple double arrow joins the front axle to a gray dot on the lane center just below it; a thin purple line leads from it to the label e. From the gray dot a thick gray line runs along the path's direction, down to the right, with dark tag 1 joined to it by a thin line. From the front axle: a black arrow labeled v along the AV's heading, almost straight right; a dotted gray line parallel to the thick gray one, the path's direction; a red arc between the arrow and the dotted line labeled psi e; and the front wheel, a short thick black bar turned to the right, with a dashed line along it and a small black arc from the arrow labeled delta.
    :width: 75%
    :align: center
 
@@ -4366,7 +4366,7 @@ only 2° more than :math:`\psi_e`, because :math:`e` is small.
    it, the front axle is :math:`\sqrt{5.98^2 + 2.875^2} - 5.98` = 0.66 m
    outside: the axles, 2.875 m apart, cannot both be on the path.
 
-   .. rubric:: Pure Pursuit Against Stanley on Our Turn
+   .. rubric:: Pure Pursuit Against Stanley on Our Curve
 
    Same start (1 m left, 8 m/s), same speed PID, same steering lag:
 
@@ -4377,8 +4377,8 @@ only 2° more than :math:`\psi_e`, because :math:`e` is small.
 
       * - **Controller**
         - **Crosses after start**
-        - **Rear axle, turn**
-        - **Front axle, turn**
+        - **Rear axle, curve**
+        - **Front axle, curve**
         - **Mean \|jerk\|**
       * - Pure Pursuit, 5 m
         - 0.32 m
@@ -4443,7 +4443,7 @@ MPC
 ~~~
 
 .. figure:: /_static/images/L10/mpc_idea.png
-   :alt: A top view to scale, x and y in meters, of the start of the right turn: the lane between two black edges, its center dashed gray. A faint gray AV near x = 78 on the lane center, its rear axle a black dot. Nine gray curves leave the rear axle and fan out over the next 3 seconds, from a curve turning sharply right that loops back below the lane, through one going straight, to two curving left off the road. A thick green curve leaves the rear axle, runs straight, then follows the lane center into the turn.
+   :alt: A top view to scale, x and y in meters, of the start of the right curve: the lane between two black edges, its center dashed gray. A faint gray AV near x = 78 on the lane center, its rear axle a black dot. Nine gray curves leave the rear axle and fan out over the next 3 seconds, from a curve turning sharply right that loops back below the lane, through one going straight, to two curving left off the road. A thick green curve leaves the rear axle, runs straight, then follows the lane center into the curve.
    :width: 60%
    :align: center
 
@@ -4560,15 +4560,15 @@ worse over the 3 s, because the AV is still on the straight. So MPC is a feedbac
 pose. Its horizon has times: it can track a trajectory (timing 2, in
 Trajectory Generation).
 
-.. dropdown:: More detail: one MPC step on our turn, drawn, and the problem written out
+.. dropdown:: More detail: one MPC step on our curve, drawn, and the problem written out
    :class-container: more-detail
    :icon: info
    :name: l10-more-mpc
 
-   .. rubric:: One MPC Step on Our Turn, Drawn
+   .. rubric:: One MPC Step on Our Curve, Drawn
 
    .. figure:: /_static/images/L10/mpc_candidates.png
-      :alt: A top view of a right turn, x from 68 to 100 meters and y from minus 26 to 6. The lane comes in from the left along y = 0 and turns down; solid lines mark its edges and a dashed gray line its center. The AV is drawn faintly at about x = 78, with a dark dot at its rear axle. A fan of hundreds of thin gray curves leaves the rear axle: a few bend left, up to y = 6.6, and most bend right, down to y = minus 12.7; tag 4 sits at the fan's lower-left end. One thick green curve runs along the lane center past a green dot (tag 1, joined by a thin line from above the lane), bends right past a second green dot (tag 2) and ends inside the turn, at about x = 90.6 and y = minus 3.5, joined by a thin line to tag 3 to the right of the lane. All tags are dark circles.
+      :alt: A top view of a right curve, x from 68 to 100 meters and y from minus 26 to 6. The lane comes in from the left along y = 0 and turns down; solid lines mark its edges and a dashed gray line its center. The AV is drawn faintly at about x = 78, with a dark dot at its rear axle. A fan of hundreds of thin gray curves leaves the rear axle: a few bend left, up to y = 6.6, and most bend right, down to y = minus 12.7; tag 4 sits at the fan's lower-left end. One thick green curve runs along the lane center past a green dot (tag 1, joined by a thin line from above the lane), bends right past a second green dot (tag 2) and ends inside the turn, at about x = 90.6 and y = minus 3.5, joined by a thin line to tag 3 to the right of the lane. All tags are dark circles.
       :width: 70%
       :align: center
 
@@ -4577,7 +4577,7 @@ Trajectory Generation).
    .. admonition:: Reading the figure
       :class: tip
 
-      A top view of the curve, in meters, 2 m before the turn, at
+      A top view of the curve, in meters, 2 m before the curve, at
       7.09 m/s. The AV is drawn faintly; the dark dot is its rear axle.
 
       - **Tag 4 (gray):** every sequence of three steering angles, each
@@ -4657,8 +4657,8 @@ Choosing a Controller
 
 .. _l10-lec-ctrl-compare:
 
-Compare the Steering Controllers on Our Turn
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Compare the Steering Controllers on Our Curve
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Same start (1 m left, 8 m/s), same speed PID, same steering delay and lag:
 
@@ -4669,8 +4669,8 @@ Same start (1 m left, 8 m/s), same speed PID, same steering delay and lag:
 
    * - **Controller**
      - **Crosses after start**
-     - **Rear axle, turn**
-     - **Front axle, turn**
+     - **Rear axle, curve**
+     - **Front axle, curve**
      - **Mean \|jerk\|**
    * - Pure Pursuit, 5 m
      - 0.32 m
@@ -4731,7 +4731,7 @@ Same start (1 m left, 8 m/s), same speed PID, same steering delay and lag:
         - smooth high speed driving, urban driving at speed
         - no
 
-   - Our turn agrees: Pure Pursuit with a long lookahead cut inside the curve by
+   - Our curve agrees: Pure Pursuit with a long lookahead cut inside the curve by
      0.98 m; Stanley's front axle stayed within 0.38 m.
    - MPC is the choice when limits must hold inside the plan: the steering
      angle and rate, the delay.
@@ -4744,7 +4744,7 @@ Longitudinal Control
 
 The bicycle model takes two inputs: the steering angle, which the
 controllers of the last section set, and the acceleration. This section
-covers the acceleration: the PID that holds the AV at the turn's speed
+covers the acceleration: the PID that holds the AV at the curve's speed
 profile, the same speed controller every steering run in the last section
 used.
 
@@ -4780,7 +4780,7 @@ with the throttle and the brake?
    .. rubric:: Turn the Speed Profile into a Trajectory: Add Up the Times
 
    .. figure:: /_static/images/L10/trajectory_dots.png
-      :alt: The same top view of the turn as before, with blue dots on the lane center, one for every second of the speed profile. On the approach the dots are evenly spaced, 8 meters apart; in the curve they bunch up, about 3.5 meters apart, and spread out again on the exit. Gray leader lines label four dots: t = 0 s at the start, t = 5 s on the approach, t = 10 s just before the curve, t = 15 s on the exit.
+      :alt: The same top view of the curve as before, with blue dots on the lane center, one for every second of the speed profile. On the approach the dots are evenly spaced, 8 meters apart; in the curve they bunch up, about 3.5 meters apart, and spread out again on the exit. Gray leader lines label four dots: t = 0 s at the start, t = 5 s on the approach, t = 10 s just before the curve, t = 15 s on the exit.
       :width: 90%
       :align: center
 
@@ -4789,18 +4789,18 @@ with the throttle and the brake?
    .. admonition:: Reading the figure
       :class: tip
 
-      The same top view of the turn, with a dot on the lane center for every
+      The same top view of the curve, with a dot on the lane center for every
       second of the profile. On the approach the dots sit 8 m apart; in the
       curve they bunch up to about 3.5 m apart, then spread out again on
       the exit. Labels mark :math:`t` = 0, 5, 10 and 15 s.
 
    - Each 0.25 m step takes :math:`\Delta s / v`; adding the steps up gives
      :math:`t(s)`.
-   - At 8 m/s the dots are 8 × 1 = 8.0 m apart; in the turn, 3.46 × 1 =
+   - At 8 m/s the dots are 8 × 1 = 8.0 m apart; in the curve, 3.46 × 1 =
      3.5 m (3.45 m measured between two dots).
    - The whole path takes 20.0 s.
 
-   .. rubric:: Slow Down for the Turn: Two Ways Between the Same Speeds
+   .. rubric:: Slow Down for the Curve: Two Ways Between the Same Speeds
 
    .. figure:: /_static/images/L10/slow_speed_accel.png
       :alt: Two graphs against the time from the start of braking. Left, speed: the red line, dark tag 1, drops in a straight line from 8 to 3.46 meters per second in 2.3 seconds; the green curve, tag 2, leaves 8 gently, falls along an S shape and reaches 3.46 at about 3.4 seconds. Right, acceleration: the red line jumps from 0 to minus 2 at once, stays there for 2.3 seconds and jumps back to 0; the green curve dips smoothly from 0 to minus 2 at its middle and comes back to 0. A dotted line marks minus 2.
@@ -5602,7 +5602,7 @@ A dynamic model needs more measurements and gains that change with speed.
 
       * - **Path**
         - **Spacing, length**
-      * - our turn
+      * - our curve
         - every 0.25 m, 137.5 m
       * - the topics demo's ``/planning/path``
         - 51 points over 50 m, sent twice a second
@@ -5730,10 +5730,10 @@ speed limit, and the path is the lane center ahead. Nothing publishes
 
 .. _l10-lec-tune-symptom:
 
-Tune by Symptom: What Each Fix Did on Our Turn
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Tune by Symptom: What Each Fix Did on Our Curve
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-From our runs on the turn (the Lateral and Longitudinal sections):
+From our runs on the curve (the Lateral and Longitudinal sections):
 
 .. list-table::
    :widths: 20 36 44
@@ -5742,7 +5742,7 @@ From our runs on the turn (the Lateral and Longitudinal sections):
 
    * - **Controller**
      - **Symptom**
-     - **Fix, and what it did on our turn**
+     - **Fix, and what it did on our curve**
    * - Pure Pursuit
      - weaves
      - longer lookahead: 3 m swung to 3.07 m; 5 m crossed by 0.32 m

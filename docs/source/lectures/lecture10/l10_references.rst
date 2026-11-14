@@ -406,7 +406,7 @@ are quoted only in a "More detail" box of the lecture; their cards say so.
 
          *autoware_mpc_lateral_controller.* Accessed 14 October 2026.
 
-         Used only in the "More detail" box "One MPC Step on Our Turn,
+         Used only in the "More detail" box "One MPC Step on Our Curve,
          Drawn...": Autoware's steering controller tracks the path with a
          linear MPC, built by linearizing the model around the path.
 

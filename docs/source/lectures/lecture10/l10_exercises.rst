@@ -12,7 +12,7 @@ Exercises
    listed in the :doc:`syllabus </syllabus/index>`.
 
 Seven take-home exercises, built on the Lecture 10 notes,
-:doc:`l10_lecture`, and on the lecture's Town03 turn. They test only what
+:doc:`l10_lecture`, and on the lecture's Town03 curve. They test only what
 the deck teaches in class, never the lecture's "More detail" boxes.
 Exercise 1 counts the states and arrows of the behavior layer, and
 Exercise 2 ticks the road behavior tree. Exercise 3 builds a speed profile
@@ -508,7 +508,7 @@ check in the lecture's hands-on window.
 
       Question 2: :math:`\sin(-18°)` = −0.309, so
       :math:`\kappa = 2 \times (-0.309) / 5.25` = −0.1177 /m. Negative: a
-      right turn.
+      right curve.
 
       Question 3: :math:`\delta = \arctan(2.875 \times (-0.1177)) =
       \arctan(-0.3384)` = −0.326 rad (−18.7°), under the 0.7 rad limit.

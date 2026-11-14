@@ -15,7 +15,7 @@ Quiz
 
 This quiz covers Lecture 10: the behavior layer beyond one flat FSM (a
 superstate and behavior trees), trajectory generation, drive-by-wire, the
-test turn and its speed profile, the kinematic bicycle model, PID speed
+test curve and its speed profile, the kinematic bicycle model, PID speed
 control and windup, Pure Pursuit and its lookahead distance, the Stanley
 law, and what MPC adds. Every question can be answered from the lecture
 notes, :doc:`l10_lecture`. This quiz tests only what the deck teaches in
@@ -30,7 +30,7 @@ class: nothing on this page needs the lecture's "More detail" boxes.
      the lecture.
    - Short answer questions want two to four sentences.
    - Click the dropdown after each question to reveal the answer.
-   - The lecture's example is one right turn in Town03, driven in a numpy
+   - The lecture's example is one right curve in Town03, driven in a numpy
      simulation of the bicycle model: wheelbase :math:`L` = 2.875 m, the
      controller's steering limit of 0.7 rad, 20 controller steps a second
      (:math:`\Delta t` = 0.05 s), and a cap of 2.0 m/s² on the sideways
@@ -211,7 +211,7 @@ Multiple Choice (Questions 1 to 15)
    2. :math:`2a` = 2 × 2.0 = 4.0.
    3. :math:`d` = 48 / 4.0 = 12.0 m.
 
-   24.0 m (**D**) forgets the 2 in :math:`2a`. On the lecture's turn, the
+   24.0 m (**D**) forgets the 2 in :math:`2a`. On the lecture's curve, the
    same rule gives 11.0 m for 8 to 4.47 m/s. See "Speed Profile, Step 2:
    Brake Before the Curve, Speed Up After It" in :doc:`l10_lecture`.
 
@@ -419,7 +419,7 @@ Multiple Choice (Questions 1 to 15)
       −0.644 rad.
    2. :math:`\sin\alpha` = −0.6.
    3. :math:`\kappa = 2\sin\alpha / L_d` = 2 × (−0.6) / 5 = −0.24 /m.
-      Negative: a right turn.
+      Negative: a right curve.
 
    −0.12 (**A**) forgets the 2; −0.6 (**D**) is :math:`\sin\alpha` alone.
    The steering is then :math:`\arctan(2.875 \times (-0.24))` = −0.604 rad,
@@ -473,7 +473,7 @@ Multiple Choice (Questions 1 to 15)
    **B**.
 
    At 6 m/s: 0.75 × 6 = 4.5 m, longer than 3 m. At 2 m/s: 0.75 × 2 = 1.5 m,
-   raised to 3 m. On the lecture's turn, this rule gave the smallest curve
+   raised to 3 m. On the lecture's curve, this rule gave the smallest curve
    error of the runs tried: 0.07 m. See "A Lookahead for Every Speed: Scale
    It with the Speed" in :doc:`l10_lecture`.
 
@@ -559,7 +559,7 @@ Short Answer (Questions 20 to 21)
 .. admonition:: Question 20
    :class: hint
 
-   On the lecture's turn, a 10 m lookahead crosses the center by only
+   On the lecture's curve, a 10 m lookahead crosses the center by only
    0.07 m after the 1 m start, but a 5 m lookahead is the best of the eight
    tried. Explain the trade-off with the two errors the lecture measures.
 
@@ -572,7 +572,7 @@ Short Answer (Questions 20 to 21)
    early: 0.98 m inside the center, then 0.95 m outside on the exit. A
    short lookahead tracks the curve more closely, but at 4 m and below the
    AV weaves. 5 m balances the two: it crosses by 0.32 m after the start and
-   stays within 0.25 m of the center in the turn. See
+   stays within 0.25 m of the center in the curve. See
    "Choose the Lookahead: Too Short Weaves, Too Long Cuts Inside the Curve" in
    :doc:`l10_lecture`.
 

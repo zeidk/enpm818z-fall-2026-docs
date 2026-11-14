@@ -14,7 +14,7 @@ Generation gives the path a quintic offset in time, checked against a moving
 car and scored for jerk. Drive-by-wire actuators carry the command over the
 CAN bus and through the electronic control units to the wheel, with a
 measured 0.2 s delay and checks that fail safe. The lecture then follows one
-right turn in Town03: the kinematic bicycle model, a speed profile, a PID
+right curve in Town03: the kinematic bicycle model, a speed profile, a PID
 controller for the speed, Pure Pursuit and Stanley for the
 steering, and what Model Predictive Control (MPC) adds. The controller node
 it describes reads five ROS topics and sends one command, and a demo shows
