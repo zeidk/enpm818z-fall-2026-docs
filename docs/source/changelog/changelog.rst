@@ -5,10 +5,40 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.28.4: Lecture 10 Worked Trajectory and New Figures (2026-11-12)
+.. dropdown:: v2.29.0: Lecture 10 MPC Walkthrough, Choosing a Controller, No Exercises Page (2026-11-14)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10, MPC in three sections:** "Make MPC's First Plan" walks through
+     the 729 candidate plans 2 m before the curve; "Score a Plan" gives the
+     score (path error plus steering effort) for five of them; "Plan Ahead
+     with MPC" now draws the best plan's 60 steps and says why only step 1
+     is applied. Our MPC sets only the steering; the speed comes from the
+     speed profile.
+   - **L10, "Choose a Steering Controller":** where Pure Pursuit, Stanley and
+     MPC each fit. The five-run comparison table moved into the Snider
+     "More detail" box.
+   - **L10, "Weigh MPC Against Pure Pursuit and Stanley":** the limits and
+     the model rows say what they mean.
+   - **L10, wording:** the test road's bend is a curve, not a turn; "jumps
+     in the path" are breaks in the path.
+
+   .. rubric:: Removed
+
+   - **L10 exercises page.**
+
+   .. rubric:: Quizzes
+
+   - **L10 quiz:** five new questions on MPC's plan and score, its inputs,
+     and choosing a controller (26 questions).
+
+
+.. dropdown:: v2.28.4: Lecture 10 Worked Trajectory and New Figures (2026-11-12)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

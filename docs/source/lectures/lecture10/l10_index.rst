@@ -47,7 +47,7 @@ Lecture Materials
 - :doc:`l10_lecture`: the notes, following the slides shown in class.
   Material cut from class sits in closed "More detail" boxes, right after
   the part it explains.
-- :doc:`l10_exercises`, :doc:`l10_quiz` and :doc:`l10_references`.
+- :doc:`l10_quiz` and :doc:`l10_references`.
 
 .. toctree::
    :hidden:
@@ -55,7 +55,6 @@ Lecture Materials
    :titlesonly:
 
    l10_lecture
-   l10_exercises
    l10_quiz
    l10_references
 

@@ -4496,7 +4496,7 @@ Predict with the Full Model: the State, the Inputs and Four Equations
 **Goal:** predict where the AV will be over the next seconds, MPC's step 1.
 The turn rate alone is not enough. The model tracks four numbers at the rear
 axle, the **state**: position :math:`x, y` (m), heading :math:`\theta` (rad)
-and speed :math:`v` (m/s). The controller sets two **inputs**: the front
+and speed :math:`v` (m/s). The model takes two **inputs**: the front
 wheel angle :math:`\delta` (rad) and the acceleration :math:`a` (m/s²). Each
 equation says how fast one state number changes:
 
@@ -4516,7 +4516,107 @@ equation says how fast one state number changes:
 
    Step the four equations forward 0.05 s at a time from the measured state,
    and MPC knows where each candidate steering sequence takes the AV. Our
-   simulation moves the AV with the same equations, 100 times a second.
+   MPC sets only :math:`\delta`; the speed comes from the speed profile.
+   Our simulation moves the AV with the same equations, 100 times a second.
+
+A full MPC can choose both inputs. Ours chooses only the steering and takes
+the speed from the speed profile, which the speed PID holds.
+
+
+.. _l10-lec-mpc-plan:
+
+Make MPC's First Plan: Try 729 Steering Plans, Keep the Best
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Goal:** choose the steering for the next 3 s that keeps the AV closest to
+the path. The AV is 2 m before the curve, at 7.09 m/s.
+
+.. figure:: /_static/images/L10/mpc_candidates.png
+   :alt: A top view of the right curve, x from 68 to 100 meters and y from minus 14 to 6. The lane comes in from the left along y = 0 and bends down; solid lines mark its edges and a dashed gray line its center. The AV is drawn faintly at about x = 78, with a dark dot at its rear axle. A fan of hundreds of thin gray curves leaves the rear axle: a few bend left, up to y = 6, and most bend right, down to about y = minus 12.7; dark tag 4 sits at the fan's lower-left end. One thick green curve runs along the lane center past a green dot (dark tag 1, joined by a thin line from above), bends right past a second green dot (dark tag 2) and ends inside the curve, at about x = 90.6 and y = minus 3.5, joined by a thin line to dark tag 3 to the right of the lane.
+   :width: 80%
+   :align: center
+
+   The 729 candidate plans and the best one.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   A top view of the curve, in meters. The AV is drawn faintly; the dark dot
+   is its rear axle, where every plan starts.
+
+   - **Tag 4 (gray):** the 729 predicted paths, one per plan.
+   - **Tags 1 to 3 (green):** the best plan's path, at 1, 2 and 3 s.
+
+1. **Measure** the AV's pose and speed now.
+2. **List the plans:** a plan holds one steering angle for 1 s, three times
+   in a row. Each angle is one of 9 values, −0.6 to 0.2 rad in steps of
+   0.1: :math:`9^3` = 729 plans (tag 4).
+3. **Predict** each plan with the bicycle model, 60 steps of 0.05 s. Our MPC
+   chooses only the steering; at each step the speed comes from the speed
+   profile.
+4. **Score** each predicted path (next section) and keep the lowest: 0, then
+   −0.4 (a right steer), then 0 rad, shown at 1, 2 and 3 s by tags 1 to 3.
+
+No formula gives :math:`\delta` here, unlike Pure Pursuit and Stanley: MPC
+tries angles and keeps the plan whose predicted path scores best. Its only
+formulas are the model's, used to predict.
+
+
+.. _l10-lec-mpc-score:
+
+Score a Plan: Path Error Plus Steering Effort
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Goal:** one number per plan, lower is better. Score = path error +
+steering effort.
+
+- **Path error:** at each of the 60 steps, the predicted rear axle's
+  distance from the lane center, squared, times 0.05 s; added up. Squaring
+  makes a big miss cost much more than a small one.
+- **Steering effort:** the three held angles, squared, added up (weight 1,
+  chosen).
+
+The table shows five of the 729 plans:
+
+.. list-table::
+   :widths: 22 30 16 16 16
+   :header-rows: 1
+   :class: compact-table
+
+   * - **Plan (rad)**
+     -
+     - **Path error**
+     - **Steering**
+     - **Score**
+   * - 0, −0.4, 0
+     - the best
+     - 0.026
+     - 0.16
+     - 0.186
+   * - 0, −0.3, 0
+     - steers too little
+     - 0.497
+     - 0.09
+     - 0.587
+   * - 0, −0.5, 0
+     - steers too much
+     - 0.713
+     - 0.25
+     - 0.963
+   * - −0.1, −0.4, 0
+     - steers right 1 s early
+     - 3.138
+     - 0.17
+     - 3.308
+   * - 0, 0, 0
+     - goes straight
+     - 6.631
+     - 0
+     - 6.631
+
+Steering for the best: :math:`0^2 + 0.4^2 + 0^2` = 0.16. Here the path error
+alone picks the same plan; the steering effort matters when two plans track
+about equally well, and then it favors the gentler one.
 
 
 .. _l10-lec-mpc-def:
@@ -4550,49 +4650,21 @@ Plan Ahead with MPC: Predict, Score, Apply the First Input, Repeat
      new measured pose.
    - **Green:** the one step each plan applies before the next plan.
 
-In our run, a step is 0.05 s and the input at each step is a steering angle.
-To keep the search small, our MPC holds each angle for 1 s (20 steps), from 9
-values: :math:`9^3` = 729 candidate plans. MPC scores whole 3 s plans and
-keeps the best one. The best plan holds 0 rad, then −0.4 rad (right), then
-0 rad, each for 20 steps. The AV applies only that plan's step 1 input,
-0 rad, for 0.05 s; then MPC plans again from the new measured pose. Step 1's
-angle is not chosen on its own: a plan that steers right at step 1 scores
-worse over the 3 s, because the AV is still on the straight. So MPC is a feedback controller: each plan starts from the measured
-pose. Its horizon has times: it can track a trajectory (timing 2, in
+**Why only step 1:** the plan is a prediction, and it is never exact. Our
+model leaves out the steering delay and lag that the simulated car has, so
+the real AV would not follow the plan exactly. After 0.05 s, MPC measures where the AV really
+is and plans again from there: the second row, then the third. That makes
+MPC a feedback controller. The other 59 steps still count: they are why
+step 1 is 0 rad (steering right 1 s early scored 3.308 instead of 0.186).
+Its horizon has times, so it can track a trajectory (timing 2, in
 Trajectory Generation).
 
-.. dropdown:: More detail: one MPC step on our curve, drawn, and the problem written out
+.. dropdown:: More detail: the problem written out
    :class-container: more-detail
    :icon: info
    :name: l10-more-mpc
 
-   .. rubric:: One MPC Step on Our Curve, Drawn
-
-   .. figure:: /_static/images/L10/mpc_candidates.png
-      :alt: A top view of a right curve, x from 68 to 100 meters and y from minus 26 to 6. The lane comes in from the left along y = 0 and turns down; solid lines mark its edges and a dashed gray line its center. The AV is drawn faintly at about x = 78, with a dark dot at its rear axle. A fan of hundreds of thin gray curves leaves the rear axle: a few bend left, up to y = 6.6, and most bend right, down to y = minus 12.7; tag 4 sits at the fan's lower-left end. One thick green curve runs along the lane center past a green dot (tag 1, joined by a thin line from above the lane), bends right past a second green dot (tag 2) and ends inside the turn, at about x = 90.6 and y = minus 3.5, joined by a thin line to tag 3 to the right of the lane. All tags are dark circles.
-      :width: 70%
-      :align: center
-
-      The candidate steering sequences and the best one.
-
-   .. admonition:: Reading the figure
-      :class: tip
-
-      A top view of the curve, in meters, 2 m before the curve, at
-      7.09 m/s. The AV is drawn faintly; the dark dot is its rear axle.
-
-      - **Tag 4 (gray):** every sequence of three steering angles, each
-        from −0.6 to 0.2 rad in steps of 0.1 and held 1 s: :math:`9^3` =
-        729 sequences, each predicted 3 s (60 steps) with the bicycle
-        model.
-      - **Tags 1 to 3 (green):** the best sequence, at 1, 2 and 3 s: 0,
-        then −0.4, then 0 rad.
-
-   - Score: the squared distance from the path, added over the 60 steps,
-     plus the squared steering angles.
-   - Apply only 0 rad for 0.05 s, then plan again.
-
-   A simplification for the picture: a real MPC finds the sequence with an
+   A simplification in our example: a real MPC finds the sequence with an
    optimizer, not by trying a list.
 
    .. rubric:: The Problem Written Out
@@ -4607,7 +4679,8 @@ Trajectory Generation).
       \quad \text{subject to} \quad
       \mathbf{x}_{i+1} = f(\mathbf{x}_i, \delta_i), \quad |\delta_i| \le 0.7
 
-   - :math:`f`: one step of the bicycle model; :math:`e_i`: the predicted
+   - :math:`f`: one step of the bicycle model, with the speed from the speed
+     profile; :math:`e_i`: the predicted
      cross-track error after step :math:`i`; :math:`w`: a weight (chosen)
      that trades steering effort against error.
    - The solution is a whole sequence; only :math:`\delta_0` is applied.

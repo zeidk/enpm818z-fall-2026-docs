@@ -17,7 +17,8 @@ This quiz covers Lecture 10: the behavior layer beyond one flat FSM (a
 superstate and behavior trees), trajectory generation, drive-by-wire, the
 test curve and its speed profile, the kinematic bicycle model, PID speed
 control and windup, Pure Pursuit and its lookahead distance, the Stanley
-law, and what MPC adds. Every question can be answered from the lecture
+law, how MPC builds and scores a plan, and how to choose a steering
+controller. Every question can be answered from the lecture
 notes, :doc:`l10_lecture`. This quiz tests only what the deck teaches in
 class: nothing on this page needs the lecture's "More detail" boxes.
 
@@ -41,7 +42,7 @@ class: nothing on this page needs the lecture's "More detail" boxes.
 ----
 
 
-Multiple Choice (Questions 1 to 15)
+Multiple Choice (Questions 1 to 17)
 ===================================
 
 .. admonition:: Question 1
@@ -478,10 +479,68 @@ Multiple Choice (Questions 1 to 15)
    It with the Speed" in :doc:`l10_lecture`.
 
 
-True or False (Questions 16 to 19)
+.. admonition:: Question 16
+   :class: hint
+
+   On the lecture's curve, the second-best of MPC's 729 plans holds 0, then
+   −0.4, then −0.1 rad. Its path error is 0.031. With the lecture's score
+   (steering weight 1), what is its score?
+
+   A. 0.031
+
+   B. 0.191
+
+   C. 0.201
+
+   D. 0.531
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **C**.
+
+   Score = path error + steering effort, and the steering effort adds the
+   three held angles, squared:
+
+   1. :math:`0^2 + 0.4^2 + 0.1^2` = 0 + 0.16 + 0.01 = 0.17.
+   2. 0.031 + 0.17 = 0.201.
+
+   0.031 (**A**) leaves out the steering; 0.191 (**B**) forgets the third
+   angle; 0.531 (**D**) adds the angles without squaring them. It loses to
+   the best plan, 0.186. See "Score a Plan: Path Error Plus Steering
+   Effort" in :doc:`l10_lecture`.
+
+
+.. admonition:: Question 17
+   :class: hint
+
+   Following Snider's guidelines in the lecture, which steering controller
+   fits smooth highway driving and parking?
+
+   A. Pure Pursuit
+
+   B. Stanley
+
+   C. MPC
+
+   D. A P controller on the steering
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **B**.
+
+   Snider rates Stanley good for smooth highway driving and parking
+   maneuvers. Pure Pursuit (**A**) fits slow driving and paths with breaks,
+   and cuts inside curves more as speed grows. MPC (**C**) fits hard limits
+   and delays. See "Choose a Steering Controller: Match It to the Situation"
+   in :doc:`l10_lecture`.
+
+
+True or False (Questions 18 to 23)
 ==================================
 
-.. admonition:: Question 16
+.. admonition:: Question 18
    :class: hint
 
    True or false: in the lecture's runs, a 3 m lookahead makes the AV weave
@@ -499,7 +558,7 @@ True or False (Questions 16 to 19)
    :doc:`l10_lecture`.
 
 
-.. admonition:: Question 17
+.. admonition:: Question 19
    :class: hint
 
    True or false: during the measured 0.2 s steering delay, at the test
@@ -516,7 +575,7 @@ True or False (Questions 16 to 19)
    Wheel Turns 0.2 s after the Command" in :doc:`l10_lecture`.
 
 
-.. admonition:: Question 18
+.. admonition:: Question 20
    :class: hint
 
    True or false: in Stanley's law, :math:`e` is the cross-track error of
@@ -535,7 +594,7 @@ True or False (Questions 16 to 19)
    :doc:`l10_lecture`.
 
 
-.. admonition:: Question 19
+.. admonition:: Question 21
    :class: hint
 
    True or false: at each step, MPC applies the whole sequence of inputs it
@@ -553,10 +612,46 @@ True or False (Questions 16 to 19)
    the First Input, Repeat" in :doc:`l10_lecture`.
 
 
-Short Answer (Questions 20 to 21)
+.. admonition:: Question 22
+   :class: hint
+
+   True or false: like Pure Pursuit and Stanley, the lecture's MPC computes
+   the steering angle :math:`\delta` from one formula.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False.**
+
+   No formula gives :math:`\delta` in MPC: it tries 729 plans, predicts each
+   with the bicycle model, scores the predicted paths and keeps the plan
+   with the lowest score. Its only formulas are the model's, used to
+   predict. See "Make MPC's First Plan: Try 729 Steering Plans, Keep the
+   Best" in :doc:`l10_lecture`.
+
+
+.. admonition:: Question 23
+   :class: hint
+
+   True or false: the lecture's MPC chooses both inputs of the bicycle
+   model, the steering angle and the acceleration.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False.**
+
+   The model takes both inputs, and a full MPC can choose both. The
+   lecture's MPC chooses only the steering; at each predicted step the speed
+   comes from the speed profile, which the speed PID holds. See "Predict
+   with the Full Model: the State, the Inputs and Four Equations" in
+   :doc:`l10_lecture`.
+
+
+Short Answer (Questions 24 to 26)
 =================================
 
-.. admonition:: Question 20
+.. admonition:: Question 24
    :class: hint
 
    On the lecture's curve, a 10 m lookahead crosses the center by only
@@ -577,7 +672,7 @@ Short Answer (Questions 20 to 21)
    :doc:`l10_lecture`.
 
 
-.. admonition:: Question 21
+.. admonition:: Question 25
    :class: hint
 
    In the lecture's road tree, tick 1 runs Change lane. At tick 2, 0.1 s
@@ -598,3 +693,24 @@ Short Answer (Questions 20 to 21)
    need an explicit arrow from Change lane to Follow, with the left lane's
    state as its condition. See "Switch Behaviors with No Arrow: a Car in
    the Left Lane Stops the Pass" in :doc:`l10_lecture`.
+
+
+.. admonition:: Question 26
+   :class: hint
+
+   2 m before the curve, MPC's best plan starts with 0 rad, although the
+   curve needs a right steer. Explain why, with the plan's horizon and the
+   lecture's scores.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   MPC scores whole 3 s plans, not single steps. The AV is still on the
+   straight, so steering right now would take it off the lane center before
+   the curve starts. The horizon covers the curve, so the best plan waits:
+   0 rad for the first second, −0.4 rad for the second, then 0 rad, with a
+   score of 0.186. Steering right one second early (−0.1, −0.4, 0 rad)
+   scores 3.308. MPC applies only step 1, 0 rad for 0.05 s, then plans again
+   from the new measured pose. See "Score a Plan: Path Error Plus Steering
+   Effort" and "Plan Ahead with MPC: Predict, Score, Apply the First Input,
+   Repeat" in :doc:`l10_lecture`.
