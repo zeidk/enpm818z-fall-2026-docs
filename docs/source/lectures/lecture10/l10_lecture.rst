@@ -4633,7 +4633,7 @@ Plan Ahead with MPC: Predict, Score, Apply the First Input, Repeat
    input; repeat from the newly measured state.
 
 .. figure:: /_static/images/L10/mpc_loop.png
-   :alt: A timeline of MPC plans, with time t in seconds from 0 to 3 along the bottom. A brace over the top row says the horizon: 3 s, 60 steps of 0.05 s. The top row, the plan at t = 0, is split into three pieces with a small tick for each step: steps 1 to 20, delta = 0 rad; steps 21 to 40, delta = -0.4 rad; steps 41 to 60, delta = 0 rad. Below it, two plain bars, the plans at t = 0.05 s and t = 0.10 s, each starting one step later. Each row's first step is green, and a label says green is the step each plan applies.
+   :alt: A timeline of MPC plans, with time t in seconds from 0 to 3 along the bottom. A brace over the top row says the horizon: 3 s, 60 steps of 0.05 s. The top row, the best plan at t = 0, score 0.186, is split into three pieces with a small tick for each step: steps 1 to 20, delta = 0 rad; steps 21 to 40, delta = -0.4 rad; steps 41 to 60, delta = 0 rad. Below it, two plain bars, the best plans at t = 0.05 s and t = 0.10 s, each starting one step later. Each row's first step is green, and a label says green is the step each plan applies.
    :width: 90%
    :align: center
 
@@ -4644,17 +4644,19 @@ Plan Ahead with MPC: Predict, Score, Apply the First Input, Repeat
 
    Time runs to the right, in seconds. Each row is one plan.
 
-   - **Top row:** the plan MPC makes at :math:`t` = 0, 2 m before the
-     curve. Its horizon is 3 s, cut into 60 steps of 0.05 s (the small
+   - **Top row:** the best plan at :math:`t` = 0, 2 m before the curve:
+     the winner of the score table above, 0.186. Its horizon is 3 s, cut into 60 steps of 0.05 s (the small
      ticks). The input at each step is a steering angle :math:`\delta`.
-   - **Lower rows:** the next two plans, each made one step later from the
-     new measured pose.
+   - **Lower rows:** the best plans at the next two steps, each made one
+     step later from the new measured pose.
    - **Green:** the one step each plan applies before the next plan.
 
-**Why only step 1:** the plan is a prediction, and it is never exact. Our
+The top row is the score table's winner: MPC picked it by its score, and
+the AV uses its steering angles. **Why only step 1:** the plan is a
+prediction, and it is never exact. Our
 model leaves out the steering delay and lag that the simulated car has, so
 the real AV would not follow the plan exactly. After 0.05 s, MPC measures where the AV really
-is and plans again from there: the second row, then the third. That makes
+is and picks a new best plan from there: the second row, then the third. That makes
 MPC a feedback controller. The other 59 steps still count: they are why
 step 1 is 0 rad (steering right 1 s early scored 3.308 instead of 0.186).
 Its horizon has times, so it can track a trajectory (timing 2, in
