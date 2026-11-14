@@ -3499,8 +3499,6 @@ sideways a little when the AV turns, and more the harder it turns.
    - **Sideways acceleration** on our turn: at most 2.0 m/s², the profile's
      cap. The model holds under 0.5 μg, 4.9 m/s² on a dry road.
 
-A 10-minute break follows in class.
-
 
 .. _l10-lec-lateral:
 
@@ -4276,49 +4274,48 @@ I with the path, and how do I fix it?
 Steer from the Front Axle: Stanley's Heading and Cross-Track Terms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The steering law of Stanford's DARPA Grand Challenge car, with our signs
-(steering and :math:`e` positive to the left):
+**Goal:** correct both errors at once, at the front axle (steering and
+:math:`e` positive left):
 
 .. math::
 
    \delta = \psi_e - \arctan\frac{k\,e}{v + k_s}
 
-- :math:`\psi_e`: the heading error.
-- :math:`e`: the cross-track error of the **front** axle.
-- :math:`k`: a gain.
-- :math:`k_s` = 1 m/s keeps the fraction finite when the AV stands still.
-  Hoffmann et al. found 1 m/s "appropriate" in experiments (Hoffmann et al.,
-  2007, p. 2299).
-
-The team's paper writes a plus sign with its own signs. With ours, an AV
-left of the path (:math:`e > 0`) must steer right, so the term is
-subtracted.
-
 .. figure:: /_static/images/L10/stanley_geom.png
-   :alt: A close top view of the curve with the AV drawn faintly. A dark dot at the rear axle (tag 1) and a purple dot at the front axle (tag 2), joined by a line. Just below the front axle, a gray dot on the lane center (tag 3), the nearest path point, with a short purple double arrow between them. A gray line from that point along the path's direction (tag 4) and a dark line from the front axle along the AV's heading; a red arc (tag 5) marks the angle between them. All tags are dark circles.
+   :alt: A close top view to scale, x and y in meters, of the AV at the start of the right turn, drawn faintly, with the lane edges and the dashed lane center. A black dot at the rear axle, joined by a line to a purple dot at the front axle. A short purple double arrow joins the front axle to a gray dot on the lane center just below it; a thin purple line leads from it to the label e. From the gray dot a thick gray line runs along the path's direction, down to the right, with dark tag 1 joined to it by a thin line. From the front axle: a black arrow labeled v along the AV's heading, almost straight right; a dotted gray line parallel to the thick gray one, the path's direction; a red arc between the arrow and the dotted line labeled psi e; and the front wheel, a short thick black bar turned to the right, with a dashed line along it and a small black arc from the arrow labeled delta.
    :width: 75%
    :align: center
 
-   Stanley's two errors, at the front axle.
+   Tag 1: the nearest path point and the path's direction there; dotted:
+   that direction at the front axle (purple).
 
-.. admonition:: Reading the figure
-   :class: tip
+- :math:`\delta` (rad): the steering angle to command: the front wheel,
+  from the heading.
+- :math:`\psi_e` (rad): the **heading error**, from the AV's heading to the
+  path's direction (red).
+- :math:`e` (m): the **cross-track error**, the front axle's distance from
+  the path (purple); positive when the AV is left of it.
+- :math:`v` (m/s): the AV's speed.
+- :math:`k` (1/s): a gain, how hard to steer back; ours, 1.
+- :math:`k_s` (m/s): keeps the fraction finite when :math:`v = 0`; 1 m/s.
 
-   A close top view of the curve, at the same moment as Pure Pursuit's
-   worked example. The AV is drawn faintly.
+The first term turns the AV to the path's direction; the second steers it
+back to the path, more gently the faster it goes. Our run:
+:math:`\psi_e` = −0.234 rad, :math:`e` = 0.212 m, :math:`v` = 5.22 m/s give
+:math:`\delta = -0.234 - \arctan(0.212 / 6.22)` = −0.268 rad, 15.4° right:
+only 2° more than :math:`\psi_e`, because :math:`e` is small.
 
-   - **Tag 1:** the rear axle.
-   - **Tag 2:** the front axle (purple).
-   - **Tag 3:** the path point nearest the front axle; the short purple
-     double arrow between them is :math:`e`.
-   - **Tag 4:** the path's direction there (gray line).
-   - **Tag 5:** the heading error :math:`\psi_e`, the angle (red arc)
-     between the path's direction and the AV's heading (dark line).
-
-.. dropdown:: More detail: one Stanley step by hand, and why it converges
+.. dropdown:: More detail: Stanley by hand, its signs, and why it converges
    :class-container: more-detail
    :icon: info
    :name: l10-more-stanley
+
+   .. rubric:: The Signs and k_s
+
+   The team's paper writes a plus sign with its own signs. With ours, an AV
+   left of the path (:math:`e > 0`) must steer right, so the term is
+   subtracted. :math:`k_s` = 1 m/s: Hoffmann et al. found 1 m/s
+   "appropriate" in experiments (Hoffmann et al., 2007, p. 2299).
 
    .. rubric:: One Stanley Step by Hand, at the Same Moment
 
