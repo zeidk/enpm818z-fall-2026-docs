@@ -3871,24 +3871,29 @@ On our turn (below): 5 m fixed, or :math:`\max(3\ \mathrm{m}, 0.75\ \mathrm{s}\t
 Code Pure Pursuit: Four Steps, Every 0.05 s
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**Goal:** the recipe the controller node runs at every cycle (you write it in
-GP4).
+**Goal:** the recipe the controller node runs at every cycle, the one you
+write in GP4. In pseudocode:
 
-1. **Find the lookahead point:** walk along the path from the AV and take the
-   first point :math:`L_d` from the rear axle.
-2. **Write it in the AV's own frame:** how far forward (:math:`x`) and how
-   far left (:math:`y`) of the rear axle, from the AV's position and heading.
-3. **Get the arc:** :math:`\alpha = \operatorname{atan2}(y, x)`, then the
-   curvature :math:`\kappa = 2\sin\alpha / L_d` (that is, :math:`1/R`).
-4. **Steer:** :math:`\delta = \arctan(L\kappa)`, the bicycle model's rule;
-   send it, and start again at the next cycle.
+.. code-block:: python
 
-.. important::
+   # every 0.05 s; pose = the car's origin, theta = its heading
+   xr = pose.x - rear_offset * cos(theta)      # move back to the rear axle
+   yr = pose.y - rear_offset * sin(theta)
+   # 1. the lookahead point: the first path point L_d from the rear axle
+   goal = first path point ahead with dist(p, (xr, yr)) >= L_d
+   # 2. the goal in the AV's own frame: forward gx, left gy
+   dx, dy = goal.x - xr, goal.y - yr
+   gx =  cos(theta) * dx + sin(theta) * dy
+   gy = -sin(theta) * dx + cos(theta) * dy
+   # 3. the arc: the angle to the goal, then the curvature 1/R
+   alpha = atan2(gy, gx)
+   kappa = 2 * sin(alpha) / L_d
+   # 4. steer for it, within the limit, and send
+   delta = clamp(atan(L * kappa), -steer_limit, steer_limit)
 
-   The node gets the pose of the car's origin and moves it back to the rear
-   axle with ``rear_offset``; its lookahead is ``lookahead_distance``, 5 m.
-   The four steps by hand, on one moment of our run, are in the "More
-   detail" box below.
+The node's values: ``lookahead_distance`` :math:`L_d` = 5 m, wheelbase
+:math:`L` = 2.875 m, ``steer_limit`` 0.7 rad. The four steps by hand, on one
+moment of our run, are in the "More detail" box below.
 
 .. dropdown:: More detail: the four steps by hand, on one moment of our run
    :class-container: more-detail
@@ -4003,9 +4008,10 @@ GP4).
 Drive Three Lookaheads on Our Turn: 3, 5 and 10 m
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Every run starts 1 m left of the lane's center (chosen), so the straight
-shows how the AV corrects; the corner shows how it turns. Red: 3 m. Blue:
-5 m. Green, dashed: 10 m.
+Three runs of Pure Pursuit on our turn, each with a different lookahead
+:math:`L_d`: red, :math:`L_d` = 3 m; blue, 5 m; green dashed, 10 m. Each
+starts 1 m left of the lane's center (chosen), so the straight shows how the
+AV steers back, and the corner how it turns.
 
 .. figure:: /_static/images/L10/pp_road_straight.png
    :alt: A long top view of the straight approach, to scale, x from 0 to 45 meters and y in meters: the lane between two black lines 1.75 meters either side of a gray dashed center line. A faint gray AV at the left, 1 meter left of the center. Three paths leave it. A red one swings across the center and back in waves that grow until they cross the lane's edges. A blue one swings once just past the center, marked by a blue dot with dark tag 1, then settles on the center. A green dashed one comes down to the center slowly with no visible swing.
