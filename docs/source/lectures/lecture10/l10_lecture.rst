@@ -4244,16 +4244,31 @@ Stanley steered Stanford's car to win the 2005 DARPA Grand Challenge (Thrun
 et al., 2006). Pure Pursuit chases a point; Stanley asks: how misaligned am
 I with the path, and how do I fix it?
 
-1. Measure the **heading error**: the angle between the car's heading and
-   the path's.
-2. Measure the **cross-track error** at the **front axle**.
-3. Steer to correct both at once.
+.. figure:: /_static/images/L10/stanley_idea.png
+   :alt: A top view to scale, x and y in meters. A gray dashed path curves gently down to the right, with an arrow showing its direction. A faint gray AV above it, turned slightly toward it; its front axle is a purple dot, dark tag 1, 1 meter above the path's point at x = 0, which is a dark dot with a small square mark. A black two-headed arrow joins the two dots, square to the path, dark tag 2. From the front axle, a gray dotted line runs along the path's direction and a black arrow along the AV's heading, 15 degrees below it; an arc between them carries dark tag 3.
+   :width: 75%
+   :align: center
 
-- Steering commands "at a rate of 20 Hz"; in the race Stanley reached "its
-  top speed of 38.0 mph" (Thrun et al., 2006).
-- Snider: "this method outperforms Pure Pursuit in most scenarios. However,
-  the Stanley method is not as robust to large errors and non-smooth
-  paths" (Snider, 2009).
+   Drawn at 1.0 m and 15° (chosen, so both show).
+
+1. Measure at the **front axle** (tag 1), not the rear axle as Pure Pursuit
+   does.
+2. The **cross-track error** (tag 2): how far the front axle is from the
+   path.
+3. The **heading error** (tag 3): the angle between the car's heading and
+   the path's.
+4. Steer to correct both at once.
+
+.. dropdown:: More detail: Stanley in the race, and Snider's comparison
+   :class-container: more-detail
+   :icon: info
+   :name: l10-more-stanley-race
+
+   - Stanley's steering commands ran "at a rate of 20 Hz"; in the race,
+     Stanley reached "its top speed of 38.0 mph" (Thrun et al., 2006).
+   - Snider: "this method outperforms Pure Pursuit in most scenarios.
+     However, the Stanley method is not as robust to large errors and
+     non-smooth paths" (Snider, 2009).
 
 
 .. _l10-lec-stanley-law:
