@@ -4636,8 +4636,13 @@ Weigh MPC: What It Adds and What It Costs
    * - Sees the curvature jump coming: the horizon covers the next seconds
        of the path
      - An optimization at every step, in time for the next one
-   * - Limits inside the problem: the 0.7 rad steering, the steering rate
-     - A model good enough to predict with; a wrong model gives wrong plans
+   * - Plans within the limits: it tries only angles up to 0.7 rad, and can
+       also cap how fast the steering changes (in rad/s). Pure Pursuit and
+       Stanley compute an angle, then cut it to the limit
+     - Trusts its model: the bicycle model assumes the tires do not slide.
+       Where they slide, at high sideways acceleration (see
+       :ref:`l10-lec-model-stops`), its predictions are wrong, and so is its
+       best plan
    * - Delays in the model: the 0.1 s steering delay can be predicted
      - Weights to tune instead of one lookahead
 
