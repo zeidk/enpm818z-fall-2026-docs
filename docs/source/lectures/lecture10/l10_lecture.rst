@@ -4549,9 +4549,9 @@ the path. The AV is 2 m before the curve, at 7.09 m/s.
      held angle changes.
 
 1. **Measure** the AV's pose and speed now.
-2. **List the plans:** a plan holds one steering angle for 1 s, three times
-   in a row. Each angle is one of 9 values, −0.6 to 0.2 rad in steps of
-   0.1: :math:`9^3` = 729 plans (gray).
+2. **List the plans:** a plan is three steering angles in a row, each held
+   for 1 s. Each angle is one of 9 values, −0.6 to 0.2 rad in steps of 0.1:
+   :math:`9^3` = 729 plans (gray).
 3. **Predict** each plan with the bicycle model, 60 steps of 0.05 s. Our MPC
    chooses only the steering; at each step the speed comes from the speed
    profile.
