@@ -51,6 +51,7 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
    .. rubric:: Removed
 
    - **L10 exercises page.**
+   - **L10, three unused images** (no page showed them).
 
    .. rubric:: Quizzes
 
