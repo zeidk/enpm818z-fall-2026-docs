@@ -4453,8 +4453,10 @@ MPC
 Pure Pursuit and Stanley steer from the path as it is now, with one formula.
 MPC looks ahead: from the AV now, it predicts with the bicycle model where
 each candidate steering takes it over the next 3 s (gray: 9 of the 729 it
-tries), scores them, and keeps the cheapest (green). It applies only the
-first 0.05 s, then plans again. It does what the local planner did in path
+tries), scores them, and keeps the cheapest (green). The AV steers with the
+green plan's first angle for one control step, 0.05 s; then MPC measures
+where the AV is and makes a whole new 3 s plan. The rest of the old plan is
+never used. It does what the local planner did in path
 and trajectory generation: roll out candidates, score them, keep the best.
 
 
@@ -4471,11 +4473,18 @@ steering sequence tracks the path best, within my limits?"
 3. **Apply:** only the first input.
 4. **Repeat:** at the next step, from the new measurement.
 
-- Re-solving from each measurement is the feedback; looking ahead handles
-  the curve coming.
-- Kong et al.: MPC "can handle Multi-Input Multi-Output systems with input
-  and state constraints while taking into account the nonlinear dynamics of
-  the vehicle" (Kong et al., 2015).
+Re-solving from each measurement is the feedback; looking ahead handles the
+curve coming.
+
+.. dropdown:: More detail: what MPC can handle
+   :class-container: more-detail
+   :icon: info
+   :name: l10-more-mpc-kong
+
+   Kong et al. drove a car with an MPC built on the kinematic bicycle model.
+   They write that MPC "can handle Multi-Input Multi-Output systems with
+   input and state constraints while taking into account the nonlinear
+   dynamics of the vehicle" (Kong et al., 2015, p. 1094).
 
 
 .. _l10-lec-bicycle-full:
