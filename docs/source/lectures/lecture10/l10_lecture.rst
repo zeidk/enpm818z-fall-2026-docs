@@ -4532,7 +4532,7 @@ Make MPC's First Plan: Try 729 Steering Plans, Keep the Best
 the path. The AV is 2 m before the curve, at 7.09 m/s.
 
 .. figure:: /_static/images/L10/mpc_candidates.png
-   :alt: A top view of the right curve, x from 68 to 100 meters and y from minus 14 to 6. The lane comes in from the left along y = 0 and bends down; solid lines mark its edges and a dashed gray line its center. The AV is drawn faintly at about x = 78, with a dark dot at its rear axle. A fan of hundreds of thin gray curves leaves the rear axle: a few bend left, up to y = 6, and most bend right, down to about y = minus 12.7; dark tag 4 sits at the fan's lower-left end. One thick green curve runs along the lane center past a green dot (dark tag 1, joined by a thin line from above), bends right past a second green dot (dark tag 2) and ends inside the curve, at about x = 90.6 and y = minus 3.5, joined by a thin line to dark tag 3 to the right of the lane.
+   :alt: A top view of the right curve, x from 68 to 100 meters and y from minus 14 to 6. The lane comes in from the left along y = 0 and bends down; solid lines mark its edges and a dashed gray line its center. The AV is drawn faintly at about x = 78, with a dark dot at its rear axle. A fan of hundreds of thin gray curves leaves the rear axle: a few bend left, up to y = 6, and most bend right, down to about y = minus 12.7. One thick green curve runs straight along the lane center to a green dot near x = 83.5, bends right to a second green dot near x = 87.7 and y = minus 1.3, and ends inside the curve, at about x = 90.6 and y = minus 3.5.
    :width: 80%
    :align: center
 
@@ -4544,18 +4544,19 @@ the path. The AV is 2 m before the curve, at 7.09 m/s.
    A top view of the curve, in meters. The AV is drawn faintly; the dark dot
    is its rear axle, where every plan starts.
 
-   - **Tag 4 (gray):** the 729 predicted paths, one per plan.
-   - **Tags 1 to 3 (green):** the best plan's path, at 1, 2 and 3 s.
+   - **Gray:** the 729 predicted paths, one per plan.
+   - **Green:** the best plan's path; its dots mark 1 and 2 s, where the
+     held angle changes.
 
 1. **Measure** the AV's pose and speed now.
 2. **List the plans:** a plan holds one steering angle for 1 s, three times
    in a row. Each angle is one of 9 values, −0.6 to 0.2 rad in steps of
-   0.1: :math:`9^3` = 729 plans (tag 4).
+   0.1: :math:`9^3` = 729 plans (gray).
 3. **Predict** each plan with the bicycle model, 60 steps of 0.05 s. Our MPC
    chooses only the steering; at each step the speed comes from the speed
    profile.
 4. **Score** each predicted path (next section) and keep the lowest: 0, then
-   −0.4 (a right steer), then 0 rad, shown at 1, 2 and 3 s by tags 1 to 3.
+   −0.4 (a right steer), then 0 rad (green).
 
 No formula gives :math:`\delta` here, unlike Pure Pursuit and Stanley: MPC
 tries angles and keeps the plan whose predicted path scores best. Its only
