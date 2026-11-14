@@ -3772,29 +3772,29 @@ AV holds it for one step, 0.05 s, then picks a new point and starts again.
 Steer for the Arc: Pure Pursuit's Steering Law
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+**Goal:** turn steps 1 to 3 into one formula for the steering angle:
+
 .. math::
 
-   \delta = \arctan\!\left(\frac{2L\sin\alpha}{L_d}\right), \qquad
-   L_d = \max(L_{d,\min},\; k_v\, v)
+   \delta = \arctan\!\left(\frac{2L\sin\alpha}{L_d}\right)
 
-- :math:`\delta`: steering angle; :math:`L`: wheelbase; :math:`\alpha`: the
-  angle from the heading to the lookahead point; :math:`L_d`: lookahead
-  distance.
-- "Look farther ahead when going faster": :math:`k_v` in seconds.
+- :math:`\delta` (rad): the steering angle to command, step 3's angle.
+- :math:`L` (m): the wheelbase, from the rear axle to the front axle:
+  2.875 m.
+- :math:`L_d` (m): the lookahead distance, step 1's: 5 m in our run.
+- :math:`\alpha` (rad): the angle at the rear axle from the AV's heading to
+  the lookahead point: 0 when the point is straight ahead, larger as the
+  path bends away.
 
-.. list-table::
-   :widths: 50 50
-   :header-rows: 1
-   :class: compact-table
+In our run, :math:`\alpha` = 0.1877 rad (10.8°) to the right:
+:math:`\delta = \arctan(2 \times 2.875 \times \sin 0.1877 / 5) = \arctan(0.2146)`
+= 0.211 rad to the right, step 3's angle.
 
-   * - **Strengths**
-     - **Limits**
-   * - simple: one formula, the wheelbase only; robust to large errors and
-       jumps in the path (Snider, 2009)
-     - no slip in the model; cuts corners, more as speed grows (Snider,
-       2009); ignores the heading error
-
-On our turn (below): 5 m fixed, or :math:`\max(3\ \mathrm{m}, 0.75\ \mathrm{s}\times v)`.
+To look farther ahead at higher speed, set the lookahead from the speed
+:math:`v`: :math:`L_d = \max(L_{d,\min},\; k_v\, v)`, with :math:`k_v` (s)
+the seconds of driving to look ahead and :math:`L_{d,\min}` (m) the shortest
+lookahead. With :math:`k_v` = 0.75 s and :math:`L_{d,\min}` = 3 m: 6 m at
+8 m/s; 3 m on the second arc, where 0.75 × 3.46 = 2.6 m is too short.
 
 .. dropdown:: More detail: why κ = 2 sin α / L_d
    :class-container: more-detail
@@ -3837,6 +3837,26 @@ On our turn (below): 5 m fixed, or :math:`\max(3\ \mathrm{m}, 0.75\ \mathrm{s}\t
    5. With :math:`\sin\alpha = g_y / L_d`: :math:`\kappa = 2 g_y / L_d^2`,
       Coulter's form (Coulter, 1992). Our example:
       2 × (−0.933) / 25 = −0.0746 /m, as below.
+
+
+.. _l10-lec-pp-weigh:
+
+Weigh Pure Pursuit: Simple, but It Cuts Corners
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :widths: 50 50
+   :header-rows: 1
+   :class: compact-table
+
+   * - **Strengths**
+     - **Limits**
+   * - simple: one formula, the wheelbase only; robust to large errors and
+       jumps in the path (Snider, 2009)
+     - no slip in the model; cuts corners, more as speed grows (Snider,
+       2009); ignores the heading error
+
+On our turn (below): 5 m fixed, or :math:`\max(3\ \mathrm{m}, 0.75\ \mathrm{s}\times v)`.
 
 
 .. _l10-lec-pp-steps:
