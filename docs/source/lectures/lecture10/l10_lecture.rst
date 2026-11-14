@@ -4698,6 +4698,32 @@ Trajectory Generation).
      fast.
 
 
+.. _l10-lec-mpc-cycle:
+
+See MPC as One Loop: Measure, Plan, Score, Pick, Apply
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. figure:: /_static/images/L10/mpc_cycle.png
+   :alt: A loop diagram of one MPC cycle in six numbered columns. 1, Measure: a box, the AV's pose and speed now, 7.09 m/s, 2 m before the curve. 2, List plans: three plans, (0, 0, 0) rad, (0, -0.4, 0) rad and (-0.1, -0.4, 0) rad, and 726 more. 3, Predict each: for each plan, a bar of three pieces with its three angles, under a brace saying 3 s horizon, each angle held 1 s, with 60 small ticks; a label says bicycle model, 60 steps of 0.05 s. 4, Score: an arrow from each bar to its score, 6.631, 0.186 in a green box, and 3.308; a label says path error plus steering. 5, Pick lowest: a green box, best plan (0, -0.4, 0) rad, score 0.186. 6, below it, a green box: apply step 1, delta = 0 rad for 0.05 s. A thick arrow runs from it back along the bottom to the Measure box, labeled 0.05 s later: measure again, make 729 new plans, pick a new best.
+   :width: 100%
+   :align: center
+
+   One MPC cycle on our curve, with three of the 729 plans.
+
+1. **Measure** the AV: 7.09 m/s, 2 m before the curve.
+2. **List the plans:** a plan is three steering angles, each held 1 s; the
+   figure shows three of the 729.
+3. **Predict** each plan with the bicycle model over the 3 s horizon, 60
+   steps of 0.05 s (the ticks).
+4. **Score** each predicted path, path error plus steering: 6.631 for going
+   straight, 0.186 for (0, −0.4, 0) rad, 3.308 for steering right 1 s early.
+5. **Pick** the lowest score, 0.186.
+6. **Apply** only its first step: 0 rad for 0.05 s.
+
+Every 0.05 s, MPC runs steps 1 to 6 again from a new measurement. Each plan
+looks 3 s ahead, but the AV uses only its first 0.05 s.
+
+
 .. _l10-lec-mpc-weigh:
 
 Weigh MPC Against Pure Pursuit and Stanley
