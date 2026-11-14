@@ -4442,11 +4442,20 @@ only 2° more than :math:`\psi_e`, because :math:`e` is small.
 MPC
 ~~~
 
-Pure Pursuit and Stanley look at the path now, with one formula. MPC builds
-on the bicycle model instead: it predicts the next seconds with it. It does
-what the local planner did: it rolls out candidates, scores them and keeps
-the best. Here the candidates are steering sequences, the plan is made
-again every 0.05 s, and only its first input is applied.
+.. figure:: /_static/images/L10/mpc_idea.png
+   :alt: A top view to scale, x and y in meters, of the start of the right turn: the lane between two black edges, its center dashed gray. A faint gray AV near x = 78 on the lane center, its rear axle a black dot. Nine gray curves leave the rear axle and fan out over the next 3 seconds, from a curve turning sharply right that loops back below the lane, through one going straight, to two curving left off the road. A thick green curve leaves the rear axle, runs straight, then follows the lane center into the turn.
+   :width: 60%
+   :align: center
+
+   Gray: 9 of the 729 candidates, each holding one steering angle for 3 s.
+   Green: the cheapest of all 729.
+
+Pure Pursuit and Stanley steer from the path as it is now, with one formula.
+MPC looks ahead: from the AV now, it predicts with the bicycle model where
+each candidate steering takes it over the next 3 s (gray: 9 of the 729 it
+tries), scores them, and keeps the cheapest (green). It applies only the
+first 0.05 s, then plans again. It does what the local planner did in path
+and trajectory generation: roll out candidates, score them, keep the best.
 
 
 .. _l10-lec-mpc-idea:
