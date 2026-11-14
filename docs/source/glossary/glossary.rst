@@ -2531,7 +2531,7 @@ L7: Route Planning
       Dijkstra. On Town01's waypoint graph, with distance costs, A* took 196
       nodes for L7's trip where Dijkstra took 543; both found the same
       260.6 m route. GP4's planner searches with A*. See Heuristic and
-      Admissible Heuristic. :doc:`L7 </lectures/lecture7/l7_index>` · L9
+      Admissible Heuristic. :doc:`L7 </lectures/lecture7/l7_index>` · :doc:`L9 </lectures/lecture9/l9_index>`
 
    Admissible Heuristic
       A heuristic :math:`h` that never overestimates: for every node
@@ -2557,7 +2557,7 @@ L7: Route Planning
       one point on the car and its heading, :math:`(x, y, \theta)` (Paden et
       al., 2016). At L7's start, :math:`(x, y)` = (133.6, −129.4) m is the
       AV's base link, and :math:`\theta` = 180°, measured counterclockwise
-      from east, so the AV faces west. :doc:`L7 </lectures/lecture7/l7_index>` · L9
+      from east, so the AV faces west. :doc:`L7 </lectures/lecture7/l7_index>` · :doc:`L9 </lectures/lecture9/l9_index>`
 
    Consistent Heuristic
       A heuristic :math:`h` with :math:`h(n) \le \text{cost}(n, m) + h(m)`
@@ -2583,7 +2583,7 @@ L7: Route Planning
       appendix. It always takes the open node with the lowest cost so far,
       :math:`g`, and treats that cost as final. It is sure to find the
       cheapest route if no edge cost is negative. Dijkstra is A* with :math:`h = 0` at every node.
-      Autoware's route search is Dijkstra, in the Lanelet2 map library. :doc:`L7 </lectures/lecture7/l7_index>` · L9
+      Autoware's route search is Dijkstra, in the Lanelet2 map library. :doc:`L7 </lectures/lecture7/l7_index>` · :doc:`L9 </lectures/lecture9/l9_index>`
 
    Directed Graph
       A set of nodes and a set of edges, each edge an ordered pair (from, to)
@@ -3008,8 +3008,8 @@ L8: Trajectory Prediction and Behavior Modeling
 
 .. _g-l9:
 
-L9 (not yet published)
-======================
+L9: Motion Planning
+===================
 
 .. glossary::
 
@@ -3019,27 +3019,27 @@ L9 (not yet published)
       the AV may use, where it must stop, and a speed limit, from facts that
       change slowly. In L9, closing the left lane leaves the local planner
       10 candidates; 9 collide, so the AV stops behind the parked car. See
-      Finite State Machine. L9
+      Finite State Machine. :doc:`L9 </lectures/lecture9/l9_index>`
 
    Bicycle Model
       A simplified kinematic vehicle model that merges the two front wheels
       and two rear wheels into single virtual wheels. Used as the foundation
-      for motion planning and control. L9 · :doc:`L10 </lectures/lecture10/l10_index>`
+      for motion planning and control. :doc:`L9 </lectures/lecture9/l9_index>` · :doc:`L10 </lectures/lecture10/l10_index>`
 
    Collision Check
-      A test of whether the AV's body overlaps an obstacle at one pose. L9
+      A test of whether the AV's body overlaps an obstacle at one pose. :doc:`L9 </lectures/lecture9/l9_index>`
       covers the AV with three circles of radius 1.21 m, and each obstacle
       the same way. The gap between two circles is the distance between
       their centers minus the two radii; a gap under 0.3 m counts as a
       collision. The check is conservative: it never misses a real
-      collision, but bodies 0.4 m apart already count as overlapping. L9
+      collision, but bodies 0.4 m apart already count as overlapping. :doc:`L9 </lectures/lecture9/l9_index>`
 
    Configuration
       Three numbers, :math:`q = (x, y, \theta)`, that fix where every point
       of the AV's rigid body is: the base link at :math:`(x, y)` in the map
       frame, and the heading :math:`\theta`, counterclockwise from the map's
       :math:`x` axis. L9's AV starts at (97.69 m, −207.29 m, 0.14°). See
-      Configuration Space. L9
+      Configuration Space. :doc:`L9 </lectures/lecture9/l9_index>`
 
    End-to-End Driving
       "We define end-to-end autonomous driving systems as fully
@@ -3047,7 +3047,7 @@ L9 (not yet published)
       a plan and/or low-level control actions as output" (Chen et al.,
       2024). An end-to-end driver is one network from the sensors to the
       plan. In 2024, Tesla said its FSD runs on end-to-end neural networks.
-      L9 · L11
+      :doc:`L9 </lectures/lecture9/l9_index>` · L11
 
    Finite State Machine (FSM)
       A fixed list of states, of which the system is in exactly one at a
@@ -3055,14 +3055,14 @@ L9 (not yet published)
       state to another when its condition becomes true. In L9, a valet that
       parks itself has five states (Enter, Search the aisle, Approach the
       spot, Reverse in, Parked), with thresholds chosen for the lecture.
-      Stanford's Junior used one with 13 states. L9
+      Stanford's Junior used one with 13 states. :doc:`L9 </lectures/lecture9/l9_index>`
 
    Foot Point
       The point of the reference path nearest to a given point P, where the
       line from P meets the reference at a right angle. It gives P's
       :math:`s`; the signed distance from it to P is :math:`d`. For L9's
       parked car, the foot point is (155.686, −207.135), at
-      :math:`s` = 118.00 m. See Frenet Frame. L9
+      :math:`s` = 118.00 m. See Frenet Frame. :doc:`L9 </lectures/lecture9/l9_index>`
 
    Frenet Frame
       Coordinates attached to a reference path: :math:`s` is the distance
@@ -3071,27 +3071,27 @@ L9 (not yet published)
       constant :math:`d`: in L9, with the right lane's center as the
       reference, the left lane's center is :math:`d` = 3.5 m. The frame
       fails where :math:`1 - \kappa d` reaches 0, at the center of a curve.
-      L9 · :doc:`L10 </lectures/lecture10/l10_index>`
+      :doc:`L9 </lectures/lecture9/l9_index>` · :doc:`L10 </lectures/lecture10/l10_index>`
 
    Hybrid A*
       A* over a grid of :math:`(x, y, \theta)` cells that keeps in each cell
       an exact pose, one the AV reaches by driving an arc from the pose
       before it. Its path can be driven, but the search is not complete: it
       can miss a path that exists. In L9's garage it finds 24.0 m forward,
-      one switch, then 6.6 m in reverse into the spot. L9
+      one switch, then 6.6 m in reverse into the spot. :doc:`L9 </lectures/lecture9/l9_index>`
 
    Local Planner
       The layer that finds the path for the next few seconds that follows
       the route and stays clear of every object, and plans it again as the
       AV moves. L9's local planner samples 31 candidate paths every 0.5 s,
-      checks them, scores them, and keeps the cheapest. L9
+      checks them, scores them, and keeps the cheapest. :doc:`L9 </lectures/lecture9/l9_index>`
 
    Markov Decision Process (MDP)
       States, actions, and, for each state and action, the chances of each
       next state and its reward. The next state depends only on the current
       state and action. In L9's lane change, prediction gives the chance
       :math:`p` that the other car yields: going first costs less on
-      average than waiting 3 s only when :math:`p` > 0.97. L9
+      average than waiting 3 s only when :math:`p` > 0.97. :doc:`L9 </lectures/lecture9/l9_index>`
 
    Nash Equilibrium
       A choice for each player of a game such that no player can lower its
@@ -3100,33 +3100,33 @@ L9 (not yet published)
       lecture), the AV and a car in the left lane each go or wait: (AV goes,
       car yields) and (AV waits, car keeps) are both equilibria, so the
       behavior layer goes first only when prediction says the car will
-      yield. L9
+      yield. :doc:`L9 </lectures/lecture9/l9_index>`
 
    Nonholonomic Constraint
       A limit on how a vehicle can move, not on where it can be. A car's
       wheels roll and do not slide, so its base link always moves along its
       heading and it cannot move sideways; it turns only by steering, no
-      tighter than the steering limit allows (3.41 m in L9). L9
+      tighter than the steering limit allows (3.41 m in L9). :doc:`L9 </lectures/lecture9/l9_index>`
 
    Obstacle Region
       The part of configuration space where the robot's body overlaps an
       obstacle; the rest is the free space. For L9's AV heading along the
       lane, the parked car becomes a 9.0 m by 3.8 m region its base link
-      must avoid. The region depends on the heading too. L9
+      must avoid. The region depends on the heading too. :doc:`L9 </lectures/lecture9/l9_index>`
 
    RRT
       Rapidly exploring random tree. A tree of points grown from the start:
       each step picks a random point, finds the tree's nearest node and
       takes a short step from it toward the point. In L9's garage, with
       1.5 m steps, the tree reaches the goal after 34 tries; its path of
-      straight steps is fast to find but not drivable as it is. L9
+      straight steps is fast to find but not drivable as it is. :doc:`L9 </lectures/lecture9/l9_index>`
 
    RRT* (RRT star)
       RRT with two more steps for each new node: choose, among nearby
       nodes, the parent that gives the shortest path from the start, and
       rewire nearby nodes through the new one when that is shorter. Its
       path's length tends to the shortest as the tree grows; plain RRT's
-      does not. L9
+      does not. :doc:`L9 </lectures/lecture9/l9_index>`
 
 .. raw:: html
 

@@ -79,12 +79,12 @@ slides are finished; the table shows the plan.
    lecture6/l6_index
    lecture7/l7_index
    lecture8/l8_index
+   lecture9/l9_index
    lecture10/l10_index
 
 ..
    Hidden until each deck is finished (see HIDDEN_LECTURES in conf.py).
    To reopen a lecture, move its line back into the toctree above.
-   lecture9/l9_index
    lecture11/l11_index
    lecture12/l12_index
    lecture13/l13_index

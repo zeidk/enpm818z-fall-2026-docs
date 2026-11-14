@@ -5,10 +5,29 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.29.0: Lecture 10 MPC Walkthrough, Choosing a Controller, No Exercises Page (2026-11-14)
+.. dropdown:: v2.30.0: Lecture 9 Published (2026-11-14)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L9: Motion Planning is published:** the lecture notes, Going Further
+     (the appendix), the hands-on code page, the exercises, the quiz and the
+     references, all in the lectures menu. They follow the slides shown in
+     class: configuration space, collision checking with circles, the Frenet
+     frame, sampling and scoring candidate paths, behavior (FSMs, the lane
+     change as a game), and the garage planners (grid search, hybrid A*,
+     RRT, RRT*).
+
+   .. rubric:: Glossary
+
+   - **L9 terms:** the section is now "L9: Motion Planning", and each L9
+     term links to the lecture.
+
+.. dropdown:: v2.29.0: Lecture 10 MPC Walkthrough, Choosing a Controller, No Exercises Page (2026-11-14)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

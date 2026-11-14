@@ -48,7 +48,7 @@ templates_path = ["_templates"]
 # L7 since 2026-10-24, L8 and its Foxglove reading since 2026-10-28), and L10
 # since 2026-11-12.
 #
-# L9 and L11 to L13 are hidden completely: they do not match the syllabus yet and
+# L11 to L13 are hidden completely: they do not match the syllabus yet and
 # open one at a time as their decks are finished. To reopen lecture N:
 #   1. remove N from HIDDEN_LECTURES below,
 #   2. restore its line in the toctree of lectures/index.rst,
@@ -57,7 +57,7 @@ templates_path = ["_templates"]
 #      pages that mention it.
 # The source files stay on disk.
 # ---------------------------------------------------------------------------
-HIDDEN_LECTURES = [9, 11, 12, 13]
+HIDDEN_LECTURES = [11, 12, 13]
 
 exclude_patterns = [f"lectures/lecture{n}/**" for n in HIDDEN_LECTURES]
 
