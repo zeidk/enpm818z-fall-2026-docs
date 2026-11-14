@@ -4004,26 +4004,27 @@ Drive Three Lookaheads on Our Turn: 3, 5 and 10 m
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Three runs of Pure Pursuit on our turn, each with a different lookahead
-:math:`L_d`: red, :math:`L_d` = 3 m; blue, 5 m; green dashed, 10 m. Each
-starts 1 m left of the lane's center (chosen), so the straight shows how the
-AV steers back, and the corner how it turns.
+:math:`L_d`: :math:`L_d` = 3 m (red); 5 m (blue); 10 m (green). Each starts
+1 m left of the lane's center (chosen), so the straight shows how the AV
+steers back, and the curve how it turns.
 
 .. figure:: /_static/images/L10/pp_road_straight.png
-   :alt: A long top view of the straight approach, to scale, x from 0 to 45 meters and y in meters: the lane between two black lines 1.75 meters either side of a gray dashed center line. A faint gray AV at the left, 1 meter left of the center. Three paths leave it. A red one swings across the center and back in waves that grow until they cross the lane's edges. A blue one swings once just past the center, marked by a blue dot with dark tag 1, then settles on the center. A green dashed one comes down to the center slowly with no visible swing.
+   :alt: A long top view of the straight approach, to scale, x from 0 to 45 meters and y in meters: the lane between two black lines 1.75 meters either side of a gray dashed center line. A faint gray AV at the left, 1 meter left of the center. Three paths leave it. A red one swings across the center and back in waves that grow until they cross the lane's edges. A blue one swings once just past the center, then settles on the center. A green dashed one comes down to the center slowly with no visible swing.
    :width: 100%
    :align: center
 
 .. figure:: /_static/images/L10/pp_road_corner.png
-   :alt: A top view of the right turn, to scale, x from 74 to 97 meters and y from minus 18 to 3 meters, the lane between two black edges and its center dashed gray. A blue path follows the center closely through the turn. A green dashed path turns early, cutting toward the inner edge, marked by a green dot with dark tag 2, then swings out past the center after the corner.
+   :alt: A top view of the right turn, to scale, x from 74 to 97 meters and y from minus 18 to 3 meters, the lane between two black edges and its center dashed gray. A thick blue path follows the center closely through the curve. A green dashed path turns early, cutting toward the inner edge, then swings out past the center after the curve.
    :width: 45%
    :align: center
 
-- **3 m:** the AV steers back so hard that it overshoots, and each swing is
-  wider: it leaves the 3.5 m lane (3.07 m off). Not drawn in the corner.
-- **5 m:** tag 1, one swing past the center, 0.32 m, then it settles; in the
-  corner, at most 0.25 m off.
-- **10 m:** it comes back slowly, 0.07 m past the center; in the corner it
-  turns early and, tag 2, cuts 0.98 m inside.
+- **3 m (red):** the AV steers back so hard that it overshoots, and each
+  swing is wider: it leaves the 3.5 m lane (3.07 m off). Not drawn on the
+  curve.
+- **5 m (blue):** one swing past the center, 0.32 m, then it settles; on
+  the curve, at most 0.25 m off.
+- **10 m (green):** it comes back slowly, 0.07 m past the center; on the
+  curve it turns early and cuts 0.98 m inside.
 
 
 .. _l10-lec-ld-tradeoff:
