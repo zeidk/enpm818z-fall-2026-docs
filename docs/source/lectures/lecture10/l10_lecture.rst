@@ -3729,8 +3729,9 @@ Pure Pursuit, Step 1: Pick the Point on the Path L_d Ahead
 
 One moment of our run: the AV at :math:`s` = 82.7 m, just before the first
 arc, at 5.22 m/s, with the node's lookahead :math:`L_d` = 5 m. Tag 1, the
-lookahead point: where the path crosses the circle of radius :math:`L_d`
-around the rear axle (dashed).
+lookahead point: the path point :math:`L_d` from the rear axle. The dashed
+circle only shows "L_d from the rear axle"; the controller draws no circle,
+it takes the first path point that far away.
 
 
 .. _l10-lec-pp-step2:
@@ -3739,13 +3740,15 @@ Pure Pursuit, Step 2: Find the Arc from the Rear Axle to That Point
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L10/pp_step_2.png
-   :alt: A top view to scale, x and y in meters, of the start of our right turn: the lane between two black edges, its center dashed gray, bending right after x = 83. A faint gray AV in the lane, its rear axle a black dot near x = 82.7 with a short black arrow along its heading. A blue dashed circle of radius 5 meters around the rear axle; where it crosses the lane center ahead, a blue dot, dark tag 1. A thick green arc runs from the rear axle, along the heading, to the blue dot, dark tag 2 below it.
-   :width: 70%
+   :alt: A top view to scale, x and y in meters, about 30 meters across: the lane between two black edges, its center dashed gray, running right and then bending down after x = 85. A small faint gray AV near x = 82.7, y = 0, its rear axle a black dot with a short arrow along its heading. A thin green circle of radius about 13.4 meters passes through the rear axle, its center a green plus about 13.4 meters below it, joined to the rear axle by a green dotted line. The part of the circle from the rear axle to a blue dot on the lane center near x = 87.6 is thick green, dark tag 2 joined to it by a thin line. Dark tag 1, above the lane, joined by a thin line to the blue dot.
+   :width: 55%
    :align: center
 
 Tag 2: the arc starts at the rear axle, heading the way the AV heads
-(arrow), and passes through the lookahead point. Only one circle does both;
-here its radius is :math:`R` = 13.39 m. The next sections compute it.
+(arrow), and passes through the lookahead point, tag 1. Only one circle does
+both: green, radius :math:`R` = 13.39 m, center + (dotted: :math:`R`). It is
+the circle the AV drives if it holds one steering angle. The next sections
+compute it.
 
 
 .. _l10-lec-pp-step3:
@@ -3754,14 +3757,14 @@ Pure Pursuit, Step 3: Steer to Drive That Arc
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L10/pp_step_3.png
-   :alt: A top view to scale, x and y in meters, of the start of our right turn: the lane between two black edges, its center dashed gray, bending right after x = 83. A faint gray AV in the lane, its rear axle a black dot near x = 82.7 with a short black arrow along its heading. A blue dashed circle of radius 5 meters around the rear axle; where it crosses the lane center ahead, a blue dot, dark tag 1. A thick green arc runs from the rear axle, along the heading, to the blue dot, dark tag 2 below it. At the front axle, a short thick black bar, the front wheel, turned slightly right from a gray dotted straight-ahead line; a thin black line joins it to dark tag 3, above and to the left inside the lane.
-   :width: 70%
+   :alt: A top view to scale, x and y in meters, about 30 meters across: the lane between two black edges, its center dashed gray, running right and then bending down after x = 85. A small faint gray AV near x = 82.7, y = 0, its rear axle a black dot with a short arrow along its heading. A thin green circle of radius about 13.4 meters passes through the rear axle, its center a green plus about 13.4 meters below it, joined to the rear axle by a green dotted line. The part of the circle from the rear axle to a blue dot on the lane center near x = 87.6 is thick green, dark tag 2 joined to it by a thin line. Dark tag 1, above the lane, joined by a thin line to the blue dot. At the front axle, a short thick black bar, the front wheel, turned slightly right, dark tag 3 above it joined by a thin line.
+   :width: 55%
    :align: center
 
 Tag 3: a fixed angle drives a circle (the bicycle model):
 :math:`\delta = \arctan(L/R) = \arctan(2.875/13.39)` = 0.211 rad, 12.1° to
-the right. The AV holds it for one step, 0.05 s, then picks a new point and
-starts again.
+the right. Held, it takes the AV around the green circle, through tag 1. The
+AV holds it for one step, 0.05 s, then picks a new point and starts again.
 
 
 .. _l10-lec-pp-law:
