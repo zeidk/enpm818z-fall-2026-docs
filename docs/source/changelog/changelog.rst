@@ -42,6 +42,11 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
      they appear.
    - **L10, drive-by-wire:** a car without drive-by-wire and the same car
      with the CAN bus and the ECUs, both drawn on the car.
+   - **L10, "Hand Over" sections:** at the end of each part, what the
+     flowchart box just finished produced and how the next box uses it.
+   - **L10, key rules:** five more key boxes: a behavior tree needs no arrow
+     between behaviors, a curve caps the speed, steer for a curvature, scale
+     the lookahead with the speed, and size the anti-windup clamp.
 
    .. rubric:: Removed
 

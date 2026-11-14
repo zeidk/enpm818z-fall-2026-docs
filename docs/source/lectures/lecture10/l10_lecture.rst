@@ -490,9 +490,7 @@ Switch Behaviors with No Arrow: a Car in the Left Lane Stops the Pass
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Goal:** watch the tree switch behaviors with no arrow, at two ticks
-chosen for this example. The root ticks every 0.1 s (chosen); each tick
-checks the conditions again from the left, and the first branch that does
-not fail picks the action.
+chosen for this example (the root ticks every 0.1 s, chosen).
 
 .. list-table::
    :widths: 50 25 25
@@ -518,9 +516,13 @@ not fail picks the action.
      - Change lane
      - Follow
 
-No arrow goes from Change lane to Follow: at tick 2, condition 3 fails, so
-the second Sequence fails, and the Fallback moves on to the third branch,
-Follow. Tick 2 comes before the AV has left its lane.
+.. admonition:: A behavior tree needs no arrow between behaviors
+   :class: important
+
+   At every tick, the root checks the conditions again from the left; the
+   first branch that does not fail acts. At tick 2, condition 3 fails, so
+   the second Sequence fails, and the Fallback moves on to the third branch,
+   Follow. Tick 2 comes before the AV has left its lane.
 
 .. dropdown:: More detail: what real stacks use, and what they hand down
    :class-container: more-detail
@@ -626,6 +628,27 @@ Code a Behavior Tree: Our Script, Then Python and ROS 2 Libraries
 
 The window and its controls are described in the hands-on
 `README <https://github.com/rubixcubic/enpm818z-fall-2026-carla-python/blob/main/lecture10/README.md>`_.
+
+
+.. _l10-lec-hand-planner:
+
+Hand Over to the Local Planner: a Task, the Lanes and a Target Speed
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Behavior layer** (done) gives:
+
+- the task: for example, pass the slow car (Change lane) or Follow it;
+- which lanes the AV may use and where it must stop;
+- a target speed: in CARLA, the road's 30 km/h limit, 8.33 m/s.
+
+**Local planner** uses them to:
+
+- choose where the motion must end: which lane, how far across (:math:`d`);
+- plan at the target speed;
+- find the motion: a path (next section) or a trajectory.
+
+The behavior layer says *what* to do; the local planner works out *where*
+the AV goes.
 
 
 .. _l10-lec-path-generation:
@@ -1162,6 +1185,28 @@ From 31 Candidates to One Path: the Steps So Far
      - A, the left lane over 40 m: cost 5.07
 
 The result is one **path**, :math:`d(s)`: where the AV goes, with no times.
+
+
+.. _l10-lec-hand-trajectory:
+
+Hand Over to Trajectory Planning: the Path Knows Where, Not When
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Local planner, as a path (L9)** (done) gives:
+
+- one path: map points :math:`(x, y)` for the next 70 m;
+- the cheapest of 31 candidates;
+- a new one every planning cycle, 0.5 s;
+- no times: where to go, not when.
+
+**Local planner, as a trajectory** uses them to:
+
+- keep the same task, lanes and costs;
+- add time: plan where *and* when;
+- check each candidate against car B, which moves.
+
+Same box, a new design: without times, the path planner could not plan
+around a moving car.
 
 
 .. _l10-lec-trajectory:
@@ -2627,6 +2672,27 @@ Where Trajectory Generation Leaves Us
      B pass and goes around the parked car; last class's planner waited.
 
 
+.. _l10-lec-hand-controller:
+
+Hand Over to the Controllers: a Path and a Target Speed
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Local planner, its output** (done) gives:
+
+- a trajectory: where the AV should be, and when;
+- or a path: where only; our node takes this one (``/planning/path``);
+- the behavior layer's target speed (``/behavior/target_speed``).
+
+**Controller node** uses them to:
+
+- steer along the path's shape, its curvature;
+- build its own speed profile: curves cap the target speed;
+- send steer, throttle and brake every control step.
+
+From here on, the controllers drive one shared test path, the next
+section's curve.
+
+
 .. _l10-lec-turn:
 
 Test Curve and Speed Profile
@@ -2819,9 +2885,15 @@ Speed Profile, Step 1: a Curve Caps the Speed
    harder.
 
 We cap it at :math:`a_{\mathrm{lat}}` = 2.0 m/s² (chosen; the controller
-node's ``a_lat``, a cap the node applies itself). From
-:math:`v^2 / R \le a_{\mathrm{lat}}`, the highest speed in a curve is
-:math:`v = \sqrt{a_{\mathrm{lat}} R}`:
+node's ``a_lat``, a cap the node applies itself).
+
+.. admonition:: A curve caps the speed
+   :class: important
+
+   From :math:`v^2 / R \le a_{\mathrm{lat}}`, the highest speed on a curve of
+   radius :math:`R` is :math:`v = \sqrt{a_{\mathrm{lat}} R}`.
+
+On our two arcs:
 
 1. First arc, :math:`R` = 10.00 m: :math:`\sqrt{2.0 \times 10.00}` =
    4.47 m/s.
@@ -2991,6 +3063,28 @@ control step, 0.05 s. The values it uses:
 
    These are not CARLA's dynamics. Use the runs to see how each controller
    behaves; tune its gains on CARLA itself.
+
+
+.. _l10-lec-hand-model:
+
+Hand Over to the Vehicle Model: the Path's Curvature and Its Speeds
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Test curve and speed profile** (done) gives:
+
+- the path: a point every 0.25 m along the lane's center;
+- its curvature :math:`\kappa`: two arcs, 0.1000 and 0.1673 per meter;
+- the speed profile: 8 m/s, then 4.47 and 3.46 m/s on the arcs;
+- the steering delay: 0.2 s on a measured car.
+
+**Vehicle model** uses them to:
+
+- say which steering angle :math:`\delta` follows each :math:`\kappa`;
+- predict where a steering angle and a speed take the AV;
+- say where that prediction stops holding.
+
+The path says what to follow; the model says how steering makes the AV
+follow it.
 
 
 .. _l10-lec-vehicle-modeling:
@@ -3282,9 +3376,12 @@ turns left) and the wheelbase :math:`L`:
 Steer for a Curvature: a Fixed Angle Drives a Circle
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Hold :math:`\delta` and the AV drives a circle of radius
-:math:`R = L / \tan\delta`. So, to follow a curvature :math:`\kappa = 1/R`,
-steer :math:`\delta = \arctan(L\kappa)`.
+.. admonition:: Steer for a curvature
+   :class: important
+
+   Hold :math:`\delta` and the AV drives a circle of radius
+   :math:`R = L / \tan\delta`. So, to follow a curvature
+   :math:`\kappa = 1/R`, steer :math:`\delta = \arctan(L\kappa)`.
 
 .. figure:: /_static/images/L10/steer_circles.png
    :alt: A top view to scale, x and y in meters from the AV's rear axle. The black AV at the origin, facing up. Three half circles start at its rear axle and curve right, each around a dot on the x axis: a blue one of radius 10 meters around x = 10, dark tag 1 above it; a purple one of radius about 6 meters around x = 6, dark tag 2; and a black dashed one of radius about 3.4 meters around x = 3.4, dark tag 3.
@@ -3532,6 +3629,30 @@ sideways a little when the AV turns, and more the harder it turns.
      0.280 rad and 0.448 rad for our two arcs, under the 0.7 rad limit.
    - **Sideways acceleration** on our curve: at most 2.0 m/s², the profile's
      cap. The model holds under 0.5 μg, 4.9 m/s² on a dry road.
+
+
+.. _l10-lec-hand-lateral:
+
+Hand Over to Steering: the Angle for a Curvature, and the Model
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Vehicle model** (done) gives:
+
+- the turn rate: :math:`\dot\theta = v\tan\delta / L`;
+- the steering for a curvature: :math:`\delta = \arctan(L\kappa)`: 0.280
+  and 0.448 rad on our arcs, under the 0.7 rad limit;
+- where it holds: sideways acceleration under 4.9 m/s².
+
+**Lateral control** uses them to:
+
+- Pure Pursuit: find a :math:`\kappa` from a point ahead, steer
+  :math:`\arctan(L\kappa)`;
+- Stanley: fix the heading and the offset at the front axle;
+- MPC: predict each plan with the model;
+- all: send a :math:`\delta` every control step.
+
+The model links :math:`\delta` to the motion; each steering controller
+picks :math:`\delta` its own way.
 
 
 .. _l10-lec-lateral:
@@ -4191,7 +4312,8 @@ changes, averaged over the run.
      - 0.18 m
      - 0.59 m/s³
 
-.. important::
+.. admonition:: Scale the lookahead with the speed
+   :class: important
 
    One rule for the whole path, straight road and curve. The speed profile
    slows the AV in the curve, so :math:`L_d` shortens there by itself (3 m)
@@ -4944,6 +5066,26 @@ for" and the weaknesses: Snider, 2009):
      trackers until speeds are significantly increased" (Snider, 2009).
 
 
+.. _l10-lec-hand-speed:
+
+Hand Over to Speed Control: the Steering Is Set, the Speed Is Next
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Lateral control** (done) gives:
+
+- a steering angle :math:`\delta` every control step, 0.05 s, at most 0.7
+  rad;
+- every run held the speed with the same speed PID, not yet explained.
+
+**Longitudinal control** uses them to:
+
+- set the bicycle model's other input, the acceleration :math:`a`;
+- follow the speed profile: 8, 4.47, 3.46 m/s;
+- turn the speed error into throttle or brake, with a PID.
+
+Steering sets where the AV goes; the speed PID sets how fast it gets there.
+
+
 .. _l10-lec-speed:
 
 Longitudinal Control
@@ -5351,10 +5493,11 @@ throttle the AV needs.
    0.1 × 1 = 0.1. Measured: the AV settles at 7.76 m/s, 0.24 m/s short:
    better than P alone (0.42), but the gap stays.
 
-.. important::
+.. admonition:: Anti-windup: size the clamp
+   :class: important
 
-   The rule: :math:`K_i` × clamp must be larger than the throttle the steady
-   speed needs.
+   Clamp the I sum, and make :math:`K_i` × clamp larger than the throttle the
+   steady speed needs.
 
 
 .. _l10-lec-d-def:
@@ -5611,6 +5754,27 @@ Where Speed Control Leaves Us
    - **D** trims the peak a little more: 8.12 m/s.
 
 
+.. _l10-lec-hand-actuators:
+
+Hand Over to the Actuators: One Command Every Control Step
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Controller node: steering and speed** (done) gives:
+
+- every control step, 0.05 s, one command:
+- steer: :math:`\delta / 0.7`, from :math:`-1` to 1, positive left;
+- throttle: 0 to 0.75; brake: 0 to 1.
+
+**Control-to-actuator interface** uses them to:
+
+- carry the command to the wheels;
+- on a real car: over the CAN bus, to the ECUs;
+- the ECUs drive the steering motor, throttle and brakes, and report back.
+
+The controllers decide the command; the interface makes the car carry it
+out.
+
+
 .. _l10-lec-control-interface:
 
 Control-to-Actuator Interface
@@ -5839,6 +6003,26 @@ Let a Computer Drive: the CAN Bus and the ECUs Replace the Links
    Our lock step is a watchdog of its own: the node that steps CARLA waits
    for each command; if the controller does not answer, the simulation does
    not advance.
+
+
+.. _l10-lec-hand-carla:
+
+Hand Over to CARLA: the Simulator Plays the Car
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Control-to-actuator interface** (done) gives:
+
+- the chain: computer, CAN bus, ECUs, actuators;
+- feedback from each actuator's sensor.
+
+**CARLA implementation** uses them to:
+
+- send the same command as one ROS 2 message, ``VehicleCmd``;
+- CARLA applies it at the next tick, in place of the ECUs and actuators;
+- read the feedback back as topics: the pose and the speed.
+
+On a real car the ECUs drive the wheels; in CARLA the simulator does, from
+the same command.
 
 
 .. _l10-lec-carla:
