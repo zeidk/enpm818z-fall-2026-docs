@@ -2957,8 +2957,8 @@ Test Controllers Without CARLA: Our Simulation and Its Values
 
 **Goal:** test every controller the same way, in seconds, with no CARLA. A
 small Python program moves the AV with the bicycle model (next section; in
-full with MPC) 100 times a second, and runs the controller 20 times a second. The values it
-uses:
+full with MPC) every simulation step, 0.01 s, and runs the controller every
+control step, 0.05 s. The values it uses:
 
 .. list-table::
    :widths: 30 24 46
@@ -2977,9 +2977,9 @@ uses:
    * - Steering delay, then lag
      - 0.1 s, then 0.2 s
      - close to the measured car (last section)
-   * - Controller
-     - 20 times a second
-     - as on CARLA: our node steps it every 0.05 s
+   * - Control step
+     - 0.05 s
+     - as on CARLA; the AV moves 5 times per step
    * - Start
      - 1 m left of the lane's center, 8 m/s
      - chosen, so we see each controller correct
@@ -4955,8 +4955,9 @@ covers the acceleration: the PID that holds the AV at the curve's speed
 profile, the same speed controller every steering run in the last section
 used.
 
-**In this section:** a PID that turns the speed error into throttle and
-brake.
+**In this section:** a model of the car's speed, then a PID built one term
+at a time (P, I, D), saturation and windup, and the anti-windup clamp the
+controller node's PID needs.
 
 **What it is for:** the controller node's speed control is a PID with
 anti-windup; this section shows why it needs the anti-windup.
@@ -5081,9 +5082,9 @@ Hold the Target Speed: the Speed Loop
    :math:`u`, which is clipped to −1 to 1: above 0 it is throttle, below 0
    brake. The AV's measured speed returns to the start of the loop.
 
-- The error :math:`e = v_{\mathrm{ref}} - v`. Three terms add to the
-  command :math:`u`: P, the **proportional** term; I, the **integral** term;
-  D, the **derivative** term. Together they make a **PID** controller.
+- The error :math:`e = v_{\mathrm{ref}} - v`. Three terms, P, I and D, add
+  to the command :math:`u`; the next sections build them one at a time.
+  Together they make a **PID** controller.
 - The command :math:`u` is a number from −1 to 1: :math:`u > 0` presses the
   throttle, :math:`u < 0` the brake. The car turns it into an acceleration:
   the next two sections.
@@ -5097,7 +5098,7 @@ Model the Car: from the Command u to the AV's Acceleration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **Goal:** know what the car does with :math:`u`. Our simulation takes four
-steps, every 0.01 s (all values chosen for the example):
+steps, every simulation step, 0.01 s (all values chosen for the example):
 
 1. **Pedals:** throttle = :math:`u`, but never above 0.75: the controller
    node's setting ``max_throttle`` caps it, so the node never asks for more
@@ -5142,30 +5143,29 @@ throttle only from an error, so it must keep an error (see "Try P Alone",
 below).
 
 
-.. _l10-lec-pid-split:
+.. _l10-lec-p-def:
 
-Drive Two Pedals from One PID: Split the Output, Stop the Windup
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 1, P: Push in Proportion to the Error
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Goal:** turn the speed error into a throttle command.
 
 .. math::
 
-   u = K_p\, e + K_i \sum e\,\Delta t + K_d\,\frac{e_k - e_{k-1}}{\Delta t},
-   \qquad e = v_{\text{ref}} - v
+   u = K_p\, e, \qquad e = v_{\mathrm{ref}} - v
 
-**Split the one output into two pedals**
+- **P**, the **proportional** term: a big error gives a big push; no error,
+  no push.
+- :math:`K_p`, the **gain**, sets how hard to push per m/s of error. Ours:
+  :math:`K_p` = 0.5 (chosen).
+- At the start, :math:`e` = 8 m/s, so :math:`u` = 0.5 × 8 = 4: far past the
+  0.75 cap, so the throttle starts at 0.75. As the AV speeds up, :math:`e`
+  shrinks, and so does the push.
 
-- :math:`u > 0`: throttle :math:`u` (ours stops at 0.75); :math:`u < 0`:
-  brake :math:`-u`.
-- Around :math:`u = 0` a small dead zone, or two thresholds, keeps the car
-  from switching pedals on every cycle (hysteresis).
+.. important::
 
-**Anti-windup**: keep the integral in check while a pedal sits at its limit
-
-- clamp the sum (ours: ±1 m, chosen; the controller node's
-  ``pid_windup_limit`` is 2.0);
-- or stop adding while the output is saturated.
-
-The next sections run it: P alone, then I, the windup, and the clamp.
+   The catch: at :math:`e = 0`, P pushes nothing, but holding 8 m/s takes
+   throttle 0.23 against drag (previous section). The next section runs it.
 
 
 .. _l10-lec-p:
@@ -5197,14 +5197,33 @@ Try P Alone: the AV Settles 0.42 m/s Short
    :math:`e` = 0.42 m/s.
 
 
+.. _l10-lec-i-def:
+
+Step 2, I: Add Up the Error over Time
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Goal:** a push that stays when the error is gone.
+
+.. math::
+
+   u = K_p\, e + K_i \sum e\,\Delta t
+
+1. **I**, the **integral** term: every control step,
+   :math:`\Delta t` = 0.05 s, add :math:`e\,\Delta t` to a running sum. Its
+   unit: m/s × s = m.
+2. While any error remains, the sum grows, and so does the push.
+3. When the error reaches 0, the sum stops changing but stays: the I term
+   alone holds the throttle. To hold 8 m/s, :math:`K_i` × sum = 0.23; with
+   :math:`K_i` = 0.3 (chosen), the sum settles at 0.23 / 0.3 = 0.77 m.
+
+
 .. _l10-lec-pi:
 
 Close the Gap with I: the AV Overshoots by 4 m/s
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The I term adds up the error over time, :math:`K_i \sum e\,\Delta t`. While
-any gap remains, the sum grows and pushes more throttle, so the gap closes.
-With :math:`K_i` = 0.3 (chosen):
+P and I together, :math:`K_p` = 0.5 and :math:`K_i` = 0.3 (chosen). The gap
+closes, but look at the start:
 
 .. figure:: /_static/images/L10/pid_pi.png
    :alt: A graph of speed against time after the target steps to 8 meters per second. The red curve rises past the dashed target line at 8, keeps rising to a peak just above 12 at about 6 seconds (dark tag 1), then falls back and settles on 8 after about 11 seconds.
@@ -5222,6 +5241,29 @@ With :math:`K_i` = 0.3 (chosen):
    - **Tag 1:** the peak: 12.18 m/s, 4.18 m/s over the target. The speed
      settles within 0.2 m/s of 8 only after 10.6 s.
 
+Adding I removed the steady gap from P, but it bought an overshoot instead.
+To see why, the next section needs one more idea: saturation.
+
+
+.. _l10-lec-saturation:
+
+Hit the Limit: the Throttle Saturates at 0.75
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. admonition:: Definition: Saturation
+   :class: note
+
+   An actuator saturates when the command asks for more than it can give.
+   Past its limit, a bigger command changes nothing.
+
+- Our throttle's limit is 0.75 (``max_throttle``). Any :math:`u` above 0.75
+  gives the same throttle, 0.75, and the same push, 3 m/s².
+- In the PI run, :math:`u` starts at 0.5 × 8 = 4 and stays above 0.75 for
+  the first 5.85 s: the throttle is saturated the whole time the AV speeds
+  up.
+- While it is saturated, the AV speeds up as fast as it can, whatever
+  :math:`u` says. The extra command goes nowhere.
+
 
 .. _l10-lec-windup:
 
@@ -5231,10 +5273,9 @@ Explain the Overshoot: Windup
 .. admonition:: Definition: Integrator windup
    :class: note
 
-   The I term keeps growing while the actuator is at its limit and cannot
-   act on it; the stored sum then drives the output past the target once
-   the limit is released. Here the sum shrinks only while the AV is too
-   fast.
+   The I term keeps growing while the actuator is saturated and cannot act
+   on it; the stored sum then drives the output past the target. Here the
+   sum shrinks only while the AV is too fast.
 
 .. figure:: /_static/images/L10/pid_windup.png
    :alt: A graph of the command against time. A pink band covers the first 5.85 seconds, while the throttle sits at its limit. A dotted line marks the throttle limit 0.75. The red curve, the I term, dark tag 1, rises from 0 to a peak of about 4.3 at 3.4 seconds and falls back to about 0.23 by 12 seconds. The dark curve, dark tag 2, is the throttle actually used: flat at 0.75 for the first 5.85 seconds, then a short dip below 0, then about 0.23.
@@ -5255,11 +5296,13 @@ Explain the Overshoot: Windup
    - **Tag 2 (dark):** the throttle actually used: flat at 0.75, then a
      short dip below 0 (brake), then about 0.23.
 
-1. The throttle (tag 2) is at its 0.75 limit from the start; a larger
-   command cannot open the throttle further.
+1. The throttle (tag 2) is saturated at 0.75 for the first 5.85 s (shaded);
+   a larger command cannot open it further.
 2. The I term keeps adding the large early errors: by the time the AV
    reaches 8 m/s (3.45 s), the sum is 14.29 m and the I term
-   0.3 × 14.29 = 4.29 (tag 1).
+   0.3 × 14.29 = 4.29 (tag 1). Holding 8 m/s needs only about 0.77 m; the
+   sum shrinks only while the AV is too fast, so the AV overshoots until the
+   extra drains away.
 
 
 .. _l10-lec-clamp:
@@ -5267,7 +5310,7 @@ Explain the Overshoot: Windup
 Anti-Windup: Clamp the Sum
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-At every step:
+At every control step:
 
 1. add :math:`e\,\Delta t` to the sum;
 2. hold the sum within ±1 m (chosen; the controller node's
@@ -5291,93 +5334,178 @@ At every step:
    - **Tag 2 (green):** with it: peak 8.25 m/s, within 0.2 m/s of 8 after
      4.4 s.
 
-.. dropdown:: More detail: size the clamp, since too tight brings the gap back
-   :class-container: more-detail
-   :icon: info
-   :name: l10-more-clamp
 
-   The sum must still be able to hold the throttle the AV needs at the
-   target speed:
+.. _l10-lec-clamp-size:
 
-   1. At 8 m/s the drag is :math:`0.15 + 0.012 \times 8^2` = 0.92 m/s², so
-      the AV needs throttle 0.92 / 4 = 0.23 with no error left.
-   2. With :math:`K_i` = 0.3 and the sum held within 1 m, the I term can
-      reach 0.3 × 1 = 0.3. Enough.
-   3. With :math:`K_i` = 0.1 and the same clamp, it can reach only 0.1.
-      Measured: the AV settles at 7.76 m/s, 0.24 m/s short: better than P
-      alone (0.42), but the gap does not close.
+Size the Clamp: Too Tight Brings the Gap Back
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   So the clamp and :math:`K_i` go together: :math:`K_i` × clamp must
-   exceed the throttle the steady speed needs.
+**Goal:** a clamp that stops windup but still lets the sum hold the
+throttle the AV needs.
 
-.. dropdown:: More detail: trim the peak with D, a little less overshoot
-   :class-container: more-detail
-   :icon: info
-   :name: l10-more-pid-d
+1. At 8 m/s the AV needs throttle 0.23 with no error left (the drag
+   section).
+2. With :math:`K_i` = 0.3 and the sum held within 1 m, the I term can reach
+   0.3 × 1 = 0.3. Enough: 0.3 > 0.23.
+3. With :math:`K_i` = 0.1 and the same clamp, it can reach only
+   0.1 × 1 = 0.1. Measured: the AV settles at 7.76 m/s, 0.24 m/s short:
+   better than P alone (0.42), but the gap stays.
 
-   .. figure:: /_static/images/L10/pid_compare.png
-      :alt: Two graphs of speed against time. Left, 0 to 20 seconds: three curves rise together from 0; the orange one levels off just under 8, the green and the blue dashed ones reach 8. A dotted box marks 2 to 10 seconds, 7 to 8.5. Right, that box enlarged, with dark tags: the orange curve, tag 1, flattens at 7.58; the green curve, tag 2, peaks at about 8.25 near 4 seconds and settles on 8; the blue dashed curve, tag 3, peaks lower, about 8.12, and settles on 8.
-      :width: 95%
-      :align: center
+.. important::
 
-      P, PI and PID, all with the clamp.
+   The rule: :math:`K_i` × clamp must be larger than the throttle the steady
+   speed needs.
 
-   .. admonition:: Reading the figure
-      :class: tip
 
-      Left: the three runs for 20 s. Right: the dotted box, enlarged. The
-      tags match the rows of the table below.
+.. _l10-lec-d-def:
 
-      - **Tag 1 (orange):** P alone.
-      - **Tag 2 (green):** PI.
-      - **Tag 3 (blue, dashed):** PID.
+Step 3, D: Ease Off as the Error Closes Fast
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   .. list-table::
-      :widths: 35 20 20 25
-      :header-rows: 1
-      :class: compact-table
+**Goal:** less overshoot: start easing off before the AV reaches the
+target.
 
-      * - **Gains (chosen), clamp 1 m**
-        - **Peak**
-        - **After 30 s**
-        - **Within 0.2 m/s**
-      * - 1: P, :math:`K_p` = 0.5
-        - 7.72 m/s
-        - 7.58 m/s
-        - never
-      * - 2: PI, :math:`K_i` = 0.3
-        - 8.25 m/s
-        - 8.00 m/s
-        - after 4.4 s
-      * - 3: PID, :math:`K_d` = 0.1
-        - 8.12 m/s
-        - 8.00 m/s
-        - after 3.5 s
+.. math::
 
-.. dropdown:: More detail: run the PID every 0.05 s, the formula the controller uses
-   :class-container: more-detail
-   :icon: info
-   :name: l10-more-pid-formula
+   u = K_p\, e + K_i \sum e\,\Delta t + K_d\,\frac{e_k - e_{k-1}}{\Delta t}
 
-   At step :math:`k`, with :math:`\Delta t` = 0.05 s and
-   :math:`e_k = v_{\mathrm{ref}} - v_k`:
+- **D**, the **derivative** term: how fast the error changes, from the last
+  two control steps, :math:`k-1` and :math:`k`, 0.05 s apart.
+- As the AV speeds up toward the target, :math:`e` shrinks fast, so the
+  change is negative and D takes push away early. Ours: :math:`K_d` = 0.1
+  (chosen).
+- When the target jumps, :math:`e` jumps too, and the change is large for
+  one step.
 
-   .. math::
 
-      u_k = K_p\, e_k \;+\; K_i \sum_{j \le k} e_j\,\Delta t \;+\;
-      K_d\,\frac{e_k - e_{k-1}}{\Delta t}
+.. _l10-lec-pid-compare:
 
-   - :math:`u_k` is clipped to −1 to 1: above 0 it is throttle (at most
-     0.75 in the node), below 0 it is brake.
-   - D reacts to how fast the error changes. A sudden target jump makes
-     that change large for one step. Here :math:`K_d` = 0.1 trimmed the
-     peak from 8.25 to 8.12 m/s.
-   - Our gains suit our speed model. The node's ``controller_config.yaml``
-     starts at :math:`K_p` = 0.5, :math:`K_i` = 0.05, :math:`K_d` = 0.1,
-     with the sum held within 2.0. By the clamp rule above,
-     0.05 × 2.0 = 0.1, under the 0.23 our model needs at 8 m/s. CARLA's car
-     may need another throttle, so tune :math:`K_i` on it and check for a
-     gap.
+Compare P, PI and PID, All with the Clamp: D Trims the Peak
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/L10/pid_compare.png
+   :alt: Two graphs of speed against time. Left, 0 to 20 seconds: three curves rise together from 0; the orange one levels off just under 8, the green and the blue dashed ones reach 8. A dotted box marks 2 to 10 seconds, 7 to 8.5. Right, that box enlarged, with dark tags: the orange curve, tag 1, flattens at 7.58; the green curve, tag 2, peaks at about 8.25 near 4 seconds and settles on 8; the blue dashed curve, tag 3, peaks lower, about 8.12, and settles on 8.
+   :width: 95%
+   :align: center
+
+   P, PI and PID, all with the clamp.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   Left: the three runs for 20 s. Right: the dotted box, enlarged. The
+   tags match the rows of the table below.
+
+   - **Tag 1 (orange):** P alone.
+   - **Tag 2 (green):** PI.
+   - **Tag 3 (blue, dashed):** PID.
+
+.. list-table::
+   :widths: 35 20 20 25
+   :header-rows: 1
+   :class: compact-table
+
+   * - **Gains (chosen), clamp 1 m**
+     - **Peak**
+     - **After 30 s**
+     - **Within 0.2 m/s**
+   * - 1: P, :math:`K_p` = 0.5
+     - 7.72 m/s
+     - 7.58 m/s
+     - never
+   * - 2: PI, :math:`K_i` = 0.3
+     - 8.25 m/s
+     - 8.00 m/s
+     - after 4.4 s
+   * - 3: PID, :math:`K_d` = 0.1
+     - 8.12 m/s
+     - 8.00 m/s
+     - after 3.5 s
+
+- **Tag 1:** P (:math:`K_p` = 0.5): settles at 7.58 m/s, never within
+  0.2 m/s of 8.
+- **Tag 2:** PI (:math:`K_i` = 0.3): peak 8.25 m/s; within 0.2 m/s of 8
+  after 4.4 s.
+- **Tag 3:** PID (:math:`K_d` = 0.1): peak 8.12 m/s; within 0.2 m/s of 8
+  after 3.5 s.
+
+
+.. _l10-lec-pid-formula:
+
+Put It Together: the PID the Controller Runs Every Control Step
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+At step :math:`k`, with :math:`\Delta t` = 0.05 s and
+:math:`e_k = v_{\mathrm{ref}} - v_k`:
+
+.. math::
+
+   u_k = K_p\, e_k \;+\; K_i \sum_{j \le k} e_j\,\Delta t \;+\;
+   K_d\,\frac{e_k - e_{k-1}}{\Delta t}
+
+1. Add :math:`e_k\,\Delta t` to the sum, then hold the sum within the clamp.
+2. Compute :math:`u_k` from the three terms; clip it to −1 to 1.
+3. Above 0 it is throttle, at most 0.75; below 0 it is brake (next
+   section).
+
+Our gains suit our speed model. The node's ``controller_config.yaml`` starts
+at :math:`K_p` = 0.5, :math:`K_i` = 0.05, :math:`K_d` = 0.1, with the sum
+held within 2.0: 0.05 × 2.0 = 0.1, under the 0.23 our model needs at 8 m/s.
+CARLA's car may need another throttle, so tune :math:`K_i` on it and check
+for a gap.
+
+
+.. _l10-lec-pid-split:
+
+Drive Two Pedals from One Command: Split u, Keep a Dead Zone
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- :math:`u > 0`: throttle :math:`u`, at most 0.75. :math:`u < 0`: brake
+  :math:`-u`.
+- Near :math:`u = 0` the controller would switch pedals on every cycle as
+  :math:`u` wobbles around 0.
+- A small **dead zone** around :math:`u = 0`, or two thresholds, one to
+  start braking and one to stop, keeps it from switching on every cycle. Two
+  thresholds are **hysteresis**.
+
+
+.. _l10-lec-pid-table:
+
+Compare Every Run: What Each Term and the Clamp Did
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 36 18 18 28
+   :header-rows: 1
+   :class: compact-table
+
+   * - **Controller (chosen gains)**
+     - **Peak**
+     - **Settles at**
+     - **Within 0.2 m/s of 8**
+   * - P, :math:`K_p` = 0.5
+     - 7.72 m/s
+     - 7.58 m/s
+     - never
+   * - PI, :math:`K_i` = 0.3, no clamp
+     - 12.18 m/s
+     - 8.00 m/s
+     - after 10.6 s
+   * - PI, clamp 1 m
+     - 8.25 m/s
+     - 8.00 m/s
+     - after 4.4 s
+   * - PI, :math:`K_i` = 0.1, clamp 1 m
+     -
+     - 7.76 m/s
+     - never
+   * - PID, :math:`K_d` = 0.1, clamp 1 m
+     - 8.12 m/s
+     - 8.00 m/s
+     - after 3.5 s
+
+- P leaves a gap; I closes it; the clamp stops windup; D trims the peak.
+- Too small :math:`K_i` × clamp brings the gap back.
 
 
 .. _l10-lec-handson-1:
@@ -5477,11 +5605,10 @@ Where Speed Control Leaves Us
 
    - **P** needs an error to make throttle: 0.42 m/s short at
      :math:`K_p` = 0.5.
-   - **I** removes the gap, but winds up while the throttle sits at its
-     limit: 12.18 m/s for an 8 m/s target.
+   - **I** removes the gap, but winds up while the throttle is saturated:
+     12.18 m/s for an 8 m/s target.
    - **Clamping the sum** stops it: peak 8.25 m/s.
-   - **D** trims the peak a little more: 8.12 m/s (in a More detail box
-     above).
+   - **D** trims the peak a little more: 8.12 m/s.
 
 
 .. _l10-lec-control-interface:

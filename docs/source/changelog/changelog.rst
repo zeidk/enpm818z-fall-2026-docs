@@ -31,6 +31,17 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
      sentence each.
    - **L10, "Summary":** in a summary box, with the behavior layer and the
      quintic; the "Today" box left "Next Class".
+   - **L10, Longitudinal Control, rewritten in order:** the car's speed model
+     (pedals, the 0.75 throttle cap, engine lag, rolling resistance and air
+     drag), then P, I and D each defined before its run, saturation before
+     windup, the clamp and how to size it, the full formula, the pedal split
+     and a table of every run. D, the clamp size and the formula are sections
+     again, no longer "More detail" boxes.
+   - **L10, "Keep Three Clocks Apart":** the planning cycle (0.5 s), the
+     control step (0.05 s) and the simulation step (0.01 s), named wherever
+     they appear.
+   - **L10, drive-by-wire:** a car without drive-by-wire and the same car
+     with the CAN bus and the ECUs, both drawn on the car.
 
    .. rubric:: Removed
 
