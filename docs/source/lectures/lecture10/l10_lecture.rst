@@ -2653,7 +2653,7 @@ One Test Path for Every Controller: a Right Turn in Town03
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L10/turn_map.png
-   :alt: A top view, x along the approach to the right and y to the left, in meters. A single lane 3.5 meters wide, drawn by two black edges with a gray dashed center line, runs 80 meters to the right, turns right through a quarter circle near x = 80 to 92, and runs 40 meters down. The AV is drawn at the start, at the left end, facing right. An arrow under the lane says driving direction. The corner is shaded orange along the center line.
+   :alt: A top view, x along the approach to the right and y to the left, in meters. A single lane 3.5 meters wide, drawn by two black edges with a gray dashed center line, runs 80 meters to the right, turns right through a quarter circle near x = 80 to 92, and runs 40 meters down. The AV is drawn at the start, at the left end, facing right. An arrow under the lane says driving direction. The curve is shaded orange along the center line.
    :width: 90%
    :align: center
 
@@ -2691,13 +2691,13 @@ Measure How the Turn Bends: Fit a Circle to Each Arc
    meter.
 
 .. figure:: /_static/images/L10/turn_arcs.png
-   :alt: The corner of the test path from above, x from 72 to 99 meters, y from minus 21 to 4, the lane drawn by two black edges with a gray dashed center line, coming from the left and turning right, down. Two pieces of the center line in the corner are thick: a blue one first, then a purple one that starts where the blue one ends. A blue dashed circle of radius 10 meters fits the blue piece, with its center, a blue dot near x = 83, y = minus 10, and a blue radius line to the piece, dark tag 1. A smaller purple dashed circle, radius about 6 meters, fits the purple piece, with its center near x = 85, y = minus 7 and a purple radius line, dark tag 2.
+   :alt: The curve of the test path from above, x from 72 to 99 meters, y from minus 21 to 4, the lane drawn by two black edges with a gray dashed center line, coming from the left and turning right, down. Two pieces of the center line in the curve are thick: a blue one first, then a purple one that starts where the blue one ends. A blue dashed circle of radius 10 meters fits the blue piece, with its center, a blue dot near x = 83, y = minus 10, and a blue radius line to the piece, dark tag 1. A smaller purple dashed circle, radius about 6 meters, fits the purple piece, with its center near x = 85, y = minus 7 and a purple radius line, dark tag 2.
    :width: 60%
    :align: center
 
-   The corner: two arcs, each part of a circle.
+   The curve: two arcs, each part of a circle.
 
-CARLA's map draws this corner as two arcs, not one, each part of a circle
+CARLA's map draws this curve as two arcs, not one, each part of a circle
 (dashed). The smaller the radius, the tighter the arc:
 
 - **Tag 1, first arc** (blue): :math:`R` = 10.00 m, so
@@ -2756,7 +2756,7 @@ Shaded: the junction lane. **Top**, the curvature: 0 on the approach, tag 1:
 0.1000 from :math:`s` = 83.2 m (first arc, blue), tag 2: 0.1673 from
 89.6 m (second arc, purple), 0 again from 94.8 m (dotted lines).
 
-Each change is a **step**, not our choice: CARLA's map draws the corner
+Each change is a **step**, not our choice: CARLA's map draws the curve
 from lines and arcs, each with one curvature, so :math:`\kappa` jumps where
 two meet (see "where the radii come from" above).
 
@@ -3258,7 +3258,7 @@ steer :math:`\delta = \arctan(L\kappa)`.
    :align: center
 
    To scale, from the AV's rear axle. Each circle is one fixed
-   :math:`\delta`, turning right as our corner does; dots: the point it
+   :math:`\delta`, turning right as our curve does; dots: the point it
    turns about.
 
 1. Tag 1, first arc: :math:`\delta = \arctan(2.875 \times 0.1000) = \arctan(0.288)`
@@ -3272,7 +3272,7 @@ steer :math:`\delta = \arctan(L\kappa)`.
 .. important::
 
    Both arcs are within reach: 0.448 rad is under the 0.7 rad limit. A
-   corner tighter than :math:`R` = 3.41 m would not be.
+   curve tighter than :math:`R` = 3.41 m would not be.
 
 .. dropdown:: More detail: where the model stops holding
    :class-container: more-detail
@@ -3711,7 +3711,7 @@ vehicle:
 .. important::
 
    The lookahead sets the trade-off: short, and the AV tracks tightly but
-   can weave; long, and it steers smoothly but cuts corners. Snider: Pure
+   can weave; long, and it steers smoothly but cuts inside curves. Snider: Pure
    Pursuit is "quite robust to large errors and discontinuous paths.
    However, it is not clear how to pick the best look-ahead distance"
    (Snider, 2009).
@@ -3842,8 +3842,8 @@ to the right, step 3's angle. Green: the arc that angle drives.
 
 .. _l10-lec-pp-weigh:
 
-Weigh Pure Pursuit: Simple, but It Cuts Corners
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Weigh Pure Pursuit: Simple, but It Cuts Inside Curves
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. list-table::
    :widths: 50 50
@@ -3854,7 +3854,7 @@ Weigh Pure Pursuit: Simple, but It Cuts Corners
      - **Limits**
    * - simple: one formula, the wheelbase only; robust to large errors and
        jumps in the path (Snider, 2009)
-     - no slip in the model; cuts corners, more as speed grows (Snider,
+     - no slip in the model; cuts inside curves, more as speed grows (Snider,
        2009); ignores the heading error
 
 To look farther ahead at higher speed, set the lookahead from the speed
@@ -3901,7 +3901,7 @@ GP4).
    first arc begins (:math:`s` = 83.2 m).
 
    .. figure:: /_static/images/L10/pp_geom_1.png
-      :alt: A close top view of the corner, in meters: the lane edges in black, the lane center dashed gray, bending right after x = 83. The AV is drawn faintly, facing right and slightly down, with its rear axle as a dark dot (dark tag 2) near x = 82.7, y = 0. A blue dashed circle of radius 5 meters is centered on the rear axle (dark tag 1). A blue dot (dark tag 3) sits where the lane center leaves the circle ahead of the AV, near x = 87.6, y = minus 1.2.
+      :alt: A close top view of the curve, in meters: the lane edges in black, the lane center dashed gray, bending right after x = 83. The AV is drawn faintly, facing right and slightly down, with its rear axle as a dark dot (dark tag 2) near x = 82.7, y = 0. A blue dashed circle of radius 5 meters is centered on the rear axle (dark tag 1). A blue dot (dark tag 3) sits where the lane center leaves the circle ahead of the AV, near x = 87.6, y = minus 1.2.
       :width: 60%
       :align: center
 
@@ -3910,7 +3910,7 @@ GP4).
    .. admonition:: Reading the figure
       :class: tip
 
-      A close top view of the corner, in meters. The lane center is the
+      A close top view of the curve, in meters. The lane center is the
       dashed gray line; the AV is drawn faintly.
 
       - **Tag 1:** the lookahead circle, :math:`L_d` = 5 m (blue dashed).
@@ -4029,8 +4029,8 @@ steers back, and the curve how it turns.
 
 .. _l10-lec-ld-tradeoff:
 
-Choose the Lookahead: Too Short Weaves, Too Long Cuts the Corner
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Choose the Lookahead: Too Short Weaves, Too Long Cuts Inside the Curve
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Goal:** pick the lookahead :math:`L_d`. The two measures above, the swing
 on the straight after the 1 m start and the error on the curve, for all
@@ -4090,28 +4090,28 @@ eight lookaheads we ran:
       run crosses by only 0.05 m with instant steering, and by 0.32 m with
       the lag alone, then settles.
 
-   .. rubric:: Choose the Lookahead: Too Long, and the AV Cuts the Corner
+   .. rubric:: Choose the Lookahead: Too Long, and the AV Cuts Inside the Curve
 
    .. figure:: /_static/images/L10/pp_turn.png
-      :alt: A top view of the corner from x = 68 to 98 and y = minus 26 to 4. The blue solid run with a 5 meter lookahead stays on the dashed lane center through the corner, swinging slightly outside after it. The green dashed run with a 10 meter lookahead leaves the center early, cuts inside the corner, where a green dot marks its farthest point inside (dark tag 1), then swings outside on the exit, where a second green dot marks its farthest point outside (dark tag 2), before returning to the center.
+      :alt: A top view of the curve from x = 68 to 98 and y = minus 26 to 4. The blue solid run with a 5 meter lookahead stays on the dashed lane center through the curve, swinging slightly outside after it. The green dashed run with a 10 meter lookahead leaves the center early, cuts inside the curve, where a green dot marks its farthest point inside (dark tag 1), then swings outside on the exit, where a second green dot marks its farthest point outside (dark tag 2), before returning to the center.
       :width: 60%
       :align: center
 
-      A 5 m and a 10 m lookahead through the corner.
+      A 5 m and a 10 m lookahead through the curve.
 
    .. admonition:: Reading the figure
       :class: tip
 
-      A top view of the corner, in meters. The blue line is the 5 m run;
+      A top view of the curve, in meters. The blue line is the 5 m run;
       the green dashed line is the 10 m run.
 
       - **Tag 1:** with :math:`L_d` = 10 m, the goal point is already
-        around the corner, so the AV turns early: 0.98 m inside the center
+        around the curve, so the AV turns early: 0.98 m inside the center
         at :math:`s` = 90.6 m.
       - **Tag 2:** then it turns too late on the exit: 0.95 m outside at
         :math:`s` = 102.2 m.
 
-   :math:`L_d` = 5 m stays within 0.25 m of the center through the corner.
+   :math:`L_d` = 5 m stays within 0.25 m of the center through the curve.
 
 
 .. _l10-lec-ld-speed:
@@ -4179,7 +4179,7 @@ Hands-On, Part 4: Compare the Steering Runs
    python3 l10_handson.py --part track     # steering runs
 
 .. figure:: /_static/images/L10/handson_track.png
-   :alt: Part of the hands-on window. Left, the corner from above with the lane edges, the lane center and the rear axle's path of the chosen run, here Pure Pursuit with 5 meters, and the AV. Right, two graphs against the distance along the path: the rear axle's distance off the center, and the steering angle.
+   :alt: Part of the hands-on window. Left, the curve from above with the lane edges, the lane center and the rear axle's path of the chosen run, here Pure Pursuit with 5 meters, and the AV. Right, two graphs against the distance along the path: the rear axle's distance off the center, and the steering angle.
    :width: 80%
    :align: center
 
@@ -4188,7 +4188,7 @@ Hands-On, Part 4: Compare the Steering Runs
 .. admonition:: Reading the figure
    :class: tip
 
-   - **Left:** the corner from above, with the lane edges, the lane center
+   - **Left:** the curve from above, with the lane edges, the lane center
      (gray dashed) and the rear axle's path of the chosen run (blue), here
      Pure Pursuit with 5 m, and the AV.
    - **Right, top:** the rear axle's distance off the center (positive
@@ -4203,7 +4203,7 @@ to 12 m, or 0.5, 0.75 or 1 s × :math:`v`; Stanley with a gain from 0.5 to 8.
    :class: hint
 
    1. Pick 2, 3 and 4 m: from which lookahead does the AV stop weaving?
-   2. Pick 12 m: how far inside the corner does the rear axle get?
+   2. Pick 12 m: how far inside the curve does the rear axle get?
 
 
 .. _l10-lec-pp-summary:
@@ -4220,9 +4220,9 @@ Where Pure Pursuit Leaves Us
      −0.173.
    - **Short lookahead** (3 m at 8 m/s): the AV weaves, 3.07 m, because the
      steering is delayed and lags.
-   - **Long lookahead** (10 m): 0.98 m inside the corner, then 0.95 m
+   - **Long lookahead** (10 m): 0.98 m inside the curve, then 0.95 m
      outside.
-   - **Scaled with speed** (0.75 s): 0.07 m at most in the corner.
+   - **Scaled with speed** (0.75 s): 0.07 m at most in the curve.
 
 
 .. _l10-lec-stanley:
@@ -4280,7 +4280,7 @@ left of the path (:math:`e > 0`) must steer right, so the term is
 subtracted.
 
 .. figure:: /_static/images/L10/stanley_geom.png
-   :alt: A close top view of the corner with the AV drawn faintly. A dark dot at the rear axle (tag 1) and a purple dot at the front axle (tag 2), joined by a line. Just below the front axle, a gray dot on the lane center (tag 3), the nearest path point, with a short purple double arrow between them. A gray line from that point along the path's direction (tag 4) and a dark line from the front axle along the AV's heading; a red arc (tag 5) marks the angle between them. All tags are dark circles.
+   :alt: A close top view of the curve with the AV drawn faintly. A dark dot at the rear axle (tag 1) and a purple dot at the front axle (tag 2), joined by a line. Just below the front axle, a gray dot on the lane center (tag 3), the nearest path point, with a short purple double arrow between them. A gray line from that point along the path's direction (tag 4) and a dark line from the front axle along the AV's heading; a red arc (tag 5) marks the angle between them. All tags are dark circles.
    :width: 75%
    :align: center
 
@@ -4289,7 +4289,7 @@ subtracted.
 .. admonition:: Reading the figure
    :class: tip
 
-   A close top view of the corner, at the same moment as Pure Pursuit's
+   A close top view of the curve, at the same moment as Pure Pursuit's
    worked example. The AV is drawn faintly.
 
    - **Tag 1:** the rear axle.
@@ -4332,7 +4332,7 @@ subtracted.
    .. rubric:: Which Point of the AV Stays on the Path
 
    .. figure:: /_static/images/L10/axle_paths.png
-      :alt: Two top views of the corner side by side, the AV drawn faintly in the second arc in each. Left, dark tag 1, Pure Pursuit with a 5 meter lookahead in blue: the solid line, the rear axle, follows the dashed lane center; the dotted line, the front axle, swings outside it through the corner. Right, tag 2, Stanley with gain 1 in purple: the dotted front axle line follows the lane center; the solid rear axle line runs inside the corner.
+      :alt: Two top views of the curve side by side, the AV drawn faintly in the second arc in each. Left, dark tag 1, Pure Pursuit with a 5 meter lookahead in blue: the solid line, the rear axle, follows the dashed lane center; the dotted line, the front axle, swings outside it through the curve. Right, tag 2, Stanley with gain 1 in purple: the dotted front axle line follows the lane center; the solid rear axle line runs inside the curve.
       :width: 90%
       :align: center
 
@@ -4341,7 +4341,7 @@ subtracted.
    .. admonition:: Reading the figure
       :class: tip
 
-      Two top views of the corner, in meters, with the AV drawn faintly in
+      Two top views of the curve, in meters, with the AV drawn faintly in
       the second arc. Solid lines are the rear axle, dotted lines the
       front axle; the gray dashed line is the lane center.
 
@@ -4542,7 +4542,7 @@ the measured pose. Its horizon has times: it can track a trajectory (timing
    .. admonition:: Reading the figure
       :class: tip
 
-      A top view of the corner, in meters, 2 m before the turn, at
+      A top view of the curve, in meters, 2 m before the turn, at
       7.09 m/s. The AV is drawn faintly; the dark dot is its rear axle.
 
       - **Tag 4 (gray):** every sequence of three steering angles, each
@@ -4680,7 +4680,7 @@ Same start (1 m left, 8 m/s), same speed PID, same steering delay and lag:
 
       * - **Tracker**
         - **Good applications**
-        - **Cutting corners**
+        - **Cutting inside curves**
       * - Pure Pursuit
         - slow driving and/or on discontinuous paths
         - significant as speed increases
@@ -4691,7 +4691,7 @@ Same start (1 m left, 8 m/s), same speed PID, same steering delay and lag:
         - smooth high speed driving, urban driving at speed
         - no
 
-   - Our turn agrees: Pure Pursuit with a long lookahead cut the corner by
+   - Our turn agrees: Pure Pursuit with a long lookahead cut inside the curve by
      0.98 m; Stanley's front axle stayed within 0.38 m.
    - MPC is the choice when limits must hold inside the plan: the steering
      angle and rate, the delay.
@@ -4740,7 +4740,7 @@ with the throttle and the brake?
    .. rubric:: Turn the Speed Profile into a Trajectory: Add Up the Times
 
    .. figure:: /_static/images/L10/trajectory_dots.png
-      :alt: The same top view of the turn as before, with blue dots on the lane center, one for every second of the speed profile. On the approach the dots are evenly spaced, 8 meters apart; in the corner they bunch up, about 3.5 meters apart, and spread out again on the exit. Gray leader lines label four dots: t = 0 s at the start, t = 5 s on the approach, t = 10 s just before the corner, t = 15 s on the exit.
+      :alt: The same top view of the turn as before, with blue dots on the lane center, one for every second of the speed profile. On the approach the dots are evenly spaced, 8 meters apart; in the curve they bunch up, about 3.5 meters apart, and spread out again on the exit. Gray leader lines label four dots: t = 0 s at the start, t = 5 s on the approach, t = 10 s just before the curve, t = 15 s on the exit.
       :width: 90%
       :align: center
 
@@ -4751,7 +4751,7 @@ with the throttle and the brake?
 
       The same top view of the turn, with a dot on the lane center for every
       second of the profile. On the approach the dots sit 8 m apart; in the
-      corner they bunch up to about 3.5 m apart, then spread out again on
+      curve they bunch up to about 3.5 m apart, then spread out again on
       the exit. Labels mark :math:`t` = 0, 5, 10 and 15 s.
 
    - Each 0.25 m step takes :math:`\Delta s / v`; adding the steps up gives
@@ -5489,7 +5489,7 @@ From our runs on the turn (the Lateral and Longitudinal sections):
      - weaves
      - longer lookahead: 3 m swung to 3.07 m; 5 m crossed by 0.32 m
    * - Pure Pursuit
-     - cuts the corner
+     - cuts inside the curve
      - shorter lookahead: 10 m cut by 0.98 m; 5 m stayed within 0.25 m
    * - Pure Pursuit
      - both
@@ -5877,7 +5877,7 @@ Next Class
    passed the parked car. The bicycle model predicts; a quintic changes
    speed with small jerk; a PID holds the speed, with a clamp against
    windup; Pure Pursuit steers toward a point 5 m ahead (short weaves, long
-   cuts corners); Stanley steers from the front axle; MPC plans the next
+   cuts inside curves); Stanley steers from the front axle; MPC plans the next
    seconds and applies only the first input.
 
 - **L11, End-to-End Driving, VLA and Imitation Learning:** one network from

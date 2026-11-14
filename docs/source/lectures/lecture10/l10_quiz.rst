@@ -472,7 +472,7 @@ Multiple Choice (Questions 1 to 15)
    **B**.
 
    At 6 m/s: 0.75 × 6 = 4.5 m, longer than 3 m. At 2 m/s: 0.75 × 2 = 1.5 m,
-   raised to 3 m. On the lecture's turn, this rule gave the smallest corner
+   raised to 3 m. On the lecture's turn, this rule gave the smallest curve
    error of the runs tried: 0.07 m. See "A Lookahead for Every Speed: Scale
    It with the Speed" in :doc:`l10_lecture`.
 
@@ -494,7 +494,7 @@ True or False (Questions 16 to 19)
 
    At 3 m, 8 m/s, the AV weaves because the steering is both delayed and
    lags: its swings grow to 3.07 m, out of the 3.5 m lane. See "Choose the
-   Lookahead: Too Short Weaves, Too Long Cuts the Corner" in
+   Lookahead: Too Short Weaves, Too Long Cuts Inside the Curve" in
    :doc:`l10_lecture`.
 
 
@@ -567,12 +567,12 @@ Short Answer (Questions 20 to 21)
 
    A long lookahead aims at a point far ahead, so after the 1 m start it
    steers gently and barely crosses the center (0.07 m at 10 m). In the
-   corner, the same far point is already around the bend, so the AV turns
+   curve, the same far point is already around the bend, so the AV turns
    early: 0.98 m inside the center, then 0.95 m outside on the exit. A
-   short lookahead tracks the corner more closely, but at 4 m and below the
+   short lookahead tracks the curve more closely, but at 4 m and below the
    AV weaves. 5 m balances the two: it crosses by 0.32 m after the start and
    stays within 0.25 m of the center in the turn. See
-   "Choose the Lookahead: Too Short Weaves, Too Long Cuts the Corner" in
+   "Choose the Lookahead: Too Short Weaves, Too Long Cuts Inside the Curve" in
    :doc:`l10_lecture`.
 
 
