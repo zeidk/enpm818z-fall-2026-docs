@@ -3029,8 +3029,9 @@ Test Controllers Without CARLA: Our Simulation and Its Values
 
 **Goal:** test every controller the same way, in seconds, with no CARLA. A
 small Python program moves the AV with the bicycle model (next section; in
-full with MPC) every simulation step, 0.01 s, and runs the controller every
-control step, 0.05 s. The values it uses:
+full with MPC) every simulation step, 0.01 s (100 times a second), and runs
+the controller every control step, 0.05 s (20 times a second). The values it
+uses:
 
 .. list-table::
    :widths: 30 24 46
