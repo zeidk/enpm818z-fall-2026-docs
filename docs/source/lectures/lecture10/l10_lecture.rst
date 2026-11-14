@@ -4134,8 +4134,8 @@ changes, averaged over the run.
    :class: compact-table
 
    * - **Lookahead**
-     - **Crosses after start**
-     - **Largest in the turn**
+     - **Straight road: swing**
+     - **Curve: largest**
      - **Mean \|jerk\|**
    * - 5 m fixed
      - 0.32 m
@@ -4158,10 +4158,15 @@ changes, averaged over the run.
      - 0.18 m
      - 0.59 m/s³
 
-Long at speed, short in the corner: 0.75 s gives the smallest corner error.
-The controller node sets the lookahead to 5 m or 1 s × :math:`v`,
-whichever is longer, because the EKF's pose jumps a little at each GNSS fix
-and a short lookahead turns each jump into a swerve.
+.. important::
+
+   One rule for the whole path, straight road and curve. The speed profile
+   slows the AV in the curve, so :math:`L_d` shortens there by itself (3 m)
+   and tracks tightly; on the straight it is long (6 m) and steers smoothly.
+   0.75 s gives the smallest curve error. Our node uses
+   :math:`\max(5\ \mathrm{m}, 1\ \mathrm{s} \times v)`: the EKF's pose jumps
+   a little at each GNSS fix, and a short lookahead turns each jump into a
+   swerve.
 
 
 .. _l10-lec-handson-4:
