@@ -4044,17 +4044,17 @@ eight lookaheads we ran:
    Two errors against the lookahead distance.
 
 - **Straight road:** how far the AV swings past the center while it
-  corrects the 1 m start: 0.50 m at 4 m, 0.07 m at 10 m. A near point makes
-  it steer back hard.
-- **Curve:** how far it strays from the center: least at 5 m (0.25 m);
-  0.98 m at 10 m, where it turns early and cuts inside.
+  corrects the 1 m start: 0.50 m with a 4 m lookahead, 0.07 m with a 10 m
+  one. A near point makes it steer back hard.
+- **Curve:** how far it strays from the center: least with a 5 m lookahead
+  (0.25 m); 0.98 m with a 10 m one, which turns early and cuts inside.
 
 .. important::
 
-   At 4 m the AV weaves about 0.4 m each way and never settles; at 3 m the
-   swings grow to 3.07 m, out of the 3.5 m lane. Short tracks closely, long
-   drives smoothly (Snider, 2009). On our turn, 5 m is the best of the eight
-   we tried.
+   With a 4 m lookahead the AV weaves about 0.4 m each way and never
+   settles; with 3 m the swings grow to 3.07 m, out of the 3.5 m lane. Short
+   tracks closely, long drives smoothly (Snider, 2009). On our turn, a 5 m
+   lookahead is the best of the eight we tried.
 
 .. dropdown:: More detail: the 3 m and 10 m runs
    :class-container: more-detail
