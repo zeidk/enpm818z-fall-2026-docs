@@ -5,10 +5,23 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.31.0: Lecture 10 Exercises (2026-11-14)
+.. dropdown:: v2.31.1: Schedule Change for Lectures 10 to 13 (2026-11-14)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Syllabus
+
+   - **Course Schedule:** no class on 11/12. L10, Trajectory Generation &
+     Control, is taught on 11/19, with Quiz 4, which covers L9, Motion
+     Planning. L11 moves to 12/03 and L12 to 12/10. L13 becomes a
+     pre-recorded lecture, with the Automotive Cybersecurity reading. L11 to
+     L13 are for general knowledge; GP4 does not need them. The project dates,
+     Quiz 5 and the GP4 deadline do not change.
+
+.. dropdown:: v2.31.0: Lecture 10 Exercises (2026-11-14)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

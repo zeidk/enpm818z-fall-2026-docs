@@ -626,8 +626,9 @@ Course Schedule
 
 Lectures meet on **Thursdays**. The first lecture is **September 3, 2026**
 and the last lecture is **December 10, 2026**. The Thanksgiving recess
-(**Nov 25 to 29**) includes Thursday Nov 26, so there is no class that week;
-all other Thursdays meet as scheduled. Dates below are given as MM/DD.
+(**Nov 25 to 29**) includes Thursday Nov 26, so there is no class that week.
+There was also no class on Thursday Nov 12 (see the note below the table).
+Dates below are given as MM/DD.
 
 **Color key:** :reading:`pre-read material`; :quiz:`quizzes`;
 :assignment:`assignments (setup, GPs and report) posted/due`;
@@ -699,14 +700,14 @@ all other Thursdays meet as scheduled. Dates below are given as MM/DD.
      - :assignment:`GP3 posted (Tue, Nov 3)`
    * - 11/12
      - 11
-     - Trajectory Generation & Control
-     - L10
+     - :no-class:`No class: L10 moved to 11/19`
+     -
      -
    * - 11/19
      - 12
-     - End-to-End Driving, VLA & Imitation Learning
-     - L11
-     - | :quiz:`Quiz 4`
+     - Trajectory Generation & Control
+     - L10
+     - | :quiz:`Quiz 4 (on L9, Motion Planning)`
        | :assignment:`GP3 due (Fri, Nov 20), GP4 and report posted`
    * - 11/26
      -
@@ -715,16 +716,20 @@ all other Thursdays meet as scheduled. Dates below are given as MM/DD.
      -
    * - 12/03
      - 13
-     - Simulation, Scenario-Based Testing & World Models
-     - L12
+     - End-to-End Driving, VLA & Imitation Learning
+     - L11
      -
    * - 12/10
      - 14
-     - System Integration, Safety & Industry Outlook
-     - L13
-     - | :reading:`Read before class: Automotive Cybersecurity`
-       | :quiz:`Quiz 5`
+     - Simulation, Scenario-Based Testing & World Models
+     - L12
+     - | :quiz:`Quiz 5`
        | :assignment:`GP4 due`
+   * - Online
+     -
+     - System Integration, Safety & Industry Outlook (pre-recorded, watched on your own)
+     - L13
+     - :reading:`Read with it: Automotive Cybersecurity`
    * - 12/17
      - 15
      - No class: final report submission window
@@ -739,6 +744,11 @@ all other Thursdays meet as scheduled. Dates below are given as MM/DD.
    L3 runs over two weeks (weeks 3 and 4), and perception is taught in two
    lectures, L4 and L5, instead of three. The course has 13 lectures: L6 is
    Localization & SLAM.
+
+   **Change (11/14):** there was no class on 11/12, so L10 is taught on
+   11/19, L11 on 12/03 and L12 on 12/10, and L13 is a pre-recorded lecture.
+   L11 to L13 are taught for general knowledge: GP4 does not need them. The
+   project dates do not change.
 
 
 Final Project: Building an ADS Pipeline
