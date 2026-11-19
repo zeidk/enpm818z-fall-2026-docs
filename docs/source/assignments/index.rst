@@ -19,9 +19,9 @@ evaluates the complete system on challenging, unseen scenarios.
 
 .. note::
 
-   Group projects are posted one at a time as the semester progresses.
-   **GP1, GP2 and GP3 are posted.** Later projects will appear here when
-   they open. See the syllabus for the full schedule and weights.
+   Group projects were posted one at a time as the semester progressed.
+   **GP1 to GP4 are posted.** See the syllabus for the full schedule and
+   weights.
 
 
 Project Weight
@@ -29,7 +29,7 @@ Project Weight
 
 The final project accounts for **80% of your overall course grade**,
 split between the group projects (**85%**) and the Final Report
-(**15%**). The table below lists the group projects posted so far:
+(**15%**). The table below lists the group projects:
 
 .. list-table::
    :header-rows: 1
@@ -56,6 +56,11 @@ split between the group projects (**85%**) and the Final Report
      - 25%
      - 18 days, due Fri, Nov 20
      - L2, L3, L5, L6
+   * - GP4: Planning & Control
+     - 100
+     - 20%
+     - 2 weeks of work, due Thu, Dec 10
+     - L7, L8, L10
 
 .. note::
 
@@ -218,6 +223,4 @@ Support Resources
    gp1
    gp2
    gp3
-
-.. GP4 is hidden (see exclude_patterns in conf.py). Re-add here to publish:
-..    gp4
+   gp4

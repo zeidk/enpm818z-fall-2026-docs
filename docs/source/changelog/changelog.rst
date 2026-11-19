@@ -5,10 +5,24 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.31.1: Schedule Change for Lectures 10 to 13 (2026-11-14)
+.. dropdown:: v2.32.0: GP4 Planning and Control (2026-11-19)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Assignments
+
+   - **GP4 is posted:** Planning & Control, due Thursday, Dec 10 (the
+     Thanksgiving week is not counted). Your robotaxi drives a trip across
+     Town01 on your own GP1 to GP3 pipeline: a route planned with A*, Pure
+     Pursuit and a PID, and a behavior layer that stops for red lights,
+     people and cars. The page has a video of our reference driving the trip.
+   - **Final Project page:** the GP4 row is added to the table of group
+     projects.
+
+.. dropdown:: v2.31.1: Schedule Change for Lectures 10 to 13 (2026-11-14)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Syllabus
 

@@ -61,10 +61,9 @@ HIDDEN_LECTURES = [11, 12, 13]
 
 exclude_patterns = [f"lectures/lecture{n}/**" for n in HIDDEN_LECTURES]
 
-# GP4 is held back until it is posted (GP2 since 2026-10-11, GP3 since
-# 2026-11-01). Remove it here (and restore its toctree line in
-# assignments/index.rst) to publish it.
-exclude_patterns += ["assignments/gp4.rst"]
+# Group projects are held back until they are posted: add one here
+# ("assignments/gpN.rst", and drop its toctree line in assignments/index.rst)
+# to hide it. GP2 was posted 2026-10-11, GP3 2026-11-01, GP4 2026-11-19.
 
 # ---------------------------------------------------------------------------
 # PyData Sphinx Theme

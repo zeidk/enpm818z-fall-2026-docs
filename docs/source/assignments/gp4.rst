@@ -37,7 +37,7 @@ GP4: Planning & Control
           13.6% of the course grade
       * - **Lectures**
         - L7 (route planning, re-planning), L8 (constant-velocity prediction),
-          L10 (Pure Pursuit, PID); L9 for the report's discussion
+          L10 (Pure Pursuit, PID); L9 (motion planning) is background
       * - **Starter code**
         - `gp4_starter <https://github.com/rubixcubic/enpm818z-fall-2026-carla-ros/tree/main/gp4_starter>`__
           and `ads_msgs <https://github.com/rubixcubic/enpm818z-fall-2026-carla-ros/tree/main/ads_msgs>`__
@@ -173,7 +173,8 @@ was 0.40 m RMSE and the mean cross-track error 0.12 m.
 .. note::
 
    **If GP3 did not work for your team,** use the GP3 reference
-   implementation released on Canvas: GP4 needs GP3's pose and tracks.
+   implementation that is released on Canvas after GP3 is due (Fri, Nov 20):
+   GP4 needs GP3's pose and tracks.
 
 
 Learning Objectives
@@ -426,16 +427,17 @@ Tasks
 
    **Yours: astar_waypoints.** A* from the node nearest the car to the node
    nearest your goal, with the straight-line distance to the goal as the
-   heuristic. It returns the node list, or ``None`` when no route exists or
-   after ``max_astar_nodes`` (10,000) expansions.
+   heuristic. It returns the node list and the number of nodes it expanded; the
+   node list is ``None`` when no route exists or after ``max_astar_nodes``
+   (10,000) expansions.
 
    **The tests compare your routes with CARLA's own planner,**
    ``GlobalRoutePlanner``, on three Town01 and two Town03 trips; we
    computed its routes once and stored their lengths. On Town01 both graphs
    are the same, so the lengths must agree within 4 m. On Town03, CARLA
    allows a lane change only once per road segment; your graph allows one
-   wherever the markings do, so your route may be shorter than CARLA's,
-   never longer by more than a lane width (4 m) per lane change. Do not
+   wherever the markings do, so your route may be shorter than CARLA's. It
+   may be longer by at most 4 m plus 4 m (a lane width) per lane change. Do not
    import CARLA's planner in your node.
 
    **Yours: the two triggers.** ``obstacle_on_path``: an object's center
@@ -466,9 +468,9 @@ Tasks
    lookahead), put it in the car's frame, and return the wheel angle
    :math:`\delta = \arctan(2 L \sin\alpha / L_d)`, where :math:`L` is the
    wheelbase and :math:`\alpha` the angle from the car's heading to the
-   goal point. The test is the
-   worked example: rear axle at (82.50, -0.07) m, heading -0.0796 rad,
-   goal point (87.22, -1.72) m, wheelbase 2.875 m: -0.285 rad.
+   goal point. One test case: rear axle at (82.50, -0.07) m, heading
+   -0.0796 rad, goal point (87.22, -1.72) m, wheelbase 2.875 m: about
+   -0.285 rad (the test accepts 0.002 either way).
 
    **The lookahead (given).** The node sets :math:`L_d` to
    ``lookahead_distance`` (5 m) or to ``lookahead_time`` (1 s) times the
@@ -768,9 +770,11 @@ Common Mistakes
    - **Steering from the car's center.** Pure Pursuit works at the rear
      axle. The given node moves the pose there with your ``rear_offset``:
      set it.
-   - **An integral that winds up.** At a red light the speed error stays at
-     8 m/s for 30 s. Without the clamp, the car lurches when the light
-     turns green.
+   - **An integral that winds up.** While the car accelerates from a stop to
+     8 m/s, the throttle is capped and the speed error stays large, so the
+     integral keeps growing. Without the clamp, the car keeps full throttle
+     after it has passed the target speed.
    - **Waiting forever.** If a node stops publishing, the lock step ticks
      after ``cmd_timeout_s`` and logs it: read your timeout count.
-   - **Committing a bag.**
+   - **Committing a bag.** GitHub refuses any file over 100 MB. Keep your
+     bags out of the repository (they stay in ``$HOME/gp4_data``).
