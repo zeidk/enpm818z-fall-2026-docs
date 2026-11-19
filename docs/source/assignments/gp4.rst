@@ -36,8 +36,8 @@ GP4: Planning & Control
         - 20% of the group-project grade: 17.0% of the final project grade,
           13.6% of the course grade
       * - **Lectures**
-        - L7 (route planning, re-planning), L8 (constant-velocity prediction),
-          L10 (Pure Pursuit, PID); L9 (motion planning) is background
+        - L7 (route planning, re-planning), L8 (constant-velocity prediction), L9
+          (finite state machines), L10 (Pure Pursuit, PID)
       * - **Starter code**
         - `gp4_starter <https://github.com/rubixcubic/enpm818z-fall-2026-carla-ros/tree/main/gp4_starter>`__
           and `ads_msgs <https://github.com/rubixcubic/enpm818z-fall-2026-carla-ros/tree/main/ads_msgs>`__
@@ -152,7 +152,7 @@ cross-track error was 0.12 m.
      - L10
      - Pure Pursuit for steering, a PID with anti-windup for speed.
    * - 4. Behavior (20 pts)
-     - L8
+     - L9
      - Follow, slow down, stop at red lights, stop in an emergency, using
        your GP3 tracks' speeds.
    * - 5. Report (15 pts)

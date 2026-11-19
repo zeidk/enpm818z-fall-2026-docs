@@ -60,7 +60,7 @@ split between the group projects (**85%**) and the Final Report
      - 100
      - 20%
      - 2 weeks of work, due Thu, Dec 10
-     - L7, L8, L10
+     - L7, L8, L9, L10
 
 .. note::
 
