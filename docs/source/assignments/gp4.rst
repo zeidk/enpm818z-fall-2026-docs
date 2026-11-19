@@ -5,11 +5,11 @@ GP4: Planning & Control
 .. admonition:: The Situation
    :class: story
 
-   Your robotaxi now knows where it is and where every car and person around
-   it is, with their speeds: your GP3 pipeline. It still has a safety driver
-   at the wheel.
+   Your robotaxi now knows where it is, where each car and person around it
+   is, and how fast each one moves: that is your GP3 pipeline. A safety driver
+   still sits at the wheel.
 
-   The company's first driverless test is a trip across Town01: from a
+   The company's first driverless test is a trip across Town01, from a
    pick-up point to a drop-off point, through junctions and traffic lights,
    with cars and people around. The test has three rules:
 
@@ -19,8 +19,8 @@ GP4: Planning & Control
    3. **Search for a new route** when a parked vehicle blocks it or the car
       leaves it.
 
-   GP4 closes the loop: the car plans its route, decides how fast to go, and
-   turns the wheel, with every earlier part of your pipeline running live.
+   In GP4 the car plans its route, decides how fast to go and steers, while
+   every earlier part of your pipeline runs live.
 
 .. card:: GP4: At a Glance
    :class-card: sd-shadow-sm
@@ -53,8 +53,8 @@ GP4: Planning & Control
 
    You may use AI tools on GP4. You must say so in your ``README.md``.
 
-   Name the tool and describe how you used it, two or three sentences per
-   team member. Disclosure carries no penalty. **Undisclosed use is a
+   Name the tool and describe how you used it, in two or three sentences
+   per team member. Disclosure carries no penalty. **Undisclosed use is a
    violation of the Code of Academic Integrity.**
 
    Your team is responsible for every line you submit. Any member may be
@@ -69,7 +69,7 @@ GP4: Planning & Control
 Overview
 --------
 
-GP4 drives the car with your whole pipeline, live in CARLA:
+In GP4 your whole pipeline drives the car, live in CARLA:
 
 .. figure:: /_static/images/GP4/gp4_flow.png
    :alt: A flow diagram of the closed loop. Top row, left to right: GP1's sensor_manager, green, sends the camera to GP2's detector_node, blue; its boxes go to GP3's fusion_node, purple, whose objects go to GP3's tracker_node, purple; sensor_manager also sends LiDAR along the top to fusion_node and on, down the right side of tracker_node, to behavior_node. sensor_manager sends IMU and GNSS down to GP3's localization_node, purple, whose pose goes to planner_node, red. Middle row: planner_node sends the path to behavior_node, red, which also gets tracks from tracker_node and the traffic light from a gray ground truth box on the right; tracker_node also sends standing vehicles to planner_node. Bottom: controller_node, red, gets the path from planner_node, the pose from localization_node, the target speed from behavior_node and the speed from the speedometer of the ground truth box, along the bottom right, and sends /control/vehicle_cmd back to sensor_manager along the bottom and up the left side. A legend: green GP1, blue GP2, purple GP3, red GP4: yours, gray given.
@@ -81,9 +81,9 @@ GP4 drives the car with your whole pipeline, live in CARLA:
    **gray:** given. Every arrow carries a ROS 2 topic. The command goes back
    to your GP1 node, which waits for it before the next simulation step.
 
-**Our reference, running.** The video below shows our reference GP4 pipeline
-driving rig A's route (535 m) in closed loop, with its EKF pose, 40 other
-vehicles and 80 people. It plays at normal speed: 165 s of simulated time.
+The video below shows our reference solution driving rig A's route (535 m)
+in closed loop, on its EKF pose, with 40 other vehicles and 80 people. It
+plays at normal speed, 165 s of simulated time, and has no sound.
 
 .. raw:: html
 
@@ -93,31 +93,44 @@ vehicles and 80 people. It plays at normal speed: 165 s of simulated time.
      Your browser cannot play this video. The description below says what it shows.
    </video>
 
-*What the video shows* (it has no sound). **Left:** a camera that follows
-the car from behind. It is only for the video; the pipeline does not use
-it. **Right:** a top view 80 m across, centered on the car: the lane
-centers from the map (light gray), the planned path (red) with the goal at
-its end (red star), the true car (black triangle), the EKF's pose (orange
-dot) and the tracks (purple squares, with speed arrows). The title gives
-the behavior state, its target speed, the car's speed and, when one
-applies, the light ahead with the distance to its stop line. **Bottom:**
-the EKF's error (EKF minus truth) in map x, map y and heading over the last
-30 s, and the error of the heading the controller steers by (dashed;
-recomputed from the run's recording).
+.. admonition:: Reading the video
+   :class: tip
 
-The car creeps straight at 2 m/s until 6.7 s, while the EKF settles, then
-follows its lane at up to 7.5 m/s and takes the left turn at 33 s to 37 s
-at 5.1 to 7.2 m/s. At 40 s the light 29 m ahead turns yellow, then red. The
-car brakes, stops 1.0 m before the stop line at 47 s and waits until the
-light turns green at 75 s. At 106 s the next light shows red 50 m ahead. On
-the way to it, at 111 s, the car stops for 1.3 s for a person crossing the
-road 8 m ahead. It then stops 1.0 m before the line and leaves when the light
-turns green at 121 s. Two meters past the line it stops again: a car stands
-8 m ahead, on the goal, and the car waits behind it from 125 s to 157 s,
-while the light turns yellow and red. It comes within 2 m of the goal at
-160 s and stops 0.18 m from it. Scored to arrival, the run had no
-collision, no pedestrian hit and no red-light violation; the EKF's error
-was 0.40 m RMSE and the mean cross-track error 0.12 m.
+   - **Left:** a camera that follows the car from behind. It is there for
+     the video only; the pipeline does not use it.
+   - **Right:** a top view, 80 m across, centered on the car. It shows the
+     lane centers from the map (light gray), the planned path (red) with the
+     goal at its end (red star), the true car (black triangle), the EKF's
+     pose (orange dot) and the tracks (purple squares, with arrows for their
+     speeds).
+   - **Above the top view:** the behavior state, its target speed and the
+     car's speed. When a light applies, it also shows the light's color and
+     the distance to its stop line.
+   - **Bottom:** the EKF's error (EKF minus truth) over the last 30 s, in
+     map x, map y and heading. The dashed line is the error of the heading
+     the controller steers by, recomputed from the run's recording.
+
+What happens in the run:
+
+- **0 to 6.5 s:** the car creeps straight at 2 m/s while the EKF settles.
+  Then it follows its lane at up to 7.5 m/s.
+- **33 to 37 s:** it takes the left turn at 5.1 to 7.2 m/s.
+- **40 s:** the light 29 m ahead turns yellow, then red. The car brakes and
+  stops 1.0 m before the stop line at 47 s.
+- **75 s:** the light turns green and the car leaves.
+- **106 s:** the next light shows red, 50 m ahead.
+- **111 s:** on the way to that light, the car stops for 1.3 s for a person
+  crossing the road 8 m ahead. It then stops 1.0 m before the line.
+- **121 s:** the light turns green and the car leaves.
+- **125 to 157 s:** two meters past the line, the car stops again: another
+  car stands 8 m ahead, on the goal. Our car waits behind it while the
+  light turns yellow and red.
+- **160 s:** after one more short stop, the car comes within 2 m
+  of the goal. It stops 0.18 m from it.
+
+Scored up to its arrival, the run had no collision, no pedestrian hit and
+no red-light violation. The EKF's error was 0.40 m RMSE, and the mean
+cross-track error was 0.12 m.
 
 .. list-table::
    :widths: 26 14 60
@@ -146,7 +159,7 @@ was 0.40 m RMSE and the mean cross-track error 0.12 m.
      - all
      - Your runs, what your EKF costs the controller, and one failure.
 
-**What GP4 reuses.** Every task starts from code your team wrote:
+Every task starts from code your team wrote:
 
 .. list-table::
    :widths: 24 40 36
@@ -173,7 +186,7 @@ was 0.40 m RMSE and the mean cross-track error 0.12 m.
 .. note::
 
    **If GP3 did not work for your team,** use the GP3 reference
-   implementation that is released on Canvas after GP3 is due (Fri, Nov 20):
+   implementation. It is released on Canvas after GP3 is due (Fri, Nov 20).
    GP4 needs GP3's pose and tracks.
 
 
@@ -213,17 +226,18 @@ Provided Resources
 
       cd ~/enpm818z_ws/src/GP1_TeamX && git checkout -b gp4 gp3-final
 
-3. Copy the GP4 files into your package. One file has the same name as a
-   GP3 file on purpose: ``ground_truth.py``. The GP4 version adds the
-   collision sensor and the traffic light, and keeps everything GP3 used.
-   Check for other files with the same name first:
+3. Copy the GP4 files into your package. One of them, ``ground_truth.py``,
+   replaces your GP3 file of the same name on purpose: the GP4 version
+   keeps everything GP3 used and adds the collision sensor and the traffic
+   light. First check that no other file would be overwritten:
 
    .. code-block:: bash
 
       (cd ../enpm818z-fall-2026-carla-ros/gp4_starter/ads_pipeline && find . -type f -printf '%P\n') | while read -r f; do [ -e "ads_pipeline/$f" ] && echo "already exists: ads_pipeline/$f"; done
       cp -r ../enpm818z-fall-2026-carla-ros/gp4_starter/ads_pipeline/. ads_pipeline/
 
-   The only line printed should be ``ads_pipeline/ads_pipeline/ground_truth.py``.
+   The check should print only one line:
+   ``already exists: ads_pipeline/ads_pipeline/ground_truth.py``.
 
 4. Add the GP4 nodes to ``setup.py``, in ``console_scripts``:
 
@@ -233,9 +247,9 @@ Provided Resources
       'behavior_node = ads_pipeline.behavior_node:main',
       'controller_node = ads_pipeline.controller_node:main',
 
-5. Check: ``python3 -m pytest test/ -k gp4`` runs. Most GP4 tests fail with
-   ``NotImplementedError`` until you write the functions marked YOURS, and
-   ``test_gp4_lockstep.py`` fails to import until you finish Task 1.
+5. Check that ``python3 -m pytest test/ -k gp4`` runs. Most GP4 tests fail
+   with ``NotImplementedError`` until you write the functions marked YOURS,
+   and ``test_gp4_lockstep.py`` fails to import until you finish Task 1.
 
 What the starter contains
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -258,7 +272,7 @@ What the starter contains
      - Given: ``Hysteresis``.
    * - ``planner_node.py``
      - Given
-     - Plans at the first pose, checks both triggers twice a second,
+     - Plans at the first pose, checks both triggers twice a second, and
        publishes ``/planning/path``.
    * - ``controller_core.py``
      - **Yours:** ``pure_pursuit_steer``, ``PIDController.compute``
@@ -276,12 +290,12 @@ What the starter contains
        start-up branch.
    * - ``behavior_node.py``
      - Given
-     - Answers every tracks message with a target speed; holds the car at
-       the goal.
+     - Answers every tracks message with a target speed, and holds the car
+       at the goal.
    * - ``ground_truth.py``
      - Given
-     - GP3's helper plus collisions and the traffic light (grading and the
-       behavior node's light only).
+     - GP3's helper plus collisions and the traffic light (for grading, and
+       for the behavior node's light only).
    * - ``tools/evaluate_run.py``
      - Given
      - Scores a run (see Task 5).
@@ -366,9 +380,9 @@ Your vehicle is your GP1 rig's. We measured its wheels in CARLA:
      - 2.935
      - 1.443
 
-Put both into ``config/controller_config.yaml`` (``wheelbase``,
-``rear_offset``). Every vehicle's front wheels turn 70 degrees (1.222 rad) at
-full steering in CARLA: that is ``max_steer_angle``, and your controller
+Put both values into ``config/controller_config.yaml`` (``wheelbase``,
+``rear_offset``). In CARLA, every vehicle's front wheels turn 70 degrees
+(1.222 rad) at full steering: that is ``max_steer_angle``. Your controller
 never asks for more than ``steer_limit``, 0.7 rad.
 
 
@@ -380,26 +394,30 @@ Tasks
    :class-container: sd-border-primary
 
    Your GP1 ``sensor_manager`` ticks the world on a timer. In GP4 the
-   controller drives, so each step must wait for its answer.
+   controller drives, so each simulation step must wait for its command.
 
    **Step 1: Two functions** at module level in ``sensor_manager.py``:
 
    - ``ready_to_tick(last_tick_stamp, last_cmd_stamp, waited_s, timeout_s)``
      returns ``(tick_now, timed_out)``. Tick when the last command's stamp
-     is at or after the last tick's stamp (a 1 ms margin), or when
+     is at or after the last tick's stamp (with a 1 ms margin), or when
      ``timeout_s`` seconds of waiting have passed (then ``timed_out`` is
      true). The first tick needs no command.
    - ``to_carla_control(cmd)`` returns the ``carla.VehicleControl``
      arguments as a dict. ``VehicleCmd.steer`` is positive to the LEFT;
      CARLA's ``steer`` is positive to the RIGHT (its y axis points right).
 
-   **Step 2: The lock step.** Add the parameters ``lock_step`` (default
+   **Step 2: The lock step.** Add two parameters: ``lock_step`` (default
    false, so GP1 to GP3 behave as before) and ``cmd_timeout_s`` (2.0).
-   With ``lock_step``: subscribe to ``/control/vehicle_cmd``; poll in the
-   timer callback every 5 ms; tick only when ``ready_to_tick`` says so, and
-   log every timeout with its count; apply the last command with
-   ``vehicle.apply_control(carla.VehicleControl(**to_carla_control(cmd)))``
-   before ``world.tick()``.
+   With ``lock_step`` on:
+
+   - subscribe to ``/control/vehicle_cmd``;
+   - poll in the timer callback every 5 ms;
+   - tick only when ``ready_to_tick`` says so, and log every timeout with
+     its count;
+   - apply the last command with
+     ``vehicle.apply_control(carla.VehicleControl(**to_carla_control(cmd)))``
+     before ``world.tick()``.
 
    **Step 3: Ground truth for GP4.** Create ``GroundTruth(...,
    gp4=self.p('lock_step'))`` and add its ``actors`` to the list your node
@@ -408,10 +426,11 @@ Tasks
    **Step 4: Run it.** ``gp4_launch.py`` starts your whole pipeline with
    ``lock_step`` on (Task 5 has the command). On day 1, before Tasks 2 to 4
    work, the given controller already answers every frame: it creeps
-   straight at 2 m/s until the first pose and the first path.
+   straight at 2 m/s until the first pose and the first path arrive.
 
-   **Evidence:** ``results/gp4/lockstep.txt``: ``ros2 topic hz
-   /control/vehicle_cmd`` during a run, and your log's timeout count.
+   **Evidence:** ``results/gp4/lockstep.txt``, holding the output of ``ros2
+   topic hz /control/vehicle_cmd`` during a run and your log's timeout
+   count.
 
    **Tests:** ``python3 -m pytest test/test_gp4_lockstep.py test/test_gp4_ground_truth.py -v``.
 
@@ -422,22 +441,23 @@ Tasks
    **The graph** (``route_graph.py``, given) has a node every 2 m along
    every lane of the map, an edge to the next node along the lane, and an
    edge to the neighbor lane where the road markings allow a lane change.
-   Town01 has 3107 nodes and 3143 edges; it has one lane each way, so no
-   lane changes. Town03 has 6647 nodes and 2753 lane-change edges.
+   Town01 has 3107 nodes and 3143 edges. It has one lane each way, so it
+   has no lane changes. Town03 has 6647 nodes and 2753 lane-change edges.
 
    **Yours: astar_waypoints.** A* from the node nearest the car to the node
    nearest your goal, with the straight-line distance to the goal as the
-   heuristic. It returns the node list and the number of nodes it expanded; the
-   node list is ``None`` when no route exists or after ``max_astar_nodes``
-   (10,000) expansions.
+   heuristic. It returns the node list and the number of nodes it expanded.
+   The node list is ``None`` when no route exists or after
+   ``max_astar_nodes`` (10,000) expansions.
 
    **The tests compare your routes with CARLA's own planner,**
-   ``GlobalRoutePlanner``, on three Town01 and two Town03 trips; we
-   computed its routes once and stored their lengths. On Town01 both graphs
-   are the same, so the lengths must agree within 4 m. On Town03, CARLA
-   allows a lane change only once per road segment; your graph allows one
-   wherever the markings do, so your route may be shorter than CARLA's. It
-   may be longer by at most 4 m plus 4 m (a lane width) per lane change. Do not
+   ``GlobalRoutePlanner``, on three Town01 trips and two Town03 trips. We
+   ran CARLA's planner once and stored the lengths of its routes. On
+   Town01 the two graphs are the same, so your length must match CARLA's
+   within 4 m. On Town03 they differ: CARLA allows a lane change only once
+   per road segment, and your graph allows one wherever the markings do.
+   So on Town03 your route may be shorter than CARLA's, and it may be
+   longer by at most 4 m plus 4 m (a lane width) per lane change. Do not
    import CARLA's planner in your node.
 
    **Yours: the two triggers.** ``obstacle_on_path``: an object's center
@@ -447,11 +467,12 @@ Tasks
    **What the given node does with them,** twice a second:
 
    - Trigger 1 counts only standing vehicles (vehicle tracks slower than
-     0.5 m/s) on the path ahead of the car, and not those within 30 m of a
-     traffic light's stop line, which are most likely queued at the light. It closes the graph's edges
-     within 3.0 m of the vehicle and searches again. Town01's lanes are
-     one-way: when no route avoids the vehicle, the node reopens the edges
-     and keeps the path, and your behavior node stops for it.
+     0.5 m/s) on the path ahead of the car. It skips those within 30 m of a
+     traffic light's stop line, which are most likely queued at the light.
+     When it fires, the node closes the graph's edges within 3.0 m of the
+     vehicle and searches again. Town01's lanes are one-way, so when no
+     route avoids the vehicle, the node reopens the edges and keeps the
+     path, and your behavior node stops for the vehicle.
    - Trigger 2 searches again from the node nearest the car.
    - A trigger that stays on starts one search, not one per check: the
      given ``Hysteresis`` waits until the trigger has been off for 1 s.
@@ -462,28 +483,28 @@ Tasks
    :icon: goal
    :class-container: sd-border-primary
 
-   **Yours: pure_pursuit_steer.** From the middle of the rear axle (the
-   given node moves your EKF's pose back by your ``rear_offset``), find the
-   goal point where the path leaves the circle of radius :math:`L_d` (the
-   lookahead), put it in the car's frame, and return the wheel angle
-   :math:`\delta = \arctan(2 L \sin\alpha / L_d)`, where :math:`L` is the
-   wheelbase and :math:`\alpha` the angle from the car's heading to the
-   goal point. One test case: rear axle at (82.50, -0.07) m, heading
-   -0.0796 rad, goal point (87.22, -1.72) m, wheelbase 2.875 m: about
-   -0.285 rad (the test accepts 0.002 either way).
+   **Yours: pure_pursuit_steer.** Start from the middle of the rear axle
+   (the given node moves your EKF's pose back by your ``rear_offset``).
+   Find the goal point where the path leaves the circle of radius
+   :math:`L_d` (the lookahead), put it in the car's frame, and return the
+   wheel angle :math:`\delta = \arctan(2 L \sin\alpha / L_d)`, where
+   :math:`L` is the wheelbase and :math:`\alpha` the angle from the car's
+   heading to the goal point. One test case: rear axle at (82.50, -0.07) m,
+   heading -0.0796 rad, goal point (87.22, -1.72) m, wheelbase 2.875 m:
+   about -0.285 rad (the test accepts 0.002 either way).
 
    **The lookahead (given).** The node sets :math:`L_d` to
    ``lookahead_distance`` (5 m) or to ``lookahead_time`` (1 s) times the
-   car's speed, whichever is longer. Your EKF's pose jumps a little at each
-   GNSS fix (0.24 m within 0.05 s, at the 99th percentile, in our run), and
-   a 5 m lookahead turns each jump into a swerve. In our offline test with
-   our EKF's measured error, the longer lookahead at speed cut the
-   step-to-step change of the steering command by almost half (its standard
-   deviation went from 0.021 to 0.011).
+   car's speed, whichever is longer. The reason is your EKF: its pose jumps
+   a little at each GNSS fix (0.24 m within 0.05 s at the 99th percentile,
+   in our run), and a 5 m lookahead turns each jump into a swerve. In our
+   offline test with our EKF's measured error, the longer lookahead at
+   speed cut the step-to-step change of the steering command almost in
+   half (its standard deviation fell from 0.021 to 0.011).
 
-   **Yours: PIDController.compute.** Kp, Ki and Kd on the speed error, with
-   the integral of the error held within ``pid_windup_limit`` (2.0), and
-   the output clamped to [-1, 1]: positive is throttle, negative brake.
+   **Yours: PIDController.compute.** Kp, Ki and Kd on the speed error. Hold
+   the integral of the error within ``pid_windup_limit`` (2.0), and clamp
+   the output to [-1, 1]: positive is throttle, negative is brake.
 
    **The speed (given).** The PID gets the car's speed from
    ``/carla/speedometer``, a wheel-speed reading that the given ground-truth
@@ -492,39 +513,39 @@ Tasks
    the car slowed to 2 m/s in a turn, and the controller kept braking until
    the car stopped.
 
-   **The heading (given).** Pure Pursuit gets a smoothed heading: the
-   IMU's yaw rate turns it, and it drifts toward your EKF's heading over
+   **The heading (given).** Pure Pursuit gets a smoothed heading: the IMU's
+   yaw rate turns it, and it drifts toward your EKF's heading over
    ``heading_tau`` (2 s). Your EKF's heading jumps a little at each GNSS fix
-   (2 degrees, standard deviation, in our run), and each jump would turn
+   (a standard deviation of 2 degrees in our run), and each jump would turn
    the wheels. In our offline test with the EKF's measured error, the
    smoothed heading cut the step-to-step change of the steering command by
-   a quarter and kept the car closer to its path (0.180 m against 0.198 m).
-   In CARLA, on rig A's route with the EKF, it cut that change by 31%
-   (standard deviation 0.0192 to 0.0132).
+   a quarter and kept the car closer to its path (0.180 m against
+   0.198 m). In CARLA, on rig A's route with the EKF, it cut that change by
+   31% (standard deviation 0.0192 to 0.0132).
 
-   **The start (given).** Your EKF's first poses are its worst: in our run,
-   its heading was 12 degrees off at the first pose, then 38 degrees one
-   way and 29 degrees the other within the next 1.2 s, and the car swerved.
-   So the node keeps the car creeping straight for ``settle_s`` (4 s) after
-   the first pose, while the path ahead stays straight, and then starts the
-   steering heading from the path's direction. In our offline test with
-   that run's EKF error, the largest distance from the path in the first
-   12 s fell from 0.91 m to 0.36 m.
+   **The start (given).** Your EKF's first poses are its worst. In our run,
+   its heading was 12 degrees off at the first pose, then 38 degrees one way
+   and 29 degrees the other within the next 1.2 s, and the car swerved. So
+   the node keeps the car creeping straight for ``settle_s`` (4 s) after
+   the first pose, while the path ahead stays straight, and then
+   starts the steering heading from the path's direction. In our offline
+   test with that run's EKF error, the largest distance from the path in
+   the first 12 s fell from 0.91 m to 0.36 m.
 
    **Speed in curves and at the goal (given).** The controller node caps
-   the behavior node's target so the car can slow, at 2.0 m/s², to
-   :math:`\sqrt{a_{lat} / \kappa}` (``a_lat`` 2.0 m/s²) on every curve in
-   the next 40 m of path, where :math:`\kappa` is the path's curvature.
-   Once the goal is within those 40 m, the cap also lets the car stop at
-   the goal. Without the curve cap, our car took junction turns at 7 m/s
-   and left its lane. Without the goal cap, it drove past its goal at
+   the behavior node's target speed so that, braking at 2.0 m/s², the car
+   can slow to :math:`\sqrt{a_{lat} / \kappa}` (``a_lat`` 2.0 m/s²) on
+   every curve in the next 40 m of path, where :math:`\kappa` is the path's
+   curvature. Once the goal is within those 40 m, the cap also lets the car
+   stop at the goal. Without the curve cap, our car took junction turns at
+   7 m/s and left its lane. Without the goal cap, it drove past its goal at
    5.1 m/s.
 
    **Tune offline first.** ``bicycle_sim.track`` drives a path with your
    two functions, with steering and engine lags. On the test curve, our
-   reference's largest cross-track error is 0.458 m with a 5 m lookahead
-   (0.195 m with 3 m, 0.821 m with 8 m: a longer lookahead cuts the
-   corners). The test allows 0.69 m.
+   reference's largest cross-track error is 0.458 m with a 5 m lookahead,
+   0.195 m with 3 m and 0.821 m with 8 m: a longer lookahead cuts the
+   corners. The test allows 0.69 m.
 
    **Tests:** ``python3 -m pytest test/test_gp4_controller.py -v``.
 
@@ -532,54 +553,61 @@ Tasks
    :icon: goal
    :class-container: sd-border-primary
 
-   **Yours: BehaviorFSM.update.** Four states; when more than one holds,
+   **Yours: BehaviorFSM.update.** Four states. When more than one holds,
    the safer state wins:
 
    1. ``EMERGENCY_STOP`` (0 m/s): no route, or an object within
       ``emergency_distance`` (8.0 m) ahead.
    2. ``STOP`` (0 m/s): a red or yellow light whose stop line is ahead of
       the car and within ``stop_distance`` (20 m). A light that turns red
-      after the car has passed its stop line does not stop it in the
-      junction. The given ground-truth helper reports the light of the stop
-      line ahead in the car's lane from 50 m away. CARLA itself tells a car
-      about a light only 2 to 3 m before the stop line, too late to stop.
-      The given node turns this STOP into braking: it lets the car keep the
-      speed from which it can stop 1 m before the line at 2.0 m/s²
-      (``stop_line_speed``). With 0 m/s as soon as the line was 20 m away,
-      our car stopped 16 m short of it.
+      after the car has passed its stop line does not stop the car in the
+      junction.
    3. ``OBSTACLE_AVOIDANCE`` (``slow_speed``, 3 m/s): an object within
       ``obstacle_distance`` (15 m) ahead.
    4. ``LANE_FOLLOW`` (``target_speed``, 8 m/s).
 
+   **The light (given).** The given ground-truth helper reports the light
+   of the stop line ahead in the car's lane from 50 m away. CARLA itself
+   tells a car about a light only 2 to 3 m before the stop line, too late
+   to stop. The given node turns STOP into braking: it lets the car keep
+   the speed from which it can stop 1 m before the line at 2.0 m/s²
+   (``stop_line_speed``). When the target was 0 m/s as soon as the line was
+   20 m away, our car stopped 16 m short of it.
+
    **What counts as ahead** (given, ``nearest_ahead`` and
    ``ahead_by_class``): an object whose constant-velocity position over the
    next ``lookahead_s`` (2.0 s; ``ped_lookahead_s``, 1.0 s, for a
-   pedestrian) comes within 2.0 m of the path ahead of the car. A person
-   3.5 m from the path, walking toward it at 1.5 m/s, counts: in 1 s they
-   are 2 m from it. With 3.0 m, our car stopped for people standing on the
-   sidewalk: their tracks' speeds are noisy, and 2 s of a wrong speed
-   carried them into a 3 m band. On our 8 runs, against the truth, 2.0 m cut
-   false stops from 87 to 41 and still caught 3 of the 4 people who came
-   within 1.5 m of the path. The camera places pedestrians, so their speeds
-   are the noisiest: on 10 runs, predicting them 1 s ahead instead of 2 s
-   cut their false slow-downs and stops from 22 to 11 and still caught all
-   7 people who came within 1.5 m of the path (7 cases are few).
+   pedestrian) comes within 2.0 m of the path ahead of the car. For
+   example, a person 3.5 m from the path, walking toward it at 1.5 m/s,
+   counts: in 1 s they are 2 m from it. The two numbers come from our runs:
 
-   **Given:** before the first path the car creeps at 2 m/s (the EKF needs
-   the car to move 3 m before it publishes a pose), or slower when this
-   node asks for less, and at the goal the node holds the car.
+   - **The 2.0 m band.** With 3.0 m, our car stopped for people standing
+     on the sidewalk: their tracks' speeds are noisy, and 2 s of a wrong
+     speed carried them into a 3 m band. On our 8 runs, checked against the
+     truth, 2.0 m cut false stops from 87 to 41 and still caught 3 of the 4
+     people who came within 1.5 m of the path.
+   - **1 s for pedestrians.** The camera places pedestrians, so their
+     speeds are the noisiest. On 10 runs, predicting them 1 s ahead instead
+     of 2 s cut their false slow-downs and stops from 22 to 11 and still
+     caught all 7 people who came within 1.5 m of the path (7 cases are
+     few).
 
-   **Given: the LiDAR stop check.** The camera misses a vehicle close ahead:
-   at 4.8 m, the back of a box truck fills the whole image, and the
+   **The start and the goal (given).** Before the first path, the car
+   creeps at 2 m/s, or slower when this node asks for less: the EKF needs
+   the car to move 3 m before it publishes a pose. At the goal, the node
+   holds the car.
+
+   **The LiDAR stop check (given).** The camera misses a vehicle close
+   ahead: at 4.8 m, the back of a box truck fills the whole image, and the
    detector calls it a stop sign. With no box there is no fused object and
-   no track, so ``BehaviorFSM.update`` sees an empty road. The node also
+   no track, so ``BehaviorFSM.update`` sees an empty road. So the node also
    reads the LiDAR. It keeps the points 0.3 m to 2.5 m above the road and
-   in front of the car, and when at least 5 of them lie within 1.1 m of
-   the path, closer than the car can stop, the state is ``EMERGENCY_STOP``
-   whatever the tracks say. "Closer than the car can stop" is 2.5 m (the
-   car's front), plus :math:`v^2 / (2 \cdot 4.0)` m (braking at
-   4.0 m/s² from the car's speed :math:`v`), plus 2 m of margin. Without it, our car drove
-   into a truck twice in each of four runs of one route.
+   in front of the car. When at least 5 of them lie within 1.1 m of the
+   path and closer than the car can stop, the state is ``EMERGENCY_STOP``,
+   whatever the tracks say. "Closer than the car can stop" means 2.5 m (the
+   car's front), plus :math:`v^2 / (2 \cdot 4.0)` m (braking at 4.0 m/s²
+   from the car's speed :math:`v`), plus 2 m of margin. Without this check,
+   our car drove into a truck twice in each of four runs of one route.
 
    **Tests:** ``python3 -m pytest test/test_gp4_behavior.py -v``.
 
@@ -587,8 +615,8 @@ Tasks
    :icon: goal
    :class-container: sd-border-primary
 
-   **Run your route** twice: with your EKF, and with the true pose (for the
-   comparison):
+   **Run your route twice:** once with your EKF, and once with the true
+   pose, for the comparison:
 
    .. code-block:: bash
 
@@ -600,46 +628,56 @@ Tasks
       python3 -m tools.evaluate_run --bag $HOME/gp4_data/run_ekf --out ../results/gp4/metrics_ekf.json
 
    Set ``traffic.vehicles: 40`` and ``traffic.walkers: 80`` in your YAML.
-   A run stops after 300 s of simulated time (``duration``): enough for a
-   route with two red lights and a traffic jam (our longest reference run
-   arrived after 216 s).
+   A run stops after 300 s of simulated time (``duration``). That is enough
+   for a route with two red lights and a traffic jam: our longest reference
+   run arrived after 216 s.
+
    ``evaluate_run.py`` scores the drive until the car first comes within
-   2 m of the goal: route completion (1 at arrival; otherwise 1 minus the
-   road distance still left to the goal over the route's length, so a
-   detour counts as progress), collisions, pedestrian hits, red-light
-   violations (crossing a stop line on red faster than 1 m/s),
-   cross-track error and mean speed. CARLA's collision sensor misses
-   people, so a pedestrian hit is a person whose center enters the car's
-   outline (2.5 m ahead and behind, 1.1 m to each side) while the car moves
-   faster than 0.5 m/s.
+   2 m of the goal. It reports:
+
+   - route completion: 1 at arrival; otherwise 1 minus the road distance
+     still left to the goal over the route's length, so a detour counts as
+     progress;
+   - collisions and pedestrian hits;
+   - red-light violations: crossing a stop line on red faster than 1 m/s;
+   - cross-track error and mean speed.
+
+   CARLA's collision sensor misses people, so the script counts a
+   pedestrian hit when a person's center enters the car's outline (2.5 m
+   ahead and behind, 1.1 m to each side) while the car moves faster than
+   0.5 m/s.
 
    **Our reference** on rig A's route (535 m, 40 vehicles and 80 people):
    with the true pose, the car arrived in 124.1 s of simulated time, with a
-   mean cross-track error of 0.036 m; with the EKF, in 124.1 s, with
-   0.161 m. Neither run had a collision, a pedestrian hit or a red-light
-   violation. Each run took 5 to 14 minutes of wall time on an RTX 4060
-   laptop GPU. The traffic differs from run to run, even with the same
-   seed, so one route gives different numbers: in two of our earlier runs
-   of this route with the same code and the EKF, the car arrived in 159.9 s
-   and, after waiting in a jam of CARLA's own cars at the goal's junction,
-   in 216.2 s. With a 1600 x 900 or 1920 x 1080 camera the detector is
-   slower and the lock step times out more often (219 to 594 times in our
-   runs); the run still works, it takes 16 to 34 minutes.
+   mean cross-track error of 0.036 m. With the EKF, it arrived in 124.1 s,
+   with 0.161 m. Neither run had a collision, a pedestrian hit or a
+   red-light violation. Each run took 5 to 14 minutes of wall time on an
+   RTX 4060 laptop GPU.
+
+   The traffic differs from run to run, even with the same seed, so one
+   route gives different numbers. In two of our earlier runs of this route,
+   with the same code and the EKF, the car arrived in 159.9 s, and in
+   216.2 s after waiting in a jam of CARLA's own cars at the goal's
+   junction.
+
+   With a 1600 x 900 or 1920 x 1080 camera, the detector is slower and the
+   lock step times out more often (219 to 594 times in our runs). The run
+   still works, but it takes 16 to 34 minutes.
 
    **The report,** ``gp4_report.pdf``, at most 5 pages:
 
    1. Both runs' metrics, from the JSON files.
    2. What your EKF costs: cross-track error and speed with your EKF
       against the true pose, and whether trigger 2 fired because of it.
-   3. One failure, with its time: what each node published then, and the
-      cause. Our first run had one: a vehicle about 5 m away that the
-      tracker did not report.
+   3. One failure, with its time: what each node published at that moment,
+      and the cause. Our first run had one: the tracker did not report a
+      vehicle about 5 m away.
    4. Re-planning: when your two triggers fired in your runs, and what the
-      planner did. In our tests with a car parked just past a junction,
-      the tracker first reported it 14.5 to 23.2 m ahead on three routes
-      out of five and never on the other two: after the junction where the
-      car could have turned off, so on Town01's one-way roads the planner
-      kept the route.
+      planner did. In our tests with a car parked just past a junction, the
+      tracker first reported it 14.5 to 23.2 m ahead on three routes out of
+      five, and never on the other two. On those three routes, the report
+      came after the junction where the car could have turned off, so on
+      Town01's one-way roads the planner kept the route.
    5. Your tuning: lookahead, PID gains, ``lookahead_s``, and why.
    6. AI disclosure in ``README.md``, per member.
 
@@ -657,7 +695,7 @@ Suggested Schedule
      - Done when
    * - Nov 19 to 21
      - Starter copied; Task 1 (lock step)
-     - The car creeps under the given controller, 0 timeouts
+     - The car creeps under the given controller, with 0 timeouts
    * - Nov 22 to 24
      - Tasks 2, 3 and 4 offline: one person per task
      - Each task's tests pass
@@ -669,7 +707,7 @@ Suggested Schedule
      - The route completes with your EKF
    * - Dec 5 to 8
      - Both runs, the report
-     - Checklist below fully ticked
+     - Every item of the checklist below is ticked
    * - Dec 9 to 10
      - **Slack**
      - Nothing scheduled
@@ -700,8 +738,8 @@ Submission Checklist
    - [ ] ``colcon build --packages-up-to ads_pipeline`` succeeds.
    - [ ] ``python3 -m pytest test/ -k gp4`` passes, with nothing skipped.
    - [ ] ``controller_config.yaml`` holds your wheelbase and rear offset.
-   - [ ] ``results/gp4/lockstep.txt``, ``metrics_ekf.json``,
-         ``metrics_truth.json`` saved.
+   - [ ] ``results/gp4/lockstep.txt``, ``metrics_ekf.json`` and
+         ``metrics_truth.json`` are saved.
    - [ ] No bags committed.
    - [ ] AI use disclosed in ``README.md``, per member.
    - [ ] Commit tagged ``gp4-final`` and pushed; ``gp4_report.pdf`` on Canvas.
@@ -714,11 +752,11 @@ Grading Rubric
 Total: **100 points**, scaled to 20% of the group-project grade (17.0% of
 the final project grade).
 
-The grader also runs your pipeline on a **held-out route**: another
-Town01 route for your rig, with the true pose (``pose_topic:=/ground_truth/ego``),
-so it measures your GP4 code and not your GP3 EKF. "Reference" means our
-reference solution on the same route, with your vehicle. The factors are
-the margins chosen for GP4.
+The grader also runs your pipeline on a **held-out route**: another Town01
+route for your rig, with the true pose (``pose_topic:=/ground_truth/ego``),
+so it measures your GP4 code and not your GP3 EKF. In the table,
+"reference" means our reference solution on the same route, with your
+vehicle, and the factors (0.8, 1.5) are margins we chose for GP4.
 
 .. list-table::
    :widths: 26 10 64
@@ -744,7 +782,7 @@ the margins chosen for GP4.
      - 20
      - **10** the behavior tests pass. **10** held-out route: no more
        red-light violations and no more pedestrian hits than the reference,
-       and collisions at most the reference's plus one.
+       and at most one collision more than the reference.
    * - Task 5: Report
      - 15
      - **4** both runs' metrics. **4** what the EKF costs. **3** one failure,
@@ -764,12 +802,12 @@ Common Mistakes
    - **The steering sign.** ``VehicleCmd.steer`` turns left when positive;
      CARLA's ``steer`` turns right. A wrong sign drives the car off the
      road at the first bend.
-   - **Dividing by 0.7.** The wheel turns 1.222 rad at full steering, so
+   - **Dividing by 0.7.** The wheels turn 1.222 rad at full steering, so
      ``steer = delta / 1.222``. Dividing by 0.7 turns the wheels 1.75 times
      too far.
    - **Steering from the car's center.** Pure Pursuit works at the rear
-     axle. The given node moves the pose there with your ``rear_offset``:
-     set it.
+     axle. The given node moves the pose there with your ``rear_offset``,
+     so set it.
    - **An integral that winds up.** While the car accelerates from a stop to
      8 m/s, the throttle is capped and the speed error stays large, so the
      integral keeps growing. Without the clamp, the car keeps full throttle
