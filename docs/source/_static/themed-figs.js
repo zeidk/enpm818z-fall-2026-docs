@@ -22,6 +22,17 @@
         var name = img.getAttribute("src").split("/").pop().replace(/\.png$/, "");
         img.dataset.light = img.getAttribute("src");
         img.dataset.dark = base + "_static/images/" + lec + "/" + name + "_dark.png";
+        /* Sphinx renames a second file of the same name in _images/ (candidate_set.png -> candidate_set1.png):
+           when the dark file is not found, try the name without the digits it may have added, then give up
+           and keep the light version */
+        var tries = [], m = name.match(/^(.*?)(\d+)$/);
+        if (m) for (var k = 1; k <= m[2].length; k++) tries.push(base + "_static/images/" + lec + "/" + name.slice(0, -k) + "_dark.png");
+        img.addEventListener("error", function () {
+          if (img.getAttribute("src") !== img.dataset.dark) return;
+          var next = tries.shift();
+          if (next) { img.dataset.dark = next; img.setAttribute("src", next); }
+          else { img.dataset.dark = img.dataset.light; img.setAttribute("src", img.dataset.light); }
+        });
       }
       var want = dark ? img.dataset.dark : img.dataset.light;
       if (img.getAttribute("src") !== want) img.setAttribute("src", want);

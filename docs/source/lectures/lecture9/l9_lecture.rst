@@ -35,6 +35,7 @@ finds the path for the next few seconds that follows the route and stays
 clear of every object, through the next lane if needed.
 
 .. figure:: /_static/images/L9/l7_to_l9.png
+   :class: dark-light themed-L9
    :alt: Two top views of the same two-lane road, one above the other. In each, the AV, a black car, drives to the right in the lower lane, and the obstacle, a blue parked car, stands about 58 meters ahead in the same lane. Top view, tag 1: a black dotted line along the center of the AV's lane runs straight through the obstacle. Bottom view, tag 2: a green path leaves the AV's lane, moves into the upper lane and passes the obstacle.
    :width: 95%
    :align: center
@@ -88,6 +89,7 @@ Four Layers Decide What the AV Does
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/layers.png
+   :class: dark-light themed-L9
    :alt: A block diagram of four boxes in a row joined by arrows: Route planner (L7), Behavior layer (L9, today), Local planner (L9, today) and Controller (L10). The two boxes marked today are green. Under the arrows: lanes to follow, a task, a path for the next seconds, and, after the controller, steering, throttle, brake. Above, a box Pose feeds the route planner, and a box Pose, objects, predictions feeds the behavior layer and the local planner.
    :width: 95%
    :align: center
@@ -128,6 +130,7 @@ box. In the deck, each section's divider shows this picture with that box
 highlighted.
 
 .. figure:: /_static/images/L9/l9_pipeline.png
+   :class: dark-light themed-L9
    :alt: A flowchart in three rows. Top row: a box of inputs (the route, from the route planner, L7; the AV's pose and speed; other cars and obstacles, as boxes; their predicted paths; the map), an arrow to the behavior layer, which picks the task, and further right the output: a path for the next 70 meters, every 0.5 seconds, with an arrow up to a box, controller (L10): steering, throttle, brake. A green dashed frame labeled local planner surrounds the two rows below; the behavior layer box is green too, as on the layers slide, and the inputs and output boxes are gray. Middle row, reached from the behavior layer on the road: Frenet frame (map to s and d), then sample 31 paths, then check (circles, turn limits), then score (keep the cheapest). Bottom row, reached from the behavior layer in the garage: search (hybrid A star, grid, RRT), and a dashed box, configuration space: the AV as a point x, y, theta, with dashed arrows to the check and to the search. Lines from the score and from the search join at the right and lead to the output.
    :width: 95%
    :align: center
@@ -198,6 +201,7 @@ Town03, Road 67
 ~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/scene_overview.png
+   :class: dark-light themed-L9
    :alt: A top view of every lane of CARLA's Town03 map as thin gray lines: a grid of streets, a roundabout near the middle and a ring road around the edge. A thick gray line, the stretch, follows the bottom edge of the ring to the right, then curves up the right side. On its straight part sit two car icons, drawn much larger than to scale: tag 1, the AV, black; tag 2, the obstacle, blue, where the curve begins.
    :width: 60%
    :align: center
@@ -224,6 +228,7 @@ The AV, the Obstacle and the Two Lanes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/scene_top.png
+   :class: dark-light themed-L9
    :alt: A top view, to scale, of the start of the stretch: two lanes, the lower one pale yellow with a dotted center line, the upper one pale purple, the lane line between them dashed. Gray arrows in both lanes point right: both lanes run the same way. Tag 1 below the AV, a black car in the lower lane at the left. Tag 2 below the obstacle, a blue parked car, about 58 meters ahead in the same lane. Tag 3 in the upper lane. On the right the road starts to curve upward.
    :width: 95%
    :align: center
@@ -288,6 +293,7 @@ Three Numbers Place the Whole AV
    :math:`x` axis.
 
 .. figure:: /_static/images/L9/config_pose.png
+   :class: dark-light themed-L9
    :alt: A top view of a black car facing up and to the right, at 30 degrees from a dashed horizontal arrow labeled map x; a dashed vertical arrow labeled map y crosses it at a small white circle near the rear of the car, the base link, with tag 1 beside it. An arc between the map x arrow and the car's dotted center line, ahead of the car, is labeled theta, tag 2. Beside the car's right side, two arrows along its length run from the rear bumper to the base link, 0.9 m, and from the base link to the front bumper, 3.6 m, tag 3. Ahead of the front bumper, a short arrow across the car's direction, labeled 0.95 m, runs from the center line to the side, tag 4.
    :width: 60%
    :align: center
@@ -323,6 +329,7 @@ Configuration Space and Its Obstacle Region
    space**.
 
 .. figure:: /_static/images/L9/cspace_idea.png
+   :class: dark-light themed-L9
    :alt: A top view of two lanes, the lower one pale yellow and the upper one pale purple, with a dashed line between them. In the lower lane, a blue car points right, tag 1. Behind it in the same lane, a light gray car, tag 2, points right with its front over the blue car's rear; the part where the two bodies overlap is outlined in rust and hatched. In the upper lane, a second light gray car, tag 3, at the same distance behind, is clear of the blue car. Each gray car has a small white circle near its rear, its base link.
    :width: 60%
    :align: center
@@ -354,6 +361,7 @@ considers), the planner decides quickly if the AV would hit the obstacle.
 There are two ways, shown here on the same three poses.
 
 .. figure:: /_static/images/L9/cspace_plan.png
+   :class: dark-light themed-L9
    :alt: Two panels side by side, split by a dashed line. Left: three light gray cars in a row along the lane, behind a blue car; the last gray car's front is over the blue car's rear. Right: the blue car, faded, inside a rust hatched box much larger than it, and three small white circles where the three gray cars' base links were: the first two outside the box, the last inside it.
    :width: 85%
    :align: center
@@ -393,6 +401,7 @@ Step 1: Grow the Obstacle, for One AV Heading
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/cspace_grow.png
+   :class: dark-light themed-L9
    :alt: A top view of a blue car, its center marked with a white cross, and eight gray cars heading the same way, each just touching it. Four darker ones on its sides: tag 1 behind it, tag 2 ahead of it, tag 3 beside it on its left, tag 4 beside it on its right. Four lighter ones at its corners, each with a dashed rectangle around its body; each dashed rectangle touches the blue car's outlined rectangle at one corner, marked by a black dot. Each gray car has a white circle at its base link, near its rear, and all eight circles lie on a rust box: its back edge 5.85 m behind the blue car's center, its front edge 3.15 m ahead, each side 1.9 m out from the center line.
    :width: 75%
    :align: center
@@ -438,6 +447,7 @@ Step 2 keeps only the AV's base link: a pose collides when that point is
 inside the grown obstacle.
 
 .. figure:: /_static/images/L9/cspace_region.png
+   :class: dark-light themed-L9
    :alt: A top view in the obstacle's own frame, along it to the right and across it upward, in meters. The obstacle, the blue car, sits at the center. A rust hatched box 9.0 meters long and 3.8 meters wide surrounds it, reaching from minus 5.85 to plus 3.15 along and from minus 1.9 to plus 1.9 across. Four white dots mark the AV's base link at four poses: tag 1 inside the box, behind the car and to its left; tag 2 inside the box, beside the car on its right; tag 3 outside the box, behind it; tag 4 outside the box, 3.8 meters to the car's left. The vertical axis reads across, to the obstacle's left.
    :width: 70%
    :align: center
@@ -478,6 +488,7 @@ be right for every candidate, every time it plans again (every 0.5 s). The
 figure shows one such moment.
 
 .. figure:: /_static/images/L9/turned_candidate.png
+   :class: dark-light themed-L9
    :alt: A top view of the road around the obstacle, x and y in meters: the left lane pale purple, the right lane pale yellow, a dashed lane line between them. Tag 1: the AV, black, in the left lane, behind the blue obstacle. From the AV, a green path, tag 2, runs straight on along the left lane. A rust path leaves the AV, crosses the lane line and comes back into the right lane past the obstacle. On it, tag 3, a light gray copy of the AV turned to its right, its body drawn as a dashed rectangle; it overlaps the obstacle's dashed rectangle at one corner, shaded rust.
    :width: 85%
    :align: center
@@ -508,6 +519,7 @@ Step 1 Again: Grow the Obstacle for the Turned AV
 Turn the AV 21° to its right, as that candidate, and do Step 1 again.
 
 .. figure:: /_static/images/L9/cspace_heading_grow.png
+   :class: dark-light themed-L9
    :alt: A top view in the obstacle's own frame, along it to the right and across it upward, in meters. The road: the right lane, pale yellow, with the blue car at the center, and the left lane, pale purple, above a dashed lane line. Four gray copies of the AV, each turned 21 degrees to its right, sit around the car: behind it, above it, ahead of it and below it, each just touching it; the one below sits off the road's right edge. Each copy's base link is a white dot. A dashed rust outline runs through the four dots and around the obstacle: straight pieces along and across, joined by slanted pieces.
    :width: 70%
    :align: center
@@ -541,6 +553,7 @@ The grown obstacle from Step 1 holds only for the AV heading along the
 obstacle. Turned 21° to its right, the AV gets a different shape.
 
 .. figure:: /_static/images/L9/cspace_heading.png
+   :class: dark-light themed-L9
    :alt: The same top view, with the road: the right lane holds the blue car, the left lane is above the dashed lane line. The solid rust box is the region for the AV heading along the obstacle. A dashed rust outline, slanted at its corners, is the region for the AV turned 21 degrees to its right: it reaches higher than the box toward the obstacle's rear and lower toward its front. Tag 1: a light gray AV in the left lane, turned 21 degrees to its right, its nose across the lane line toward the car, its base link on the dashed outline. Tag 2 sits beside the dashed outline on the right.
    :width: 70%
    :align: center
@@ -575,6 +588,7 @@ The wheels roll; they do not slide. So the base link always moves along the
 heading, and the AV turns only by steering. This gives every path two limits.
 
 .. figure:: /_static/images/L9/turn_limits.png
+   :class: dark-light themed-L9
    :alt: A top view of the AV, a light gray car heading right, its base link a white dot near the rear and the center of its front axle a black dot. Tag 1: two dashed arcs start at the base link and curve forward, one to the left and one to the right, each around a center marked with a plus sign beside the AV; an arrow marked R = 3.41 m runs from the upper center to the end of the left arc. Tag 2: an arrow pointing straight up from the AV's left side. At the front axle, a dotted line continues the AV's axis and a solid line leaves it, turned to the left; the angle between them is marked delta max. Below the car, a double arrow marked L = 2.875 m spans from the base link to the front axle.
    :width: 40%
    :align: center
@@ -624,6 +638,7 @@ uses a stricter 2.0 m/s²). At 10 m/s, our road's speed:
    turn tighter, slow down: at 5 m/s, 5 × 5 / 3 = 8.3 m.
 
 .. figure:: /_static/images/L9/turn_radius_speed.png
+   :class: dark-light themed-L9
    :alt: A graph of the smallest turn radius in meters, from 0 to 42, against speed in meters per second, from 0 to 12. A flat black line at 3.41 meters across all speeds. A purple curve that starts at zero and rises ever more steeply. A white dot where the curve crosses the flat line, at about 3.2 meters per second. A white dot on the curve at 10 meters per second and 33.3 meters, with dashed gray guide lines down to the speed axis and across to the radius axis.
    :width: 60%
    :align: center
@@ -658,6 +673,7 @@ Goal: a test for every path a planner returns: can the AV drive it as it is?
    steering, or the comfort radius at the AV's speed (33.3 m at 10 m/s).
 
 .. figure:: /_static/images/L9/drivable_path.png
+   :class: dark-light themed-L9
    :alt: Two top views of the AV, a light gray car heading right, its base link a white dot. Left, tag 1: a purple path leaves the base link straight to the right, then turns up at a sharp right-angle corner and ends in an arrow. Right, tag 2: a green path leaves the base link straight to the right, then curves up along a quarter circle and ends in an arrow; a plus sign marks the circle's center, and an arrow marked R runs from the center to the curve.
    :width: 80%
    :align: center
@@ -709,6 +725,7 @@ Where Configuration Space Leaves Us
      10 m/s, comfort needs 33.3 m or more.
 
 .. figure:: /_static/images/L9/cspace_region.png
+   :class: dark-light themed-L9
    :alt: The figure from Step 2: a top view in the obstacle's own frame, in meters. The blue car at the center inside a rust hatched box 9.0 meters long and 3.8 meters wide. Four white dots mark the AV's base link: tags 1 and 2 inside the box, tags 3 and 4 outside it, tag 4 on the left lane's center.
    :width: 60%
    :align: center
@@ -786,6 +803,7 @@ Cover the AV with Three Circles
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/circles_cover.png
+   :class: dark-light themed-L9
    :alt: The AV from above, light gray, 4.5 meters long and 1.9 meters wide, facing right, split into three 1.5 meter pieces marked along the top. Three equal dark circles, one per piece, cover the body; each circle and each center, a dark plus sign, has a thin white outline so it shows on the light gray car. Tag 1 below the rear circle, joined by a thin line, marks the base link, a white dot next to the rear circle's center. Tag 2, above the body, marks a dark arrow from the middle circle's center to the corner of its piece: the radius. Tag 3 below the front circle, joined by a thin line, marks its center.
    :width: 60%
    :align: center
@@ -829,6 +847,7 @@ Step 1: the Radius and the Centers, by Hand
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/circles_hand.png
+   :class: dark-light themed-L9
    :alt: The AV from above, light gray, inside a dashed 4.5 by 1.9 meter box cut by two dashed lines into three pieces. A plus sign marks each piece's center; a white dot just right of the rear plus is the base link. The middle piece holds a right triangle: from its center, a line 0.75 meters along the AV, then a line 0.95 meters across it to the piece's corner, a black dot; an arrow marked r runs from the center to that corner. A circle around the middle center passes through the corner. Below the AV, dimension lines: 0.9 meters from the rear bumper to the base link, 0.15 meters from the rear center to the base link, and 1.35 and 2.85 meters from the base link to the middle and front centers.
    :width: 60%
    :align: center
@@ -887,6 +906,7 @@ street (Reid et al., 2019, on :doc:`the References page <l9_references>`). We
 round it to 0.3 m.
 
 .. figure:: /_static/images/L9/margin_gap.png
+   :class: dark-light themed-L9
    :alt: Two separate drawings side by side, tags 1 and 2. In each, a black circle (the AV's) on the left and a blue circle (the obstacle's) on the right, each with a plus sign at its center, and a short bar spanning the gap between them along the line through the centers. A dashed black circle is the AV's circle moved 0.3 meters to the right, shown by a small arrow marked 0.3 m. In drawing 1, the gap is wider and the dashed circle stays clear of the blue one. In drawing 2, the gap is narrower and the dashed circle crosses into the blue one; the overlap is shaded rust.
    :width: 85%
    :align: center
@@ -920,6 +940,7 @@ Step 2: One Pose, Checked by Hand
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/circle_check.png
+   :class: dark-light themed-L9
    :alt: A close top view beside the obstacle, x and y in meters. The AV, light gray with three dark circles, is in the upper, purple lane, on its center, a dotted line; a white dot near its rear circle's center is its base link. The obstacle, blue with three blue circles, is in the lower, yellow lane right below it, its center a little below the right lane's center, a thick black line; a blue dashed line carries the obstacle's center to the right. Each circle and its center, a plus sign, has a thin white outline so it shows on its car. A dark double arrow spans the gap between the two middle circles, across the dashed lane line, with tag 1 just right of it. Above the AV, a double arrow marked 1.35 m runs from the base link to the middle circle's center. On the right, a double arrow marked 3.5 m runs from the right lane's center up to the left lane's center, and a short bar marked 0.3 m from the right lane's center down to the obstacle's center. On the left, a stack from the obstacle's center up to the AV's: 1.21 m, 1.38 m, 1.21 m.
    :width: 70%
    :align: center
@@ -965,6 +986,7 @@ Circles Can Report a Collision That Is Not There
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/circles_conservative.png
+   :class: dark-light themed-L9
    :alt: The AV and the obstacle side by side from above, the AV light gray on top and the obstacle, a blue car, below, each inside a dashed rectangle, its body's outline, and each with its three circles and their centers, plus signs, outlined in white so they show on the cars. Tag 1 on the right marks the gap between the two dashed outlines, labeled 0.4 m: the bodies do not touch. Further right, a double arrow labeled 2.3 m spans from the AV's centers down to the obstacle's. Small rust lens shapes show where each dark circle overlaps the blue circle below it; tag 2, on the left, points at the rear lens with a line. Above the AV, a short bar labeled 0.26 m spans from the body's side to the top of the middle circle; at the AV's rear, a bar labeled 0.46 m spans from the rear bumper to the edge of the rear circle.
    :width: 60%
    :align: center
@@ -1019,6 +1041,7 @@ Where Collision Checking Leaves Us
      AV's position error, rounded.
 
 .. figure:: /_static/images/L9/check_summary.png
+   :class: dark-light themed-L9
    :alt: A flowchart of the collision check, top to bottom. A pose (x, y, theta) on a candidate path. Then: 3 circles of radius 1.21 m on the AV, centers 0.15 m behind, 1.35 m and 2.85 m ahead of the base link. Then: 9 gaps to the obstacle's 3 circles, each the distance between centers minus 1.21 minus 1.21. Then the question: is the smallest gap under 0.3 m? Yes leads to a rust box, collision: drop the candidate. No leads to a green box, free: check the next pose; all free: keep the candidate.
    :width: 60%
    :align: center
@@ -1072,6 +1095,7 @@ Two Coordinates That Follow the Road
    (Werling et al., 2010; see :doc:`the References page <l9_references>`).
 
 .. figure:: /_static/images/L9/frenet_def.png
+   :class: dark-light themed-L9
    :alt: A top view of a piece of the road where it starts to curve upward, a left turn for the AV, x and y in meters. The reference path, the right lane's center, is a thick black line with small ticks every 5 meters labeled 130 to 150 below the road: the value of s. A dark point labeled P sits in the left lane. A white dot labeled F on the reference, at the 140 tick, is its foot point; a small square at F marks the right angle between the reference and the line to P. A solid arrow labeled d runs from F to P. Just outside the road's right edge, an arrow runs along the reference from the left edge of the view to the 140 tick, labeled s = 140 m, from the start; a dotted line drops from F to its end.
    :width: 80%
    :align: center
@@ -1109,6 +1133,7 @@ On the Map: d Is Measured Across the Road
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/frenet_map.png
+   :class: dark-light themed-L9
    :alt: A top view, to scale, of a piece of our road where it curves left, x and y in meters. The reference, the right lane's center, is a thick black line; the left lane's center is dotted; the lane line is dashed. At three white dots on the reference, at s = 145, 165 and 185, an arrow labeled d = 3.5 m goes from the reference to the left lane's center, at a right angle to the reference; the arrows turn with the road. Tag 3, joined by a thin line, points into the right lane; tag 4 into the left lane.
    :width: 75%
    :align: center
@@ -1144,6 +1169,7 @@ the side. It is not a picture of the road: the :math:`d` axis is stretched, and
 curves do not show.
 
 .. figure:: /_static/images/L9/frenet_sd.png
+   :class: dark-light themed-L9
    :alt: A graph of the road in s and d, both in meters, s from 40 to 236. The right lane, pale yellow, between d = minus 1.75 and 1.75, and the left lane, pale purple, between 1.75 and 5.25, with straight lines at minus 1.75, 1.75 (dashed) and 5.25; the reference as a thick line at d = 0 and the left lane's center dotted at d = 3.5. A black car icon, the AV, sits on the reference with its base link, a white dot, at s = 60; the label d = 0 is just ahead of it on the reference. A blue car icon, the obstacle, is centered at s = 118, just below the reference. Both icons are drawn several times too large. At s = 145, 165 and 185, three equal vertical arrows labeled d = 3.5 m rise from white dots on the reference to the left lane's center. Tags 3 and 4 at s = 215, joined by thin lines, point into the right and left lane bands.
    :width: 80%
    :align: center
@@ -1190,6 +1216,7 @@ gives one every 0.5 m of its own road length, which on the map comes out 0.50
 to 0.55 m apart. The drawing is to scale.
 
 .. figure:: /_static/images/L9/frenet_step1.png
+   :class: dark-light themed-L9
    :alt: A close-up, to scale, of the reference: gray dots about half a meter apart joined by a gray line, running left to right. The piece between dots A and B is drawn thick and black. A blue square P sits below that piece. A dashed line rises from P and meets the piece at a right angle, marked by a small square, at a white dot labeled F, close to B. Above the chain, a dimension shows 0.461 m from A to F and 0.063 m from F to B.
    :width: 85%
    :align: center
@@ -1214,6 +1241,7 @@ Step 2 and Step 3: Read s and d
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/frenet_step23.png
+   :class: dark-light themed-L9
    :alt: The same close-up of the reference chain. Above it, an arrow runs from the left edge to A, labeled from the start: 117.539 m, then a dimension from A to F labeled 0.461 m. At F, a short gray arrow labeled n points up, to the left of the reference. A dark arrow labeled d runs from F down to the blue square P.
    :width: 85%
    :align: center
@@ -1245,6 +1273,7 @@ check need map coordinates. Example: the left lane's center beside the
 obstacle, :math:`(s, d)` = (118, 3.5).
 
 .. figure:: /_static/images/L9/frenet_back.png
+   :class: dark-light themed-L9
    :alt: A top view of the road beside the obstacle, x and y in meters. The blue obstacle sits on the thick black reference, the right lane's center. A white dot labeled r on the reference at the obstacle's center; a short gray arrow labeled n points up from it, to the reference's left. A black dot labeled p sits on the dotted center line of the left lane, above r. A double arrow labeled 3.5 m, behind the obstacle, spans from the reference to the left lane's center.
    :width: 70%
    :align: center
@@ -1279,6 +1308,7 @@ Why Two Frames: Build in (s, d), Check and Drive in (x, y)
 Goal: each step of the planner runs in the frame where it is simplest.
 
 .. figure:: /_static/images/L9/frames_flow.png
+   :class: dark-light themed-L9
    :alt: A flowchart in two bands: the map frame (x, y) on top, gray, and the Frenet frame (s, d) below, dashed. Box 1, in the map frame: the lane points, the AV's pose, the obstacle's box. An arrow labeled to (s, d): foot point goes down to box 2, in the Frenet frame: where each one is, AV s = 60, d = 0, obstacle s = 118, d = minus 0.3. An arrow goes right to box 3: build 31 candidates, d as a curve of s, a lane is a band of d. An arrow labeled back to (x, y) goes up to box 4, in the map frame: check, every gap 0.3 m or more, at most 3 m/s squared sideways. An arrow goes right to box 5: the path as map points, to the controller.
    :width: 90%
    :align: center
@@ -1407,6 +1437,7 @@ Step 1: One Candidate, a Smooth Move Sideways
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/lateral_curve.png
+   :class: dark-light themed-L9
    :alt: A graph of d against s, from s = 55 to 120 meters: the two lanes as bands, the right one pale yellow and the left one pale purple, with the lane edges as horizontal lines at minus 1.75, 1.75 (dashed) and 5.25, the right lane's center as a thick line at d = 0 and the left lane's center dotted at 3.5. Three curves start at the AV, s = 60 and d = 0, flat, rise in an S shape and level off at d = 3.5: a solid one reaches 3.5 at s = 80, a dashed one at s = 90, a dotted one at s = 100; a dot marks each arrival, labeled 20 m, 30 m and 40 m. After that each stays at 3.5. Near the right edge, an arrow rises from the reference to 3.5, labeled d end = 3.5 m.
    :width: 80%
    :align: center
@@ -1450,6 +1481,7 @@ Step 1: the Candidate Set, 30 Shifts and One Stop
 The goal is a fixed set of candidates, built the same way every 0.5 s.
 
 .. figure:: /_static/images/L9/candidate_set.png
+   :class: dark-light themed-L9
    :alt: A graph of d against s, s from 57 to 132 meters, the right lane pale yellow and the left lane pale purple. A black car icon, the AV, at s = 60 and d = 0. Thirty thin dark curves leave it, solid, dashed or dotted, and level off at ten values of d from minus 0.5 to 4 meters, every 0.5; a dot marks where each one levels off, at s = 80 for the solid ones, 90 for the dashed ones and 100 for the dotted ones. A thick dark line stays at d = 0 and ends with a bar at s = 110. A blue car icon, the obstacle, at s = 118 just below d = 0. A legend names the line styles 20 m, 30 m and 40 m, and the thick line stop behind.
    :width: 85%
    :align: center
@@ -1491,6 +1523,7 @@ Every end offset keeps the AV's whole body on the two lanes, which run from
 :math:`d` = −1.75 to 5.25 m.
 
 .. figure:: /_static/images/L9/offset_limits.png
+   :class: dark-light themed-L9
    :alt: A straight piece of the two lanes, to scale, d in meters up the side: the right lane pale yellow from minus 1.75 to 1.75, the left lane pale purple from 1.75 to 5.25, a dashed lane line between them. Two light gray AVs heading right, each in a dashed 4.5 by 1.9 meter outline with a dotted center line. The lower one, at d = minus 0.5: a bar of 0.95 m from its center line down to its body's side, and a bar of 0.30 m from there to the road's lower edge. The upper one, at d = 4: a bar of 0.95 m up to its body's side, and a bar of 0.30 m from there to the road's upper edge.
    :width: 85%
    :align: center
@@ -1521,6 +1554,7 @@ Step 2: Drop Paths That Collide or Turn Too Hard
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/candidates_frenet.png
+   :class: dark-light themed-L9
    :alt: A graph of d against s with all 31 candidates from the AV at s = 60. A black car icon, the AV, sits at s = 60. The obstacle is a blue car icon at s = 118, d around 0. Thin rust curves end at d from minus 0.5 to 2.0 and run into or beside the obstacle: they collide. Purple dashed curves rise steeply to 2.5 to 4.0 within 20 meters: too sharp. Gray curves end at 2.5 to 4.0 after 30 or 40 meters. One thick green curve ends at 3.5 after 40 meters. A black dotted line stays at d = 0 and ends with a bar at s = 110: stop behind. A legend names cheapest, kept, stop behind, collides and too sharp.
    :width: 90%
    :align: center
@@ -1605,6 +1639,7 @@ Candidate A: :math:`d_\text{end}` = 3.5 m, maneuver 40 m. The numbers in the
 steps are the script's, rounded.
 
 .. figure:: /_static/images/L9/score_A.png
+   :class: dark-light themed-L9
    :alt: A graph of d against s, s from 57 to 132 meters, the right lane pale yellow, the left lane pale purple, the right lane's center a thin black line and the left lane's center dotted at 3.5. A black car icon, the AV, at s = 60, d = 0; a blue car icon, the obstacle, at s = 118 just below d = 0. A thick green curve leaves the AV and rises to d = 3.5, reached at s = 100, then runs straight to s = 130. Tag 1 points at a ring on the curve near s = 68, where it bends hardest. Tag 2 points at a ring on the curve at s = 116.5, beside the obstacle. Tag 3 points at a dot where the curve ends, at s = 130 on the left lane's center. Tag 4 sits above a double arrow from s = 60 to 130 near the bottom.
    :width: 70%
    :align: center
@@ -1648,6 +1683,7 @@ Candidate B: :math:`d_\text{end}` = 3.0 m, maneuver 40 m. It moves 0.5 m
 less, so it bends less, but it passes closer.
 
 .. figure:: /_static/images/L9/score_B.png
+   :class: dark-light themed-L9
    :alt: A graph of d against s, s from 57 to 132 meters, the right lane pale yellow, the left lane pale purple, the right lane's center a thin black line and the left lane's center dotted at 3.5. A black car icon, the AV, at s = 60, d = 0; a blue car icon, the obstacle, at s = 118 just below d = 0. A thick gray curve leaves the AV and rises to d = 3.0, reached at s = 100, then runs straight to s = 130, 0.5 m below the left lane's center. Tag 1 points at a ring near s = 68, where it bends hardest. Tag 2 points at a ring at s = 116.5, beside the obstacle. Tag 3 points at a dot where the curve ends at s = 130, with a short bar from it up to the left lane's center. Tag 4 sits above a double arrow from s = 60 to 130 near the bottom.
    :width: 70%
    :align: center
@@ -1692,6 +1728,7 @@ from the obstacle's center, back by half the obstacle's 4.5 m, by the gap,
 and by the distance from the AV's front to its base link.
 
 .. figure:: /_static/images/L9/score_C.png
+   :class: dark-light themed-L9
    :alt: A graph of d against s, s from 57 to 132 meters, the right lane pale yellow, the left lane pale purple, the right lane's center a thin black line and the left lane's center dotted at 3.5. A black car icon, the AV, at s = 60, d = 0; a blue car icon, the obstacle, at s = 118 just below d = 0. A thick dotted black line stays at d = 0 from the AV to s = 110.15, where a bar marks the stop, 2 meters short of the obstacle. Tag 1 points at the straight line. Tags 2 and 3 point at a ring at the stop. Tag 4 sits above a double arrow from s = 60 to 110.15 near the bottom; from there to s = 130, a gray hatched strip marks the road it does not cover.
    :width: 70%
    :align: center
@@ -1848,6 +1885,7 @@ Step 4: the Cheapest Path, on the Map
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/candidates_map.png
+   :class: dark-light themed-L9
    :alt: A top view, to scale, of the 31 candidates on the road from the AV at the left to past the obstacle, x and y in meters. Rust lines run into the obstacle; purple dashed lines bend sharply into the left lane; gray lines move into the left lane more gently; a black dotted line stops behind the obstacle; one thick green line moves into the left lane and passes the obstacle. A legend names cheapest, kept, stop behind, collides and too sharp.
    :width: 95%
    :align: center
@@ -1928,6 +1966,7 @@ Step 5: Plan Again Every 0.5 s
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/drive_snapshots.png
+   :class: dark-light themed-L9
    :alt: Three top views of the stretch, one above the other, tagged 1 to 3, x and y in meters. In each, the obstacle is blue in the lower lane and the AV is black; both are drawn about twice their true size so they show. 1: the AV at the start, its green path moving into the upper lane. 2: the AV halfway into the upper lane, a dotted trail behind it, its green path continuing in the upper lane into the curve. 3: the AV beside the obstacle in the upper lane, its green path moving back into the lower lane in the curve.
    :width: 70%
    :align: center
@@ -2082,6 +2121,7 @@ One Decision Changes the Cheapest Path
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/behavior_restricted.png
+   :class: dark-light themed-L9
    :alt: A top view of the road with the AV at the left and the obstacle ahead in the lower lane, x and y in meters. The upper lane is cross-hatched in gray: not allowed. In it, behind the AV, a blue car, tag 1, with a dashed arrow running ahead of it along the upper lane past the AV, tag 2. Thin rust candidate lines stay in the lower lane and run into the obstacle. A thick green line stays in the lower lane and ends with a bar behind the obstacle. A legend names cheapest: stop behind, and collides.
    :width: 95%
    :align: center
@@ -2189,6 +2229,7 @@ means one driver gets a lower delay by switching while the other keeps its
 choice (solid: the AV; dashed: the other car).
 
 .. figure:: /_static/images/L9/nash_arrows.png
+   :class: dark-light themed-L9
    :alt: A two by two grid. Columns: other car keeps, other car yields. Rows: AV goes, AV waits. Cells: AV goes and car keeps, AV 100, car 100, a crash; AV goes and car yields, AV 0, car 2; AV waits and car keeps, AV 3, car 0; AV waits and car yields, AV 3, car 2. A solid arrow from the crash cell down to the AV waits and car keeps cell, labeled AV: 100 to 3. A dashed arrow from the crash cell right to the AV goes and car yields cell, labeled car: 100 to 2. A solid arrow from the bottom right cell up to the AV goes and car yields cell, labeled AV: 3 to 0. A dashed arrow from the bottom right cell left to the AV waits and car keeps cell, labeled car: 2 to 0. The two cells with arrows coming in and none going out, AV goes and car yields, and AV waits and car keeps, have a double border, tag 1 and the words: No arrow leaves the cell: Equilibrium.
    :width: 65%
    :align: center
@@ -2272,6 +2313,7 @@ Each cell gives A's years, then B's. An arrow means one suspect gets fewer
 years by switching while the other keeps its choice (solid: A; dashed: B).
 
 .. figure:: /_static/images/L9/nash_pd.png
+   :class: dark-light themed-L9
    :alt: A two by two grid. Columns: B stays silent, B confesses. Rows: A stays silent, A confesses. Cells: both silent, A 1, B 1, with tag 2; A silent and B confesses, A 10, B 0; A confesses and B silent, A 0, B 10; both confess, A 5, B 5. Solid arrows go down: from A 1, B 1 to A 0, B 10, labeled A: 1 to 0, and from A 10, B 0 to A 5, B 5, labeled A: 10 to 5. Dashed arrows go right: from A 1, B 1 to A 10, B 0, labeled B: 1 to 0, and from A 0, B 10 to A 5, B 5, labeled B: 10 to 5. The both confess cell has arrows coming in and none going out; it has a double border, tag 1 and the words: No arrow leaves the cell: Equilibrium.
    :width: 65%
    :align: center
@@ -2333,6 +2375,7 @@ An FSM for a Valet in a Parking Garage
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/fsm_garage.png
+   :class: dark-light themed-L9
    :alt: A state diagram with five rounded boxes. An arrow from the left enters Enter. Enter goes to Search the aisle, tag 1. Search the aisle goes to Approach the spot, tag 2, and Approach the spot goes back to Search the aisle, tag 3. Search the aisle has a loop back to itself, tag 6. Approach the spot goes down to Reverse in, tag 4, and Reverse in goes left to Parked, tag 5. Parked has a double border: the final state.
    :width: 75%
    :align: center
@@ -2486,6 +2529,7 @@ The Garage: No Lane to Follow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/garage_scene.png
+   :class: dark-light themed-L9
    :alt: A top view of a garage 36 by 18 meters, x and y in meters: a row of parking spots along the top wall and one along the bottom wall, with an aisle between them. Blue parked cars, the obstacles, fill most spots. Tag 1: the AV, black, at the left end of the aisle facing right. Tag 2 below a light gray car drawn in the free spot of the top row, facing down: the goal pose. Tag 3 in the aisle, above two empty spots in the bottom row.
    :width: 75%
    :align: center
@@ -2520,6 +2564,7 @@ Grid Search on the Whole Garage
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/garage_grid.png
+   :class: dark-light themed-L9
    :alt: The garage top view, x and y in meters, covered by a fine grid of light gray lines, one every 0.5 meters, with a light rust band around every obstacle, the parked cars and the walls: cells the AV's base link may not enter. A green line of small squares leaves the AV at the left along the aisle, steps up in short diagonal pieces, then turns straight up into the free spot of the top row and ends where the goal is.
    :width: 70%
    :align: center
@@ -2558,6 +2603,7 @@ Grid Search, Step 1: Count the Steps from the Start
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/toy_wavefront.png
+   :class: dark-light themed-L9
    :alt: A grid of 5 rows and 7 columns. Blue cells are obstacles (parked cars): the top two rows except the fourth column, and the bottom row except the third and fourth columns. White cells hold numbers. Tag 1 marks the start cell, row 4 at the left, holding a bold 0. Its row reads 0 to 6 from left to right; the row above reads 1 to 7. The bottom row's free cells read 3 and 4. The fourth column above reads 5, then a bold 6 at the top: the goal, tag 2.
    :width: 55%
    :align: center
@@ -2591,6 +2637,7 @@ Grid Search, Step 2: Walk Back from the Goal
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/toy_path.png
+   :class: dark-light themed-L9
    :alt: The same grid with the path shaded green: from the start cell 0 right through 1, 2 and 3 along the row, then up through 4, 5 and 6 to the goal in the top row.
    :width: 55%
    :align: center
@@ -2631,6 +2678,7 @@ Hybrid A*: an Exact Pose in Every Cell
    reaches by driving from the pose before it.
 
 .. figure:: /_static/images/L9/hybrid_primitives.png
+   :class: dark-light themed-L9
    :alt: A light gray AV facing right with its base link at the origin, x and y in meters. Five solid black arcs leave the base link forward, curving from hard left to hard right, tag 1. Five dashed arcs leave it backward, tag 2. Each arc is 3 meters long and ends in a dot.
    :width: 55%
    :align: center
@@ -2661,6 +2709,7 @@ Hybrid A*, Steps 1 to 3: Expand a Pose and Check It
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/hybrid_expand.png
+   :class: dark-light themed-L9
    :alt: A zoomed top view of the garage near the top row of parked blue cars, x and y in meters. A pose in the aisle, tag 1 just below it with a short line up to it: a white dot with a dashed outline of the AV's body, heading up and to the right. Ten arcs leave it: five solid ones forward, five dashed ones in reverse, each ending in a point. Eight ends are gray dots. The two forward arcs that turn left end in rust crosses, tag 2; for the sharpest one, a rust dashed body outline and three rust circles reach into a parked car.
    :width: 55%
    :align: center
@@ -2703,6 +2752,7 @@ Hybrid A*, Steps 4 to 6: Cells, Cost and the Goal
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/hybrid_cells.png
+   :class: dark-light themed-L9
    :alt: Two panels. Left, an example: a grid of 0.5 meter cells, two short arcs from two parent poses. The first ends in a white dot with a short heading arrow, tag 1, off the gray plus sign at its cell's center. The second ends in the same cell in a rust cross, tag 2. Right: the garage near the goal spot; the search's green path comes along the aisle, turns down, and a dashed green line runs straight from there up into the free spot, where a light gray AV stands backed in; a second light gray AV marks where the reverse starts, tag 3.
    :width: 90%
    :align: center
@@ -2747,6 +2797,7 @@ Hybrid A* in the Garage
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/garage_hybrid.png
+   :class: dark-light themed-L9
    :alt: The garage top view, x and y in meters. Light gray dots fill most of the aisle: the poses the search expanded. A green line, tag 1 above it, leaves the AV at the left, rises gently, runs along the aisle and curves down to the right past the free spot. There a gray copy of the AV stands angled down to the right, tag 2: the switch to reverse. A dashed green line runs from it straight up into the free spot, where a gray copy of the AV stands backed in, tag 3.
    :width: 80%
    :align: center
@@ -2789,6 +2840,7 @@ RRT: Grow a Tree Toward Random Points
    point; the step's end is a new node.
 
 .. figure:: /_static/images/L9/rrt_step.png
+   :class: dark-light themed-L9
    :alt: A small gray tree of five nodes joined by lines, rooted at the bottom left, tag 1, x and y in meters. A rust star at the top right is a random point, tag 2. The tree node nearest to the star is black, tag 3. A green step 1.5 meters long goes from it toward the star and ends in a green node, tag 4. A thin dotted line continues to the star.
    :width: 55%
    :align: center
@@ -2820,6 +2872,7 @@ RRT in the Garage
 ~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L9/rrt_garage.png
+   :class: dark-light themed-L9
    :alt: The garage top view, x and y in meters. A small gray tree grows from the AV at the left end of the aisle to the right. A green path through the tree zigzags along the aisle to a dark cross in front of the free spot, tag 1.
    :width: 70%
    :align: center
@@ -3014,6 +3067,7 @@ bottom row, the garage (:ref:`Garage Planners <l9-lec-garage>`) and the
 idea every check uses (:ref:`Configuration Space <l9-lec-cspace>`).
 
 .. figure:: /_static/images/L9/l9_pipeline.png
+   :class: dark-light themed-L9
    :alt: A flowchart in three rows. Top row: a box of inputs (the route, from the route planner, L7; the AV's pose and speed; other cars and obstacles, as boxes; their predicted paths; the map), an arrow to the behavior layer, which picks the task, and further right the output: a path for the next 70 meters, every 0.5 seconds, with an arrow up to a box, controller (L10): steering, throttle, brake. A green dashed frame labeled local planner surrounds the two rows below; the behavior layer box is green too, and the inputs and output boxes are gray. Middle row, reached from the behavior layer on the road: Frenet frame (map to s and d), then sample 31 paths, then check (circles, turn limits), then score (keep the cheapest). Bottom row, reached from the behavior layer in the garage: search (hybrid A star, grid, RRT), and a dashed box, configuration space: the AV as a point x, y, theta, with dashed arrows to the check and to the search. Lines from the score and from the search join at the right and lead to the output.
    :width: 90%
    :align: center

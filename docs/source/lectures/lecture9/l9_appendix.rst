@@ -160,6 +160,7 @@ On a curve, the lines across the road (constant :math:`s`) all meet at the
 curve's center.
 
 .. figure:: /_static/images/L9/frenet_fails.png
+   :class: dark-light themed-L9
    :alt: A tight left turn drawn to scale: a straight piece of the two lanes, the right lane pale yellow with the reference as a thick black line, the left lane pale purple, then a quarter circle turning left. Dashed lines cross the road every 2 meters of the reference: vertical and parallel on the straight, and on the curve all running to one black dot, the curve's center, tag 1. Three white circles sit on the reference, each on one of those lines, at the same distance from the center; past the road's edge, their labels read F, s = 2 m, F, s = 6 m and F, s = 10 m. An arrow labeled R = 8 m runs from the center down to the reference. An orange box on the inside of the left lane, near its inner edge, holds the part where the dashed lines are closest together; tag 2 points at it.
    :width: 70%
    :align: center
@@ -209,6 +210,7 @@ On a Tight Turn: Change the Reference, or Drop It
 Goal: keep :math:`1 - d/R` well above 0 where the road turns tightly.
 
 .. figure:: /_static/images/L9/frenet_fix.png
+   :class: dark-light themed-L9
    :alt: The tight left turn of the last figure, drawn twice side by side, to scale, with the curve's center as a black dot. Panel 1: the reference is a thick black line on the right lane's center; the AV's path, green, runs on the left lane's center; an arrow labeled d = 3.5 m goes across from the reference to the path in the middle of the turn. Panel 2: the reference, thick black, now runs on the left lane's center, and the green path lies on it, dashed over it; label d = 0.
    :width: 90%
    :align: center
