@@ -5,10 +5,19 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.39.2: L10 Interactive Slides on Phones (2026-11-20)
+.. dropdown:: v2.39.3: L10 Drag Windows Open on a Click (2026-11-20)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10, slide 74 and its Try it panel:** the rolling resistance and air
+     drag windows start closed; click a title to open its window.
+
+.. dropdown:: v2.39.2: L10 Interactive Slides on Phones (2026-11-20)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

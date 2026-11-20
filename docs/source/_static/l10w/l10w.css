@@ -196,6 +196,13 @@
 .l10w .katex{font-size:1.06em}
 .l10w .mathout{background:var(--card);border:2px solid var(--plate-edge);border-radius:calc(8 * var(--u));padding:calc(6 * var(--u)) calc(18 * var(--u));font-size:max(var(--fmin), calc(25 * var(--u)));overflow-x:auto}
 .l10w .live-val{color:var(--livetext) !important}
+.l10w details.win > summary{cursor:pointer;font-weight:700;color:var(--slate);list-style:none;display:flex;align-items:center;gap:calc(10 * var(--u))}
+.l10w details.win > summary::-webkit-details-marker{display:none}
+.l10w details.win > summary::before{content:"";width:0;height:0;border-left:11px solid var(--live);border-top:7px solid transparent;border-bottom:7px solid transparent;transition:transform .2s}
+.l10w details.win[open] > summary::before{transform:rotate(90deg)}
+.l10w details.win[open] > summary{margin-bottom:2px}
+.l10w details.win > summary::after{content:"click to open";font-weight:400;font-size:.72em;color:var(--muted)}
+.l10w details.win[open] > summary::after{content:""}
 .l10w .cite{border-bottom:2px dotted var(--plan);cursor:help;border-radius:2px}
 .l10w .cite:hover,.l10w .cite:focus-visible,.l10w .cite.on{background:var(--hover);outline:none}
 .l10w #bibpop{position:fixed;z-index:60;display:none;max-height:calc(100vh - calc(24 * var(--u)));overflow:auto;border-radius:calc(14 * var(--u));
