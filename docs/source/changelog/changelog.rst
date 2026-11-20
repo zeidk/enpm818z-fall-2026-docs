@@ -5,10 +5,24 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.37.2: L10 Interactive Slides, Pure Pursuit Zoom on Slide 95 (2026-11-20)
+.. dropdown:: v2.37.3: L10 Interactive Slides, Pure Pursuit Formulas and Plan Colors (2026-11-20)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10 interactive slides:**
+
+     - Slide 95, step 5: the two Pure Pursuit formulas appear under the
+       zoomed sketch, each with its result, and the sketch labels the
+       wheelbase they use.
+     - Slide 4: each plan has its own color and track (plan 1 blue, plan 2
+       green), so the new plan no longer hides the old one.
+
+.. dropdown:: v2.37.2: L10 Interactive Slides, Pure Pursuit Zoom on Slide 95 (2026-11-20)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

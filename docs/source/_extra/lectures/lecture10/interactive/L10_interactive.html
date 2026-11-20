@@ -3432,9 +3432,11 @@ document.querySelectorAll(".tile").forEach(function(t){
   function drawRoad(t){
     road.innerHTML = ""; var sa = S0 + VV * t, nCtl = Math.floor(t / 0.05 + 1e-9), nPlan = Math.floor(t / 0.5 + 1e-9);
     for (var k = 0; k <= nCtl; k++) el(road, "circle", {cx:RX(S0 + VV * 0.05 * k), cy:ry, r:3, fill:C.live});   /* one notch per control step */
-    for (var p = 0; p <= nPlan; p++){ var sp = S0 + VV * 0.5 * p, last = p === nPlan;
-      el(road, "line", {x1:RX(sp + 4.5), y1:ry, x2:x1 - 4, y2:ry, stroke:last ? C.ok : "#B9C4CF", "stroke-width":last ? 5 : 2, "stroke-dasharray":last ? "" : "6 6"});
-      if (last) txt(road, x1 + 10, ry + 6, "plan " + (p + 1), 17, C.ok, "start", {"font-weight":600}); }
+    /* each plan in its own color, on its own track (plan 1 just above the lane center, plan 2 just below), so both
+       stay visible; the newest one is thicker (user, 2026-11-20: "a different color for plan 2") */
+    for (var p = 0; p <= nPlan; p++){ var sp = S0 + VV * 0.5 * p, last = p === nPlan, col = p ? C.ok : C.plan, py = ry + (p ? 11 : -11);
+      el(road, "line", {x1:RX(sp + 4.5), y1:py, x2:x1 - 4, y2:py, stroke:col, "stroke-width":last ? 5 : 3});
+      txt(road, x1 + 10, py + 5, "plan " + (p + 1), 15, col, "start", {"font-weight":600}); }
     carIcon(road, "av", RX(sa + 2.25 - 0.9), ry, 4.5 / 40 * (x1 - x0), 0);
   }
   function flash(m, c){ if (c !== m.n){ m.n = c; if (m.tr && c > 0){ m.tr.classList.remove("tick"); void m.tr.offsetWidth; m.tr.classList.add("tick"); } } }
@@ -4457,8 +4459,13 @@ function makeTraj(R){
     el(svg, "line", {x1:ax, y1:ay, x2:ax, y2:310, stroke:C.ok, "stroke-width":3, "stroke-dasharray":"9 6"});
     el(svg, "path", {d:"M" + ax + ",322 l -8 -14 l 16 0 z", fill:C.ok});
     el(svg, "path", {d:"M" + (ax + 12) + "," + ay + " l 0 12 l -12 0", fill:"none", stroke:C.ok, "stroke-width":2});
-    halo(txt(svg, ax + 14, 215, "R = 13.39 m", 17, C.ok, "start", {"font-weight":600}));
+    halo(txt(svg, ax + 14, 215, "R = 13.40 m", 17, C.ok, "start", {"font-weight":600}));   /* from the formula with alpha = 0.1877, as the deck's Pure Pursuit slide (13.39 unrounded) */
     halo(txt(svg, ax + 14, 241, "to the turn center", 15, C.ok, "start"));
+    /* L: the wheelbase, rear axle to front axle, above the heading (the delta formula uses it) */
+    var ly = ay - 0.62 * s; el(svg, "line", {x1:ax + 4, y1:ly, x2:fx - 4, y2:ly, stroke:C.ink, "stroke-width":2});
+    el(svg, "path", {d:"M" + ax + "," + ly + " l 11 -6 l 0 12 z M" + fx + "," + ly + " l -11 -6 l 0 12 z", fill:C.ink});
+    [ax, fx].forEach(function(x){ el(svg, "line", {x1:x, y1:ly - 9, x2:x, y2:ly + 9, stroke:C.ink, "stroke-width":2}); });
+    halo(txt(svg, (ax + fx) / 2, ly - 9, "L = 2.875 m", 17, C.ink, "middle", {"font-weight":600}));
     /* delta: at the front wheel, from the heading to the wheel */
     el(svg, "line", {x1:fx, y1:ay, x2:fx + 1.35 * s, y2:ay, stroke:C.ink, "stroke-width":1.5, "stroke-dasharray":"5 5"});
     el(svg, "line", {x1:fx, y1:ay, x2:fx + 1.35 * s * Math.cos(DEL), y2:ay + 1.35 * s * Math.sin(DEL), stroke:C.ok, "stroke-width":2, "stroke-dasharray":"5 5"});
@@ -4469,6 +4476,8 @@ function makeTraj(R){
     var z0 = zs, t0 = performance.now(), D = 900;
     (function run(){ var q = Math.min(1, (performance.now() - t0) / D), e = q < 0.5 ? 2 * q * q : 1 - 2 * (1 - q) * (1 - q);
       zs = q >= 1 ? t : z0 + (t - z0) * e; draw(cur); if (q < 1) zraf = requestAnimationFrame(run); })(); }
+  /* step 5's caption: the deck's two Pure Pursuit formulas (slide 67), each with its result; their inputs are labeled in the zoom */
+  var FORM = "\\(R = \\dfrac{L_d}{2\\sin\\alpha} = 13.40\\text{ m}\\) &emsp; \\(\\delta = \\arctan\\dfrac{2L\\sin\\alpha}{L_d} = 0.211\\text{ rad}\\)";
   var CAPS = [
     "CARLA moves the world one tick, 0.05 s. At 5.22 m/s the AV is now 0.26 m further on (gray: where it was).",
     "The node reads the AV's pose and speed: rear axle at 82.7 m along the approach, heading east, 5.22 m/s.",
@@ -4478,7 +4487,8 @@ function makeTraj(R){
     "The speed PID compares the speed with the speed profile's target here and sets the pedal.",
     "The node scales the angle for CARLA: 0.211 / 1.222 = 0.173, sent as −0.173 because left is positive.",
     "One VehicleCmd goes out, stamped for this tick; CARLA ticks again and the loop repeats."];
-  function show(k){ cur = Math.max(0, Math.min(N - 1, k)); items.forEach(function(li, j){ li.classList.toggle("lit", j === cur); if (j === cur) li.setAttribute("aria-current", "step"); else li.removeAttribute("aria-current"); }); draw(cur); zoomTo(cur === 4 ? 1 : 0); cap.textContent = CAPS[cur]; }
+  function show(k){ cur = Math.max(0, Math.min(N - 1, k)); items.forEach(function(li, j){ li.classList.toggle("lit", j === cur); if (j === cur) li.setAttribute("aria-current", "step"); else li.removeAttribute("aria-current"); }); draw(cur); zoomTo(cur === 4 ? 1 : 0);
+    if (cur === 4){ cap.innerHTML = FORM; mathIn(cap); } else cap.textContent = CAPS[cur]; }
   function stop(){ clearTimeout(timer); timer = null; document.getElementById("c-run").textContent = "Run one control step"; }
   document.getElementById("c-run").onclick = function(e){ e.stopPropagation();
     if (timer){ stop(); return; }
