@@ -200,6 +200,20 @@ body.onslide #nav{opacity:0;visibility:hidden;pointer-events:none}
 body.cornershow #corner{opacity:.96;visibility:visible}
 #corner button{font-size:15px;padding:3px 9px;border-width:1px;min-width:34px}
 #hotspot{position:fixed;top:0;right:0;width:300px;height:56px;z-index:29}
+/* phones (user, 2026-11-20: "does this work on smartphones?"): big previous and next buttons at the screen's edges, a
+   swipe changes the slide, a tap top right shows the corner controls, and portrait asks for landscape */
+.ph-nav,#ph-turn{display:none}
+body.phone.onslide .ph-nav{display:block;position:fixed;top:50%;transform:translateY(-50%);z-index:31;width:44px;height:72px;padding:0;
+  font-size:34px;line-height:1;border-radius:12px;border:1px solid var(--plate-edge);background:var(--navbg);color:var(--ink);opacity:.82}
+#ph-prev{left:4px} #ph-next{right:4px}
+/* portrait: the slide spans the width, so the buttons go under it, above the hint */
+body.phone.portrait.onslide .ph-nav{top:auto;bottom:96px;transform:none;width:76px;height:52px}
+body.phone.portrait #ph-prev{left:calc(50% - 92px)} body.phone.portrait #ph-next{right:calc(50% - 92px)}
+body.phone.portrait #ph-turn{display:flex;align-items:center;gap:10px;position:fixed;left:10px;right:10px;bottom:14px;z-index:32;padding:10px 12px;
+  border-radius:12px;background:var(--navbg);border:1px solid var(--plate-edge);color:var(--ink);font-size:16px}
+body.phone.portrait.turnok #ph-turn{display:none}
+#ph-turn button{margin-left:auto;font-size:20px;padding:0 8px}
+body.phone #corner button{font-size:15px;min-height:36px}
 #help{position:fixed;inset:0;z-index:1100;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.4)}
 #help.on{display:flex}
 #help .hc{background:var(--card);color:var(--ink);border:2px solid var(--live);border-radius:12px;padding:20px 30px 22px;width:min(860px,92vw);max-height:90vh;overflow:auto;font-size:19px;line-height:1.45;position:relative}
@@ -2649,6 +2663,9 @@ tr[data-why]:hover td:first-child::before,tr[data-why]:focus td:first-child::bef
   <button id="nav-theme" aria-label="Switch between the light and dark theme">Dark</button>
 </div>
 <div id="hotspot" aria-hidden="true"></div>
+<button id="ph-prev" class="ph-nav" aria-label="Previous slide">&#8249;</button>
+<button id="ph-next" class="ph-nav" aria-label="Next slide">&#8250;</button>
+<div id="ph-turn" role="note">Turn your phone sideways to read the slides. <button aria-label="close">&#215;</button></div>
 <div id="corner" role="navigation" aria-label="Slide controls">
   <button id="c-prev" aria-label="Previous slide" title="Previous (&#8592;)">&#8592;</button>
   <button id="c-home" aria-label="Overview" title="Overview (Esc)">Overview</button>
@@ -2740,7 +2757,7 @@ function go(scene){
   var full = kind === "card";
   var r = rectOf(scene), vw = window.innerWidth, vh = window.innerHeight - (full ? 0 : 70);
   /* full screen (F) on a slide: the slide fills the screen, edge to edge (user, 2026-11-20) */
-  var fs = !!document.fullscreenElement && (full || kind === "plate");
+  var fs = (!!document.fullscreenElement || isPhone()) && (full || kind === "plate");   /* a phone: the same edge-to-edge look */
   var pad = fs ? 1 : kind === "map" ? 0.98 : kind === "card" ? 0.99 : 0.94;
   var s = Math.min(vw / r.w, vh / r.h) * pad;
   var tx = (vw - r.w * s) / 2 - r.x * s, ty = (vh - r.h * s) / 2 - r.y * s;
@@ -2899,6 +2916,23 @@ document.addEventListener("mousemove", function(e){
       cornerTimer = setTimeout(function(){ document.body.classList.add("cornershow"); cornerTimer = null; }, 400); }
   else { clearTimeout(cornerTimer); cornerTimer = null; if (!corner.contains(e.target)) document.body.classList.remove("cornershow"); }
 });
+/* ---------- phones ---------- */
+function isPhone(){ return !!(window.matchMedia && matchMedia("(pointer: coarse)").matches) && Math.min(innerWidth, innerHeight) <= 600; }
+function phoneMarks(){ var ph = isPhone(); document.body.classList.toggle("phone", ph); document.body.classList.toggle("portrait", ph && innerHeight > innerWidth); }
+phoneMarks(); window.addEventListener("resize", phoneMarks);
+document.getElementById("ph-prev").onclick = function(e){ e.stopPropagation(); step(-1); };
+document.getElementById("ph-next").onclick = function(e){ e.stopPropagation(); step(1); };
+document.querySelector("#ph-turn button").onclick = function(e){ e.stopPropagation(); document.body.classList.add("turnok"); };
+/* a tap top right shows the corner controls (the mouse rest does it on a computer) */
+document.getElementById("hotspot").addEventListener("touchstart", function(){ document.body.classList.toggle("cornershow"); }, {passive:true});
+/* a swipe left or right changes the slide; not when it starts on a control */
+(function(){ var x0 = null, y0 = 0, t0 = 0;
+  document.addEventListener("touchstart", function(e){ x0 = null;
+    if (e.touches.length !== 1 || current === "overview" || e.target.closest("input,button,select,textarea,a,.rng,#help,#bibpop")) return;
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; t0 = Date.now(); }, {passive:true});
+  document.addEventListener("touchend", function(e){ if (x0 === null) return; var t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0; x0 = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > 1.5 * Math.abs(dy) && Date.now() - t0 < 800) step(dx < 0 ? 1 : -1); }, {passive:true});
+})();
 document.getElementById("c-prev").onclick = function(e){ e.stopPropagation(); step(-1); };
 document.getElementById("c-next").onclick = function(e){ e.stopPropagation(); step(1); };
 document.getElementById("c-home").onclick = function(e){ e.stopPropagation(); go("overview"); };
@@ -4671,7 +4705,8 @@ window.addEventListener("hashchange", function(){ var h = location.hash.slice(1)
    bottom-right corner instead of 50 px up and 20 px in (user, 2026-11-20). The menu keeps its styles in a shadow root,
    so one more stylesheet goes in there, as the docs' _static/flyout-style.js does. Local copies have no menu. ---------- */
 (function(){
-  var CSS = ".container.bottom-right{right:0 !important;bottom:0 !important;border-radius:8px 0 0 0}" +
+  var CSS = "@media (pointer: coarse) and (max-width: 600px), (pointer: coarse) and (max-height: 600px){.container{display:none !important}}" +   /* phones: the menu covered the slide */
+            ".container.bottom-right{right:0 !important;bottom:0 !important;border-radius:8px 0 0 0}" +
             ".container.bottom-left{left:0 !important;bottom:0 !important;border-radius:0 8px 0 0}";
   function style(f){ var root = f.shadowRoot; if (!root || f.hasAttribute("data-l10-flush")) return;
     try { var sh = new CSSStyleSheet(); sh.replaceSync(CSS); root.adoptedStyleSheets = root.adoptedStyleSheets.concat([sh]); f.setAttribute("data-l10-flush", ""); } catch (e) {} }

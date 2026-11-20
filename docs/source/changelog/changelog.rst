@@ -5,10 +5,20 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.39.1: L10 Panels on Phones, Lighter Math (2026-11-20)
+.. dropdown:: v2.39.2: L10 Interactive Slides on Phones (2026-11-20)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10 interactive slides:** on a phone, swipe left or right, or tap the
+     large arrows, to change slides. Turned sideways, the slide fills the
+     screen; held upright, a note asks you to turn the phone.
+
+.. dropdown:: v2.39.1: L10 Panels on Phones, Lighter Math (2026-11-20)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 
