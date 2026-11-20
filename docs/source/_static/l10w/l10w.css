@@ -120,6 +120,10 @@
 .l10w table.eq td:first-child{font-weight:600;color:var(--slate);width:34%}
 .l10w .frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;font-size:.85em;margin:0 4px}
 .l10w .frac span:first-child{border-bottom:2px solid var(--ink);padding:0 calc(6 * var(--u))}
+.l10w .ph-nav,.l10w #ph-turn{display:none}
+.l10w #ph-prev{left:4px}
+.l10w #ph-next{right:4px}
+.l10w #ph-turn button{margin-left:auto;font-size:max(var(--fmin), calc(20 * var(--u)));padding:0 calc(8 * var(--u))}
 .l10w tr.stephide{visibility:hidden}
 .l10w tr.stepnow td{background:var(--now) !important;box-shadow:inset 0 2px 0 var(--follow),inset 0 -2px 0 var(--follow)}
 .l10w .rng{position:relative;display:inline-block;vertical-align:middle;height:calc(40 * var(--u))}
