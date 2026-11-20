@@ -5,10 +5,22 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.37.1: L10 Interactive Slides, Changed Values in Orange (2026-11-20)
+.. dropdown:: v2.37.2: L10 Interactive Slides, Pure Pursuit Zoom on Slide 95 (2026-11-20)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10 interactive slides, slide 95:** clicking step 5 (compute the
+     steering angle) zooms in on the AV and labels the three Pure Pursuit
+     quantities on the sketch: the angle to the lookahead point, the radius
+     of the arc and the wheel angle, with the lecture's numbers. The slow
+     play stops when you leave the slide.
+
+.. dropdown:: v2.37.1: L10 Interactive Slides, Changed Values in Orange (2026-11-20)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

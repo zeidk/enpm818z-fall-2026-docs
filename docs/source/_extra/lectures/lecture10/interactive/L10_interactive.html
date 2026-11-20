@@ -4391,7 +4391,11 @@ function makeTraj(R){
   var PX = SA + LD * Math.cos(AL), PY = -LD * Math.sin(AL);
   var vref = null;
   try { var prof = speedProfile(2.0), jj = 0; while (jj < cs.length - 1 && cs[jj] < SA) jj++; vref = prof[jj]; } catch (e) {}
-  function X(x){ return 40 + (x - 79.5) * 40; } function Y(y){ return 64 + (1.6 - y) * 40; }
+  /* the view: 40 px per meter, the rear axle at (168, 128); step 5 zooms (zs from 0 to 1) to 80 px per meter with the
+     rear axle at (110, 120), so alpha, R and delta can be read */
+  var zs = 0, zraf = null;
+  function S(){ return 40 + 40 * zs; }
+  function X(x){ return 168 - 58 * zs + (x - SA) * S(); } function Y(y){ return 128 - 8 * zs - y * S(); }
   function pathPt(t){ /* t: meters along the path from x = 79.5 */ var st = X0 - 79.5;
     if (t <= st) return [79.5 + t, 0]; var ph = (t - st) / RA; return [X0 + RA * Math.sin(ph), -RA + RA * Math.cos(ph)]; }
   function offsetPath(off){ var pts = []; for (var t = 0; t <= 14; t += 0.1){ var st = X0 - 79.5, p, nx, ny;
@@ -4408,24 +4412,24 @@ function makeTraj(R){
     svg.innerHTML = ""; var on = function(j){ return k >= j; };
     poly(svg, offsetPath(1.75), {stroke:C.muted, "stroke-width":2}); poly(svg, offsetPath(-1.75), {stroke:C.muted, "stroke-width":2});
     poly(svg, offsetPath(0), {stroke:C.plan, "stroke-width":3, "stroke-dasharray":"10 7"});
-    txt(svg, X(79.7), Y(0) - 10, "path", 15, C.plan, "start");
+    if (zs < 0.01) txt(svg, X(79.7), Y(0) - 10, "path", 15, C.plan, "start");
     txt(svg, 12, 22, "a sketch with our numbers", 13, C.muted, "start");
-    if (k === 0) carIcon(svg, "av", X(SA - V * 0.05 + 1.35), Y(0), 4.5 * 40, 0, "#C9D2DC");
+    if (k === 0) carIcon(svg, "av", X(SA - V * 0.05 + 1.35), Y(0), 4.5 * S(), 0, "#C9D2DC");
     var front = SA + L;
-    carIcon(svg, "av", X(SA + 1.35), Y(0), 4.5 * 40, 0, k === 0 ? "#9AA6B2" : "#C9D2DC");
+    carIcon(svg, "av", X(SA + 1.35), Y(0), 4.5 * S(), 0, k === 0 ? "#9AA6B2" : "#C9D2DC").setAttribute("opacity", 1 - 0.5 * zs);
     el(svg, "circle", {cx:X(SA), cy:Y(0), r:6, fill:C.ink});
-    if (on(1)) arrow(X(SA), Y(0), X(SA + 1.8), Y(0), C.ink, 3);
+    if (on(1)) arrow(X(SA), Y(0), X(SA) + 72, Y(0), C.ink, 3);   /* 72 px at any zoom */
     if (on(2)) el(svg, "circle", {cx:X(SA), cy:Y(0), r:10, fill:"none", stroke:C.plan, "stroke-width":3});
-    if (on(3)){ el(svg, "circle", {cx:X(SA), cy:Y(0), r:LD * 40, fill:"none", stroke:C.follow, "stroke-width":2, "stroke-dasharray":"7 6"});
+    if (on(3)){ if (zs < 0.5) el(svg, "circle", {cx:X(SA), cy:Y(0), r:LD * S(), fill:"none", stroke:C.follow, "stroke-width":2, "stroke-dasharray":"7 6"});
       el(svg, "circle", {cx:X(PX), cy:Y(PY), r:8, fill:C.follow, stroke:"#fff", "stroke-width":2}); }
     if (on(4)){ var arc = []; for (var a = 0; a <= 2 * AL + 0.02; a += 0.01) arc.push([X(SA + RPP * Math.sin(a)), Y(-RPP + RPP * Math.cos(a))]);
       poly(svg, arc, {stroke:C.ok, "stroke-width":4}); el(svg, "line", {x1:X(SA), y1:Y(0), x2:X(PX), y2:Y(PY), stroke:C.follow, "stroke-width":2});
-      var wx = X(front), wy = Y(0), wl = 26; el(svg, "line", {x1:wx - wl * Math.cos(DEL), y1:wy - wl * Math.sin(DEL), x2:wx + wl * Math.cos(DEL), y2:wy + wl * Math.sin(DEL), stroke:C.ok, "stroke-width":8, "stroke-linecap":"round"}); }
+      var wx = X(front), wy = Y(0), wl = 0.65 * S(); el(svg, "line", {x1:wx - wl * Math.cos(DEL), y1:wy - wl * Math.sin(DEL), x2:wx + wl * Math.cos(DEL), y2:wy + wl * Math.sin(DEL), stroke:C.ok, "stroke-width":8, "stroke-linecap":"round"}); }
     if (k === 0){ card(["lock step: one tick", "CARLA moves 0.05 s", "5.22 m/s × 0.05 s", "= 0.26 m further on"], C.live); }
     if (k === 1) card(["the state, read", "x = 82.7 m, y = 0 m", "heading 0° (east)", "speed 5.22 m/s"], C.ink);
     if (k === 2) card(["nearest path point", "at the rear axle", "offset e = 0.00 m", "path heading 0°"], C.plan);
     if (k === 3) card(["lookahead point", "on the path, 5 m from", "the rear axle", "(the dashed circle)"], C.follow);
-    if (k === 4) card(["Pure Pursuit", "α = 0.1877 rad", "R = 13.39 m (green arc)", "δ = 0.211 rad, right"], C.ok);
+    if (k === 4 && zs > 0.999) zoomMarks();
     if (k === 5){ var e = vref != null ? vref - V : null;
       card(["speed PID", "target " + (vref != null ? f(vref, 2) : "?") + " m/s (profile)", "now 5.22 m/s",
         e != null ? "e = " + f(e, 2) + (e < 0 ? ": too fast" : ": too slow") : ""], C.follow); }
@@ -4440,21 +4444,49 @@ function makeTraj(R){
       txt(svg, 460, 30, "20 Hz", 16, C.live, "middle", {"font-weight":700});
       card(["VehicleCmd, sent", "steer −0.173", "pedal from the PID", "again in 0.05 s"], C.slate); }
   }
+  function arcD(cx, cy, r, a0, a1){ return "M" + (cx + r * Math.cos(a0)) + "," + (cy + r * Math.sin(a0)) + " A" + r + "," + r + " 0 0 1 " + (cx + r * Math.cos(a1)) + "," + (cy + r * Math.sin(a1)); }
+  function zoomMarks(){ var s = S(), ax = X(SA), ay = Y(0), fx = X(SA + L);
+    /* alpha: from the heading to the line to the lookahead point (orange, like that line) */
+    el(svg, "path", {d:arcD(ax, ay, 1.4 * s, 0, AL), fill:"none", stroke:C.follow, "stroke-width":3});
+    halo(txt(svg, ax + 1.3 * s, ay - 12, "α = 0.1877 rad", 17, C.follow, "middle", {"font-weight":600}));   /* above the angle: the wedge is too thin to hold it */
+    /* L_d: the 5 m line, labeled under it */
+    var ld = halo(txt(svg, (ax + X(PX)) / 2 + 10, (ay + Y(PY)) / 2 + 28, "L", 17, C.follow, "middle", {"font-weight":600}));
+    var sub = document.createElementNS("http://www.w3.org/2000/svg", "tspan"); sub.setAttribute("baseline-shift", "sub"); sub.setAttribute("font-size", "13"); sub.textContent = "d"; ld.appendChild(sub);
+    var rest = document.createElementNS("http://www.w3.org/2000/svg", "tspan"); rest.textContent = " = 5 m"; ld.appendChild(rest);
+    /* R: the arc's center is straight below the rear axle (to the AV's right), 13.39 m away, off the sketch */
+    el(svg, "line", {x1:ax, y1:ay, x2:ax, y2:310, stroke:C.ok, "stroke-width":3, "stroke-dasharray":"9 6"});
+    el(svg, "path", {d:"M" + ax + ",322 l -8 -14 l 16 0 z", fill:C.ok});
+    el(svg, "path", {d:"M" + (ax + 12) + "," + ay + " l 0 12 l -12 0", fill:"none", stroke:C.ok, "stroke-width":2});
+    halo(txt(svg, ax + 14, 215, "R = 13.39 m", 17, C.ok, "start", {"font-weight":600}));
+    halo(txt(svg, ax + 14, 241, "to the turn center", 15, C.ok, "start"));
+    /* delta: at the front wheel, from the heading to the wheel */
+    el(svg, "line", {x1:fx, y1:ay, x2:fx + 1.35 * s, y2:ay, stroke:C.ink, "stroke-width":1.5, "stroke-dasharray":"5 5"});
+    el(svg, "line", {x1:fx, y1:ay, x2:fx + 1.35 * s * Math.cos(DEL), y2:ay + 1.35 * s * Math.sin(DEL), stroke:C.ok, "stroke-width":2, "stroke-dasharray":"5 5"});
+    el(svg, "path", {d:arcD(fx, ay, 1.2 * s, 0, DEL), fill:"none", stroke:C.ok, "stroke-width":3});
+    halo(txt(svg, fx + 1.45 * s * Math.cos(DEL / 2), ay + 1.45 * s * Math.sin(DEL / 2) + 6, "δ = 0.211 rad", 17, C.ok, "start", {"font-weight":600})); }
+  function zoomTo(t){ cancelAnimationFrame(zraf);
+    if (reduce || zs === t){ zs = t; draw(cur); return; }
+    var z0 = zs, t0 = performance.now(), D = 900;
+    (function run(){ var q = Math.min(1, (performance.now() - t0) / D), e = q < 0.5 ? 2 * q * q : 1 - 2 * (1 - q) * (1 - q);
+      zs = q >= 1 ? t : z0 + (t - z0) * e; draw(cur); if (q < 1) zraf = requestAnimationFrame(run); })(); }
   var CAPS = [
     "CARLA moves the world one tick, 0.05 s. At 5.22 m/s the AV is now 0.26 m further on (gray: where it was).",
     "The node reads the AV's pose and speed: rear axle at 82.7 m along the approach, heading east, 5.22 m/s.",
     "The nearest path point is right at the rear axle: no sideways error yet, and the path still heads east.",
     "The lookahead point: the point on the path 5 m from the rear axle, just inside the first arc.",
-    "The arc from the rear axle through that point has R = 13.39 m; steering 0.211 rad (12.1°) to the right drives it.",
+    "α: from the heading to the lookahead point. R: radius of the arc through it. δ: the wheel angle that drives it.",
     "The speed PID compares the speed with the speed profile's target here and sets the pedal.",
     "The node scales the angle for CARLA: 0.211 / 1.222 = 0.173, sent as −0.173 because left is positive.",
     "One VehicleCmd goes out, stamped for this tick; CARLA ticks again and the loop repeats."];
-  function show(k){ cur = Math.max(0, Math.min(N - 1, k)); items.forEach(function(li, j){ li.classList.toggle("lit", j === cur); if (j === cur) li.setAttribute("aria-current", "step"); else li.removeAttribute("aria-current"); }); draw(cur); cap.textContent = CAPS[cur]; }
-  function stop(){ clearInterval(timer); timer = null; document.getElementById("c-run").textContent = "Run one control step"; }
+  function show(k){ cur = Math.max(0, Math.min(N - 1, k)); items.forEach(function(li, j){ li.classList.toggle("lit", j === cur); if (j === cur) li.setAttribute("aria-current", "step"); else li.removeAttribute("aria-current"); }); draw(cur); zoomTo(cur === 4 ? 1 : 0); cap.textContent = CAPS[cur]; }
+  function stop(){ clearTimeout(timer); timer = null; document.getElementById("c-run").textContent = "Run one control step"; }
   document.getElementById("c-run").onclick = function(e){ e.stopPropagation();
     if (timer){ stop(); return; }
     show(0); this.textContent = "Pause";
-    timer = setInterval(function(){ if (cur >= N - 1){ stop(); return; } show(cur + 1); }, reduce ? 1200 : 2600); };
+    (function tick(){ timer = setTimeout(function(){
+        if (cur >= N - 1 || document.getElementById("cstep").dataset.scene !== current){ stop(); return; }   /* the end, or the slide was left */
+        show(cur + 1); if (cur >= N - 1) stop(); else tick(); },
+      reduce ? 1200 : (cur === 4 ? 5200 : 2600)); })(); };   /* step 5 zooms: it stays longer */
   document.getElementById("c-next").onclick = function(e){ e.stopPropagation(); stop(); show(cur + 1); };
   document.getElementById("c-back").onclick = function(e){ e.stopPropagation(); stop(); show(cur - 1); };
   items.forEach(function(li, j){ li.style.cursor = "pointer";
