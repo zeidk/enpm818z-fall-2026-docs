@@ -14,7 +14,9 @@ All notable changes to the ENPM818Z Fall 2026 course documentation are recorded 
 
    - **GP5:** the model's three parts are drawn as a diagram instead of a
      text sketch, with the size of each vector and which parts are frozen
-     or trained.
+     or trained. A box under the diagram explains each part.
+   - **GP5:** the throttle limit is 0.75 everywhere on the page, the
+     ``max_throttle`` of GP4's starter code. Task 2 said 0 to 1.
 
 .. dropdown:: v2.34.5: L10 Interactive Slides, Contents and Wheel Angles (2026-11-20)
    :icon: tag

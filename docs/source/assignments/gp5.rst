@@ -58,10 +58,12 @@ vectors. Your model is a camera-driven policy with a six-way command, close
 to the conditional imitation learning in the first reading below. Keep this in
 mind when you compare it with the real VLA systems.
 
-The model has three parts:
+The model has three parts: two encoders from CLIP (a pre-trained model) and
+an action decoder that you train. The figure follows one camera frame through
+them, from left to right.
 
 .. figure:: /_static/images/GP5/gp5_model.svg
-   :alt: A diagram, left to right. Three inputs: the front camera image, the text command (for example "turn left at the intersection") and the speed in m/s. The image goes to the CLIP image encoder and the command to the CLIP text encoder; both are blue and marked frozen. Each encoder gives 512 numbers, and the speed is 1 number. The three are joined, inside a dashed outline, into one input of 1,025 numbers. It goes to the action decoder, a small MLP in orange marked trained, which outputs the command: steer from -1 to 1, throttle from 0 to 1, brake from 0 to 1. A legend: blue, frozen, the weights do not change; orange, trained, the only weights you train.
+   :alt: A diagram, left to right. Three inputs: the front camera image, the text command (for example "turn left at the intersection") and the speed in m/s. The image goes to the CLIP image encoder and the command to the CLIP text encoder; both are blue and marked frozen. Each encoder gives 512 numbers, and the speed is 1 number. The three are joined, inside a dashed outline, into one input of 1,025 numbers. It goes to the action decoder, a small MLP in orange marked trained. An arrow down from the decoder leads to a VehicleCmd box: steer from -1 to 1, throttle from 0 to 0.75, brake from 0 to 1. A legend: blue, frozen, the weights do not change; orange, trained, the only weights you train.
    :align: center
    :width: 100%
 
@@ -70,27 +72,63 @@ The model has three parts:
 .. admonition:: Reading the figure
    :class: tip
 
-   - The three boxes on the left are the inputs your node reads for each camera frame.
-   - The two blue boxes are CLIP's encoders. They are frozen: their weights
-     do not change. Each turns its input into 512 numbers.
-   - The dashed outline is one input of 1,025 numbers: the two CLIP vectors
-     and the speed, joined end to end.
-   - The orange box is the only part you train. Its three outputs become the
-     ``VehicleCmd`` you publish.
+   **The inputs (gray, left).** For every camera frame, your ``vla_node``
+   has three inputs. The image comes from the front camera, on
+   ``/carla/camera/rgb/image``. The speed, in m/s, comes from
+   ``/carla/speedometer``. The text command is one of the
+   six phrases of Task 1. It changes only when the route reaches a new
+   ``RoadOption``, so long runs of frames share the same phrase.
 
-CLIP is a pre-trained model that maps an image and a text to vectors. You
-use it **frozen**: its weights do not change. The only part you train is a
-small MLP (a multi-layer perceptron, a few fully connected layers), which
-needs far less data and compute than training the encoders.
+   **The two encoders (blue).** CLIP was trained on 400 million images
+   paired with text from the internet (Radford et al., in the readings
+   below). It has two encoders, one for images and one for text, and each
+   turns its input into a vector of 512 numbers. The training compared each
+   image with many texts and taught the encoders to give the matching pair a
+   higher similarity score (the cosine of the angle between the two vectors)
+   than the pairs that do not match. GP5 uses these vectors as they are, so
+   you do not change CLIP. The padlock says both encoders are **frozen**: their
+   weights stay as downloaded and get no gradient while you train.
+
+   **The joined input (dashed outline).** Your code puts the image vector,
+   the text vector and the speed one after the other: 512 + 512 + 1 = 1,025
+   numbers, and this is all the decoder sees. CLIP's two vectors, read as
+   the ``image_embeds`` and ``text_embeds`` of the model's output (Task 2),
+   are scaled to length 1, so their numbers are small: the root mean square of
+   512 numbers whose squares add up to 1 is the square root of 1/512, about
+   0.044. A speed of several m/s would be far larger than any of them, which
+   is why Task 2 asks you to scale the speed. Use the same scaling in
+   training and in the node.
+
+   **The action decoder (orange).** This is a small MLP (a multi-layer
+   perceptron: a few fully connected layers), and it is the only part that
+   learns. It reads the 1,025 numbers and its last layer gives three. Your
+   code squashes them into the ranges shown below it. You choose the
+   number and size of its hidden layers.
+
+   **The output (below the decoder).** The three numbers fill one
+   ``ads_msgs/VehicleCmd``, which the node publishes on
+   ``/control/vehicle_cmd`` once per camera frame. ``steer`` runs from -1
+   to 1 and is positive to the left, the opposite of CARLA's sign (see
+   "Mind the steering sign" in Task 1). ``throttle`` runs from 0 to 0.75,
+   the ``max_throttle`` in the ``controller_config.yaml`` of GP4's starter
+   code. CARLA's agent,
+   your expert in Task 1, caps its own throttle at 0.75 too, so your data
+   never asks for more. ``brake`` runs from 0 to 1.
+
+   **What changes from frame to frame.** The image and the speed change at
+   every frame. The text vector does not: with only six phrases, there are
+   only six text vectors. You can compute them once and skip the text
+   encoder (the speed-up in Task 2).
 
 .. admonition:: Why not train CLIP too?
    :class: note
 
    CLIP ViT-B/16 has about 150 million parameters (149,620,737, counted in
    the ``transformers`` library). Training all of them needs much more data
-   and GPU time than a course project has. The decoder in Task 2 has 329,219
-   parameters: the three layers hold 1025 x 256 + 256, 256 x 256 + 256 and
-   256 x 3 + 3 weights and biases.
+   and GPU time than a course project has. A decoder with two hidden layers
+   of 256, the example size of Task 2, has 329,219 parameters:
+   (1,025 × 256 + 256) + (256 × 256 + 256) + (256 × 3 + 3) weights and
+   biases.
 
 
 .. _gp5-show:
@@ -152,8 +190,11 @@ the text commands come from.
    * - Command out
      - Publish one ``ads_msgs/VehicleCmd`` per camera frame on
        ``/control/vehicle_cmd``. ``steer`` is between -1 and 1 and **positive
-       turns left**. ``throttle`` is between 0 and your controller's
-       ``max_throttle``, and ``brake`` between 0 and 1.
+       turns left**. ``throttle`` is between 0 and 0.75, the
+       ``max_throttle`` in the ``controller_config.yaml`` of GP4's starter code.
+       The controller is gone in GP5, so your node must keep the throttle at
+       or under 0.75 itself. ``brake``
+       is between 0 and 1.
    * - Lock step
      - Set the header stamp of each ``VehicleCmd`` to the stamp of the frame
        it answers, as GP4 Task 1 describes. Your GP1 ``sensor_manager`` waits
@@ -255,7 +296,8 @@ What the model does, part by part (you write the code):
 - **The decoder.** A small MLP that you train. Its last layer gives three
   numbers.
 - **The command's ranges.** Squash the three numbers into the ranges of
-  ``VehicleCmd``: steer from -1 to 1, throttle and brake from 0 to 1.
+  ``VehicleCmd``: steer from -1 to 1, throttle from 0 to 0.75 and brake
+  from 0 to 1.
 
 A size check: with two hidden layers of 256, the decoder has
 (1,025 × 256 + 256) + (256 × 256 + 256) + (256 × 3 + 3) = 329,219
