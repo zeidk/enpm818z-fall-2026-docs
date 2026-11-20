@@ -459,9 +459,7 @@ svg.plot,.fig{background:var(--paper) !important}
 </div>
 
 <div id="deck">
-<section class="secblock" data-scene="sec-0" data-name="0 Title and contents" tabindex="0"><div class="sechead"><span class="num">&#9654;</span><span>Title and contents</span><span class="meta">title and contents</span></div><div class="grid" style="grid-template-columns:repeat(2,1280px)"><!-- Table of contents. The deck's title pagection, <b>Esc</b> the overview.</p>
-  </div>
-</section>
+<section class="secblock" data-scene="sec-0" data-name="0 Title and contents" tabindex="0"><div class="sechead"><span class="num">&#9654;</span><span>Title and contents</span><span class="meta">title and contents</span></div><div class="grid" style="grid-template-columns:repeat(2,1280px)"><!-- Table of contents. The deck's title page is not shown: the cover replaces it. -->
 
 <section class="plate frame" data-scene="p2" data-name="Contents" tabindex="0"><span class="bolt"></span><div class="fhead"><span></span><span>Contents</span></div>
   <h2>Table of contents</h2><div class="fit"><div class="fitin">
@@ -1503,6 +1501,8 @@ svg.plot,.fig{background:var(--paper) !important}
       <ul class="st small" style="margin:4px 0 0"><li>\(\delta_i = \arctan\frac{L}{R - w/2}\), \(\delta_o = \arctan\frac{L}{R + w/2}\)</li>
         <li>the bicycle's one angle, \(\arctan(L/R)\), lies between them</li>
         <li>\(L = 2.875\) m: wheelbase; \(w = 1.6\) m (chosen): track; \(R\): turn radius, to the rear axle's middle</li></ul>
+      <svg id="ak-zoom" class="plot" viewBox="0 0 420 230" width="520" height="285" style="margin-top:8px" role="img"
+           aria-label="Close-up of the front axle, drawn larger: each front wheel turned left; a dotted line straight ahead and a dotted line along the wheel meet at the wheel, and an arc between them marks its angle, delta i on the inner wheel and delta o on the outer one."></svg>
     </div>
   </div>
 </div></div></section>
@@ -2613,7 +2613,7 @@ function step(d){
     var first = order.indexOf(byScene[current].querySelector(".card, .plate").dataset.scene);
     go(order[d > 0 ? first : Math.max(0, first - 1)]); return;
   }
-  if (order.indexOf(current) < 0){ go(d > 0 ? order[1] : "overview"); return; }   /* the title block */
+  if (order.indexOf(current) < 0){ go(d > 0 ? order[1] : "overview"); return; }   /* the cover: forward goes to the first slide */
   var i = order.indexOf(current) + d; if (i >= 0 && i < order.length) go(order[i]);
 }
 function up(){ var b = blockOf(current); go(kindOf(current) === "sec" || !b ? "overview" : b); }
@@ -3731,6 +3731,19 @@ function makeTraj(R){
     el(s,"line",{x1:X(-w / 2),y1:Y(0),x2:X(w / 2),y2:Y(0),stroke:C.ink,"stroke-width":2}); el(s,"line",{x1:X(-w / 2),y1:Y(L),x2:X(w / 2),y2:Y(L),stroke:C.ink,"stroke-width":2});
     el(s,"circle",{cx:X(icr[0]),cy:Y(0),r:6,fill:C.ok}); txt(s, X(icr[0]), Y(0) + 24, "ICR", 15, C.ok);
     txt(s, (X(icr[0]) + X(0)) / 2, Y(0) - 8, "R = " + R.toFixed(2) + " m", 15, C.ok);
+    /* close-up of the front axle, 70 px per m: each angle between straight ahead (dotted gray) and the wheel (dotted orange) */
+    var z = document.getElementById("ak-zoom"); z.innerHTML = "";
+    var k = 70, zx = function(x){ return 210 + x * k; }, zy = function(y){ return 196 - y * k; };
+    el(z,"line",{x1:zx(-0.8),y1:zy(0),x2:zx(0.8),y2:zy(0),stroke:C.ink,"stroke-width":2.5});
+    [[-0.8, di, "\u03b4i"], [0.8, dO, "\u03b4o"]].forEach(function(q){
+      var c = Math.cos(q[1]), sn = Math.sin(q[1]), x0 = q[0], ext = 2.35, ra = 1.65, hl = 0.36;
+      el(z,"line",{x1:zx(x0),y1:zy(0),x2:zx(x0),y2:zy(ext),stroke:C.muted,"stroke-width":2,"stroke-dasharray":"6 5"});
+      el(z,"line",{x1:zx(x0),y1:zy(0),x2:zx(x0 - ext * sn),y2:zy(ext * c),stroke:C.follow,"stroke-width":2,"stroke-dasharray":"6 5"});
+      el(z,"path",{d:"M" + zx(x0) + "," + zy(ra) + " A" + (ra * k) + "," + (ra * k) + " 0 0 0 " + zx(x0 - ra * sn) + "," + zy(ra * c),fill:"none",stroke:C.follow,"stroke-width":3});
+      el(z,"line",{x1:zx(x0 + hl * sn),y1:zy(-hl * c),x2:zx(x0 - hl * sn),y2:zy(hl * c),stroke:C.follow,"stroke-width":11,"stroke-linecap":"round"});
+      var hm = q[1] / 2, rl = ra + 0.32;
+      txt(z, zx(x0 - rl * Math.sin(hm)), zy(rl * Math.cos(hm)) + 6, q[2], 18, C.follow, "middle", {"font-style":"italic","font-weight":600}); });
+    txt(z, 12, 20, "front axle, drawn larger", 14, C.muted, "start");
     tex("ak-read", "\\begin{aligned} \\delta_i &= \\arctan(2.875 / " + nt(R - w / 2, 2) + ") = " + nt(di, 3) + "\\text{ rad } (" + nt(di * 180 / Math.PI, 1) + "^\\circ) \\\\ " +
       "\\delta_o &= \\arctan(2.875 / " + nt(R + w / 2, 2) + ") = " + nt(dO, 3) + "\\text{ rad } (" + nt(dO * 180 / Math.PI, 1) + "^\\circ) \\\\ " +
       "\\text{bicycle } \\delta &= \\arctan(2.875 / " + nt(R, 2) + ") = " + nt(db, 3) + "\\text{ rad} \\end{aligned}");

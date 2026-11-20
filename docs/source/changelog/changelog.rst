@@ -5,10 +5,20 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.34.4: L10 Interactive Slides, Diagram Fixes (2026-11-20)
+.. dropdown:: v2.34.5: L10 Interactive Slides, Contents and Wheel Angles (2026-11-20)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10, Interactive Slides:** the table of contents follows the cover
+     again, and the Ackermann slide shows each front wheel's angle in a
+     close-up of the front axle.
+
+.. dropdown:: v2.34.4: L10 Interactive Slides, Diagram Fixes (2026-11-20)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 
