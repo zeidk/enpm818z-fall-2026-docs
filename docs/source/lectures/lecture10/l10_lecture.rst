@@ -2184,6 +2184,11 @@ planner gives up something else to cut that penalty:
 - **Raise** :math:`k_{\dot s}`: the end speed stays closer to the speed
   asked for.
 
+Change the weights and watch which lane change becomes the cheapest.
+
+.. raw:: html
+   :file: widgets/extra/cost.html
+
 .. note::
 
    A stop misses the asked 10 m/s by all of it: :math:`(0 - 10)^2 = 100`.
@@ -2613,6 +2618,11 @@ closest to car B.
 - (1) Keep 10 m/s: the circles overlap by 0.98 m. **A crash.**
 - (2) Slow to 7 m/s first: the circles never come closer than 1.04 m (at
   2.8 s). **Safe.**
+
+Move the time, or play both runs, and watch the gap to car B.
+
+.. raw:: html
+   :file: widgets/extra/timings.html
 
 
 .. _l10-lec-traj-where-when:
@@ -3129,6 +3139,11 @@ and watched the wheel (Xu et al., 2021).
 
    At 8 m/s, the AV drives 8 × 0.2 = 1.6 m before the wheel even starts to
    turn. A controller that ignores this steers late.
+
+Pick a steering model and move the time, or play the jump, to see the wheel answer late.
+
+.. raw:: html
+   :file: widgets/extra/delay.html
 
 .. dropdown:: More detail: other steering delays
    :class-container: more-detail
@@ -3987,6 +4002,11 @@ Measure How Far Off the Path: Two Errors
   (arrow) and the path's direction there (dotted). Drawn at 15° so it shows;
   our runs start at 0, the AV parallel to the lane, 1 m left of its center.
 
+Move the AV off the path and turn it, then read the two errors.
+
+.. raw:: html
+   :file: widgets/extra/errors.html
+
 A steering controller turns these two into a steering angle: Pure Pursuit by
 looking ahead along the path; Stanley (below) from both errors directly.
 
@@ -4666,6 +4686,11 @@ back to the path, more gently the faster it goes. Our run:
 :math:`\delta = -0.234 - \arctan(0.212 / 6.22)` = −0.268 rad, 15.4° right:
 only 2° more than :math:`\psi_e`, because :math:`e` is small.
 
+Move the two errors and the speed, and watch Stanley's steering angle.
+
+.. raw:: html
+   :file: widgets/extra/stanley.html
+
 .. dropdown:: More detail: Stanley by hand, its signs, and why it converges
    :class-container: more-detail
    :icon: info
@@ -5013,6 +5038,11 @@ The table shows five of the 729 plans:
 Keep the lowest, 0.186 (steering: :math:`0^2 + 0.4^2 + 0^2` = 0.16). Here
 the path error alone picks the same plan; the steering effort matters when
 two plans track about equally well, and then it favors the gentler one.
+
+Step through the plans with the arrows, then pick any plan with the three sliders and compare its score.
+
+.. raw:: html
+   :file: widgets/extra/mpc.html
 
 No formula gives :math:`\delta` here, unlike Pure Pursuit and Stanley: the
 plan with the lowest score sets it. MPC's only formulas are the model's,
@@ -5679,6 +5709,11 @@ Hit the Limit: the Throttle Saturates at 0.75
 - While it is saturated, the AV speeds up as fast as it can, whatever
   :math:`u` says. The extra command goes nowhere.
 
+Raise the command past 0.75 and see the throttle stop at the limit.
+
+.. raw:: html
+   :file: widgets/extra/saturation.html
+
 
 .. _l10-lec-windup:
 
@@ -5920,6 +5955,11 @@ Drive Two Pedals from One Command: Split u, Keep a Dead Zone
   start braking and one to stop, keeps it from switching on every cycle. Two
   thresholds are **hysteresis**.
 
+Move u, turn the dead zone on or off, and wobble u around 0 to count the pedal switches.
+
+.. raw:: html
+   :file: widgets/extra/split.html
+
 
 .. _l10-lec-pid-table:
 
@@ -6146,6 +6186,11 @@ Let a Computer Drive: the CAN Bus and the ECUs Replace the Links
   part of the car: the steering, the engine or the brakes. It checks each
   command, drives its actuator, and sends feedback back on the bus (dashed
   arrows).
+
+Follow one steering command from the computer to the wheels, step by step.
+
+.. raw:: html
+   :file: widgets/extra/can.html
 
 .. dropdown:: More detail: the actuators, the command chain, ECUs, CAN, a message layout and fail safe
    :class-container: more-detail
@@ -6834,3 +6879,6 @@ The vehicle icon in the figures on this page was created by Stone from the
 
 .. raw:: html
    :file: widgets/_scripts.html
+
+.. raw:: html
+   :file: widgets/extra/_scripts.html

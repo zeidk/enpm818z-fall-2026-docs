@@ -64,6 +64,13 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--table);color:var
 .plate::before{left:14px;top:14px}.plate::after{right:14px;top:14px}
 .plate .bolt::before{left:14px;bottom:14px}.plate .bolt::after{right:14px;bottom:14px}
 body.zoomed .plate.active{cursor:default}
+/* full screen on a slide: only the slide shows, and the screen around a 16:9 slide takes its background, so it reads
+   edge to edge on a wider screen too; the slide's own edge, corners and shadow go */
+body.fs #viewport{background-image:none;background-color:var(--plate)}
+body.fs .plate:not(.active),body.fs .card:not(.active),body.fs .sechead,body.fs .node,body.fs .edge{visibility:hidden}
+body.fs .secblock{background:none;border-color:transparent;box-shadow:none}
+body.fs .plate.active,body.fs .card.active{border-left-color:transparent;border-right-color:transparent;border-bottom-color:transparent;border-radius:0;box-shadow:none}
+body.fs .plate.active:not(.plan):not(.follow),body.fs .card.active{border-top-color:transparent}   /* the section bar stays */
 body.panning,body.panning *{cursor:grabbing !important;user-select:none}
 .plate h2{margin:0 0 18px;font-size:50px;line-height:1.1;font-weight:600;color:var(--slate);letter-spacing:-.01em}
 .plate h3{margin:0 0 10px;font-size:30px;color:var(--slate)}
@@ -2732,7 +2739,9 @@ function go(scene){
   world.style.transitionDuration = near ? "450ms" : "1000ms";
   var full = kind === "card";
   var r = rectOf(scene), vw = window.innerWidth, vh = window.innerHeight - (full ? 0 : 70);
-  var pad = kind === "map" ? 0.98 : kind === "card" ? 0.99 : 0.94;
+  /* full screen (F) on a slide: the slide fills the screen, edge to edge (user, 2026-11-20) */
+  var fs = !!document.fullscreenElement && (full || kind === "plate");
+  var pad = fs ? 1 : kind === "map" ? 0.98 : kind === "card" ? 0.99 : 0.94;
   var s = Math.min(vw / r.w, vh / r.h) * pad;
   var tx = (vw - r.w * s) / 2 - r.x * s, ty = (vh - r.h * s) / 2 - r.y * s;
   world.style.transform = "translate(" + tx + "px," + ty + "px) scale(" + s + ")";
@@ -2741,6 +2750,7 @@ function go(scene){
   document.body.classList.toggle("zoomed", scene !== "overview");
   document.body.classList.toggle("onslide", full);
   document.body.classList.toggle("indeck", full || kind === "plate");
+  document.body.classList.toggle("fs", fs);
   document.querySelectorAll(".plate, .card, .secblock").forEach(function(p){ p.classList.toggle("active", p.dataset.scene === scene); });
   if (kind === "sec") loadImgs(byScene[scene]);
   var i = order.indexOf(scene);
@@ -2956,6 +2966,7 @@ function onEnter(scene){
   
 }
 window.addEventListener("resize", function(){ go(current); });
+document.addEventListener("fullscreenchange", function(){ go(current); });   /* the resize can come before the full-screen state */
 
 /* ---------- small helpers ---------- */
 function el(svg, tag, attrs, text){ var e = document.createElementNS(NS, tag);
@@ -3957,12 +3968,13 @@ function makeTraj(R){
     (function stepA(){ var p = Math.max(0, Math.min(1, (performance.now() - start) / dur)); draw(P, p >= 1 ? Infinity : t0 + (t1 - t0) * p);
       anim = p < 1 ? requestAnimationFrame(stepA) : null; })();
   }
-  for (var k in IN){ IN[k].addEventListener("input", function(){ update(false); }); IN[k].addEventListener("change", function(){ update(true); }); }
+  /* the sliders change the graph directly; only the first visit and "Draw again" draw it gradually (user, 2026-11-20) */
+  for (var k in IN) IN[k].addEventListener("input", function(){ update(false); });
   document.getElementById("stx-draw").onclick = function(e){ e.stopPropagation(); update(true); };
-  document.getElementById("stx-reset").onclick = function(e){ e.stopPropagation(); for (var k in DECK) IN[k].value = DECK[k]; update(true); };
-  /* Draw the curves again each time the slide comes on screen. */
-  var wasOn = false;
-  new MutationObserver(function(){ var on = sec.classList.contains("active"); if (on && !wasOn) update(true); wasOn = on; }).observe(sec, {attributes:true, attributeFilter:["class"]});
+  document.getElementById("stx-reset").onclick = function(e){ e.stopPropagation(); for (var k in DECK) IN[k].value = DECK[k]; update(false); };
+  /* Draw the curves gradually the first time the slide comes on screen, then never on their own again. */
+  var drawn = false, mo = new MutationObserver(function(){ if (!drawn && sec.classList.contains("active")){ drawn = true; mo.disconnect(); update(true); } });
+  mo.observe(sec, {attributes:true, attributeFilter:["class"]});
   update(false);
 })();
 

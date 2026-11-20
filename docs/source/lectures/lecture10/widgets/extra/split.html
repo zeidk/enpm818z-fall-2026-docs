@@ -1,0 +1,12 @@
+<!-- Hand-written docs-only panel (its code: _static/l10w/l10w-extra.js). -->
+<div class="l10w mathjax_ignore tex2jax_ignore" data-w="x-split">
+<div class="l10w-title"><span class="l10w-kick">Try it</span>Split u into two pedals, with and without a dead zone</div>
+<div class="l10w-in">
+<div class="row"><span class="lbl">command \(u\)</span><input type="range" id="xp-u" min="-1" max="1" step="0.01" value="0.3" aria-label="the command u"></div>
+<div class="row" id="xp-dz"><span class="lbl">dead zone</span></div>
+<div class="row"><button id="xp-wob">Wobble u around 0</button></div>
+<svg id="xp-svg" class="plot" viewBox="0 0 1100 300" style="width:calc(1100 * var(--u));max-width:100%;height:auto;display:block;margin:calc(6 * var(--u)) auto" role="img" aria-label="A number line for u from minus 1 to 1: purple for braking below 0, green for throttle above 0, brown above 0.75 where the throttle is capped, and a gray band for the dead zone around 0 when it is on. A teal marker shows u. Below, two pedals, brake and throttle, each filled by how hard it is pressed, and a strip of the last 20 control steps, one square per step colored by the pedal pressed."></svg>
+<div class="mathout" id="xp-read"></div>
+<p class="small" style="margin:calc(6 * var(--u)) 0 0">The dead zone, ±0.05, and the wobble, u = +0.02 and −0.02 on alternate control steps, are chosen for this example.</p>
+</div>
+</div>

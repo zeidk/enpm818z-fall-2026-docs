@@ -218,3 +218,4 @@ _build
 
 # The L10 lecture page's interactive panels, built by tools/build_l10_widgets.py and included with raw:: html
 !docs/source/lectures/lecture10/widgets/*.html
+!docs/source/lectures/lecture10/widgets/extra/*.html

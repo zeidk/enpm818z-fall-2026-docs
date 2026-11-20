@@ -1,0 +1,12 @@
+<!-- Hand-written docs-only panel (its code: _static/l10w/l10w-extra.js). -->
+<div class="l10w mathjax_ignore tex2jax_ignore" data-w="x-cost">
+<div class="l10w-title"><span class="l10w-kick">Try it</span>Tune the weights: which lane change is cheapest</div>
+<div class="l10w-in">
+<div class="row"><span class="lbl">\(k_j\), jerk</span><input type="range" id="xc-kj" min="0" max="10" step="0.1" value="1" aria-label="the jerk weight"></div>
+<div class="row"><span class="lbl">\(k_t\), time</span><input type="range" id="xc-kt" min="0" max="10" step="0.1" value="1" aria-label="the time weight"></div>
+<div class="row"><span class="lbl">\(k_d\), end offset</span><input type="range" id="xc-kd" min="0" max="10" step="0.1" value="1" aria-label="the end offset weight"></div>
+<svg id="xc-svg" class="plot" viewBox="0 0 1100 360" style="width:calc(1100 * var(--u));max-width:100%;height:auto;display:block;margin:calc(6 * var(--u)) auto" role="img" aria-label="A graph of the offset d in meters against the time t in seconds, with dashed lines at 0, the right lane's center, and 3.5, the left lane's center. Eighteen gray curves, each a move from 0 to an end offset of minus 0.5, 0, 0.5, 3, 3.5 or 4 meters in 3, 4 or 5 seconds. The cheapest for the weights you set is thick and green, with its label."></svg>
+<div class="mathout" id="xc-read"></div>
+<p class="small" style="margin:calc(6 * var(--u)) 0 0">The lateral moves \(d(t)\) of the first plan, from rest at \(d\) = 0, with the left lane asked for (3.5 m): \(C_d = k_j\,J + k_t\,T + k_d\,(d_1 - 3.5)^2\), with \(J = 720\,d_1^2/T^5\).</p>
+</div>
+</div>

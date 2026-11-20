@@ -1,0 +1,19 @@
+<!-- Hand-written docs-only panel (its code: _static/l10w/l10w-extra.js). -->
+<div class="l10w mathjax_ignore tex2jax_ignore" data-w="x-can">
+<div class="l10w-title"><span class="l10w-kick">Try it</span>Follow one command to the wheels: the CAN bus and the ECUs</div>
+<div class="l10w-in">
+<div class="row"><button id="xn-run">Follow one command</button><button id="xn-back" aria-label="previous step">&#9664;</button><button id="xn-next" aria-label="next step">&#9654;</button></div>
+<div class="two" style="grid-template-columns:1fr calc(640 * var(--u));gap:calc(20 * var(--u));align-items:start">
+<ol class="loop" id="xn-loop" style="font-size:max(var(--fmin), calc(22 * var(--u)))">
+<li tabindex="0">The controllers make one command.</li>
+<li tabindex="0">It goes on the CAN bus.</li>
+<li tabindex="0">The steering ECU takes it and checks it.</li>
+<li tabindex="0">The ECU drives its actuator.</li>
+<li tabindex="0">It reads its own sensor.</li>
+<li tabindex="0">It sends feedback back on the bus.</li>
+</ol>
+<div><svg id="xn-svg" class="plot" viewBox="0 0 640 460" style="width:calc(640 * var(--u));max-width:100%;height:auto;display:block;margin:0" role="img" aria-label="A diagram: a gray box at the top, the driving computer; a thick line under it, the CAN bus; under the bus three green boxes, the steering ECU, the throttle ECU and the brake ECU; under each, its actuator: the power steering motor, the throttle body and the brake actuator. Solid arrows carry commands down, dashed arrows carry feedback up. The step you pick lights up, and a dot carries the message along."></svg>
+<div class="small" id="xn-cap" style="margin:calc(6 * var(--u)) 0 0;min-height:calc(90 * var(--u))"></div></div>
+</div>
+</div>
+</div>

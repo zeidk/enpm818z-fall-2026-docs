@@ -5,10 +5,25 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.38.0: L10 Lecture, Try It Panels and References on Hover (2026-11-20)
+.. dropdown:: v2.39.0: L10 Lecture, Nine New Try It Panels (2026-11-20)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10 lecture:** nine new "Try it" panels for parts the slides do not
+     show: the two errors, Stanley's law, the steering delay, throttle
+     saturation, MPC's plans, Werling's cost weights, the two timings, the
+     pedal split and the actuators. Each uses the numbers of the text
+     around it; a value the text does not give is marked "chosen for this
+     example".
+   - **L10 interactive slides:** full screen (F) fills the screen with the
+     slide, and slide 35 draws its curves gradually only on the first visit.
+
+.. dropdown:: v2.38.0: L10 Lecture, Try It Panels and References on Hover (2026-11-20)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

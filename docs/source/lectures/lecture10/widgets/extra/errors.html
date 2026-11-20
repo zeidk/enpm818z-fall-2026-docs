@@ -1,0 +1,11 @@
+<!-- Hand-written docs-only panel (its code: _static/l10w/l10w-extra.js). -->
+<div class="l10w mathjax_ignore tex2jax_ignore" data-w="x-errors">
+<div class="l10w-title"><span class="l10w-kick">Try it</span>Measure the two errors: move the AV off the path</div>
+<div class="l10w-in">
+<div class="row"><span class="lbl">rear axle left of the path (m)</span><input type="range" id="xe-d" min="-2" max="2" step="0.05" value="1" aria-label="the rear axle's distance left of the path"></div>
+<div class="row"><span class="lbl">AV heading from the path's direction (°)</span><input type="range" id="xe-h" min="-30" max="30" step="1" value="-15" aria-label="the AV's heading from the path's direction, degrees"></div>
+<svg id="xe-svg" class="plot" viewBox="0 0 1100 300" style="width:calc(1100 * var(--u));max-width:100%;height:auto;display:block;margin:calc(6 * var(--u)) auto" role="img" aria-label="A top view: a straight dashed path along the bottom, an arrow showing its direction, and a faint AV whose rear axle is a black dot. Dark tag 1: the nearest path point under the rear axle. Dark tag 2: a two-headed arrow square to the path, the cross-track error. Dark tag 3: the arc between a dotted line along the path's direction and the black arrow of the AV's heading, the heading error. Both move with the sliders."></svg>
+<div class="mathout" id="xe-read"></div>
+<p class="small" style="margin:calc(6 * var(--u)) 0 0">A straight path, chosen for this example. The heading error is measured from the AV's heading to the path's direction, positive counterclockwise, as in Stanley's law below.</p>
+</div>
+</div>

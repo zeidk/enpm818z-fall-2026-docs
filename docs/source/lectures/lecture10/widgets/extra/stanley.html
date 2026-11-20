@@ -1,0 +1,14 @@
+<!-- Hand-written docs-only panel (its code: _static/l10w/l10w-extra.js). -->
+<div class="l10w mathjax_ignore tex2jax_ignore" data-w="x-stanley">
+<div class="l10w-title"><span class="l10w-kick">Try it</span>Steer with Stanley: both errors at the front axle</div>
+<div class="l10w-in">
+<div class="row"><span class="lbl">heading error \(\psi_e\) (rad)</span><input type="range" id="xs-psi" min="-0.6" max="0.6" step="0.002" value="-0.234" aria-label="the heading error, radians"></div>
+<div class="row"><span class="lbl">cross-track error \(e\) (m)</span><input type="range" id="xs-e" min="-2" max="2" step="0.002" value="0.212" aria-label="the cross-track error at the front axle, meters"></div>
+<div class="row"><span class="lbl">speed \(v\) (m/s)</span><input type="range" id="xs-v" min="0" max="16" step="0.02" value="5.22" aria-label="the AV's speed, meters per second"></div>
+<div class="row" id="xs-pre"><span class="lbl">start from</span></div>
+<div class="row" id="xs-k"><span class="lbl">gain \(k\) (1/s)</span></div>
+<svg id="xs-svg" class="plot" viewBox="0 0 1100 380" style="width:calc(1100 * var(--u));max-width:100%;height:auto;display:block;margin:calc(6 * var(--u)) auto" role="img" aria-label="A top view of a straight dashed path and a faint AV near it. A purple dot at the front axle and a purple two-headed arrow down to the path: the cross-track error e. At the front axle, a dotted line along the path's direction, a black arrow along the AV's heading, and a red arc between them: the heading error. The front wheel, a thick bar, turned by the steering angle delta with a small black arc. All move with the sliders."></svg>
+<div class="mathout" id="xs-read"></div>
+<p class="small" style="margin:calc(6 * var(--u)) 0 0">A straight path, chosen for this example. \(k_s\) = 1 m/s. The sliders start at the lecture's moment.</p>
+</div>
+</div>

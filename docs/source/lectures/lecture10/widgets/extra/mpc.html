@@ -1,0 +1,13 @@
+<!-- Hand-written docs-only panel (its code: _static/l10w/l10w-extra.js). -->
+<div class="l10w mathjax_ignore tex2jax_ignore" data-w="x-mpc">
+<div class="l10w-title"><span class="l10w-kick">Try it</span>Step through MPC's 729 plans, then keep the cheapest</div>
+<div class="l10w-in">
+<div class="row"><button id="xm-back" aria-label="previous step">&#9664;</button><button id="xm-next" aria-label="next step">&#9654;</button><span id="xm-step" class="small" style="font-weight:600;flex:1 1 0;min-width:0"></span></div>
+<svg id="xm-svg" class="plot" viewBox="0 0 1100 560" style="width:calc(1100 * var(--u));max-width:100%;height:auto;display:block;margin:calc(6 * var(--u)) auto" role="img" aria-label="A top view of the start of the right curve with the lane edges and its dashed center, and the AV drawn faintly 2 meters before the curve. Step by step: the 9 branches of the first steering angle over the first second; a zoom on the branch with angle 1 = 0 rad and its 9 branches at 1 second; the 9 branches at 2 seconds after angle 2 = minus 0.4 rad; all 729 predicted paths; and the cheapest plan in green. A plan you pick with the three sliders is drawn in teal."></svg>
+<div class="mathout" id="xm-read"></div>
+<div class="row"><span class="lbl">pick a plan: angle 1 (rad)</span><input type="range" id="xm-a1" min="-0.6" max="0.2" step="0.1" value="0" style="width:calc(300 * var(--u))" aria-label="angle 1 of the plan you pick, radians"></div>
+<div class="row"><span class="lbl">angle 2 (rad)</span><input type="range" id="xm-a2" min="-0.6" max="0.2" step="0.1" value="-0.3" style="width:calc(300 * var(--u))" aria-label="angle 2 of the plan you pick, radians"></div>
+<div class="row"><span class="lbl">angle 3 (rad)</span><input type="range" id="xm-a3" min="-0.6" max="0.2" step="0.1" value="0" style="width:calc(300 * var(--u))" aria-label="angle 3 of the plan you pick, radians"></div>
+<div class="mathout" id="xm-pick"></div>
+</div>
+</div>

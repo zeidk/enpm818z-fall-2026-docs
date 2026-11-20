@@ -380,6 +380,9 @@ themeFigs(); new MutationObserver(themeFigs).observe(document.documentElement, {
 document.querySelectorAll(".l10w").forEach(function(w){{ mathIn(w); }});
 {widgets}
 {live}
+/* the helpers, for the hand-written docs-only panels (_static/l10w/l10w-extra.js), which load after this file */
+window.L10W = {{el:el, txt:txt, tag:tag, tagR:tagR, halo:halo, poly:poly, frame:frame, f:f, nt:nt, tex:tex, mathIn:mathIn,
+  carIcon:carIcon, q:q, speedProfile:speedProfile, svgScale:svgScale, C:C, NS:NS, reduce:reduce, DATA:DATA}};
 """
     # the slider's value label: the deck's thumb is 78 px, here it scales with the column, so measure it, and move the
     # label and the ticks again when the column changes width
