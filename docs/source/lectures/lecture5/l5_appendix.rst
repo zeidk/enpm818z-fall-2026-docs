@@ -128,6 +128,7 @@ The pixel is chosen for this example; the camera (:math:`1280 \times 720`,
 :math:`90^\circ` field of view) and the 0.2 m grid are the capture script's.
 
 .. figure:: /_static/images/L5/seg_lift_steps.png
+   :class: dark-light themed-L5
    :alt: Left: the semantic image, 1280 by 720, with a dashed center line at column 640 and a purple road pixel at column 940, 300 pixels right of the center, a little below the middle row. Right: the same pixel seen from above. The camera is a black dot at the bottom; a dashed line runs straight ahead, and two dotted lines at 45 degrees on either side mark the edge of the camera's view. An arrow from the camera ends at the purple pixel, 20 m ahead and 9.375 m right. Grid lines every 2 m.
    :width: 55%
    :align: center
@@ -183,6 +184,7 @@ this example):
 **Lift:** put :math:`\alpha_d\,\mathbf{c}` at depth :math:`d`.
 
 .. figure:: /_static/images/L5/lift_pixel.png
+   :class: dark-light themed-L5
    :alt: A camera and its image at the left, with one green pixel whose feature is c = (2.0, 1.0). Its ray runs to the right, with points at depths 5, 10, 15 and 20 m. Above each point a bar shows the depth probability, set by training: 0.1, 0.6, 0.2 and 0.1, the 0.6 bar much the tallest; the probabilities add to 1.0. Below each point, the lifted feature alpha_d times c: (0.2, 0.1), (1.2, 0.6), (0.4, 0.2) and (0.2, 0.1).
    :width: 100%
    :align: center
@@ -220,6 +222,7 @@ frame:
 3. The cell holds :math:`(1.2 + 0.3,\ 0.6 + 0.3) =` **(1.5, 0.9)**.
 
 .. figure:: /_static/images/L5/splat_cell.png
+   :class: dark-light themed-L5
    :alt: A top view on a 1 m grid, x to the right and y, left, up. The AV faces right in the upper left, with a front camera (green) and a right camera (violet). One ray from each camera runs down and to the right, and the two rays cross in one highlighted green cell. Faint green points on the front camera's ray carry (0.2, 0.1), (0.4, 0.2) and (0.2, 0.1) in other cells. A zoom on the cell shows one green and one violet point, and the sum: the cell adds them, (1.2 + 0.3, 0.6 + 0.3) = (1.5, 0.9).
    :width: 55%
    :align: center
@@ -254,6 +257,7 @@ for what it needs instead? **BEVFormer** (Li et al., 2022) does it: each cell
 **pulls** features.
 
 .. figure:: /_static/images/L5/bevformer.png
+   :class: dark-light themed-L5
    :alt: A top-down grid of BEV queries around the AV, one query per cell. One highlighted query sends arrows to the image features of the two cameras that see its patch of ground: spatial cross-attention. A dashed arrow goes to the BEV grid of the previous frame: temporal self-attention.
    :width: 72%
    :align: center
@@ -290,6 +294,7 @@ where the cell is, each camera's calibration from L2, and offsets and weights
 that training set. With those it runs four steps, every frame.
 
 .. figure:: /_static/images/L5/sca_pillar.png
+   :class: dark-light themed-L5
    :alt: Left, a side view, x forward to 15 m and z from -5 to 3 m, at the same scale on both axes. The AV, drawn from the side, with its front camera on the roof, stands on the road at the left. One BEV cell lies on the road 15 m ahead; a dashed pillar over it holds 4 points, from 5 m below to 3 m above the road, and a ray runs from each point to the camera. The region under the road is shaded, below the road. Right, the front camera's image with a dashed horizon: the 4 points land in one column, the top one above the horizon; small circles around one point mark the 4 offsets, set by training, read around each point.
    :width: 90%
    :align: center
@@ -339,6 +344,7 @@ frames; cells are 0.512 m.
    its own cell**.
 
 .. figure:: /_static/images/L5/temporal_shift.png
+   :class: dark-light themed-L5
    :alt: Two strips of BEV cells, rows i running to the right. Top, last frame: the AV at the left and a gray parked car whose center cell, row 133, is outlined in green. Bottom, this frame, 5.12 m later: the same parked car, now at row 123. A green arrow from the top car to the bottom car reads shift: 10 cells, 5.12 m. Tick labels under the bottom strip: 100, 123 and 133.
    :width: 48%
    :align: center
@@ -370,6 +376,7 @@ The Match Distance Is the NIS of L3
 The miss and the uncertainty of the lecture, in L3's terms:
 
 .. figure:: /_static/images/L5/nis_terms.png
+   :class: dark-light themed-L5
    :alt: A sketch of one track seen from above. A cross, the predicted position, sits in a shaded circle, labeled shaded, S: how far off the track expects a box (1 sigma). A green arrow, nu, runs from the cross to a black dot, labeled box: this frame's detection, and nu, the miss: from predicted position to box; its length is d. A dashed circle around both, about three times the radius of the shaded circle, is labeled gate: where epsilon < 9.21; a box outside cannot match.
    :width: 60%
    :align: center
@@ -416,6 +423,7 @@ chosen for this example):
    9.1 m for the new track.
 
 .. figure:: /_static/images/L5/mahalanobis.png
+   :class: dark-light themed-L5
    :alt: Two panels. Left, Track 1: car B, followed for many frames. A blue cross in a tiny shaded circle, sigma = 0.1 m, inside a dashed gate circle of 0.30 m; a detection 2 m away is far outside, with epsilon = 2 squared over 0.1 squared = 400: far outside the gate; a 1 m scale bar. A legend: cross, predicted position; shaded, 1 sigma; dashed, the gate, epsilon below 9.21, radius root 9.21 sigma = 3.03 sigma; each panel has its own scale. Right, Track 2: new. A gray cross in a shaded circle of sigma = 3 m, a detection 2 m away inside it, and a dashed gate circle of 9.1 m around both: epsilon = 2 squared over 3 squared = 0.44: well inside the gate; a 5 m scale bar.
    :width: 95%
    :align: center

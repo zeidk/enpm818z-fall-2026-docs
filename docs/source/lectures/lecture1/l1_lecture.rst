@@ -1027,7 +1027,7 @@ The Semester Ahead
    :alt: Block diagram of the ADS pipeline. Sensing (L2, GP1) feeds Perception (L4 and L5, GP2), which feeds Fusion and Localization (L3, L6, GP3), which feeds Prediction (L8), then Planning (L7, L9, GP4), then Control (L10, GP4), then Integration and Safety (L13, final report).
    :align: center
    :width: 100%
-   :class: white-figure
+   :class: white-figure dark-light themed-L1
 
    The ADS pipeline you will build, with the lecture that teaches each stage
    and the project that implements it.

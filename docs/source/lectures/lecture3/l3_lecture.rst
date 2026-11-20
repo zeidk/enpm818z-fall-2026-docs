@@ -1021,6 +1021,7 @@ After the Update, Sigma Is Smaller Than Either Source's
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L3/fusion_1d.png
+   :class: dark-light themed-L3
    :alt: Three bell curves over distance into the tunnel. Green: prediction, 50.0 m, sigma 2.0 m, low and wide. Blue: sign match, 53.0 m, sigma 1.0 m. Orange, filled: combined, 52.4 m, sigma 0.89 m, the tallest and narrowest. A dotted gray line at 51.5 m is the plain average. Below, plus or minus sigma of each as two-headed bars to scale.
    :width: 85%
    :align: center
@@ -1076,6 +1077,7 @@ prediction counted from the last sign, and the sign match uses the same map,
 so **both answers are 2 m too far**. Same error, twice.
 
 .. figure:: /_static/images/L3/shared_error.png
+   :class: dark-light themed-L3
    :alt: Three rows on a scale of 46 to 54 m into the tunnel. Each row has a hollow dot (correct map) and an arrow labeled plus 2 m to a filled dot (map 2 m off). Prediction, green: 48.0 to 50.0. Sign match, blue: 51.0 to 53.0. Combined, orange: 50.4 to 52.4, with a plus or minus 0.89 m bar around 52.4 that does not reach 50.4.
    :width: 60%
    :align: center
@@ -1406,6 +1408,7 @@ The Measurement Model, Seen from Above
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L3/meas_model.png
+   :class: dark-light themed-L3
    :alt: Top view to scale, east 98 to 106 m, north 18 to 22 m, with six numbered tags. A faded AV faces east with its base link on a green dot at (100.995, 20), tag 1. A blue cross at (102.4, 19.1), tag 2. An arrow between them, tag 3. Arrows of 1 m each way and a dashed 1 m circle, tag 4. A dashed velocity arrow ahead of the AV, tag 5. A dashed 2 m circle, tag 6. Sixty faint blue dots scatter around the green dot.
    :width: 60%
    :align: center
@@ -1632,6 +1635,7 @@ m, so :math:`P^- = 1.35^2 = 1.84` m². The sign match reads 111.15 m with
 the estimate moves **65 percent of the surprise**, 0.48 of 0.74 m.
 
 .. figure:: /_static/images/L3/gain_one.png
+   :class: dark-light themed-L3
    :alt: Three bell curves along the tunnel, 106 to 115 m. Green: prediction, 110.41 m, sigma 1.35 m. Blue: sign match, 111.15 m, sigma 1 m. Orange: new estimate, 110.89 m, sigma 0.80 m, the tallest. Below, a black arrow from the prediction to the sign match, surprise 0.74 m, and a shorter orange arrow to the new estimate, moved 0.48 m: K equals 0.65 of it.
    :width: 75%
    :align: center
@@ -1876,6 +1880,7 @@ cycles, in a simplified tunnel (position only, predict at 10 Hz, a sign match
 every 2.5 s). The hands-on numbers differ a little, but the shape is the same.
 
 .. figure:: /_static/images/L3/kf_sawtooth.png
+   :class: dark-light themed-L3
    :alt: Sigma on position, 0 to 3.6 m, against time, 0 to 12.5 s. Tag 1: a solid sawtooth climbing from 1.000 to 1.756 m over 2.5 s. Tag 2: the drop at 2.5 s to 0.869 m. Tag 3: later teeth settling between about 0.9 and 2.0 m. Tag 4: a dashed curve that keeps rising and leaves the chart at about 5.4 s. Tag 5: a dotted horizontal line at 1 m.
    :width: 75%
    :align: center
@@ -2984,6 +2989,7 @@ A tangent is only right **near where it touches**. The EKF draws it at its
 **own estimate**, so a wrong estimate puts it in the wrong place.
 
 .. figure:: /_static/images/L3/ekf_story_4_loop.png
+   :class: dark-light themed-L3
    :alt: Loop diagram. A gray box, the estimate is a little off, points into an orange loop of four boxes: the tangent is drawn in the wrong place; the correction is the wrong size; if it is far enough off, the next estimate is worse; the next tangent is drawn at that estimate; and back. In the middle: each turn starts from a worse place. A shaded box: meanwhile P shrinks at every update, right or wrong. Confident and wrong: divergence.
    :width: 80%
    :align: center

@@ -187,6 +187,7 @@ ICP Step 2: Centroids
 ~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/icp_step2_centroids.png
+   :class: dark-light themed-L6
    :alt: Three pairs joined by dotted lines: orange dots p1 at 1, 0, p2 at 0, 2 and p3 at minus 1, minus 2; green circles q1 at 2, 2, q2 at 0, 1 and q3 at 4, 0. An orange cross at 0, 0 with tag 1 and a green cross at 2, 1 with tag 2.
    :width: 60%
    :align: center
@@ -215,6 +216,7 @@ ICP Step 2: Center
 ~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/icp_step2_center.png
+   :class: dark-light themed-L6
    :alt: The three pairs after centering, joined by dotted lines: p1 prime at 1, 0, p2 prime at 0, 2 and p3 prime at minus 1, minus 2; q1 prime at 0, 1, q2 prime at minus 2, 0 and q3 prime at 2, minus 1. Both centroid crosses at 0, 0, tag 3.
    :width: 60%
    :align: center
@@ -250,6 +252,7 @@ ICP Step 2: Compare
    2 is :math:`y`).
 
 .. figure:: /_static/images/L6/icp_step2_compare.png
+   :class: dark-light themed-L6
    :alt: The centered points as arrows from the origin: orange p1 prime to 1, 0, p2 prime to 0, 2, p3 prime to minus 1, minus 2; green q1 prime to 0, 1, q2 prime to minus 2, 0, q3 prime to 2, minus 1.
    :width: 50%
    :align: center
@@ -281,6 +284,7 @@ ICP Step 2: Angle
 ~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/icp_step2_angle.png
+   :class: dark-light themed-L6
    :alt: The same arrows as the last figure, with a dashed quarter-circle arc from each orange p prime arrow counterclockwise to its green q prime arrow, one arc labeled 90 degrees.
    :width: 50%
    :align: center
@@ -313,6 +317,7 @@ ICP Step 2: Turn
 ~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/icp_step2_turn.png
+   :class: dark-light themed-L6
    :alt: Faint orange circles at the centered scan points 1, 0, 0, 2 and minus 1, minus 2, each with a curved grey arrow to an orange dot inside a green circle: R p1 prime equals q1 prime at 0, 1; R p2 prime equals q2 prime at minus 2, 0; R p3 prime equals q3 prime at 2, minus 1.
    :width: 55%
    :align: center
@@ -340,6 +345,7 @@ ICP Step 2: Shift
 ~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/icp_worked_after.png
+   :class: dark-light themed-L6
    :alt: Titled After: R P plus t lands on Q. The three moved scan points, R p plus t, drawn as orange dots, each sitting inside its green map circle q1 at 2, 2, q2 at 0, 1 and q3 at 4, 0.
    :width: 55%
    :align: center
@@ -379,6 +385,7 @@ In 3-D, steps 4 and 5 become one: the SVD of :math:`H`.
    singular values: it stretches along the axes.
 
 .. figure:: /_static/images/L6/svd_intuition.png
+   :class: dark-light themed-L6
    :alt: Four panels with a light grey curve and two arrows from the origin, one black and one grey. Panel 1, axes from minus 1 to 1: a circle; the black arrow points right and slightly down, the grey arrow down and slightly left. Panel 2: the same circle; the black arrow lies along the x axis, the grey arrow along the y axis. Panel 3, axes from minus 8 to 8: a flat ellipse along x; the black arrow about 8.6 long along x, the grey arrow about 1.4 long along y. Panel 4: the same ellipse tilted steeply; the black arrow points down and slightly left, about 8.6 long; the grey arrow short.
    :width: 100%
    :align: center
@@ -505,6 +512,7 @@ is a straight wall (a building front), with one map point every 1 m
 (chosen).
 
 .. figure:: /_static/images/L6/icp_p2p_p2l.png
+   :class: dark-light themed-L6
    :alt: Two panels, titled point to point and point to line, each with a green dashed horizontal line, the wall, green squares on it every 1 m from 0 to 6, and three rust dots above it at x 1.45, 3.3 and 4.55. Left: black lines from each rust dot to its nearest green square, labeled 0.75, 0.54 and 0.83. Right: black vertical lines from each rust dot down to the dashed line, labeled 0.60, 0.45 and 0.70, and small green arrows pointing up from the squares at x 1, 3 and 5.
    :width: 95%
    :align: center
@@ -527,6 +535,7 @@ Point to Point or Point to Line: the Start Decides
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/score_start_sweep.png
+   :class: dark-light themed-L6
    :alt: A line plot. Across: how far the start is off, 0 to 5 m, the heading off 6.4 degrees per m. Up: the error where ICP ends, 0 to 7 m. Point to point, a solid black line with circles: about 0.4 m from 0.6 to 4.7 m, then 1.24 m at 5 m. Point to line, a dashed grey line with squares: 0 up to 1.56 m, then about 6.5 m from 1.88 to 4.06 m, then about 1 m.
    :width: 75%
    :align: center
@@ -555,6 +564,7 @@ GICP: When Both Point Sets Are Only Samples
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/gicp_two_scans.png
+   :class: dark-light themed-L6
    :alt: A corner of two walls, along x and along y. Green squares, the map points, every 1 m, each with a flat green ellipse along its wall. Rust dots, the scan points, sampled halfway between the map points and drawn at a guess 0.4 m off in x and y, each with a flat rust ellipse along its wall. Thin black lines join each scan point to its nearest map point.
    :width: 50%
    :align: center
@@ -590,6 +600,7 @@ NDT: How It Scores a Pose
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/ndt_cells.png
+   :class: dark-light themed-L6
    :alt: The 20 by 10 meter box with its pillar, drawn as grey dots with a little noise, under a grid of 2.5 meter cells. In every cell with points, a green ellipse: long and thin along each wall, rounder in the corner cells and in the pillar's cell.
    :width: 80%
    :align: center
@@ -618,6 +629,7 @@ NDT on Our Map: Cells Instead of Points
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/ndt_our_map.png
+   :class: dark-light themed-L6
    :alt: A 30 by 20 meter crop of our CARLA map, grey map points under a grid of 2.5 meter cells. Each cell with 5 or more points has a green outlined ellipse: thin lines along the straight walls, small ellipses on poles and short walls, and round ellipses over the dense curved bands at the right.
    :width: 70%
    :align: center
@@ -686,6 +698,7 @@ The Likelihood Field, Drawn Around a Corner
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/likelihood_field.png
+   :class: dark-light themed-L6
    :alt: A heat map over a corner of two walls, one along x from 0 to 8 meters and one along y from 0 to 5 meters, drawn as dots. The color is darkest green on the walls and fades to pale green about 2 to 3 meters away. A color bar is labeled how likely a scan point is here.
    :width: 75%
    :align: center
@@ -731,6 +744,7 @@ The Filter's NIS Over the Drive
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/integrity_nis.png
+   :class: dark-light themed-L6
    :alt: NIS on a log scale against time, 0 to 125 seconds, blue dots for GNSS fixes and green dots for map poses. Almost all dots lie between 0.1 and 10. Two dashed lines: green at 11.34 for the map pose, blue at 9.21 for GNSS. One blue dot near 105 seconds lies above 9.21; no green dot lies above 11.34 (the one rejected pose is not plotted).
    :width: 90%
    :align: center

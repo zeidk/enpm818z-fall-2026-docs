@@ -5,10 +5,23 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.36.3: L7 Figures in Light and Dark (2026-11-20)
+.. dropdown:: v2.36.4: L1, L3, L4, L5 and L6 Figures in Light and Dark (2026-11-20)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L6, L5, L4, L3 and L1:** the generated figures have a light and a
+     dark version and follow the site's theme: L6 63, L5 48, L4 41, L3 6,
+     L1 1. Photos and camera images inside a figure keep their colors.
+   - **Kept on a white background:** figures drawn by hand, photos and
+     screenshots, and six L4 figures whose cell colors are the data (gray
+     levels, color channels, a feature map).
+
+.. dropdown:: v2.36.3: L7 Figures in Light and Dark (2026-11-20)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

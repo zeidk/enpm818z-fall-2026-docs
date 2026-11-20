@@ -156,6 +156,7 @@ Every CNN is built on one operation, the convolution.
    number.
 
 .. figure:: /_static/images/L4/conv_grid.png
+   :class: dark-light themed-L4
    :alt: A 5 by 5 input grid labeled input 5 x 5, with its top-left 3 by 3 window shaded green and outlined. An arrow leads to a 3 by 3 grid labeled output 3 x 3, whose top-left cell is shaded green.
    :width: 55%
    :align: center
@@ -257,6 +258,7 @@ between them: the activation.
    weighted sum.
 
 .. figure:: /_static/images/L4/activations.png
+   :class: dark-light themed-L4
    :alt: Two curves of output against input, for inputs from -5 to 5. ReLU, max(0, x), solid blue: zero for every negative input, then a straight line equal to the input. SiLU, x / (1 + e^(-x)), dashed orange: close to ReLU, but smooth near zero and slightly below zero for negative inputs, lowest near -1.3.
    :width: 60%
    :align: center
@@ -634,6 +636,7 @@ probabilities that are positive and add to 1. The distance is their weighted
 average.
 
 .. figure:: /_static/images/L4/dfl_bins.png
+   :class: dark-light themed-L4
    :alt: A bar chart of probability against the top-side distance, in strides of 32 pixels, for distances 0 to 15. Almost all the probability is in one bar at 6, about 0.92, with a small bar at 7 and a smaller one at 5. A dashed orange line at 6.058 is labeled weighted average 6.058.
    :width: 55%
    :align: center
@@ -804,6 +807,7 @@ There is no single AV detector. The approach follows the sensor, and an AV
 usually runs several at once.
 
 .. figure:: /_static/images/L4/approaches.png
+   :class: dark-light themed-L4
    :alt: The AV seen from above, front up, in the middle, inside a dashed orange circle labeled LiDAR. A blue cone ahead of it is the front camera; five gray-blue cones around it are labeled cameras around the AV. Left, under the heading 2D boxes, in pixels, from one camera, two blue cards fed by the front camera: One-stage CNN, YOLOv8, YOLO26, one pass, a box from every grid cell, then a clean-up; and Set prediction, RT-DETR, RF-DETR, one box per object, no clean-up; both tagged today. Right, under the heading 3D boxes, in meters: an orange card fed by the LiDAR, LiDAR seen from above, PointPillars, CenterPoint; a blue card fed by the cameras, Cameras around the AV, bird's-eye view, BEVFormer; and a double-edged card fed by both, Camera plus LiDAR fusion; each tagged L5. Below a dashed line separating on the AV from not on the AV, offline: a gray card, Any camera, open vocabulary, Grounding DINO, SAM 3, boxes and masks for a typed phrase, used to label data and find rare objects, tagged reading.
    :width: 95%
    :align: center
@@ -960,6 +964,7 @@ for this example so we can draw them: the first says how royal, the second
 how male.
 
 .. figure:: /_static/images/L4/word2vec_toy.png
+   :class: dark-light themed-L4
    :alt: A plot, not a picture of space. The horizontal axis is the first number, how royal, from 0 to 1; the vertical axis is the second number, how male. Man at (0.1, 0.8) and King at (0.9, 0.8) are blue points, joined by an orange arrow labeled King minus Man equals (0.8, 0). Woman at (0.1, 0.1) and Queen at (0.9, 0.1) are green points, joined by the same orange arrow, labeled plus the same arrow.
    :width: 55%
    :align: center
@@ -1002,6 +1007,7 @@ image one layer can read. One CNN layer reads only the cells **close by**.
 One transformer layer reads the **whole picture**.
 
 .. figure:: /_static/images/L4/local_global.png
+   :class: dark-light themed-L4
    :alt: Our bus image twice, each with the stride-32 grid of 15 by 20 cells and the man's cell, on his leg, as an orange square. Left, titled Convolution, a 3 x 3 window: the 3 by 3 block of cells around his cell is shaded blue, with short white arrows from the 8 neighbors toward it. Right, titled Attention, all 300 cells: thin orange lines run from every cell of the grid into his cell.
    :width: 90%
    :align: center

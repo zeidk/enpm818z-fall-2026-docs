@@ -248,6 +248,7 @@ Classification
 ~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L4/task_classification.png
+   :class: dark-light themed-L4
    :alt: Our image with one label in a dark box at the top: label, police van. No boxes on the bus or on the people.
    :width: 45%
    :align: center
@@ -298,6 +299,7 @@ Localization
 ~~~~~~~~~~~~
 
 .. figure:: /_static/images/L4/task_localization.png
+   :class: dark-light themed-L4
    :alt: Our image with one blue box around the bus and no class label. Yellow dots mark its corners: top-left (x0, y0) = (15.0, 228.5) and bottom-right (x1, y1) = (808.2, 748.1). White arrows at the top-left corner of the image show the axes: x to the right, y down.
    :width: 45%
    :align: center
@@ -342,6 +344,7 @@ A detector needs seven ingredients, in two groups: those used once, offline,
 to train the network, and those used on the AV, on every camera frame.
 
 .. figure:: /_static/images/L4/ingredients.png
+   :class: dark-light themed-L4
    :alt: Two gray lanes. Top lane, Training, once, offline: 1 Labeled images, every object boxed and named; 2 Network, backbone, neck and head; 3 Assignment rule, which prediction answers for which object; 4 Loss, how wrong the classes and boxes are. An arrow from Loss back to Network reads adjust the weights, repeat. A dashed arrow labeled trained weights goes down to the bottom lane, Inference, every frame, on the AV: camera image, then 2 Network with its trained weights, then 5 Clean-up, NMS or none, then detections: class, confidence and box. A bracket under this path reads 7 Time budget: 1 / 20 Hz = 50 ms per frame, for this whole path. Below the lanes, a dashed arrow from the detections leads to 6 Grade: IoU, precision, recall, mAP, against labeled images the network never trained on.
    :width: 90%
    :align: center
@@ -501,6 +504,7 @@ How the Lecture Fits Together
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L4/lecture_roadmap.png
+   :class: dark-light themed-L4
    :alt: The lecture's sections as boxes joined by arrows. Features branches into One-stage on top and Transformers below, which join at On the road. Grading sits between the two branches, with dashed arrows up to One-stage and down to Transformers. After On the road, two dashed gray boxes, 3D and Segmentation, are marked next lecture.
    :width: 75%
    :align: center
@@ -636,6 +640,7 @@ changes sharply: a white letter on the blue bus, a light-colored jacket
 against the street. It is not the border of the picture.
 
 .. figure:: /_static/images/L4/five_steps.png
+   :class: dark-light themed-L4
    :alt: A flowchart of five steps. Inside a dashed frame labeled a test, by hand: we pick two windows: 1 Pick two 3 by 3 windows by eye, one edge, one flat; 2 Multiply each window by a filter we choose; 3 Add the products: one number, the response; 4 Compare the edge's response with the flat one's. An arrow leads to a green frame labeled every window: nobody picks, holding 5 Slide the filter over the whole image: a response everywhere.
    :width: 100%
    :align: center
@@ -766,6 +771,7 @@ Step 3: Add the Products, the Response at the Edge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L4/letter_edge.png
+   :class: dark-light themed-L4
    :alt: A pixel-level close-up of the letters e, m and i of emisiones, white on the blue side of the bus. A small yellow square, labeled 3 x 3 window with an arrow, sits at the top of the first stroke of the m: the dark blue gap between the e and the m on its left, the m's white stroke on its right.
    :width: 60%
    :align: center
@@ -853,6 +859,7 @@ compute again, and so on, row after row.
 - Sliding a filter over an image like this has a name: a **convolution**.
 
 .. figure:: /_static/images/L4/edge_filter.png
+   :class: dark-light themed-L4
    :alt: Two panels. Left, our image. Right, the size of the same filter's response at every pixel, drawn dark where the response is large: the outlines of the bus, the letters, the windows, the balconies and the people appear as dark lines on white. The long top edge of the bus roof is faint.
    :width: 85%
    :align: center
@@ -968,6 +975,7 @@ Feature Map: One Grid of Features, for One Pattern
    as an image, bright means a large number.
 
 .. figure:: /_static/images/L4/term_map.png
+   :class: dark-light themed-L4
    :alt: One feature map from YOLOv8s's first layer on our image, outlined in orange: mostly dark purple, with bright thin vertical lines along the side of the bus, the people's legs and coats, the building's windows and the strokes of the letters.
    :width: 45%
    :align: center
@@ -1025,6 +1033,7 @@ Layer: One Step of the Network's Computation
 A network does what we did in Step 5, many times at once.
 
 .. figure:: /_static/images/L4/term_layer.png
+   :class: dark-light themed-L4
    :alt: Our image, labeled image in, an arrow into a green box labeled layer 1, and an arrow out to a stack of 32 dark feature maps, the front one outlined in orange, labeled 32 maps out.
    :width: 90%
    :align: center
@@ -1071,6 +1080,7 @@ A layer looks for many patterns at once, and each pattern gets its own map.
    one per filter: YOLOv8s's first layer outputs 32.
 
 .. figure:: /_static/images/L4/term_channels.png
+   :class: dark-light themed-L4
    :alt: Eight of the 32 maps from YOLOv8s's first layer on our image, labeled channel 0, 1, 2, 5, 9, 12, 17 and 26. Channels 1 and 9 are bright on the blue side of the bus; channel 5 is bright on the light, warm areas such as the building and the man's jacket; channel 2, outlined in orange, shows thin vertical edges; channel 26 shows horizontal edges such as the bus roof; channels 0, 12 and 17 show fine texture.
    :width: 90%
    :align: center
@@ -1104,6 +1114,7 @@ of the layer before it, so it can respond to larger patterns. Here is YOLOv8s
 at three depths, on our image, measured.
 
 .. figure:: /_static/images/L4/layer_features.png
+   :class: dark-light themed-L4
    :alt: Four panels from YOLOv8s. First, its 32 first-layer filters, each 3 by 3 pixels in color, many showing a light-to-dark step or a single color. Then three feature maps, each one channel drawn bright where it responds strongly. Stride 2, 240 by 320 cells, 32 channels, 1 shown: a faint copy of the image with thin bright outlines. Stride 8, 60 by 80 cells, 128 channels, 1 shown: patchy bright texture over the bus and the building. Stride 32, 15 by 20 cells, 512 channels, 1 shown: a few coarse bright blocks where the people stand, dark elsewhere.
    :width: 100%
    :align: center
@@ -1135,6 +1146,7 @@ many learned filters. A network built from layers of convolutions is a
 **CNN**, a convolutional neural network.
 
 .. figure:: /_static/images/L4/cnn_stack.png
+   :class: dark-light themed-L4
    :alt: YOLOv8s's backbone drawn as 3D blocks after the image, which lies on a slanted plane: input 480 by 640, 3 colors; stride 2, 240 by 320, 32 channels; stride 4, 120 by 160, 64 channels; then, darker and in bold, stride 8, 60 by 80, 128 channels; stride 16, 30 by 40, 256 channels; stride 32, 15 by 20, 512 channels. Each block is shorter and thicker than the one before. A note says drawn to show the trend, not to scale.
    :width: 90%
    :align: center
@@ -1174,6 +1186,7 @@ Almost every detector has the same three parts, and the CNN above is the
 first of them.
 
 .. figure:: /_static/images/L4/backbone_neck_head_callouts.png
+   :class: dark-light themed-L4
    :alt: Four boxes joined by arrows: image, backbone (features), neck (mix the scales), head (classes, boxes), shaded darker green from left to right. A dotted line drops from each box to a note. Input: the image scaled to 480 by 640 pixels, 3 numbers each. Backbone: a CNN; three feature maps out, strides 8, 16, 32; 128, 256, 512 channels. Neck: mixes the three maps; the coarse one knows bus, the fine one where its edges are. Head: a few convolutions at every cell; 144 numbers, decoded to 84: a box, 80 scores.
    :width: 90%
    :align: center
@@ -1289,6 +1302,7 @@ A detector's box is never exactly the true box, so we need one number that
 says how well two boxes agree.
 
 .. figure:: /_static/images/L4/iou_example.png
+   :class: dark-light themed-L4
    :alt: A grid in pixels, x to the right and y down, with two boxes. The ground truth, solid black, runs from 2 to 8 across and 2 to 10 down. The detection, dashed orange, runs from 3 to 9 across and 3 to 11 down. Their overlap, shaded green, runs from 3 to 8 across and 3 to 10 down, and is labeled overlap 35.
    :width: 50%
    :align: center
@@ -1461,6 +1475,7 @@ precision drops to two out of three. The fourth finds the last person:
 recall reaches three out of three. The fifth is wrong again.
 
 .. figure:: /_static/images/L4/pr_example.png
+   :class: dark-light themed-L4
    :alt: A plot of precision, the share of boxes that are right, against recall, the share of real people found, both from 0 to 1. Five orange points, one after each detection: (0.33, 1.0), (0.67, 1.0), (0.67, 0.67), (1.0, 0.75) and (1.0, 0.6). A blue step line runs at 1.0 up to recall 0.67, drops to 0.75 up to recall 1.0, then down to 0.6. The area under it is shaded and labeled area = AP = 0.917.
    :width: 60%
    :align: center
@@ -1577,6 +1592,7 @@ original image is 810 pixels wide, so one cell is :math:`810/15 = 54` image
 pixels on a side.
 
 .. figure:: /_static/images/L4/grid_cells.png
+   :class: dark-light themed-L4
    :alt: Two panels. Left, titled the stride-32 grid: our image with a white grid over it, 15 cells across and 20 down; one cell on the man in the light-colored jacket, near his waist, is filled orange, an orange box surrounds him, and a dashed white frame marks the zoomed area. Right, titled zoom: one cell's box: the orange cell with a white dot at its center, and four white arrows from the dot to the four edges of the orange box, labeled 275.7 up, 85.0 to the left, 111.4 to the right and 227.4 down.
    :width: 70%
    :align: center
@@ -1615,6 +1631,7 @@ No. The network runs once on the image, and that one run gives **every** cell
 its 80 scores and its 4 distances at the same time. Measured, YOLOv8s:
 
 .. figure:: /_static/images/L4/cell_reach.png
+   :class: dark-light themed-L4
    :alt: Two panels of our image. Left, titled person score per cell: the stride-32 grid of 15 by 20 cells, with cells tinted orange where their person score is high; only cells on people are tinted, around the man in the light jacket, the man beside him and the person cut off at the right edge. Two neighboring cells on the man are outlined in dark blue and labeled 0.86 and 0.887. Right, titled what cell (3, 13) reads: the image faded to gray except where pixels change that cell's person score; the man, the bus behind him and the second man stay visible, while the street and the building are faded. A small dark square marks the cell, on the man's leg, and an orange box surrounds the man.
    :width: 75%
    :align: center
@@ -1652,6 +1669,7 @@ The grid tells us where each prediction is made. Now: what can one cell see
 when it makes it?
 
 .. figure:: /_static/images/L4/local_conv.png
+   :class: dark-light themed-L4
    :alt: Our image with the stride-32 grid of 15 by 20 cells, titled Convolution: a 3 x 3 window. The man's cell, on his leg, is orange; the 3 by 3 block of cells around it is shaded blue, with short white lines from the 8 neighboring cells into his cell.
    :width: 45%
    :align: center
@@ -1692,6 +1710,7 @@ Before Clean-up: Each Person Found about Ten Times
 clean-up, and you find each person about ten times.
 
 .. figure:: /_static/images/L4/nms_before_after.png
+   :class: dark-light themed-L4
    :alt: Two copies of our image. Left, titled Before NMS: 49 boxes, drawn so closely on top of each other that each object looks like it has one thick box; labels count them: 10 boxes on the bus, 11 on the person cut off at the left edge, 9 on the man in the light jacket, 9 on the man in the black coat, and 10 on the person at the right edge. Right, titled After NMS: 5 boxes, one per object: bus 0.92, and person 0.61, 0.89, 0.88 and 0.89.
    :width: 90%
    :align: center
@@ -1846,6 +1865,7 @@ The transformer was built for translation, in 2017 (Vaswani et al.). The
 **encoder** reads the input; the **decoder** writes the output.
 
 .. figure:: /_static/images/L4/transformer_encdec.png
+   :class: dark-light themed-L4
    :alt: Two stacks of boxes side by side, data flowing up. Left, the encoder: tokens in, Embedding, a plus with position, then a dashed frame repeated N times holding Multi-head self-attention and MLP. Right, the decoder: decoder input, the text so far (DETR: object queries), Embedding, a plus with position, then a dashed frame repeated N times holding Multi-head self-attention, masked for text only, Multi-head cross-attention and MLP, then Linear and predictions. A green arrow labeled encoder output runs from the top of the encoder into the decoder's cross-attention. A line below: Not drawn: each block has a Norm before it, and its input is added back after it.
    :width: 70%
    :align: center
@@ -2062,6 +2082,7 @@ ViT-Based Architecture
 ^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L4/vit_arch_flow.png
+   :class: dark-light themed-L4
    :alt: The Vision Transformer, ViT-Base, step by step, in nine panels. Top row, joined by arrows: Input image, our image at 224 by 224 by 3; 1 Patches, the image with a 14 by 14 grid, 196 patches, 16 by 16; 2 Embedding, four sample patches, each with an arrow to a short blue bar, times E, 196 by D; 3 Class token, an orange bar labeled CLS put in front of the blue bars, in front, 197 by D; 4 Position, each bar plus a gray bar, plus learned, 197 by D. An arrow leads to the bottom row: 6 Encoder layer, repeated 12 times: Norm, 5 Multi-head attention, plus, Norm, MLP, plus, with two arrows carrying each block's input to its plus sign, 197 by D in, 197 by D out; 7 Class token, the orange CLS bar kept, 1 by D; 7 Head, Linear, 768 to 1000, 1000 scores; Prediction: minibus 0.451, trolleybus 0.282, police van 0.013, passenger car 0.008, answer minibus.
    :width: 100%
    :align: center
@@ -2108,6 +2129,7 @@ A transformer works on a list of pieces, so an image has to be cut up first.
    values are the input for that square.
 
 .. figure:: /_static/images/L4/vit_patches.png
+   :class: dark-light themed-L4
    :alt: Our image squeezed to 224 by 224 pixels, with a white grid cutting it into 14 by 14 squares of 16 by 16 pixels. One square on the man's jacket, row 7, column 3 counting from 0, is outlined in orange.
    :width: 50%
    :align: center
@@ -2132,6 +2154,7 @@ instead: each cell already describes its square well. RT-DETR does that.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L4/patch_count.png
+   :class: dark-light themed-L4
    :alt: Our image squeezed to 224 by 224 pixels, with arrows marking 224 pixels across the top and 224 pixels down the side. A white grid cuts it into squares, numbered 1 to 14 along the top and 1 to 14 down the side. The top-left square is outlined in blue and labeled one patch: 16 x 16 pixels.
    :width: 55%
    :align: center
@@ -2182,6 +2205,7 @@ to match, which the paper does when it fine-tunes at 384.
 The first step only rearranges numbers.
 
 .. figure:: /_static/images/L4/vit_flatten.png
+   :class: dark-light themed-L4
    :alt: Three panels from our image, all real pixel values. Cut into patches: the image squeezed to 224 by 224 with a 14 by 14 grid, one patch on the man's jacket outlined in orange; 224 x 224 x 3, 14 x 14 = 196 patches. One patch: that patch enlarged, 16 x 16 x 3, light jacket on the left and blue bus on the right, and below it the same patch read row by row into a strip of 768 numbers, drawn in gray. All 196 patches, stacked: a gray matrix of 196 rows and 768 columns of pixel values, one row per patch, our patch's row outlined in orange.
    :width: 100%
    :align: center
@@ -2208,6 +2232,7 @@ spelling.
 **set by training**, like every other weight. This is where learning starts.
 
 .. figure:: /_static/images/L4/vit_embed.png
+   :class: dark-light themed-L4
    :alt: A matrix product. Left: the real 196 by 768 matrix of pixel values, drawn in gray, with our patch's row in orange, labeled orange: our patch, 768 numbers. Times E, 768 by D, learned, drawn as a tan rectangle with one column in blue, labeled column j: 768 weights. Equals the tokens, 196 by D, drawn green, with one cell in orange labeled feature j of our patch, equal to the orange row times the blue column, 768 products, added.
    :width: 90%
    :align: center
@@ -2240,6 +2265,7 @@ gives each patch one. The appendix shows word2vec's vectors
 Here is what the vectors of our own image look like.
 
 .. figure:: /_static/images/L4/vit_patch_map.png
+   :class: dark-light themed-L4
    :alt: Two plots, not pictures of space, with axes labeled first summary number and second summary number. Each of our 196 patches is drawn as its own small thumbnail at the two numbers that best summarize its vector, framed by its region from YOLOv8s's boxes: orange for person, blue for bus, gray for other. Left, titled before the encoder: E vectors, 5 nearest neighbors, same region: 49 percent: the frames of all three colors are mixed in one cloud. Right, titled after the 12 encoder layers, 84 percent: gray patches gather at the bottom left, blue bus patches at the bottom right, orange patches of the people toward the top.
    :width: 100%
    :align: center
@@ -2336,6 +2362,7 @@ paper says they resemble plausible basis functions for the fine structure
 within each patch. Measured on torchvision's ViT-B/16:
 
 .. figure:: /_static/images/L4/vit_E_patterns.png
+   :class: dark-light themed-L4
    :alt: Twelve small 16 by 16 color patches, patterns 1 to 12, the main patterns shared by the columns of E. Pattern 1, green above magenta, labeled top against bottom. Patterns 2 and 3, a magenta or blue spot inside a ring of another color, labeled center against surround. Pattern 5, outlined in orange, green on the left and magenta on the right, labeled left against right: like our edge filter. The others show finer stripes, checkers and spots near the center.
    :width: 95%
    :align: center
@@ -2366,6 +2393,7 @@ the rest of the section.
    which is where the name comes from.
 
 .. figure:: /_static/images/L4/vit_token.png
+   :class: dark-light themed-L4
    :alt: Our patch, 16 x 16 x 3, light jacket on the left and blue bus on the right, and an arrow to its token: a strip of 768 thin colored bars, red for positive and blue for negative values, titled its token: 768 numbers, set by E. Below: (0.02, -0.26, 0.10, 0.02, ..., 0.10), and red: positive, blue: negative; -2.93 to 2.32.
    :width: 100%
    :align: center
@@ -2462,6 +2490,7 @@ The weights are not fixed like a filter's: they are computed from the tokens
 themselves, for each image.
 
 .. figure:: /_static/images/L4/global_attn.png
+   :class: dark-light themed-L4
    :alt: Our image with the stride-32 grid of 15 by 20 cells, titled Attention: all 300 cells. The man's cell, on his leg, is orange, and thin orange lines run from every cell of the grid into his cell.
    :width: 45%
    :align: center
@@ -2772,6 +2801,7 @@ while writing "rive", the French reads the English "bank".
 Part 6 is the whole encoder layer, which ViT-Base repeats 12 times.
 
 .. figure:: /_static/images/L4/transformer_layer.png
+   :class: dark-light themed-L4
    :alt: One encoder layer as a row of blocks: tokens in, 197 by D; Norm; Multi-head attention, 12 heads, labeled tokens exchange information; a plus sign; Norm; MLP, 2 layers, 768 to 3072 to 768, labeled each token on its own; a plus sign; tokens out, 197 by D. Two arrows labeled add the input back carry each block's input around it to its plus sign.
    :width: 100%
    :align: center
@@ -2821,6 +2851,7 @@ own pixels and its place, never on the rest of the image.
    tokens.
 
 .. figure:: /_static/images/L4/vit_context.png
+   :class: dark-light themed-L4
    :alt: Left: our image, and a CARLA frame of a city street with cars, both squeezed to 224 by 224, with the same orange-outlined patch from our image pasted at the same place in both. Right: a line chart of how alike the patch's two vectors are, from 1, the same, down to 0, against the layer: 0 before the encoder, then 1 to 12 after each encoder layer. It starts at 1, labeled the same vector: static, stays near 1 after layer 1, and falls steadily to about 0.3 after layer 12, labeled very different after 12 layers: contextual.
    :width: 100%
    :align: center
@@ -2845,6 +2876,7 @@ raised its rates": one static vector, two contextual ones.
 Part 7, the head, and with it the whole Vision Transformer on our image.
 
 .. figure:: /_static/images/L4/vit_tokens.png
+   :class: dark-light themed-L4
    :alt: Four drawn panels of ViT-Base, numbered by the parts of the architecture figure. 3. Class token + 4. position: a green matrix of 197 by D with its top row in orange, labeled class token, plus a purple matrix E_pos, 197 by D; both learned, D = 768. 6. Encoder: 12 layers: a stack of 12 layers, each drawn as tokens on the left linked to every token on the right, with the class token in orange at the top; every token attends to every token, 197 x D in, 197 x D out. 7. Keep the class token: an orange bar, the class token, 1 x D. 7. Head: the 1 x D bar times a D x 1000 matrix gives a 1 x 1000 strip of class scores.
    :width: 100%
    :align: center
@@ -2948,6 +2980,7 @@ Our Image through RT-DETR-L, Step by Step
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L4/rtdetr_flow.png
+   :class: dark-light themed-L4
    :alt: Nine boxes in two rows, with the size measured after each step of RT-DETR-L on our image. Top row, left to right: 1 Image, 640 by 640 by 3; 2 Backbone, CNN, stride 32, 20 by 20 by 2048; 3 Shrink depth, 1 by 1 conv, 20 by 20 by 256; 4 Tokens, 20 by 20 cells, 400 by 256; 5 Encoder, 1 layer, 8 heads, 400 by 256, highlighted green. Bottom row, right to left: 6 Mix 3 sizes, convolutions, 8400 by 256; 7 Queries, top 300 cells, 300 by 256; 8 Decoder, 6 layers, 300 by 256, highlighted green; 9 Heads, box plus 80 scores, 300 by 84. A green arrow runs from step 6 to step 8, labeled encoder output: every decoder layer reads it (cross-attention). A note reads measured, our image.
    :width: 100%
    :align: center
@@ -3157,6 +3190,7 @@ YOLOv8s and RT-DETR-L on Our Image
 We have two models, so here they are side by side on our image.
 
 .. figure:: /_static/images/L4/det_compare.png
+   :class: dark-light themed-L4
    :alt: Our image twice. Left, titled YOLOv8s: 5 objects: the bus at 0.92 and four people at 0.89, 0.88, 0.89 and 0.61. Right, titled RT-DETR-L: 9 objects: the bus at 0.96, four people at 0.95, 0.93, 0.95 and 0.86, and four extras in green: a traffic light at 0.28 on a sign board on the wall, a fire hydrant at 0.34 on a bollard, and two ties at 0.27 and 0.26 on the men's shirts.
    :width: 90%
    :align: center
@@ -3432,6 +3466,7 @@ A model knows only the kind of images it trained on. Here is what a model
 trained on COCO sees in a CARLA camera frame, measured with both models.
 
 .. figure:: /_static/images/L4/carla_compare.png
+   :class: dark-light themed-L4
    :alt: The same CARLA camera frame twice: a wide, empty, gray street under an overcast sky, with a sidewalk on the right lined with flower planters and lampposts, and buildings on both sides. Left, titled YOLOv8s: car, potted plant: two blue boxes on distant parked cars down the road and two on planters. Right, titled RT-DETR-L: car, potted plant: green boxes, small ones far down the road and many along the planters on the right, one on the base of a lamppost.
    :width: 100%
    :align: center

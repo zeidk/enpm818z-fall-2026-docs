@@ -453,6 +453,7 @@ The Route: Two Laps of a Downtown Block
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/l6_route.png
+   :class: dark-light themed-L6
    :alt: A top view of CARLA's Town10HD map as gray points: building walls, poles and a large central building. A rounded rectangular route about 160 by 90 meters runs around the central building, with the start marked on its bottom side by the car. Most of the route is drawn thick and red for the GNSS outage; only the top right stretch is black.
    :width: 75%
    :align: center
@@ -521,6 +522,7 @@ Our Drive's GNSS: Meters Off, and Then Nothing
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/gnss_error.png
+   :class: dark-light themed-L6
    :alt: GNSS position error in meters against time, 0 to 125 seconds, one blue dot per fix, one fix per second. The dots scatter between about 0.3 and 4 meters, one at 5.4. From 34 to 89 seconds a pink band labeled no fixes has no dots.
    :width: 85%
    :align: center
@@ -656,6 +658,7 @@ RTK, Step 4: the AV Subtracts the Base's Error
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/rtk_step4.png
+   :class: dark-light themed-L6
    :alt: A side view. A satellite at the top sends signals, drawn as dashed lines, to a base station on the left, a mast on a marker labeled base station on a surveyed point, and to the AV on the right, a car labeled the AV (rover), with an antenna. Below the base, a panel labeled seen from above, with arrows for east and north: a cross labeled true point and a blue dot labeled GNSS says, up and to the right of it, joined by a rust arrow; below them, in rust, error: 1.2 m east, 0.8 m north. A green arrow from the base to the AV is labeled corrections: the base's error. Below the AV, a second panel seen from above: a cross labeled truth, a blue dot up and to the right joined to it by a rust arrow and labeled raw fix: 1.3 m east, 0.7 m north, and a curved green arrow from the raw fix back to a green dot almost on the cross, labeled in green corrected: 0.1 m east, 0.1 m south.
    :width: 60%
    :align: center
@@ -790,6 +793,7 @@ was :math:`6.0^\circ` off by the end of the outage (measured). Say it is
    driving.
 
 .. figure:: /_static/images/L6/heading_error.png
+   :class: dark-light themed-L6
    :alt: A graph of sideways error in meters against distance driven, 0 to 200 meters. Three straight rust lines from the origin for heading errors of 0.5 degrees (dotted), 1 degree (solid) and 2 degrees (dashed), reaching about 1.75, 3.5 and 7 meters at 200 meters. A dot on the 1 degree line at 100 meters, labeled 100 m at 1 degree: 1.75 m. A red horizontal line at 0.29 meters is labeled 0.29 m bound, Reid et al. A red dot where the 1 degree line meets the bound, at 16.6 meters, labeled 16.6 m at 1 degree: the 0.29 m is used up.
    :width: 70%
    :align: center
@@ -827,6 +831,7 @@ A program that steps every 0.05 s gets 4.54 m. After 60 s it gets 18.08 m:
 **twice the time, four times the error**, because :math:`t` is squared.
 
 .. figure:: /_static/images/L6/bias_growth.png
+   :class: dark-light themed-L6
    :alt: A graph of sideways error in meters against time since the last fix, 0 to 60 seconds. A rust curve, integrated step by step for the AV driving straight with a biased gyro, bends upward and reaches 0.52 meters at 10 seconds, 4.54 at 30 and 18.08 at 60. A dotted black curve, v b t squared over 2, lies on top of it.
    :width: 70%
    :align: center
@@ -846,6 +851,7 @@ Dead Reckoning on Our Drive: 400 m Without GNSS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/dr_drift.png
+   :class: dark-light themed-L6
    :alt: Left: a top view of the outage part of the route, the truth in black and dead reckoning in rust, starting together at a dot labeled last fix at the top. The rust path slowly turns away from the black one, crossing it in places, and ends a few meters off. Right: position error in meters against distance since the last fix, 0 to 400 meters; it rises to about 2.7 meters by 100 meters, bumps to about 4.7 meters near 180 meters, dips, then climbs to a peak near 9.0 meters at about 330 meters and ends near 7.8.
    :width: 95%
    :align: center
@@ -989,6 +995,7 @@ that dead reckoning drove alone in the last section. Here is one run of the
 filter over the whole drive, fusing GNSS, the wheels and the gyro.
 
 .. figure:: /_static/images/L6/ekf_run_nomap.png
+   :class: dark-light themed-L6
    :alt: A graph of meters against time, 0 to 125 seconds, the outage from 34 to 89 seconds shaded pink, titled GNSS plus wheels plus gyro. The blue position error stays near 1 to 3 meters, climbs in the outage to peaks near 9 and 9.5 meters, and drops to under 1 meter at the first fix; the grey band of the filter's own 1 sigma grows in the outage only to about 4 meters.
    :width: 70%
    :align: center
@@ -1014,6 +1021,7 @@ The same drive and the same outage, a second run of the filter. This run
 adds map matching, the subject of the next section (:ref:`l6-lec-map`).
 
 .. figure:: /_static/images/L6/ekf_run_map.png
+   :class: dark-light themed-L6
    :alt: A graph of meters against time, 0 to 125 seconds, the outage shaded pink, titled GNSS plus wheels plus gyro plus map matching. The green error starts near 2.5 meters for the first few seconds, then stays mostly under 0.5 meters with short bumps to about 1 meter, outage or not; the grey band stays near 0.2 meters.
    :width: 70%
    :align: center
@@ -1126,6 +1134,7 @@ Eight Runs, One Score Each
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/ape_bars.png
+   :class: dark-light themed-L6
    :alt: Two panels of bars, APE RMSE in meters from 0 to 6, with a red dashed line at the 0.29 m bound. Blue bars: no map matching; green bars: with map matching. Left, GNSS always: wheel speed read, 1.28 blue and 0.47 green; wheel speed not read, 1.97 blue and 1.38 green. Right, GNSS outage of 400 m: wheel speed read, 4.99 blue and 0.52 green; wheel speed not read, 4.58 blue, and a green bar that reaches the top of the axis, with a break mark of two slanted lines across it and the value 27.66 printed above it.
    :width: 90%
    :align: center
@@ -1151,6 +1160,7 @@ Eight Runs: the Four with GNSS Always
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/ape_bars_always.png
+   :class: dark-light themed-L6
    :alt: A bar chart titled GNSS always, APE RMSE in meters from 0 to 6, with a red dashed line at 0.29 m, the bound. Wheel speed read: bar 1, blue, no map matching, 1.28; bar 2, green, with map matching, 0.47. Wheel speed not read: bar 3, blue, 1.97; bar 4, green, 1.38. Each bar has a black numbered tag above its value. A legend: blue no map matching, green with map matching, red dashed 0.29 m bound.
    :width: 55%
    :align: center
@@ -1178,6 +1188,7 @@ Eight Runs: the Four with a GNSS Outage
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/ape_bars_outage.png
+   :class: dark-light themed-L6
    :alt: A bar chart titled GNSS outage, 400 m, APE RMSE in meters from 0 to 6, with a red dashed line at 0.29 m, the bound. Wheel speed read: bar 1, blue, no map matching, 4.99; bar 2, green, with map matching, 0.52. Wheel speed not read: bar 3, blue, 4.58; bar 4, green, reaching the top of the axis with a break mark of two slanted lines, labeled 27.66. Each bar has a black numbered tag above its value. A legend: blue no map matching, green with map matching, red dashed 0.29 m bound.
    :width: 55%
    :align: center
@@ -1411,6 +1422,7 @@ Predict
 ~~~~~~~
 
 .. figure:: /_static/images/L6/mcl_predict_spread.png
+   :class: dark-light themed-L6
    :alt: A top view of a straight stretch of the route, x east from 52 to 87 meters, y north near minus 25 meters. A black dot labeled start, 8 s into the drive, and the black true path running east. Three green clouds of particles along the path: a small oval labeled 1 s later (9 s): spread 0.33 m, a round cloud labeled 3 s later (11 s): spread 0.79 m, and a larger cloud labeled 5 s later (13 s): spread 1.26 m. Each cloud holds the same 2000 particles; 25 of them carry a dark green arrow for their heading, all pointing east.
    :width: 95%
    :align: center
@@ -1543,6 +1555,7 @@ Weigh Three Particles, Then Normalize
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/mcl_weigh_example.png
+   :class: dark-light themed-L6
    :alt: Three panels, particle A, B and C, each with a green wall along the bottom labeled map: a wall and three rust scan points above it. A: the points are 0.1, 0.2 and 0.1 meters from the wall, scores 0.929, 0.916 and 0.929. B: 1.0, 1.3 and 0.9 meters, scores 0.579, 0.420 and 0.634. C: 2.0, 3.5 and 2.5 meters, scores 0.155, 0.033 and 0.073.
    :width: 95%
    :align: center
@@ -1618,6 +1631,7 @@ Resample: How?
 ~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/mcl_resample.png
+   :class: dark-light themed-L6
    :alt: A bar from 0 to 1 cut into three segments, one per particle, as wide as its weight: A 0.836 and B 0.163; C, 0.0004, is too thin to see and is marked by a line at the right end. Three rust arrows point down at 0.200, 0.533 and 0.867, labeled N = 3 pointers: first at r/N, then every 1/N. The first two land in A, the third in B.
    :width: 90%
    :align: center
@@ -1671,6 +1685,7 @@ When Two Places Look the Same, MCL Can Pick the Wrong One
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/mcl_symmetry.png
+   :class: dark-light themed-L6
    :alt: Two top views of a 20 by 10 meter room whose walls are grey lines. In both, the AV is drawn in black near the bottom at x 8.5, y 2, facing right. Panel 1, plain room: a cluster of dark green particles and a light green car, MCL's estimate, sit near the top at x 11.5, y 8, facing left. Panel 2, room with a small square pillar at about x 14.5, y 7.5: the particles and the light green car sit on the black AV.
    :width: 95%
    :align: center
@@ -1735,6 +1750,7 @@ MCL on Our Drive: from a 20 m Circle to the AV
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/mcl_snapshots.png
+   :class: dark-light themed-L6
    :alt: Three top views of the map in grey around the AV, drawn in black, with dark green particles and a light green car for MCL's estimate. Scan 1 at t 0 seconds, 44 meters wide: 2000 particles fill a circle 40 meters across around a blue cross, the GNSS fix, just below the AV; the estimate is 3.06 meters off. Scan 4 at 1.5 seconds, zoomed in to 16 meters wide: the particles form a short line behind the AV and the estimate is 1.66 meters behind it. Scan 16 at 7.5 seconds, 16 meters wide: the particles and the estimate sit on the AV, 0.02 meters off.
    :width: 95%
    :align: center
@@ -1774,6 +1790,7 @@ code). What do ten times the particles buy? Five runs of each, from the same
 20 m start:
 
 .. figure:: /_static/images/L6/mcl_particle_count_find.png
+   :class: dark-light themed-L6
    :alt: Two graphs side by side, 200 particles and 2000 particles, five runs each, error of MCL's estimate in meters from 0 to 15 against time since the first scan from 0 to 70 seconds, a red dashed line at 0.29 m and a grey dotted line at 2 m. Left: three runs drop below 1 meter within a few seconds; two start near 9 and 14 meters and stay between 5 and 10 meters until about 60 seconds, then drop. Right: two runs drop quickly; three start between 10 and 13 meters and drop below 2 meters at about 14, 15 and 34 seconds.
    :width: 95%
    :align: center
@@ -1797,6 +1814,7 @@ How Many Particles: Once the AV Is Found
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/mcl_particle_count_found.png
+   :class: dark-light themed-L6
    :alt: Two graphs side by side, 200 particles and 2000 particles, five runs each, error of MCL's estimate in meters from 0 to 1.5 against time since the first scan from 70 to 125 seconds, with a red dashed line at 0.29 m. In both, all five lines rise and fall together: peaks near 80, 90, 110 and 122 seconds, up to about 1 meter, and near 0.05 meters between them.
    :width: 95%
    :align: center
@@ -1822,6 +1840,7 @@ When MCL Loses the AV: Add Random Particles
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/mcl_kidnap.png
+   :class: dark-light themed-L6
    :alt: Three top views of the 20 by 10 meter room with a small square pillar near x 14.5, y 7.5. The AV is drawn in black, the particles in dark green, and MCL's estimate as a light green car. Panel 1, just after the AV is moved: the AV is at x 3, y 5; the particles and the estimate are still near x 9, y 2, where the AV was. Panel 2, 10 seconds later with no random particles: the AV is at x 12.5, y 5; the particles and the estimate are near x 17, y 4, about 4.5 meters away. Panel 3, 10 seconds later with 100 random particles per scan: random dots are spread over the room, and the particles and the estimate sit on the AV.
    :width: 100%
    :align: center
@@ -1966,6 +1985,7 @@ ICP: Guess the Pairs, Solve, Move, Repeat
    distance metric" (Besl and McKay, 1992).
 
 .. figure:: /_static/images/L6/icp_three_phases.png
+   :class: dark-light themed-L6
    :alt: A loop of three boxes with arrows. Box 1: pair each scan point with its nearest map point. Box 2: solve for the best rotation and shift (SVD). Box 3: move the scan; repeat until it stops improving. An arrow from box 3 back to box 1 is labeled not done yet: next round, and an arrow from box 3 leads to a separate green box, done: the pose.
    :width: 90%
    :align: center
@@ -1994,6 +2014,7 @@ What ICP Minimizes: One Pair
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/icp_objective_vehicle.png
+   :class: dark-light themed-L6
    :alt: Titled 1. The scan, as the LiDAR measures it: the AV facing right, with the middle of its rear axle at the origin, axes x AV forward and y AV left, a 1 m scale bar, and rust scan points along an L: a column on the left and a row below; one point on the left column is circled and labeled p i.
    :width: 55%
    :align: center
@@ -2003,6 +2024,7 @@ What ICP Minimizes: One Pair
    the rear axle. One scan point, :math:`p_i`, is circled.
 
 .. figure:: /_static/images/L6/icp_objective_map.png
+   :class: dark-light themed-L6
    :alt: Titled 2. The same scan, transformed with a guessed pose: green squares of the map, an L-shaped wall along the x and y axes in meters; a faint grey AV labeled the AV at the guess; the rust scan points placed near the wall but turned and shifted, each joined by a thin grey line to its nearest map point. One pair is highlighted: a circled rust point labeled R p i plus t, a boxed green square labeled q i, and the black line between them labeled e i equals 0.78 m.
    :width: 65%
    :align: center
@@ -2057,6 +2079,7 @@ really is. **Gray:** ICP's start, and its scan. **Rust:** where ICP ends, and
 its scan.
 
 .. figure:: /_static/images/L6/icp_start_ahead_before.png
+   :class: dark-light themed-L6
    :alt: Titled before ICP: the start. A top view in meters: green map points along y equals 4 and down a side wall at x equals 10, two green poles. The black AV at the origin facing right. A gray car 4 meters ahead of it, and the gray scan, the same walls shifted 4 meters to the right.
    :width: 55%
    :align: center
@@ -2065,6 +2088,7 @@ its scan.
    scan lies 4 m to the right of the green walls.
 
 .. figure:: /_static/images/L6/icp_start_ahead_after.png
+   :class: dark-light themed-L6
    :alt: The same scene after ICP, titled after ICP: 18 rounds. The rust car sits on the black AV, and the rust scan lies on the green walls and poles.
    :width: 55%
    :align: center
@@ -2081,6 +2105,7 @@ Before the Loop: Start 4 m to the Right
 The same scene and the same distance, 4 m, in another direction.
 
 .. figure:: /_static/images/L6/icp_start_right_before.png
+   :class: dark-light themed-L6
    :alt: Titled before ICP: the start. The same scene. A gray car 4 meters to the right of the black AV, below it, and the gray scan, the same walls shifted 4 meters down, so its top wall runs through the black AV.
    :width: 55%
    :align: center
@@ -2089,6 +2114,7 @@ The same scene and the same distance, 4 m, in another direction.
    scan lies 4 m below the green walls.
 
 .. figure:: /_static/images/L6/icp_start_right_after.png
+   :class: dark-light themed-L6
    :alt: The same scene after ICP, titled after ICP: 13 rounds. The rust scan lies across the side wall at an angle, and the rust car ends below and to the right of the black AV, turned.
    :width: 55%
    :align: center
@@ -2107,6 +2133,7 @@ ICP Step 1: Pair Each Scan Point with Its Nearest Map Point
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/icp_pairs.png
+   :class: dark-light themed-L6
    :alt: The map around the middle scan, green points, and the scan at the 5 degree start, rust points. A thin black line joins most scan points to their nearest map point; a few long red dashed lines, at the top left and near a pole, are pairs 3 m or longer. Legend: pair kept (under 3 m): 495; pair dropped (3 m or more): 7.
    :width: 70%
    :align: center
@@ -2172,6 +2199,7 @@ part it splits. Solid lines split on :math:`x`, dashed lines on :math:`y`.
 **Frame 1 of 5: Level 0, split on** :math:`x`.
 
 .. figure:: /_static/images/L6/kd_tree_level0.png
+   :class: dark-light themed-L6
    :alt: Titled level 0: split on x. Eight green points on a 10 by 10 meter square shaded blue, each labeled with its coordinates: (1, 8), (2, 3), (4, 7), (5, 4), (6, 9), (7, 2), (8, 1), (9, 6). The point (6, 9) is ringed and its label is in bold; a solid line at x equals 6 splits the square.
    :width: 55%
    :align: center
@@ -2193,6 +2221,7 @@ when it is even (the 3rd of 4, the 2nd of 2).
 **Frame 2 of 5: Level 1, split each half on** :math:`y`.
 
 .. figure:: /_static/images/L6/kd_tree_level1.png
+   :class: dark-light themed-L6
    :alt: Titled level 1: split on y. The left half of the square, left of x equals 6, is shaded blue and the right half yellow. In the left half, (4, 7) is ringed and a dashed line at y equals 7 splits it; in the right half, (7, 2) is ringed and a dashed line at y equals 2 splits it.
    :width: 55%
    :align: center
@@ -2213,6 +2242,7 @@ each side of the line :math:`x = 6`.
 **Frame 3 of 5: Level 2, split each of the four parts on** :math:`x`.
 
 .. figure:: /_static/images/L6/kd_tree_level2.png
+   :class: dark-light themed-L6
    :alt: Titled level 2: split on x. Four parts shaded: lower left blue, upper left lavender, lower right yellow, upper right grey. (5, 4), (1, 8), (8, 1) and (9, 6) are ringed, each with a solid vertical line through it: x equals 5, 1, 8 and 9.
    :width: 55%
    :align: center
@@ -2233,6 +2263,7 @@ Solid lines split on :math:`x`, dashed lines on :math:`y`.
 **Frame 4 of 5: Level 3, split on** :math:`y`.
 
 .. figure:: /_static/images/L6/kd_tree_level3.png
+   :class: dark-light themed-L6
    :alt: Titled level 3: split on y. Only the part left of x equals 5 and below y equals 7 is shaded blue; (2, 3) is ringed and a dashed line at y equals 3 splits that part. All earlier lines are drawn.
    :width: 55%
    :align: center
@@ -2250,6 +2281,7 @@ of its line as children. The split takes :math:`x` and :math:`y` in turn:
 **Frame 5 of 5: The finished tree.**
 
 .. figure:: /_static/images/L6/kd_tree_full.png
+   :class: dark-light themed-L6
    :alt: Titled the finished tree. Boxes joined by branches. The root (6, 9), x equals 6, at the top; its left child (4, 7), y equals 7, on the branch x less than 6, and its right child (7, 2), y equals 2, on the branch x greater than 6. Under (4, 7): (5, 4), x equals 5, for y less than 7, and (1, 8), x equals 1, for y greater than 7. Under (7, 2): (8, 1), x equals 8, for y less than 2, and (9, 6), x equals 9, for y greater than 2. Under (5, 4): (2, 3), y equals 3, for x less than 5, and a dotted branch marked empty.
    :width: 60%
    :align: center
@@ -2277,6 +2309,7 @@ Searching the k-d Tree: the Query and What We Look For
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/kd_query.png
+   :class: dark-light themed-L6
    :alt: Titled 1 query, 8 map points, 8 distances. The eight green map points on a 10 by 10 meter square, each labeled with its coordinates and its distance from a blue star labeled query at (7.5, 5): (1, 8) 7.16 m, (6, 9) 4.27 m, (4, 7) 4.03 m, (5, 4) 2.69 m, (2, 3) 5.85 m, (7, 2) 3.04 m, (8, 1) 4.03 m, and (9, 6) 1.80 m in bold blue, joined to the query by a blue line.
    :width: 55%
    :align: center
@@ -2316,6 +2349,7 @@ scan point; all 7 steps find its one pair.
 **Step 1: the root.**
 
 .. figure:: /_static/images/L6/kd_search_step0.png
+   :class: dark-light themed-L6
    :alt: Left, the plane: the root (6, 9) ringed in blue and rust, a blue line from the query star at (7.5, 5) to it, and a dotted blue circle of that radius around the query. Right, the tree: the root box (6, 9), x equals 6, filled blue, labeled 4.27 m.
    :width: 95%
    :align: center
@@ -2329,6 +2363,7 @@ is more than 6, so go to the right child.
 **Step 2: down the query's side.**
 
 .. figure:: /_static/images/L6/kd_search_step1.png
+   :class: dark-light themed-L6
    :alt: Left, the plane: (6, 9) has a rust ring; (7, 2) is ringed in blue and rust, joined to the query by a blue line, and the dotted circle around the query is smaller. Right, the tree: the root box outlined rust with 4.27 m; the box (7, 2), y equals 2, filled blue, labeled 3.04 m.
    :width: 95%
    :align: center
@@ -2341,6 +2376,7 @@ shrinks. The query's :math:`y`, 5, is more than 2, so go to the right child.
 **Step 3: a leaf.**
 
 .. figure:: /_static/images/L6/kd_search_step2.png
+   :class: dark-light themed-L6
    :alt: Left, the plane: (9, 6) ringed in blue and rust, joined to the query by a blue line; the dotted circle around the query now has radius 1.80 m. Right, the tree: the root and (7, 2) outlined rust with 4.27 m and 3.04 m; the leaf (9, 6), x equals 9, filled blue, labeled 1.80 m.
    :width: 95%
    :align: center
@@ -2354,6 +2390,7 @@ and check the sides not taken.
 **Step 4: back at** :math:`(7, 2)`.
 
 .. figure:: /_static/images/L6/kd_search_step3.png
+   :class: dark-light themed-L6
    :alt: Left, the plane: (7, 2) ringed in blue; a black two-headed arrow labeled 3.0 m runs from the query down to the line y equals 2; the 1.80 m circle does not reach it; (8, 1) is grey. Right, the tree: (7, 2) filled blue; its branch y less than 2 dashed and the box (8, 1) grey and dashed.
    :width: 95%
    :align: center
@@ -2366,6 +2403,7 @@ the circle does not reach it. Skip it: :math:`(8, 1)` is never measured.
 **Step 5: back at the root.**
 
 .. figure:: /_static/images/L6/kd_search_step4.png
+   :class: dark-light themed-L6
    :alt: Left, the plane: a black two-headed arrow labeled 1.5 m from the query to the line x equals 6, inside the 1.80 m circle; (4, 7) ringed in blue and rust. Right, the tree: (4, 7), y equals 7, filled blue, labeled 4.03 m; (6, 9), (7, 2) and (9, 6) outlined rust; (8, 1) grey and dashed.
    :width: 95%
    :align: center
@@ -2381,6 +2419,7 @@ child.
 **Step 6:** :math:`(5, 4)`.
 
 .. figure:: /_static/images/L6/kd_search_step5.png
+   :class: dark-light themed-L6
    :alt: Left, the plane: (5, 4) ringed in blue and rust; a black two-headed arrow labeled 2.5 m from the query to the line x equals 5, outside the 1.80 m circle; (2, 3) grey. Right, the tree: (5, 4), x equals 5, filled blue, labeled 2.69 m; its branch x less than 5 dashed and the box (2, 3) grey and dashed.
    :width: 95%
    :align: center
@@ -2395,6 +2434,7 @@ than 1.80 m: skip it, with :math:`(2, 3)`.
 **Step 7: back at** :math:`(4, 7)`.
 
 .. figure:: /_static/images/L6/kd_search_step6.png
+   :class: dark-light themed-L6
    :alt: Left, the plane: (4, 7) ringed in blue; a black two-headed arrow labeled 2.0 m from the query up to the line y equals 7, outside the 1.80 m circle; (1, 8) grey. Right, the tree: (4, 7) filled blue; its branch y greater than 7 dashed and the box (1, 8) grey and dashed; five boxes outlined rust with their distances, (9, 6) at 1.80 m in bold.
    :width: 95%
    :align: center
@@ -2508,6 +2548,7 @@ ICP's pose.
 **Frame 1 of 3: The start.**
 
 .. figure:: /_static/images/L6/icp_iter_start.png
+   :class: dark-light themed-L6
    :alt: Titled start. A top view, x east from about minus 35 to 15 meters, y north from about minus 44 to minus 18 meters. Green map points: a long wall near y minus 38 that steps down to y minus 40 at x 0, a corner at x minus 29, poles near y minus 20 and minus 33, and a parked car's outline near x 12, y minus 34. The black AV near x minus 7, y minus 25, and a light rust car beside it, shifted and turned. The rust scan wall crosses the green wall at a small angle, and each rust pole sits beside its green pole.
    :width: 90%
    :align: center
@@ -2525,6 +2566,7 @@ pairs (the root mean square of their distances): 1.32 m. Each round pairs
 **Frame 2 of 3: After iteration 1.**
 
 .. figure:: /_static/images/L6/icp_iter_1.png
+   :class: dark-light themed-L6
    :alt: Titled after iteration 1. The same view. The light rust car overlaps the black AV more closely, and the rust scan wall crosses the green wall at a smaller angle.
    :width: 90%
    :align: center
@@ -2540,6 +2582,7 @@ from the new pose and repeats.
 **Frame 3 of 3: After iteration 28.**
 
 .. figure:: /_static/images/L6/icp_iter_last.png
+   :class: dark-light themed-L6
    :alt: Titled after iteration 28. The same view. The rust car covers the black AV, and the rust scan's wall, poles and parked car lie on the green map points.
    :width: 90%
    :align: center
@@ -2588,6 +2631,7 @@ Four Ways to Score How Far the Scan Is Off
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/residual_kinds.png
+   :class: dark-light themed-L6
    :alt: Four small panels, each with one rust scan point above a wall of green map points. Panel 1, point to point: a black line from the scan point to the nearest map point. Panel 2, point to line: a black line straight down to the dashed wall line, and a green arrow, the wall's normal. Panel 3, GICP: a flat green ellipse around the map point and a flat rust ellipse around the scan point, joined by a black line. Panel 4, NDT: a grid of cells; the cells along the wall each hold a flat green ellipse with a cross at its center; a dotted line from the scan point to the center of the cell below it.
    :width: 95%
    :align: center
@@ -2657,6 +2701,7 @@ Some Scenes Cannot Pin Down the Pose
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/scan_degeneracy.png
+   :class: dark-light themed-L6
    :alt: Three top views in meters, each with the AV at the center facing right and green map walls. One wall: a straight wall 4 meters to the left of the AV; a black two-headed arrow along the road under the AV; title one wall: 0.000. A corridor: walls 4 meters on both sides; the same two-headed arrow; title a corridor: 0.000. A corner: a wall on the left that turns and closes the road 8 meters ahead; no arrow; title a corner: 0.297.
    :width: 95%
    :align: center
@@ -2708,6 +2753,7 @@ A Match Is a Measurement: Predict, Register, Check, Fuse
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/registration_pipeline.png
+   :class: dark-light themed-L6
    :alt: A flow chart. Box 1 Predict, the filter's pose, arrow to box 2 Register, ICP from that pose, arrow to box 3 Check, is the fit usable? An arrow labeled pass goes to box 4 Fuse, filter update; a dashed arrow labeled fail goes down to box 5 Recover, search wider (MCL). A line from Fuse back over the top into Predict is labeled the next prediction starts from the fused pose.
    :width: 85%
    :align: center
@@ -2881,6 +2927,7 @@ Lost GNSS: Is SLAM the Answer?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/lidar_odometry.png
+   :class: dark-light themed-L6
    :alt: A top view of lap 1 of the route, x east and y north in meters. The black truth starts and ends at a dot labeled start. The green LiDAR odometry path, scan to scan, follows it but drifts outward on the left and bottom sides and ends below and left of the start; a red line joins the two ends, labeled after 458 m: 6.08 m off.
    :width: 75%
    :align: center
@@ -2999,6 +3046,7 @@ A Loop Closure Finds the Gap Odometry Left
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/pose_graph.png
+   :class: dark-light themed-L6
    :alt: Two panels with three nodes p1, p2 and p3 joined by rust odometry edges and a green dashed loop closure edge, and an L-shaped building corner of green squares left of and below p1. Left, titled before: the corner seen twice: filled squares where p1 saw the corner, and hollow squares about 0.7 meters higher and slightly to the right, where p3's pose places it; the loop closure from p3 ends short of p1, labeled gap 0.71 m. Right, titled after the solve: one corner: the filled and hollow squares coincide, the dashed edge ends on p1, and faint gray lines show where the edges to p2 and p3 were before.
    :width: 85%
    :align: center
@@ -3036,6 +3084,7 @@ values, chosen for this example:
 - :math:`\sigma = 0.1` m for the loop closure, which ICP measured.
 
 .. figure:: /_static/images/L6/pose_graph_shares.png
+   :class: dark-light themed-L6
    :alt: A horizontal bar under an arrow labeled the 0.71 m gap, shared out as corrections, cut into three pieces. A wide rust piece: odometry edge p1 to p2, corrected by 0.51 m (71%). A narrower rust piece: odometry edge p2 to p3, corrected by 0.18 m (26%). A thin green piece at the right end: loop closure p3 to p1, corrected by 0.020 m (3%).
    :width: 85%
    :align: center
@@ -3130,6 +3179,7 @@ LiDAR SLAM on Our Drive: the Drift, and the Loop Closure That Finds It
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L6/lidar_odometry.png
+   :class: dark-light themed-L6
    :alt: A top view of lap 1 of the route, x east and y north in meters. The black truth starts and ends at a dot labeled start. The green LiDAR odometry path, scan to scan, follows it but drifts outward on the left and bottom sides and ends below and left of the start; a red line joins the two ends, labeled after 458 m: 6.08 m off.
    :width: 75%
    :align: center

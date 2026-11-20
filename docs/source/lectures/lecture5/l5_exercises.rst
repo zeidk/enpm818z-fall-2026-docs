@@ -819,6 +819,7 @@ GNN. Exercise 7 runs the four ROS packages of :doc:`l5_code` in CARLA.
    three boxes (the red dots).
 
    .. figure:: /_static/images/L5/assoc_scene.png
+      :class: dark-light themed-L5
       :alt: A top view, x forward to the right. The AV at the left, facing right, in its lane between two dashed lines; car B's lane to the right. Two crosses are the predicted positions: track B, blue, in the right part of the AV's lane, and track D, orange, ahead in the AV's lane. Each sits in a dashed circle of the same color, its gate. Three red dots are the boxes: 1 inside track B's gate only, behind and right of the blue cross; 2 between the crosses, inside both gates; 3 at the edge of track D's gate, ahead and right of the orange cross.
       :width: 60%
       :align: center
@@ -874,6 +875,7 @@ GNN. Exercise 7 runs the four ROS packages of :doc:`l5_code` in CARLA.
       whatever the order.
 
       .. figure:: /_static/images/L5/assoc_graph_gnn.png
+         :class: dark-light themed-L5
          :alt: A graph with tracks B and D on the left and boxes 1, 2 and 3 on the right, each line labeled with epsilon. B to 1 (5.4) and D to 2 (5.9) are thick green lines, GNN's choice; B to 2 (4.5) and D to 3 (8.5) are faint; B to 3 (47.3) and D to 1 (47.0) are dashed, outside the gate. Caption: GNN, total 5.4 + 5.9 = 11.3.
          :width: 45%
          :align: center

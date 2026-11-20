@@ -87,6 +87,7 @@ come first:
 - A **decoder** is a network that turns features into outputs.
 
 .. figure:: /_static/images/L5/waymo_stack.png
+   :class: dark-light themed-L5
    :alt: A block diagram. Cameras, LiDAR and radar feed the Sensor Fusion Encoder, labeled think fast, which fuses all three over time into objects, semantics and embeddings; it is highlighted green and labeled today. Cameras also feed the Driving VLM, labeled think slow, tagged L11. Both feed the World Decoder, which outputs behavior predictions, high-definition maps, trajectories for the vehicle and validation signals, tagged L8 and L9. Its trajectories go to an onboard validation layer.
    :width: 90%
    :align: center
@@ -156,6 +157,7 @@ this lecture that teaches that box: 1 3D Detection, 2 Segmentation, 3 BEV and
 Occupancy, 4 Fusion, 5 Tracking.
 
 .. figure:: /_static/images/L5/perception_stack.png
+   :class: dark-light themed-L5
    :alt: A block diagram. Sensing, camera images, LiDAR point clouds and radar objects, feeds four parts. Obstacle segmentation and the occupancy grid map exchange data, and each sends its output to planning: obstacles and blind spots. A Detection group holds a 3D detector, tagged 1 and 3; camera 2D detection with projection fusion, tagged 2 and 4; and a radar pipeline. All three feed a multi-object tracker, tagged 5, then prediction, tagged L8, which sends dynamic objects to planning. The occupancy grid map is tagged 3. Traffic light recognition runs on its own and also feeds planning.
    :width: 80%
    :align: center
@@ -205,6 +207,7 @@ and each part is one level.
    awareness.
 
 .. figure:: /_static/images/L5/sa_pipeline.png
+   :class: dark-light themed-L5
    :alt: L4's pipeline: Sensors (L2), Perception (L4, L5, highlighted), Prediction (L8), Planning (L9) and Control (L10), joined by arrows, with a curved arrow from Perception straight to Planning labeled drivable area, lanes, lights. Braces above: Level 1 perception and Level 2 comprehension over Perception; Level 3 projection over Prediction; a larger brace labeled Situation awareness over both. A dashed line separates them from Decision over Planning and Action over Control, labeled outside awareness.
    :width: 80%
    :align: center
@@ -324,6 +327,7 @@ the points, on every sweep):
 - heading :math:`\theta = 30^\circ`, turned toward the AV's lane.
 
 .. figure:: /_static/images/L5/box3d.png
+   :class: dark-light themed-L5
    :alt: A top view, x forward to the right, y to the left, up the page. Two lanes: the AV's lane on top, with the AV at the origin facing +x and its centerline dashed, and the right lane below, separated by a dashed lane line. Car B, a light blue car drawn inside a dark blue box, centered at (12.0, -2.0), straddles the lane line, turned 30 degrees toward the AV's lane; an arrow marks its heading and the angle theta = 30 degrees.
    :width: 60%
    :align: center
@@ -445,6 +449,7 @@ its input to its output. Each part answers one question, on the subsections
 named under it in the figure.
 
 .. figure:: /_static/images/L5/detector_strip.png
+   :class: dark-light themed-L5
    :alt: Three panels joined by arrows. 1, Input: LiDAR points: a sketch of one sweep, gray points around and blue points on car B's rear and left side; under it, how many points reach car B?, LiDAR points thin out, Step by step: rings. 2, Network: a grid seen from above with a few filled cells, labeled pillars, seen from above, then an arrow to a box labeled 2D CNN (L4); under it, how does a network read a list of points?, Three ways to read, PointPillars. 3, Output: the box: car B, a light blue car in a dark blue box with a heading arrow, labeled center (x, y, z), l times w times h, heading theta; under it, how does it read off the 7 numbers?, CenterPoint.
    :width: 95%
    :align: center
@@ -483,6 +488,7 @@ vertical angles. As it turns, each channel traces one **ring** of points.
 - Car B is 1.5 m tall (its box).
 
 .. figure:: /_static/images/L5/lidar_channels.png
+   :class: dark-light themed-L5
    :alt: Left, a side view at true scale, x in meters from the LiDAR: the AV on the road with its LiDAR on the roof, 1.8 m up at x = 0; a fan of beams, every 8th of the 64 channels, from 10 degrees up to 30 degrees down; the four steepest are drawn in red, magenta, violet and teal and hit the road within 7 m, the others in orange. A thick green mark between two neighboring drawn beams at x = 12 m is labeled gap at 12 m; a green arrow between the same two beams at x = 50 m is labeled at 50 m, 50/12 = 4.2 times wider. Right, from above: the AV inside four dotted circles in the same four colors, labeled minus 30 degrees, 3.1 m; minus 25.6 degrees, 3.8 m; minus 20.5 degrees, 4.8 m; minus 15.4 degrees, 6.5 m; captioned steeper channels hit the road closer, one ring each.
    :width: 100%
    :align: center
@@ -663,6 +669,7 @@ way, and still a common baseline. **Every weight in PointPillars is set by
 training.**
 
 .. figure:: /_static/images/L5/pointpillars_steps.png
+   :class: dark-light themed-L5
    :alt: Six panels joined by arrows, each a sketch seen from above, with an x and y key in the first. LiDAR points: car B, a faint light blue car turned 30 degrees, with its points in blue along its rear and its left side, and two gray points elsewhere. Step 1: pillars, one per cell: the same car and points under a 5 by 5 grid, the cells that hold points shaded orange. Step 2: one vector per pillar: one cell's points become a short column of numbers. Step 3: pseudo-image from above: the grid with each occupied cell in its own shade, car B faint underneath. Step 4: 2D CNN, then a head (SSD): a stack of shrinking feature maps, then two dashed preset boxes, at 0 and 90 degrees, on one cell. Output: car B's box, 7 numbers: car B as a light blue car in its dark blue box.
    :width: 100%
    :align: center
@@ -752,6 +759,7 @@ bumps from the features: the size and the shape of the points seen from
 above. After training, a peak in the car heatmap means a car.
 
 .. figure:: /_static/images/L5/centerpoint_step1.png
+   :class: dark-light themed-L5
    :alt: Left, a stack of gray feature maps labeled features from the backbone, PointPillars without its head, or VoxelNet, with an arrow labeled head to a stack of heatmaps, one per class: truck and pedestrian behind, car in front. The car heatmap is a top view on a faint grid with the AV at the left and, around car B, a square patch of red cells, darkest in the middle, labeled around car B, darker, a center is more likely, each cell from 0 to 1.
    :width: 76%
    :align: center
@@ -773,6 +781,7 @@ of its neighbors. Each peak is the center of one object. For car B, the peak
 sits at :math:`(12.0, -2.0)` m, its center from the 3D box above.
 
 .. figure:: /_static/images/L5/centerpoint_step2.png
+   :class: dark-light themed-L5
    :alt: The same heatmap with a dark red dot on its darkest cell, labeled the peak, a cell higher than all its neighbors, car B's center, (12.0, -2.0).
    :width: 92%
    :align: center
@@ -795,6 +804,7 @@ network give the size, the heading and the velocity. With the center from
 Step 4b, that is the full box: car B's 7 numbers, plus its velocity.
 
 .. figure:: /_static/images/L5/centerpoint_step3.png
+   :class: dark-light themed-L5
    :alt: The same heatmap and peak, now with car B's dark blue box, turned 30 degrees, around the peak, and a green arrow along its heading labeled velocity 4.0 m/s. A label reads: read at the peak, size 4.5 by 1.9 by 1.5 m, heading 30 degrees as sine and cosine, velocity 4.0 m/s.
    :width: 92%
    :align: center
@@ -998,6 +1008,7 @@ ahead. **What we have:** one moment captured by our script: the front camera
 (right), both :math:`1280 \times 720`.
 
 .. figure:: /_static/images/L5/seg_example.png
+   :class: dark-light themed-L5
    :alt: Two images of the same street from the AV's front camera in CARLA. Left, the camera image: a four-lane city street with a double yellow center line, dashed white lane lines, a small blue car on the left, a dark jeep ahead on the right, a bus shelter on the right sidewalk, buildings and trees. Right, the semantic segmentation of the same view: the road purple, lane markings bright green, sidewalks pink, the cars dark blue, buildings dark gray, trees olive green, poles light gray, the bus shelter teal, the sky blue, and the AV's own hood dark blue at the bottom. A legend names the nine colors: road, lane marking, sidewalk, car, building, vegetation, pole, static object (bus shelter), sky.
    :width: 93%
    :align: center
@@ -1035,6 +1046,7 @@ The same kind of grid can also hold a whole class, every person at once.
 That is what semantic segmentation gives.
 
 .. figure:: /_static/images/L5/mask_example.png
+   :class: dark-light themed-L5
    :alt: Left: the bus photo, a street in Madrid with a blue electric bus and several people, with a dark red box around the man in the light-colored jacket, labeled his box: 99,437 px. An arrow labeled his box, enlarged leads to the right panel: the same box drawn at the photo's height, his mask in orange on a light gray background. Legend: orange 1, him, 51,476 px; gray 0, the rest, 47,961 px.
    :width: 55%
    :align: center
@@ -1150,6 +1162,7 @@ Instance segmentation is not a subset of semantic segmentation: each gives
 something the other lacks. Panoptic takes one part from each.
 
 .. figure:: /_static/images/L5/seg_tree.png
+   :class: dark-light themed-L5
    :alt: A tree. The root box: Segmentation, a label for every pixel (or every LiDAR point). Four branches, left to right. Semantic: a class per pixel, things and stuff, no object ids; example SegFormer. Panoptic: a class per pixel and an id on things, one label per pixel; example Mask2Former. Instance: a mask per object, things only, with ids, masks may overlap; example YOLOv8s-seg. Promptable: a mask for what you point at, no fixed class list; example SAM. A dashed green arrow labeled its stuff goes from Semantic to Panoptic, and a dashed orange arrow labeled its things goes from Instance to Panoptic. Below: any kind can run on a camera image, LiDAR points, or a grid seen from above (next section). A key: things are countable objects (a person, a car); stuff is regions you do not count (road, sky, grass).
    :width: 100%
    :align: center
@@ -1228,6 +1241,7 @@ Cityscapes: the model in our ROS package ``l5_seg_demo``. We ran it on this
 frame; every image and size below is measured from its output.
 
 .. figure:: /_static/images/L5/segp_semantic.png
+   :class: dark-light themed-L5
    :alt: Semantic segmentation pipeline, left to right. The CARLA camera image, 1280 by 720, a city street with a double yellow center line and buildings. An arrow to the encoder, four green blocks that get smaller, labeled 1/4 to 1/32 of the size. An arrow to the decoder, three orange blocks that get larger, labeled back up to 1/4. An arrow to two of the 19 score maps, 180 by 320: road, black over the lower part of the image, and car, white with small black spots where the cars are. An arrow labeled each pixel: highest score, to the output: a class per pixel, 1280 by 720, with the road purple, sidewalk pink, cars dark blue, buildings dark gray and trees green, and a legend for those five colors.
    :width: 100%
    :align: center
@@ -1465,6 +1479,7 @@ only a simulator gives. Our capture script puts every pixel of the semantic
 image on the ground, on a grid of 0.2 m cells seen from above.
 
 .. figure:: /_static/images/L5/seg_bev.png
+   :class: dark-light themed-L5
    :alt: Left, the semantic segmentation image from the CARLA slide, with the note that a lane marking is 9 pixels wide at 10 m and 4 pixels wide at 20 m, measured. Right, the same pixels put on a grid seen from above, x ahead from 0 to 50 m up the page and y from 20 m left to 20 m right; the camera is a black dot at the bottom middle. Marker 1: near the camera the lane markings are straight and parallel green lines. Marker 2: far away the purple road splits into separate thin rows. Marker 3: white wedges where no pixel lands, behind the cars and between rows.
    :width: 78%
    :align: center
@@ -1577,6 +1592,7 @@ looks level.
 - :math:`v`: how many pixel rows below the horizon that point lands.
 
 .. figure:: /_static/images/L5/pinhole_side.png
+   :class: dark-light themed-L5
    :alt: Side view, not to scale. A camera, a black dot, h above a flat road, with a dashed level line through it marked level (horizon). A green ray goes down from the camera to a road point d ahead on the road. A vertical image plane stands f in front of the camera; the ray crosses it v below the level line, marked in orange.
    :width: 50%
    :align: center
@@ -1614,6 +1630,7 @@ Here is that answer drawn: the same two meters of road in the camera image
 model, :math:`f = 640` px and :math:`h = 1.5` m.
 
 .. figure:: /_static/images/L5/far_road_rows.png
+   :class: dark-light themed-L5
    :alt: Top left, a sketch of the camera image, 1280 by 720 pixels, with the horizon dashed and the AV's lane, 3.5 m wide, as a gray triangle meeting at the horizon; a thin green band crosses the lane near the top of the triangle and a tiny box marks the far band near the horizon. Two zooms at one square per pixel: 10 to 11 m covers 8.7 rows, a block of green pixel rows; 50 to 51 m covers 0.38 rows, a single orange line inside one row. Bottom, the same road from above, d from 0 to 55 m ahead of the camera, with the AV at the left: the green band at 10 to 11 m and the orange band at 50 to 51 m have the same width, labeled from above: the same 1 m of road.
    :width: 98%
    :align: center
@@ -1664,6 +1681,7 @@ AV. :math:`i` counts cells along :math:`x` (forward), :math:`j` along
    **same** cells. That is what makes fusion on the grid easy later.
 
 .. figure:: /_static/images/L5/bev_grid.png
+   :class: dark-light themed-L5
    :alt: A square grid seen from above, lines every 20 cells, x and y from -51.2 to 51.2 m. The corner at the bottom left is i = 0, j = 0; i counts along x, forward, to the right, and j along y, left, up. The AV sits at the center. Car B, a small blue box ahead and to the right of the AV, is labeled car B, center (12.0, -2.0) m. A zoom at the upper right shows car B's outline and its center dot inside a green cell: cell (i, j) = (123, 96).
    :width: 45%
    :align: center
@@ -1717,6 +1735,7 @@ on a synthetic road made by a script, not CARLA: three lane lines and a car
 put the lane lines, and the car?
 
 .. figure:: /_static/images/L5/ipm_example.png
+   :class: dark-light themed-L5
    :alt: Left, the front camera image of a synthetic road: two lanes with white lane lines meeting at the horizon, dashed at the middle of the image, and a blue car ahead whose roof touches the horizon. An arrow marks the bottom of the car, where it meets the road, 96 rows below the horizon, so d = 640 times 1.5 over 96 = 10 m. Right, the IPM top view, x from 0 to 40 m to the right and y, left, up: the lane lines are straight and parallel, a red dashed rectangle marks where the car really is, 10 to 14.5 m, and a blue wedge, where IPM puts the car's pixels, starts at 10 m and widens past 40 m.
    :width: 100%
    :align: center
@@ -1748,6 +1767,7 @@ it shows :math:`v = f\,(h - z)/d` rows below the horizon. IPM then says
 :math:`d = f\,h/v`.
 
 .. figure:: /_static/images/L5/ipm_side.png
+   :class: dark-light themed-L5
    :alt: A side view, x forward to the right, from 0 to 20 m. On the left, the AV, a black car icon facing right, with its camera on the roof at x = 0, h = 1.5 m above flat ground. Ahead, the car, a gray car icon facing right, 1.5 m tall, its back at 10 m. Three rays from the camera: green to the bottom of the car, on the ground at 10 m; orange to the back of the car 0.75 m up, continued dashed to the ground at 20 m, where an orange cross is labeled IPM puts it at 20 m; red, level with the camera, to the car's roof top, continued dashed and labeled roof top: never meets the ground.
    :width: 100%
    :align: center
@@ -1787,6 +1807,7 @@ depth is known? The first method that made this work from cameras alone, in
 steps.
 
 .. figure:: /_static/images/L5/lss_cameras.png
+   :class: dark-light themed-L5
    :alt: The AV seen from above, front up, with six camera wedges around it: one straight ahead labeled 70 degrees, two more on each side, and one straight back labeled 110 degrees; neighboring wedges overlap a little.
    :width: 15%
    :align: center
@@ -1795,6 +1816,7 @@ steps.
    110° at the back.
 
 .. figure:: /_static/images/L5/lss_pipeline.png
+   :class: dark-light themed-L5
    :alt: Three panels joined by arrows, all seen from above with the AV at the bottom, its front up. Lift: a short line in front of the AV is the camera image, with one pixel marked on it; a ray goes from the camera through the pixel out into the scene, cut by ticks into five depth bins, each with a bar whose length is its probability, the longest in the middle bin. Splat: the same ray on a grid of cells, and the five cells it crosses shaded, the darkest in the middle. Shoot: the same grid with three candidate paths from the AV, the straight one highlighted.
    :width: 74%
    :align: center
@@ -1894,6 +1916,7 @@ mapping**, on the BEV grid.
   RTX 3090 GPU for its smallest version.
 
 .. figure:: /_static/images/L5/vector_map.png
+   :class: dark-light themed-L5
    :alt: Two top views of the same made-up road, the AV at the left facing right. Left, raster: a class in every 1 m cell; three lane lines that bend gently left drawn as staircases of dark cells, and a crosswalk as a block of orange cells. Right, vector: a short list of points; the same three lane lines as smooth polylines with 7 dots each, and the crosswalk as an orange polygon with 4 corner dots.
    :width: 98%
    :align: center
@@ -1926,6 +1949,7 @@ question:** how does the planner know that space is taken?
 objects".
 
 .. figure:: /_static/images/L5/occupancy.png
+   :class: dark-light themed-L5
    :alt: A block of small cubes, voxels, around the AV, seen at an angle. Most are empty and drawn as faint outlines. Colored ones are occupied: blue for a car, orange for a pedestrian, and brown for a fallen branch that no detector class covers. The AV is dark gray, on the left. A hatched patch of ground behind the car, as seen from the AV, marks voxels no sensor can see: unobserved.
    :width: 55%
    :align: center
@@ -2071,6 +2095,7 @@ subsections:** at which stage of the pipeline do the camera's data and the
 LiDAR's data join: at the start, in the middle, or at the end?
 
 .. figure:: /_static/images/L5/fusion_scenario.png
+   :class: dark-light themed-L5
    :alt: A top view, x forward to the right. The AV at the left, facing right, in its lane marked by two dashed lines. Its front camera's 90 degree view spreads to the right as a green wedge, labeled front camera: 90 degree view. Ahead and to the right, car B, light blue, turned 30 degrees toward the AV's lane, labeled car B, cutting in: (12.0, -2.0) m, 30 degrees. Orange dots line car B's back and left side, labeled LiDAR: points on car B's back and left side.
    :width: 65%
    :align: center
@@ -2103,6 +2128,7 @@ anything interprets them.
    one answer for the planner.
 
 .. figure:: /_static/images/L5/fusion_scn_early.png
+   :class: dark-light themed-L5
    :alt: Car B as the AV's front camera sees it, from behind and to its left. Top left, the camera's pixels of car B, in green text: camera, pixels. Bottom left, the LiDAR's points on car B alone, eleven orange rings, in orange text: LiDAR, points. Arrows from both lead to the right: car B with the orange rings drawn on its pixels, labeled each point paired with its pixel.
    :width: 45%
    :align: center
@@ -2143,6 +2169,7 @@ sensor counts?
    one answer.
 
 .. figure:: /_static/images/L5/fusion_scn_mid.png
+   :class: dark-light themed-L5
    :alt: A top view on a 1 m grid, x forward to the right. The AV at the left, facing right; car B ahead and to the right, about 12 m ahead, turned 30 degrees toward the AV's lane. The eight cells under car B are shaded, and each holds a green dot, a camera feature, and an orange dot, a LiDAR feature. A legend names the two dots; a caption says: both in the cells under car B.
    :width: 45%
    :align: center
@@ -2182,6 +2209,7 @@ how do two finished answers become one?
    objects; the **FUSE** bar joins them only at the end.
 
 .. figure:: /_static/images/L5/fusion_scn_late.png
+   :class: dark-light themed-L5
    :alt: Two answers about car B. Left, in green: the camera's answer, car B seen from behind and to its left with a green box around it, labeled camera: a car, at this box in the image. Right, in orange: the LiDAR's answer, car B seen from above inside an orange rotated box with a black center dot, labeled LiDAR: an object, near (12.0, -2.0) m. Arrows from both lead down to one box: one car B, by a filter (L3).
    :width: 45%
    :align: center
@@ -2286,6 +2314,7 @@ Step 1: Project a LiDAR Point into the Image
   1.0 m up (chosen).
 
 .. figure:: /_static/images/L5/project_point.png
+   :class: dark-light themed-L5
    :alt: Two panels. Left, from above: the AV at the left facing right, its camera a green dot on its roof; car B ahead and to the right, turned 30 degrees; the orange point P on the middle of car B's rear face. A green dashed line runs straight ahead from the camera, labeled z_c = 8.45 m, then turns right down to P, labeled x_c = 3.125 m. Right, the camera's image, 1280 by 720, with its center (640, 360) marked where the two center lines cross; car B's camera box drawn dashed in green, right of and below the center; the orange point P at (876.7, 397.9), inside the box.
    :width: 79%
    :align: center
@@ -2322,6 +2351,7 @@ point from Step 1 lands at :math:`(876.7, 397.9)`:
 point outside the box is dropped.
 
 .. figure:: /_static/images/L5/projection_image.png
+   :class: dark-light themed-L5
    :alt: The front camera's image as a 1280 by 720 pixel frame, u to the right and v down from the top-left corner (0, 0). A dashed line marks row 360 to the image center, (c_u, c_v) = (640, 360). A blue rectangle, the detector's box on car B, spans u from 640 to 925 and v from 355 to 485. A red dot inside it is the LiDAR point on car B, (876.7, 397.9), labeled inside: keep.
    :width: 66%
    :align: center
@@ -2346,6 +2376,7 @@ The box is flat, but the space it sees is a wedge, wider the farther you go.
 That includes points behind car B.
 
 .. figure:: /_static/images/L5/frustum.png
+   :class: dark-light themed-L5
    :alt: A top view, x forward to the right, y left, up the page. The AV at the origin facing right, its camera at the front. Two lines from the camera spread to the right: the frustum of the camera box, from straight ahead to the right. Inside it, car B, a light blue car in a dark blue box turned 30 degrees, with 41 LiDAR points along its rear face and its left side; their centroid, a red cross at (10.99, -1.89), sits about 1 m nearer the AV than the box center, a black dot at (12.0, -2.0). Farther right, a wall 8 m to the right of the AV, from x = 20 to 30 m, with 9 points.
    :width: 80%
    :align: center
@@ -2482,6 +2513,7 @@ A Pedestrian the AV Cannot See
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L5/csa_pedestrian.png
+   :class: dark-light themed-L5
    :alt: A top view of a straight road, x pointing right, all vehicles driving right. The AV, a black car, at x = 70 m, behind a truck from 78 to 90 m. A connected car C, a green car, at x = 100 m. A pedestrian at x = 115 m, 3 m to the left of the lane center. The truck's shadow, a gray wedge from the AV, covers the pedestrian. C's camera view, a green wedge, reaches the pedestrian. A dashed arrow from C to the AV is labeled V2X.
    :width: 92%
    :align: center
@@ -2695,6 +2727,7 @@ know that this frame's car B is last frame's car B. **The question:** which
 box continues which track? The tracker answers in four steps, on every frame.
 
 .. figure:: /_static/images/L5/track_loop.png
+   :class: dark-light themed-L5
    :alt: Four boxes in a row joined by arrows: 1. Predict every track (Kalman filter); 2. Associate: pair detections with tracks; 3. Update matched tracks (Kalman filter); 4. Manage the rest: start, coast, delete. New detections from this frame enter box 2 from above. Confirmed tracks leave box 4 to the right, to prediction and planning. An arrow labeled next frame runs from box 4 back to box 1. Boxes 2 and 4 are green.
    :width: 95%
    :align: center
@@ -2736,6 +2769,7 @@ gate cannot belong to that track. The tracker must decide:
 4. which tracks got **nothing**, and whether they still exist.
 
 .. figure:: /_static/images/L5/four_decisions.png
+   :class: dark-light themed-L5
    :alt: A sketch, not to scale, of one frame seen from above: a two-lane road with the AV at the left facing right. Three predicted tracks are hollow circles, each in a dashed gate ellipse. Red dots are this frame's detections. One sits inside the gate of the track ahead of the AV, labeled 1: matched, inside a gate, and one inside the gate of a track in the left lane, labeled 1: matched. A red dot on the road near its right edge, outside every gate, is labeled 2: new object?. A red dot just off the road is labeled 3: clutter?. The farthest track has no detection in its gate, labeled 4: nothing this frame.
    :width: 95%
    :align: center
@@ -2787,6 +2821,7 @@ This frame, a box lands 2 m from the cross. Is it car B? Two meters alone
 cannot say. It depends on the size of the circle.
 
 .. figure:: /_static/images/L5/nis_terms_plain.png
+   :class: dark-light themed-L5
    :alt: A sketch of one track seen from above. A cross, the predicted position, sits in a shaded circle, labeled shaded, the uncertainty: how far from the cross the box may land. A green arrow runs from the cross to a black dot, labeled box: this frame's detection, and the miss: from the predicted position to the box, d m. A dashed circle around both, about three times the radius of the shaded circle, is labeled gate: close enough to match, about 3 times the uncertainty.
    :width: 60%
    :align: center
@@ -2825,6 +2860,7 @@ example). **Left:** car B, followed for many frames, so the filter is sure:
 0.1 m. **Right:** a track started one frame ago, so it is unsure: 3 m.
 
 .. figure:: /_static/images/L5/mahalanobis_plain.png
+   :class: dark-light themed-L5
    :alt: Two panels, each with its own scale. Left, car B's track: sure. A blue cross in a tiny shaded circle, uncertainty 0.1 m, inside a dashed gate of 0.30 m; a box 2 m away is far outside; text: 2 m is 20 times its uncertainty: outside the gate; a 1 m scale bar. A legend: cross, predicted position; shaded, the uncertainty; dashed, the gate, about 3 times the uncertainty; each panel has its own scale. Right, a new track: unsure. A gray cross in a shaded circle, uncertainty 3 m, a box 2 m away inside it, and a dashed gate of 9.1 m around both; text: 2 m is less than its uncertainty: inside the gate; a 5 m scale bar.
    :width: 97%
    :align: center
@@ -2926,6 +2962,7 @@ missed. Each track has a **status**. **M of N** means at least M detections
 in the last N frames; M and N are set by tuning.
 
 .. figure:: /_static/images/L5/track_lifecycle.png
+   :class: dark-light themed-L5
    :alt: A state diagram. An arrow from the label a detection that matched no track enters Tentative, where the planner is not told. Tentative leads to Confirmed, green, where the planner is told, when the track passes M of N, for example 3 detections in 5 frames. Confirmed leads to Coasting, predicted forward, like a pedestrian behind a van, on no detection, and back on detected again. Tentative leads to Deleted, red, removed, when it fails M of N. Coasting leads to Deleted when it goes too long with no detection.
    :width: 95%
    :align: center
@@ -2997,6 +3034,7 @@ a crosswalk. **The question:** the system detected her 5.6 s before impact;
 why did it not brake in time? Every time below is from the NTSB report.
 
 .. figure:: /_static/images/L5/tempe_timeline.png
+   :class: dark-light themed-L5
    :alt: A time axis of seconds before impact, from 6 on the left to 0, impact, on the right. A tick at 5.6 s: radar detects her (as a vehicle). A tick at 5.2 s: LiDAR detects her (as an unknown object). A yellow band from 5.6 to 1.2 s: class keeps changing: vehicle, other, bicycle; the tracking history is dropped at each change. A red tick at 1.2 s: her location is in the path: emergency. A red band from 1.2 to 0.2 s: braking held back 1 s, by design.
    :width: 98%
    :align: center
