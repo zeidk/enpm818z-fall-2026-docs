@@ -34,6 +34,8 @@ GP5: Vision-Language-Action Driving (Optional)
       * - **Starter code**
         - None. We have not written GP5 starter code or a reference solution.
           This page gives no measured results for that reason.
+          :ref:`gp5-setup` lists the files you create and the GP4 files you
+          reuse.
       * - **Prerequisites**
         - Your GP1 to GP3 pipeline working. GP4 helps: it gives you the
           closed loop and the scoring script.
@@ -201,6 +203,178 @@ the text commands come from.
        for the command before it ticks the world, so a slow model slows the
        run but does not change what the car does. It ticks anyway after
        ``cmd_timeout_s`` (2.0 s by default) and logs the timeout.
+
+
+.. _gp5-setup:
+
+Setting Up the Project
+----------------------
+
+GP5 has no starter: you create every new file yourself. It runs on your GP4
+code, so start from your GP4 submission.
+
+1. Start the ``gp5`` branch from your GP4 submission:
+
+   .. code-block:: bash
+
+      cd ~/enpm818z_ws/src/GP1_TeamX && git checkout -b gp5 gp4-final
+
+2. Install the Python packages that GP1 to GP4 did not need: ``torch``,
+   ``transformers`` and ``Pillow`` for the model, and ``networkx`` and
+   ``shapely`` for CARLA's ``agents`` module (its ``requirements.txt`` lists
+   them):
+
+   .. code-block:: bash
+
+      python3 -m pip install --user --break-system-packages torch transformers Pillow networkx shapely
+
+   ``--user`` and ``--break-system-packages`` work as in GP2. We have not
+   tested this install on the course machines. Check that PyTorch sees your
+   GPU; this prints ``True`` when it does:
+
+   .. code-block:: bash
+
+      python3 -c "import torch; print(torch.cuda.is_available())"
+
+3. Make CARLA's ``agents`` module importable. Task 1's expert,
+   ``BasicAgent``, and ``GlobalRoutePlanner`` are in it. The ``carla``
+   package that ``pip`` installs (0.9.16) does not include it, so point
+   Python to the copy that comes with CARLA:
+
+   .. tab-set::
+
+      .. tab-item:: Native (22.04)
+         :sync: native
+
+         .. code-block:: bash
+
+            echo 'export PYTHONPATH="$PYTHONPATH:$HOME/carla/CARLA_0.9.16/PythonAPI/carla"' >> ~/.bashrc
+            source ~/.bashrc
+
+      .. tab-item:: Docker (24.04)
+         :sync: docker
+
+         Copy the module out of the CARLA container once (``docker cp``
+         works while the container is stopped too):
+
+         .. code-block:: bash
+
+            mkdir -p ~/carla_agents
+            docker cp carla-server:/workspace/PythonAPI/carla/agents ~/carla_agents/
+            echo 'export PYTHONPATH="$PYTHONPATH:$HOME/carla_agents"' >> ~/.bashrc
+            source ~/.bashrc
+
+   Check:
+
+   .. code-block:: bash
+
+      python3 -c "from agents.navigation.basic_agent import BasicAgent; print('agents OK')"
+
+4. Create the new files of the folder structure below. The names are ours:
+   any names work if your ``setup.py`` and launch file use them.
+
+5. Add the node to ``setup.py``, in ``console_scripts``:
+
+   .. code-block:: python
+
+      'vla_node = ads_pipeline.vla_node:main',
+
+   In ``gp5_launch.py``, give ``vla_config.yaml`` to the node the way
+   ``gp4_launch.py`` gives ``controller_config.yaml`` to the controller: a
+   launch argument that names the YAML file, passed as the node's
+   ``parameters``.
+
+6. Keep the data out of git: add ``gp5_data/`` to ``.gitignore``. Frames,
+   labels and model checkpoints all go there.
+
+7. The first time you load CLIP, ``from_pretrained`` downloads
+   ``openai/clip-vit-base-patch16`` to ``~/.cache/huggingface``. Load it
+   once while you are online, before you need it in the car.
+
+Folder Structure
+~~~~~~~~~~~~~~~~
+
+GP5 adds these files to your repository, on the ``gp5`` branch. Everything
+else stays as you left it in GP4.
+
+.. code-block:: text
+
+   GP1_Team{X}/
+   ├── ads_pipeline/
+   │   ├── ads_pipeline/
+   │   │   ├── sensor_manager.py      # yours, from GP1 to GP4: unchanged
+   │   │   ├── ground_truth.py        # Given in GP4: /carla/speedometer
+   │   │   ├── planner_node.py        # Given in GP4: /planning/path
+   │   │   ├── vla_model.py           # Task 2: yours, new
+   │   │   └── vla_node.py            # Task 4: yours, new
+   │   ├── config/
+   │   │   └── vla_config.yaml        # Task 4: yours, new
+   │   ├── launch/
+   │   │   ├── gp4_launch.py          # Given in GP4
+   │   │   └── gp5_launch.py          # Task 4: yours, new
+   │   ├── routes/
+   │   │   ├── <rig>.yaml             # Given in GP4: your test route
+   │   │   └── town01_points.json     # Given in GP4: Task 1's spawn points
+   │   ├── tools/evaluate_run.py      # Given in GP4: Task 5's scores
+   │   └── setup.py                   # + vla_node
+   ├── gp5/
+   │   ├── collect_expert.py          # Task 1: yours, new
+   │   ├── dataset.py                 # Task 2: yours, new
+   │   └── train.py                   # Task 3: yours, new
+   └── gp5_data/                      # not in git: your data and checkpoints
+
+The ``gp5/`` scripts are plain Python, not ROS 2 nodes: they talk to CARLA
+directly (Task 1) or only read files (Tasks 2 and 3).
+
+Where each file comes from
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 30 20 50
+   :header-rows: 1
+   :class: compact-table
+
+   * - **File**
+     - **Status**
+     - **What it does**
+   * - ``gp5/collect_expert.py``
+     - **Yours, new** (Task 1)
+     - Drives Town01 routes with ``BasicAgent`` and saves, for every frame,
+       the image, the controls, the speed, the text command and the episode
+       number. Mount the camera as your rig does (``carla_config.yaml``:
+       position, image size, field of view), so the training images look
+       like the ones the node sees.
+   * - ``gp5/dataset.py``
+     - **Yours, new** (Task 2)
+     - A PyTorch ``Dataset`` over ``gp5_data/``: one item per frame.
+   * - ``ads_pipeline/vla_model.py``
+     - **Yours, new** (Task 2)
+     - The model: frozen CLIP, the joined input and the decoder. It lives in
+       the package so that both ``train.py`` and ``vla_node.py`` import
+       the same code.
+   * - ``gp5/train.py``
+     - **Yours, new** (Task 3)
+     - Trains the three models of the ablation and reports the validation
+       MAE. Saves each model to ``gp5_data/``.
+   * - ``ads_pipeline/vla_node.py``
+     - **Yours, new** (Task 4)
+     - Reads the camera, the speed and the command, runs the model, and
+       publishes one ``VehicleCmd`` per camera frame (Your Pipeline in GP5).
+   * - ``config/vla_config.yaml``
+     - **Yours, new** (Task 4)
+     - The node's settings: the checkpoint path, the speed scale used in
+       training, and the 0.75 throttle limit.
+   * - ``launch/gp5_launch.py``
+     - **Yours, new** (Task 4)
+     - A copy of ``gp4_launch.py`` without ``behavior_node`` and
+       ``controller_node``, and with ``vla_node``.
+   * - ``ground_truth.py``, ``planner_node.py``, ``gp4_launch.py``,
+       ``routes/``, ``tools/evaluate_run.py``
+     - Given in GP4
+     - Used as they are. GP5 changes none of them.
+   * - ``sensor_manager.py`` and your GP2 and GP3 nodes
+     - Yours, from GP1 to GP4
+     - Used as they are.
 
 
 Task 1: Collect Expert Data
@@ -437,7 +611,7 @@ The hardware table in the :doc:`syllabus </syllabus/index>` applies. CARLA,
 your GP2 detector and CLIP will share one GPU. We have not measured how much
 memory the three need together.
 You need ``torch``, ``transformers`` and ``Pillow``, besides the packages of
-GP1 to GP4.
+GP1 to GP4 (:ref:`gp5-setup`, step 2).
 
 
 Further Reading

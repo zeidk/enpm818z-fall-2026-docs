@@ -5,10 +5,27 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.34.6: GP5 Model Diagram (2026-11-20)
+.. dropdown:: v2.35.0: GP5 Project Setup, L10 Slide 35 Live (2026-11-20)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Assignments
+
+   - **GP5:** a new section, Setting Up the Project: the ``gp5`` branch,
+     the Python packages, how to reach CARLA's ``agents`` module (the
+     ``pip`` package does not include it), the folder structure, and a table
+     of the files you create and the GP4 files you reuse.
+
+   .. rubric:: Lectures
+
+   - **L10, Interactive Slides:** slide 35 is a live plot. Sliders set the
+     AV's speed and the end of each worked move, and the curves draw
+     gradually, in time order.
+
+.. dropdown:: v2.34.6: GP5 Model Diagram (2026-11-20)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Assignments
 

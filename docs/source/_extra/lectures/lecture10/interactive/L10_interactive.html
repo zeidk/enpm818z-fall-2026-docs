@@ -1139,14 +1139,26 @@ svg.plot,.fig{background:var(--paper) !important}
     the end conditions fix the rest: \(b_{3}\), \(b_{4}\), or \(c_{3}\), \(c_{4}\), \(c_{5}\).</li><li>The next frames work one of each.</li></ul></p>
 </div></div></section>
 
-<section class="plate frame plan" data-scene="p37" data-name="Slide 35 · Trajectory Generation" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Trajectory Generation</span><span>Slide 35</span></div>
+<section class="plate frame plan" id="st-ex" data-scene="p37" data-name="Slide 35 · Trajectory Generation" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Trajectory Generation</span><span>Slide 35</span></div>
   <h2>Work one \(s(t)\): where it starts and where it must end</h2><div class="fit"><div class="fitin">
-  <p class="goal"><ul class="pl" data-pl="24"><li>Keep a speed: \(\dot{s}(T) = 6\) m/s, \(\ddot{s}(T) = 0\), at \(T = 4\) s.</li><li>Stop: \(s(T) = 110.15\) m, \(\dot{s}(T) = 0\), \(\ddot{s}(T) = 0\), at \(T = 10\) s.</li><li>It says only how far along the road; where across comes from \(d(t)\).</li><li>The AV now, along the road: at \(s = 60\) m, driving at 10 m/s, not speeding up or slowing down.</li></ul></p>
-  <img class="fig" src="L10_interactive_assets/st_example.png" style="width:700px" alt="Two graphs side by side of the distance along the road s, in meters, against the time t from now, in seconds. Both start the same way: a thick black line rising steeply up to a red round marker at t = 0 and s = 60, dark tag 1 below and to the right of it. Left graph, titled keep a speed: a gray curve rises from the red round marker and bends to a gentler slope at t = 4 s, marked by a dotted vertical line, with no red round marker there; a thick black straight line goes on at that gentler slope, dark tag 2 below it. Right graph, titled stop at a point: a gray curve rises from the red round marker and levels off at a second red round marker at t = 10 s and s = 110.15, marked by a dotted vertical line; a thick black flat line goes on from it, dark tag 2 below it.">
-  <ul class="tags" style="font-size:25px">
-    <li><span class="tg">1</span><span>Now, \(t = 0\): \(s = 60\) m, \(\dot{s} = 10\) m/s, \(\ddot{s} = 0\) (the steeper the line, the faster).</span></li>
-    <li><span class="tg">2</span><span>At the end:<ul><li>left, at \(T = 4\) s: \(\dot{s} = 6\) m/s, \(\ddot{s} = 0\)</li><li>no condition fixes \(s(T)\), so no red marker: the AV ends where the curve takes it (92 m)</li><li>right, at \(T = 10\) s: stopped at 110.15 m</li></ul></span></li>
-  </ul>
+  <p class="goal" style="margin-bottom:4px">\(s(t)\) says only how far along the road; where across comes from \(d(t)\).</p>
+  <div style="display:grid;grid-template-columns:740px 1fr;gap:22px;align-items:start">
+    <div><svg id="stx-plot" class="plot" viewBox="0 0 740 272" width="740" height="272" role="img"
+         aria-label="Two graphs of the distance along the road s, in meters, against the time t from now, in seconds. Left, keep a speed: a black line rises to a red marker at t = 0, a gray curve bends to the end speed at T, and a black straight line goes on. Right, stop at a point: the same start, a gray curve levels off at a red marker at T and the stop point, and a black flat line goes on."></svg>
+    <ul class="tags" id="stx-tags" style="font-size:25px;margin:8px 0 0"></ul></div>
+    <div style="font-size:20px">
+      <div class="small" style="font-weight:700;color:var(--ink)">The AV now, at \(s = 60\) m<span class="try">try it</span></div>
+      <div class="row" style="margin:2px 0 8px"><span class="lbl" style="min-width:186px">speed, m/s</span><input type="range" id="stx-v0" min="4" max="14" step="0.5" value="10" style="width:150px" aria-label="the AV's speed now, m/s"></div>
+      <div class="small" style="font-weight:700;color:var(--ink)">Keep a speed</div>
+      <div class="row" style="margin:2px 0"><span class="lbl" style="min-width:186px">end speed, m/s</span><input type="range" id="stx-v1" min="0" max="14" step="0.5" value="6" style="width:150px" aria-label="the speed to keep, m/s"></div>
+      <div class="row" style="margin:2px 0 8px"><span class="lbl" style="min-width:186px">reach it in, s</span><input type="range" id="stx-t1" min="2" max="8" step="0.5" value="4" style="width:150px" aria-label="the time T to reach it, s"></div>
+      <div class="small" style="font-weight:700;color:var(--ink)">Stop at a point</div>
+      <div class="row" style="margin:2px 0"><span class="lbl" style="min-width:186px">stop at, m</span><input type="range" id="stx-ss" min="70" max="150" step="0.05" value="110.15" style="width:150px" aria-label="the stop point along the road, m"></div>
+      <div class="row" style="margin:2px 0 8px"><span class="lbl" style="min-width:186px">stop in, s</span><input type="range" id="stx-t2" min="4" max="14" step="0.5" value="10" style="width:150px" aria-label="the time T to stop, s"></div>
+      <div class="row" style="margin:4px 0 0"><button id="stx-draw">Draw again</button><button id="stx-reset">The deck's values</button></div>
+      <div id="stx-warn" style="font-size:22px;font-weight:600;color:var(--bad, #B3261E);margin-top:10px"></div>
+    </div>
+  </div>
 </div></div></section>
 
 <section class="plate frame plan" data-scene="p38" data-name="Slide 36 · Trajectory Generation" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Trajectory Generation</span><span>Slide 36 (1 of 2)</span></div>
@@ -1298,6 +1310,7 @@ svg.plot,.fig{background:var(--paper) !important}
   </div>
   <div class="box" style="margin-top:26px">From here on, the controllers drive one shared test path, the next section's curve.</div>
 </div></div></section>
+
 
 
 
@@ -3691,6 +3704,81 @@ function makeTraj(R){
       (function step(now){ t = Math.min(7, (now - t0) / 1000); tIn.value = t; tIn2.value = t; draw(); if (t < 7) playT = requestAnimationFrame(step); else playT = null; })(t0); };
     scene();
   })();
+
+
+/* ---------- Slide 35: the two worked s(t), live, drawn by a time sweep ---------- */
+(function(){
+  var sec = document.getElementById("st-ex"), svg = document.getElementById("stx-plot");
+  var IN = {}; ["v0","v1","t1","ss","t2"].forEach(function(k){ IN[k] = document.getElementById("stx-" + k); });
+  var DECK = {v0:10, v1:6, t1:4, ss:110.15, t2:10}, S0 = 60, RED = "#D32F2F", GRAY = "#7D8792";
+  var anim = null;
+  /* Keep a speed: quartic, s(0) = 60, v(0) = v0, a(0) = 0, v(T) = v1, a(T) = 0: b4 = (v0 - v1) / (2T^3), b3 = -2T b4. */
+  function keepF(P){ var T = P.t1, b4 = (P.v0 - P.v1) / (2 * T * T * T), b3 = -2 * T * b4, sT = S0 + P.v0 * T + b3 * T * T * T + b4 * T * T * T * T;
+    return {T:T, end:sT, s:function(t){ if (t <= 0) return S0 + P.v0 * t; if (t >= T) return sT + P.v1 * (t - T); return S0 + P.v0 * t + b3 * t * t * t + b4 * t * t * t * t; },
+      v:function(t){ return P.v0 + 3 * b3 * t * t + 4 * b4 * t * t * t; }}; }
+  /* Stop: quintic, s(T) = stop point, v(T) = 0, a(T) = 0. With D = stop - 60:
+     c3 = (10D - 6 v0 T) / T^3, c4 = (8 v0 T - 15D) / T^4, c5 = (6D - 3 v0 T) / T^5 (the deck's -0.0985, 0.004775, 0.000009). */
+  function stopF(P){ var T = P.t2, D = P.ss - S0, v0 = P.v0, T3 = T * T * T;
+    var c3 = (10 * D - 6 * v0 * T) / T3, c4 = (8 * v0 * T - 15 * D) / (T3 * T), c5 = (6 * D - 3 * v0 * T) / (T3 * T * T);
+    return {T:T, end:P.ss, s:function(t){ if (t <= 0) return S0 + v0 * t; if (t >= T) return P.ss; return S0 + v0 * t + c3 * t * t * t + c4 * Math.pow(t, 4) + c5 * Math.pow(t, 5); },
+      v:function(t){ return v0 + 3 * c3 * t * t + 4 * c4 * t * t * t + 5 * c5 * Math.pow(t, 4); }}; }
+  function params(){ var P = {}; for (var k in IN) P[k] = +IN[k].value; return P; }
+  function m(x){ return nt(x, 2).replace(/\.?0+$/, ""); }
+  function tagsText(P, K, Sp){
+    var back = null; for (var k = 1; k <= 400; k++){ var t = Sp.T * k / 400; if (Sp.v(t) < -0.005){ back = t; break; } }
+    var h = '<li><span class="tg">1</span><span>Now, \\(t = 0\\): \\(s = 60\\) m, \\(\\dot{s} = ' + m(P.v0) + '\\) m/s, \\(\\ddot{s} = 0\\) (the steeper the line, the faster).</span></li>' +
+      '<li><span class="tg">2</span><span>At the end:<ul><li>left, at \\(T = ' + m(P.t1) + '\\) s: \\(\\dot{s} = ' + m(P.v1) + '\\) m/s, \\(\\ddot{s} = 0\\)</li>' +
+      '<li>no condition fixes \\(s(T)\\), so no red marker: the AV ends where the curve takes it (' + nt(K.end, 1).replace(/\.0$/, "") + ' m)</li>' +
+      '<li>right, at \\(T = ' + m(P.t2) + '\\) s: stopped at ' + m(P.ss) + ' m</li>' +
+      '</ul></span></li>';
+    var ul = document.getElementById("stx-tags"); ul.innerHTML = h; mathIn(ul);
+    document.getElementById("stx-warn").textContent = back != null ? "The stop's speed falls below 0 at " + nt(back, 1) + " s: the AV would back up. Give it more room, or less time." : ""; }
+  /* Draw both graphs with the time sweep at tau (Infinity: everything). */
+  function draw(P, tau){
+    svg.innerHTML = "";
+    var K = keepF(P), Sp = stopF(P), xL = [-1.2, K.T + 1.6], xR = [-1.2, Sp.T + 2.5];
+    var top = Math.max(K.s(xL[1]), Sp.end, S0) + 6, step = top - 40 > 120 ? 40 : 20, yMax = Math.ceil(top / step) * step;
+    for (var k = 0; k <= 400; k++){ var tt = Sp.T * k / 400; yMax = Math.max(yMax, Math.ceil((Sp.s(tt) + 4) / step) * step); }
+    var yMin = 40, yt = []; for (var y = yMin; y <= yMax + 1e-9; y += step) yt.push(y);
+    function ticks(x1, every){ var o = []; for (var v = 0; v <= x1 + 1e-9; v += every) o.push(v); return o; }
+    var panels = [
+      {F:K, box:{x:0, y:30, w:300, h:196}, xr:xL, xt:ticks(xL[1], xL[1] > 8 ? 2 : 1), title:"keep a speed", ylab:"s (m)", stopMark:false},
+      {F:Sp, box:{x:372, y:30, w:362, h:196}, xr:xR, xt:ticks(xR[1], 2), title:"stop at a point", ylab:"", stopMark:true}];
+    panels.forEach(function(pn){
+      var F = frame(svg, pn.box, pn.xr, [yMin, yMax], pn.xt, yt, "t (s), from now", pn.ylab);
+      txt(svg, pn.box.x + pn.box.w / 2, 22, pn.title, 17, C.ink, "middle", {"font-weight":600});
+      var g = el(svg, "g", {}), Fn = pn.F, T = Fn.T, end = Math.min(tau, pn.xr[1]);
+      function seg(a, b, attrs){ if (end <= a) return; var pts = [], b2 = Math.min(b, end), n = 120;
+        for (var i = 0; i <= n; i++){ var t = a + (b2 - a) * i / n; pts.push([F.X(t), F.Y(Fn.s(t))]); } poly(g, pts, attrs); }
+      seg(pn.xr[0], 0, {stroke:C.ink, "stroke-width":5, "stroke-linecap":"round"});
+      seg(0, T, {stroke:GRAY, "stroke-width":3.5});
+      seg(T, pn.xr[1], {stroke:C.ink, "stroke-width":5, "stroke-linecap":"round"});
+      var r = tagR(svg);
+      if (end >= 0){ el(g, "circle", {cx:F.X(0), cy:F.Y(S0), r:7, fill:RED, stroke:"#fff", "stroke-width":2});
+        tag(g, F.X(0) + 2.4 * r, Math.min(F.Y(S0) + 2.4 * r, pn.box.y + pn.box.h - r - 4), 1); }
+      if (end >= T){
+        el(g, "line", {x1:F.X(T), y1:F.Y(Fn.s(T)), x2:F.X(T), y2:pn.box.y + pn.box.h, stroke:C.muted, "stroke-width":1.6, "stroke-dasharray":"3 4"});
+        if (pn.stopMark) el(g, "circle", {cx:F.X(T), cy:F.Y(Fn.s(T)), r:7, fill:RED, stroke:"#fff", "stroke-width":2});
+        var tm = T + (pn.xr[1] - T) / 2; tag(g, F.X(tm), Math.min(F.Y(Fn.s(tm)) + 2.6 * r, pn.box.y + pn.box.h - r - 4), 2); }
+      if (tau < pn.xr[1]) el(g, "circle", {cx:F.X(end), cy:F.Y(Fn.s(end)), r:5, fill:C.live});   /* the pen */
+    });
+  }
+  function update(animate){
+    var P = params(); tagsText(P, keepF(P), stopF(P));
+    if (anim){ cancelAnimationFrame(anim); anim = null; }
+    if (!animate || reduce){ draw(P, Infinity); return; }
+    var K = keepF(P), Sp = stopF(P), t0 = -1.2, t1 = Math.max(K.T + 1.6, Sp.T + 2.5), dur = 3200, start = performance.now();
+    (function stepA(){ var p = Math.max(0, Math.min(1, (performance.now() - start) / dur)); draw(P, p >= 1 ? Infinity : t0 + (t1 - t0) * p);
+      anim = p < 1 ? requestAnimationFrame(stepA) : null; })();
+  }
+  for (var k in IN){ IN[k].addEventListener("input", function(){ update(false); }); IN[k].addEventListener("change", function(){ update(true); }); }
+  document.getElementById("stx-draw").onclick = function(e){ e.stopPropagation(); update(true); };
+  document.getElementById("stx-reset").onclick = function(e){ e.stopPropagation(); for (var k in DECK) IN[k].value = DECK[k]; update(true); };
+  /* Draw the curves again each time the slide comes on screen. */
+  var wasOn = false;
+  new MutationObserver(function(){ var on = sec.classList.contains("active"); if (on && !wasOn) update(true); wasOn = on; }).observe(sec, {attributes:true, attributeFilter:["class"]});
+  update(false);
+})();
 
 
 /* ---------- Test Curve and Speed Profile: the cap on each arc for a chosen a_lat ---------- */
