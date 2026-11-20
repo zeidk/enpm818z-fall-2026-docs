@@ -5,10 +5,20 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.37.3: L10 Interactive Slides, Pure Pursuit Formulas and Plan Colors (2026-11-20)
+.. dropdown:: v2.37.4: L10 Interactive Slides, References on Hover (2026-11-20)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10 interactive slides:** hover a citation, such as "(Werling et al.,
+     2010)", to see the full reference in a card beside the slide, with its
+     number and links. Click the citation to keep the card open.
+
+.. dropdown:: v2.37.3: L10 Interactive Slides, Pure Pursuit Formulas and Plan Colors (2026-11-20)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 
