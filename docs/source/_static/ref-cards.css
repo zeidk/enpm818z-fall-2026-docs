@@ -1,0 +1,20 @@
+/* References on hover: the citation and its card (_static/ref-cards.js). Theme colors only, so light and dark follow. */
+.refcite { border-bottom: 2px dotted var(--pst-color-primary); cursor: help; border-radius: 2px; }
+.refcite:hover, .refcite:focus-visible, .refcite.on { background: var(--pst-color-surface); outline: none; }
+#refcard { position: absolute; z-index: 1100; display: none; max-height: 70vh; overflow: auto; border-radius: 14px;
+  background: var(--pst-color-background); color: var(--pst-color-text-base); border: 1px solid var(--pst-color-border);
+  box-shadow: 0 18px 50px rgba(15, 25, 40, .28), 0 2px 8px rgba(15, 25, 40, .12);
+  opacity: 0; transform: translateY(6px) scale(.98); transition: opacity .16s ease, transform .16s ease; }
+#refcard.up { transform: translateY(-6px) scale(.98); }
+#refcard.show { opacity: 1; transform: none; }
+#refcard .rc-h { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--pst-color-border);
+  background: linear-gradient(90deg, var(--pst-color-surface), var(--pst-color-background)); border-radius: 14px 14px 0 0; }
+#refcard .rc-h svg { flex: none; color: var(--pst-color-primary); }
+#refcard .rc-t { font-weight: 600; font-size: 1rem; line-height: 1.25; }
+#refcard .rc-k { font-size: .85rem; color: var(--pst-color-text-muted); margin-top: 2px; }
+#refcard .rc-x { margin-left: auto; border: 0; background: none; color: var(--pst-color-text-muted); font-size: 1.3rem;
+  cursor: pointer; padding: 0 4px; display: none; }
+#refcard.pinned .rc-x { display: block; }
+#refcard .rc-b { padding: 14px 18px 10px; font-size: .98rem; line-height: 1.5; overflow-wrap: anywhere; }
+#refcard .rc-f { padding: 0 18px 10px; font-size: .8rem; color: var(--pst-color-text-muted); }
+@media (prefers-reduced-motion: reduce) { #refcard { transition: none; } }

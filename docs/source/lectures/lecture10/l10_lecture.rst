@@ -27,6 +27,7 @@ paths with times, around a car that moves, and then turn a trajectory into
 steering, throttle and brake.
 
 .. figure:: /_static/images/L10/l10_stack.png
+   :class: dark-light themed-L10
    :alt: A block diagram of four boxes in a row joined by arrows: Route planner (L7), Behavior layer (L9), Local planner (L9) and Controller (L10, today); only the controller box is green. Under the arrows: lanes to follow, a task, a path for the next seconds, and, after the controller, steering, throttle, brake. Above, a box Pose feeds the route planner, a box Pose, objects, predictions feeds the behavior layer and the local planner, and a box Pose, speed feeds the controller.
    :width: 95%
    :align: center
@@ -82,6 +83,15 @@ Follow the Path at the Right Speed: Two Controllers Side by Side
      - Pure Pursuit, Stanley, MPC
      - PID
 
+.. raw:: html
+   :file: widgets/_head.html
+
+Click a row of the table: the note under it says what that controller compares and sends.
+
+.. raw:: html
+   :file: widgets/feedback.html
+
+
 
 .. _l10-lec-map:
 
@@ -93,6 +103,7 @@ section's divider shows it again with that box highlighted, and the boxes
 link to their sections.
 
 .. figure:: /_static/images/L10/l10_pipeline.png
+   :class: dark-light themed-L10
    :alt: The lecture's flowchart. Top row, as in L9: the inputs (the route from the route planner, L7; the AV's pose and speed; other cars and obstacles; their predicted paths; the map), the behavior layer (picks the task and a target speed), the local planner (a path in L9, or a trajectory today) and its output, a path, which our controller node uses. Below, a green dashed frame, the controller node: the behavior layer's target speed goes into the speed profile (curves cap the target speed), which feeds the speed PID (throttle, brake); the path goes into a row of three steering methods, one of which is used (the section also covers PID and LQR): Pure Pursuit, Stanley, MPC; a dashed bicycle model (how steering turns the AV) points down to them. The steering methods and the PID lead to the output (steer, throttle, brake, every 0.05 s, to the actuators), which goes to the AV in CARLA; a dashed line takes the measured pose and speed back to the inputs. Each box links to its section.
    :width: 100%
    :align: center
@@ -154,6 +165,12 @@ later sections name the clock with its number.
    Other times are not clocks: how late the car answers (steering and engine
    delays and lags) and how far ahead a plan looks (a horizon, such as MPC's
    3 s).
+
+Press the button to play one second, ten times slower, and watch both clocks tick while the AV moves.
+
+.. raw:: html
+   :file: widgets/clocks.html
+
 
 
 .. _l10-lec-objectives:
@@ -279,6 +296,12 @@ needs a state for every pair: 5 × 3 = 15.
      behavior's column, Follow's included, as Follow (Nominal) to Follow
      (Caution): 5 arrows (blue).
 
+Pick how many behaviors and modes the flat FSM has, and count the states it needs.
+
+.. raw:: html
+   :file: widgets/flat-fsm.html
+
+
 .. _l10-lec-superstate:
 
 Step 2, Fewer Arrows: One Superstate Arrow Replaces Five
@@ -312,6 +335,12 @@ needs 5 arrows to Emergency stop.
    Harel lets a transition that leaves a superstate stand for that
    transition leaving every state inside it: "the main way statecharts
    economize in the number of arrows" (Harel, 1987).
+
+Switch between the flat FSM and the superstate, and count the arrows in each.
+
+.. raw:: html
+   :file: widgets/superstate.html
+
 
 
 .. _l10-lec-fsm-left:
@@ -425,6 +454,12 @@ Running, Success or Failure (Colledanchise and Ögren, 2018).
      - A leaf: **runs a behavior**; returns Running while it is ongoing.
        Ours: Lane keep, Follow, Change lane, Stop at the line.
 
+Tick the tree with each button and follow which nodes run and what each one returns.
+
+.. raw:: html
+   :file: widgets/bt-read.html
+
+
 .. _l10-lec-road-bt:
 
 Pass a Slow Car or Follow It: Four Road Behaviors as a Behavior Tree
@@ -527,6 +562,12 @@ chosen for this example (the root ticks every 0.1 s, chosen).
    first branch that does not fail acts. At tick 2, condition 3 fails, so
    the second Sequence fails, and the Fallback moves on to the third branch,
    Follow. Tick 2 comes before the AV has left its lane.
+
+
+Play the two ticks, or flip a condition, and see which behavior the tree picks.
+
+.. raw:: html
+   :file: widgets/bt-ticks.html
 
 .. dropdown:: More detail: what real stacks use, and what they hand down
    :class-container: more-detail
@@ -692,6 +733,12 @@ candidate.
      course's CARLA code, the controller sets it from a speed profile (later
      in this lecture).
 
+Pick a speed and read how far ahead the path then has to reach.
+
+.. raw:: html
+   :file: widgets/horizon.html
+
+
 
 .. _l10-lec-recap-path:
 
@@ -821,6 +868,12 @@ says how far through the move that point is:
 - The same :math:`u` works for every :math:`L`: halfway is :math:`u` = 0.5
   for 20, 30 or 40 m.
 
+Move the point s along the road and read how far through the move it is.
+
+.. raw:: html
+   :file: widgets/u.html
+
+
 
 .. _l10-lec-qu:
 
@@ -860,6 +913,12 @@ move :math:`\Delta d` done.
 The slope of :math:`q`, :math:`30u^2(1 - u)^2`, is 0 at :math:`u = 0` and
 :math:`u = 1`: the curve is flat at both ends. So the AV leaves its lane and
 enters the next one parallel to the lane.
+
+
+Move u from 0 to 1 and see how much of the shift q(u) has done.
+
+.. raw:: html
+   :file: widgets/qu.html
 
 .. dropdown:: More detail: why a polynomial, and where 10, −15 and 6 come from
    :class-container: more-detail
@@ -1012,6 +1071,12 @@ move:
      = 1.75` m above :math:`d_0`.
    - **Tag 3:** after :math:`s_0 + L` = 100 m, :math:`u` stops at 1:
      :math:`d` stays at :math:`d_0 + \Delta d` = 3.5 m.
+
+Move the point s, or change the length, and read d(s) for candidate A.
+
+.. raw:: html
+   :file: widgets/candidate.html
+
 
 
 .. _l10-lec-candidate-all:
@@ -1272,6 +1337,12 @@ tell whether the AV would reach the left lane before car B or after it, so
 the behavior layer closed the lane. To keep that lane open, the local
 planner must check each candidate itself: where the AV will be at each
 moment, against where prediction puts car B at that same moment.
+
+Move the time and see where car B and the AV are at that moment.
+
+.. raw:: html
+   :file: widgets/traj-scene.html
+
 
 
 .. _l10-lec-traj-key:
@@ -1680,6 +1751,12 @@ Work One d(t): Find Its Six Numbers
    :math:`d_1`, over :math:`T^3`, :math:`T^4` or :math:`T^5`.
 
 
+
+Pick the end offset and the duration, and see the quintic d(t) that meets them.
+
+.. raw:: html
+   :file: widgets/dt-numbers.html
+
 .. dropdown:: More detail: the three equations, solved step by step
    :class-container: more-detail
    :icon: info
@@ -1835,6 +1912,12 @@ One move of each kind, picked for this example:
 
 Red round markers: positions the conditions fix. Gray: the curve between.
 
+Change the start speed, the end speed and the duration, and see where s(t) ends.
+
+.. raw:: html
+   :file: widgets/st-example.html
+
+
 
 .. _l10-lec-traj-quartic:
 
@@ -1870,6 +1953,12 @@ speed and acceleration:
 
 A stop has six conditions, so it needs six numbers: a quintic, solved as
 for :math:`d(t)`.
+
+Move the time and read s(t), its speed and its acceleration.
+
+.. raw:: html
+   :file: widgets/st-numbers.html
+
 
 
 .. _l10-lec-traj-lon-set:
@@ -2299,6 +2388,18 @@ where prediction puts it at that same moment**.
 - A graph with no time: a line into car B's lane is dropped only if the AV
   is there when car B is.
 
+
+Press the button to check every candidate at its own time and count the ones kept.
+
+.. raw:: html
+   :file: widgets/traj-check.html
+
+
+Pick one candidate and see why the check keeps it or drops it.
+
+.. raw:: html
+   :file: widgets/traj-pick.html
+
 .. dropdown:: More detail: score the cheapest by hand, stay and slow to 6 m/s
    :class-container: more-detail
    :icon: info
@@ -2338,6 +2439,12 @@ Steps 4 and 5: Pick and Repeat
 
 Drive the first 0.5 s of the cheapest candidate, then plan again from where
 the AV is.
+
+Generate the 324 candidates, check each one and play the plan the planner picks.
+
+.. raw:: html
+   :file: widgets/traj-live.html
+
 
 
 .. _l10-lec-traj-replan:
@@ -2928,6 +3035,12 @@ On our two arcs:
 These caps are the speed limit at each point, the dotted line in the next
 figure.
 
+Change the sideways acceleration limit and read the speed cap on each arc.
+
+.. raw:: html
+   :file: widgets/cap.html
+
+
 
 .. _l10-lec-profile-2:
 
@@ -2966,6 +3079,12 @@ not a map: speed against the distance along the path. The profile (blue):
    arc's lower cap, and holds it.
 3. Tag 4: speeds up after the curve, more gently than it braked, back to
    the target speed.
+
+
+Change the limit or move along the path, and see the speed profile brake before the curve.
+
+.. raw:: html
+   :file: widgets/profile.html
 
 .. dropdown:: More detail: the two distances, worked
    :class-container: more-detail
@@ -3180,6 +3299,12 @@ So each wheel must point at a right angle to the line from the ICR to it
    the turn, but a controller sends one. The model also assumes no tire
    slides sideways: true only while the sideways acceleration stays low.
 
+Change the turn radius and read the angle of each front wheel.
+
+.. raw:: html
+   :file: widgets/ackermann.html
+
+
 
 .. _l10-lec-bicycle-collapse:
 
@@ -3364,6 +3489,12 @@ turns left) and the wheelbase :math:`L`:
    model, with position and speed, comes with MPC, which predicts with it
    (:ref:`l10-lec-bicycle-full`).
 
+
+Change the steering angle and the speed, and read the turn rate.
+
+.. raw:: html
+   :file: widgets/turn-rate.html
+
 .. dropdown:: More detail: why tan δ = L/R
    :class-container: more-detail
    :icon: info
@@ -3437,6 +3568,12 @@ Steer for a Curvature: a Fixed Angle Drives a Circle
    Both arcs are within reach: 0.448 rad is under the 0.7 rad limit. A
    curve tighter than :math:`R` = 3.41 m would not be.
 
+
+Change the steering angle, or pick one of the curve's arcs, and see the circle the AV drives.
+
+.. raw:: html
+   :file: widgets/steer-curvature.html
+
 .. dropdown:: More detail: where the model stops holding
    :class-container: more-detail
    :icon: info
@@ -3497,6 +3634,12 @@ sideways a little when the AV turns, and more the harder it turns.
 
    Speed alone does not set the limit: the sideways acceleration is
    :math:`v^2/R`, so a gentle curve allows more speed than a tight one.
+
+
+Change the curvature and the speed, and see when the sideways acceleration gets too high.
+
+.. raw:: html
+   :file: widgets/model-limit.html
 
 .. dropdown:: More detail: the dynamic bicycle model, when tires slide
    :class-container: more-detail
@@ -3988,6 +4131,12 @@ In our run, :math:`\alpha` = 0.1877 rad (10.8°) to the right:
 :math:`\delta = \arctan(2 \times 2.875 \times \sin 0.1877 / 5)` = 0.211 rad
 to the right, step 3's angle. Green: the arc that angle drives.
 
+
+Change the angle and the lookahead, and read the arc and the steering angle.
+
+.. raw:: html
+   :file: widgets/pp-law.html
+
 .. dropdown:: More detail: why κ = 2 sin α / L_d
    :class-container: more-detail
    :icon: info
@@ -4369,6 +4518,12 @@ changes, averaged over the run.
    :math:`\max(5\ \mathrm{m}, 1\ \mathrm{s} \times v)`: the EKF's pose jumps
    a little at each GNSS fix, and a short lookahead turns each jump into a
    swerve.
+
+Click a run in the table, or pick a lookahead, and see how far the AV strays from the path.
+
+.. raw:: html
+   :file: widgets/lookahead-runs.html
+
 
 
 .. _l10-lec-handson-4:
@@ -5042,6 +5197,12 @@ for" and the weaknesses: Snider, 2009):
 - Our controller node (CARLA Implementation) uses Pure Pursuit, the simplest
   of the three; its target speed is the road's 30 km/h limit, a low speed.
 
+
+Pick a controller to watch its run on our curve.
+
+.. raw:: html
+   :file: widgets/steer-videos.html
+
 .. dropdown:: More detail: Snider's guidelines, and our five runs side by side
    :class-container: more-detail
    :icon: info
@@ -5291,6 +5452,12 @@ Hold the Target Speed: the Speed Loop
 - The test: the AV at rest; the target jumps to 8 m/s, as when a red light
   turns green.
 
+Change the AV's speed and read what the loop compares and sends.
+
+.. raw:: html
+   :file: widgets/speed-loop.html
+
+
 
 .. _l10-lec-speed-model:
 
@@ -5315,6 +5482,18 @@ steps, every simulation step, 0.01 s (all values chosen for the example):
    grows with the square of the speed.
 
 The AV's acceleration = the lagged request − drag.
+
+Move the command u and see which pedal it presses and how hard.
+
+.. raw:: html
+   :file: widgets/pedal.html
+
+
+Move the time and see how the engine's push catches up with the command.
+
+.. raw:: html
+   :file: widgets/lag.html
+
 
 
 .. _l10-lec-speed-drag:
@@ -5342,6 +5521,12 @@ So even at the target, the AV needs some throttle. A P controller makes
 throttle only from an error, so it must keep an error (see "Try P Alone",
 below).
 
+Change the speed and read how hard drag pulls back.
+
+.. raw:: html
+   :file: widgets/drag.html
+
+
 
 .. _l10-lec-p-def:
 
@@ -5366,6 +5551,12 @@ Step 1, P: Push in Proportion to the Error
 
    The catch: at :math:`e = 0`, P pushes nothing, but holding 8 m/s takes
    throttle 0.23 against drag (previous section). The next section runs it.
+
+Play the run, or move the time, and compare the AV with a ghost car that holds the target speed perfectly.
+
+.. raw:: html
+   :file: widgets/ghost.html
+
 
 
 .. _l10-lec-p:
@@ -5396,6 +5587,18 @@ Try P Alone: the AV Settles 0.42 m/s Short
 2. P makes throttle only from an error: 0.5 × :math:`e` = 0.21 gives
    :math:`e` = 0.42 m/s.
 
+Move the time and see the P term push in proportion to the error.
+
+.. raw:: html
+   :file: widgets/p.html
+
+
+Click a row of the table for its explanation.
+
+.. raw:: html
+   :file: widgets/p-steps.html
+
+
 
 .. _l10-lec-i-def:
 
@@ -5415,6 +5618,12 @@ Step 2, I: Add Up the Error over Time
 3. When the error reaches 0, the sum stops changing but stays: the I term
    alone holds the throttle. To hold 8 m/s, :math:`K_i` × sum = 0.23; with
    :math:`K_i` = 0.3 (chosen), the sum settles at 0.23 / 0.3 = 0.77 m.
+
+Click a row of the table for its explanation.
+
+.. raw:: html
+   :file: widgets/i-def.html
+
 
 
 .. _l10-lec-pi:
@@ -5443,6 +5652,12 @@ closes, but look at the start:
 
 Adding I removed the steady gap from P, but it bought an overshoot instead.
 To see why, the next section needs one more idea: saturation.
+
+Move the time and see the I term keep pushing after the error is gone.
+
+.. raw:: html
+   :file: widgets/pi.html
+
 
 
 .. _l10-lec-saturation:
@@ -5504,6 +5719,12 @@ Explain the Overshoot: Windup
    sum shrinks only while the AV is too fast, so the AV overshoots until the
    extra drains away.
 
+Click a row of the table for its explanation.
+
+.. raw:: html
+   :file: widgets/windup.html
+
+
 
 .. _l10-lec-clamp:
 
@@ -5533,6 +5754,12 @@ At every control step:
    - **Tag 1 (red):** without the clamp: peak 12.18 m/s.
    - **Tag 2 (green):** with it: peak 8.25 m/s, within 0.2 m/s of 8 after
      4.4 s.
+
+Change the gains, turn the clamp on or off, and play the run.
+
+.. raw:: html
+   :file: widgets/clamp.html
+
 
 
 .. _l10-lec-clamp-size:
@@ -5577,6 +5804,18 @@ target.
   (chosen).
 - When the target jumps, :math:`e` jumps too, and the change is large for
   one step.
+
+Move the time and see the D term ease off as the error closes.
+
+.. raw:: html
+   :file: widgets/d-def.html
+
+
+Click a row of the table for its explanation.
+
+.. raw:: html
+   :file: widgets/d-steps.html
+
 
 
 .. _l10-lec-pid-compare:
@@ -5630,6 +5869,12 @@ Compare P, PI and PID, All with the Clamp: D Trims the Peak
 - **Tag 3:** PID (:math:`K_d` = 0.1): peak 8.12 m/s; within 0.2 m/s of 8
   after 3.5 s.
 
+Pick a controller and move the time, and read its P, I and D terms at that moment.
+
+.. raw:: html
+   :file: widgets/pid-moment.html
+
+
 
 .. _l10-lec-pid-formula:
 
@@ -5654,6 +5899,12 @@ at :math:`K_p` = 0.5, :math:`K_i` = 0.05, :math:`K_d` = 0.1, with the sum
 held within 2.0: 0.05 × 2.0 = 0.1, under the 0.23 our model needs at 8 m/s.
 CARLA's car may need another throttle, so tune :math:`K_i` on it and check
 for a gap.
+
+Change the speed and the gains, and follow the error through the PID to the command.
+
+.. raw:: html
+   :file: widgets/pid-block.html
+
 
 
 .. _l10-lec-pid-split:
@@ -6128,6 +6379,12 @@ Run One Control Step: the Loop, Step by Step
 
 A dynamic model needs more measurements and gains that change with speed.
 
+
+Click each step, or play them all slowly, and see what that step computes.
+
+.. raw:: html
+   :file: widgets/control-step.html
+
 .. dropdown:: More detail: CARLA inputs and outputs
    :class-container: more-detail
    :icon: info
@@ -6409,6 +6666,12 @@ From our runs on the curve (the Lateral and Longitudinal sections):
      - a little overshoot left
      - add D: 8.25 to 8.12 m/s peak
 
+Click a symptom to see the fix and what it did on our curve.
+
+.. raw:: html
+   :file: widgets/tune.html
+
+
 
 .. _l10-lec-summary:
 
@@ -6568,3 +6831,6 @@ Next Class
 The vehicle icon in the figures on this page was created by Stone from the
 `Noun Project <https://thenounproject.com>`_. The map is CARLA's Town03
 (`carla.org <https://carla.org>`_).
+
+.. raw:: html
+   :file: widgets/_scripts.html

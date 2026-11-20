@@ -215,3 +215,6 @@ _build
 
 # The L10 interactive slides are served as they are (html_extra_path): keep their page
 !docs/source/_extra/**/*.html
+
+# The L10 lecture page's interactive panels, built by tools/build_l10_widgets.py and included with raw:: html
+!docs/source/lectures/lecture10/widgets/*.html

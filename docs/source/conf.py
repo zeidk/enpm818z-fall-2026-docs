@@ -126,7 +126,9 @@ exclude_patterns.append("_extra/**")
 master_doc = "index"
 
 html_css_files = [
-    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css", "my.css"
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css", "my.css",
+    # The card a citation opens on hover (see ref-cards.js).
+    "ref-cards.css",
 ]
 
 # sidebar-persist.js loads without `defer` so the stored sidebar state is
@@ -139,4 +141,7 @@ html_js_files = [
     ("open-target-dropdown.js", {"defer": "defer"}),
     # Swaps a themed figure to its _dark version in the dark theme (see the file's header).
     ("themed-figs.js", {"defer": "defer"}),
+    # References on hover: each lecture's sources (generated), then the card (see ref-cards.js's header).
+    ("l10w/l10-refs.js", {"defer": "defer"}),
+    ("ref-cards.js", {"defer": "defer"}),
 ]

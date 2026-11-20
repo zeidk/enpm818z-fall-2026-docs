@@ -5,10 +5,30 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.37.4: L10 Interactive Slides, References on Hover (2026-11-20)
+.. dropdown:: v2.38.0: L10 Lecture, Try It Panels and References on Hover (2026-11-20)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10 lecture:**
+
+     - 43 "Try it" panels from the interactive slides sit in the lecture,
+       each after the part it shows: sliders, step tables, plays and
+       animations, in light and dark. The text around them is unchanged.
+     - Hover a citation, such as "(Werling et al., 2010)", to see the full
+       reference in a card beside it. Click the citation to keep the card
+       open.
+     - The first two figures, the layer stack and the lecture's flowchart,
+       follow the site's theme.
+   - **L10 interactive slides, slide 74:** rolling resistance has its own
+     window with the tire, and air drag a new one: the AV seen from above,
+     the air pushed aside, and a speed slider that computes the air drag.
+
+.. dropdown:: v2.37.4: L10 Interactive Slides, References on Hover (2026-11-20)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 
