@@ -40,7 +40,7 @@
   --table:#E6EBF0; --hole:#C3CCD6; --plate:#F8FAFB; --plate-edge:#B9C4CF;
   --ink:#1E2935; --slate:#34506E; --muted:#5B6B7C;
   --plan-fill:#DCE9F8; --plan:#3E6FA8; --follow-fill:#FBE4CF; --follow:#B5622A;
-  --live:#16798A; --ok:#2E7D4F; --bad:#B3261E; --focus:#16798A;
+  --live:#16798A; --ok:#2E7D4F; --bad:#B3261E; --focus:#16798A; --livetext:#A84300;
   --on-accent:#fff;
   --card:#fff; --zebra:#F3F6F9; --hl:#D6EEF1; --hover:#EAF1F7; --chip:#EEF2F6; --now:#FFF8E6;
   --tagbg:#1E2935; --tagfg:#fff;
@@ -346,8 +346,9 @@ table.t.nowrap td, table.t.nowrap th{white-space:nowrap}
 /* math: KaTeX, inline \\( \\) and display \\[ \\] in the frames, tex() in the scripts */
 .katex{font-size:1.06em}
 .mathout{background:var(--card);border:2px solid var(--plate-edge);border-radius:8px;padding:6px 18px;font-size:25px;overflow-x:auto}
-/* live values (user, 2026-11-20): the text a control changes is drawn in the "changes now" color of the help key */
-.live-val{color:var(--live) !important}
+/* live values (user, 2026-11-20): the text a control changes is drawn in its own orange (teal was hard to see on the
+   light theme; red already means an issue) */
+.live-val{color:var(--livetext) !important}
 .mathout .katex-display{margin:.25em 0}
 .refs{font-size:25px;line-height:1.4;padding-left:56px;margin:6px 0} .refs li{margin:0 0 14px;padding-left:6px} .refs li::marker{color:var(--slate);font-weight:600}
 .refs a,.frame .box a,.opener a{color:var(--plan);word-break:break-all}
@@ -478,7 +479,7 @@ tr[data-why]:hover td:first-child::before,tr[data-why]:focus td:first-child::bef
   --table:#121820; --hole:#27313C; --plate:#1C242E; --plate-edge:#3A4757;
   --ink:#E4EAF0; --slate:#A8C0DA; --muted:#9CABBB;
   --plan-fill:#1F3248; --plan:#74A6DE; --follow-fill:#3F2B1C; --follow:#E39158;
-  --live:#43BACB; --ok:#62C48F; --bad:#F2786F; --focus:#43BACB;
+  --live:#43BACB; --ok:#62C48F; --bad:#F2786F; --focus:#43BACB; --livetext:#FFA657;
   --card:#242E39; --zebra:#2A3541; --hl:#1D4950; --hover:#2C3A49; --chip:#2A3541; --now:#3A2E1A;
   --navbg:rgba(28,36,46,.94); --tray:rgba(28,36,46,.6);
   --tagbg:#E4EAF0; --tagfg:#121820;
@@ -2647,7 +2648,8 @@ tr[data-why]:hover td:first-child::before,tr[data-why]:focus td:first-child::bef
   <div class="key">
     <i style="background:var(--plan-fill);border:2px solid var(--plan)"></i><span>Plan the motion: the behavior layer and the local planner.</span>
     <i style="background:var(--follow-fill);border:2px solid var(--follow)"></i><span>Follow it: speed profile, vehicle model, steering, throttle and brake.</span>
-    <i style="background:var(--live)"></i><span>What moves or changes now: the value you set, the step running, and the text a control changes.</span>
+    <i style="background:var(--live)"></i><span>What moves or changes now: the value you set, the step running.</span>
+    <i style="background:var(--livetext)"></i><span>Text a slider or button just changed.</span>
     <i style="background:var(--bad)"></i><span>An issue, or a candidate the planner drops.</span>
     <i style="background:var(--ok)"></i><span>Kept, or within the limit.</span>
   </div>

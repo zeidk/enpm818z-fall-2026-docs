@@ -5,10 +5,20 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.37.0: L10 Interactive Slides, Live Values and a Step-by-Step Control Loop (2026-11-20)
+.. dropdown:: v2.37.1: L10 Interactive Slides, Changed Values in Orange (2026-11-20)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10 interactive slides:** the numbers and words a slider or a button
+     changes are now dark orange instead of teal, which was hard to see on the
+     light theme. The help window's color key has a line for it.
+
+.. dropdown:: v2.37.0: L10 Interactive Slides, Live Values and a Step-by-Step Control Loop (2026-11-20)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 
