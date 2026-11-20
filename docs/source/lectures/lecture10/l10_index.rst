@@ -45,6 +45,7 @@ Lecture Materials
 -----------------
 
 - :doc:`l10_lecture`: the notes, following the slides shown in class.
+- :doc:`l10_interactive`: the slides as a web page you can try.
   Material cut from class sits in closed "More detail" boxes, right after
   the part it explains.
 - :doc:`l10_exercises`: four take-home exercises, not graded: a speed profile,
@@ -75,6 +76,7 @@ yourself. It runs in your browser, with nothing to install.
    :titlesonly:
 
    l10_lecture
+   l10_interactive
    l10_exercises
    l10_quiz
    l10_references
