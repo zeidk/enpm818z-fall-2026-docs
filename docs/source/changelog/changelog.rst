@@ -5,10 +5,19 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.33.0: GP4 Behavior Tree and Optional GP5 (2026-11-20)
+.. dropdown:: v2.33.1: GP5 Task 2 in Words (2026-11-20)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Assignments
+
+   - **GP5, Task 2:** the model is described part by part, with its sizes;
+     you write its code.
+
+.. dropdown:: v2.33.0: GP4 Behavior Tree and Optional GP5 (2026-11-20)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Assignments
 

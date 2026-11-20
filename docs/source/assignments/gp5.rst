@@ -236,51 +236,32 @@ Task 2: Build the Model
 
 **Goal:** a PyTorch model with the three parts of the Overview.
 
-The class below is a starting point. Its CLIP weights are random in our test;
-you load the pre-trained ones with ``from_pretrained``.
+What the model does, part by part (you write the code):
 
-.. code-block:: python
+- **CLIP, frozen.** Load ``openai/clip-vit-base-patch16`` with
+  ``from_pretrained`` and freeze it: its weights get no gradient.
+- **Two vectors.** CLIP turns the camera image into an image vector and the
+  command into a text vector, 512 numbers each, already scaled to length 1.
+- **One input.** Join the two vectors and the speed in m/s:
+  512 + 512 + 1 = 1,025 numbers. Scale the speed the same way in training
+  and in the node.
+- **The decoder.** A small MLP that you train. Its last layer gives three
+  numbers.
+- **The command's ranges.** Squash the three numbers into the ranges of
+  ``VehicleCmd``: steer from -1 to 1, throttle and brake from 0 to 1.
 
-   import torch
-   import torch.nn as nn
-   from transformers import CLIPModel, CLIPProcessor
+A size check: with two hidden layers of 256, the decoder has
+(1,025 × 256 + 256) + (256 × 256 + 256) + (256 × 3 + 3) = 329,219
+trainable parameters, while CLIP's 149,620,737 stay frozen.
 
-   class SimpleVLA(nn.Module):
-       def __init__(self, hidden_dim=256, dropout=0.1):
-           super().__init__()
-           name = "openai/clip-vit-base-patch16"
-           self.clip = CLIPModel.from_pretrained(name)
-           self.processor = CLIPProcessor.from_pretrained(name)
-           for p in self.clip.parameters():
-               p.requires_grad = False            # frozen
-           # 512 (image) + 512 (text) + 1 (speed) = 1025 inputs
-           self.decoder = nn.Sequential(
-               nn.Linear(1025, hidden_dim), nn.ReLU(), nn.Dropout(dropout),
-               nn.Linear(hidden_dim, hidden_dim), nn.ReLU(), nn.Dropout(dropout),
-               nn.Linear(hidden_dim, 3))
+.. admonition:: A version trap
+   :class: tip
 
-       def forward(self, images, commands, speeds):
-           # images: list of PIL images; commands: list of str;
-           # speeds: tensor (B, 1)
-           with torch.no_grad():
-               inp = self.processor(images=images, text=commands,
-                                    return_tensors="pt", padding=True)
-               out = self.clip(**inp)
-               img, txt = out.image_embeds, out.text_embeds   # (B, 512) each
-           raw = self.decoder(torch.cat([img, txt, speeds], dim=-1))
-           steer = torch.tanh(raw[:, :1])                    # -1 to 1
-           pedals = torch.sigmoid(raw[:, 1:])                # throttle, brake: 0 to 1
-           return torch.cat([steer, pedals], dim=-1)
+   In recent ``transformers`` versions (5.19.0 here),
+   ``get_image_features`` returns an output object, not a tensor. Read the
+   ``image_embeds`` and ``text_embeds`` of the model's output instead.
 
-We ran this class with random CLIP weights to check the shapes: it gives
-(B, 512) image and text vectors, 329,219 decoder parameters and a (B, 3)
-output (``transformers`` 5.19.0, ``torch`` 2.9.0). We have not trained it.
-The code reads ``image_embeds`` and ``text_embeds`` from the model's output
-because, in recent ``transformers`` versions, ``get_image_features`` returns an
-output object and not a tensor. CLIP's two embeddings are already scaled to
-length 1. Speed is in m/s; scale it the same way in training and in the node.
-
-**What you write:** a dataset class that loads the images, commands, speeds
+**What you write:** the model, a dataset class that loads the images, commands, speeds
 and controls of Task 1, the training loop, and your choice of hidden size,
 learning rate, dropout and batch size. We have no tested values to give you.
 
