@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1140 440" width="1140" height="440" role="img" aria-labelledby="t d">
+  <title id="t">The GP5 model</title>
+  <desc id="d">Three inputs on the left: the front camera image, the text command and the speed. The image goes to the CLIP image encoder and the command to the CLIP text encoder, both frozen. Each encoder gives 512 numbers; the speed is 1 number. The three are joined into one input of 1,025 numbers, which goes to the action decoder, a small MLP that you train. The decoder outputs steer from -1 to 1, throttle from 0 to 1 and brake from 0 to 1.</desc>
+  <defs>
+    <marker id="ah" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#424242"/>
+    </marker>
+    <clipPath id="thumb"><rect x="42" y="32" width="176" height="72" rx="6"/></clipPath>
+  </defs>
+  <style>
+    text { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; fill: #212121; }
+    .h { font-size: 19px; font-weight: 700; }
+    .b { font-size: 17px; }
+    .s { font-size: 16px; fill: #424242; }
+    .m { font-family: "DejaVu Sans Mono", Menlo, Consolas, monospace; font-size: 15px; fill: #37474f; }
+    .badge { font-size: 14px; font-weight: 700; letter-spacing: 0.4px; }
+    .line { stroke: #424242; stroke-width: 2.4; fill: none; }
+  </style>
+
+  <rect width="1140" height="440" fill="#ffffff"/>
+
+  <!-- Inputs -->
+  <rect x="22" y="20" width="216" height="130" rx="12" fill="#fafafa" stroke="#616161" stroke-width="2"/>
+  <g clip-path="url(#thumb)">
+    <rect x="42" y="32" width="176" height="72" fill="#cfe8fc"/>
+    <rect x="42" y="72" width="176" height="32" fill="#a5d6a7"/>
+    <path d="M100,104 L124,72 L136,72 L160,104 Z" fill="#78909c"/>
+    <path d="M130,100 L130,94 M130,88 L130,83 M130,79 L130,75" stroke="#ffffff" stroke-width="2.2"/>
+    <rect x="152" y="58" width="6" height="16" fill="#8d6e63"/>
+    <circle cx="155" cy="54" r="9" fill="#66bb6a"/>
+  </g>
+  <rect x="42" y="32" width="176" height="72" rx="6" fill="none" stroke="#9e9e9e" stroke-width="1.2"/>
+  <text class="b" x="130" y="133" text-anchor="middle">front camera image</text>
+
+  <rect x="22" y="175" width="216" height="90" rx="12" fill="#fafafa" stroke="#616161" stroke-width="2"/>
+  <text class="b" x="130" y="203" text-anchor="middle">text command</text>
+  <text class="m" x="130" y="228" text-anchor="middle">"turn left at the</text>
+  <text class="m" x="130" y="248" text-anchor="middle">intersection"</text>
+
+  <rect x="22" y="290" width="216" height="70" rx="12" fill="#fafafa" stroke="#616161" stroke-width="2"/>
+  <text class="b" x="130" y="320" text-anchor="middle">speed</text>
+  <text class="s" x="130" y="343" text-anchor="middle">in m/s</text>
+
+  <!-- Frozen encoders -->
+  <rect x="310" y="45" width="210" height="80" rx="12" fill="#e3f2fd" stroke="#1565c0" stroke-width="2.6"/>
+  <text class="h" x="415" y="77" text-anchor="middle">CLIP image encoder</text>
+  <rect x="373" y="90" width="84" height="24" rx="12" fill="#1565c0"/>
+  <path d="M386,100 v-3 a4.5,4.5 0 0 1 9,0 v3" fill="none" stroke="#ffffff" stroke-width="1.8"/>
+  <rect x="383.5" y="100" width="14" height="10" rx="2" fill="#ffffff"/>
+  <text class="badge" x="403" y="107" style="fill:#ffffff">frozen</text>
+
+  <rect x="310" y="180" width="210" height="80" rx="12" fill="#e3f2fd" stroke="#1565c0" stroke-width="2.6"/>
+  <text class="h" x="415" y="212" text-anchor="middle">CLIP text encoder</text>
+  <rect x="373" y="225" width="84" height="24" rx="12" fill="#1565c0"/>
+  <path d="M386,235 v-3 a4.5,4.5 0 0 1 9,0 v3" fill="none" stroke="#ffffff" stroke-width="1.8"/>
+  <rect x="383.5" y="235" width="14" height="10" rx="2" fill="#ffffff"/>
+  <text class="badge" x="403" y="242" style="fill:#ffffff">frozen</text>
+
+  <!-- Arrows: inputs to encoders, encoders and speed to the joined input -->
+  <path class="line" d="M238,85 H308" marker-end="url(#ah)"/>
+  <path class="line" d="M238,220 H308" marker-end="url(#ah)"/>
+  <path class="line" d="M520,85 H648" marker-end="url(#ah)"/>
+  <path class="line" d="M520,220 H648" marker-end="url(#ah)"/>
+  <path class="line" d="M238,325 H648" marker-end="url(#ah)"/>
+  <text class="s" x="589" y="74" text-anchor="middle">512 numbers</text>
+  <text class="s" x="589" y="209" text-anchor="middle">512 numbers</text>
+  <text class="s" x="589" y="314" text-anchor="middle">1 number</text>
+
+  <!-- The joined input vector -->
+  <rect x="660" y="40" width="34" height="90" rx="4" fill="#bbdefb" stroke="#1565c0" stroke-width="2"/>
+  <rect x="660" y="175" width="34" height="90" rx="4" fill="#bbdefb" stroke="#1565c0" stroke-width="2"/>
+  <rect x="660" y="313" width="34" height="24" rx="4" fill="#eeeeee" stroke="#616161" stroke-width="2"/>
+  <rect x="650" y="30" width="54" height="317" rx="10" fill="none" stroke="#424242" stroke-width="2" stroke-dasharray="6 5"/>
+  <text class="b" x="677" y="372" text-anchor="middle">joined:</text>
+  <text class="b" x="677" y="394" text-anchor="middle">1,025 numbers</text>
+
+  <!-- Trained decoder -->
+  <path class="line" d="M704,205 H743" marker-end="url(#ah)"/>
+  <rect x="745" y="145" width="168" height="120" rx="12" fill="#fff3e0" stroke="#e65100" stroke-width="2.6"/>
+  <text class="h" x="829" y="180" text-anchor="middle">action decoder</text>
+  <text class="b" x="829" y="205" text-anchor="middle">small MLP</text>
+  <rect x="784" y="222" width="90" height="24" rx="12" fill="#e65100"/>
+  <text class="badge" x="829" y="239" text-anchor="middle" style="fill:#ffffff">trained</text>
+
+  <!-- Output command -->
+  <path class="line" d="M913,205 H951" marker-end="url(#ah)"/>
+  <rect x="953" y="135" width="168" height="140" rx="12" fill="#fafafa" stroke="#616161" stroke-width="2"/>
+  <text class="h" x="1037" y="166" text-anchor="middle">command</text>
+  <text class="b" x="971" y="198">steer</text>
+  <text class="s" x="1105" y="198" text-anchor="end">−1 to 1</text>
+  <text class="b" x="971" y="226">throttle</text>
+  <text class="s" x="1105" y="226" text-anchor="end">0 to 1</text>
+  <text class="b" x="971" y="254">brake</text>
+  <text class="s" x="1105" y="254" text-anchor="end">0 to 1</text>
+
+  <!-- Legend -->
+  <rect x="310" y="370" width="26" height="18" rx="4" fill="#e3f2fd" stroke="#1565c0" stroke-width="2.2"/>
+  <text class="s" x="346" y="385">frozen: the weights do not change</text>
+  <rect x="310" y="402" width="26" height="18" rx="4" fill="#fff3e0" stroke="#e65100" stroke-width="2.2"/>
+  <text class="s" x="346" y="417">trained: the only weights you train</text>
+</svg>

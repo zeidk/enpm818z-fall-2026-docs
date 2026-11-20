@@ -5,10 +5,20 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.34.5: L10 Interactive Slides, Contents and Wheel Angles (2026-11-20)
+.. dropdown:: v2.34.6: GP5 Model Diagram (2026-11-20)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Assignments
+
+   - **GP5:** the model's three parts are drawn as a diagram instead of a
+     text sketch, with the size of each vector and which parts are frozen
+     or trained.
+
+.. dropdown:: v2.34.5: L10 Interactive Slides, Contents and Wheel Angles (2026-11-20)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

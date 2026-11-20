@@ -60,16 +60,23 @@ mind when you compare it with the real VLA systems.
 
 The model has three parts:
 
-.. code-block:: text
+.. figure:: /_static/images/GP5/gp5_model.svg
+   :alt: A diagram, left to right. Three inputs: the front camera image, the text command (for example "turn left at the intersection") and the speed in m/s. The image goes to the CLIP image encoder and the command to the CLIP text encoder; both are blue and marked frozen. Each encoder gives 512 numbers, and the speed is 1 number. The three are joined, inside a dashed outline, into one input of 1,025 numbers. It goes to the action decoder, a small MLP in orange marked trained, which outputs the command: steer from -1 to 1, throttle from 0 to 1, brake from 0 to 1. A legend: blue, frozen, the weights do not change; orange, trained, the only weights you train.
+   :align: center
+   :width: 100%
 
-   front camera image --> CLIP image encoder (frozen) --+
-                                                        |
-   text command --------> CLIP text encoder (frozen) ---+--> action decoder
-                                                        |    (small MLP,
-   speed ------------------------------------------------+     trained)
-                                                             |
-                                                             v
-                                              steer, throttle, brake
+   The GP5 model.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   - The three boxes on the left are the inputs your node reads for each camera frame.
+   - The two blue boxes are CLIP's encoders. They are frozen: their weights
+     do not change. Each turns its input into 512 numbers.
+   - The dashed outline is one input of 1,025 numbers: the two CLIP vectors
+     and the speed, joined end to end.
+   - The orange box is the only part you train. Its three outputs become the
+     ``VehicleCmd`` you publish.
 
 CLIP is a pre-trained model that maps an image and a text to vectors. You
 use it **frozen**: its weights do not change. The only part you train is a
