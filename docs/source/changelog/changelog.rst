@@ -5,10 +5,19 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.34.0: L10 Interactive Slides (2026-11-20)
+.. dropdown:: v2.34.1: L10 Interactive Slides Open (2026-11-20)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10, Interactive Slides:** the button now opens the slides; the
+     page itself was missing from the site.
+
+.. dropdown:: v2.34.0: L10 Interactive Slides (2026-11-20)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

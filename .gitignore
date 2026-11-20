@@ -212,3 +212,6 @@ _build
 *.html
 # the in-browser hands-on pages are published files, built by tools/make_l8_handson_html.py
 !docs/source/_static/handson/*.html
+
+# The L10 interactive slides are served as they are (html_extra_path): keep their page
+!docs/source/_extra/**/*.html
