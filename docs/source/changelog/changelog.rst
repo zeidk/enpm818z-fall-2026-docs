@@ -5,10 +5,25 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.36.5: Filters Reading in Light and Dark (2026-11-20)
+.. dropdown:: v2.36.6: GP3, GP4 and LiDAR SLAM Figures in Light and Dark (2026-11-20)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Group Projects
+
+   - **GP3 and GP4:** the flowchart that shows how the projects connect
+     follows the site's theme.
+
+   .. rubric:: Pre-Read Material
+
+   - **LiDAR SLAM:** seven figures follow the site's theme. The visual SLAM
+     reading and GP1 and GP2 keep their white figures for now (camera images,
+     and figures whose input recordings are not at hand).
+
+.. dropdown:: v2.36.5: Filters Reading in Light and Dark (2026-11-20)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Pre-Read Material
 

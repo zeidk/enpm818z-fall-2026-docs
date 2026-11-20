@@ -208,6 +208,7 @@ The loop closure, measured
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/SLAM/toy_ekf_slam.png
+   :class: dark-light themed-SLAM
    :alt: Two panels. Left: a top view of the circular path in gray, the dead-reckoning path in red, which ends about 2.4 meters off, 24 black landmark dots, and small blue 3-sigma ellipses around the EKF-SLAM landmark estimates, smallest near the start at the right of the circle. Right: uncertainty in meters against time in seconds. A red line, the robot's 1-sigma position uncertainty, climbs from 0 to 0.575 meters at about 50 seconds, drops sharply at a green dashed line labeled loop closure, a lap-1 landmark seen again, then rises to about 0.26 meters near 96 seconds and falls to about 0.05 at the end. A blue line, the mean 1-sigma of the landmarks seen so far, rises in steps to about 0.35 meters, drops at the same moment, and settles near 0.16 meters.
    :align: center
    :width: 100%
@@ -242,6 +243,7 @@ What the right panel shows, step by step:
    **0.092 m** at most. Dead reckoning ended 2.38 m off.
 
 .. figure:: /_static/images/SLAM/toy_ekf_correlation.png
+   :class: dark-light themed-SLAM
    :alt: A 51 by 51 square heat map of the absolute correlation between every pair of state numbers at the end of the run, on a scale from 0, dark purple, to 1, yellow. The diagonal is yellow. Most of the square is green to yellow, above 0.6, with a few dark rows and columns.
    :align: center
    :width: 60%
@@ -568,6 +570,7 @@ On our drive, below: 387 nodes and 549 edges.
 3. Share nonzero: :math:`1{,}485 / 149{,}769 = 0.99\%`.
 
 .. figure:: /_static/images/SLAM/lidar_sparsity.png
+   :class: dark-light themed-SLAM
    :alt: A square plot, 387 nodes by 387 nodes, titled 387 nodes, nonzero blocks of H. A thick black line runs down the main diagonal. Two thinner diagonal lines run parallel to it, offset by about 194 nodes, one above and one below, with a few small gaps.
    :align: center
    :width: 55%
@@ -604,6 +607,7 @@ ways to run the same ICP:
 Both start ICP from the last motion repeated and pair points within 1 m.
 
 .. figure:: /_static/images/SLAM/lidar_odometry_compare.png
+   :class: dark-light themed-SLAM
    :alt: A top view, x east against y north in meters, of two laps around a rectangular block about 160 by 95 meters, starting at a black dot at the bottom near x 0, y minus 25. The black truth and the blue scan-to-submap path lie almost on top of each other. The red scan-to-scan path drifts outward on the left and bottom sides, ending at about x minus 10, y minus 35.
    :align: center
    :width: 80%
@@ -708,6 +712,7 @@ the car, ring by ring and sector by sector:
 3. The result is a :math:`20 \times 60` image of the scan.
 
 .. figure:: /_static/images/SLAM/lidar_scan_context.png
+   :class: dark-light themed-SLAM
    :alt: Two stacked heat maps, range in meters from 0 to 50 upward, bearing around the car from 0 to 360 degrees across, 6 degrees per sector. Top, lap 1, keyframe 0; bottom, lap 2, keyframe 194. Both show the same pattern: a U-shaped band of cells between 25 and 50 meters on the left, from 0 to 140 degrees, and another U-shaped band between 13 and 30 meters on the right, from 200 to 340 degrees.
    :align: center
    :width: 85%
@@ -825,6 +830,7 @@ at the end. Same 387 keyframes, same 163 loop pairs, each measured again by
 ICP between the same two scans.
 
 .. figure:: /_static/images/SLAM/lidar_graph_before_after.png
+   :class: dark-light themed-SLAM
    :alt: Two top views of the block, with the truth as a thick gray line. Left, titled before, RMSE 7.07 meters: red keyframes from scan-to-scan odometry, with lap 2 drawn outside lap 1 on the left and bottom sides, joined by thin green loop edges. Right, titled after, RMSE 1.56 meters: blue optimized keyframes lie on the gray truth almost everywhere, with a small bulge on the right side near x 110, y 0.
    :align: center
    :width: 100%
@@ -847,6 +853,7 @@ The map
 ~~~~~~~
 
 .. figure:: /_static/images/SLAM/lidar_maps.png
+   :class: dark-light themed-SLAM
    :alt: Two occupancy grid maps of the block, white for free space, dark for walls, gray for unknown. Left, from scan-to-scan odometry: the walls of the inner block appear twice, as two offset outlines, and the outer walls are blurred. Right, from the optimized poses: one sharp outline of the inner block and sharp outer walls.
    :align: center
    :width: 100%

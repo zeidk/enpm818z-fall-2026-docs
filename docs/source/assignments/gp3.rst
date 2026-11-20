@@ -78,6 +78,7 @@ GP1 node so it can record a drive with ground truth; we give you that drive,
 recorded with your rig, and every later task works on it.
 
 .. figure:: /_static/images/GP3/gp3_flow.png
+   :class: dark-light themed-GP3
    :alt: A flow diagram, left to right. GP1's sensor_manager, in green, records your drive, a gray box. From the drive: the camera goes to GP2's detector_node, in blue; GNSS goes to the gray gnss_outage box and on to localization_node as fix_used; the IMU goes to localization_node; LiDAR goes to fusion_node. The detector's boxes go to fusion_node, localization_node's pose goes up to fusion_node, fusion_node's objects go to tracker_node, and tracker_node's tracks and localization_node's pose go to a dashed red GP4 box: planner, behavior, controller. fusion_node, localization_node and tracker_node are purple, GP3's own. Above them, dashed gray arrows marked reuses come down from GP1's lidar_projection, green, to fusion_node, and from GP2's box_tracker, blue, to tracker_node. A legend: green from GP1, blue from GP2, purple GP3: yours, red next: GP4, gray given or data.
    :align: center
    :width: 100%

@@ -72,6 +72,7 @@ Overview
 In GP4 your whole pipeline drives the car, live in CARLA:
 
 .. figure:: /_static/images/GP4/gp4_flow.png
+   :class: dark-light themed-GP4
    :alt: A flow diagram of the closed loop. Top row, left to right: GP1's sensor_manager, green, sends the camera to GP2's detector_node, blue; its boxes go to GP3's fusion_node, purple, whose objects go to GP3's tracker_node, purple; sensor_manager also sends LiDAR along the top to fusion_node and on, down the right side of tracker_node, to behavior_node. sensor_manager sends IMU and GNSS down to GP3's localization_node, purple, whose pose goes to planner_node, red. Middle row: planner_node sends the path to behavior_node, red, which also gets tracks from tracker_node and the traffic light from a gray ground truth box on the right; tracker_node also sends standing vehicles to planner_node. Bottom: controller_node, red, gets the path from planner_node, the pose from localization_node, the target speed from behavior_node and the speed from the speedometer of the ground truth box, along the bottom right, and sends /control/vehicle_cmd back to sensor_manager along the bottom and up the left side. A legend: green GP1, blue GP2, purple GP3, red GP4: yours, gray given.
    :align: center
    :width: 100%

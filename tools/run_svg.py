@@ -24,6 +24,6 @@ def savefig(self, fname, *a, **k):
 Figure.savefig = savefig
 import matplotlib.pyplot as plt
 plt.savefig = lambda fname, *a, **k: savefig(plt.gcf(), fname, *a, **k)
-script = sys.argv[2]; sys.argv = [script] + sys.argv[3:]
+script = sys.argv[2]; sys.argv = [script] + sys.argv[3:]; sys.path.insert(0, str(Path(script).resolve().parent))
 os.chdir(Path(script).resolve().parent.parent if "filters_figs" in script else Path.cwd())
 runpy.run_path(script, run_name="__main__")
