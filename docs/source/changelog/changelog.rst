@@ -5,10 +5,26 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.32.0: GP4 Planning and Control (2026-11-19)
+.. dropdown:: v2.33.0: GP4 Behavior Tree and Optional GP5 (2026-11-20)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Assignments
+
+   - **GP4, Task 4:** the behavior is now a behavior tree, built from the
+     node types of L10's hands-on (Condition, Action, Sequence, Fallback),
+     in place of the state machine. The four behaviors, their order, the
+     speeds, the points and what the tests expect are the same. Pull the
+     updated starter: three files changed (``behavior_core.py``,
+     ``behavior_node.py``, ``test_gp4_behavior.py``).
+   - **GP5 is posted, optional and not graded:** end-to-end driving with a
+     vision-language-action model on your own pipeline. No points, no
+     deadline, nothing to submit.
+
+.. dropdown:: v2.32.0: GP4 Planning and Control (2026-11-19)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Assignments
 

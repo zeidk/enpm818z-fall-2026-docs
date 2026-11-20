@@ -37,7 +37,7 @@ GP4: Planning & Control
           13.6% of the course grade
       * - **Lectures**
         - L7 (route planning, re-planning), L8 (constant-velocity prediction), L9
-          (finite state machines), L10 (Pure Pursuit, PID)
+          (finite state machines), L10 (behavior trees, Pure Pursuit, PID)
       * - **Starter code**
         - `gp4_starter <https://github.com/rubixcubic/enpm818z-fall-2026-carla-ros/tree/main/gp4_starter>`__
           and `ads_msgs <https://github.com/rubixcubic/enpm818z-fall-2026-carla-ros/tree/main/ads_msgs>`__
@@ -152,9 +152,9 @@ cross-track error was 0.12 m.
      - L10
      - Pure Pursuit for steering, a PID with anti-windup for speed.
    * - 4. Behavior (20 pts)
-     - L9
-     - Follow, slow down, stop at red lights, stop in an emergency, using
-       your GP3 tracks' speeds.
+     - L9, L10
+     - A behavior tree that follows the lane, slows down, stops at red
+       lights and stops in an emergency, using your GP3 tracks' speeds.
    * - 5. Report (15 pts)
      - all
      - Your runs, what your EKF costs the controller, and one failure.
@@ -181,7 +181,7 @@ Every task starts from code your team wrote:
      - Pure Pursuit and the PID
    * - 4. Behavior
      - GP3's tracks with their speeds
-     - The state machine
+     - The behavior tree
 
 .. note::
 
@@ -201,8 +201,9 @@ After completing GP4, you will be able to:
   firing again and again.
 - Steer with Pure Pursuit at the rear axle, and control speed with a PID
   that does not wind up.
-- Write a state machine where the safer state always wins, and use a
-  constant-velocity prediction to see a person about to step into the road.
+- Write a behavior tree that tries the safest branch first, so the safer
+  behavior always wins, and use a constant-velocity prediction to see a
+  person about to step into the road.
 - Run a closed loop where the simulation waits for the controller, and
   measure a drive: route completion, collisions, red-light violations,
   cross-track error.
@@ -285,9 +286,10 @@ What the starter contains
      - Given
      - Tunes your controller offline, with no CARLA.
    * - ``behavior_core.py``
-     - **Yours:** ``BehaviorFSM.update``
-     - Given: ``nearest_ahead`` (the constant-velocity look-ahead) and the
-       start-up branch.
+     - **Yours:** ``BehaviorTree.build_tree``
+     - Given: the four node classes (``Condition``, ``Action``,
+       ``Sequence``, ``Fallback``), ``BehaviorTree.tick`` with its start-up
+       branch, and ``nearest_ahead`` (the constant-velocity look-ahead).
    * - ``behavior_node.py``
      - Given
      - Answers every tracks message with a target speed, and holds the car
@@ -553,8 +555,31 @@ Tasks
    :icon: goal
    :class-container: sd-border-primary
 
-   **Yours: BehaviorFSM.update.** Four states. When more than one holds,
-   the safer state wins:
+   **Yours: BehaviorTree.build_tree.** You write a behavior tree that picks
+   one of four states and a target speed. When more than one condition
+   holds, the safer behavior wins.
+
+   **The node classes (given).** They are the four node types of L10's
+   ``behavior_tree.py``. A node's ``tick(bb)`` returns ``Success``,
+   ``Failure`` or ``Running``. ``bb`` is the blackboard, a dict with what the
+   car senses now: ``nearest_obstacle``, ``light_state``, ``dist_to_light``
+   and ``path_empty``, the arguments of ``BehaviorTree.tick``.
+
+   - ``Condition(name, check)`` is ``Success`` when ``check(bb)`` is true and
+     ``Failure`` when it is not.
+   - ``Action(state, speed)`` writes its state and speed into the
+     blackboard and returns ``Running``, because driving is never done.
+   - ``Sequence(*children)`` ticks its children in order and stops at the
+     first one that does not succeed.
+   - ``Fallback(*children)`` ticks its children in order and stops at the
+     first one that does not fail.
+
+   **The tree (yours).** ``build_tree`` returns the root, a ``Fallback`` with
+   four branches in this order, safest first. The ``Fallback`` ticks a
+   branch only when every branch before it has failed, so the first branch
+   whose condition holds decides. Each of the first three branches is a
+   ``Sequence`` of one ``Condition`` and one ``Action``. The fourth is an
+   ``Action`` alone, because it always applies.
 
    1. ``EMERGENCY_STOP`` (0 m/s): no route, or an object within
       ``emergency_distance`` (8.0 m) ahead.
@@ -565,6 +590,11 @@ Tasks
    3. ``OBSTACLE_AVOIDANCE`` (``slow_speed``, 3 m/s): an object within
       ``obstacle_distance`` (15 m) ahead.
    4. ``LANE_FOLLOW`` (``target_speed``, 8 m/s).
+
+   For example, an object 5 m ahead and a red light 10 m ahead both hold.
+   The ``Fallback`` stops at branch 1, so the state is ``EMERGENCY_STOP``.
+   With the object at 12 m, branch 1 fails and branch 2 holds, so the state
+   is ``STOP``.
 
    **The light (given).** The given ground-truth helper reports the light
    of the stop line ahead in the car's lane from 50 m away. CARLA itself
@@ -600,7 +630,7 @@ Tasks
    **The LiDAR stop check (given).** The camera misses a vehicle close
    ahead: at 4.8 m, the back of a box truck fills the whole image, and the
    detector calls it a stop sign. With no box there is no fused object and
-   no track, so ``BehaviorFSM.update`` sees an empty road. So the node also
+   no track, so the behavior tree sees an empty road. So the node also
    reads the LiDAR. It keeps the points 0.3 m to 2.5 m above the road and
    in front of the car. When at least 5 of them lie within 1.1 m of the
    path and closer than the car can stop, the state is ``EMERGENCY_STOP``,

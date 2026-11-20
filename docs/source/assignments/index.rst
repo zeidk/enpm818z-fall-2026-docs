@@ -20,8 +20,8 @@ evaluates the complete system on challenging, unseen scenarios.
 .. note::
 
    Group projects were posted one at a time as the semester progressed.
-   **GP1 to GP4 are posted.** See the syllabus for the full schedule and
-   weights.
+   **GP1 to GP4 are posted.** GP5 is optional and not graded. See the
+   syllabus for the full schedule and weights.
 
 
 Project Weight
@@ -61,6 +61,11 @@ split between the group projects (**85%**) and the Final Report
      - 20%
      - 2 weeks of work, due Thu, Dec 10
      - L7, L8, L9, L10
+   * - GP5: Vision-Language-Action Driving (optional)
+     - not graded
+     - none
+     - no deadline
+     - L9, L10 and L11
 
 .. note::
 
@@ -224,3 +229,4 @@ Support Resources
    gp2
    gp3
    gp4
+   gp5
