@@ -3115,7 +3115,7 @@ So each wheel must point at a right angle to the line from the ICR to it
 **tire scrub**.
 
 .. figure:: /_static/images/L10/ackermann_geom.png
-   :alt: A top view of a car facing up and turning left, drawn in faint gray, with its two axles and center line in dark lines and its four wheels as thick dark bars. The rear wheels point straight ahead. Thin gray lines run from the rear axle and from each front wheel to a green point at the far left, dark tag 3; a small square mark at each front wheel shows the wheel is square to its line. The left front wheel, dark tag 1, is turned by the orange angle delta i from a dashed straight-ahead line; the right front wheel, dark tag 2, is turned by the smaller orange angle delta o. A green double arrow R runs from the green point to the middle of the rear axle. L marks the wheelbase on the right and W the track behind the car.
+   :alt: A top view of a car facing up and turning left, drawn in faint blue-gray, with its two axles and center line in dark lines and its four wheels as thick dark bars. The rear wheels point straight ahead. Thin gray lines run from the rear axle and from each front wheel to a green point at the far left, dark tag 3; a small square mark at each front wheel shows the wheel is square to its line. The left front wheel, dark tag 1, is turned by the orange angle delta i from a dashed straight-ahead line; the right front wheel, dark tag 2, is turned by the smaller orange angle delta o. A green double arrow R runs from the green point to the middle of the rear axle. L marks the wheelbase on the right and W the track behind the car.
    :width: 55%
    :align: center
 
@@ -3283,7 +3283,7 @@ Predict the AV's Motion: the Bicycle Model, One Wheel per Axle
    point.
 
 .. figure:: /_static/images/L10/bicycle_geom.png
-   :alt: A drawing of the bicycle model. The rear wheel at dark tag 1 and the front wheel at dark tag 2 are short thick bars joined by a line of length L, tilted up to the right at angle theta from a dashed horizontal line. The front wheel is turned further left by the angle delta from the body line. Thin gray lines from both wheels, square to each wheel, meet far up and to the left at a green point, dark tag 3; a green double arrow labeled R runs from the rear wheel to that point. A dashed green arc leaves the rear wheel toward the front. A faint gray top view of the AV lies under the model, facing along the body line, with its rear axle on the rear wheel. Small x and y axes sit at the bottom left, off the car.
+   :alt: A drawing of the bicycle model. The rear wheel at dark tag 1 and the front wheel at dark tag 2 are short thick bars joined by a line of length L, tilted up to the right at angle theta from a dashed horizontal line. The front wheel is turned further left by the angle delta from the body line. Thin gray lines from both wheels, square to each wheel, meet far up and to the left at a green point, dark tag 3; a green double arrow labeled R runs from the rear wheel to that point. A dashed green arc leaves the rear wheel toward the front. A faint blue-gray top view of the AV lies under the model, facing along the body line, with its rear axle on the rear wheel. Small x and y axes sit at the bottom left, off the car.
    :width: 55%
    :align: center
 
@@ -3292,7 +3292,7 @@ Predict the AV's Motion: the Bicycle Model, One Wheel per Axle
 .. admonition:: Reading the figure
    :class: tip
 
-   The faint gray AV lies under the model, facing along the body line. The
+   The faint blue-gray AV lies under the model, facing along the body line. The
    body line, of length :math:`L`, is turned by the heading :math:`\theta`
    from the :math:`x` axis (the dashed horizontal line). The thin gray lines
    are square to each wheel.

@@ -5,10 +5,24 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.35.0: GP5 Project Setup, L10 Slide 35 Live (2026-11-20)
+.. dropdown:: v2.35.1: L10 Interactive Slides, Readable Figures (2026-11-20)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10, Interactive Slides:** no label in a figure is cut off, crossed
+     by a line or covered by a car, at any slider position. The tire of
+     slide 74 turns, and slide 76's PID diagram is live, with each term's
+     value and the pedal it presses. The left and right arrows always
+     change the slide, and the overview shows only the title.
+   - **L10, Lecture:** the car in the Ackermann and bicycle model figures
+     is drawn in the same light blue-gray as in the interactive slides.
+
+.. dropdown:: v2.35.0: GP5 Project Setup, L10 Slide 35 Live (2026-11-20)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Assignments
 
