@@ -119,6 +119,10 @@ numfig_format = {
 }
 
 html_static_path = ["_static"]
+# Files served as they are, next to the pages: the L10 interactive slides
+# (_extra/lectures/lecture10/interactive/, copied by tools/sync_l10_interactive.sh).
+html_extra_path = ["_extra"]
+exclude_patterns.append("_extra/**")
 master_doc = "index"
 
 html_css_files = [

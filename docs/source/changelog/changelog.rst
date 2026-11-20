@@ -5,10 +5,21 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.33.1: GP5 Task 2 in Words (2026-11-20)
+.. dropdown:: v2.34.0: L10 Interactive Slides (2026-11-20)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10, Interactive Slides:** the slides from class as a web page you
+     can try, opened from the L10 page: sliders, tables you step through row
+     by row, and the 324 trajectory candidates generated live. It runs in
+     the browser, with nothing to install.
+
+.. dropdown:: v2.33.1: GP5 Task 2 in Words (2026-11-20)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Assignments
 
