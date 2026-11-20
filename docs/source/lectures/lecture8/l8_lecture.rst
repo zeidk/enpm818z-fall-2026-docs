@@ -40,6 +40,7 @@ Introduction
    clear of them, and control (L10) drives the plan.
 
 .. figure:: /_static/images/L8/pred_stack.png
+   :class: dark-light themed-L8
    :alt: A block diagram. Two gray input boxes on the left: tracks (L5), each road user's position and velocity; and the map (L7), lanes and junctions. Each has an arrow into a magenta box labeled trajectory prediction (today). A magenta arrow leads from prediction to a box labeled planning (L9), and an arrow from planning to a box labeled control (L10). Below prediction, a magenta box lists its output: for each road user, over the next few seconds, 1. where it will be, and how sure that is, 2. which of several futures, how likely.
    :width: 95%
    :align: center
@@ -112,6 +113,7 @@ One Step for the Tracker, 50 for the Planner
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/steps_timeline.png
+   :class: dark-light themed-L8
    :alt: A time axis from minus 0.5 to 5 seconds, time from now, with a dotted line at 0 and two rows. Row tracker: six dark dots from minus 0.5 to 0 seconds, tag 1, and one blue circle at 0.1 seconds with a dark dot inside it, tag 2. Row planner: the same six dark dots, then 50 blue circles, one every 0.1 seconds from 0.1 to 5 seconds, tag 3.
    :width: 95%
    :align: center
@@ -146,6 +148,7 @@ automated driving system.
 The report's table of what the ADS recorded shows what it predicted for her.
 
 .. figure:: /_static/images/L8/tempe_paths.png
+   :class: dark-light themed-L8
    :alt: A road seen from above, north to the right: a bicycle lane at the bottom, then the right and left through lanes, then the area where two left-turn lanes form, up to the median. Tag 1: a black car in the right lane, facing right. Tag 2: a dark arrow straight down across the lanes, ending in the right lane ahead of the car. Three gray rings, with no tag, on that arrow: one near its start, one in the turn-lane area, one in the right lane. Tag 3: a magenta arrow that starts on the dark arrow in the left through lane and points right, along that lane.
    :width: 80%
    :align: center
@@ -205,6 +208,7 @@ until it stops. **3** is the whole stop. We chose the reaction time and the
 braking rate for this example.
 
 .. figure:: /_static/images/L8/stopping_side.png
+   :class: dark-light themed-L8
    :alt: A side view of the road, to scale, with a distance axis from 0 to 16 meters: distance driven since the AV sees the obstacle. A faded gray car, the AV when it sees the obstacle, has its front bumper at 0, with three short gray speed lines behind it to show it is moving. A black car, the same AV once it has stopped, stands with its front bumper at about 14.7 meters, just short of a red traffic cone, the obstacle, at about 15.6 meters. A darker gray band runs from 0 to 4 meters and a lighter gray band from 4 to 14.7 meters, with dashed vertical lines at 0, 4 and 14.7. Above the road, a double arrow from 0 to 4 marked tag 1 and a double arrow from 4 to 14.7 marked tag 2. Below the road, a double arrow from 0 to 14.7 marked tag 3.
    :width: 95%
    :align: center
@@ -243,6 +247,7 @@ two time windows: **observed**, how much past track the predictor reads, and
 **predicted**, how far ahead it must predict.
 
 .. figure:: /_static/images/L8/dataset_windows.png
+   :class: dark-light themed-L8
    :alt: Four horizontal bars on a time axis from minus 6 to 8 seconds, with a dotted line at 0, now. For each row, a light gray bar to the left of 0 is the observed past and a dark bar to the right is the predicted future, each labeled with its length. Argoverse: 2 s and 3 s. Argoverse 2: 5 s and 6 s. Waymo Open Motion: 1 s and 8 s. This lecture: 2 s and 5 s.
    :width: 95%
    :align: center
@@ -379,6 +384,7 @@ The Truth We Simulated
 ~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/scene_truth.png
+   :class: dark-light themed-L8
    :alt: The same top view, the junction shaded tan, with each road user's next 5 seconds drawn as a line with a dot every second, and the three cars faded at their positions now. The AV's black line runs east along its lane from x 107 to about 147, labeled 5 s at its end. Car A's green line runs west, then curves left through the junction into the side road, ending at x 154, y minus 7, labeled 5 s. Car B's gray line runs west along the north lane from x 201 to about 164, under car A's line where they overlap. Dark tags 1, A and B mark the AV, car A and car B; a red cross with no tag, in the junction at x 156, y minus 2, marks where car A's turn crosses the AV's lane.
    :width: 95%
    :align: center
@@ -491,6 +497,7 @@ Step 1: Read Car A's Motion from Its Track
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/track_fit.png
+   :class: dark-light themed-L8
    :alt: Car A's speed in meters per second against time from minus 2 to 0 seconds. A black line, the true speed, falls straight from 8.0 to 6.0. A light blue band covers the last 1.5 seconds. A blue dashed line, the speed from the fit, runs inside the band just under the black line and ends at a blue dot at time 0, at 5.99 meters per second. The legend, bottom left, names the true speed (the AV does not know it), the speed from the fit, the band (the last 1.5 seconds of track, used for the fit) and the dot (the fit's speed now).
    :width: 60%
    :align: center
@@ -586,6 +593,7 @@ CV Against the Truth
 ~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/cv_vs_truth.png
+   :class: dark-light themed-L8
    :alt: A close-up top view of the junction, x from 136 to 184 meters. Car A, green, at x 175 on the north lane, facing west. A black line, the truth, runs west and curves left into the side road with a dot every second, ending at y minus 7. A blue line, constant velocity, runs straight west along the north lane with a dot every second. Tags 1, 2 and 3 mark the blue dots at 1, 3 and 5 seconds; red dotted lines join each to the truth's dot at the same time: hidden under the dots at 1 second, short at 3 seconds, long at 5 seconds.
    :width: 70%
    :align: center
@@ -699,6 +707,7 @@ made only to compare the models. An AV runs the one it keeps, every 0.1 s;
 the test set decides which.
 
 .. figure:: /_static/images/L8/ctra_now.png
+   :class: dark-light themed-L8
    :alt: The same close-up of the junction with car A at x 175. The black truth curves left into the side road. Three predictions run west along the north lane: blue CV straight to x 145; purple dashed CTRV bending slightly south, ending at x 145, y minus 2.6; dark gold dash-dotted CTRA shorter, slowing, ending at x 157, y minus 0.3. None follows the truth into the side road.
    :width: 70%
    :align: center
@@ -737,6 +746,7 @@ CTRV in the Middle of the Turn
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/ctrv_midturn.png
+   :class: dark-light themed-L8
    :alt: A close-up of the junction and the side road, with car A in the middle of its left turn at t equals 3 seconds, facing west-south-west. The black truth curves into the side road and runs straight south. A blue CV line runs straight off to the west-south-west. A purple dashed CTRV line curves with the truth for the first second, then swings wider; a faint purple dotted circle of radius about 15 meters continues it all the way round, through the side road and back.
    :width: 50%
    :align: center
@@ -779,6 +789,7 @@ Error Against Horizon, on 2476 Predictions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/err_horizon.png
+   :class: dark-light themed-L8
    :alt: Two panels of mean error in meters against horizon from 0 to 5 seconds, each with a legend at the top left (CV, CTRV, CTRA, truth with error 0), a black line at 0 meters for the truth, and a gray dotted line at 2 meters. Left, no turn in the next 5 s, 1381 predictions: blue CV rises slowly to 3.6 meters at 5 seconds; purple dashed CTRV to 10.1; dark gold dash-dotted CTRA to 15.2. Right, a turn in the next 5 s, 1095 predictions: all three rise steeply and close together, CV to 20.8, CTRV to 19.1, CTRA to 18.3 meters.
    :width: 95%
    :align: center
@@ -873,6 +884,7 @@ own test set, 2476 predictions from our simulated drives. The verdict on CV,
 under 2 m up to 3.5 s with no turn, came from these scores.
 
 .. figure:: /_static/images/L8/score_loops.png
+   :class: dark-light themed-L8
    :alt: Two boxed rows joined by arrows. Top row, on the car, while it drives (every 0.1 seconds): sensors, tracker (L5), predictor: next 5 seconds (highlighted), planner (L9), control (L10), each feeding the next; under them: used once, replaced 0.1 seconds later: no truth yet, no score. An arrow labeled recorded goes down to the bottom row, afterwards, off the car (once the truth is known): each prediction, and the truth; then scores: ADE, FDE, minADE, minFDE, misses; then decide: which predictor, how far ahead to trust it. A magenta arrow labeled next software version goes from the decision back up to the car.
    :width: 95%
    :align: center
@@ -1049,6 +1061,7 @@ CV's 95% Region
 ~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/cv_region.png
+   :class: dark-light themed-L8
    :alt: The close-up of the junction with car A at x 175. The blue CV line runs west with a dot every second; around each dot a light blue circle, the 95 percent region, small at 1 second and larger every second, the one at 5 seconds about 16 meters across. The black truth curves left into the side road: its dots at 1, 2 and 3 seconds lie inside the circles of the same time; its dots at 4 and 5 seconds lie outside.
    :width: 70%
    :align: center
@@ -1132,6 +1145,7 @@ How Often the Region Holds the Truth
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/coverage.png
+   :class: dark-light themed-L8
    :alt: Percent of true positions inside CV's 95 percent region against horizon, 0 to 5 seconds. A dark dotted line at 95 percent is labeled 95 percent: what the region promises. A solid blue line, no turn, rises from about 58 to about 85 percent and stays between 81 and 86 percent from 1 second on. A dashed blue line, a turn, starts near 47 percent, peaks near 52 percent at 0.4 seconds and falls to about 7 percent at 5 seconds.
    :width: 70%
    :align: center
@@ -1212,6 +1226,7 @@ Car A Can Do Two Things
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/two_futures.png
+   :class: dark-light themed-L8
    :alt: The close-up of the junction with car A at x 175 facing west. Two magenta predicted lines leave it, each with a dot every second: a thick solid one curving left into the side road, labeled left turn, p = 0.87, and a dashed one running straight west, labeled straight on, p = 0.13.
    :width: 70%
    :align: center
@@ -1234,6 +1249,7 @@ The Average of Two Futures Is Not a Future
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/mean_of_modes.png
+   :class: dark-light themed-L8
    :alt: The close-up of the junction with car A at x 175. Tag 1: the end of the magenta left-turn line in the side road. Tag 2: the end of the magenta dashed straight line, far west on car A's lane. Tag 3: a red dot at the end of a red dotted line between them; the line starts along car A's lane and bends south-west across the junction toward its south-west corner.
    :width: 70%
    :align: center
@@ -1360,6 +1376,7 @@ turn. The steady one is the lecture's mode. Turn speeds chosen for this
 example: 3.83, 5.42 and 6.06 m/s.
 
 .. figure:: /_static/images/L8/three_left_timeline.png
+   :class: dark-light themed-L8
    :alt: Four gray time lines, one per row, against time from now, 0 to 8 seconds. Row tag 1: a magenta bar from 4.2 to 5.0 seconds. Row tag 2: a magenta bar from 3.2 to 4.0 seconds. Row tag 3: a magenta bar from 3.0 to 3.7 seconds. Row tag 4: a black diamond at 6.08 seconds, with a dotted vertical line up through the rows. Tag 5: a two-headed arrow above the rows from 3.0 to 5.0 seconds, between two dotted lines. Tag 6: a two-headed arrow on row 1 from 5.0 seconds to the dotted line at 6.08 seconds.
    :width: 80%
    :align: center
@@ -1388,6 +1405,7 @@ What the Planner Does with Two Futures
 The AV's own plan is 8 m/s, straight on.
 
 .. figure:: /_static/images/L8/lane_timeline.png
+   :class: dark-light themed-L8
    :alt: Four gray time lines, one per row, against time from now, 0 to 8 seconds. Row tag 1: a magenta bar from 3.2 to 4.0 seconds. Row tag 2: empty. Row tag 3: a green bar from 3.4 to 4.3 seconds. Row tag 4: a black diamond at 6.08 seconds, with a dotted vertical line up through all rows. Tag 5: a two-headed arrow on row 1 from the end of the magenta bar, 4.0 seconds, to the dotted line.
    :width: 95%
    :align: center
@@ -1473,6 +1491,7 @@ The Plan for Car A, in Four Steps
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/lane_plan.png
+   :class: dark-light themed-L8
    :alt: A flowchart. A gray box, car A's track and the map's lanes, has an arrow into Step 1, put car A on each candidate lane; an arrow to Step 2, the speed each path expects here; an arrow down to Step 3, how well each path explains car A's speed; an arrow left to Step 4, Bayes' rule; a magenta arrow left to a magenta box, one probability for each lane.
    :width: 90%
    :align: center
@@ -1492,6 +1511,7 @@ For each candidate lane, we find the lane point nearest car A's fitted
 position (**1** in the figure).
 
 .. figure:: /_static/images/L8/step1_lanes.png
+   :class: dark-light themed-L8
    :alt: Top view of the junction to scale, x east from 148 to 184 meters, y north from minus 16 to 7 meters. Car A, green, faces west in the north lane at x 175. One magenta line runs west from a dot at car A's rear axle, tag 1, through a black square at x 168, tag 2, and splits a few meters later: a solid line curves left into the side road, tag 4, and a dashed line continues west, tag 5. Tag 3: a two-headed arrow above the road from the square to the dot. The junction, from x 168 meters west and into the side road, is shaded tan; the rest of the road is gray.
    :width: 80%
    :align: center
@@ -1596,6 +1616,7 @@ prediction nor the truth: only what the AV measures at :math:`t` = 0.
    probabilities.
 
 .. figure:: /_static/images/L8/bell_curve.png
+   :class: dark-light themed-L8
    :alt: A bell curve of likelihood, 0 to 1, against delta v, car A's speed minus the path's expected speed, from minus 3.5 to 3.5 meters per second. The curve peaks at 1 at delta v equals 0, marked by a dotted vertical line. Two magenta dots on the curve, each with a magenta dashed line down to the delta v axis, where its value is marked: tag 1 at minus 0.52, likelihood about 0.87; tag 2 at minus 2.01, likelihood about 0.13.
    :width: 80%
    :align: center
@@ -1732,6 +1753,7 @@ What a Learned Predictor Reads and Writes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/learned_io.png
+   :class: dark-light themed-L8
    :alt: A block diagram. Three gray input boxes on the left: 1. every road user's last few seconds of track; 2. the map's lanes, as polylines (lists of points); 3. traffic lights, the road user's type (car, cyclist). Each has an arrow into a central box: a neural network, weights set by training. Two magenta arrows lead out to two magenta boxes: K future tracks for each road user, and one probability for each of them.
    :width: 90%
    :align: center
@@ -1984,6 +2006,7 @@ Run #1: The AV Is 48 m Away When Car A Decides
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/run1_gap.png
+   :class: dark-light themed-L8
    :alt: Top view of the junction to scale, x east from 100 to 182 meters, at the moment car A decides. The AV, black, on the south lane at x 108, facing east. Car A, green, on the north lane at x 174, facing west. A red cross at x 156 where car A's turn crosses the AV's lane. Tag 1: a two-headed arrow below the road from the AV to the red cross. Tag 2: a two-headed arrow above the road from car A to the junction's entry at x 168. Tag 3: a dashed mark across the AV's lane at x 123.
    :width: 95%
    :align: center
@@ -2006,6 +2029,7 @@ Run #2: The AV Starts 24 m Closer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/run2_gap.png
+   :class: dark-light themed-L8
    :alt: The same top view as run 1, at the moment car A decides, with the junction shaded tan. The AV, black, on the south lane at x 132, facing east. Car A, green, on the north lane at x 174, facing west. A red cross at x 156. Tag 1: a two-headed arrow below the road from the AV to the red cross. Tag 2: a two-headed arrow above the road from car A to the junction's entry at x 168. Tag 3: a dashed mark across the AV's lane at x 123, behind the AV.
    :width: 95%
    :align: center
@@ -2046,6 +2070,7 @@ Post-Encroachment Time: What It Measures
    wider margin.
 
 .. figure:: /_static/images/L8/pet_side.png
+   :class: dark-light themed-L8
    :alt: A side view of the road, to scale, with the red cross on it at 0 meters. The AV is drawn twice, driving right: faded, tag 1, with its front bumper at the cross; black, tag 2, with its rear bumper at the cross and its front bumper 4.5 meters past it. Above the black AV, a black bar from 0 to 4.5 meters, tag 3. A time axis on top marks 5.63 seconds above 0 meters and 6.19 seconds above 4.5 meters.
    :width: 80%
    :align: center

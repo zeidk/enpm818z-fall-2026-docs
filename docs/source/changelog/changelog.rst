@@ -5,10 +5,23 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.36.1: L9 Figures in Light and Dark (2026-11-20)
+.. dropdown:: v2.36.2: L8 Figures in Light and Dark (2026-11-20)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L8, Lecture and More detail:** every figure but three has a light and a
+     dark version and follows the site's theme. In the dark theme the cars
+     drawn from the side are light, and the flowcharts have no panel behind
+     them.
+   - **L9 and L10:** four figures (two grids, the drive-by-wire sketch and the
+     lane-change setup) lose their remaining white panel.
+
+.. dropdown:: v2.36.1: L9 Figures in Light and Dark (2026-11-20)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

@@ -255,6 +255,7 @@ P(left) as Car A Approaches
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/p_left_time.png
+   :class: dark-light themed-L8
    :alt: P(left turn) against time from minus 4 to 3 seconds, 0 to 1. A magenta line stays at 0.5 until about minus 1.5 seconds, rises through 0.6 at minus 1 and 0.87 at 0, and reaches about 0.99 after 1 second. A dashed green vertical line at minus 2, tag 1: car A starts braking. A gray dotted vertical line at 0, tag 2: now.
    :width: 70%
    :align: center
@@ -277,6 +278,7 @@ The Map-Aware Prediction Against the Truth
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/modes_vs_truth.png
+   :class: dark-light themed-L8
    :alt: The close-up of the junction with car A at x 175. The thick magenta left-turn mode, p = 0.87, curves into the side road; the magenta dashed straight-on mode, p = 0.13, runs west. The black truth follows the magenta left-turn line into the side road, its dots a little short of the magenta dots.
    :width: 70%
    :align: center
@@ -300,6 +302,7 @@ Map-Aware Prediction on the Test Set
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/test_scores.png
+   :class: dark-light themed-L8
    :alt: A bar chart of mean FDE at 5 seconds, in meters, on the test set's predictions with a turn ahead. Blue CV 20.8, purple CTRV 19.1, dark gold CTRA 18.3, magenta map most likely mode 5.0, and a hatched magenta bar, map best of the modes, 1.8. A gray dotted line at 2 meters.
    :width: 70%
    :align: center
@@ -343,6 +346,7 @@ its probability. Each dot is a group; its bar shows how far chance alone
 moves it.
 
 .. figure:: /_static/images/L8/reliability.png
+   :class: dark-light themed-L8
    :alt: A square plot of share that came true, 0 to 1, against probability given, 0 to 1 (each dot is placed at its group's mean). A gray dashed diagonal, tag 1. Four magenta dots with error bars: near 0.06 and 0.09, at 0.5 and 0.5, at 0.81 and 0.73 with a long bar, tag 2, below the diagonal, and near 0.99 and 0.98.
    :width: 55%
    :align: center
@@ -505,6 +509,7 @@ Car B Slows Because Car A Slows
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L8/b_speed.png
+   :class: dark-light themed-L8
    :alt: Car B's speed in meters per second against time from minus 2 to 5 seconds, a gray dotted vertical line at 0 labeled now. The black truth falls from 8.0 to about 6.5 at 3.2 seconds, then rises to about 7.3 at 5 seconds. A blue line, CV, stays flat at 7.76 from 0 to 5 seconds. A magenta dashed line, the IDM behind car A's likely future, follows the truth down to about 6.75 at 3 seconds and back up to about 7.6.
    :width: 70%
    :align: center
