@@ -262,7 +262,18 @@ body.laser #laser{display:block} body.laser,body.laser *{cursor:none !important}
 .card.active .lk:hover{background:rgba(22,121,138,.14);outline:2px solid rgba(22,121,138,.55)}
 .card:not(.active):hover{outline:6px solid var(--live);outline-offset:4px}
 .card:focus-visible{outline:6px solid var(--focus);outline-offset:4px}
-.secblock .plate{position:relative;left:auto;top:auto;transition:opacity .4s}
+.secblock .plate{position:relative;left:auto;top:auto;transition:opacity .4s,transform .2s,box-shadow .2s}
+/* the section view (user, 2026-11-20): each row's slide range on its left, and a hovered card grows a little and shows
+   its slide number */
+.secblock{padding-left:150px}
+.rowrng{position:absolute;left:26px;width:100px;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;
+  transform:rotate(180deg);font-size:64px;font-weight:600;color:var(--slate);white-space:nowrap;pointer-events:none}
+body.indeck .rowrng{opacity:.08}
+body:not(.indeck) .secblock .frame:hover,body:not(.indeck) .secblock .card:not(.active):hover{transform:scale(1.07);z-index:6;
+  box-shadow:0 30px 70px rgba(15,25,40,.35)}
+.cardnum{position:absolute;left:26px;top:26px;z-index:7;padding:8px 26px;border-radius:44px;background:var(--slate);color:var(--on-accent);
+  font-size:60px;font-weight:700;line-height:1.15;opacity:0;transition:opacity .2s;pointer-events:none}
+body:not(.indeck) .secblock .frame:hover > .cardnum,body:not(.indeck) .secblock .card:not(.active):hover > .cardnum{opacity:1}
 /* On a slide or a panel of the deck, the rest of the section fades out. */
 body.indeck .secblock .card:not(.active),body.indeck .secblock .plate:not(.active),body.indeck .sechead{opacity:.08}
 body.indeck .secblock{background:transparent;border-color:transparent}
@@ -2804,6 +2815,22 @@ document.querySelectorAll("[data-go]").forEach(function(n){
   n.addEventListener("keydown", function(e){ if (e.key === "Enter") go(n.dataset.go); });
 });
 /* A click on a slide or a panel zooms to it; a click on a section's tray shows the section. */
+/* ---------- the section view: each row's slide range on its left; each card's number, shown on hover ---------- */
+function slideNumOf(c){ var h = c.querySelector(".fhead span:last-child"), m = h && h.textContent.match(/Slide\s+(\d+)/); return m ? +m[1] : null; }
+function rowRanges(){
+  document.querySelectorAll(".secblock").forEach(function(sb){
+    sb.querySelectorAll(".rowrng").forEach(function(e){ e.remove(); });
+    var grid = sb.querySelector(".grid"); if (!grid) return;
+    var rows = {};
+    [].forEach.call(grid.children, function(c){ var n = slideNumOf(c);
+      if (n != null && !c.querySelector(":scope > .cardnum")){ var b = document.createElement("span"); b.className = "cardnum"; b.setAttribute("aria-hidden", "true"); b.textContent = "Slide " + n; c.insertBefore(b, c.firstChild); }   /* first: the frame's fit code reads its last child */
+      var top = c.offsetTop; (rows[top] = rows[top] || {top:top, h:0, nums:[]}); rows[top].h = Math.max(rows[top].h, c.offsetHeight); if (n != null) rows[top].nums.push(n); });
+    Object.keys(rows).forEach(function(k){ var r = rows[k]; if (!r.nums.length) return;
+      var lo = Math.min.apply(null, r.nums), hi = Math.max.apply(null, r.nums), e = document.createElement("div");
+      e.className = "rowrng"; e.setAttribute("aria-hidden", "true"); e.textContent = lo === hi ? "Slide " + lo : lo + " to " + hi;
+      e.style.top = (grid.offsetTop + r.top) + "px"; e.style.height = r.h + "px"; sb.appendChild(e); }); });
+}
+rowRanges(); if (document.fonts) document.fonts.ready.then(rowRanges);
 document.querySelectorAll(".plate, .card, .secblock").forEach(function(p){
   p.addEventListener("click", function(e){ e.stopPropagation(); if (current !== p.dataset.scene) go(p.dataset.scene); });
   p.addEventListener("keydown", function(e){ if (e.key === "Enter" && e.target === p && current !== p.dataset.scene) go(p.dataset.scene); });

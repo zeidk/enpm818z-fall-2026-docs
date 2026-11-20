@@ -5,10 +5,20 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.39.3: L10 Drag Windows Open on a Click (2026-11-20)
+.. dropdown:: v2.39.4: L10 Section View, Slide Ranges and Numbers (2026-11-20)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10 interactive slides, section view:** each row of cards shows its
+     slide range on the left, and a card you point at grows a little and
+     shows its slide number.
+
+.. dropdown:: v2.39.3: L10 Drag Windows Open on a Click (2026-11-20)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

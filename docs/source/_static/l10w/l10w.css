@@ -137,6 +137,8 @@
 .l10w .rng .rv{position:absolute;top:3px;width:calc(78 * var(--u));height:calc(34 * var(--u));line-height:calc(34 * var(--u));text-align:center;font:600 calc(20 * var(--u))/calc(34 * var(--u)) var(--sans);color:var(--on-accent);pointer-events:none;white-space:nowrap}
 .l10w .rng .tk{position:absolute;bottom:0;width:2px;height:calc(8 * var(--u));background:var(--slate);pointer-events:none;transform:translateX(-1px)}
 .l10w .rng.held input[type=range]::-webkit-slider-thumb{background:var(--follow)}
+.l10w .rowrng{position:absolute;left:calc(26 * var(--u));width:calc(100 * var(--u));display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;
+  transform:rotate(180deg);font-size:max(var(--fmin), calc(64 * var(--u)));font-weight:600;color:var(--slate);white-space:nowrap;pointer-events:none}
 .l10w .goal{font-size:max(var(--fmin), calc(25 * var(--u)));margin:0 0 calc(14 * var(--u))}
 .l10w .goal b:first-child{color:var(--slate)}
 .l10w ul,.l10w ol{margin:4px 0 calc(8 * var(--u));padding-left:calc(34 * var(--u))}
