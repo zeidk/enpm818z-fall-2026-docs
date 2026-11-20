@@ -222,7 +222,7 @@ are curves.
    :alt: Six panels in two rows. The top row shows three scenes from above, east and north in meters. Left, "Drive along a road at 30°": a gray road at 30 degrees from east; a black car at the origin and a faint gray car 20 meters along the road, joined by an arrow labeled "d = 20 m along the road"; a blue dashed line drops from the faint car to a blue two-headed arrow on the east axis labeled "x = 17.32 m east". Middle, "Drive 20 m at heading theta": a black car at the origin, an arrow labeled "20 m at heading theta" to a faint gray car, an angle theta between east and the arrow, a dotted arc labeled "every spot 20 m away", and a blue arrow on the east axis labeled "x = 20 cos theta". Right, "Measure the range to a sign": a gray road running east, a black car facing east at x = 16 meters, a black square labeled "the sign" 10 meters north of the road at x = 20, a line r from the car to the sign, a dotted line labeled 10 m, an arrow labeled "x = 16 m", and the text "the AV at x: r = 10.77 m". The bottom row has one graph under each scene. Left, "A straight line": distance east x against distance driven d, a straight line labeled x = d cos 30° = 0.866 d, with a blue dot labeled "d = 20 m: x = 17.32 m". Middle, "A curve": distance east x against heading theta from minus 90 to 90 degrees, an arch labeled x = 20 cos theta, with a blue dot labeled "theta = 30°: x = 17.32 m". Right, "A curve": range to the sign r against the AV's position along the road x from 0 to 30 meters, a curve lowest at 10 meters at x = 20, labeled r = square root of (20 minus x) squared plus 10 squared, with a blue dot labeled "x = 16 m: r = 10.77 m".
    :align: center
    :width: 100%
-   :class: white-figure
+   :class: white-figure dark-light themed-filters
 
    Three AV scenes from above, and the graph each one gives.
 
@@ -273,7 +273,7 @@ The AV is on a road that runs at :math:`30^\circ` from east. Its heading is
    :alt: A top view, east to the right and north up, both in meters. A gray road runs from the bottom left up to the right at 30 degrees from east. A black car at the origin, labeled "the AV at the start", points along the road; an arc marks the 30 degree angle between east and the road. About 20 meters along the road, a faint gray copy of the car has a dark gray bar under it along the road and a black dot in its middle, labeled "where it ends: 19 to 21 m along the road". Two blue dashed lines drop from the ends of the gray bar to the east axis, where a blue bar is labeled "how far east: 16.45 to 18.19 m". A dotted line drops from the black dot to the east axis at about 17.3 meters.
    :align: center
    :width: 75%
-   :class: white-figure
+   :class: white-figure dark-light themed-filters
 
    The road from above: where the AV starts, and where it can end.
 
@@ -297,7 +297,7 @@ curve that comes out for :math:`x`.
    :alt: Three plots side by side. Left, "Step 1: what the AV knows": probability density per meter against distance driven d from 16 to 24 meters; a gray bell curve peaked at 20 with a height of 0.40, labeled d = 20 plus or minus 1 m, with a shaded stretch from 19 to 21 meters. Middle, "Step 2: the function": distance east x against distance driven d, a straight line labeled "x = d cos 30°: a straight line"; a gray vertical band from d = 19 to 21 and a blue horizontal band from x = 16.45 to 18.19 cross on the line; a dotted guide runs from d = 20 up to the line and across to x = 17.32. Right, "Step 3: what you get": probability density per meter against distance east x from 13.5 to 21 meters; a blue bell curve peaked near 17.3 with a height of about 0.46, labeled "x = 17.32 plus or minus 0.87 m: still a bell curve", with a shaded stretch labeled 16.45 to 18.19 m.
    :align: center
    :width: 100%
-   :class: white-figure
+   :class: white-figure dark-light themed-filters
 
    A bell curve through a straight line stays a bell curve.
 
@@ -349,7 +349,7 @@ a straight line.
    :alt: Three plots side by side. Left, "Step 1: what the AV knows": probability density per degree against heading theta from minus 10 to 70 degrees; a gray bell curve peaked at 30 with a height of about 0.033, labeled theta = 30° plus or minus 12°, with a shaded stretch labeled 18° to 42°. Middle, "Step 2: the function": distance east x against heading, the curve labeled "x = 20 cos theta: a curve", highest at 20 meters at 0 degrees and falling to about 7 meters at 70 degrees; a gray vertical band from 18 to 42 degrees and a blue horizontal band from about 14.9 to 19.0 meters cross on the curve; a dotted guide runs from 30 degrees up to the curve and across to 17.32 meters. Two black dots mark the ends of the gray band on the curve, labeled "18°: 19.02 m, 1.70 m above" and "42°: 14.86 m, 2.46 m below". Right, "Step 3: what you get": probability density per meter against distance east x; blue histogram bars from about 7.5 to 20 meters, low on the left and highest, about 0.2, between about 17.5 and 19.5 meters, cut off at 20, labeled "lopsided: not a bell curve". A solid vertical line is labeled "its mean, 16.95 m" and a dashed vertical line just to its right is labeled "20 cos 30° = 17.32 m".
    :align: center
    :width: 100%
-   :class: white-figure
+   :class: white-figure dark-light themed-filters
 
    A bell curve through a curve comes out lopsided.
 
@@ -445,7 +445,7 @@ repeated here.
    :alt: Two panels. Left, "Measure the range to a sign", a view from above in meters, east and north: a gray road runs east; a black car facing east sits on it at x = 16 meters, measured by an arrow labeled "x = 16 m" from the start of the road; a black square labeled "the sign" stands 10 meters north of the road at x = 20, with a dotted line labeled 10 m; a line labeled r joins the car to the sign, and the text reads "the AV at x: r = 10.77 m". Right, "A curve": range to the sign r in meters against the AV's position along the road x from 0 to 30 meters; a black curve starts near 22.4 meters, is lowest, 10 meters, at x = 20 and rises to about 14 meters at x = 30, labeled r = square root of (20 minus x) squared plus 10 squared; a blue dot on it is labeled "x = 16 m: r = 10.77 m".
    :align: center
    :width: 85%
-   :class: white-figure
+   :class: white-figure dark-light themed-filters
 
    The range to the sign: the scene from above, and its graph.
 
@@ -464,7 +464,7 @@ repeated here.
    :alt: A graph of the range to the sign r in meters against the AV's position along the road x in meters, from 0 to 24. A thick black curve, labeled "the real range, r", falls from about 22.4 meters at x = 0, is lowest, 10 meters, at x = 20, and rises after that. Purple dots on the curve at 4, 9 and 14 meters are labeled "step 1: the estimate, 4 m, and the tangent there", and the same for step 2 at 9 m and step 3 at 14 m. Through each dot a short, wide, light purple band lies along the curve. A dashed purple line, labeled "the tangent at 4 m, drawn long", starts at the first dot and runs straight on, falling farther and farther below the curve. At x = 18 it ends at a purple dot, and a two-headed black arrow from that dot up to the curve is labeled "at 18 m it says 7.00 m; the real range is 10.20 m".
    :align: center
    :width: 85%
-   :class: white-figure
+   :class: white-figure dark-light themed-filters
 
    The EKF draws a new tangent at each step.
 
@@ -510,7 +510,7 @@ hand.
    :alt: A top view, to scale: position along the road x in meters to the right, from 0 to 20, and distance across the road up, from 0 to 10 meters. A gray one-lane road, labeled "the road", runs left to right, and an arrow on it says "the AV drives this way", to the right. A black car faces right, with the middle of its rear axle, a white dot, at x = 16. A black square at x = 20, 10 meters above the AV's path, is labeled "the landmark"; a dotted gray line labeled 10 m drops from it to the AV's path. A thick black line from the white dot to the landmark is labeled "the range from the AV at 16 m: 10.77 m". Above the road, a green triangle at 15.5 meters is labeled "run 1: the estimate, 15.5 m", and an orange triangle at 10 meters is labeled "run 2: the estimate, 10 m". Under the road, a black two-headed arrow from 0 to 16 is labeled "x = 16 m", and a gray one from 16 to 20 is labeled "20 − x = 4 m".
    :align: center
    :width: 80%
-   :class: white-figure
+   :class: white-figure dark-light themed-filters
 
    The road from above: the AV, the landmark and the two estimates.
 
@@ -565,7 +565,7 @@ report at each position :math:`x`.
    :alt: Two panels. Left, titled "The road from above", to scale: position along the road x in meters, with ticks at 4, 10, 16 and 19, and distance across the road, up to 10 meters. A gray band is labeled "the road". A black square at x = 20, 10 meters off the AV's path, is labeled "the landmark". Black lines of sight run to it from four dots on the road, each labeled with its length: 18.87 m from 4 m, 14.14 m from 10 m, 10.77 m from 16 m and 10.05 m from 19 m. Arcs mark the line from 4 m at 32° off the road and the line from 19 m at 84°. A faint gray car with its rear axle at 16 m is labeled "the faint AV: where the AV really is". Right, titled "A graph, not the road: range against position": the range to the landmark in meters, from 8.5 to 20.5, against the AV's position along the road x, from 3 to 21 meters. A black curve, labeled "the range, h(x)", falls from about 19.7 meters at x = 3 and flattens toward 10 meters at x = 20. Black dots on it, with dotted lines down to the x axis, are labeled "from 4 m: 18.87 m", "from 10 m: 14.14 m", "from 16 m: 10.77 m" and "from 19 m: 10.05 m".
    :align: center
    :width: 100%
-   :class: white-figure
+   :class: white-figure dark-light themed-filters
 
    The range from four positions: from above, and as a graph.
 
@@ -629,7 +629,7 @@ surprise, is the only information the filter has that the estimate is off.
    :alt: The range to the landmark in meters, from 8.6 to 19.4, against the AV's position along the road x, from 4 to 20 meters. A thick black curve, labeled "the real range, h(x)", falls from about 18.9 meters at x = 4 and flattens near 10 meters at x = 20. A dotted gray horizontal line is labeled "the camera reads 10.77 m". A green dot on the curve at 15.5 meters is labeled "the estimate, 15.5 m: the filter expects 10.97 m". A label, "surprise: 0.20 m less range", points to the small gap between the green dot and the dotted line. A dashed purple line, labeled "the tangent at 15.5 m", runs through the green dot from about 11.5 to 17.5 meters, close to the curve. A green cross where the tangent crosses the dotted line is labeled "where the tangent meets the reading: 15.98 m". A dotted gray vertical line at 16 meters is labeled "the AV really is at 16 m". A thin gray box around x = 14 to 17.2 meters and ranges 10.3 to 11.45 meters is labeled "drawn close up in the next figure".
    :align: center
    :width: 85%
-   :class: white-figure
+   :class: white-figure dark-light themed-filters
 
    Run 1: the estimate, the reading and the tangent.
 
@@ -664,7 +664,7 @@ The surprise is in meters of **range**. The filter moves the AV in meters of
    :alt: A close-up of run 1. The horizontal axis is the AV's position along the road, x, from 14 to 17 meters; the vertical axis is the range to the landmark, from 10.3 to 11.4 meters. A thick black curve, labeled the real range h(x), falls from left to right. A dashed purple line, labeled the tangent at 15.5 m, touches the curve at a green dot labeled "the estimate, 15.5 m: the filter expects 10.97 m"; the two lines almost overlap. A purple right triangle above the dot is 1 m wide and 0.41 m tall. A dotted gray line at 10.77 m is labeled "the camera reads 10.77 m". A black arrow points down from the dot to that line, labeled "surprise: 0.20 m less range". A green arrow points right along it, labeled "move: 0.20 / 0.41 = 0.48 m", and ends at a green cross labeled "new estimate, 15.98 m", where the tangent meets the reading line. The cross sits almost on the black curve at 16 m, labeled "the AV really is at 16 m".
    :align: center
    :width: 85%
-   :class: white-figure
+   :class: white-figure dark-light themed-filters
 
    Run 1, close up: a good estimate lands near the AV.
 
@@ -709,7 +709,7 @@ Same AV, same reading, 10.77 m. This time the estimate is
    :alt: Run 2. The horizontal axis is the AV's position along the road, x, from 4 to 20 meters; the vertical axis is the range to the landmark, from 10 to 19 meters. A thick black curve, labeled the real range h(x), falls from left to right and flattens near 20 m. An orange dot on the curve at 10 m is labeled "the estimate, 10 m: the filter expects 14.14 m". A dotted gray line at 10.77 m is labeled "the camera reads 10.77 m". A long black arrow points down from the dot to that line, labeled "surprise: 3.37 m less range". A dashed purple line through the dot is labeled "the tangent at 10 m: 0.71 m less range per meter"; it runs below the curve to the right of the dot. An orange dotted line from the dot to a black dot on the curve at 16 m is labeled "the real drop from 10 m to 16 m: 0.56 m per meter". The tangent meets the reading line at an orange cross labeled "new estimate, 14.77 m". A two-headed orange arrow from the cross to the black dot, labeled "the AV really is at 16 m", is labeled "1.23 m short".
    :align: center
    :width: 85%
-   :class: white-figure
+   :class: white-figure dark-light themed-filters
 
    Run 2: a poor estimate falls short.
 
@@ -760,7 +760,7 @@ curve comes out again.
    :alt: Three plots side by side. Left, "Step 1: what the AV knows": a gray bell curve over heading theta from minus 10 to 70 degrees, peaked at 30, labeled theta = 30° plus or minus 12°, with a shaded stretch labeled 18° to 42°; the y axis is probability density per degree, 0 to 0.04. Middle, "Step 2: the function": distance east x against heading, the black curve labeled "x = 20 cos theta: the curve" and a dashed orange straight line labeled "the tangent at 30°: a straight line" that touches it at an orange dot at 30 degrees and 17.32 meters; a gray vertical band from 18 to 42 degrees and an orange horizontal band labeled 15.23 to 19.41 m. Right, "Step 3: what you get": blue histogram bars over distance east x, lopsided and cut off at 20 meters, with a dashed orange bell curve over them that runs on past 20 meters, labeled "above 20 m: impossible"; the y axis is probability density per meter. A black vertical line is labeled "true mean, 16.95 m" and an orange one "EKF mean, 17.32 m". Text at the top left reads "the EKF: 17.32 ± 2.09 m" in orange and "the truth: 16.95 ± 2.11 m" in blue.
    :align: center
    :width: 100%
-   :class: white-figure
+   :class: white-figure dark-light themed-filters
 
    The EKF pushes the heading bell curve through the tangent at 30°.
 
@@ -999,7 +999,7 @@ with three numbers in the state.
    :alt: Seen from above, north in meters against east in meters. A black arc curves left from the origin to about 29 meters east and 7 meters north, with dots every half second; it is labeled "the estimate: an arc from the real f". Black arrows show the heading at 0, 1, 2 and 3 seconds; the one at 3 seconds is labeled "the heading". Orange ellipses, labeled "each ellipse: 2σ", sit on the arc at 0, 1, 2 and 3 seconds, each marked with its time. The one at 0 seconds is a small circle labeled "at 0 s: σ = 0.3 m each way, heading σ = 3°". The ellipses grow longer and thinner over time and lie nearly across the direction of travel; the one at 3 seconds, about 6 meters long, is labeled "at 3 s: σ = 1.58 m the long way, 0.30 m the short way".
    :align: center
    :width: 100%
-   :class: white-figure
+   :class: white-figure dark-light themed-filters
 
    Predict only on the EKF hands-on's bend: :math:`P` stretches sideways.
 
@@ -1196,7 +1196,7 @@ when the uncertainty is wide.
    :alt: Seen from above, east and north in meters, a straight two-lane road. A black AV, labeled "the AV, heading east", sits in the lower lane at the origin with an arrow pointing east. Two dashed gray lines fan out from it, labeled "heading spread: ±12° (1σ)". A dotted gray arc about 20 meters ahead is labeled "every spot 20 m from the start". About 500 blue dots, labeled "where the AV could be after 20 m: 500 draws", spread along that arc from about 11 meters north to 11 meters south, forming a curved band whose ends bend back toward the AV. A tall dashed orange ellipse, straight, centered at 20 meters east, is drawn over the dots and labeled "the EKF's 2σ ellipse: straight, from one tangent". An orange dot at its center is labeled "the EKF's mean: 20.00 m ahead", and a black cross just left of it is labeled "the real middle: 19.57 m ahead".
    :align: center
    :width: 90%
-   :class: white-figure
+   :class: white-figure dark-light themed-filters
 
    A wide heading spread bends the belief into a banana.
 
@@ -1280,7 +1280,7 @@ at its **own estimate**, so a wrong estimate puts it in the wrong place.
    :alt: A loop diagram. A gray box, "The estimate is a little off", points into a loop of four orange boxes joined by arrows, clockwise: "The tangent is drawn in the wrong place"; "The correction is the wrong size"; "If it is far enough off, the next estimate is worse"; "The next tangent is drawn at that estimate"; and back to the first. In the middle of the loop: "each turn starts from a worse place". A shaded orange box on the right reads: "Meanwhile P shrinks at every update, right or wrong. Confident and wrong: divergence".
    :align: center
    :width: 85%
-   :class: white-figure
+   :class: white-figure dark-light themed-filters
 
    The EKF's feedback loop.
 
@@ -1521,7 +1521,7 @@ bell curve and pushes each through the real curve.
    :alt: Three plots side by side. Left, "Step 1: place three points": a gray bell curve of probability density per degree over heading theta, from minus 10 to 70 degrees, labeled theta = 30° ± 12°, with three green dots on the curve, labeled 9.2° weight 1/6, 30° weight 2/3, and 50.8° weight 1/6. Middle, "Step 2: push each through the curve": distance east x in meters against heading, the curve labeled "x = 20 cos θ: the real curve", with the three green dots on it and dotted green guides to both axes, labeled 19.74 m, 17.32 m and 12.64 m. Right, "Step 3: average with the weights": blue histogram bars of probability density per meter over distance east x, highest between about 17.5 and 19.5 meters and cut off at 20, with a green bell curve labeled "the UKF's bell curve", peaked near 17 meters. Three green dots on the x axis, at 12.64, 17.32 and 19.74 meters, are labeled "where the three points land". At the top, in blue, "true: 16.95 ± 2.11 m", and in green, "UKF: 16.94 ± 2.12 m".
    :align: center
    :width: 100%
-   :class: white-figure
+   :class: white-figure dark-light themed-filters
 
    Three headings through the real curve, rebuilt into one bell curve.
 
@@ -1712,7 +1712,7 @@ heading, so :math:`n = 2` and 5 sigma points. One step is
    :alt: Three panels. Left, "Step 1: place five points": distance driven d in meters, 18.7 to 21.7, against heading theta in degrees, minus 30 to 30. A gray ellipse, labeled "gray, the input (2σ ellipse): d = 20 ± 0.5 m, θ = 0° ± 12°", holds five green dots: chi 0 at the center, 20 meters and 0 degrees, weight 1/3; chi 1 above, at about 20.9 meters, and chi 3 below, at about 19.1 meters; chi 2 to the right, at about 21 degrees, and chi 4 to the left, at about minus 21 degrees; each of the four has weight 1/6. Middle, "Step 2: push each through f": seen from above, north against east in meters, to scale. A black car at the origin faces east, labeled "the AV starts here, facing east". A gray curved cloud between about 17 and 21 meters east, labeled "gray: 4,000 possible AVs". Thin green lines run from the car to five green dots: "chi 2 lands 18.70 m east, 7.1 m north", "chi 4 lands 18.70 m east, 7.1 m south", and three dots on the line straight east, labeled "chi 3, chi 0, chi 1 stay on this line". Right, "Step 3: rebuild a bell curve": the same cloud, closer, with a tall, thin green filled ellipse labeled "UKF ellipse" and a tall, thin dashed orange ellipse just to its right, labeled "EKF ellipse". A green dot is labeled "UKF mean: 19.57 m east" and an orange dot just right of it "EKF mean: 20.00 m east". Text below them: "middle of the gray cloud: 19.57 m east".
    :align: center
    :width: 100%
-   :class: white-figure
+   :class: white-figure dark-light themed-filters
 
    The five sigma points of the drive: place, push, rebuild.
 
@@ -2013,7 +2013,7 @@ belief has two peaks, with nothing in between.
    :alt: A graph of probability density per meter, 0 to 0.15, against position along the tunnel in meters, minus 15 to 40. Two tall, narrow blue bell curves peak at about 0.15 per meter over 0 and 25 meters, labeled "the honest belief: two peaks, σ = 1.3 m each, half the weight each". A low, wide dashed orange bell curve peaks at about 0.03 per meter over 12.5 meters, labeled "one bell curve with the same mean and spread: σ = 12.6 m". A dotted orange line at 12.5 meters is labeled "its mean, 12.5 m: between the lights, where the honest belief is near zero". Two yellow squares at the top, over 0 and 25 meters, are labeled "a light at 0 m" and "a light at 25 m". A black cross on the axis at 0 meters is labeled "the AV is really at 0 m".
    :align: center
    :width: 85%
-   :class: white-figure
+   :class: white-figure dark-light themed-filters
 
    Two peaks against one bell curve.
 
@@ -2046,7 +2046,7 @@ The particle filter keeps no bell curve at all. On the heading example,
    :alt: Three plots side by side. Left, "Step 1: what the AV knows": probability density per degree against heading theta, from minus 10 to 70 degrees. A black bell curve over a gray fill peaks at 30 degrees and is labeled theta = 30° ± 12°. Purple dots, labeled "200 random headings", are stacked in columns that roughly follow the curve. Middle, "Step 2: the function": distance east x in meters against heading. The black curve x = 20 cos theta carries the purple dots, from 0 to about 60 degrees. A dotted guide from one dot, labeled "one point: 45.2° gives 14.08 m", runs down to the heading axis and across to the distance axis. Right, "Step 3: what you get": probability density per meter against distance east x, from 6 to 21 meters. A light blue stepped outline, labeled "blue: the true shape (400,000 points)", is low on the left, highest near 18 meters and cut off at 20. Purple dots stacked in columns, labeled "dots: where the 200 points land", roughly fill it. A dashed purple line is labeled "mean of the dots: 16.82 m" and a solid black line just to its right is labeled "true mean: 16.95 m".
    :align: center
    :width: 100%
-   :class: white-figure
+   :class: white-figure dark-light themed-filters
 
    200 random points through the same curve: the dots are the belief.
 
@@ -2087,7 +2087,7 @@ shows one cycle along a road, with 40 particles.
    :alt: Three strips, one above the other, sharing one axis: position along the tunnel in meters, 3 to 27. Strip 1, "Step 1: predict": 40 gray dots between about 3.5 and 13 meters, labeled "the 40 particles, last cycle", and 40 purple dots between about 13 and 25 meters, labeled "after predict: more spread out". An arrow between the two groups is labeled "each moves 10 m/s for 1 s, plus its own random kick". Strip 2, "Step 2: weigh": score from 0 to 1 against position. A black bell-shaped curve peaks at 1 over a dotted gray line at 20.5 meters, labeled "the sign match: z = 20.5 m, σ = 1.5 m"; the curve is labeled "the score: how well a particle here explains the reading". The purple dots sit on the axis, large near 20.5 meters and tiny far from it. One large dot is labeled "big dot: heavy, weight 0.093" and the leftmost tiny dot "tiny dot: far from the match, weight close to 0". Strip 3, "Step 3: resample": copies, from 0 to 7, against position. Purple dots stand in columns between about 16.5 and 22 meters; the tallest column, 7 dots, is labeled "7 copies of the particle at 20.36 m". Text on the left reads "40 particles again, but only 16 different ones".
    :align: center
    :width: 100%
-   :class: white-figure
+   :class: white-figure dark-light themed-filters
 
    One cycle with 40 particles: predict, weigh, resample.
 
@@ -2289,7 +2289,7 @@ distance along the tunnel. How to run it is on the
    :alt: A bar chart of the weight per 2 m bin, from 0 to 0.6, against position along the tunnel, 0 to 700 meters. A tall purple bar of about 0.55 at 193 meters is labeled "193 m: 57% of the weight", and a dashed black line through it is labeled "where the AV really is, 193 m". A dashed orange line at 341 meters, where there is almost no weight, is labeled "weighted average of the whole crowd, 341 m". A short purple bar of about 0.08 at 417 meters is labeled "417 m: 8% of the weight", and a bar of about 0.29 at 568 meters is labeled "568 m: 35% of the weight". Everywhere else the bars are close to zero.
    :align: center
    :width: 100%
-   :class: white-figure
+   :class: white-figure dark-light themed-filters
 
    The belief 12 s in, along the 700 m tunnel.
 
@@ -2316,7 +2316,7 @@ sits.
    :alt: A step plot of the number of places (clusters), 0 to 25, against time in seconds, 0 to 45. The purple line starts at 23, labeled "23 at the start: one per light", flickers to 22, drops to 18 at half a second, labeled 18, then to 4 at 2.1 seconds, labeled "4 after the first niche", to 3 at about 8 seconds, to 2 at 14.1 seconds, and to 1 at 20.9 seconds, labeled "1 from 20.9 s on". Gray vertical lines labeled niche mark 2.1, 14.1, 20.9, 32.7 and 44.7 seconds. A dotted black line marks 12 s.
    :align: center
    :width: 70%
-   :class: white-figure
+   :class: white-figure dark-light themed-filters
 
    How many places the crowd is in, over time.
 
@@ -2339,7 +2339,7 @@ sits.
    :alt: Error in meters against time in seconds, 0 to 45. The y axis is linear from 0 to 1 meter and logarithmic above, up to 1000. A thick orange line, labeled "weighted average", sits near 300 meters until 2.1 seconds, between about 120 and 170 meters until 14.1 seconds, and between about 12 and 21 meters until 20.9 seconds, then drops below 1 meter. A thin purple line, labeled "heaviest cluster", starts near 70 meters, jumps to about 300 meters, drops close to 0 at 2.1 seconds and stays under 1 meter, mostly between 0 and 0.6. After 20.9 seconds the two lines lie on top of each other, labeled "the two answers agree: the crowd is in one place". A dashed line marks 1 meter, gray vertical lines labeled niche mark the five niche matches, and a dotted line marks 12 s.
    :align: center
    :width: 70%
-   :class: white-figure
+   :class: white-figure dark-light themed-filters
 
    The error of two answers from the same crowd.
 

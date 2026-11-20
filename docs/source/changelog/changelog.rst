@@ -5,10 +5,19 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.36.4: L1, L3, L4, L5 and L6 Figures in Light and Dark (2026-11-20)
+.. dropdown:: v2.36.5: Filters Reading in Light and Dark (2026-11-20)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Pre-Read Material
+
+   - **Nonlinear filters:** all 23 figures have a light and a dark version and
+     follow the site's theme.
+
+.. dropdown:: v2.36.4: L1, L3, L4, L5 and L6 Figures in Light and Dark (2026-11-20)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 
