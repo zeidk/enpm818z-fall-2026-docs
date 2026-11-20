@@ -5,10 +5,32 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.36.6: GP3, GP4 and LiDAR SLAM Figures in Light and Dark (2026-11-20)
+.. dropdown:: v2.37.0: L10 Interactive Slides, Live Values and a Step-by-Step Control Loop (2026-11-20)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10 interactive slides:**
+
+     - The page carries its own fonts, so every slide fits in any browser.
+       Before, a browser without Fira Sans used a wider font and the text ran
+       past the bottom of some slides (slide 85 among them).
+     - Slide 4 plays one second with a road under the two clocks: the AV moves
+       0.4 m at each control step and gets a new plan at each planning cycle,
+       and the table row of each clock flashes when it fires.
+     - Slide 95 walks through one control step, one step at a time: click a
+       step, or play them all slowly. A sketch with the lecture's numbers shows
+       what each step computes.
+     - When you move a slider or press a slide's button, the numbers and words
+       it changes turn teal.
+     - The help window (H) says how the slides are made.
+     - The Read the Docs version menu sits flush in the bottom-right corner.
+
+.. dropdown:: v2.36.6: GP3, GP4 and LiDAR SLAM Figures in Light and Dark (2026-11-20)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Group Projects
 
