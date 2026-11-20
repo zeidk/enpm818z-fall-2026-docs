@@ -426,7 +426,28 @@ def main():
             "/* the panel title carries the Try it badge, so the slide's own badge is not repeated */\n"
             ".l10w .l10w-in .try{display:none}\n"
             "/* the slider's value sits centered on the thumb at any column width (the slides' top is 3 px of 40) */\n"
-            ".l10w .rng .rv{top:calc(3 * var(--u))}\n")
+            ".l10w .rng .rv{top:calc(3 * var(--u))}\n"
+            "/* a narrow panel (a phone): one column, rows that wrap, and a wide table or formula scrolls on its own, so the\n"
+            "   panel itself fits the screen (user, 2026-11-20) */\n"
+            "@container (max-width: 640px){\n"
+            "  .l10w ul.c2,.l10w ul.c3,.l10w ol.cols2{columns:1;column-count:1}\n"
+            "  .l10w .two{grid-template-columns:1fr !important}\n"
+            "  .l10w .row{flex-wrap:wrap}\n"
+            "  .l10w table.t{display:block;overflow-x:auto;max-width:100%;contain:paint}\n"
+            "  .l10w .katex-display,.l10w .mathout{overflow-x:auto;overflow-y:hidden;max-width:100%}\n"
+            "  .l10w .l10w-in ul:not(.tags),.l10w .l10w-in ol{padding-left:18px}\n"
+            "  .l10w .l10w-in span:has(> button),.l10w .l10w-in div:has(> button){display:inline-flex;flex-wrap:wrap;gap:6px;max-width:100%}\n"
+            "  .l10w .l10w-in div[style*=\"grid-template-columns\"]{grid-template-columns:1fr !important}\n"
+            "  .l10w .l10w-in div[style*=\"display:flex\"]{flex-wrap:wrap}\n"
+            "  .l10w .l10w-in li{overflow-x:auto;overflow-y:hidden}\n"
+            "  /* the slider in fixed sizes: at the smallest scale the thumb's offset and the value's box no longer agree */\n"
+            "  .l10w .rng,.l10w .rng input[type=range]{height:34px}\n"
+            "  .l10w .rng input[type=range]::-webkit-slider-runnable-track{height:6px}\n"
+            "  .l10w .rng input[type=range]::-webkit-slider-thumb{width:52px;height:26px;border-radius:13px;margin-top:-10px}\n"
+            "  .l10w .rng input[type=range]::-moz-range-thumb{width:48px;height:22px;border-radius:13px}\n"
+            "  .l10w .rng .rv{width:52px;height:26px;top:4px;font:600 13px/26px var(--sans)}\n"
+            "  .l10w .rng .tk{height:6px}\n"
+            "}\n")
     (STATIC / "l10w.css").write_text(FONT_FACES + DOCS_CSS.replace('font-family:"Fira Sans"', 'font-family:"L10W Fira Sans","Fira Sans"') + css + tail)
     js_main = main_js[main_js.find("(function(){", data.end(1)):]
     (STATIC / "l10w-core.js").write_text(build_js(js_main, page, names))

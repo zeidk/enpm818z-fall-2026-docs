@@ -28,7 +28,7 @@ steering, throttle and brake.
 
 .. figure:: /_static/images/L10/l10_stack.png
    :class: dark-light themed-L10
-   :alt: A block diagram of four boxes in a row joined by arrows: Route planner (L7), Behavior layer (L9), Local planner (L9) and Controller (L10, today); only the controller box is green. Under the arrows: lanes to follow, a task, a path for the next seconds, and, after the controller, steering, throttle, brake. Above, a box Pose feeds the route planner, a box Pose, objects, predictions feeds the behavior layer and the local planner, and a box Pose, speed feeds the controller.
+   :alt: A block diagram of four boxes in a row joined by arrows: Route planner (L7), Behavior layer (L9), Local planner (L9) and Controller (L10, today); the first three have green name bands and the controller an orange one. Under the arrows: lanes to follow, a task, a path for the next seconds, and, after the controller, steering, throttle, brake. Above, a box Pose feeds the route planner, a box Pose, objects, predictions feeds the behavior layer and the local planner, and a box Pose, speed feeds the controller.
    :width: 95%
    :align: center
 

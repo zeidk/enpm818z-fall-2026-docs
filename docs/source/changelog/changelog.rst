@@ -5,10 +5,26 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.39.0: L10 Lecture, Nine New Try It Panels (2026-11-20)
+.. dropdown:: v2.39.1: L10 Panels on Phones, Lighter Math (2026-11-20)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10 lecture:** the Try it panels fit a phone screen: one column, rows
+     that wrap, and a wide table or formula scrolls on its own. On the
+     trajectory panels, the lane labels are no longer cut, and the first
+     figure's description names its colors correctly.
+
+   .. rubric:: Site
+
+   - **Math:** the site loads MathJax for TeX only, so pages with Try it
+     panels load faster.
+
+.. dropdown:: v2.39.0: L10 Lecture, Nine New Try It Panels (2026-11-20)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

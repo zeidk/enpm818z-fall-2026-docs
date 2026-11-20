@@ -125,6 +125,10 @@ html_extra_path = ["_extra"]
 exclude_patterns.append("_extra/**")
 master_doc = "index"
 
+# MathJax with TeX input only: the site's math is all TeX, and the default bundle's MathML input also
+# typeset the hidden MathML copies KaTeX puts in each L10 Try it panel (363 of them, work for nothing).
+mathjax_path = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"
+
 html_css_files = [
     "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css", "my.css",
     # The card a citation opens on hover (see ref-cards.js).

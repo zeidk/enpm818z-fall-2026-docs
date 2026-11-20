@@ -3778,7 +3778,7 @@ function makeTraj(R){
     var sc = Object.assign({}, R.SCENE), cands = [], shown = 324, t = 0, pick = {d1:3.5, T_lat:4, v1:10, T_lon:3, stop:false};
     var anim = null, playT = null;
     /* the straightened road: s along it, d across it; across drawn larger than along */
-    var S0 = 40, S1 = 180, D0 = -2.6, D1 = 6.0, BOX = {x:60, y:14, w:1160, h:168};
+    var S0 = 40, S1 = 180, D0 = -2.6, D1 = 6.0, BOX = {x:76, y:14, w:1130, h:168};   /* room left of the road for "right" and "left", and right of it for "s = 180 m", in the smaller drawing too */
     var X = function(s){ return BOX.x + (s - S0) / (S1 - S0) * BOX.w; };
     var Y = function(d){ return BOX.y + BOX.h - (d - D0) / (D1 - D0) * BOX.h; };
     var kx = BOX.w / (S1 - S0), ky = BOX.h / (D1 - D0);
