@@ -5,10 +5,20 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.34.1: L10 Interactive Slides Open (2026-11-20)
+.. dropdown:: v2.34.2: L10 Interactive Slides, Worked Steps as Lists (2026-11-20)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10, Interactive Slides:** worked steps are lists, one step per
+     line, and the trajectory-candidate frames have a key for their dots,
+     crosses and cars.
+
+.. dropdown:: v2.34.1: L10 Interactive Slides Open (2026-11-20)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 
