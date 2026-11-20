@@ -5,10 +5,20 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.36.2: L8 Figures in Light and Dark (2026-11-20)
+.. dropdown:: v2.36.3: L7 Figures in Light and Dark (2026-11-20)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L7, Lecture, More detail and search steps:** 39 figures have a light
+     and a dark version and follow the site's theme. The figures drawn by hand
+     and the map photos keep their white background.
+
+.. dropdown:: v2.36.2: L8 Figures in Light and Dark (2026-11-20)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

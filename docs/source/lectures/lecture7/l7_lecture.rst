@@ -111,6 +111,7 @@ and UNECE, 2019). Keep this second quote in mind: a road also covers
 junctions and crossings, and in CARLA an intersection is made of roads too.
 
 .. figure:: /_static/images/L7/road25.png
+   :class: dark-light themed-L7
    :alt: A top view of part of Town01, x from 128 to 186 meters east, y from minus 68 to 12 meters north, lanes in light gray. A thick black line, tag 1, runs south along x 156 from y minus 11 to minus 46 meters, with an arrow pointing south: road 25's reference line. Gray dots run beside it on both sides: points along its two lanes. Black circles mark the intersection at its north end, tag 2, near y minus 2, and the one at its south end, tag 3, near y minus 55.
    :width: 50%
    :align: center
@@ -144,6 +145,7 @@ Road Network
    "All roads in a given area" (Eurostat, ITF and UNECE, 2019).
 
 .. figure:: /_static/images/L7/town01_overview.png
+   :class: dark-light themed-L7
    :alt: A top view of all of Town01's lanes in gray, x from 0 to 400 meters east and y from minus 340 to 0 meters north: an outer loop with streets inside it. White circles with a dark ring mark the twelve intersections: three along the top street, three on the next street down, two on each of the next two streets, and two on the bottom street.
    :width: 70%
    :align: center
@@ -249,6 +251,7 @@ Route
 A *static* map is made before the drive, like ``Town01.xodr``.
 
 .. figure:: /_static/images/L7/route_panel.png
+   :class: dark-light themed-L7
    :alt: A top view of part of Town01, x from 65 to 215 meters east, y from minus 150 to 18 meters north. The lanes are light gray. The route is a thick blue line: from the start on a lower street it goes west, turns north at the intersection marked 1, turns east at the one marked 3, turns north at the one marked 5, turns east at the one marked 6, and ends at the goal on the top street. The marks 1, 3, 5 and 6 are gray numbers in gray rings.
    :width: 60%
    :align: center
@@ -313,6 +316,7 @@ A route says which lanes. Two more words say how the AV moves along them.
 People often mix up the three.
 
 .. figure:: /_static/images/L7/route_path_traj.png
+   :class: dark-light themed-L7
    :alt: Three panels of the same trip. Panel 1, Route: which lanes, in order: part of Town01 with the route as a thick blue line from the start west to intersection 1, north to 3, east to 5, north to 6 and east to the goal; gray rings mark 1, 3, 5 and 6. Panel 2, Path: points with heading: a close view of the right turn at intersection 1, with small black arrows along the blue line pointing west on the straight, turning through the curve, and north after it. Panel 3, Trajectory: the path, and when: the same turn with black dots one second apart, labeled 5 s, 7 s, 9 s and 11 s, farther apart on the straight and closer in the turn.
    :width: 95%
    :align: center
@@ -503,6 +507,7 @@ which we read with the CARLA Python API and no CARLA server running (CARLA
 Team, Python API reference).
 
 .. figure:: /_static/images/L7/town01_overview.png
+   :class: dark-light themed-L7
    :alt: A top view of all of Town01's lanes in gray, x from 0 to 400 meters east and y from minus 340 to 0 meters north: an outer loop with streets inside it. White circles with a dark ring mark the twelve intersections: three along the top street, three on the next street down, two on each of the next two streets, and two on the bottom street.
    :width: 70%
    :align: center
@@ -517,6 +522,7 @@ The Trip in Town01
 ~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L7/trip_overview.png
+   :class: dark-light themed-L7
    :alt: A top view of all of Town01's lanes in light gray: an outer loop about 400 meters wide and 330 meters tall with a grid of streets inside. Tag 1, the start, sits on a horizontal street in the middle left, near x 134 and y minus 129 meters, with a black arrow pointing west. The intersection 41 meters west of it, near x 93, is circled, and a two-headed line below the street between them is labeled 41 m. Tag 2, the goal, sits on the top street near x 196 and y minus 2 meters, with an arrow pointing east. The intersection 40 meters west of it, near x 157, is circled, with a two-headed line labeled 40 m. Axes: x east and y north, in meters.
    :width: 75%
    :align: center
@@ -543,6 +549,7 @@ What the AV Knows, and What It Must Produce
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L7/trip_line_vs_route.png
+   :class: dark-light themed-L7
    :alt: A top view of part of Town01, x from 60 to 215 meters east, y from minus 150 to 22 meters north, lanes in light gray. Tag 1, the start, on a lower street near x 134; tag 2, the goal, on the top street near x 196. A dashed black straight line joins them, tag 3; it crosses blocks where there are no lanes. A thick blue line, the route, follows the lanes: west, north, east, north and east, turning four times.
    :width: 60%
    :align: center
@@ -1142,6 +1149,7 @@ lanes there, and where the file starts a new road.
    reference).
 
 .. figure:: /_static/images/L7/zoom_segments.png
+   :class: dark-light themed-L7
    :alt: A top view, x from 86 to 170 meters east and y from minus 67 to minus 43 meters north, of the street between intersection 3 on the left and intersection 5 on the right. All lanes are light gray lines with light gray dots every 2 meters. Two segments are drawn thick and dark, each with dark dots on it and an arrow for its direction. Tag 1: the eastbound lane of the street, from a white circle at x 101.4 to a white circle at x 145.0, y minus 59.5. Tag 2: from that second white circle, a curve turning left through intersection 5 to a white circle at x 158.0, y minus 46.2.
    :width: 95%
    :align: center
@@ -1222,6 +1230,7 @@ The figure shows intersection 5 (junction 332): dots are nodes, gray arrows
 are edges. A node's **successors** are the nodes its edges lead to.
 
 .. figure:: /_static/images/L7/zoom_graph.png
+   :class: dark-light themed-L7
    :alt: Intersection 5 as a graph, x from 126 to 186 meters east and y from minus 65 to minus 29 meters north: black dots for nodes, small gray arrows for the edges, every arrow pointing along its lane. Tag 1, with a short line, marks a white node where the southbound lane meets the intersection. Two thick dark lines leave it: one curves right and ends with an arrowhead pointing west at a second white node, tag 2, on the westbound lane; the other curves left and ends with an arrowhead pointing east on the eastbound lane.
    :width: 75%
    :align: center
@@ -1292,6 +1301,7 @@ Only the connections the file lists become edges, so the traffic rules are
 in the graph.
 
 .. figure:: /_static/images/L7/t_movements.png
+   :class: dark-light themed-L7
    :alt: A top view in meters of intersection 1 of our route, junction 306 in Town01, x from 76 to 114 meters east: two lanes running north and south on the left and two lanes to the east, with gray arrows showing each lane's driving direction. Six dark paths cross the intersection, each ending in an arrowhead. Tag 1: the two straight paths, solid lines, one south in the left lane and one north in the right lane. Tag 2: the two right turns, dashed, from the south into the east road and from the east road north. Tag 3: the two left turns, dotted, from the north into the east road and from the east road south. Tag 4: a faint gray dashed U-turn arc between the two north-south lanes below the intersection, with no arrowhead, crossed out with a dark x.
    :width: 60%
    :align: center
@@ -1405,6 +1415,7 @@ The Toy Graph on the Map
 """"""""""""""""""""""""
 
 .. figure:: /_static/images/L7/toy_on_map.png
+   :class: dark-light themed-L7
    :alt: Town01's lanes in light gray, with the toy graph drawn over them: nine white circles labeled S, 1 to 7 and G, joined by straight black lines. S sits on a street east of node 1. Node 1 has node 2 below it and node 3 above it; node 3 joins node 4 above and node 5 to the right; nodes 4 and 5 both join node 6, which joins G to its right; node 5 also joins node 7 far to the east.
    :width: 70%
    :align: center
@@ -1431,6 +1442,7 @@ Edge Lengths in the Toy Graph
 Each edge of the toy graph needs a cost. Here, the cost is its length.
 
 .. figure:: /_static/images/L7/toy_base.png
+   :class: dark-light themed-L7
    :alt: The toy graph alone, to scale, nodes as white circles. Edge lengths in meters beside each edge: S to 1, 41, with an arrow from S to 1; 1 to 2, 67; 1 to 3, 75; 3 to 4, 55; 3 to 5, 64; 4 to 6, 66; 5 to 6, 53; 5 to 7, 179; 6 to G, 40, with an arrow from 6 to G.
    :width: 65%
    :align: center
@@ -1558,6 +1570,7 @@ right, looking the way the reference line points (south). Here are 20 m of
 Town03's road 4, before junction 238.
 
 .. figure:: /_static/images/L7/road4_lanes.png
+   :class: dark-light themed-L7
    :alt: A top view of 20 meters of Town03's road 4, five lanes side by side, tagged 1 to 5 from west to east. Lanes 1 and 2 have arrows pointing south, lanes 4 and 5 arrows pointing north, and the shaded middle lane, tag 3, an arrow pointing both ways. Solid lines run along the outer edges; broken lines separate lanes 1 and 2, and lanes 4 and 5; each side of the middle lane has a double line, one broken and one solid.
    :width: 45%
    :align: center
@@ -1662,6 +1675,7 @@ In Town03 the route must pick the lane before a turn. Road 4 has two lanes
 driving south, toward junction 238.
 
 .. figure:: /_static/images/L7/town03_lanes.png
+   :class: dark-light themed-L7
    :alt: A top view in meters of road 4 in Town03 approaching junction 238 from the north, with the other lanes in light gray. Two lanes drive south: the left one teal, tag 1, the right one brown, tag 2. At the bottom, the teal lane goes straight on or turns left, toward the east; the brown lane goes straight on or turns right, toward the west. Short dashed black arrows run diagonally from the brown lane to the teal lane along the approach.
    :width: 40%
    :align: center
@@ -1694,6 +1708,7 @@ must turn left at junction 238. Which edges must its route contain, in order?
    :class-container: sd-border-success
 
    .. figure:: /_static/images/L7/town03_graph.png
+      :class: dark-light themed-L7
       :alt: Town03's road 4 approaching junction 238 from the north, drawn as a graph: x from about minus 107 to minus 57 meters east, y from minus 140 to minus 85 meters north, other lanes in light gray. Dark dots every 4 meters along the two southbound lanes, joined by gray arrows pointing south. Dashed gray arrows cross between the two lanes in X shapes, one pair every 12 meters. At the intersection, the west lane's arrows go straight on south or turn right to the west; the east lane's go straight on south or turn left to the east. One thick dark route: tag 1, south along the west lane; tag 2, a dashed dark arrow into the east lane; tag 3, south along the east lane; tag 4, the left turn to the east, ending in an arrowhead.
       :width: 60%
       :align: center
@@ -1778,6 +1793,7 @@ How fast may the AV drive through a curve? The planner answers this from the
 map, before the drive, and puts the answer in the travel-time cost.
 
 .. figure:: /_static/images/L7/turn_geometry.png
+   :class: dark-light themed-L7
    :alt: A top view of a lane turning left: it comes from the left, curves through a quarter circle and leaves upward. A dark dot, tag 1, marks the circle's center. A dashed line, tag 2, runs from the center to the AV, which drives along the curve. An arrow along the lane ahead of the AV is tag 3; an arrow from the AV toward the center is tag 4.
    :width: 60%
    :align: center
@@ -1938,6 +1954,7 @@ The same trip, searched once with each cost. Blue: the distance route; dashed
 rust: the travel-time route, which the penalty also picks.
 
 .. figure:: /_static/images/L7/routes_costs.png
+   :class: dark-light themed-L7
    :alt: A top view of part of Town01's lanes, with intersections 1 to 6 marked by small gray numbered circles. A thick blue line, the shortest-distance route, runs from S west to intersection 1, north to 3, east to 5, north to 6 and east to G. A dashed rust line, the fastest route, shares the part from S to 3, then continues north to 4, east past 6 and on to G.
    :width: 50%
    :align: center
@@ -2066,6 +2083,7 @@ GP4 calls the route's waypoints the **path**: the planner publishes them as
 a ``nav_msgs/Path`` message.
 
 .. figure:: /_static/images/L7/triggers.png
+   :class: dark-light themed-L7
    :alt: Two panels to scale, each with a straight blue path along x from 0 to 30 meters, black dots every 2 meters. Panel 1, trigger 1, an object within 3.0 m of a waypoint: the AV at the left on the path; a red X 2.0 m beside the path at x 20, with a double arrow from it down to the path labeled 2.0 m, and a red circle of radius 3 meters around it; the three path points inside the circle are red. Panel 2, trigger 2, the AV more than 2.0 m from the nearest waypoint: the AV 2.5 m to the side of the path, with a double arrow from its rear axle down to the nearest path point, labeled 2.5 m.
    :width: 95%
    :align: center
@@ -2216,6 +2234,7 @@ Our Route as Four Maneuvers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L7/route_maneuvers.png
+   :class: dark-light themed-L7
    :alt: A top view of part of Town01 with the trip's route in blue from S, west to intersection 1, north to 3, east to 5, north to 6 and east to G. Gray circles label the intersections 1, 3, 5 and 6.
    :width: 50%
    :align: center

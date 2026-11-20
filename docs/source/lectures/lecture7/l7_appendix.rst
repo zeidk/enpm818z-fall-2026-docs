@@ -732,6 +732,7 @@ Top Speed in Town01's Turns
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L7/turn_speed.png
+   :class: dark-light themed-L7
    :alt: A graph, not a map: top speed in meters per second against the curve's radius in meters, 0 to 90. A solid dark curve rises from 0 and becomes flat at about 11.2 meters per second from a radius of about 62 meters on. Dots on it: tag 1 at radius 7.2 and speed 3.8, tag 2 at radius 11.5 and speed 4.8, tag 3 where it becomes flat. Tag 4 points at the flat part. A dotted gray line marks 11.18 meters per second across the graph, and a dashed gray curve, tag 5, keeps rising above the flat part.
    :width: 75%
    :align: center
@@ -1149,6 +1150,7 @@ The same two searches, on all 3107 nodes of Town01, run in advance by a
 reference planner:
 
 .. figure:: /_static/images/L7/scale_search.png
+   :class: dark-light themed-L7
    :alt: Two top views of Town01's lanes side by side, each with the trip's route as a blue line from S to G and the nodes the search took as amber dots. Left, Dijkstra, 543 nodes taken: amber spreads in every direction from the route, south along the left street to the bottom of the town, west along the top street to the town's edge, and east along two cross streets. Right, A*, 196 nodes taken: amber covers the route and only short stubs off it, near intersections 1 and 3 and east of 5.
    :width: 100%
    :align: center
