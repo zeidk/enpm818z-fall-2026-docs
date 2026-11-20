@@ -19,6 +19,10 @@ Usage (from the repo root):
   /usr/bin/python3 tools/check_figures.py lectures/lecture3   # one folder or file
   /usr/bin/python3 tools/check_figures.py --all            # list ok files too
 
+A figure with a <name>_dark.png beside it is a themed pair: both versions are
+drawn with no background, and the page shows the one for the theme
+(_static/themed-figs.js). The pair must be the same size.
+
 Exit status is 1 if any image FAILs or is missing, else 0.
 """
 import re
@@ -45,8 +49,29 @@ def images_used(scope):
     return used
 
 
+def transparent_px(path):
+    with Image.open(path) as im:
+        return sum(sum(1 for a in f.convert("RGBA").getchannel("A").getdata() if a < 255) for f in ImageSequence.Iterator(im))
+
+
 def check(path):
     """Return (status, detail) for one image file."""
+    # A themed pair (<name>.png and <name>_dark.png, from the deck's make_themed.py) is drawn with no
+    # background on purpose: the page swaps the two with the theme (_static/themed-figs.js).
+    if path.suffix.lower() == ".svg":
+        # an SVG is drawn, not photographed: it reads on both themes when it paints a white background first
+        text = path.read_text(encoding="utf-8", errors="replace")
+        first = re.search(r"<(rect|path|circle|g|text|line|polygon|image)\b[^>]*>", text)
+        white = first and first.group(1) == "rect" and re.search(r'fill="(#fff|#ffffff|white)"', first.group(0), re.I)
+        return ("ok", "SVG, white background first") if white else ("CHECK", "SVG with no white background drawn first")
+    dark = path.with_name(path.stem + "_dark" + path.suffix)
+    if dark.exists():
+        with Image.open(path) as a, Image.open(dark) as b:
+            if a.size != b.size:
+                return "FAIL", f"themed pair of different sizes: {a.size} and {b.size}"
+        if not (transparent_px(path) and transparent_px(dark)):
+            return "CHECK", "themed pair, but one of the two has an opaque background"
+        return "ok", "themed pair (light and dark)"
     with Image.open(path) as im:
         frames = [f.convert("RGBA") for f in ImageSequence.Iterator(im)]
     transparent = sum(sum(1 for a in f.getchannel("A").getdata() if a < 255) for f in frames)

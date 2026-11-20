@@ -5,10 +5,23 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.35.1: L10 Interactive Slides, Readable Figures (2026-11-20)
+.. dropdown:: v2.36.0: L10 Figures in Light and Dark (2026-11-20)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10, Lecture:** 59 figures have a light and a dark version and follow
+     the site's theme, with no white box around them in the dark theme.
+     Twelve keep their white background for now: eleven versions made for
+     these pages only, and one screenshot.
+   - **L10, Interactive Slides:** the figures, plots and flowcharts follow the
+     light and dark themes.
+
+.. dropdown:: v2.35.1: L10 Interactive Slides, Readable Figures (2026-11-20)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

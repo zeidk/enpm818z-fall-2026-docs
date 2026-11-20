@@ -137,4 +137,6 @@ html_js_files = [
     ("flyout-style.js", {"defer": "defer"}),
     # Opens the "More detail" box a deck link points at (l10_lecture.html#l10-more-...).
     ("open-target-dropdown.js", {"defer": "defer"}),
+    # Swaps a themed figure to its _dark version in the dark theme (see the file's header).
+    ("themed-figs.js", {"defer": "defer"}),
 ]

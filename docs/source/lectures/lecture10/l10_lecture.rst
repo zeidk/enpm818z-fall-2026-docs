@@ -253,6 +253,7 @@ The AV is in one behavior and one monitor state at once, so one flat FSM
 needs a state for every pair: 5 × 3 = 15.
 
 .. figure:: /_static/images/L10/beh_flat.png
+   :class: dark-light themed-L10
    :alt: A grid of 15 rounded boxes in three rows and five columns. Each box shows a road behavior in bold above a line and a monitor state below it: the columns are Lane keep, Follow, Change lane, Stop at line and Cross, the rows Nominal, Caution and Emergency. Three orange arrows go from Lane keep to Follow, one in each row; dark tag 1 marks the top one. Five blue arrows go down from each Nominal box to the Caution box below it; dark tag 2 marks the leftmost one.
    :width: 85%
    :align: center
@@ -288,6 +289,7 @@ AV must be able to stop from any of its five behaviors, so one flat FSM
 needs 5 arrows to Emergency stop.
 
 .. figure:: /_static/images/L10/beh_hier.png
+   :class: dark-light themed-L10
    :alt: A state diagram. A large green rounded box labeled Driving, dark tag 1 at its top-left corner, holds five states: Lane keep, Follow and Change lane in a top row, Stop at the line and Cross the intersection below. An arrow from the left enters Lane keep. Lane keep and Follow go to each other; Follow goes to Change lane; Change lane goes back to Lane keep by an arc over the top. Lane keep goes down to Stop at the line, which goes to Cross the intersection, which goes back up to Lane keep. One red arrow, dark tag 2, leaves the bottom edge of the Driving box and goes down to Emergency stop.
    :width: 75%
    :align: center
@@ -434,6 +436,7 @@ car, follow a car, keep the lane. Ovals are conditions, gray boxes are
 actions; each tag is one condition (thresholds chosen for this example).
 
 .. figure:: /_static/images/L10/beh_road_bt.png
+   :class: dark-light themed-L10
    :alt: A behavior tree. The root, a Fallback box marked with a question mark, has four children from left to right: three Sequence boxes marked with an arrow, and a gray action box, Lane keep. The first Sequence holds condition 1, an ellipse with dark tag 1, and the action Stop at the line. The second holds conditions 2 and 3 and the action Change lane. The third holds condition 4 and the action Follow.
    :width: 90%
    :align: center
@@ -466,6 +469,7 @@ Set the Scene: a Slow Car Ahead, Then a Car in the Left Lane
 (chosen for this example). The AV drives right, in the right lane.
 
 .. figure:: /_static/images/L10/bt_scene.png
+   :class: dark-light themed-L10
    :alt: Two top views of a straight two-lane road, to scale, one above the other, titled Tick 1, t = 4.0 s, and Tick 2, t = 4.1 s. In both, the black AV drives right in the lower, yellow lane, and a blue car is 25 meters ahead of it in the same lane, labeled 5 m/s with dark tag 2; a double arrow under the road marks the 25 m, with dark tag 4. Short gray lines trail behind each car to show that it moves. In the upper, purple lane, a dashed box, dark tag 3, covers the lane from 30 meters behind the AV to 40 meters ahead. In Tick 2 only, a second blue car sits in the purple lane inside the box, labeled 20 m behind.
    :width: 100%
    :align: center
@@ -699,6 +703,7 @@ road, with the AV at 10 m/s. It worked in the Frenet frame: :math:`s` is the
 distance along the right lane's center, :math:`d` the offset to its left.
 
 .. figure:: /_static/images/L10/candidate_set.png
+   :class: dark-light themed-L10
    :alt: A graph of d against s, s from 48 to 132 meters, the right lane pale yellow and the left lane pale purple. A black car icon, the AV, at s = 60 and d = 0. Short gray lines trail behind it to show that it moves. Thirty thin dark curves leave it, solid, dashed or dotted, and level off at ten values of d from minus 0.5 to 4 meters, every 0.5; a dot marks where each one levels off, at s = 80 for the solid ones, 90 for the dashed ones and 100 for the dotted ones. A thick dark line stays at d = 0 and ends with a bar at s = 110. A blue car icon, the obstacle, at s = 118 just below d = 0. Gray dash-dot lines mark the two lane centers, d = 0 and d = 3.5. A legend names the line styles 20 m, 30 m and 40 m, the thick line stop behind, and the dash-dot line lane center.
    :width: 85%
    :align: center
@@ -746,6 +751,7 @@ Candidate A, the cheapest (green), on last class's road; the :math:`d` axis
 is stretched.
 
 .. figure:: /_static/images/L10/scurve_setup.png
+   :class: dark-light themed-L10
    :alt: A graph of d against s, s from 50 to 123 meters, the right lane pale yellow from minus 1.75 to 1.75 and the left lane pale purple from 1.75 to 5.25, the right lane's center a thick black line at d = 0 and the left lane's center dotted at 3.5. A black AV icon at s = 60, d = 0, with short gray lines behind it to show that it moves; a blue parked car at s = 118, just below d = 0. A thick green S curve leaves the AV, crosses the dashed lane line near s = 80, reaches d = 3.5 at a green dot at s = 100 and runs straight on. Two dotted vertical guides at s = 60 and s = 100, labeled s0 = 60 m and s0 + L = 100 m near the bottom. Above the road, a double arrow between the guides is labeled L = 40 m. Near the AV, the label d0 = 0. A vertical double arrow at s = 107, from d = 0 up to 3.5, is labeled Delta d = 3.5 m. A top axis, u = (s minus s0) / L, reads 0 above s = 60, 0.5 above s = 80 and 1 above s = 100.
    :width: 80%
    :align: center
@@ -826,6 +832,7 @@ Shape the Move with q(u): How Much of Δd Is Done at u
 move :math:`\Delta d` done.
 
 .. figure:: /_static/images/L10/scurve_q.png
+   :class: dark-light themed-L10
    :alt: A graph of q(u), the share of Delta d, from 0 to 1, against u, the share of the distance L, from 0 to 1. A dark S-shaped curve starts flat at (0, 0), rises slowly, climbs fastest in the middle and levels off flat at (1, 1). Dots on the curve at u = 0, 0.25, 0.5, 0.75 and 1, with dotted guides to both axes; the vertical axis is marked 0, 0.10, 0.5, 0.90 and 1.
    :width: 55%
    :align: center
@@ -895,6 +902,7 @@ enters the next one parallel to the lane.
      bends.
 
    .. figure:: /_static/images/L10/poly_powers.png
+      :class: dark-light themed-L10
       :alt: A graph of value against u from 0 to 1, with four dark curves: u, a straight dotted line from 0 to 1; u squared, dashed; u cubed, dash-dotted; and u to the fifth, solid. All four start at 0 and end at 1. The higher the power, the longer the curve stays near 0 before it rises.
       :width: 55%
       :align: center
@@ -917,6 +925,7 @@ enters the next one parallel to the lane.
    with fewer numbers cannot meet all six.
 
    .. figure:: /_static/images/L10/poly_compare.png
+      :class: dark-light themed-L10
       :alt: Three graphs side by side, each against u from 0 to 1, with three curves: a dotted line, u; a dashed purple cubic, 3 u squared minus 2 u cubed; and a solid green quintic, 10 u cubed minus 15 u to the fourth plus 6 u to the fifth. Left, the curves themselves: all go from 0 to 1, the line straight, the other two S shaped. Middle, their slopes: the line's is 1 everywhere; the cubic's and the quintic's start and end at 0 and peak at 1.5 and about 1.9 at u = 0.5. Right, their bends: the line's is 0; the cubic's falls in a straight line from 6 to minus 6; the quintic's starts at 0, rises to about 5.8, falls through 0 at u = 0.5 to about minus 5.8 and ends at 0.
       :width: 100%
       :align: center
@@ -983,6 +992,7 @@ move:
       d(s) = d_0 + \Delta d\; q(u), \qquad u = \frac{s - s_0}{L}
 
 .. figure:: /_static/images/L10/dformula.png
+   :class: dark-light themed-L10
    :alt: A graph of d against s for candidate A, s from 50 to 123 meters, the right lane pale yellow and the left lane pale purple, with the black AV at s = 60 on d = 0, short gray lines behind it to show that it moves, and the blue parked car near s = 118. A green curve leaves the AV, rises in an S shape and levels off at d = 3.5 at s = 100, then stays flat. Dotted vertical lines mark s = 60 and s = 100. Dark tag 1 sits next to the AV. At s = 80, a double arrow, dark tag 2, runs from d = 0 up to a dot on the curve at d = 1.75, on the lane line. A dot marks the curve at s = 100, d = 3.5, and dark tag 3 sits above the flat part after it.
    :width: 85%
    :align: center
@@ -1043,6 +1053,7 @@ Two of the 9 candidates that pass the checks, both from :math:`s_0` = 60 m
 over :math:`L` = 40 m.
 
 .. figure:: /_static/images/L10/two_candidates.png
+   :class: dark-light themed-L10
    :alt: A graph of d against s, s from 50 to 132 meters, the right lane pale yellow from minus 1.75 to 1.75 and the left lane pale purple from 1.75 to 5.25, the right lane's center a thick black line at d = 0 and the left lane's center dotted at 3.5. A black AV icon at s = 60, d = 0, with short gray lines behind it to show that it moves; a blue parked car at s = 118, just below d = 0. Two S curves leave the AV together: a green one, labeled A, levels off at d = 3.5 near s = 100; a gray one, labeled B, levels off just below it at d = 3. Both then run straight to s = 132.
    :width: 90%
    :align: center
@@ -1117,6 +1128,7 @@ Compare Lengths: the Same Lane Change over 20, 30, 40 and 60 m
 same :math:`q(u)`, the S curve stretched.
 
 .. figure:: /_static/images/L10/lengths_compare.png
+   :class: dark-light themed-L10
    :alt: A graph of d against s, s from 50 to 132 meters, the right lane pale yellow and the left lane pale purple, the black AV at s = 60 with short gray lines behind it and the blue parked car near s = 118. Four S curves leave the AV and level off at d = 3.5, each with a dot where it levels off and a dark tag above: tag 1, a purple dashed curve, at s = 80; tag 2, a gray curve, at s = 90; tag 3, a thick green curve, at s = 100; tag 4, a black dashed curve, at s = 120. The shorter the curve, the steeper it rises.
    :width: 85%
    :align: center
@@ -1233,6 +1245,7 @@ Plan Around a Car That Moves: Last Class Closed the Lane Instead
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L10/traj_scene.png
+   :class: dark-light themed-L10
    :alt: The two-lane road drawn along its length, to scale: s in meters along the right lane's center, from 35 to 135, across; d in meters to its left, up. The right lane light yellow, the left lane light purple, a dashed line between them. In the left lane, at s = 45, a dark red car, car B, dark tag 1. A dark red dashed line runs ahead of it along the left lane's center, with a dark red dot every second for four seconds, at s = 60, 75, 90 and 105, dark tag 2 above the second dot. In the right lane the black AV at s = 60, tag 3, below the first dot, and far ahead a blue parked car at s = 118, tag 4. Short gray lines trail behind car B and the AV to show that they move; the parked car has none.
    :width: 95%
    :align: center
@@ -1580,6 +1593,7 @@ Each candidate's :math:`d(t)` is one quintic, from the AV's :math:`d`,
 each side; :math:`T` = 3, 4 or 5 s: 6 × 3 = 18.
 
 .. figure:: /_static/images/L10/traj_lat_set.png
+   :class: dark-light themed-L10
    :alt: A graph of the sideways offset d, in meters, against time t from 0 to 7 seconds, over two horizontal bands: the right lane in yellow from minus 1.75 to 1.75, the left lane in purple from 1.75 to 5.25, a dashed line between them. Eighteen S-shaped curves start at d = 0 at time 0 and level off at minus 0.5, 0, 0.5, 3, 3.5 or 4 meters; solid black curves level off at 3 seconds, dashed red at 4, dotted blue at 5.
    :width: 80%
    :align: center
@@ -1804,6 +1818,7 @@ One move of each kind, picked for this example:
    110.15 m* (:math:`s_\text{stop}`), *10 s from now* (:math:`T` = 10 s).
 
 .. figure:: /_static/images/L10/st_example.png
+   :class: dark-light themed-L10
    :alt: Two graphs side by side of the distance along the road s, in meters, against the time t from now, in seconds. Both start the same way: a thick black line rising steeply up to a red round marker at t = 0 and s = 60, dark tag 1 below and to the right of it. Left graph, titled keep a speed: a gray curve rises from the red round marker and bends to a gentler slope at t = 4 s, marked by a dotted vertical line, with no red round marker there; a thick black straight line goes on at that gentler slope, dark tag 2 below it. Right graph, titled stop at a point: a gray curve rises from the red round marker and levels off at a second red round marker at t = 10 s and s = 110.15, marked by a dotted vertical line; a thick black flat line goes on from it, dark tag 2 below it.
    :width: 95%
    :align: center
@@ -1868,6 +1883,7 @@ Samples (chosen). Keep a speed: :math:`\dot s_1` = 4, 6, 8, 10 or 12 m/s,
 :math:`T` = 8, 10 or 12 s: 3.
 
 .. figure:: /_static/images/L10/traj_lon_set.png
+   :class: dark-light themed-L10
    :alt: A graph of the speed along the road, in meters per second, against time from 0 to 12 seconds. All curves start at 10. Thin curves change smoothly to 4, 6, 8, 10 or 12 and stay there; solid black ones arrive at 3 seconds, dashed red at 4, dotted blue at 5. Three thick curves, the stops, fall slowly and reach 0 at 8, 10 and 12 seconds. A dotted vertical line at 7 seconds; to its right the background is gray, with dark tag 1.
    :width: 95%
    :align: center
@@ -2258,6 +2274,7 @@ Check Each Candidate at Its Own Time: 45 of 324 Are Kept
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L10/traj_first_plan.png
+   :class: dark-light themed-L10
    :alt: A graph, d against s, with the right lane yellow and the left lane purple. The black AV at s = 60 meters, with short gray lines behind it to show that it moves, and the blue parked car in the right lane at 118 meters; car B is behind, out of view. A fan of 324 lines leaves the AV. Every line that reaches the left lane is orange-red or dashed purple. In the right lane, gray lines end between about 105 and 110 meters, and one thick green line rises slightly to d = 0.5 and runs to about 110 meters. Orange-red lines in the right lane run on past 120 meters.
    :width: 85%
    :align: center
@@ -2332,6 +2349,7 @@ The AV drives the first 0.5 s of the cheapest candidate, then plans again
 from where it is. Three of those plans, one per section.
 
 .. figure:: /_static/images/L10/traj_drive_1.png
+   :class: dark-light themed-L10
    :alt: A top view of the road, to scale, x and y in meters: the right lane yellow, the left lane purple, a dashed line between them, the road bending left after x = 160. In the left lane, the dark red car B, with short gray lines behind it to show that it moves. In the right lane, just ahead of car B, the black AV, with short gray lines behind it and a dotted line behind it where it has been. A thick green line leaves the AV along the right lane and ends with a short green bar near x = 148, before the blue parked car near x = 157.
    :width: 100%
    :align: center
@@ -2353,6 +2371,7 @@ Plan Again at 2.5 s: Car B Is Level and Faster, So Go Behind It
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L10/traj_drive_2.png
+   :class: dark-light themed-L10
    :alt: The same top view, 0.5 seconds later. The dark red car B in the left lane and the black AV in the right lane, side by side, both with short gray lines behind them; a dotted line behind the AV. A thick green line leaves the AV, curves across the dashed line into the left lane near x = 140, runs along the left lane past the blue parked car and follows the bend up to near x = 180.
    :width: 100%
    :align: center
@@ -2373,6 +2392,7 @@ At 7.0 s: the AV Passes the Parked Car, in the Left Lane
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L10/traj_drive_3.png
+   :class: dark-light themed-L10
    :alt: The same top view at 7 seconds. The dotted line shows where the AV has been: along the right lane, then across the dashed line into the left lane after x = 130. The black AV in the left lane beside the blue parked car, near x = 157, with short gray lines behind it. A thick green line goes on from the AV along the left lane through the bend. Far ahead on that line, near x = 185, the dark red car B, with short gray lines behind it.
    :width: 100%
    :align: center
@@ -2473,6 +2493,7 @@ it at 15 m/s: its :math:`s` is 45 + 15 :math:`t`. Every 0.05 s, the check
 compares the AV's three circles with car B's (last class).
 
 .. figure:: /_static/images/L10/traj_two_timings.png
+   :class: dark-light themed-L10
    :alt: Two views of the same stretch of road, to scale, one above the other, dark tags 1 and 2, drawn along the road: s in meters along the right lane's center on the horizontal axis, from 62 to 128, and d in meters to its left on the vertical axis. Short gray lines trail behind each moving car to show that it moves; the parked car has none. Three circles cover each car, the ones the collision check compares: at tag 1 the AV's front circle overlaps car B's rear circle; at tag 2 they are far apart. Both show the same black line: it keeps the right lane, then curves smoothly into the left lane's center. Black dots on the line mark each second. Top, tag 1: the dots are evenly spaced; the black AV is crossing the dashed lane line, and the dark red car B is right beside and slightly ahead of it, the two bodies touching. Bottom, tag 2: the dots are closer together at first; the AV is still in the right lane, well behind car B, which is in the left lane. The blue parked car is in the right lane at the right of both views.
    :width: 90%
    :align: center
@@ -2753,6 +2774,7 @@ One Test Path for Every Controller: a Right Curve in Town03
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L10/turn_map.png
+   :class: dark-light themed-L10
    :alt: A top view, x along the approach to the right and y to the left, in meters. A single lane 3.5 meters wide, drawn by two black edges with a gray dashed center line, runs 80 meters to the right, turns right through a quarter circle near x = 80 to 92, and runs 40 meters down. The AV is drawn at the start, at the left end, facing right. An arrow under the lane says driving direction. The curve is shaded orange along the center line.
    :width: 90%
    :align: center
@@ -2791,6 +2813,7 @@ Measure How the Curve Bends: Fit a Circle to Each Arc
    meter.
 
 .. figure:: /_static/images/L10/turn_arcs.png
+   :class: dark-light themed-L10
    :alt: The curve of the test path from above, x from 72 to 99 meters, y from minus 21 to 4, the lane drawn by two black edges with a gray dashed center line, coming from the left and turning right, down. Two pieces of the center line in the curve are thick: a blue one first, then a purple one that starts where the blue one ends. A blue dashed circle of radius 10 meters fits the blue piece, with its center, a blue dot near x = 83, y = minus 10, and a blue radius line to the piece, dark tag 1. A smaller purple dashed circle, radius about 6 meters, fits the purple piece, with its center near x = 85, y = minus 7 and a purple radius line, dark tag 2.
    :width: 60%
    :align: center
@@ -2847,6 +2870,7 @@ Read the Curvature Along the Path: It Steps Up, Then Down
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L10/turn_curvature.png
+   :class: dark-light themed-L10
    :alt: Two graphs, not maps, one above the other, against the distance along the path, zoomed on 60 to 120 meters, with the junction lane from 80 to 97.5 meters shaded orange and three dotted vertical lines at about 83, 90 and 95 meters. Top: the curvature in 1 per meter, zero up to about 83 meters, a blue plateau at 0.100 with dark tag 1 above it, a purple plateau at 0.167 to about 95 meters with dark tag 2 above it, then zero. Bottom: how far the AV is off the path, in meters, in one run: a blue line that stays under 0.06 meters, with small bumps just after the first two dotted lines, rises to a peak of about 0.25 meters at 97 meters, just after the third dotted line, marked by a dot with dark tag 3, and falls back under 0.05 meters by about 102 meters.
    :width: 70%
    :align: center
@@ -2911,6 +2935,7 @@ Speed Profile, Step 2: Brake Before the Curve, Speed Up After It
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L10/speed_profile.png
+   :class: dark-light themed-L10
    :alt: A graph of speed in meters per second against the distance along the path. A dotted gray limit line sits at 8, drops to about 4.5 on the first arc and 3.46 on the second, and returns to 8. The blue profile holds 8, falls along a curve from about 72 meters (dark tag 1), holds 4.47 on the first arc and 3.46 on the second; dark tags 2 and 3 sit below the dip, each joined by a thin line to the middle of its level stretch, then rises back to 8 by about 112 meters (tag 4). The junction lane is shaded orange.
    :width: 85%
    :align: center
@@ -2968,6 +2993,7 @@ Lincoln MKZ, a research car: they changed the steering command in one jump
 and watched the wheel (Xu et al., 2021).
 
 .. figure:: /_static/images/L10/steer_delay.png
+   :class: dark-light themed-L10
    :alt: A graph of the steering angle, as a share of the new commanded angle from 0 to 1, against the time t from the command, marked from 0 to 1.2 seconds; the lines start a little before 0. A gray dashed line, the command, jumps from 0 to 1 at t = 0. A thick black line, the wheel's angle, stays at 0 until t = 0.2 s, with a double arrow from 0 to 0.2 s and dark tag 1 above it; then it rises, quickly at first and then more slowly, toward 1. A dot marks it at t = 0.4 s and 0.63, with dotted guides to both axes and dark tag 2 beside it.
    :width: 70%
    :align: center
@@ -3115,6 +3141,7 @@ So each wheel must point at a right angle to the line from the ICR to it
 **tire scrub**.
 
 .. figure:: /_static/images/L10/ackermann_geom.png
+   :class: dark-light themed-L10
    :alt: A top view of a car facing up and turning left, drawn in faint blue-gray, with its two axles and center line in dark lines and its four wheels as thick dark bars. The rear wheels point straight ahead. Thin gray lines run from the rear axle and from each front wheel to a green point at the far left, dark tag 3; a small square mark at each front wheel shows the wheel is square to its line. The left front wheel, dark tag 1, is turned by the orange angle delta i from a dashed straight-ahead line; the right front wheel, dark tag 2, is turned by the smaller orange angle delta o. A green double arrow R runs from the green point to the middle of the rear axle. L marks the wheelbase on the right and W the track behind the car.
    :width: 55%
    :align: center
@@ -3182,6 +3209,7 @@ model, like a bicycle" (Snider, 2009).
      - inner and outer
 
 .. figure:: /_static/images/L10/bicycle_collapse.png
+   :class: dark-light themed-L10
    :alt: The same car, axles and green point as on the Ackermann figure, now drawn as a bicycle: one dark rear wheel, dark tag 1, at the middle of the rear axle, pointing straight ahead, and one dark front wheel, dark tag 2, at the middle of the front axle, joined by a dark center line. The four wheels of the Ackermann figure stay in light gray. The front wheel is turned by the orange angle delta from a dashed straight-ahead line, and is square to the thin gray line to the green point, dark tag 3. A green double arrow R runs from the green point to the rear wheel; L marks the wheelbase on the right.
    :width: 55%
    :align: center
@@ -3283,6 +3311,7 @@ Predict the AV's Motion: the Bicycle Model, One Wheel per Axle
    point.
 
 .. figure:: /_static/images/L10/bicycle_geom.png
+   :class: dark-light themed-L10
    :alt: A drawing of the bicycle model. The rear wheel at dark tag 1 and the front wheel at dark tag 2 are short thick bars joined by a line of length L, tilted up to the right at angle theta from a dashed horizontal line. The front wheel is turned further left by the angle delta from the body line. Thin gray lines from both wheels, square to each wheel, meet far up and to the left at a green point, dark tag 3; a green double arrow labeled R runs from the rear wheel to that point. A dashed green arc leaves the rear wheel toward the front. A faint blue-gray top view of the AV lies under the model, facing along the body line, with its rear axle on the rear wheel. Small x and y axes sit at the bottom left, off the car.
    :width: 55%
    :align: center
@@ -3341,6 +3370,7 @@ turns left) and the wheelbase :math:`L`:
    :name: l10-more-bicycle-tan
 
    .. figure:: /_static/images/L10/bicycle_geom.png
+      :class: dark-light themed-L10
       :alt: The bicycle model drawing again, with dark round tags: rear wheel at tag 1, front wheel at tag 2 turned by delta, the point the AV turns about at tag 3, the radius R from the rear wheel to that point, and the wheelbase L between the wheels.
       :width: 45%
       :align: center
@@ -3385,6 +3415,7 @@ Steer for a Curvature: a Fixed Angle Drives a Circle
    :math:`\kappa = 1/R`, steer :math:`\delta = \arctan(L\kappa)`.
 
 .. figure:: /_static/images/L10/steer_circles.png
+   :class: dark-light themed-L10
    :alt: A top view to scale, x and y in meters from the AV's rear axle. The black AV at the origin, facing up. Three half circles start at its rear axle and curve right, each around a dot on the x axis: a blue one of radius 10 meters around x = 10, dark tag 1 above it; a purple one of radius about 6 meters around x = 6, dark tag 2; and a black dashed one of radius about 3.4 meters around x = 3.4, dark tag 3.
    :width: 70%
    :align: center
@@ -3501,6 +3532,7 @@ sideways a little when the AV turns, and more the harder it turns.
       F_{yf} = -c_f\,\alpha_f, \qquad F_{yr} = -c_r\,\alpha_r
 
    .. figure:: /_static/images/L10/dynamic_geom.png
+      :class: dark-light themed-L10
       :alt: A top view of the dynamic bicycle model, front up, over a faint gray car. A dark center line joins the rear wheel at the bottom, dark tag 3, to the front wheel at the top, dark tag 1, which is turned left by the orange angle delta from the dashed axis. Between them, nearer the rear, a white circle marks the center of gravity, dark tag 2. At each wheel a blue arrow points where the wheel points and a green arrow v shows where the wheel moves; the purple angle between them is alpha f at the front and alpha r at the rear. A red arrow at each wheel, F y f and F y r, points to the left, square to its wheel. At the center of gravity a green arrow v, at the angle beta from the axis, splits into dashed parts v x along the car and v y across it. On the right, l f marks the distance from the center of gravity to the front wheel and l r to the rear wheel.
       :width: 45%
       :align: center
@@ -3798,6 +3830,7 @@ Measure How Far Off the Path: Two Errors
    the rear axle's :math:`d` in the Frenet frame.
 
 .. figure:: /_static/images/L10/track_errors.png
+   :class: dark-light themed-L10
    :alt: A top view to scale, x and y in meters. A gray dashed path curves gently down to the right, with an arrow showing its direction. A faint gray AV, turned slightly toward the path, has its rear axle marked by a dot 1 meter above the path's point at x = 0, which is a dark dot with a small square mark, dark tag 1. A black two-headed arrow joins the two dots, square to the path, dark tag 2. From the rear axle, a gray dotted line runs along the path's direction and a black arrow along the AV's heading, 15 degrees below it; an arc between them carries dark tag 3.
    :width: 75%
    :align: center
@@ -3877,6 +3910,7 @@ Pure Pursuit, Step 1: Pick the Point on the Path L_d Ahead
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L10/pp_step_1.png
+   :class: dark-light themed-L10
    :alt: A top view to scale, x and y in meters, of the start of our right curve: the lane between two black edges, its center dashed gray, bending right after x = 83. A faint gray AV in the lane, its rear axle a black dot near x = 82.7 with a short black arrow along its heading. A blue dashed circle of radius 5 meters around the rear axle; where it crosses the lane center ahead, a blue dot, dark tag 1.
    :width: 70%
    :align: center
@@ -3894,6 +3928,7 @@ Pure Pursuit, Step 2: Find the Arc from the Rear Axle to That Point
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L10/pp_step_2.png
+   :class: dark-light themed-L10
    :alt: A top view to scale, x and y in meters, about 30 meters across: the lane between two black edges, its center dashed gray, running right and then bending down after x = 85. A small faint gray AV near x = 82.7, y = 0, its rear axle a black dot with a short arrow along its heading. A thin green circle of radius about 13.4 meters passes through the rear axle, its center a green plus about 13.4 meters below it, joined to the rear axle by a green dotted line. The part of the circle from the rear axle to a blue dot on the lane center near x = 87.6 is thick green, dark tag 2 joined to it by a thin line. Dark tag 1, above the lane, joined by a thin line to the blue dot.
    :width: 55%
    :align: center
@@ -3911,6 +3946,7 @@ Pure Pursuit, Step 3: Steer to Drive That Arc
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L10/pp_step_3.png
+   :class: dark-light themed-L10
    :alt: A top view to scale, x and y in meters, zoomed on the AV and its turning circle: the lane between two black edges, its center dashed gray, bending down to the right after x = 85. A faint gray AV near x = 82.7, y = 0, its rear axle a black dot. A two-headed arrow L runs inside the car from the rear axle to the front axle. At the front axle, a short thick black bar, the front wheel, dark tag 3 above it joined by a thin line; a dotted line runs straight ahead from it and a dashed line along the wheel, with a small angle delta between them. A thin green circle passes through the rear axle; a green dotted line labeled R runs from the rear axle down toward its center, which is below the view, 13.4 meters away. The part of the circle from the rear axle to a blue dot on the lane center near x = 87.6, dark tag 1 just below the dot, is thick green, dark tag 2 joined to it by a thin line.
    :width: 55%
    :align: center
@@ -3932,6 +3968,7 @@ what the AV can measure: the arc through the lookahead point has
 :math:`R = L_d / (2\sin\alpha)`. So:
 
 .. figure:: /_static/images/L10/pp_law.png
+   :class: dark-light themed-L10
    :alt: A close top view to scale, x and y in meters, of the AV on the lane at the start of the right curve. A faint gray AV, its rear axle a black dot. A two-headed arrow labeled L runs inside the car from the rear axle to the front axle. A dotted line runs straight ahead from the rear axle along the heading. A blue line labeled L d runs from the rear axle down to a blue dot on the lane center near x = 87.6; an arc between the dotted heading line and the blue line marks the angle alpha. At the front axle a thick black bar, the front wheel, with a dashed line along it and a small arc labeled delta between it and the dotted line. A thin green curve runs from the rear axle to the blue dot.
    :width: 70%
    :align: center
@@ -3957,6 +3994,7 @@ to the right, step 3's angle. Green: the arc that angle drives.
    :name: l10-more-pp-arc
 
    .. figure:: /_static/images/L10/pp_arc.png
+      :class: dark-light themed-L10
       :alt: A geometry drawing with dark round tags. The rear axle at tag 1 with an arrow pointing right along the heading. A green arc leaves it tangent to the arrow and curves up to the goal point at tag 2. The arc's center, a green cross at tag 3, sits straight above the rear axle; gray lines of length R join it to the rear axle and to the goal. A blue chord of length L_d joins the rear axle to the goal. A red arc marks the angle alpha between the heading and the chord; a green arc at the center marks the angle 2 alpha. A dashed line from the center meets the chord at its middle.
       :width: 45%
       :align: center
@@ -4056,6 +4094,7 @@ GP4).
    first arc begins (:math:`s` = 83.2 m).
 
    .. figure:: /_static/images/L10/pp_geom_1.png
+      :class: dark-light themed-L10
       :alt: A close top view of the curve, in meters: the lane edges in black, the lane center dashed gray, bending right after x = 83. The AV is drawn faintly, facing right and slightly down, with its rear axle as a dark dot (dark tag 2) near x = 82.7, y = 0. A blue dashed circle of radius 5 meters is centered on the rear axle (dark tag 1). A blue dot (dark tag 3) sits where the lane center leaves the circle ahead of the AV, near x = 87.6, y = minus 1.2.
       :width: 60%
       :align: center
@@ -4077,6 +4116,7 @@ GP4).
    .. rubric:: Step 2: Write the Goal Point in the AV's Frame
 
    .. figure:: /_static/images/L10/pp_geom_2.png
+      :class: dark-light themed-L10
       :alt: The same close top view. Two black arrows leave the rear axle: one forward along the AV's heading, labeled forward, one to its left, labeled left. An orange double arrow below and parallel to the forward arrow spans from the rear axle to the goal point's forward distance (tag 4). A short orange double arrow beside the goal spans its sideways distance to the right of the forward line (tag 5). The lookahead circle and the goal point are as before, tags 1 to 3. All tags are dark circles.
       :width: 60%
       :align: center
@@ -4105,6 +4145,7 @@ GP4).
    .. rubric:: Step 3: Find the Angle α and the Arc Through the Goal
 
    .. figure:: /_static/images/L10/pp_geom_3.png
+      :class: dark-light themed-L10
       :alt: The same close top view, zoomed out downward. A black line joins the rear axle to the goal point; a red arc at the rear axle (tag 4) marks the small angle between the forward arrow and that line. A green arc starts at the rear axle along the heading and curves right into the goal point. A green cross far below, near x = 82.1, y = minus 13.4 (tag 5), is the arc's center; green dotted lines join it to the rear axle and to the goal. All tags are dark circles.
       :width: 55%
       :align: center
@@ -4164,11 +4205,13 @@ Three runs of Pure Pursuit on our curve, each with a different lookahead
 steers back, and the curve how it turns.
 
 .. figure:: /_static/images/L10/pp_road_straight.png
+   :class: dark-light themed-L10
    :alt: A long top view of the straight approach, to scale, x from 0 to 45 meters and y in meters: the lane between two black lines 1.75 meters either side of a gray dashed center line. A faint gray AV at the left, 1 meter left of the center. Three paths leave it. A red one swings across the center and back in waves that grow until they cross the lane's edges. A blue one swings once just past the center, then settles on the center. A green dashed one comes down to the center slowly with no visible swing.
    :width: 100%
    :align: center
 
 .. figure:: /_static/images/L10/pp_road_corner.png
+   :class: dark-light themed-L10
    :alt: A top view of the right curve, to scale, x from 74 to 97 meters and y from minus 18 to 3 meters, the lane between two black edges and its center dashed gray. A thick blue path follows the center closely through the curve. A green dashed path turns early, cutting toward the inner edge, then swings out past the center after the curve.
    :width: 45%
    :align: center
@@ -4192,6 +4235,7 @@ on the straight after the 1 m start and the error on the curve, for all
 eight lookaheads we ran:
 
 .. figure:: /_static/images/L10/pp_tradeoff.png
+   :class: dark-light themed-L10
    :alt: A graph of distance from the lane center in meters against the lookahead distance from 4 to 12 meters, with a legend at the top left. The orange line with round markers, straight road, swing past the center, falls from 0.50 at 4 meters to 0.05 at 12. The dark line with square markers, curve, largest distance from the center, is 0.40 at 4 meters, lowest at 5 meters with 0.25, then rises to 0.39, 0.67, 0.98 and 1.53 at 6, 8, 10 and 12 meters.
    :width: 70%
    :align: center
@@ -4219,6 +4263,7 @@ eight lookaheads we ran:
    .. rubric:: Choose the Lookahead: Too Short, and the AV Weaves
 
    .. figure:: /_static/images/L10/pp_straight.png
+      :class: dark-light themed-L10
       :alt: A graph, not a map: the rear axle's distance from the lane center, positive left, against the distance along the path from 0 to 72 meters. All three runs start at plus 1. The red curve, dark tag 1, swings across the center with growing swings, reaching about plus and minus 3 meters by 70 meters. The blue curve, tag 2, crosses once to about minus 0.3 and settles near zero by about 36 meters. The green dashed curve, tag 3, slides down to zero without crossing much and settles by about 16 meters.
       :width: 85%
       :align: center
@@ -4248,6 +4293,7 @@ eight lookaheads we ran:
    .. rubric:: Choose the Lookahead: Too Long, and the AV Cuts Inside the Curve
 
    .. figure:: /_static/images/L10/pp_turn.png
+      :class: dark-light themed-L10
       :alt: A top view of the curve from x = 68 to 98 and y = minus 26 to 4. The blue solid run with a 5 meter lookahead stays on the dashed lane center through the curve, swinging slightly outside after it. The green dashed run with a 10 meter lookahead leaves the center early, cuts inside the curve, where a green dot marks its farthest point inside (dark tag 1), then swings outside on the exit, where a second green dot marks its farthest point outside (dark tag 2), before returning to the center.
       :width: 60%
       :align: center
@@ -4401,6 +4447,7 @@ et al., 2006). Pure Pursuit chases a point; Stanley asks: how misaligned am
 I with the path, and how do I fix it?
 
 .. figure:: /_static/images/L10/stanley_idea.png
+   :class: dark-light themed-L10
    :alt: A top view to scale, x and y in meters. A gray dashed path curves gently down to the right, with an arrow showing its direction. A faint gray AV above it, turned slightly toward it; its front axle is a purple dot, dark tag 1, 1 meter above the path's point at x = 0, which is a dark dot with a small square mark. A black two-headed arrow joins the two dots, square to the path, dark tag 2. From the front axle, a gray dotted line runs along the path's direction and a black arrow along the AV's heading, 15 degrees below it; an arc between them carries dark tag 3.
    :width: 75%
    :align: center
@@ -4440,6 +4487,7 @@ Steer from the Front Axle: Stanley's Heading and Cross-Track Terms
    \delta = \psi_e - \arctan\frac{k\,e}{v + k_s}
 
 .. figure:: /_static/images/L10/stanley_geom.png
+   :class: dark-light themed-L10
    :alt: A close top view to scale, x and y in meters, of the AV at the start of the right curve, drawn faintly, with the lane edges and the dashed lane center. A black dot at the rear axle, joined by a line to a purple dot at the front axle. A short purple double arrow joins the front axle to a gray dot on the lane center just below it; a thin purple line leads from it to the label e. From the gray dot a thick gray line runs along the path's direction, down to the right, with dark tag 1 joined to it by a thin line. From the front axle: a black arrow labeled v along the AV's heading, almost straight right; a dotted gray line parallel to the thick gray one, the path's direction; a red arc between the arrow and the dotted line labeled psi e; and the front wheel, a short thick black bar turned to the right, with a dashed line along it and a small black arc from the arrow labeled delta.
    :width: 75%
    :align: center
@@ -4502,6 +4550,7 @@ only 2° more than :math:`\psi_e`, because :math:`e` is small.
    .. rubric:: Which Point of the AV Stays on the Path
 
    .. figure:: /_static/images/L10/axle_paths.png
+      :class: dark-light themed-L10
       :alt: Two top views of the curve side by side, the AV drawn faintly in the second arc in each. Left, dark tag 1, Pure Pursuit with a 5 meter lookahead in blue: the solid line, the rear axle, follows the dashed lane center; the dotted line, the front axle, swings outside it through the curve. Right, tag 2, Stanley with gain 1 in purple: the dotted front axle line follows the lane center; the solid rear axle line runs inside the curve.
       :width: 90%
       :align: center
@@ -4601,6 +4650,7 @@ MPC
 ~~~
 
 .. figure:: /_static/images/L10/mpc_idea.png
+   :class: dark-light themed-L10
    :alt: A top view to scale, x and y in meters, of the start of the right curve: the lane between two black edges, its center dashed gray. A faint gray AV near x = 78 on the lane center, its rear axle a black dot. Nine gray curves leave the rear axle and fan out over the next 3 seconds, from a curve turning sharply right that loops back below the lane, through one going straight, to two curving left off the road. A thick green curve leaves the rear axle, runs straight, then follows the lane center into the curve.
    :width: 60%
    :align: center
@@ -4699,6 +4749,7 @@ Step 1, Predict: 729 Steering Plans on Our Curve
 Measured now: the AV is 2 m before the curve, at 7.09 m/s.
 
 .. figure:: /_static/images/L10/mpc_candidates.png
+   :class: dark-light themed-L10
    :alt: A top view of the right curve, x from 68 to 100 meters and y from minus 14 to 6. The lane comes in from the left along y = 0 and bends down; solid lines mark its edges and a dashed gray line its center. The AV is drawn faintly at about x = 78, with a dark dot at its rear axle. A fan of hundreds of thin gray curves leaves the rear axle: a few bend left, up to y = 6, and most bend right, down to about y = minus 12.7. One thick green curve runs straight along the lane center to a green dot near x = 83.5, bends right to a second green dot near x = 87.7 and y = minus 1.3, and ends inside the curve, at about x = 90.6 and y = minus 3.5.
    :width: 80%
    :align: center
@@ -4731,6 +4782,7 @@ Step 1, Predict: Zoom In on One Branch of the Fan
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L10/mpc_branch.png
+   :class: dark-light themed-L10
    :alt: A close top view to scale of the start of the right curve, x from 75 to 99.5 meters and y from minus 9 to 6, with the lane edges and its dashed center. The AV is drawn faintly at x = 78 with a dark dot at its rear axle, labeled start, the measured pose: 9 branches, one per value of angle 1 (-0.6 to 0.2 rad); we follow angle 1 = 0 rad. Eight light gray curves fan out from it over the first second; the ninth, straight ahead, is the thick green path. A thick green path with small dots runs straight to a large dark dot near x = 83.5; the straight part is labeled steps 1 to 20 (0 to 1 s): angle 1, delta = 0 rad, and the dot is labeled at 1 s, after step 20: 9 branches, one per value of angle 2 (-0.6 to 0.2 rad). From that dot nine gray curves fan out, from bending left to bending sharply right. The green path follows one of them, labeled steps 21 to 40 (1 to 2 s): angle 2, delta = -0.4 rad, to a second large dark dot near x = 87.7 and y = -1.3, labeled at 2 s, after step 40: 9 branches again, one per value of angle 3 (-0.6 to 0.2 rad). From it nine shorter gray curves fan out, and the green path continues along one, labeled steps 41 to 60 (2 to 3 s): angle 3, delta = 0 rad (dots: the 60 steps of 0.05 s). It ends at a third large dark dot near x = 90.6 and y = -3.5, labeled at 3 s, after step 60: the horizon ends; each branch end ends one plan.
    :width: 80%
    :align: center
@@ -4822,6 +4874,7 @@ Steps 3 and 4, Apply and Repeat: Use 0.05 s of the Plan, Then Plan Again
 optimizes again (the lower rows).
 
 .. figure:: /_static/images/L10/mpc_loop.png
+   :class: dark-light themed-L10
    :alt: A timeline of MPC plans, with time t in seconds from 0 to 3 along the bottom. A brace over the top row says the horizon: 3 s, 60 steps of 0.05 s. The top row, the best plan at t = 0, score 0.186, is split into three pieces with a small tick for each step: steps 1 to 20, delta = 0 rad; steps 21 to 40, delta = -0.4 rad; steps 41 to 60, delta = 0 rad. Below it, two plain bars, the best plans at t = 0.05 s and t = 0.10 s, each starting one step later. Each row's first step is green, and a label says green is the step each plan applies.
    :width: 90%
    :align: center
@@ -4894,6 +4947,7 @@ Put the Four Steps Together: One MPC Loop Every 0.05 s
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L10/mpc_cycle.png
+   :class: dark-light themed-L10
    :alt: A loop diagram of one MPC cycle. On the left, under Measured, a box: the AV's pose and speed now, 7.09 m/s, 2 m before the curve. A header 1, Predict, spans two columns: each plan, with three plans, (0, 0, 0) rad, (0, -0.4, 0) rad and (-0.1, -0.4, 0) rad, and 726 more; and, for each plan, a bar of three pieces with its three angles, under a brace saying 3 s horizon, each angle held 1 s, with 60 small ticks and a label, bicycle model, 60 steps of 0.05 s. A header 2, Optimize, spans two more columns: score, an arrow from each bar to its score, 6.631, 0.186 in a green box, and 3.308, labeled path error plus steering; and keep the lowest, a green box, best plan (0, -0.4, 0) rad, score 0.186. Below it a green box: 3, Apply step 1, delta = 0 rad for 0.05 s. A thick arrow runs from it back along the bottom to the Measured box, labeled 4, Repeat: 0.05 s later, measure again, predict and optimize again.
    :width: 100%
    :align: center
@@ -5131,6 +5185,7 @@ with the throttle and the brake?
    .. rubric:: Turn the Speed Profile into a Trajectory: Add Up the Times
 
    .. figure:: /_static/images/L10/trajectory_dots.png
+      :class: dark-light themed-L10
       :alt: The same top view of the curve as before, with blue dots on the lane center, one for every second of the speed profile. On the approach the dots are evenly spaced, 8 meters apart; in the curve they bunch up, about 3.5 meters apart, and spread out again on the exit. Gray leader lines label four dots: t = 0 s at the start, t = 5 s on the approach, t = 10 s just before the curve, t = 15 s on the exit.
       :width: 90%
       :align: center
@@ -5154,6 +5209,7 @@ with the throttle and the brake?
    .. rubric:: Slow Down for the Curve: Two Ways Between the Same Speeds
 
    .. figure:: /_static/images/L10/slow_speed_accel.png
+      :class: dark-light themed-L10
       :alt: Two graphs against the time from the start of braking. Left, speed: the red line, dark tag 1, drops in a straight line from 8 to 3.46 meters per second in 2.3 seconds; the green curve, tag 2, leaves 8 gently, falls along an S shape and reaches 3.46 at about 3.4 seconds. Right, acceleration: the red line jumps from 0 to minus 2 at once, stays there for 2.3 seconds and jumps back to 0; the green curve dips smoothly from 0 to minus 2 at its middle and comes back to 0. A dotted line marks minus 2.
       :width: 90%
       :align: center
@@ -5180,6 +5236,7 @@ with the throttle and the brake?
    .. rubric:: Compare the Jerk: a Jump Against a Quintic
 
    .. figure:: /_static/images/L10/slow_jerk.png
+      :class: dark-light themed-L10
       :alt: A graph of jerk in meters per second cubed, sampled at 20 per second, against the time from the start of braking. The red line, dark tag 1, is zero except for a spike down to minus 40 at time 0 and a spike up to plus 40 at about 2.3 seconds. The green line, tag 2, stays close to zero, rising slowly from about minus 2.3 to plus 2.3.
       :width: 85%
       :align: center
@@ -5798,6 +5855,7 @@ See What Drive-by-Wire Replaces: Mechanical Links from the Driver
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L10/dbw_regular.png
+   :class: dark-light themed-L10
    :alt: A top view of a car pointing right, drawn faintly, with its four wheels as dark dots. A box in the cabin reads driver: wheel, pedals. A thick dark line runs from it to the front axle and along the axle between the front wheels, labeled steering column and rack: the wheel turns the front wheels. A gray line runs from it to a box past the front axle, engine, labeled throttle cable: the pedal opens the engine's throttle. Red lines run from it along the car to both axles and across each axle to the wheels, labeled brake lines: the pedal pushes fluid to all four brakes.
    :width: 75%
    :align: center
@@ -5909,6 +5967,7 @@ Let a Computer Drive: the CAN Bus and the ECUs Replace the Links
    .. rubric:: Share One Bus: Commands and Feedback on CAN
 
    .. figure:: /_static/images/L10/can_bus.png
+      :class: dark-light themed-L10
       :alt: A diagram. A thick horizontal line, the CAN bus (example: 500 kbit/s). Above it a gray box, Driving computer, planning and control, sends a solid arrow labeled command down to the bus and gets a dashed arrow labeled feedback back up. Below the bus three green boxes, each with a solid arrow down from the bus and a dashed arrow up to it: Steering ECU (command: angle or torque; feedback: angle, torque, status), Throttle ECU (command: pedal percent; feedback: position, engine speed) and Brake ECU (command: pressure or deceleration; feedback: pressure, wheel speed, ABS). Under each ECU a white box, joined the same way: EPS motor and its angle sensor, Throttle body and its position sensor, Brake actuator and its pressure sensor.
       :width: 80%
       :align: center
@@ -6239,6 +6298,7 @@ Today's Two Controllers: One Node, Five Inputs, One Command
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L10/controller_io.png
+   :class: dark-light themed-L10
    :alt: A block diagram. A green block labeled controller_node holds two boxes: steering, Pure Pursuit, and speed, PID. Five ROS topics come in on the left, each with what it carries: /planning/path, the route planner's lane path; /localization/odom, the pose, which the node moves 1.4 meters back to the rear axle; /carla/imu/data, the turn rate, for the heading; /carla/speedometer, the speed the PID uses; /behavior/target_speed, the speed to hold. One output on the right: /control/vehicle_cmd, with steer from minus 1 to 1, positive left, throttle and brake, to the node that steps CARLA.
    :width: 95%
    :align: center

@@ -363,8 +363,98 @@ tr[data-why]:hover td:first-child::before,tr[data-why]:focus td:first-child::bef
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
 
-/* plots and the deck's figures stay on white paper in both themes */
-svg.plot,.fig{background:var(--paper) !important}
+/* the PNG figures stay on white paper in both themes until they have a dark version; plots follow the theme */
+.fig{background:var(--paper) !important}
+.fig[data-dark]{background:none !important}   /* a themed figure has no card: the page shows through */
+/* Dark theme for the drawings (user, 2026-11-20: no white figure backgrounds). The plots and flowcharts are drawn
+   with the light palette's colors; in the dark theme each of those colors is replaced here, so a plot follows the
+   theme without being redrawn. One line per color and attribute; a color missing here stays as drawn. */
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#ffffff" i]{fill:var(--card)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#ffffff" i]{stroke:var(--card)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#fff" i]{fill:var(--card)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#fff" i]{stroke:var(--card)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#f2f4f6" i]{fill:#2A3541}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#f2f4f6" i]{stroke:#2A3541}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#f3f5f7" i]{fill:#2A3541}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#f3f5f7" i]{stroke:#2A3541}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#eef1f4" i]{fill:#2A3541}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#eef1f4" i]{stroke:#2A3541}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#eef2f6" i]{fill:#2A3541}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#eef2f6" i]{stroke:#2A3541}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#dde3ea" i]{fill:#33404E}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#dde3ea" i]{stroke:#33404E}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#eef3ee" i]{fill:#22342B}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#eef3ee" i]{stroke:#22342B}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#fff6d5" i]{fill:#3A3420}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#fff6d5" i]{stroke:#3A3420}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#ede6f6" i]{fill:#2F2840}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#ede6f6" i]{stroke:#2F2840}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#fbe4cf" i]{fill:var(--follow-fill)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#fbe4cf" i]{stroke:var(--follow-fill)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#d6eef1" i]{fill:var(--hl)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#d6eef1" i]{stroke:var(--hl)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#fff3bf" i]{fill:#4A3F17}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#fff3bf" i]{stroke:#4A3F17}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#eae0f5" i]{fill:#352B47}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#eae0f5" i]{stroke:#352B47}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#dce9f8" i]{fill:var(--plan-fill)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#dce9f8" i]{stroke:var(--plan-fill)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#c9d2dc" i]{fill:#4A5868}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#c9d2dc" i]{stroke:#4A5868}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#c3cbd4" i]{fill:#4B5866}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#c3cbd4" i]{stroke:#4B5866}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#aeb8c4" i]{fill:#5A6878}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#aeb8c4" i]{stroke:#5A6878}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#9aa6b2" i]{fill:#6E7D8D}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#9aa6b2" i]{stroke:#6E7D8D}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#b9c4cf" i]{fill:#56667A}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#b9c4cf" i]{stroke:#56667A}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#e3e8ee" i]{fill:#33404E}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#e3e8ee" i]{stroke:#33404E}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#1e2935" i]{fill:var(--ink)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#1e2935" i]{stroke:var(--ink)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#1e2939" i]{fill:var(--ink)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#1e2939" i]{stroke:var(--ink)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#2b2f36" i]{fill:#AEB9C5}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#2b2f36" i]{stroke:#AEB9C5}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#34506e" i]{fill:var(--slate)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#34506e" i]{stroke:var(--slate)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#56626f" i]{fill:var(--muted)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#56626f" i]{stroke:var(--muted)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#5b6b7c" i]{fill:var(--muted)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#5b6b7c" i]{stroke:var(--muted)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#6b7785" i]{fill:var(--muted)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#6b7785" i]{stroke:var(--muted)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#7a828c" i]{fill:var(--muted)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#7a828c" i]{stroke:var(--muted)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#7d8792" i]{fill:var(--muted)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#7d8792" i]{stroke:var(--muted)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#3e6fa8" i]{fill:var(--plan)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#3e6fa8" i]{stroke:var(--plan)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#b5622a" i]{fill:var(--follow)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#b5622a" i]{stroke:var(--follow)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#16798a" i]{fill:var(--live)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#16798a" i]{stroke:var(--live)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#2e7d4f" i]{fill:var(--ok)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#2e7d4f" i]{stroke:var(--ok)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#b3261e" i]{fill:var(--bad)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#b3261e" i]{stroke:var(--bad)}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#9b1b1b" i]{fill:#E06A6A}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#9b1b1b" i]{stroke:#E06A6A}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#2d6ca2" i]{fill:#6FA3D8}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#2d6ca2" i]{stroke:#6FA3D8}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#7b5ea7" i]{fill:#B49AE0}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#7b5ea7" i]{stroke:#B49AE0}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#d9694a" i]{fill:#EE8C70}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#d9694a" i]{stroke:#EE8C70}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#9a6212" i]{fill:#E0A84A}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#9a6212" i]{stroke:#E0A84A}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#d32f2f" i]{fill:#F2786F}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#d32f2f" i]{stroke:#F2786F}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#1e9e74" i]{fill:#4CC79E}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#1e9e74" i]{stroke:#4CC79E}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [fill="#7d3c98" i]{fill:#C08BDB}
+:root[data-theme="dark"] :is(svg.plot,svg.pipe) [stroke="#7d3c98" i]{stroke:#C08BDB}
 /* dark theme: the same roles, darker surfaces, lighter ink */
 :root[data-theme="dark"]{
   --table:#121820; --hole:#27313C; --plate:#1C242E; --plate-edge:#3A4757;
@@ -377,7 +467,7 @@ svg.plot,.fig{background:var(--paper) !important}
   --on-accent:#0E161E;   /* text on an accent fill (--live, --slate, --plan, --follow): these are light in the dark theme */
 }
 :root[data-theme="dark"] body,:root[data-theme="dark"] #viewport{color-scheme:dark}
-:root[data-theme="dark"] svg.pipe{background:var(--paper);border-radius:10px}
+:root[data-theme="dark"] svg.pipe{background:var(--card);border-radius:10px}
 :root[data-theme="dark"] #band g{stroke:#9FB6CF}
 :root[data-theme="dark"] #band marker path{fill:#9FB6CF}
 :root[data-theme="dark"] #band text{fill:#B7C5D3}
@@ -779,7 +869,7 @@ svg.plot,.fig{background:var(--paper) !important}
   <h2>Describe one lane change with four numbers: \(s_{0}\), \(d_{0}\), \(\Delta d\) and \(L\)</h2><div class="fit"><div class="fitin">
   <p class="goal">Candidate A, the cheapest (green), on last class's road. The \(d\) axis is stretched.</p>
   <div class="two" style="grid-template-columns:770px 1fr;gap:20px;align-items:center">
-  <img class="fig" src="L10_interactive_assets/scurve_setup.png" style="width:770px;margin:0" alt="A graph of d against s, s from 50 to 123 meters, the right lane pale yellow from minus 1.75 to 1.75 and the left lane pale purple from 1.75 to 5.25, the right lane&#x27;s center a thick black line at d = 0 and the left lane&#x27;s center dotted at 3.5. A black AV icon at s = 60, d = 0, with short gray lines behind it to show that it moves; a blue parked car at s = 118, just below d = 0. A thick green S curve leaves the AV, crosses the dashed lane line near s = 80, reaches d = 3.5 at a green dot at s = 100 and runs straight on. Two dotted vertical guides at s = 60 and s = 100, labeled s0 = 60 m and s0 + L = 100 m near the bottom. Above the road, a double arrow between the guides is labeled L = 40 m. Near the AV, the label d0 = 0. A vertical double arrow at s = 107, from d = 0 up to 3.5, is labeled Delta d = 3.5 m. A top axis, u = (s minus s0) / L, reads 0 above s = 60, 0.5 above s = 80 and 1 above s = 100.">
+  <img class="fig" src="L10_interactive_assets/scurve_setup.png" data-light="L10_interactive_assets/scurve_setup.png" data-dark="L10_interactive_assets/scurve_setup_dark.png" style="width:770px;margin:0" alt="A graph of d against s, s from 50 to 123 meters, the right lane pale yellow from minus 1.75 to 1.75 and the left lane pale purple from 1.75 to 5.25, the right lane&#x27;s center a thick black line at d = 0 and the left lane&#x27;s center dotted at 3.5. A black AV icon at s = 60, d = 0, with short gray lines behind it to show that it moves; a blue parked car at s = 118, just below d = 0. A thick green S curve leaves the AV, crosses the dashed lane line near s = 80, reaches d = 3.5 at a green dot at s = 100 and runs straight on. Two dotted vertical guides at s = 60 and s = 100, labeled s0 = 60 m and s0 + L = 100 m near the bottom. Above the road, a double arrow between the guides is labeled L = 40 m. Near the AV, the label d0 = 0. A vertical double arrow at s = 107, from d = 0 up to 3.5, is labeled Delta d = 3.5 m. A top axis, u = (s minus s0) / L, reads 0 above s = 60, 0.5 above s = 80 and 1 above s = 100.">
   <div style="font-size:25px">
     <ul style="margin:0">
       <li>\(s_{0}\): where the move starts.</li>
@@ -977,9 +1067,9 @@ svg.plot,.fig{background:var(--paper) !important}
       <li>every pair is one trajectory: 18 &#215; 18 = 324;</li>
       <li>next: \(d(t)\) on four frames, then \(s(t)\) on four.</li></ul></div>
   <div class="two" style="grid-template-columns:420px 1fr;gap:24px;align-items:end">
-    <figure style="margin:0"><img class="fig" src="L10_interactive_assets/traj_lat_set.png" style="max-height:262px;width:auto;margin:0 auto" alt="A graph of the sideways offset d, in meters, against time t from 0 to 7 seconds, over two horizontal bands: the right lane in yellow from minus 1.75 to 1.75, the left lane in purple from 1.75 to 5.25, a dashed line between them. Eighteen S-shaped curves start at d = 0 at time 0 and level off at minus 0.5, 0, 0.5, 3, 3.5 or 4 meters; solid black curves level off at 3 seconds, dashed red at 4, dotted blue at 5.">
+    <figure style="margin:0"><img class="fig" src="L10_interactive_assets/traj_lat_set.png" data-light="L10_interactive_assets/traj_lat_set.png" data-dark="L10_interactive_assets/traj_lat_set_dark.png" style="max-height:262px;width:auto;margin:0 auto" alt="A graph of the sideways offset d, in meters, against time t from 0 to 7 seconds, over two horizontal bands: the right lane in yellow from minus 1.75 to 1.75, the left lane in purple from 1.75 to 5.25, a dashed line between them. Eighteen S-shaped curves start at d = 0 at time 0 and level off at minus 0.5, 0, 0.5, 3, 3.5 or 4 meters; solid black curves level off at 3 seconds, dashed red at 4, dotted blue at 5.">
       <figcaption class="small" style="text-align:center">Across: 18 moves \(d(t)\)</figcaption></figure>
-    <figure style="margin:0"><img class="fig" src="L10_interactive_assets/traj_lon_set.png" style="max-height:262px;width:auto;margin:0 auto" alt="A graph of the speed along the road, in meters per second, against time from 0 to 12 seconds. All curves start at 10. Thin curves change smoothly to 4, 6, 8, 10 or 12 and stay there; solid black ones arrive at 3 seconds, dashed red at 4, dotted blue at 5. Three thick curves, the stops, fall slowly and reach 0 at 8, 10 and 12 seconds. A dotted vertical line at 7 seconds; to its right the background is gray, with dark tag 1.">
+    <figure style="margin:0"><img class="fig" src="L10_interactive_assets/traj_lon_set.png" data-light="L10_interactive_assets/traj_lon_set.png" data-dark="L10_interactive_assets/traj_lon_set_dark.png" style="max-height:262px;width:auto;margin:0 auto" alt="A graph of the speed along the road, in meters per second, against time from 0 to 12 seconds. All curves start at 10. Thin curves change smoothly to 4, 6, 8, 10 or 12 and stay there; solid black ones arrive at 3 seconds, dashed red at 4, dotted blue at 5. Three thick curves, the stops, fall slowly and reach 0 at 8, 10 and 12 seconds. A dotted vertical line at 7 seconds; to its right the background is gray, with dark tag 1.">
       <figcaption class="small" style="text-align:center">Along: 18 moves \(s(t)\), as speed \(\dot{s}(t)\); <span class="tg" style="width:24px;height:24px;font-size:20px">1</span>past the 7 s plan</figcaption></figure>
   </div>
 </div></div></section>
@@ -1025,7 +1115,7 @@ svg.plot,.fig{background:var(--paper) !important}
       <li>only where across the road; how far along comes from \(s(t)\)</li></ul></li></ul>
     <ul class="st"><li>The AV now, sideways:<ul><li>on its lane's center: \(d = 0\)</li><li>not drifting: \(\dot{d} = 0\)</li><li>not starting to: \(\ddot{d} = 0\)</li>
       <li>along the road, it drives at 10 m/s</li></ul></li></ul></div>
-  <img class="fig" src="L10_interactive_assets/dt_example.png" style="width:510px" alt="A graph of the sideways offset d, in meters, against the time t from now, in seconds, over two bands: the right lane in yellow from minus 1.75 to 1.75 and the left lane in purple from 1.75 to 5.25. A thick black flat line at d = 0 ends at a red round marker at t = 0, dark tag 1 below it. A gray S curve rises from that marker to a second red round marker at t = 4 s and d = 3.5, dark tag 2 above it, crossing the dashed lane line at t = 2 s. From the second marker a thick black flat line goes on at d = 3.5. A dotted vertical line marks t = 4 s.">
+  <img class="fig" src="L10_interactive_assets/dt_example.png" data-light="L10_interactive_assets/dt_example.png" data-dark="L10_interactive_assets/dt_example_dark.png" style="width:510px" alt="A graph of the sideways offset d, in meters, against the time t from now, in seconds, over two bands: the right lane in yellow from minus 1.75 to 1.75 and the left lane in purple from 1.75 to 5.25. A thick black flat line at d = 0 ends at a red round marker at t = 0, dark tag 1 below it. A gray S curve rises from that marker to a second red round marker at t = 4 s and d = 3.5, dark tag 2 above it, crossing the dashed lane line at t = 2 s. From the second marker a thick black flat line goes on at d = 3.5. A dotted vertical line marks t = 4 s.">
   <ul class="tags" style="font-size:25px">
     <li><span class="tg">1</span><span>Now, \(t = 0\): \(d = 0\), \(\dot{d} = 0\), \(\ddot{d} = 0\) (flat: on its lane, not drifting).</span></li>
     <li><span class="tg">2</span><span>At \(T = 4\) s: \(d = 3.5\), \(\dot{d} = 0\), \(\ddot{d} = 0\) (flat: parallel to the left lane).</span></li>
@@ -1204,7 +1294,7 @@ svg.plot,.fig{background:var(--paper) !important}
   <h2>Check each candidate at its own time: 45 of 324 are kept</h2><div class="fit"><div class="fitin">
   <p class="docs">More detail in the docs: <a href="https://enpm818z-fall-2026-docs.readthedocs.io/en/latest/lectures/lecture10/l10_lecture.html#l10-more-score-by-hand" target="_blank" rel="noopener">the cheapest, scored by hand</a></p>
   <div class="two" style="grid-template-columns:600px 1fr;gap:24px">
-    <img class="fig" src="L10_interactive_assets/traj_first_plan.png" style="margin:0" alt="A graph, d against s, with the right lane yellow and the left lane purple. The black AV at s = 60 meters, with short gray lines behind it to show that it moves, and the blue parked car in the right lane at 118 meters; car B is behind, out of view. A fan of 324 lines leaves the AV. Every line that reaches the left lane is orange-red or dashed purple. In the right lane, gray lines end between about 105 and 110 meters, and one thick green line rises slightly to d = 0.5 and runs to about 110 meters. Orange-red lines in the right lane run on past 120 meters.">
+    <img class="fig" src="L10_interactive_assets/traj_first_plan.png" data-light="L10_interactive_assets/traj_first_plan.png" data-dark="L10_interactive_assets/traj_first_plan_dark.png" style="margin:0" alt="A graph, d against s, with the right lane yellow and the left lane purple. The black AV at s = 60 meters, with short gray lines behind it to show that it moves, and the blue parked car in the right lane at 118 meters; car B is behind, out of view. A fan of 324 lines leaves the AV. Every line that reaches the left lane is orange-red or dashed purple. In the right lane, gray lines end between about 105 and 110 meters, and one thick green line rises slightly to d = 0.5 and runs to about 110 meters. Orange-red lines in the right lane run on past 120 meters.">
     <div style="font-size:25px">Check all 324, at a point every 0.1 s for 7 s:
       <ul style="margin:4px 0">
         <li>the acceleration along the road within &#177;2.0 m/s<sup>2</sup> (chosen), and across within 3 m/s<sup>2</sup> (last class's comfort limit);</li>
@@ -1270,7 +1360,7 @@ svg.plot,.fig{background:var(--paper) !important}
 
 <section class="plate frame plan" data-scene="p44" data-name="Slide 42 · Trajectory Generation" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Trajectory Generation</span><span>Slide 42</span></div>
   <h2>At 7.0 s: the AV passes the parked car, in the left lane</h2><div class="fit"><div class="fitin">
-  <img class="fig" src="L10_interactive_assets/traj_drive_3.png" style="width:1100px" alt="The same top view at 7 seconds. The dotted line shows where the AV has been: along the right lane, then across the dashed line into the left lane after x = 130. The black AV in the left lane beside the blue parked car, near x = 157, with short gray lines behind it. A thick green line goes on from the AV along the left lane through the bend. Far ahead on that line, near x = 185, the dark red car B, with short gray lines behind it.">
+  <img class="fig" src="L10_interactive_assets/traj_drive_3.png" data-light="L10_interactive_assets/traj_drive_3.png" data-dark="L10_interactive_assets/traj_drive_3_dark.png" style="width:1100px" alt="The same top view at 7 seconds. The dotted line shows where the AV has been: along the right lane, then across the dashed line into the left lane after x = 130. The black AV in the left lane beside the blue parked car, near x = 157, with short gray lines behind it. A thick green line goes on from the AV along the left lane through the bend. Far ahead on that line, near x = 185, the dark red car B, with short gray lines behind it.">
   <p class="small" style="margin:2px 0 8px">Black: the AV. Dark red: car B. Blue: the parked car. Green: the plan made now. Dotted: where the AV has been.</p>
   <ol style="font-size:25px;margin:0">
     <li>The AV is 3.12 m left of the right lane's center, beside the parked car. The green line runs through car B's spot now; by the time the AV gets there, car B is further on.</li>
@@ -1354,7 +1444,7 @@ svg.plot,.fig{background:var(--paper) !important}
 
 <section class="plate frame follow" data-scene="p49" data-name="Slide 47 · Test Curve and Speed Profile" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Test Curve and Speed Profile</span><span>Slide 47</span></div>
   <h2>One test path for every controller: a right curve in Town03</h2><div class="fit"><div class="fitin">
-  <img class="fig" src="L10_interactive_assets/turn_map.png" style="width:740px" alt="A top view, x along the approach to the right and y to the left, in meters. A single lane 3.5 meters wide, drawn by two black edges with a gray dashed center line, runs 80 meters to the right, turns right through a quarter circle near x = 80 to 92, and runs 40 meters down. The AV is drawn at the start, at the left end, facing right. An arrow under the lane says driving direction. The curve is shaded orange along the center line.">
+  <img class="fig" src="L10_interactive_assets/turn_map.png" data-light="L10_interactive_assets/turn_map.png" data-dark="L10_interactive_assets/turn_map_dark.png" style="width:740px" alt="A top view, x along the approach to the right and y to the left, in meters. A single lane 3.5 meters wide, drawn by two black edges with a gray dashed center line, runs 80 meters to the right, turns right through a quarter circle near x = 80 to 92, and runs 40 meters down. The AV is drawn at the start, at the left end, facing right. An arrow under the lane says driving direction. The curve is shaded orange along the center line.">
   <div class="box" style="font-size:25px">Our path is the lane's center, as the route planner gives it:
     <ul class="st c3" style="margin-top:4px"><li>80 m straight</li><li>a right curve of 91&#176; (orange)</li><li>40 m straight</li></ul>
     The controller follows it directly, with no local planner in between.</div>
@@ -1367,7 +1457,7 @@ svg.plot,.fig{background:var(--paper) !important}
     <ul class="st" style="margin-top:4px"><li>\(\kappa = 1/R\), where \(R\) is the radius of the circle that fits the path there</li>
       <li>a straight road has \(\kappa = 0\)</li><li>on that circle, each meter driven turns the heading by 1/\(R\) radians: \(\kappa\) is the turn per meter</li></ul></div>
   <div class="two" style="grid-template-columns:340px 1fr;gap:22px">
-    <img class="fig" src="L10_interactive_assets/turn_arcs.png" style="margin:0;width:340px" alt="The curve of the test path from above, x from 66 to 104 meters, y from minus 24 to 6, the lane drawn by two black edges with a gray dashed center line, coming from the left and turning right, down. Two pieces of the center line in the curve are thick: a blue one first, then a purple one that starts where the blue one ends. A blue dashed circle of radius 10 meters fits the blue piece, with its center, a blue dot near x = 83, y = minus 10, and a blue radius line to the piece, dark tag 1. A smaller purple dashed circle, radius about 6 meters, fits the purple piece, with its center near x = 85, y = minus 7 and a purple radius line, dark tag 2.">
+    <img class="fig" src="L10_interactive_assets/turn_arcs.png" data-light="L10_interactive_assets/turn_arcs.png" data-dark="L10_interactive_assets/turn_arcs_dark.png" style="margin:0;width:340px" alt="The curve of the test path from above, x from 66 to 104 meters, y from minus 24 to 6, the lane drawn by two black edges with a gray dashed center line, coming from the left and turning right, down. Two pieces of the center line in the curve are thick: a blue one first, then a purple one that starts where the blue one ends. A blue dashed circle of radius 10 meters fits the blue piece, with its center, a blue dot near x = 83, y = minus 10, and a blue radius line to the piece, dark tag 1. A smaller purple dashed circle, radius about 6 meters, fits the purple piece, with its center near x = 85, y = minus 7 and a purple radius line, dark tag 2.">
     <div style="font-size:25px">CARLA's map draws this curve as two arcs, not one, each part of a circle (dashed). The smaller the radius, the tighter the arc:
       <ul class="tags" style="margin:8px 0">
         <li><span class="tg">1</span><span>First arc: \(R = 10.00\) m, so \(\kappa = 1/10.00 = 0.1000\) per meter: each meter, the heading turns 0.1000 rad (5.7&#176;).</span></li>
@@ -1381,7 +1471,7 @@ svg.plot,.fig{background:var(--paper) !important}
 <section class="plate frame follow" data-scene="p51" data-name="Slide 49 · Test Curve and Speed Profile" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Test Curve and Speed Profile</span><span>Slide 49</span></div>
   <h2>Read the curvature along the path: it steps up, then down</h2><div class="fit"><div class="fitin">
   <div class="two" style="grid-template-columns:500px 1fr;gap:26px">
-    <img class="fig" src="L10_interactive_assets/turn_curvature.png" style="margin:0" alt="Two graphs, not maps, one above the other, against the distance along the path, zoomed on 60 to 120 meters, with the junction lane from 80 to 97.5 meters shaded orange and three dotted vertical lines at about 83, 90 and 95 meters. Top: the curvature in 1 per meter, zero up to about 83 meters, a blue plateau at 0.100 with dark tag 1 above it, a purple plateau at 0.167 to about 95 meters with dark tag 2 above it, then zero. Bottom: how far the AV is off the path, in meters, in one run: a blue line that stays under 0.06 meters, with small bumps just after the first two dotted lines, rises to a peak of about 0.25 meters at 97 meters, just after the third dotted line, marked by a dot with dark tag 3, and falls back under 0.05 meters by about 102 meters.">
+    <img class="fig" src="L10_interactive_assets/turn_curvature.png" data-light="L10_interactive_assets/turn_curvature.png" data-dark="L10_interactive_assets/turn_curvature_dark.png" style="margin:0" alt="Two graphs, not maps, one above the other, against the distance along the path, zoomed on 60 to 120 meters, with the junction lane from 80 to 97.5 meters shaded orange and three dotted vertical lines at about 83, 90 and 95 meters. Top: the curvature in 1 per meter, zero up to about 83 meters, a blue plateau at 0.100 with dark tag 1 above it, a purple plateau at 0.167 to about 95 meters with dark tag 2 above it, then zero. Bottom: how far the AV is off the path, in meters, in one run: a blue line that stays under 0.06 meters, with small bumps just after the first two dotted lines, rises to a peak of about 0.25 meters at 97 meters, just after the third dotted line, marked by a dot with dark tag 3, and falls back under 0.05 meters by about 102 meters.">
     <div style="font-size:25px">
       <p style="margin:0 0 8px">Graphs, not maps: both against the distance \(s\) along the path. Shaded: the junction lane.
         <b>Top</b>, the curvature \(\kappa\) of the last frame, at each point: 0 on the approach, <span class="tg">1</span>0.1000 from \(s = 83.2\) m,
@@ -1520,7 +1610,7 @@ svg.plot,.fig{background:var(--paper) !important}
       </table>
     </div>
     <div>
-      <img class="fig" src="L10_interactive_assets/bicycle_collapse.png" style="width:370px" alt="The same car, axles and green point as on the Ackermann slide, now drawn as a bicycle: one dark rear wheel, dark tag 1, at the middle of the rear axle, pointing straight ahead, and one dark front wheel, dark tag 2, at the middle of the front axle, joined by a dark center line. The four wheels of the last slide stay in light gray. The front wheel is turned by the orange angle delta from a dashed straight-ahead line, and is square to the thin gray line to the green point, dark tag 3. A green double arrow R runs from the green point to the rear wheel; L marks the wheelbase on the right.">
+      <img class="fig" src="L10_interactive_assets/bicycle_collapse.png" data-light="L10_interactive_assets/bicycle_collapse.png" data-dark="L10_interactive_assets/bicycle_collapse_dark.png" style="width:370px" alt="The same car, axles and green point as on the Ackermann slide, now drawn as a bicycle: one dark rear wheel, dark tag 1, at the middle of the rear axle, pointing straight ahead, and one dark front wheel, dark tag 2, at the middle of the front axle, joined by a dark center line. The four wheels of the last slide stay in light gray. The front wheel is turned by the orange angle delta from a dashed straight-ahead line, and is square to the thin gray line to the green point, dark tag 3. A green double arrow R runs from the green point to the rear wheel; L marks the wheelbase on the right.">
       <p class="small" style="margin:0"><span class="tg">1</span>rear wheel, <span class="tg">2</span>front wheel, <span class="tg">3</span>the same ICR. Drawn for a 5 m turn, tighter than our first arc's 10 m, so the angles show.</p>
     </div>
   </div>
@@ -1531,7 +1621,7 @@ svg.plot,.fig{background:var(--paper) !important}
 <section class="plate frame follow" data-scene="p58" data-name="Slide 56 · Vehicle Modeling" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Vehicle Modeling</span><span>Slide 56</span></div>
   <h2>Predict the AV's motion: the bicycle model, one wheel per axle</h2><div class="fit"><div class="fitin">
   <div class="two" style="grid-template-columns:560px 1fr;gap:28px">
-    <img class="fig" src="L10_interactive_assets/bicycle_geom.png" style="margin:0" alt="A drawing of the bicycle model. The rear wheel at dark tag 1 and the front wheel at dark tag 2 are short thick bars joined by a line of length L, tilted up to the right at angle theta from a dashed horizontal line. The front wheel is turned further left by the angle delta from the body line. Thin gray lines from both wheels, square to each wheel, meet far up and to the left at a green point, dark tag 3; a green double arrow labeled R runs from the rear wheel to that point. A dashed green arc leaves the rear wheel toward the front. A faint gray top view of the AV lies under the model, facing along the body line, with its rear axle on the rear wheel. Small x and y axes sit at the bottom left, off the car.">
+    <img class="fig" src="L10_interactive_assets/bicycle_geom.png" data-light="L10_interactive_assets/bicycle_geom.png" data-dark="L10_interactive_assets/bicycle_geom_dark.png" style="margin:0" alt="A drawing of the bicycle model. The rear wheel at dark tag 1 and the front wheel at dark tag 2 are short thick bars joined by a line of length L, tilted up to the right at angle theta from a dashed horizontal line. The front wheel is turned further left by the angle delta from the body line. Thin gray lines from both wheels, square to each wheel, meet far up and to the left at a green point, dark tag 3; a green double arrow labeled R runs from the rear wheel to that point. A dashed green arc leaves the rear wheel toward the front. A faint gray top view of the AV lies under the model, facing along the body line, with its rear axle on the rear wheel. Small x and y axes sit at the bottom left, off the car.">
     <div>
       <div class="box def" style="font-size:25px;margin-top:0"><span class="bt">Kinematic bicycle model</span>
     <ul class="pl" data-pl="37"><li>The AV's two front wheels merged into one, and its two rear wheels into one.</li><li>The wheels roll without sliding sideways, so the AV turns about one point.</li></ul></div>
@@ -1706,7 +1796,7 @@ svg.plot,.fig{background:var(--paper) !important}
 <section class="plate frame follow" data-scene="p66" data-name="Slide 64 · Lateral Control" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Lateral Control</span><span>Slide 64</span></div>
   <h2>Pure Pursuit, step 1: pick the point on the path \(L_d\) ahead</h2><div class="fit"><div class="fitin">
   <div class="two" style="grid-template-columns:660px 1fr;gap:24px;align-items:center">
-  <img class="fig" src="L10_interactive_assets/pp_step_1.png" style="width:660px;margin:0" alt="A top view to scale, x and y in meters, of the start of our right curve: the lane between two black edges, its center dashed gray, bending right after x = 83. A faint gray AV in the lane, its rear axle a black dot near x = 82.7 with a short black arrow along its heading. A blue dashed circle of radius 5 meters around the rear axle; where it crosses the lane center ahead, a blue dot, dark tag 1.">
+  <img class="fig" src="L10_interactive_assets/pp_step_1.png" data-light="L10_interactive_assets/pp_step_1.png" data-dark="L10_interactive_assets/pp_step_1_dark.png" style="width:660px;margin:0" alt="A top view to scale, x and y in meters, of the start of our right curve: the lane between two black edges, its center dashed gray, bending right after x = 83. A faint gray AV in the lane, its rear axle a black dot near x = 82.7 with a short black arrow along its heading. A blue dashed circle of radius 5 meters around the rear axle; where it crosses the lane center ahead, a blue dot, dark tag 1.">
   <div style="font-size:25px"><ul class="st">
     <li>One moment of our run:<ul><li>the AV at \(s = 82.7\) m, just before the first arc</li><li>at 5.22 m/s</li><li>a fixed lookahead \(L_d = 5\) m, the node's minimum</li></ul></li>
     <li><span class="tg">1</span> The lookahead point: the path point \(L_d\) from the rear axle.</li>
@@ -1717,7 +1807,7 @@ svg.plot,.fig{background:var(--paper) !important}
 <section class="plate frame follow" data-scene="p67" data-name="Slide 65 · Lateral Control" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Lateral Control</span><span>Slide 65</span></div>
   <h2>Pure Pursuit, step 2: find the arc from the rear axle to that point</h2><div class="fit"><div class="fitin">
   <div class="two" style="grid-template-columns:560px 1fr;gap:30px;align-items:center">
-    <img class="fig" src="L10_interactive_assets/pp_step_2.png" style="max-height:565px;margin:0" alt="A top view to scale, x and y in meters, about 30 meters across: the lane between two black edges, its center dashed gray, running right and then bending down after x = 85. A small faint gray AV near x = 82.7, y = 0, its rear axle a black dot with a short arrow along its heading. A thin green circle of radius about 13.4 meters passes through the rear axle, its center a green plus about 13.4 meters below it, joined to the rear axle by a green dotted line. The part of the circle from the rear axle to a blue dot on the lane center near x = 87.6 is thick green, dark tag 2 joined to it by a thin line. Dark tag 1, above the lane, joined by a thin line to the blue dot.">
+    <img class="fig" src="L10_interactive_assets/pp_step_2.png" data-light="L10_interactive_assets/pp_step_2.png" data-dark="L10_interactive_assets/pp_step_2_dark.png" style="max-height:565px;margin:0" alt="A top view to scale, x and y in meters, about 30 meters across: the lane between two black edges, its center dashed gray, running right and then bending down after x = 85. A small faint gray AV near x = 82.7, y = 0, its rear axle a black dot with a short arrow along its heading. A thin green circle of radius about 13.4 meters passes through the rear axle, its center a green plus about 13.4 meters below it, joined to the rear axle by a green dotted line. The part of the circle from the rear axle to a blue dot on the lane center near x = 87.6 is thick green, dark tag 2 joined to it by a thin line. Dark tag 1, above the lane, joined by a thin line to the blue dot.">
     <p style="font-size:25px"><span class="tg">2</span>The arc starts at the rear axle, heading the way the AV heads (arrow), and passes through the lookahead point
       <span class="tg">1</span>. Only one circle does both: green, radius \(R = 13.39\) m, center + (dotted: \(R\)). It is the circle the AV drives if it holds one
       steering angle. The next frames compute it.</p>
@@ -1727,7 +1817,7 @@ svg.plot,.fig{background:var(--paper) !important}
 <section class="plate frame follow" data-scene="p68" data-name="Slide 66 · Lateral Control" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Lateral Control</span><span>Slide 66</span></div>
   <h2>Pure Pursuit, step 3: steer to drive that arc</h2><div class="fit"><div class="fitin">
   <div class="two" style="grid-template-columns:600px 1fr;gap:30px;align-items:center">
-    <img class="fig" src="L10_interactive_assets/pp_step_3.png" style="margin:0" alt="A top view to scale, x and y in meters, zoomed on the AV and its turning circle: the lane between two black edges, its center dashed gray, bending down to the right after x = 85. A faint gray AV near x = 82.7, y = 0, its rear axle a black dot. A two-headed arrow L runs inside the car from the rear axle to the front axle. At the front axle, a short thick black bar, the front wheel, dark tag 3 above it joined by a thin line; a dotted line runs straight ahead from it and a dashed line along the wheel, with a small angle delta between them. A thin green circle passes through the rear axle; a green dotted line labeled R runs from the rear axle down toward its center, which is below the view, 13.4 meters away. The part of the circle from the rear axle to a blue dot on the lane center near x = 87.6, dark tag 1 just below the dot, is thick green, dark tag 2 joined to it by a thin line.">
+    <img class="fig" src="L10_interactive_assets/pp_step_3.png" data-light="L10_interactive_assets/pp_step_3.png" data-dark="L10_interactive_assets/pp_step_3_dark.png" style="margin:0" alt="A top view to scale, x and y in meters, zoomed on the AV and its turning circle: the lane between two black edges, its center dashed gray, bending down to the right after x = 85. A faint gray AV near x = 82.7, y = 0, its rear axle a black dot. A two-headed arrow L runs inside the car from the rear axle to the front axle. At the front axle, a short thick black bar, the front wheel, dark tag 3 above it joined by a thin line; a dotted line runs straight ahead from it and a dashed line along the wheel, with a small angle delta between them. A thin green circle passes through the rear axle; a green dotted line labeled R runs from the rear axle down toward its center, which is below the view, 13.4 meters away. The part of the circle from the rear axle to a blue dot on the lane center near x = 87.6, dark tag 1 just below the dot, is thick green, dark tag 2 joined to it by a thin line.">
     <div style="font-size:25px"><ul class="st">
       <li><span class="tg">3</span> A fixed angle drives a circle (the bicycle model):<ul><li>\(\delta = \arctan(L/R)\)</li><li>\(= \arctan(2.875/13.39) = 0.211\) rad, 12.1&#176; to the right</li></ul></li>
       <li>Held, it takes the AV around the green circle, through <span class="tg">1</span>.</li>
@@ -1965,7 +2055,7 @@ svg.plot,.fig{background:var(--paper) !important}
 <section class="plate frame follow" data-scene="p77" data-name="Slide 75 · Longitudinal Control" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Longitudinal Control</span><span>Slide 75 (1 of 2)</span></div>
   <h2>Hold a speed against drag: it sets the throttle needed and the top speed</h2><div class="fit"><div class="fitin">
   <div class="two" style="grid-template-columns:450px 1fr;gap:24px;align-items:start">
-    <img class="fig" src="L10_interactive_assets/speed_model.png" style="margin:0;width:450px" alt="A graph of acceleration in meters per second squared, from 0 to 3.9, against the speed v in meters per second, from 0 to 17. A dark curve, drag, 0.15 + 0.012 v squared, starts at 0.15 at v = 0, marked with a dark dot and dark tag 1, and rises ever faster. A red dashed horizontal line at 3 is the most push, 0.75 times 4 = 3 m/s^2. A dark dot on the curve at v = 8 and about 0.92, with a dotted line down to the axis, carries dark tag 2. A red dot where the curve meets the dashed line, at about v = 15.4, with a dotted line down to the axis, carries dark tag 3. A legend at the top left names the two lines.">
+    <img class="fig" src="L10_interactive_assets/speed_model.png" data-light="L10_interactive_assets/speed_model.png" data-dark="L10_interactive_assets/speed_model_dark.png" style="margin:0;width:450px" alt="A graph of acceleration in meters per second squared, from 0 to 3.9, against the speed v in meters per second, from 0 to 17. A dark curve, drag, 0.15 + 0.012 v squared, starts at 0.15 at v = 0, marked with a dark dot and dark tag 1, and rises ever faster. A red dashed horizontal line at 3 is the most push, 0.75 times 4 = 3 m/s^2. A dark dot on the curve at v = 8 and about 0.92, with a dotted line down to the axis, carries dark tag 2. A red dot where the curve meets the dashed line, at about v = 15.4, with a dotted line down to the axis, carries dark tag 3. A legend at the top left names the two lines.">
     <div style="font-size:25px">
       <p style="margin:0 0 6px">The speed holds (acceleration 0) when the engine pushes exactly as hard as drag pulls.</p>
       <ul class="tags">
@@ -2084,7 +2174,7 @@ svg.plot,.fig{background:var(--paper) !important}
 
 <section class="plate frame follow" data-scene="p83" data-name="Slide 81 · Longitudinal Control" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Longitudinal Control</span><span>Slide 81</span></div>
   <h2>See P on a graph: the speed stops short of 8 m/s</h2><div class="fit"><div class="fitin">
-  <img class="fig" src="L10_interactive_assets/pid_ghost_p_speed.png" style="width:1000px" alt="A graph of speed in meters per second, 5 to 8.6, against the time since the light turned green, 0 to 14 seconds. A dashed gray line at 8. An orange curve rises from below 5 at about 2 seconds, peaks near 7.7 and settles at about 7.6. A dotted vertical line at 10 seconds with a dot on the curve, dark tag 1 just below and right of the dot. A short two-headed arrow between the curve and the dashed line at 12.5 seconds, dark tag 2 above it.">
+  <img class="fig" src="L10_interactive_assets/pid_ghost_p_speed.png" data-light="L10_interactive_assets/pid_ghost_p_speed.png" data-dark="L10_interactive_assets/pid_ghost_p_speed_dark.png" style="width:1000px" alt="A graph of speed in meters per second, 5 to 8.6, against the time since the light turned green, 0 to 14 seconds. A dashed gray line at 8. An orange curve rises from below 5 at about 2 seconds, peaks near 7.7 and settles at about 7.6. A dotted vertical line at 10 seconds with a dot on the curve, dark tag 1 just below and right of the dot. A short two-headed arrow between the curve and the dashed line at 12.5 seconds, dark tag 2 above it.">
   <ul class="tags" style="font-size:25px">
     <li><span class="tg">1</span><span>10 s: the AV at 7.58 m/s, as in the table.</span></li>
     <li><span class="tg">2</span><span>The error that stays: \(8 - 7.58 = 0.42\) m/s.</span></li>
@@ -2169,7 +2259,7 @@ svg.plot,.fig{background:var(--paper) !important}
 
 <section class="plate frame follow" data-scene="p88" data-name="Slide 86 · Longitudinal Control" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Longitudinal Control</span><span>Slide 86</span></div>
   <h2>See the overshoot on a graph: the same run, from the green light</h2><div class="fit"><div class="fitin">
-  <img class="fig" src="L10_interactive_assets/pid_ghost_i_speed.png" style="width:1000px" alt="A graph of speed in meters per second, 0 to 13.5, against the time since the light turned green, 0 to 14 seconds. A dashed gray line at 8. A red curve rises from 0, crosses 8 at about 3.5 seconds, where a dotted vertical line and a dot mark it with dark tag 1 below right, keeps rising to a peak near 12.2 at about 6.3 seconds, marked with a dot and dark tag 2 to its right, then falls back and levels off at 8.">
+  <img class="fig" src="L10_interactive_assets/pid_ghost_i_speed.png" data-light="L10_interactive_assets/pid_ghost_i_speed.png" data-dark="L10_interactive_assets/pid_ghost_i_speed_dark.png" style="width:1000px" alt="A graph of speed in meters per second, 0 to 13.5, against the time since the light turned green, 0 to 14 seconds. A dashed gray line at 8. A red curve rises from 0, crosses 8 at about 3.5 seconds, where a dotted vertical line and a dot mark it with dark tag 1 below right, keeps rising to a peak near 12.2 at about 6.3 seconds, marked with a dot and dark tag 2 to its right, then falls back and levels off at 8.">
   <ul class="tags" style="font-size:25px">
     <li><span class="tg">1</span><span>3.45 s: the AV reaches 8 m/s. The sum holds 14.29 m.</span></li>
     <li><span class="tg">2</span><span>6.25 s: the peak, 12.18 m/s, 4 m/s too fast.</span></li>
@@ -2271,7 +2361,7 @@ svg.plot,.fig{background:var(--paper) !important}
 
 <section class="plate frame follow" data-scene="p94" data-name="Slide 92 · Longitudinal Control" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Longitudinal Control</span><span>Slide 92</span></div>
   <h2>See D on a graph: a lower peak than without D</h2><div class="fit"><div class="fitin">
-  <img class="fig" src="L10_interactive_assets/pid_ghost_d_speed.png" style="width:1000px" alt="A graph of speed in meters per second, 6.5 to 8.6, against the time since the light turned green, 2 to 8 seconds. A dashed gray line at 8. A dashed green curve, without D, rises to a peak near 8.25 at 4 seconds, marked with a dot and dark tag 2 above left, then dips just below 8. A solid blue curve, with D, rises more gently to a peak near 8.12 at about 4.6 seconds, marked with a dot and dark tag 1 above right, and settles on 8. A legend at the lower right names the two curves.">
+  <img class="fig" src="L10_interactive_assets/pid_ghost_d_speed.png" data-light="L10_interactive_assets/pid_ghost_d_speed.png" data-dark="L10_interactive_assets/pid_ghost_d_speed_dark.png" style="width:1000px" alt="A graph of speed in meters per second, 6.5 to 8.6, against the time since the light turned green, 2 to 8 seconds. A dashed gray line at 8. A dashed green curve, without D, rises to a peak near 8.25 at 4 seconds, marked with a dot and dark tag 2 above left, then dips just below 8. A solid blue curve, with D, rises more gently to a peak near 8.12 at about 4.6 seconds, marked with a dot and dark tag 1 above right, and settles on 8. A legend at the lower right names the two curves.">
   <ul class="tags" style="font-size:25px">
     <li><span class="tg">1</span><span>With D: peak 8.12 m/s, within 0.2 m/s of 8 after 3.5 s.</span></li>
     <li><span class="tg">2</span><span>Without D (the clamp only): peak 8.25 m/s, within 0.2 m/s of 8 after 4.4 s.</span></li>
@@ -2351,7 +2441,7 @@ svg.plot,.fig{background:var(--paper) !important}
 
 <section class="plate frame" data-scene="p98" data-name="Slide 96 · CARLA Implementation" tabindex="0"><span class="bolt"></span><div class="fhead"><span>CARLA Implementation</span><span>Slide 96</span></div>
   <h2>Today's two controllers: one node, five inputs, one command</h2><div class="fit"><div class="fitin">
-  <img class="fig" src="L10_interactive_assets/controller_io.png" style="width:950px" alt="A block diagram. A green block labeled controller_node holds two boxes: steering, Pure Pursuit, and speed, PID. Five ROS topics come in on the left, each with what it carries: /planning/path, the route planner's lane path; /localization/odom, the pose, which the node moves 1.4 meters back to the rear axle; /carla/imu/data, the turn rate, for the heading; /carla/speedometer, the speed the PID uses; /behavior/target_speed, the speed to hold. One output on the right: /control/vehicle_cmd, with steer from minus 1 to 1, positive left, throttle and brake, to the node that steps CARLA.">
+  <img class="fig" src="L10_interactive_assets/controller_io.png" data-light="L10_interactive_assets/controller_io.png" data-dark="L10_interactive_assets/controller_io_dark.png" style="width:950px" alt="A block diagram. A green block labeled controller_node holds two boxes: steering, Pure Pursuit, and speed, PID. Five ROS topics come in on the left, each with what it carries: /planning/path, the route planner's lane path; /localization/odom, the pose, which the node moves 1.4 meters back to the rear axle; /carla/imu/data, the turn rate, for the heading; /carla/speedometer, the speed the PID uses; /behavior/target_speed, the speed to hold. One output on the right: /control/vehicle_cmd, with steer from minus 1 to 1, positive left, throttle and brake, to the node that steps CARLA.">
   <ul style="font-size:25px">
     <li>The node holds two parts: <b>Pure Pursuit</b> for the steering and a <b>PID</b> for the speed. Today: how each one works, by hand and in simulation.</li>
     <li>A separate node steps CARLA every control step, 0.05 s, and waits for this node's command before each step (the lock step). So the controller runs 20 times a second;
@@ -2637,11 +2727,16 @@ document.querySelectorAll(".plate, .card, .secblock").forEach(function(p){
 function markTheme(){ var th = document.documentElement.getAttribute("data-theme");
   document.getElementById("nav-theme").textContent = th === "dark" ? "Light theme" : "Dark theme";
   document.querySelectorAll("[data-theme-pick]").forEach(function(b){ b.classList.toggle("on", b.dataset.themePick === th); b.setAttribute("aria-pressed", b.dataset.themePick === th); }); }
-function setTheme(th){ document.documentElement.setAttribute("data-theme", th); try { localStorage.setItem("l10-theme", th); } catch (err) {} markTheme(); }
+/* figures with a light and a dark version show the one for the theme */
+function themeFigs(){ var dk = document.documentElement.getAttribute("data-theme") === "dark";
+  document.querySelectorAll("img[data-dark]").forEach(function(i){ var want = dk ? i.dataset.dark : i.dataset.light; if (i.getAttribute("src") !== want) i.setAttribute("src", want); }); }
+function setTheme(th){ document.documentElement.setAttribute("data-theme", th); try { localStorage.setItem("l10-theme", th); } catch (err) {} markTheme(); themeFigs(); }
 document.querySelectorAll("[data-theme-pick]").forEach(function(b){ b.addEventListener("click", function(e){ e.stopPropagation(); setTheme(b.dataset.themePick); }); });
 document.getElementById("nav-theme").addEventListener("click", function(e){ e.stopPropagation();
   setTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark"); });
-markTheme();
+markTheme(); themeFigs();
+/* however the theme changes (the buttons, T, a stored choice, a test harness), the figures follow it */
+new MutationObserver(themeFigs).observe(document.documentElement, {attributes:true, attributeFilter:["data-theme"]});
 document.getElementById("title").addEventListener("click", function(){ if (current !== "about") go("about"); });
 document.getElementById("title").addEventListener("keydown", function(e){ if (e.key === "Enter" && current !== "about") go("about"); });
 /* Links copied from the PDF: one to another page moves there, one to the web opens a tab. */
@@ -2834,8 +2929,7 @@ function poly(svg, pts, attrs){ var d = ""; pts.forEach(function(p, i){ if (p[1]
 function f(x, n){ var s = x.toFixed(n); return s.replace("-", "−"); }
 /* halo(t): a band of the plot's own background around a label, so a line that moves under it (a cursor, a
    circle that changes size) passes behind the words instead of through them. Draw the label after the line. */
-function halo(t){ var svg = t.ownerSVGElement, bg = svg ? getComputedStyle(svg).backgroundColor : "#fff";
-  t.setAttribute("stroke", bg && bg !== "rgba(0, 0, 0, 0)" ? bg : "#fff"); t.setAttribute("stroke-width", 7);
+function halo(t){ t.style.stroke = "var(--card)"; t.setAttribute("stroke-width", 7);   /* the plot's background, in either theme */
   t.setAttribute("stroke-linejoin", "round"); t.setAttribute("paint-order", "stroke"); return t; }
 function buttons(host, values, fmt, onPick, initial){
   var bs = [];
