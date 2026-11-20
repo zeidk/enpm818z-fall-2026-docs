@@ -622,10 +622,10 @@ svg.plot,.fig{background:var(--paper) !important}
   <h2>Step 2, fewer arrows: one superstate arrow replaces five</h2><div class="fit"><div class="fitin">
   <p class="goal"><ul class="pl" data-pl="2"><li><b>Goal:</b> add an emergency stop without an arrow from every state.</li><li>The AV must be able to
     stop from any of its five behaviors, so one flat FSM needs 5 arrows to Emergency stop.</li></ul></p>
-  <div class="two" style="grid-template-columns:460px 1fr;gap:26px">
+  <div class="two" style="grid-template-columns:540px 1fr;gap:26px">
     <div>
       <div class="row"><button id="fsm-flat" class="on">Flat FSM</button><button id="fsm-super">Superstate</button><span class="try">try it</span></div>
-      <svg id="fsm" class="plot" viewBox="0 0 470 300" width="450" height="287" role="img" aria-label="Five behavior states and an Emergency stop state, drawn flat or inside the superstate Driving"></svg>
+      <svg id="fsm" class="plot" viewBox="0 0 540 300" width="528" height="293" role="img" aria-label="Five behavior states and an Emergency stop state, drawn flat or inside the superstate Driving"></svg>
     </div>
     <div>
       <ul class="tags" style="font-size:25px;margin-top:0">
@@ -2950,7 +2950,8 @@ function pipe(s, on){
     var top = b.y + hh, room = b.h - hh, lines = b.b.concat(b.docs ? ["(in the docs)"] : []), n = lines.length;
     lines.forEach(function(line, i){ var docs = b.docs && i === n - 1;
       pt.call(g, b.left ? b.x + 18 : b.x + b.w / 2, top + room / 2 + (i - (n - 1) / 2) * 54 + 16, line, TB, gray ? "#6B7785" : docs ? C.muted : C.ink, b.left ? "start" : "middle", docs ? {"font-style":"italic"} : {}); });
-    if (done.indexOf(k) >= 0){ el(g,"circle",{cx:b.x+b.w-6,cy:b.y+6,r:30,fill:C.ok,stroke:"#fff","stroke-width":4}); pt.call(g, b.x+b.w-6, b.y+6, "✓", 48, "#fff", "middle", {"dominant-baseline":"central"}); }
+    if (done.indexOf(k) >= 0){ el(g,"circle",{cx:b.x+b.w-6,cy:b.y+6,r:30,fill:C.ok,stroke:"#fff","stroke-width":4}); var cx = b.x+b.w-6, cy = b.y+6;   /* a drawn check, its box centered on the circle (a font glyph sits off center) */
+      el(g,"path",{d:"M"+(cx-13.5)+","+(cy+0.5)+" L"+(cx-4.5)+","+(cy+10)+" L"+(cx+13.5)+","+(cy-10),fill:"none",stroke:"#fff","stroke-width":7,"stroke-linecap":"round","stroke-linejoin":"round"}); }
     if (!b.go) return;
     function jump(e){ var fr = s.closest(".plate"); if (fr && fr.dataset.scene !== current) return; e.stopPropagation(); go(b.go); }
     g.addEventListener("click", jump);
@@ -2963,14 +2964,27 @@ document.querySelectorAll("svg.pipe").forEach(function(s){ pipe(s, s.dataset.on 
 /* ---------- 1: FSM and behavior tree ---------- */
 var behaviors = ["Lane keep","Follow","Change lane","Stop at the line","Cross the intersection"];
 function drawFsm(superstate){
+  /* boxes are sized from their measured labels, so a label never leaves its box at any text size */
   var s = document.getElementById("fsm"); s.innerHTML = "";
   el(s,"defs",{}).innerHTML = '<marker id="fa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#16798A"/></marker>';
-  if (superstate){ el(s,"rect",{x:14,y:14,width:226,height:272,rx:18,fill:C.planFill,stroke:C.plan,"stroke-width":2.5}); txt(s, 127, 38, "Driving", 17, C.plan, "middle", {"font-weight":600}); }
-  behaviors.forEach(function(b, i){ var y = (superstate ? 52 : 30) + i * (superstate ? 46 : 52);
-    el(s,"rect",{x:32,y:y,width:190,height:36,rx:6,fill:"#fff",stroke:C.slate,"stroke-width":1.5}); txt(s, 127, y + 24, b, 15);
-    if (!superstate) el(s,"path",{d:"M222,"+(y+18)+" C300,"+(y+18)+" 300,150 344,150",fill:"none",stroke:C.live,"stroke-width":2.2,"marker-end":"url(#fa)"}); });
-  el(s,"rect",{x:346,y:126,width:110,height:48,rx:6,fill:"#fff",stroke:C.bad,"stroke-width":2}); txt(s, 401, 147, "Emergency", 15, C.bad); txt(s, 401, 165, "stop", 15, C.bad);
-  if (superstate) el(s,"path",{d:"M240,150 L344,150",fill:"none",stroke:C.live,"stroke-width":3,"marker-end":"url(#fa)"});
+  var VB = s.viewBox.baseVal, W = VB.width, H = VB.height;
+  function measure(str, col){ var tt = txt(s, 0, -100, str, 15, col || C.ink); var b = tt.getBBox(); tt.remove(); return b; }
+  var lab = behaviors.map(function(b){ return measure(b); }), wMax = Math.max.apply(null, lab.map(function(b){ return b.width; }));
+  var e1 = measure("Emergency", C.bad), e2 = measure("stop", C.bad), lh = e1.height;
+  var padX = 12, boxW = wMax + 2 * padX, boxH = lh + 12, eW = Math.max(e1.width, e2.width) + 2 * padX, eH = 2 * lh + 14;
+  var top = superstate ? lh + 22 : 10, gap = Math.max(6, (H - top - 10 - 5 * boxH - (superstate ? 10 : 0)) / 4);
+  var x0 = superstate ? 22 : 8, ex = W - eW - 6, ey = H / 2 - eH / 2;
+  if (superstate){ el(s,"rect",{x:6,y:6,width:boxW + 32,height:H - 12,rx:16,fill:C.planFill,stroke:C.plan,"stroke-width":2.5});
+    txt(s, x0 + boxW / 2, 6 + lh + 4, "Driving", 17, C.plan, "middle", {"font-weight":600}); }
+  behaviors.forEach(function(b, i){ var y = top + i * (boxH + gap);
+    el(s,"rect",{x:x0,y:y,width:boxW,height:boxH,rx:6,fill:"#fff",stroke:C.slate,"stroke-width":1.5});
+    el(s,"text",{x:x0 + boxW / 2, y:y + boxH / 2, "text-anchor":"middle", "dominant-baseline":"central", "font-size":lab[i].height ? null : 15, fill:C.ink, "font-family":FONT}, b).setAttribute("font-size", txt(s, 0, -100, "x", 15).getAttribute("font-size"));
+    if (!superstate){ var x1 = x0 + boxW, mx = (x1 + ex) / 2; el(s,"path",{d:"M"+x1+","+(y+boxH/2)+" C"+mx+","+(y+boxH/2)+" "+mx+","+(H/2)+" "+(ex-2)+","+(H/2),fill:"none",stroke:C.live,"stroke-width":2.2,"marker-end":"url(#fa)"}); } });
+  [].slice.call(s.querySelectorAll("text")).forEach(function(n){ if (+n.getAttribute("y") === -100) n.remove(); });
+  el(s,"rect",{x:ex,y:ey,width:eW,height:eH,rx:6,fill:"#fff",stroke:C.bad,"stroke-width":2});
+  [["Emergency", ey + 7 + lh / 2], ["stop", ey + 7 + lh * 1.5]].forEach(function(r){
+    var n = txt(s, ex + eW / 2, r[1], r[0], 15, C.bad); n.setAttribute("dominant-baseline", "central"); });
+  if (superstate) el(s,"path",{d:"M"+(boxW + 38)+","+(H/2)+" L"+(ex-2)+","+(H/2),fill:"none",stroke:C.live,"stroke-width":3,"marker-end":"url(#fa)"});
   document.getElementById("fsm-note").innerHTML = superstate
     ? "1 arrow leaves the superstate <b>Driving</b>. It stands for 5 arrows, one from each state inside (Harel)."
     : "5 arrows, one from each behavior. With a safety monitor of 3 states, one flat FSM needs 5 &#215; 3 = 15 states.";
