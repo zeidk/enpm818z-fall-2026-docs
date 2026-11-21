@@ -10,527 +10,600 @@ Quiz
    The graded quizzes are the **five in-class quizzes** listed in the
    :doc:`syllabus </syllabus/index>`. Those are closed-notes, given at the
    start of class, and they **use different questions from these**. Working
-   through this page is good preparation for one. Memorising the answers
+   through this page is good preparation for one. Memorizing the answers
    below is not.
 
-This quiz covers the key concepts from Lecture 11: End-to-End Driving,
-VLA & Imitation Learning. Topics include the modular vs. end-to-end
-debate, UniAD (CVPR 2023), DriveTransformer (ICLR 2025),
-Vision-Language-Action (VLA) models, Tesla's FSD v12 architecture,
-NVIDIA's end-to-end stack with reinforcement learning, behavior
-cloning and the distribution-shift / compounding-error problem,
-DAgger, and the safety and validation challenges of black-box neural
-driving systems.
+This quiz covers Lecture 11: end-to-end driving, defined; behavior cloning on
+one lap of Town01 and why a clone that looks good on recorded data leaves its
+lane (compounding error); DAgger and what it costs; commands for a learned
+driver at a junction; TransFuser, UniAD and driving VLA models; open-loop and
+closed-loop evaluation; and how to compare a modular stack with an end-to-end
+driver. Every question can be answered from the lecture notes,
+:doc:`l11_lecture`. This quiz tests only what the deck teaches in class:
+nothing on this page needs the lecture's "More detail" boxes.
 
 .. note::
 
    **Instructions:**
 
-   - Answer all questions to the best of your ability.
    - Multiple choice questions have exactly one correct answer.
-   - True/False questions require you to determine if the statement is correct.
-   - Essay questions require short written responses (2-4 sentences).
+   - True or false questions ask whether the statement holds as stated in
+     the lecture.
+   - Short answer questions want two to four sentences.
    - Click the dropdown after each question to reveal the answer.
+   - The lecture's example is one lap of Town01 (1442.6 m) driven at 8 m/s
+     with 20 steps per second, by an expert and by a clone trained on one
+     recorded lap, and tested on 20 laps. Numbers that are not the lecture's
+     are marked "chosen for this question".
 
 
 ----
 
 
-Multiple Choice (Questions 1-10)
-=================================
+Multiple Choice (Questions 1 to 15)
+===================================
 
 .. admonition:: Question 1
    :class: hint
 
-   What is the **primary theoretical advantage** of end-to-end driving over
-   the modular pipeline?
+   Which description matches the definition of end-to-end driving used in the
+   lecture?
 
-   A. End-to-end models are always faster to train than modular pipelines.
+   A. A stack in which every part is trained on its own score, and the parts
+      pass boxes and poses to each other.
 
-   B. End-to-end models eliminate information loss at module boundaries and
-      allow joint optimization toward a unified driving objective.
+   B. A fully differentiable program that takes raw sensor data as input and
+      produces a plan, low-level control actions, or both.
 
-   C. End-to-end models do not require any labeled training data.
+   C. Any stack that uses a neural network in at least one of its parts.
 
-   D. End-to-end models are more interpretable because their representations
-      are learned rather than hand-engineered.
+   D. A driver that never uses a map.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- End-to-end models eliminate information loss at module boundaries
-   and allow joint optimization toward a unified driving objective.
+   **B**.
 
-   In a modular pipeline, each stage outputs a fixed schema (e.g., object
-   lists), discarding information that doesn't fit. E2E models propagate
-   gradients from the final planning loss back through all representations,
-   ensuring every feature extraction step is optimized for the ultimate goal.
+   The lecture quotes Chen et al.: fully differentiable programs that take raw
+   sensor data as input and produce a plan and/or low-level control actions as
+   output. Differentiable means the error at the output can train every part
+   together. Option A describes your modular stack, and one neural network in
+   one part (**C**) does not make a stack end to end. The definition says
+   nothing about maps (**D**).
 
 
 .. admonition:: Question 2
    :class: hint
 
-   UniAD (CVPR 2023) uses a **query-based architecture** built on a shared
-   BEV backbone. What are the four task-specific modules it introduces?
+   Steps 1 to 3 of behavior cloning are the same as training a detector:
+   inputs, labels and a loss. What is new in step 4?
 
-   A. TrackFormer, MapFormer, PredictFormer, ControlFormer
+   A. The labels come from an expert.
 
-   B. TrackFormer, MapFormer, MotionFormer, OccFormer
+   B. The loss is a squared loss.
 
-   C. PerceptionFormer, FusionFormer, PlanFormer, ControlFormer
+   C. The policy's outputs move the AV, and the AV's new position decides the
+      next input.
 
-   D. BEVFormer, OccFormer, MotionFormer, PlanFormer
+   D. The policy is trained by supervised learning.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- TrackFormer, MapFormer, MotionFormer, OccFormer
+   **C**.
 
-   UniAD's architecture flows from a shared BEV encoder into TrackFormer
-   (agent tracking), MapFormer (map element detection), MotionFormer
-   (multi-modal motion forecasting), and OccFormer (occupancy grid
-   prediction), with a final ego-trajectory planner on top.
+   A detector's output never changes its next image. A driving policy's
+   output moves the AV, so the AV's new position decides the next input. The
+   other three choices describe steps 1 to 3, which a detector shares.
 
 
 .. admonition:: Question 3
    :class: hint
 
-   DriveTransformer (ICLR 2025) achieves approximately **3x the throughput**
-   of UniAD. What is the key architectural change that enables this?
+   A road has a lane 3.6 m wide, and the AV is 1.8 m wide (both chosen for
+   this question). How far can the AV's center move from the lane center
+   before a wheel leaves the lane?
 
-   A. DriveTransformer removes the planning module entirely.
+   A. 0.9 m
 
-   B. DriveTransformer uses a single joint attention block shared across
-      all tasks, eliminating redundant feature extraction in separate heads.
+   B. 1.8 m
 
-   C. DriveTransformer operates on LiDAR point clouds instead of cameras.
+   C. 1.35 m
 
-   D. DriveTransformer uses knowledge distillation to compress UniAD into
-      a smaller model.
+   D. 0.45 m
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- DriveTransformer uses a single joint attention block shared across
-   all tasks, eliminating redundant feature extraction in separate heads.
+   **A**.
 
-   Instead of having each task head independently attend to BEV features,
-   DriveTransformer defines three unified token types (agent, map, ego) that
-   all attend to each other and to sensor features in a single operation.
-   This sharing eliminates the computational duplication that made UniAD slow.
+   A wheel leaves the lane when the AV's center is more than
+   (lane width − AV width) / 2 from the lane center: (3.6 − 1.8) / 2 = 0.9 m.
+   The lecture's own numbers, a 4.0 m lane and a 2.0 m AV, give 1.0 m.
 
 
 .. admonition:: Question 4
    :class: hint
 
-   In the context of Vision-Language-Action (VLA) models, what is the
-   purpose of **chain-of-thought reasoning**?
+   In the lecture's training run 6, the expert steers back 3.44° per meter of
+   offset, and the clone's fit gives 0.38° per meter. About how many times too
+   weak is the clone's weight on the offset?
 
-   A. To increase the size of the training dataset through data augmentation.
+   A. 0.38 times
 
-   B. To generate an intermediate textual reasoning trace that makes the
-      model's driving decisions auditable and interpretable.
+   B. 3 times
 
-   C. To replace the camera sensor with a language description of the scene.
+   C. 3.44 times
 
-   D. To fine-tune the model on a chain of reinforcement learning rewards.
+   D. 9 times
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- To generate an intermediate textual reasoning trace that makes
-   the model's driving decisions auditable and interpretable.
+   **D**.
 
-   Chain-of-thought (CoT) prompting/training encourages the model to produce
-   a human-readable reasoning step (e.g., "the pedestrian may cross; I should
-   slow down") before outputting a waypoint or action. This dramatically
-   improves interpretability compared to direct regression models.
+   3.44 / 0.38 = 9.05. Turned around, the clone's weight is 0.38 / 3.44 =
+   0.11 of the expert's. The other weights, on the heading and the
+   curvature, were close to the expert's.
 
 
 .. admonition:: Question 5
    :class: hint
 
-   Starting with FSD v12, Tesla's end-to-end architecture is:
+   Why is the clone's fitted weight on the offset so small?
 
-   A. LiDAR-primary with camera redundancy.
+   A. The clone was trained on too few pairs.
 
-   B. Camera-only, with gradients flowing from control commands back through
-      the video encoder.
+   B. The expert stays near the center, so the true offset varies by only
+      0.15 m, and the detector's noise of 0.35 m hides it: the pairs form a
+      flat cloud, and a line fit to it is flat.
 
-   C. Radar-primary with camera confirmation.
+   C. Gradient descent stopped too early.
 
-   D. A hybrid of modular perception and learned planning.
+   D. The expert's own rule has a small weight on the offset.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Camera-only, with gradients flowing from control commands back
-   through the video encoder.
+   **B**.
 
-   Tesla's FSD v12 uses 8 cameras feeding space-time transformers that
-   produce BEV features, which feed an occupancy/flow predictor, and then a
-   planning transformer. The entire pipeline is differentiable, and Tesla
-   trains it using billions of fleet miles of human supervision and shadow
-   mode corrections.
+   Most of the spread in the offset the clone sees is noise (0.35 / 0.15 =
+   2.3 times the true spread), and the expert's steering does not follow
+   noise. Training used 3607 pairs and a closed-form solution, with no
+   gradient descent (**A**, **C**). The expert's weight is 3.44° per meter
+   (**D**).
 
 
 .. admonition:: Question 6
    :class: hint
 
-   NVIDIA's end-to-end stack uses reinforcement learning (RL) **after**
-   imitation learning (IL). Why?
+   The lecture trains on five expert laps instead of one: the offset weight
+   goes from 0.38 to 0.42, and the clone finishes 6 laps instead of 5. What
+   does the lecture conclude?
 
-   A. Imitation learning is too slow, so RL is used to speed up training.
+   A. More data fixes the clone.
 
-   B. RL allows the model to be deployed without any labeled data.
+   B. More data makes the clone worse.
 
-   C. Imitation learning inherits the distribution of human driving (including
-      human mistakes), while RL can optimize explicitly for safety and comfort
-      reward functions.
+   C. It is not a change we can read, because a new recording alone moves the
+      count by several laps.
 
-   D. RL generates the camera images used for imitation learning.
+   D. The clone now matches the expert.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- Imitation learning inherits the distribution of human driving
-   (including human mistakes), while RL can optimize explicitly for safety and
-   comfort reward functions.
+   **C**.
 
-   IL is a strong initialization because it immediately produces human-like
-   behavior. RL fine-tuning then corrects the inherited human errors and
-   optimizes for explicit objectives (minimize collision risk, maximize
-   comfort, make progress) that are difficult to demonstrate.
+   Across ten training runs, behavior cloning finishes 2 to 9 laps of 20, so
+   5 to 6 is inside that spread. The extra laps also stay near the center, so
+   they add more of the same states.
 
 
 .. admonition:: Question 7
    :class: hint
 
-   Which of the following is a **key validation challenge** specific to
-   end-to-end driving models compared to modular pipelines?
+   Which statement defines open-loop error?
 
-   A. End-to-end models cannot be evaluated in simulation.
+   A. The policy's error on recorded inputs: its outputs are compared with the
+      expert's and never move the AV.
 
-   B. ISO 26262 assumes modular decomposition, making it difficult to apply
-      standard safety arguments to a monolithic E2E system.
+   B. The share of the route the AV completes.
 
-   C. End-to-end models require more compute than modular pipelines.
+   C. The policy's error while it drives.
 
-   D. End-to-end models cannot process LiDAR data.
+   D. An error that can only be measured in a simulator.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- ISO 26262 assumes modular decomposition, making it difficult to
-   apply standard safety arguments to a monolithic E2E system.
+   **A**.
 
-   ISO 26262 functional safety methodology relies on decomposing system
-   requirements into subsystem requirements and testing each component
-   independently. A monolithic neural network has no such decomposition,
-   requiring novel "neural system safety" frameworks that are still being
-   developed by standards bodies in 2026.
+   Open loop reads recorded inputs and compares the policy's output with the
+   expert's, so it needs only a dataset. The share of the route completed
+   (**B**) and the error while the policy drives (**C**) are closed-loop
+   measures, and a simulator (**D**) is not needed for open loop.
 
 
 .. admonition:: Question 8
    :class: hint
 
-   The fundamental problem with behavior cloning (BC) that
-   DAgger is designed to solve is:
+   The clone's average steering error is 0.44° when the AV is 0.00 to 0.25 m
+   from the lane center, and 2.41° when it is 0.75 to 1.00 m from it. How many
+   times larger is the second error?
 
-   A. Behavior cloning requires labeled data, which is expensive
-      to collect.
+   A. 0.18 times
 
-   B. Distribution shift: the policy visits states not seen
-      during training, where it has no supervision signal,
-      causing compounding errors.
+   B. 2.4 times
 
-   C. Behavior cloning converges to the wrong policy because
-      the supervised loss is non-convex.
+   C. 3 times
 
-   D. Behavior cloning cannot learn from continuous action
-      spaces.
+   D. 5.5 times
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Distribution shift causing compounding errors.
+   **D**.
 
-   When a BC policy makes a small error, it moves to a state
-   slightly off the expert's trajectory. The policy was never
-   trained on this state, so it may make another error in
-   a bad direction. Errors compound quadratically in the time
-   horizon (:math:`O(\epsilon T^2)`). DAgger fixes this by
-   querying the expert at states the learned policy actually
-   visits, so the training distribution converges to the
-   deployment distribution.
+   2.41 / 0.44 = 5.48, about 5.5. The error is largest where the AV is
+   farthest from the center, which is where the clone needs to be best.
 
 
 .. admonition:: Question 9
    :class: hint
 
-   DAgger improves over behavior cloning by:
+   In DAgger, the clone drives a lap. Who gives the labels for the states it
+   reached?
 
-   A. Using a larger neural network with more capacity.
+   A. The clone itself.
 
-   B. Iteratively rolling out the learned policy and augmenting
-      the training dataset with expert actions at visited states.
+   B. The expert, always, whoever drove.
 
-   C. Using reinforcement learning with a reward signal instead
-      of supervised learning.
+   C. A person watching the lap, who steers as they see fit.
 
-   D. Training on randomized simulation environments to cover
-      more state diversity.
+   D. The driver of that iteration, which is the clone after iteration 1.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **B** -- Iteratively rolling out the learned policy and
-   augmenting the dataset with expert labels at visited states.
+   **B**.
 
-   DAgger is a supervised learning algorithm (not RL), but it
-   uses an online data collection loop. At each iteration the
-   current policy generates new states, the expert labels them,
-   and these are added to the aggregated dataset. Over iterations
-   the training distribution converges to the deployment
-   distribution, reducing compounding errors from
-   :math:`O(\epsilon T^2)` to :math:`O(\epsilon T)`.
+   The AV executes the clone's steering, but the data stores what the expert
+   would have steered in each state. So the data holds the states the clone
+   itself reaches, with the expert's labels.
 
 
 .. admonition:: Question 10
    :class: hint
 
-   As of 2026, what describes the **industry consensus** on where end-to-end
-   learning fits in production ADS systems?
+   In the lecture's training run 6, the behavior-cloned clone finishes 5 of 20
+   test laps. How many does it finish after one DAgger lap?
 
-   A. Major robotaxi operators run fully end-to-end systems from pixels to
-      actuators with no engineered safety layers.
+   A. 9
 
-   B. End-to-end learning is considered a failed approach and the industry
-      has returned to purely modular pipelines.
+   B. 12
 
-   C. E2E models excel at perception and scene understanding, but explicit
-      safety checks and rule-based overrides remain as engineered layers on top.
+   C. 16
 
-   D. End-to-end models are only used for highway driving, not urban
-      environments.
+   D. 20
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **C** -- E2E models excel at perception and scene understanding, but
-   explicit safety checks and rule-based overrides remain as engineered
-   layers on top.
+   **C**.
 
-   No major robotaxi operator in 2026 runs a system that is purely neural
-   from camera to brake pedal without any engineered safety monitoring. The
-   dominant pattern is a hybrid: a powerful E2E neural backbone for perception
-   and initial planning, with an explicit safety module (RSS, rule-based
-   overrides) that can veto unsafe actions.
+   One DAgger lap lifts the clone from 5 to 16 finished laps, and the second
+   to 19, where it stays. The expert finishes all 20.
 
-
-----
-
-
-True or False (Questions 11-15)
-================================
 
 .. admonition:: Question 11
    :class: hint
 
-   **True or False:** In a modular ADS pipeline, a detected pedestrian's
-   probability of entering the road can be fully preserved and communicated
-   to the planner via the standard object-list interface between perception
-   and prediction modules.
+   Why does a learned driver need the route's command at a junction?
+
+   A. The camera image of a junction does not say which way to go, so without
+      a command the clone averages the ways it saw.
+
+   B. The command makes the network train faster.
+
+   C. The command replaces the camera image.
+
+   D. A junction has more lanes than the network can see.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **A**.
 
-   The object-list interface between perception and prediction modules
-   typically encodes discrete detections with fixed attributes (class, 3-D
-   box, velocity). Subtle behavioral cues -- such as a pedestrian looking
-   toward the road, crouching, or holding a ball -- that are visible in the
-   raw image are often discarded because they don't fit the schema. This is
-   the information loss problem that motivates end-to-end approaches.
+   The camera sees the same junction whether the expert went straight or
+   turned left. A clone fit to both by least squares steers about the average,
+   which fits neither lane. In conditional imitation, the command picks which
+   head of the network produces the steering.
 
 
 .. admonition:: Question 12
    :class: hint
 
-   **True or False:** DriveTransformer achieves 3x throughput over UniAD
-   by using a smaller model with fewer parameters, sacrificing performance
-   on individual driving tasks.
+   In TransFuser, which step is not learned by imitation?
+
+   A. The convolution layers that read the camera image.
+
+   B. The attention blocks between the two branches.
+
+   C. The waypoint predictor.
+
+   D. The two PID controllers that turn the waypoints into steering, throttle
+      and brake.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **D**.
 
-   DriveTransformer's throughput improvement comes from **sharing** attention
-   computations across tasks through unified agent, map, and ego token types --
-   not from reducing model size. DriveTransformer matches or exceeds UniAD on
-   planning metrics (L2 distance) while running approximately 3x faster.
+   The authors write that they use two PID controllers for lateral and
+   longitudinal control, so the last step is not learned. Everything in blue
+   in the figure, the convolution layers, the attention blocks and the
+   waypoint predictor, is trained by imitation.
 
 
 .. admonition:: Question 13
    :class: hint
 
-   **True or False:** In DAgger, the expert is only queried at
-   states that the *expert* would visit, not states that the
-   *learned policy* visits.
+   DriveVLM's vision-language model has an average inference speed of 410 ms
+   on the NVIDIA OrinX chip in the car. At the lecture's 8 m/s, how far does
+   the AV drive during one answer?
+
+   A. 0.4 m
+
+   B. 0.8 m
+
+   C. 3.3 m
+
+   D. 33 m
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **C**.
 
-   DAgger explicitly queries the expert at states that the
-   **learned policy** visits during its rollouts. This is the
-   key distinction from standard behavior cloning. By labeling
-   states on the *policy's* trajectory (not the expert's),
-   DAgger provides supervision at the states where the policy
-   will actually be deployed, closing the distribution shift gap.
+   0.41 × 8 = 3.3 m. The lane keeper steers every 0.05 s, which is 0.4 m
+   (**A**), so a slow model needs a fast partner. 0.8 m (**B**) is Alpamayo 1's
+   99 ms at 8 m/s, on a different chip.
 
 
 .. admonition:: Question 14
    :class: hint
 
-   **True or False:** Chain-of-thought (CoT) supervision in VLA models
-   provides a language-based training signal that can improve generalization
-   to novel scenarios compared to direct waypoint regression.
+   The lecture compares your stack with UniAD, part by part. What does UniAD
+   remove?
+
+   A. The tasks, such as tracking and planning.
+
+   B. The hand-designed message between the tasks.
+
+   C. The need for labels.
+
+   D. The planner.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **True**
+   **B**.
 
-   Language descriptions of scenes encode semantic reasoning (e.g., "the
-   cyclist may merge left") that transfers across geographic domains and
-   lighting conditions far better than pixel-level imitation labels. VLA
-   models trained with CoT supervision have demonstrated better zero-shot
-   generalization than equivalent direct regression models in several
-   benchmarks (DriveVLM, 2024).
+   UniAD keeps your stack's tasks and their names, and puts them in one
+   network. What it removes is the hand-designed message between them: learned
+   queries take its place. It still needs labels for every module, and it has
+   a planner.
 
 
 .. admonition:: Question 15
    :class: hint
 
-   **True or False:** The sim-to-real gap is fully eliminated by using
-   CARLA for end-to-end training because CARLA uses Unreal Engine 4 for
-   photorealistic rendering.
+   NAVSIM scores a plan on real recorded drives, and the planner is queried
+   only in the first frame of each scene. What does that mean for compounding
+   error?
+
+   A. NAVSIM shows compounding error well, because it uses real data.
+
+   B. The plan never moves the AV, so NAVSIM cannot show compounding error.
+
+   C. NAVSIM is a closed-loop benchmark.
+
+   D. NAVSIM needs CARLA.
 
 .. dropdown:: Answer
    :class-container: sd-border-success
 
-   **False**
+   **B**.
 
-   Despite CARLA's high-quality rendering, a significant sim-to-real gap
-   remains. Sensor noise models, material reflectances, dynamic agent
-   behavior distributions, and environmental conditions in CARLA do not
-   perfectly match reality. Neural world models (GAIA-3, Cosmos) trained
-   on real data are emerging as a complementary approach to reduce this gap,
-   but it has not been eliminated.
+   The evaluated policy and the environment do not influence each other, and
+   the planner is queried only in the first frame of each scene. NAVSIM is a
+   middle ground between open loop and closed loop: real sensor data and a
+   score that checks the plan, but the plan never moves the AV. Only a closed
+   loop shows compounding error. Bench2Drive is the one that runs in CARLA.
 
 
 ----
 
 
-Essay Questions (Questions 16-18)
-===================================
+True or False (Questions 16 to 22)
+==================================
 
 .. admonition:: Question 16
    :class: hint
 
-   **Explain the distribution shift problem in behavior cloning
-   and why it causes compounding errors.** Use a concrete
-   autonomous driving example to illustrate the failure mode.
+   True or false: a clone whose steering is within 0.2° of the human driver's
+   on a held-out recorded lap does not need a closed-loop test.
 
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
+.. dropdown:: Answer
    :class-container: sd-border-success
 
-   *Key points to include:*
+   **False.**
 
-   - Behavior cloning trains a policy on expert state-action pairs.
-     During deployment, the policy's own actions take it to states
-     that differ from the expert's trajectory -- these states were
-     never seen during training.
-   - Concrete example: the expert always stays centered in the lane.
-     The BC policy makes a small right-drift error, ending up
-     slightly off-center. This state was never in the training set,
-     so the policy has no reliable recovery action and may drift
-     further right -- eventually leaving the lane.
-   - Errors compound because each mistake produces a new out-of-
-     distribution state, which produces a larger mistake, which
-     produces an even more out-of-distribution state.
-   - The compounding grows as :math:`O(\epsilon T^2)` where
-     :math:`\epsilon` is the per-step error and :math:`T` is
-     the episode length -- making BC fragile for long-horizon tasks.
+   The 0.2° is measured on the human's states only. Once the clone drives, it
+   reaches states the recording does not have, where its error is unknown.
+   The lecture's clone had 0.37° on recorded data and still finished only 5
+   laps of 20.
 
 
 .. admonition:: Question 17
    :class: hint
 
-   **Explain the safety and validation challenges unique to end-to-end driving
-   models** compared to modular systems. What approaches are researchers and
-   engineers pursuing to address these challenges?
+   True or false: in all ten training runs, behavior cloning has the lower
+   open-loop error than DAgger and also the fewer finished laps.
 
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
+.. dropdown:: Answer
    :class-container: sd-border-success
 
-   *Key points to include:*
+   **True.**
 
-   - Modular systems can be validated module-by-module against ISO 26262
-     ASIL requirements with component-level fault trees. E2E models have no
-     such decomposition -- the entire neural network must be validated as a
-     whole, which is computationally intractable for exhaustive testing.
-   - Black-box behavior makes it difficult to determine the root cause of
-     failures, which is essential for constructing safety cases and for
-     regulator approval.
-   - Approaches being pursued include: neural network formal verification
-     (limited to small networks), comprehensive simulation-based scenario
-     testing, runtime safety monitors (Responsibility-Sensitive Safety),
-     concept bottleneck models that enforce interpretable intermediate
-     representations, and VLA chain-of-thought reasoning for post-hoc
-     explainability.
-   - The UNECE GTR (Jan 2026) is moving toward a "safety case" approach
-     that may be more amenable to E2E systems than component-level ASIL
-     certification.
+   Behavior cloning fits the expert's own states best. DAgger's fit also
+   covers the states where the AV drifts, so on the expert's states alone it
+   fits slightly worse (0.47° against 0.37° in run 6) and drives much better
+   (19 laps against 5).
 
 
 .. admonition:: Question 18
    :class: hint
 
-   **Compare rule-based FSM behavior planners with learned
-   (imitation learning) behavior planners.** Under what
-   operational conditions would you choose each approach, and
-   what hybrid strategies exist?
+   True or false: the bound of Ross and Bagnell says behavior cloning's total
+   cost grows linearly with the length of the drive, :math:`T`.
 
-   *(2-4 sentences)*
-
-.. dropdown:: Answer Guidelines
+.. dropdown:: Answer
    :class-container: sd-border-success
 
-   *Key points to include:*
+   **False.**
 
-   - FSM planners are preferred when: interpretability and
-     certifiability are required (regulatory approval), the
-     operational design domain (ODD) is well-defined and narrow,
-     or real-time guarantees with bounded computation are needed.
-   - Learned planners are preferred when: the ODD is broad and
-     difficult to enumerate (urban driving), human-like interaction
-     is required (gap acceptance, courtesy behaviors), or large
-     logged datasets are available to train from.
-   - Hybrid strategies: use an FSM for safety-critical decisions
-     (emergency stop, right-of-way) with a learned planner for
-     non-safety-critical comfort behaviors (smooth merges, yield
-     negotiation). The safety layer can override the learned policy
-     whenever a formal safety condition is violated.
-   - Another hybrid: use a learned policy as a cost function or
-     prior within a model-based planner (e.g., RL-guided lattice
-     search), combining the interpretability of the lattice with
-     the generalization of learned policies.
+   The bound grows quadratically, :math:`O(T^2)`, rather than as
+   :math:`O(T)`: one mistake can take the policy off the expert's states, and
+   from there it may keep making mistakes for the rest of the drive. The
+   lecture also says the bound is a worst case, not a curve our lap must
+   follow.
+
+
+.. admonition:: Question 19
+   :class: hint
+
+   True or false: the CARLA Leaderboard, where TransFuser was tested in closed
+   loop, has since closed.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **True.**
+
+   The lecture says TransFuser was tested closed loop in CARLA, on the CARLA
+   Leaderboard, which has since closed.
+
+
+.. admonition:: Question 20
+   :class: hint
+
+   True or false: GP5, the end-to-end project, is part of the group-project
+   grade and the final report.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **False.**
+
+   GP5 is optional and not graded: no points, no bonus, nothing due and
+   nothing submitted. It does not count toward the group-project grade or the
+   final report.
+
+
+.. admonition:: Question 21
+   :class: hint
+
+   True or false: your final report evaluates your modular pipeline.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **True.**
+
+   Your final report evaluates your modular pipeline, on the three scenarios
+   the instructor provides. End-to-end driving is the optional GP5.
+
+
+.. admonition:: Question 22
+   :class: hint
+
+   True or false: in the lecture's ten training runs, DAgger finishes 19 of
+   20 test laps every time, and always misses the same test lap.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **True.**
+
+   DAgger finishes 19 in every run, and it always misses test lap 8. The
+   expert's own largest offset, 0.75 m (the limit is 1.0 m), is on that lap,
+   so it is the hardest lap. Behavior cloning, in comparison, finishes 2 to 9
+   laps of 20 over the ten runs.
+
+
+----
+
+
+Short Answer (Questions 23 to 25)
+=================================
+
+.. admonition:: Question 23
+   :class: hint
+
+   Explain compounding error with the lecture's numbers: where does the
+   clone's error grow, and why does that make the AV leave the lane?
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   The clone's steering error depends on how far the AV is from the lane
+   center: 0.44° near the center and 2.41° at 0.75 to 1.00 m, 5.5 times
+   more. Near the center the clone steers back too little, so a gust or a turn
+   pushes it a little farther out. Farther out, its error is larger, so it
+   goes farther out again. Each step starts where the last one left the AV, so
+   the errors add up instead of averaging out. The training data cannot help
+   in those states: the expert's true offset has a standard deviation of
+   0.15 m and never passes 0.61 m, while the clone spends 20% of its time
+   beyond 0.61 m. See "Compounding Error" in :doc:`l11_lecture`.
+
+
+.. admonition:: Question 24
+   :class: hint
+
+   DAgger raised the lecture's clone from 5 finished laps to 19. Name what
+   DAgger costs.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   Three costs. First, an expert who can label any state. A program that
+   reads the simulator's state can, but a human must say what they would
+   steer in a state they did not drive, often from a recording. Second, a
+   place for a bad clone to drive: the first DAgger lap is driven by the
+   behavior-cloned clone, which left its lane on 15 of 20 test laps, so such
+   laps belong in a simulator or with a safety driver. Third, a guarantee that
+   holds only under conditions, on the expert's ability to recover and on the
+   class of policies. See "What DAgger costs" in :doc:`l11_lecture`.
+
+
+.. admonition:: Question 25
+   :class: hint
+
+   A team says its end-to-end model beats a modular stack, based on one run of
+   each. Using the lecture's four steps for a fair comparison, say what the
+   team must add, and use the lecture's clone as the example for the point
+   about runs.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   The four steps: the same routes and scenarios, none used in training or
+   tuning; closed loop, with the same metrics (route completion, collisions,
+   red lights); several runs, with the spread reported; and a statement of
+   what each driver was given (sensors, the map, the route, privileged
+   information). One run each does not give a spread. The lecture's clone
+   finished 2 to 9 laps of 20 depending only on the training run, so a single
+   run can make a worse design look better. See "A fair comparison, in four
+   steps" in :doc:`l11_lecture`.

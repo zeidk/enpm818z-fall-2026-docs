@@ -5,10 +5,30 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.39.5: L10 Slide 96 Shows the Controller Node Live (2026-11-20)
+.. dropdown:: v2.40.0: L11 Rewritten for the New Deck, Not Yet Published (2026-11-21)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L11, End-to-End Driving (not yet published):** the lecture, exercises,
+     quiz and references pages are rewritten to follow the new L11 deck:
+     behavior cloning on one lap of Town01, compounding error, DAgger,
+     conditional imitation, end-to-end architectures, VLA models, and open-loop
+     against closed-loop evaluation. The page appears when L11 is published.
+   - **Lecture schedule:** the L11 row lists the new deck's topics.
+
+   .. rubric:: Glossary
+
+   - **L11 terms** follow the new deck: compounding error, conditional
+     imitation, open-loop error, policy and privileged information are new;
+     DriveTransformer and reinforcement learning are gone, and DAgger no longer
+     claims an error that stays constant.
+
+.. dropdown:: v2.39.5: L10 Slide 96 Shows the Controller Node Live (2026-11-20)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

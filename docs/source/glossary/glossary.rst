@@ -3292,54 +3292,66 @@ L11 (not yet published)
 .. glossary::
 
    Behavior Cloning
-      An imitation learning approach where a policy is trained by supervised
-      regression on expert state-action pairs. Simple but suffers from
-      distribution shift and compounding errors that grow as
-      :math:`O(\epsilon T^2)`. L11
+      Learning a driving :term:`Policy` from an expert's recorded examples by
+      supervised learning: each example pairs what the expert saw with what
+      the expert did, and the policy is trained to give the expert's action
+      for the expert's input. It can score well on recorded data and still
+      leave the lane: see :term:`Compounding Error`. L11
+
+   Compounding Error
+      The policy's own mistakes take it to states its training data did not
+      cover, where it makes larger mistakes. It happens only when the policy
+      drives (closed loop): on recorded data the next input is the recorded
+      one, whatever the policy said. L11
+
+   Conditional Imitation
+      Imitation learning with a route command as an input (follow the lane,
+      left, straight, right): the command picks which output head steers, so
+      the policy knows which way to go at a junction. L11
 
    DAgger
-      Dataset Aggregation. An iterative imitation learning algorithm that
-      addresses distribution shift by collecting new training data under
-      the learner's own policy, then re-labeling with the expert's actions.
-      Reduces per-step regret from :math:`O(\epsilon T^2)` (BC) to
-      :math:`O(\epsilon)`. L11
-
-   Distribution Shift
-      The mismatch between the state distribution seen during training and
-      the distribution encountered during deployment. A key failure mode
-      of behavior cloning where small errors compound over time. L11
-
-   DriveTransformer
-      An end-to-end autonomous driving model (ICLR 2025) that uses shared
-      attention across all perception, prediction, and planning tasks,
-      achieving high throughput through task-parallel processing. L11
+      Dataset aggregation (Ross, Gordon and Bagnell, 2011). The policy drives,
+      the expert labels the states the policy reached, and the new pairs are
+      added to all the data so far before the policy is trained again. The
+      paper's bound on mistakes grows linearly with the time horizon, where
+      :term:`Behavior Cloning`'s grows with its square, under conditions on the
+      expert and the class of policies. It needs an expert that can label any
+      state. L11
 
    DriveVLM
-      A Vision-Language-Action model for autonomous driving (Tian et al.,
-      2024) that combines a vision-language reasoning model with a fast
-      driving policy, producing chain-of-thought scene descriptions
-      alongside action outputs. L11
+      A driving system (Tian et al.) with reasoning modules for scene
+      description, scene analysis and hierarchical planning; its dual version
+      pairs them with a classical planner and runs on a production vehicle.
+      L11
 
-   Reinforcement Learning (RL)
-      Learning by optimizing a reward function through trial and error.
-      Used in AV systems for planner fine-tuning (e.g., NVIDIA's
-      end-to-end stack) and scenario-based policy improvement. L11
+   Open-Loop Error
+      A policy's error on recorded inputs: it reads each recorded input and
+      its output is compared with the expert's; its outputs never move the
+      AV. A small open-loop error does not mean the policy can drive. L11
+
+   Policy
+      A rule from what the AV sees to what it does. L11
+
+   Privileged Information
+      A state only the simulator knows, such as the true offset from the lane
+      center. An expert that reads it (like a simulator's autopilot) can label
+      any state; the AV's own policy gets only what its sensors report. L11
 
    UniAD
-      Unified Autonomous Driving (CVPR 2023 Best Paper). A landmark
-      end-to-end architecture that jointly performs perception, prediction,
-      and planning through a unified transformer framework with
-      planning-oriented task design. L11
+      Unified Autonomous Driving (CVPR 2023 Best Paper). One network that runs
+      tracking, mapping, motion, occupancy and planning, trained together
+      toward planning; its tasks pass learned vectors to each other instead
+      of the boxes and paths a modular stack passes. L11
 
    VLA Model
-      Vision-Language-Action model. A multimodal architecture that
-      combines visual perception, language reasoning (chain-of-thought),
-      and action prediction for autonomous driving. Examples: DriveVLM,
-      NVIDIA Alpamayo. L11
+      Vision-language-action model: a vision-language model (one that reads
+      images and text and writes text) trained to output actions too, as text
+      tokens. Examples for driving: DriveVLM, EMMA, LINGO-2, NVIDIA's
+      Alpamayo. L11
 
 .. raw:: html
 
-   <p class="glossary-also">Also used here: <a href="#term-End-to-End-Driving" target="_blank" rel="noopener">End-to-End Driving</a> (L9), <a href="#term-Foundation-Model" target="_blank" rel="noopener">Foundation Model</a> (L4).</p>
+   <p class="glossary-also">Also used here: <a href="#term-Closed-Loop-Evaluation" target="_blank" rel="noopener">Closed-Loop Evaluation</a> (L12), <a href="#term-End-to-End-Driving" target="_blank" rel="noopener">End-to-End Driving</a> (L9), <a href="#term-Foundation-Model" target="_blank" rel="noopener">Foundation Model</a> (L4), <a href="#term-Open-Loop-Evaluation" target="_blank" rel="noopener">Open-Loop Evaluation</a> (L12).</p>
 
 
 .. _g-l12:
