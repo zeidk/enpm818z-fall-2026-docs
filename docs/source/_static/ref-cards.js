@@ -5,7 +5,9 @@
  * tools/build_l10_widgets.py, from the interactive slides): for each source, how the text cites it, "(Werling et
  * al., 2010)", its number on the references page, and its formatted entry. On the lecture's pages, each such citation
  * in the text opens a card beside it with the full reference. Hover shows the card; a click (or Enter) pins it, so its
- * links can be followed; Esc, the close button or a click elsewhere unpins it. The references page itself is skipped:
+ * links can be followed; a second click on the citation (or the close button) unpins it, never Esc or a click
+ * elsewhere (user, 2026-11-21: "to pin and unpin a citation, click on the citation. do not use Esc to unpin"). The
+ * references page itself is skipped:
  * its cards already show every entry. Colors are the theme's, so the card follows light and dark.
  */
 (function () {
@@ -59,7 +61,7 @@
     card.innerHTML = '<div class="rc-h">' + BOOK + '<div><div class="rc-t">Reference [' + r.n + ']</div><div class="rc-k">' +
       escHtml(r.cite[0]) + '</div></div><button class="rc-x" aria-label="close">×</button></div>' +
       '<div class="rc-b">' + r.html + '</div><div class="rc-f">' +
-      (pinned ? "Pinned: the links work. Esc closes." : "Click the citation to pin this card.") + "</div>";
+      (pinned ? "Pinned: the links work. Click the citation again to unpin." : "Click the citation to pin this card.") + "</div>";
     card.querySelector(".rc-x").onclick = function (e) { e.stopPropagation(); unpin(); };
     card.style.display = "block"; place(el); requestAnimationFrame(function () { card.classList.add("show"); }); }
   function hide() { if (pinned) return; card.classList.remove("show"); hideT = setTimeout(function () { if (!pinned) card.style.display = "none"; }, 160); }
@@ -74,7 +76,5 @@
     el.addEventListener("click", function (e) { e.stopPropagation(); if (pinned === el) unpin(); else pin(el); });
     el.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); if (pinned === el) unpin(); else pin(el); } }); });
   card.addEventListener("click", function (e) { e.stopPropagation(); });
-  document.addEventListener("click", function () { if (pinned) unpin(); });
-  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && pinned) unpin(); });
   addEventListener("resize", function () { if (pinned) place(pinned); });
 })();

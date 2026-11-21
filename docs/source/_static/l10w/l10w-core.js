@@ -7,7 +7,7 @@ var C = {ink:"#1E2935", slate:"#34506E", muted:"#5B6B7C", edge:"#B9C4CF", plan:"
   follow:"#B5622A", followFill:"#FBE4CF", live:"#16798A", ok:"#2E7D4F", bad:"#B3261E", grid:"#E3E8EE"};
 var NS = "http://www.w3.org/2000/svg", FONT = "L10W Fira Sans, Fira Sans, Segoe UI, sans-serif";
 var DATA = window.L10W_VARS.DATA, BIB = window.L10W_VARS.BIB, current = null;
-var TAGS = {"icons":"svg","ico-av":"path","ico-car":"path","viewport":"div","world":"div","title":"div","t-help":"button","deck":"div","fb-table":"table","fb-note":"div","clk-t-table":"table","clk-play":"button","clk-t":"span","clk":"svg","ff-b":"span","ff-m":"span","ff":"svg","ff-t1":"span","ff-t2":"span","ff-issue":"div","fsm-flat":"button","fsm-super":"button","fsm":"svg","fsm-note":"div","tk-seq":"button","tk-fb":"button","tk":"svg","tk-note":"div","btroad":"svg","bt-t1":"button","bt-t2":"button","bt-why":"div","bt-conds":"div","bt":"svg","hz-v":"span","hz-t":"table","u-s":"input","u-read":"span","u-bar":"svg","u-t":"table","q-u":"input","q-plot":"svg","q-read":"div","q-list":"ol","s-path":"section","p-s":"input","pathplot":"svg","p-read":"div","sum-path":"table","sc-t":"input","sc-read":"div","sc":"svg","t-d1":"span","t-T":"span","trajplot":"svg","t-read":"div","st-ex":"section","stx-plot":"svg","stx-tags":"ul","stx-v0":"input","stx-v1":"input","stx-t1":"input","stx-ss":"input","stx-t2":"input","stx-draw":"button","stx-reset":"button","stx-warn":"div","st-t":"input","st-plot":"svg","st-read":"div","t-check":"button","funnel":"svg","x-traj-live":"section","tl-gen":"button","tl-play":"button","tl-t":"input","tl-tv":"span","tl-road":"svg","tl-bv":"input","tl-bv-v":"span","tl-bg":"input","tl-bg-v":"span","tl-vd":"input","tl-vd-v":"span","tl-reset":"button","tl-count":"div","x-traj-pick":"section","tl-t2":"input","tl-tv2":"span","tl-road2":"svg","tl-d1":"span","tl-tl":"span","tl-v1":"span","tl-to":"span","tl-read":"div","cap-a":"input","cap-a-v":"span","cap-list":"ol","sp-a":"input","sp-a-v":"span","sp-s":"input","spplot":"svg","sp-read":"div","ak-r":"input","ak-a1":"button","ak-a2":"button","ak":"svg","ak-read":"div","ak-zoom":"svg","tr-d":"input","tr-v":"input","tr-read":"div","v-d":"input","v-a1":"button","v-a2":"button","v-lim":"button","v-v":"input","v-v-v":"span","vplot":"svg","v-read":"div","v-note":"div","lim-k":"span","lim-v":"input","lim-read":"div","lim-note":"div","x-steer-videos":"section","steer-video":"video","x-steer-runs":"section","law-a":"input","law-ld":"span","law-run":"button","law":"svg","law-read":"div","pp-table":"table","pp-fixed":"span","pp-scaled":"span","ppplot":"svg","pp-note":"p","hs-v":"input","hs-read":"div","hs-note":"div","pd-u":"input","pd-read":"div","lag-t":"input","lag":"svg","lag-read":"div","tyA":"marker","tyT":"marker","tyR":"marker","tyClip":"clipPath","air-svg":"svg","air-v":"input","air-read":"div","dr-v":"input","dr-read":"div","pidb":"svg","pb-v":"input","pb-s":"input","pb-d":"input","gh0-run":"span","gh0-t":"input","gh0":"svg","gh0-read":"div","gh0-why":"div","gh0-run2":"span","gh0-t2":"input","gh0-pid":"div","gh0-ped":"p","gh1-t":"input","gh1":"svg","gh1-read":"div","tw-pal":"table","gh2-t":"input","gh2":"svg","gh2-read":"div","tw-i8":"table","tw-ip":"table","s-pid":"section","pid-play":"button","g-kp":"span","g-ki":"span","g-kd":"span","g-cl":"span","pidplot":"svg","k-peak":"span","k-end":"span","k-settle":"span","gh3-t":"input","gh3":"svg","gh3-read":"div","tw-d":"table","cstep":"section","c-run":"button","c-back":"button","c-next":"button","c-loop":"ol","c-stage":"svg","c-cap":"div","cio":"section","io-svg":"svg","io-run":"button","io-back":"button","io-next":"button","io-cap":"span","nav":"div","nav-prev":"button","where":"span","nav-next":"button","nav-home":"button","nav-theme":"button","hotspot":"div","ph-prev":"button","ph-next":"button","ph-turn":"div","corner":"div","c-prev":"button","c-home":"button","c-theme":"button","c-full":"button","c-help":"button","help":"div","bibpop":"div","ink":"canvas","laser":"div","modebadge":"div","pa":"marker","fa":"marker","ffo":"marker","ffb":"marker"}, SVGT = {"tspan":1,"circle":1,"ellipse":1,"text":1,"rect":1,"marker":1,"svg":1,"symbol":1,"path":1,"polygon":1,"stop":1,"defs":1,"image":1,"clipPath":1,"use":1,"polyline":1,"pattern":1,"g":1,"linearGradient":1,"line":1,"mask":1,"foreignObject":1};
+var TAGS = {"icons":"svg","ico-av":"path","ico-car":"path","viewport":"div","world":"div","title":"div","t-help":"button","av-fov-fade":"linearGradient","deck":"div","fb-table":"table","fb-note":"div","clk-t-table":"table","clk-play":"button","clk-t":"span","clk":"svg","ff-b":"span","ff-m":"span","ff":"svg","ff-t1":"span","ff-t2":"span","ff-issue":"div","fsm-flat":"button","fsm-super":"button","fsm":"svg","fsm-note":"div","tk-seq":"button","tk-fb":"button","tk":"svg","tk-note":"div","btroad":"svg","bt-t1":"button","bt-t2":"button","bt-why":"div","bt-conds":"div","bt":"svg","hz-v":"span","hz-t":"table","u-s":"input","u-read":"span","u-bar":"svg","u-t":"table","q-u":"input","q-plot":"svg","q-read":"div","q-list":"ol","s-path":"section","p-s":"input","pathplot":"svg","p-read":"div","sum-path":"table","sc-t":"input","sc-read":"div","sc":"svg","t-d1":"span","t-T":"span","trajplot":"svg","t-read":"div","st-ex":"section","stx-plot":"svg","stx-tags":"ul","stx-v0":"input","stx-v1":"input","stx-t1":"input","stx-ss":"input","stx-t2":"input","stx-draw":"button","stx-reset":"button","stx-warn":"div","st-t":"input","st-plot":"svg","st-read":"div","t-check":"button","funnel":"svg","x-traj-live":"section","tl-gen":"button","tl-play":"button","tl-t":"input","tl-tv":"span","tl-road":"svg","tl-bv":"input","tl-bv-v":"span","tl-bg":"input","tl-bg-v":"span","tl-vd":"input","tl-vd-v":"span","tl-reset":"button","tl-count":"div","x-traj-pick":"section","tl-t2":"input","tl-tv2":"span","tl-road2":"svg","tl-d1":"span","tl-tl":"span","tl-v1":"span","tl-to":"span","tl-read":"div","cap-a":"input","cap-a-v":"span","cap-list":"ol","sp-a":"input","sp-a-v":"span","sp-s":"input","spplot":"svg","sp-read":"div","ak-r":"input","ak-a1":"button","ak-a2":"button","ak":"svg","ak-read":"div","ak-zoom":"svg","tr-d":"input","tr-v":"input","tr-read":"div","v-d":"input","v-a1":"button","v-a2":"button","v-lim":"button","v-v":"input","v-v-v":"span","vplot":"svg","v-read":"div","v-note":"div","lim-k":"span","lim-v":"input","lim-read":"div","lim-note":"div","x-steer-videos":"section","steer-video":"video","x-steer-runs":"section","law-a":"input","law-ld":"span","law-run":"button","law":"svg","law-read":"div","pp-table":"table","pp-fixed":"span","pp-scaled":"span","ppplot":"svg","pp-note":"p","hs-v":"input","hs-read":"div","hs-note":"div","pd-u":"input","pd-read":"div","lag-t":"input","lag":"svg","lag-read":"div","tyre-svg":"svg","tyA":"marker","tyT":"marker","tyR":"marker","tyClip":"clipPath","tyre-play":"button","air-svg":"svg","air-v":"input","air-play":"button","air-read":"div","dr-v":"input","dr-read":"div","pidb":"svg","pb-play":"button","pb-v":"input","pb-s":"input","pb-d":"input","gh0-run":"span","gh0-t":"input","gh0":"svg","gh0-read":"div","gh0-why":"div","gh0-run2":"span","gh0-t2":"input","gh0-pid":"div","gh0-ped":"p","gh1-t":"input","gh1":"svg","gh1-read":"div","tw-pal":"table","gh2-t":"input","gh2":"svg","gh2-read":"div","tw-i8":"table","tw-ip":"table","s-pid":"section","pid-play":"button","g-kp":"span","g-ki":"span","g-kd":"span","g-cl":"span","pidplot":"svg","k-peak":"span","k-end":"span","k-settle":"span","gh3-t":"input","gh3":"svg","gh3-read":"div","tw-d":"table","cstep":"section","c-run":"button","c-back":"button","c-next":"button","c-loop":"ol","c-stage":"svg","c-cap":"div","cio":"section","io-svg":"svg","io-run":"button","io-back":"button","io-next":"button","io-cap":"span","nav":"div","nav-prev":"button","where":"span","nav-next":"button","nav-home":"button","nav-theme":"button","hotspot":"div","jump":"div","jump-in":"input","jump-of":"span","jump-msg":"span","ph-prev":"button","ph-next":"button","ph-turn":"div","corner":"div","c-prev":"button","c-home":"button","c-theme":"button","c-full":"button","c-help":"button","help":"div","bibpop":"div","ink":"canvas","laser":"div","modebadge":"div","pa":"marker","fa":"marker","ffo":"marker","ffb":"marker"}, SVGT = {"ellipse":1,"mask":1,"pattern":1,"foreignObject":1,"linearGradient":1,"text":1,"rect":1,"polygon":1,"path":1,"tspan":1,"stop":1,"clipPath":1,"marker":1,"g":1,"defs":1,"circle":1,"image":1,"symbol":1,"line":1,"polyline":1,"svg":1,"use":1};
 /* an element a widget asks for: the page's, or a detached one when its panel is not on this page */
 function $id(id){ var e = document.getElementById(id); if (e) return e; var t = TAGS[id] || "div";
   e = SVGT[t] ? document.createElementNS(NS, t) : document.createElement(t); e.id = id; return e; }
@@ -63,8 +63,34 @@ function f(x, n){ var s = x.toFixed(n); return s.replace("-", "−"); }
    circle that changes size) passes behind the words instead of through them. Draw the label after the line. */
 function halo(t){ t.style.stroke = "var(--card)"; t.setAttribute("stroke-width", 7);   /* the plot's background, in either theme */
   t.setAttribute("stroke-linejoin", "round"); t.setAttribute("paint-order", "stroke"); return t; }
+/* onReset(el, fn): fn puts the state of the slide that holds el back to what it was when the slide first came on screen.
+   resetScene (the navigation code) runs it once the viewer has left that slide. Frames register what
+   their sliders do not cover: step lists, option buttons, revealed answers, selections, players, counters. */
+var resetFns = [];
+function onReset(el, fn, key){ if (key) resetFns = resetFns.filter(function(r){ return !(r.el === el && r.key === key); });   /* a rebuilt control replaces its old entry */
+  resetFns.push({el:el, fn:fn, key:key}); }
+/* reserveWidth(btn, labels): a button whose label changes ("Run ..." / "Pause") keeps the width of its longest label, so the controls beside it do not move */
+function reserveWidth(btn, labels){ function go_(){ var keep = btn.textContent, w = 0; btn.style.minWidth = "";
+    labels.forEach(function(l){ btn.textContent = l; w = Math.max(w, btn.offsetWidth); });   /* layout px: the camera and the fit scale do not count */
+    btn.textContent = keep; if (w) btn.style.minWidth = Math.ceil(w) + "px"; }
+  go_(); if (document.fonts && document.fonts.ready) document.fonts.ready.then(go_); }
+/* reserveBySlider(inp, els): what a slider rewrites (a readout, a formula) keeps the largest width and height it has at the slider's
+   ends and middle, so the controls and figures beside or below it do not move when the text gets longer or shorter */
+function reserveBySlider(inp, els){ function run(){
+    var list = els.map(function(i){ return typeof i === "string" ? $id(i) : i; }).filter(Boolean), d = inp.value, lo = +inp.min, hi = +inp.max,
+        mw = list.map(function(){ return 0; }), mh = mw.slice();
+    window.L10_RESETTING = true;
+    try {
+      list.forEach(function(e){ e.style.minWidth = ""; e.style.minHeight = ""; if (getComputedStyle(e).display === "inline") e.style.display = "inline-block"; });
+      [lo, (lo + hi) / 2, hi, d].forEach(function(v){ inp.value = v; inp.dispatchEvent(new Event("input", {bubbles:true}));
+        list.forEach(function(e, k){ mw[k] = Math.max(mw[k], e.offsetWidth); mh[k] = Math.max(mh[k], e.offsetHeight); }); });
+      list.forEach(function(e, k){ if (mw[k]) e.style.minWidth = mw[k] + "px"; if (mh[k]) e.style.minHeight = mh[k] + "px"; });
+    } finally { window.L10_RESETTING = false; } }
+  run(); if (document.fonts && document.fonts.ready) document.fonts.ready.then(run); }
 function buttons(host, values, fmt, onPick, initial){
   var bs = [];
+  /* a row of option buttons goes back to its first choice (none when initial is null; a row that is rebuilt later sets host._noReset and registers its own) */
+  if (initial != null && !host._noReset) onReset(host, function(){ bs.forEach(function(x, i){ x.classList.toggle("on", values[i] === initial); }); onPick(initial); }, "buttons");
   values.forEach(function(v){ var b = document.createElement("button"); b.textContent = fmt(v); b.style.marginRight = "8px";
     b.onclick = function(e){ e.stopPropagation(); bs.forEach(function(x){ x.classList.remove("on"); }); b.classList.add("on"); onPick(v); };
     if (v === initial) b.classList.add("on"); host.appendChild(b); bs.push(b); });
@@ -166,7 +192,8 @@ function drawFsm(superstate){
 $id("fsm-flat").onclick = function(e){ e.stopPropagation(); this.classList.add("on"); $id("fsm-super").classList.remove("on"); drawFsm(false); };
 $id("fsm-super").onclick = function(e){ e.stopPropagation(); this.classList.add("on"); $id("fsm-flat").classList.remove("on"); drawFsm(true); };
 drawFsm(false);
-
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ drawFsm($id("fsm-super").classList.contains("on")); });   /* the boxes are measured: redo them with the real font */
+onReset($id("fsm-flat"), function(){ $id("fsm-flat").classList.add("on"); $id("fsm-super").classList.remove("on"); drawFsm(false); });
 var conds = [["A stop line within 30 m", false], ["The car ahead under 6 m/s for 3 s", true], ["The left lane free (no car within 30 m behind or 40 m ahead)", true], ["A car ahead within 40 m", true]];
 var condHost = $id("bt-conds"), chips = [];
 conds.forEach(function(c, i){ var b = document.createElement("div"); b.className = "chip"; b.tabIndex = 0; b.setAttribute("role","button");
@@ -209,6 +236,8 @@ function drawBt(){
 $id("bt-t1").onclick = function(e){ e.stopPropagation(); conds[0][1]=false; conds[1][1]=true; conds[2][1]=true; conds[3][1]=true; drawBt(); };
 $id("bt-t2").onclick = function(e){ e.stopPropagation(); conds[0][1]=false; conds[1][1]=true; conds[2][1]=false; conds[3][1]=true; drawBt(); };
 drawBt();
+onReset(condHost, function(){ [false, true, true, true].forEach(function(v, k){ conds[k][1] = v; }); drawBt();   /* the conditions of the first showing, no tick picked */
+  var w = $id("bt-why"); if (w) w.innerHTML = "Pick a tick."; });
 
 /* ---------- 2: path d(s) ---------- */
 var pathL = 40;
@@ -239,6 +268,8 @@ $id("p-s").oninput = drawPath;
 document.querySelectorAll("#s-path [data-L]").forEach(function(b){ b.onclick = function(e){ e.stopPropagation();
   document.querySelectorAll("#s-path [data-L]").forEach(function(x){ x.classList.remove("on"); }); b.classList.add("on"); pathL = +b.getAttribute("data-L"); drawPath(); }; });
 drawPath();
+onReset($id("s-path"), function(){ pathL = 40;   /* the 40 m length, as first shown */
+  document.querySelectorAll("#s-path [data-L]").forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-L") === "40"); }); drawPath(); });
 
 /* ---------- 3: trajectory d(t) and the 324 candidates ---------- */
 var tD1 = 3.5, tT = 4;
@@ -271,9 +302,11 @@ function drawFunnel(n){
     x += pw; });
 }
 drawFunnel(0);
-$id("t-check").onclick = function(e){ e.stopPropagation(); var t0 = performance.now();
+var funRaf = null;
+$id("t-check").onclick = function(e){ e.stopPropagation(); var t0 = performance.now(); cancelAnimationFrame(funRaf);
   if (reduce){ drawFunnel(1); return; }
-  (function anim(now){ var k = Math.min(1, (now - t0) / 1200); drawFunnel(k); if (k < 1) requestAnimationFrame(anim); })(t0); };
+  (function anim(now){ var k = Math.min(1, (now - t0) / 1200); drawFunnel(k); if (k < 1) funRaf = requestAnimationFrame(anim); })(t0); };
+onReset($id("t-check"), function(){ cancelAnimationFrame(funRaf); drawFunnel(0); });   /* the funnel empty, as first shown */
 
 /* ---------- 4: speed profile (l10common.speed_profile, ported) ---------- */
 var cs = DATA.curve.s, ck = DATA.curve.kappa;
@@ -416,6 +449,9 @@ $id("pid-play").onclick = function(e){ e.stopPropagation(); clearInterval(pidTim
   var n = 1, N = P.t.length; if (reduce){ drawPid(); return; }
   pidTimer = setInterval(function(){ n += 4; drawPid(Math.min(n, N)); if (n >= N) clearInterval(pidTimer); }, 30); };
 drawPid();
+onReset($id("pid-play"), function(){ clearInterval(pidTimer);   /* the run stopped; P alone's gains, no deck run lit, the whole run drawn */
+  g.kp = 0.5; g.ki = 0; g.kd = 0; g.cl = false; gK.kp.set(0.5); gK.ki.set(0); gK.kd.set(0); gK.cl.set(false);
+  document.querySelectorAll("#s-pid [data-pre]").forEach(function(x){ x.classList.remove("on"); }); drawPid(); });
 
 /* ---------- 8: the control step ---------- */
 /* (the control step, #c-run: driven by the frame script in frames/09-carla.html, slide 95) */
@@ -438,6 +474,9 @@ document.querySelectorAll(".l10w .tile").forEach(function(t){
       rows.forEach(function(x){ x.querySelectorAll("td").forEach(function(td){ td.classList.remove("hl"); }); });
       r.querySelectorAll("td").forEach(function(td){ td.classList.add("hl"); });
       $id("fb-note").innerHTML = notes[i]; }); });
+  onReset($id("fb-table"), function(){   /* no row lit, the opening note */
+    document.querySelectorAll("#fb-table td.hl").forEach(function(td){ td.classList.remove("hl"); });   /* (not the later "rows" variable: it holds the clocks' table) */
+    $id("fb-note").innerHTML = notes[0]; });
 
   /* the two clocks over one second; under them, 40 m of road where the AV (8 m/s, the target speed of the speed
      section) moves 0.4 m at each control step and gets a new plan at each planning cycle; the matching table row flashes */
@@ -483,6 +522,10 @@ document.querySelectorAll(".l10w .tile").forEach(function(t){
     (function run(){ var t = Math.min(0.999, (performance.now() - t0) / 10000); show(t); if (t < 0.999) raf = requestAnimationFrame(run); })(); };
   marks.forEach(function(m){ m.n = 1; });
   show(0);
+  onReset($id("clk-play"), function(){   /* stopped, rewound to t = 0, no row flashing */
+    cancelAnimationFrame(raf); raf = null;
+    marks.forEach(function(m){ if (m.tr) m.tr.classList.remove("tick"); m.n = 1; });
+    show(0); });
 })();
 
 
@@ -538,12 +581,21 @@ document.querySelectorAll(".l10w .tile").forEach(function(t){
   $id("tk-seq").onclick = function(e){ e.stopPropagation(); kind = "seq"; this.classList.add("on"); $id("tk-fb").classList.remove("on"); drawTick(); };
   $id("tk-fb").onclick = function(e){ e.stopPropagation(); kind = "fb"; this.classList.add("on"); $id("tk-seq").classList.remove("on"); drawTick(); };
   drawTick();
+  onReset($id("tk-seq"), function(){   /* a Sequence, the three children as first shown */
+    kind = "seq"; kids = ["S","S","R"]; $id("tk-seq").classList.add("on"); $id("tk-fb").classList.remove("on"); drawTick(); });
 
   /* The two ticks of the example, with the numbers behind each answer. */
   $id("bt-t1").addEventListener("click", function(){ $id("bt-why").innerHTML =
-    "<b>Tick 1:</b> no stop line within 30 m; the car ahead drives 5 m/s, 25 m ahead; the left lane is free. The tree runs <b>Change lane</b>."; });
+    "<b>Tick 1:</b> no stop line within 30 m; the car ahead drives 5 m/s, 25 m ahead; the left lane is free."; });
   $id("bt-t2").addEventListener("click", function(){ $id("bt-why").innerHTML =
-    "<b>Tick 2:</b> the same, but a car is now 20 m behind in the left lane, so condition 3 fails. The tree runs <b>Follow</b>."; });
+    "<b>Tick 2:</b> the same, but a car is now 20 m behind in the left lane, so condition 3 fails."; });
+  /* the note keeps the height of its tallest text, so the conditions below it never move (user, 2026-11-21: nothing jumps) */
+  (function(){ var w = $id("bt-why"), T = [w.innerHTML,
+      "<b>Tick 1:</b> no stop line within 30 m; the car ahead drives 5 m/s, 25 m ahead; the left lane is free.",
+      "<b>Tick 2:</b> the same, but a car is now 20 m behind in the left lane, so condition 3 fails."];
+    function run(){ var keep = w.innerHTML, h = 0; w.style.minHeight = ""; T.forEach(function(t){ w.innerHTML = t; h = Math.max(h, w.offsetHeight); });
+      w.innerHTML = keep; if (h) w.style.minHeight = h + "px"; }
+    run(); if (document.fonts && document.fonts.ready) document.fonts.ready.then(run); })();
 })();
 
 
@@ -598,6 +650,7 @@ document.querySelectorAll(".l10w .tile").forEach(function(t){
     document.querySelectorAll("#u-t tr[data-s]").forEach(function(r){ r.querySelectorAll("td").forEach(function(td){ td.classList.toggle("hl", +r.dataset.s === sv); }); });
   }
   uS.oninput = drawU; drawU();
+  reserveBySlider(uS, ["u-read"]);
 
   var qU = $id("q-u");
   function drawQ(){
@@ -868,11 +921,11 @@ function makeTraj(R){
     /* pick one candidate by hand */
     var d1B = buttons($id("tl-d1"), R.SAMPLES.d1, function(v){ return nt(v, 1) + " m"; }, function(v){ pick.d1 = v; draw(); }, pick.d1);
     var tlB = buttons($id("tl-tl"), R.SAMPLES.T, function(v){ return v + " s"; }, function(v){ pick.T_lat = v; draw(); }, pick.T_lat);
-    var toHost = $id("tl-to"), toB;
+    var toHost = $id("tl-to"), toB; toHost._noReset = true;   /* rebuilt on each pick: the reset below rebuilds it too */
     function lonTimes(){ toHost.innerHTML = ""; var ts = pick.stop ? R.SAMPLES.T_stop : R.SAMPLES.T;
       if (ts.indexOf(pick.T_lon) < 0) pick.T_lon = ts[0];
       toB = buttons(toHost, ts, function(v){ return v + " s"; }, function(v){ pick.T_lon = v; draw(); }, pick.T_lon); }
-    buttons($id("tl-v1"), R.SAMPLES.v1.concat(["stop"]), function(v){ return v === "stop" ? "stop" : v + " m/s"; },
+    var v1B = buttons($id("tl-v1"), R.SAMPLES.v1.concat(["stop"]), function(v){ return v === "stop" ? "stop" : v + " m/s"; },
       function(v){ pick.stop = v === "stop"; pick.v1 = pick.stop ? 0 : v; lonTimes(); draw(); }, pick.v1);
     lonTimes();
     /* the scene */
@@ -895,6 +948,13 @@ function makeTraj(R){
       var t0 = performance.now();
       (function step(now){ t = Math.min(7, (now - t0) / 1000); tIn.value = t; tIn2.value = t; draw(); if (t < 7) playT = requestAnimationFrame(step); else playT = null; })(t0); };
     scene();
+    /* leaving either of the two slides: the generating and the playing stop, the pick, the scene and the time go back to the first showing */
+    function resetTl(){
+      if (anim){ cancelAnimationFrame(anim); anim = null; } if (playT){ cancelAnimationFrame(playT); playT = null; }
+      pick = {d1:3.5, T_lat:4, v1:10, T_lon:3, stop:false}; t = 0;
+      bv.value = bv.defaultValue; bg.value = bg.defaultValue; vd.value = vd.defaultValue; tIn.value = 0; tIn2.value = 0;
+      d1B.set(pick.d1); tlB.set(pick.T_lat); v1B.set(pick.v1); lonTimes(); scene(); }
+    hosts.forEach(function(h){ onReset(h, resetTl, "tl"); });
   })();
 
 
@@ -971,6 +1031,7 @@ function makeTraj(R){
   var drawn = false, mo = new MutationObserver(function(){ if (!drawn && sec.classList.contains("active")){ drawn = true; mo.disconnect(); update(true); } });
   mo.observe(sec, {attributes:true, attributeFilter:["class"]});
   update(false);
+  onReset(sec, function(){ drawn = true; mo.disconnect(); update(false); });   /* the curves as drawn at the end of the first visit: no new drawing */
 })();
 
 
@@ -1107,6 +1168,10 @@ function makeTraj(R){
     vb.forEach(function(x){ x.classList.toggle("on", x === b); });
     vid.poster = "interactive/L10_interactive_media/" + b.dataset.vid + ".jpg";
     vid.src = "interactive/L10_interactive_media/" + b.dataset.vid + ".mp4"; vid.play().catch(function(){}); }); });
+  onReset(vid, function(){   /* stopped, at the start, Pure Pursuit chosen */
+    vid.pause(); vb.forEach(function(x){ x.classList.toggle("on", x.dataset.vid === "pure_pursuit"); });
+    if (!/pure_pursuit\.mp4$/.test(vid.getAttribute("src") || "")){ vid.poster = "interactive/L10_interactive_media/pure_pursuit.jpg"; vid.src = "interactive/L10_interactive_media/pure_pursuit.mp4"; }
+    try { vid.currentTime = 0; } catch (err) {} });
 
   /* the lecture's table picks a replayed run; the chosen run's row is lit */
   var rows = document.querySelectorAll("#pp-table tr[data-run]");
@@ -1156,7 +1221,7 @@ function makeTraj(R){
      which sets how fast the air and the road marks go by and the air drag, 0.012 v^2 (the lecture's drag model; 3.07 m/s^2
      at 16 m/s). In the AV's frame: the AV stays, the road and the air move left at v. */
   (function(){
-    var svg = $id("air-svg"), inp = $id("air-v"), seen = false;
+    var svg = $id("air-svg"), inp = $id("air-v"), seen = false, playing = false, abtn = $id("air-play");
     var CX = 300, CY = 140, PX = 44, HB = 50,   /* CY: the top 40 px hold the two labels, clear of the air lines */
     raf = null, t0 = performance.now(), shift = 0, last = t0;
     var OFF = [12, 34, 58, 82];            /* each air line's distance from the AV's center line far ahead, px */
@@ -1183,13 +1248,26 @@ function makeTraj(R){
       tex("air-read", "\\text{air drag} = 0.012 \\times " + nt(v, 1) + "^2 = " + nt(0.012 * v * v, 2) + "\\text{ m/s}^2"); }
     function loop(now){ var dt = Math.min(0.1, (now - last) / 1000); last = now;
       shift += (+inp.value) * PX * 0.35 * dt;   /* 0.35: the air and road slowed down so the eye can follow */
-      draw(); raf = (seen && !reduce) ? requestAnimationFrame(loop) : null; }
-    function kick(){ if (!raf && !reduce){ last = performance.now(); raf = requestAnimationFrame(loop); } }
-    inp.addEventListener("input", function(){ read(); draw(); kick(); });
+      draw(); raf = (playing && seen && !reduce) ? requestAnimationFrame(loop) : null; }
+    function kick(){ if (!raf && playing && !reduce){ last = performance.now(); raf = requestAnimationFrame(loop); } }
+    inp.addEventListener("input", function(){ read(); draw(); });   /* the slider redraws the still picture; only Play moves it */
+    abtn.onclick = function(e){ e.stopPropagation(); playing = !playing; abtn.textContent = playing ? "Pause" : "Play"; if (playing) kick(); else { cancelAnimationFrame(raf); raf = null; } };
+    if (reduce){ abtn.disabled = true; abtn.title = "Motion is reduced on this device"; }
+    reserveWidth(abtn, ["Play", "Pause"]);
+    onReset(abtn, function(){ playing = false; cancelAnimationFrame(raf); raf = null; shift = 0; abtn.textContent = "Play"; draw(); });
     /* it moves only while the drawing is on screen (the slide shown, or the panel scrolled into view in the docs) */
-    if (window.IntersectionObserver) new IntersectionObserver(function(es){ seen = es[0].isIntersecting; if (seen) kick(); }).observe(svg);
+    if (window.IntersectionObserver) new IntersectionObserver(function(es){ seen = es[0].isIntersecting; if (seen && playing) kick(); }).observe(svg);
     else seen = true;
-    read(); draw(); kick();
+    read(); draw();   /* a still first frame: nothing moves until Play is clicked */
+  })();
+  /* slide 74, the tire: its CSS animations stay paused until Play; leaving the slide stops and rewinds them */
+  (function(){ var tsvg = $id("tyre-svg"), tb = $id("tyre-play"); if (!tsvg || !tb) return;
+    var els = tsvg.querySelectorAll(".tyre-spin,.tyre-road,.tyre-flow,.tyre-pulse");
+    tb.onclick = function(e){ e.stopPropagation(); var on = tsvg.classList.toggle("playing"); tb.textContent = on ? "Pause" : "Play"; };
+    if (reduce){ tb.disabled = true; tb.title = "Motion is reduced on this device"; }
+    reserveWidth(tb, ["Play", "Pause"]);
+    onReset(tb, function(){ tsvg.classList.remove("playing"); tb.textContent = "Play";
+      [].forEach.call(els, function(e){ e.style.animation = "none"; void e.getBoundingClientRect(); e.style.animation = ""; if (!e.getAttribute("style")) e.removeAttribute("style"); }); });
   })();
   var dv = $id("dr-v");
   function drag(){ var v = +dv.value, d = 0.15 + 0.012 * v * v, net = 3 - d;
@@ -1197,6 +1275,7 @@ function makeTraj(R){
     tex("dr-read", "\\begin{aligned}\\text{drag} &= 0.15 + 0.012 \\times " + nt(v, 1) + "^2 = " + nt(d, 2) + "\\text{ m/s}^2 \\\\ \\text{most throttle} &= 3 - " + nt(d, 2) + " = " + nt(net, 2) + "\\text{ m/s}^2" +
       (net < 0 ? " \\\\ &\\text{(slows down: past the top speed, 15.4 m/s)}" : "") + "\\end{aligned}"); }
   dv.oninput = drag; drag();
+  reserveBySlider(dv, ["dr-read"]);
 
   /* the ghost-car roads: the lecture's PID runs, positions by the trapezoid rule */
   var RUNS = {P:[0.5, 0, 0, false, "P alone"], PI:[0.5, 0.3, 0, false, "P + I"], PIc:[0.5, 0.3, 0, true, "P + I, clamp"], PIDc:[0.5, 0.3, 0.1, true, "P + I + D, clamp"]};
@@ -1257,6 +1336,16 @@ function makeTraj(R){
   ghIn.oninput = function(){ ghIn2.value = ghIn.value; road("gh0", ghRun, +ghIn.value); };
   ghIn2.oninput = function(){ ghIn.value = ghIn2.value; road("gh0", ghRun, +ghIn.value); };
   road("gh0", ghRun, +ghIn.value);
+  /* the run and the time rewrite the why line and the PID box: each keeps its tallest height over every run and time, so nothing
+     below it moves and the frame never rescales (user, 2026-11-21: nothing jumps) */
+  (function(){ var ids = ["gh0-why", "gh0-read"];   /* and the PID box as a whole, so its pedal line stays right under the formula */
+    function run(){ var els = ids.map(function(i){ return $id(i); }).concat([$id("gh0-pid").parentElement]).filter(Boolean), mh = els.map(function(){ return 0; }), r0 = ghRun, t0 = +ghIn.value;
+      window.L10_RESETTING = true;
+      try { els.forEach(function(e){ e.style.minHeight = ""; });
+        ["P", "PI", "PIc", "PIDc"].forEach(function(r){ for (var t = 0; t <= 10.001; t += 0.25){ road("gh0", r, t); els.forEach(function(e, k){ mh[k] = Math.max(mh[k], e.offsetHeight); }); } });
+        els.forEach(function(e, k){ if (mh[k]) e.style.minHeight = mh[k] + "px"; });
+      } finally { road("gh0", r0, t0); window.L10_RESETTING = false; } }
+    run(); if (document.fonts && document.fonts.ready) document.fonts.ready.then(run); })();
   [["gh1", "P"], ["gh2", "PI"], ["gh3", "PIDc"]].forEach(function(q){ var inp = $id(q[0] + "-t");
     inp.oninput = function(){ road(q[0], q[1], +inp.value); }; road(q[0], q[1], +inp.value); });
 })();
@@ -1447,6 +1536,12 @@ function makeTraj(R){
   }
   for (var k in IN) $id(IN[k]).addEventListener("input", draw);
   draw();
+  /* the signals flow along the wires only after Play; leaving the slide stops them and draws the wires again */
+  var pbtn = $id("pb-play");
+  pbtn.onclick = function(e){ e.stopPropagation(); var on = svg.classList.toggle("playing"); pbtn.textContent = on ? "Pause" : "Play"; };
+  if (reduce){ pbtn.disabled = true; pbtn.title = "Motion is reduced on this device"; }
+  reserveWidth(pbtn, ["Play", "Pause"]);
+  onReset(pbtn, function(){ svg.classList.remove("playing"); pbtn.textContent = "Play"; draw(); });
 })();
 
 
@@ -1573,6 +1668,8 @@ function makeTraj(R){
     li.addEventListener("click", function(e){ if (false) return; e.stopPropagation(); stop(); show(j); });
     li.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " "){ e.preventDefault(); e.stopPropagation(); stop(); show(j); } }); });
   show(0);
+  reserveWidth($id("c-run"), ["Run one control step", "Pause"]);
+  onReset($id("c-run"), function(){ stop(); cancelAnimationFrame(zraf); zs = 0; show(0); });   /* stopped, step 1 lit, not zoomed */
 })();
 
 
@@ -1706,6 +1803,10 @@ function makeTraj(R){
   $id("io-next").onclick = function(e){ e.stopPropagation(); stop(); show(phase < 0 ? 0 : (phase + 1) % 6, true); };
   $id("io-back").onclick = function(e){ e.stopPropagation(); stop(); show(phase <= 0 ? 0 : phase - 1); };
   draw();
+  reserveWidth($id("io-run"), ["Run one control step", "Pause"]);
+  onReset($id("io-run"), function(){   /* the first showing: nothing picked, no step, the clock at zero, the dots gone */
+    stop(); sel = null; phase = -1; steps = 0; dots = [];
+    cap.textContent = "Click a topic or a part to see what feeds what."; draw(); });
 })();
 
 
@@ -1732,6 +1833,7 @@ document.querySelectorAll('.l10w input[type="range"]').forEach(function(inp){
   inp.addEventListener("input", place);
   inp.addEventListener("pointerdown", function(){ w.classList.add("held"); });
   inp.addEventListener("pointerup", function(){ w.classList.remove("held"); });
+  inp.defaultValue = inp.value;   /* the value the slide first shows (a script may have set it): resetScene goes back to it */
   place();
 });
 
@@ -1753,7 +1855,7 @@ document.querySelectorAll('.l10w input[type="range"]').forEach(function(inp){
     Object.keys(after).forEach(function(p){ if (before[p] && before[p].txt !== after[p].txt) changed.push(p); });
     changed.forEach(function(p){ if (!changed.some(function(q){ return q !== p && q.indexOf(p + "/") === 0; })) live[p] = 1; });
     Object.keys(live).forEach(function(p){ if (after[p]) after[p].el.classList.add("live-val"); }); }
-  function watch(ev){ var t = ev.target; if (!t || !t.closest) return;
+  function watch(ev){ var t = ev.target; if (!t || !t.closest || window.L10_RESETTING) return;   /* resetScene's own events are no marks */
     var ctl = t.closest('input[type="range"], button'); if (!ctl) return;
     var fr = ctl.closest(".l10w"); if (!fr) return;
     var before = walk(fr, "", {}); setTimeout(function(){ mark(fr, before); }, 60); }

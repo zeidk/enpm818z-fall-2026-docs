@@ -5,10 +5,32 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.41.1: L11 Adds Alpamayo 2 Edge, Not Yet Published (2026-11-21)
+.. dropdown:: v2.42.0: L10 Interactive Slides Updated (2026-11-21)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10 interactive slides:** the slide number at the top right now reads
+     "Slide N / 108": click it, type a number or press G to jump to a slide.
+     A new slide fades in, with no camera motion. Sliders and buttons go back
+     to their start when you leave a slide, and nothing on a slide moves when
+     you change a control.
+   - **L10 cover:** the University of Maryland seal, and a road scene where
+     the AV's lidar marks red points on the car ahead.
+   - **L10 slides:** the references slides say "References" in their top
+     left corner, and Next Class has its own design.
+   - **L10 lecture:** the interactive panels follow the slides again.
+
+   .. rubric:: Site
+
+   - **Reference cards:** a click on a citation pins its card and a second
+     click closes it; Esc no longer closes a pinned card.
+
+.. dropdown:: v2.41.1: L11 Adds Alpamayo 2 Edge, Not Yet Published (2026-11-21)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

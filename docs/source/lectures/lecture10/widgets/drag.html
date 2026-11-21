@@ -7,7 +7,7 @@
   <div class="box def" style="margin-top:0;font-size:max(var(--fmin), calc(25 * var(--u)))"><span class="bt">Drag</span>
     <ul class="pl" data-pl="53"><li>Everything that slows a moving vehicle when no pedal is pressed.</li><li>Our model gives it as the deceleration it causes, in m/s<sup>2</sup>.</li></ul></div>
     <details class="box win" style="font-size:max(var(--fmin), calc(25 * var(--u)));margin-bottom:0"><summary>Rolling resistance</summary>Each tire flattens a little where it meets the road. It slows the AV by 0.15 m/s<sup>2</sup> at any speed.
-      <svg class="plot" viewBox="0 24 600 248" style="width:100%;height:auto;display:block;margin-top:4px" role="img"
+      <div style="position:relative"><svg id="tyre-svg" class="plot" viewBox="0 24 600 248" style="width:100%;height:auto;display:block;margin-top:4px" role="img"
       aria-label="Animated: one tire seen from the side, turning clockwise as it rolls to the right, while marks on the road slide left at the same speed. Its bottom is flattened where it meets the road, the contact patch, drawn larger than it is. A curved arrow shows the tire turning clockwise, and an arrow at the contact patch points backward: rolling resistance, 0.15 meters per second squared at any speed.">
       <defs>
         <marker id="tyA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#34506E"/></marker>
@@ -33,13 +33,13 @@
       <text x="306" y="160" fill="#16798A" font-family="Fira Sans, sans-serif" font-size="23">flattened where it meets</text>
       <text x="306" y="184" fill="#16798A" font-family="Fira Sans, sans-serif" font-size="23">the road (drawn larger)</text>
       <line x1="302" y1="178" x2="243" y2="197" stroke="#16798A" stroke-width="1.5"/>
-    </svg>
+    </svg><button id="tyre-play" style="position:absolute;left:calc(10 * var(--u));top:calc(10 * var(--u));font-size:max(var(--fmin), calc(20 * var(--u)));padding:3px calc(12 * var(--u))">Play</button></div>
     </details>
   </div>
   <details class="box win" style="font-size:max(var(--fmin), calc(25 * var(--u)));margin:0"><summary>Air drag</summary>The AV pushes the air aside. It slows the AV by \(0.012\,v^2\) m/s<sup>2</sup>, so twice the speed gives four times the air drag.
     <svg id="air-svg" class="plot" viewBox="0 0 600 270" style="width:100%;height:auto;display:block;margin-top:calc(6 * var(--u))" role="img"
       aria-label="Animated, seen from above: the AV drives to the right while the road marks slide left. Blue lines of air flow past it from the front; each bends out around the car, most near its nose, and dots move along them faster at higher speed. A red arrow behind the AV, longer at higher speed, is the air drag, with its value."></svg>
-    <div class="row" style="margin:calc(6 * var(--u)) 0 4px"><span class="lbl">AV speed \(v\)</span><input type="range" id="air-v" min="0" max="16" step="0.1" value="8" style="width:calc(230 * var(--u))" aria-label="the AV's speed"><span class="try">try it</span></div>
+    <div class="row" style="margin:calc(6 * var(--u)) 0 4px"><span class="lbl">AV speed \(v\)</span><input type="range" id="air-v" min="0" max="16" step="0.1" value="8" style="width:calc(230 * var(--u))" aria-label="the AV's speed"><button id="air-play">Play</button><span class="try">try it</span></div>
     <div class="mathout" id="air-read" style="font-size:max(var(--fmin), calc(25 * var(--u)))"></div>
   </details>
 </div>
