@@ -5,10 +5,20 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.42.0: L10 Interactive Slides Updated (2026-11-21)
+.. dropdown:: v2.43.0: L11 Interactive Slides Reworked, Not Yet Published (2026-11-21)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L11 interactive slides (not yet published):** the reworked deck, 100
+     slides. The slide number at the top right reads "Slide N / 100": click
+     it, type a number or press G to jump to a slide.
+
+.. dropdown:: v2.42.0: L10 Interactive Slides Updated (2026-11-21)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 
