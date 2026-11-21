@@ -1212,8 +1212,10 @@ describing the models.
    * - Alpamayo 1 (NVIDIA)
      - named Alpamayo-R1 in its paper: "integrates Chain of Causation
        reasoning with trajectory planning" (NVIDIA, 2025); open weights,
-       "ready for non-commercial use" (NVIDIA, model card). NVIDIA's newer
-       Alpamayo 2 Super has its own model card.
+       "ready for non-commercial use" (NVIDIA, model card). Newer: Alpamayo 2
+       Super, with its own model card, and Alpamayo 2 Edge, "a 2B-parameter
+       reasoning vision-language-action model" with "64 waypoints spanning 0.1
+       through 6.4 seconds" (NVIDIA, model card).
 
 A slow model needs a fast partner
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1237,7 +1239,7 @@ A slow model needs a fast partner
    - **Coarse trajectory:** a rough path, written as numbers. A **fast
      planner** refines it at every control step.
 
-A VLA writes text, and writing is slow. Three numbers show what that costs at
+A VLA writes text, and writing is slow. Four numbers show what that costs at
 our 8 m/s:
 
 1. DriveVLM's vision-language model, on an NVIDIA OrinX chip in the car, has
@@ -1245,10 +1247,13 @@ our 8 m/s:
    0.41 × 8 = 3.3 m per answer.
 2. Alpamayo 1 reports 99 ms on an NVIDIA RTX 6000 Pro Blackwell (NVIDIA,
    2025): 0.099 × 8 = 0.8 m.
-3. Our lane keeper steers every 0.05 s: 0.05 × 8 = 0.4 m.
+3. Alpamayo 2 Edge runs on NVIDIA DRIVE AGX Thor-X, a chip made for cars:
+   "160 ms to 190 ms depending on the amount of reasoning" (Pavone and
+   Ivanovic, 2026): 0.16 × 8 = 1.3 m to 0.19 × 8 = 1.5 m.
+4. Our lane keeper steers every 0.05 s: 0.05 × 8 = 0.4 m.
 
 These times are the authors' reports, on different chips, not a comparison of
-the two models. DriveVLM-Dual hands its trajectory to "a classical planner for
+the models. DriveVLM-Dual hands its trajectory to "a classical planner for
 high-frequency trajectory refinement" (Tian et al., 2025).
 
 

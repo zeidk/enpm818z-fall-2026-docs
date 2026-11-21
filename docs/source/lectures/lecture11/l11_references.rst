@@ -332,6 +332,29 @@ bibliography file.
 
          Cited as NVIDIA's newer model, with its own model card.
 
+      .. grid-item-card:: Alpamayo 2 Edge model card
+         :link: https://huggingface.co/nvidia/Alpamayo2-Edge
+         :class-card: sd-border-secondary
+
+         **NVIDIA**
+
+         *Alpamayo 2 Edge model card.* Web page, accessed 2026-11-21.
+
+         Quoted for its size, 2B parameters, and its 64 waypoints from 0.1 to
+         6.4 seconds.
+
+      .. grid-item-card:: Running AV Reasoning Models Within Onboard Compute and Latency Limits
+         :link: https://developer.nvidia.com/blog/running-av-reasoning-models-within-onboard-compute-and-latency-limits/
+         :class-card: sd-border-secondary
+
+         **Marco Pavone and Boris Ivanovic (NVIDIA, November 10, 2026)**
+
+         *Running AV Reasoning Models Within Onboard Compute and Latency
+         Limits.* NVIDIA Technical Blog, accessed 2026-11-21.
+
+         Quoted for Alpamayo 2 Edge's 160 ms to 190 ms on NVIDIA DRIVE AGX
+         Thor-X.
+
       .. grid-item-card:: LINGO-2
          :link: https://wayve.ai/thinking/lingo-2-driving-with-language/
          :class-card: sd-border-secondary

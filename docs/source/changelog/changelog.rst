@@ -5,10 +5,22 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.41.0: L11 Interactive Slides and Dark Figures, Not Yet Published (2026-11-21)
+.. dropdown:: v2.41.1: L11 Adds Alpamayo 2 Edge, Not Yet Published (2026-11-21)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L11 (not yet published):** the VLA section adds NVIDIA's Alpamayo 2
+     Edge, a 2B-parameter model built to run in the car: its 64 waypoints out
+     to 6.4 s, and 160 ms to 190 ms per answer on DRIVE AGX Thor-X (1.3 m to
+     1.5 m driven at 8 m/s). Two new reference cards; the interactive slides
+     show it too.
+
+.. dropdown:: v2.41.0: L11 Interactive Slides and Dark Figures, Not Yet Published (2026-11-21)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 
