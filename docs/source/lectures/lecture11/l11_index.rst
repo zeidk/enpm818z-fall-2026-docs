@@ -66,6 +66,7 @@ Lecture Materials
   Material cut from class sits in closed "More detail" boxes, right after the
   part it explains. The hands-on commands are in the section "Hands-on: clone
   the expert, then run DAgger".
+- :doc:`l11_interactive`: the slides as a web page you can try.
 - :doc:`l11_exercises`: five take-home exercises, not graded: an open-loop
   score against a closed-loop one, noise and the offset weight, the data of a
   DAgger run, a junction with a tighter left turn, and a slow model with a
@@ -78,6 +79,7 @@ Lecture Materials
    :titlesonly:
 
    l11_lecture
+   l11_interactive
    l11_exercises
    l11_quiz
    l11_references

@@ -45,9 +45,9 @@ Lecture Materials
 -----------------
 
 - :doc:`l10_lecture`: the notes, following the slides shown in class.
-- :doc:`l10_interactive`: the slides as a web page you can try.
   Material cut from class sits in closed "More detail" boxes, right after
   the part it explains.
+- :doc:`l10_interactive`: the slides as a web page you can try.
 - :doc:`l10_exercises`: four take-home exercises, not graded: a speed profile,
   Pure Pursuit by hand, the speed PID at 12 m/s, and a quintic lane change.
 - :doc:`l10_quiz` and :doc:`l10_references`.

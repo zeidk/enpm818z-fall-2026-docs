@@ -28,7 +28,7 @@ Two ways to build a driver
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L11/stack_e2e.png
-   :class: white-figure
+   :class: dark-light themed-L11
    :alt: Two rows of boxes. Top row, titled Modular: the stack you built in GP1 to GP4: Sensors (L2), Perception (L4, L5), Localization (L6), Planning (L7, L8, L9), Control (L10), then Steering, throttle, brake, joined by arrows numbered 1 to 5. Bottom row, titled End-to-end: one network, learned from driving data: Sensors, one long blue box labeled One neural network, then Trajectory or steering, throttle, with the last arrow numbered 6.
    :width: 100%
    :align: center
@@ -140,7 +140,7 @@ Behavior cloning in four steps
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L11/bc_steps.png
-   :class: white-figure
+   :class: dark-light themed-L11
    :alt: Four boxes in a row joined by arrows. Step 1, outlined dark: the expert drives; we record. Step 2: pairs: what the AV saw, steering. Step 3: fit a policy: supervised learning. Step 4, outlined rust: the clone drives alone.
    :width: 100%
    :align: center
@@ -166,7 +166,7 @@ The road: one lap of Town01
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L11/l11_lap.png
-   :class: white-figure
+   :class: dark-light themed-L11
    :alt: A top view of CARLA Town01's lanes as light gray dots, with the outer loop drawn as a thick dark line, a rounded rectangle about 395 m wide and 330 m tall. A dot on the top side tagged S marks the start, with an arrow pointing left: the lap runs counterclockwise. The four corners are tagged 1 to 4, starting top left. A small square on the bottom side near x 325 m is tagged J.
    :width: 70%
    :align: center
@@ -211,7 +211,7 @@ example:
 3. steer back 0.8° for every degree of heading error.
 
 .. figure:: /_static/images/L11/expert_drive.png
-   :class: white-figure
+   :class: dark-light themed-L11
    :alt: The expert's offset in meters against the distance along the lap, 0 to 1443 m. Dashed gray lines at plus and minus 1.0 m mark where a wheel leaves the lane. The dark line stays between about minus 0.5 and plus 0.5 m, with a short swing at each of the four turns, tagged 1 to 4 above the plot.
    :width: 95%
    :align: center
@@ -405,7 +405,7 @@ The clone drives: a wheel leaves the lane after 649 m
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L11/bc_drive.png
-   :class: white-figure
+   :class: dark-light themed-L11
    :alt: Offset from lane center against distance along the lap, 0 to 1443 m. Dashed gray lines at plus and minus 1.0 m, tagged 1. A thin gray line, tagged 2, is the expert on the same test lap and stays within about 0.5 m. A rust line, tagged 3 beside its highest point near 1170 m, is the clone: it swings wider at each turn, drifts down to minus 1.0 m near 649 m, where a dark circle tagged 4 marks the first time a wheel leaves the lane, comes back, then drifts up to about plus 1.0 m near 1100 m and reaches plus 1.3 m at 1170 m.
    :width: 95%
    :align: center
@@ -456,7 +456,7 @@ The clone's error grows with the offset
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L11/error_vs_offset.png
-   :class: white-figure
+   :class: dark-light themed-L11
    :alt: Bar chart. The average size of the clone's steering error, in degrees, for four ranges of how far the AV really is from the lane center: 0.00 to 0.25 m, 0.44; 0.25 to 0.50 m, 1.09; 0.50 to 0.75 m, 1.78; 0.75 to 1.00 m, 2.41.
    :width: 75%
    :align: center
@@ -505,7 +505,7 @@ The clone drives where the expert never was
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L11/coverage.png
-   :class: white-figure
+   :class: dark-light themed-L11
    :alt: Two histograms of the true offset from the lane center, from minus 1.6 to plus 1.6 m. Tagged 1, dark: the expert's recorded lap, a narrow peak around zero, almost all within plus or minus 0.3 m. Tagged 2, rust: the clone's 20 test laps, wide and flat, spread from about minus 1.4 to plus 1.4 m.
    :width: 75%
    :align: center
@@ -536,7 +536,7 @@ Why the offset weight is too small: the noise hides the offset
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L11/bc_fit.png
-   :class: white-figure
+   :class: dark-light themed-L11
    :alt: Scatter plot of steering in degrees against the offset the detector reports, in meters, for the expert's lap on straight road. The gray points, tagged 3, form a flat cloud from about minus 1.2 to plus 1.3 m wide and about 2 degrees tall, with a few points higher up. A dark line, tagged 1, falls steeply from plus 4.5 degrees at minus 1.3 m to minus 4.5 at plus 1.3 m. A rust line, tagged 2, through the middle of the cloud is almost flat.
    :width: 75%
    :align: center
@@ -733,7 +733,7 @@ DAgger: let the clone drive, ask the expert
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L11/dagger_loop.png
-   :class: white-figure
+   :class: dark-light themed-L11
    :alt: A loop of four boxes. A box on the left, Start: behavior cloning, points to Step 1, outlined rust: the newest clone drives one lap. Step 1 points right to Step 2, outlined dark: the expert labels every state it reached. Step 2 points down to Step 3: add the pairs to all the data so far. Step 3 points left to Step 4, outlined green: refit the clone on all the data. Step 4 points up to Step 1.
    :width: 86%
    :align: center
@@ -778,7 +778,7 @@ After five DAgger laps, the data covers the drift
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L11/dagger_coverage.png
-   :class: white-figure
+   :class: dark-light themed-L11
    :alt: Two histograms of the true offset in the labeled data. Tagged 1, dark, small: the expert's lap alone, 3607 steps, narrow around zero. Tagged 2, green, tall: all data after iteration 6, 21642 steps, wider, from about minus 1.1 to plus 1.3 m.
    :width: 66%
    :align: center
@@ -796,8 +796,9 @@ After five DAgger laps, the data covers the drift
    - **Tag 2, green:** all the data after iteration 6, which is the expert's
      lap and five DAgger laps. It is taller and wider.
 
-- Labeled states: 3607 × 6 = 21,642 (each lap is 3607 steps; the clone did not
-  run off the road in the five DAgger laps).
+- Labeled states: 3607 × 6 = 21,642 (each lap is 3607 steps: a wheel left the lane
+  on two of the five DAgger laps, at 112.8 m and 860.4 m, but no lap reached
+  1.6 m off center, where a lap stops early).
 - True offset beyond 0.5 m: 2.0% of the expert's lap, 10.8% of all the data.
   The spread grows from 0.15 m to 0.29 m.
 
@@ -807,7 +808,7 @@ Iteration by iteration: laps finished and the offset weight
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L11/dagger_iters.png
-   :class: white-figure
+   :class: dark-light themed-L11
    :alt: Two line plots against DAgger iteration 1 to 6, iteration 1 being behavior cloning, drawn as a rust dot. Left: test laps finished, of 20: 5 at iteration 1 (tagged 1), 16 at iteration 2, then 19 at iterations 3 to 6; a dashed dark line at 20 is the expert, tagged 2. Right: steer back per meter of offset, in degrees: 0.38 at iteration 1, 1.44 at iteration 2, 1.54 at iteration 3, then slowly down to 1.32 at iteration 6; a dashed dark line at 3.44 is the expert, tagged 2.
    :width: 100%
    :align: center
@@ -836,7 +837,7 @@ Ten training runs: the result is not luck
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L11/seeds.png
-   :class: white-figure
+   :class: dark-light themed-L11
    :alt: Dot plot of test laps finished, of 20, for ten training runs numbered 1 to 10. Rust circles, tagged 1, for behavior cloning: 5, 8, 4, 9, 4, 5, 6, 7, 3 and 2. Green squares, tagged 2, for DAgger after iteration 6: 19 in every run.
    :width: 75%
    :align: center
@@ -956,7 +957,7 @@ suppose the recording held expert drives both ways through J, half going
 straight and half turning left. The camera sees the same junction each time.
 
 .. figure:: /_static/images/L11/junction.png
-   :class: white-figure
+   :class: dark-light themed-L11
    :alt: Top view of junction J in Town01, about 60 m across. The AV, drawn as a car facing right, sits in a gray lane coming from the left. The lane goes straight on to the right, its centerline a solid dark line tagged 1, and also turns left and up, its centerline a dashed dark line tagged 2. A rust arc, tagged 3, starts where the lanes split and curves up between them, through the corner, missing both lanes.
    :width: 60%
    :align: center
@@ -994,7 +995,7 @@ Conditional imitation: the route's command picks the head
 The fix is to tell the network which way to go.
 
 .. figure:: /_static/images/L11/cil_branches.png
-   :class: white-figure
+   :class: dark-light themed-L11
    :alt: A diagram. Camera image and Speed feed a blue box, Shared layers. From it, four blue boxes: Follow lane head, Left head, Straight head, Right head. Only the Straight head connects to the output box, Steering, throttle, brake. A dashed arrow from a box below, Command from the route: Straight, points up to that connection, labeled picks the Straight head.
    :width: 84%
    :align: center
@@ -1065,7 +1066,7 @@ TransFuser: camera and LiDAR fused by attention, then waypoints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L11/transfuser.png
-   :class: white-figure
+   :class: dark-light themed-L11
    :alt: A diagram. Camera image feeds a row of four blue conv boxes; LiDAR, seen from above, feeds a second row of four conv boxes. Between each pair, a blue attn box exchanges with both rows. Both rows end in a blue Waypoint predictor box, which sends waypoints to a gray box, Two PID controllers, which outputs steering, throttle, brake. A note says learned (blue): trained by imitation.
    :width: 100%
    :align: center
@@ -1099,7 +1100,7 @@ UniAD: the stack's modules, inside one network
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L11/uniad.png
-   :class: white-figure
+   :class: dark-light themed-L11
    :alt: A diagram. Several cameras feed a blue box, Bird's-eye features, then a row of blue boxes joined by blue arrows: Track (L5), Map, Motion (L8), Occupancy (L5), Planner (L9), then the output AV's future waypoints. A brace above the five modules reads one network: every part trained together, toward planning.
    :width: 100%
    :align: center
@@ -1218,7 +1219,7 @@ A slow model needs a fast partner
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: /_static/images/L11/vla.png
-   :class: white-figure
+   :class: dark-light themed-L11
    :alt: A diagram. Camera images and Text: route, question feed a blue box, Vision-language model, marked slow: about 0.4 s per answer. It writes two outputs: Text out: what it sees and plans; and Coarse trajectory, written as numbers, which goes to a box Fast planner refines it, marked fast: every control step.
    :width: 90%
    :align: center
@@ -1303,7 +1304,7 @@ Our lap: the better open-loop score loses in closed loop
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L11/open_closed.png
-   :class: white-figure
+   :class: dark-light themed-L11
    :alt: Two bar charts. Left, open loop on the expert's recorded lap, mean clone minus expert steering in degrees: bar 1, rust, 0.37; bar 2, green, 0.47. Right, closed loop, test laps finished of 20: bar 1, rust, 5; bar 2, green, 19; bar 3, dark, 20.
    :width: 100%
    :align: center

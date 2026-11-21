@@ -5,10 +5,26 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.40.0: L11 Rewritten for the New Deck, Not Yet Published (2026-11-21)
+.. dropdown:: v2.41.0: L11 Interactive Slides and Dark Figures, Not Yet Published (2026-11-21)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L11 interactive slides (not yet published):** the slides as a web
+     page you can try: drive the clone on any of the 20 test laps, change the
+     detector noise and watch the fitted offset weight, step through DAgger.
+     The L11 page links them once L11 is published.
+   - **L11 figures** have a dark version that the dark theme shows.
+   - **L11 lecture:** the DAgger data line now says a wheel left the lane on
+     two of the five DAgger laps, but no lap reached the 1.6 m stop.
+   - **L10 overview:** the interactive slides line no longer splits the
+     sentence about the "More detail" boxes from the lecture notes line.
+
+.. dropdown:: v2.40.0: L11 Rewritten for the New Deck, Not Yet Published (2026-11-21)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 
