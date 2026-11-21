@@ -5,10 +5,22 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.39.4: L10 Section View, Slide Ranges and Numbers (2026-11-20)
+.. dropdown:: v2.39.5: L10 Slide 96 Shows the Controller Node Live (2026-11-20)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10 interactive slides, slide 96:** the controller node's diagram is
+     live. Click a part or a topic to see which inputs feed the steering and
+     which feed the speed, or run one control step to watch the lock step:
+     messages in, Pure Pursuit, the PID, and the command out to the node
+     that steps CARLA.
+
+.. dropdown:: v2.39.4: L10 Section View, Slide Ranges and Numbers (2026-11-20)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

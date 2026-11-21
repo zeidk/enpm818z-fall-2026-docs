@@ -7,7 +7,7 @@ var C = {ink:"#1E2935", slate:"#34506E", muted:"#5B6B7C", edge:"#B9C4CF", plan:"
   follow:"#B5622A", followFill:"#FBE4CF", live:"#16798A", ok:"#2E7D4F", bad:"#B3261E", grid:"#E3E8EE"};
 var NS = "http://www.w3.org/2000/svg", FONT = "L10W Fira Sans, Fira Sans, Segoe UI, sans-serif";
 var DATA = window.L10W_VARS.DATA, BIB = window.L10W_VARS.BIB, current = null;
-var TAGS = {"icons":"svg","ico-av":"path","ico-car":"path","viewport":"div","world":"div","title":"div","t-help":"button","deck":"div","fb-table":"table","fb-note":"div","clk-t-table":"table","clk-play":"button","clk-t":"span","clk":"svg","ff-b":"span","ff-m":"span","ff":"svg","ff-t1":"span","ff-t2":"span","ff-issue":"div","fsm-flat":"button","fsm-super":"button","fsm":"svg","fsm-note":"div","tk-seq":"button","tk-fb":"button","tk":"svg","tk-note":"div","btroad":"svg","bt-t1":"button","bt-t2":"button","bt-why":"div","bt-conds":"div","bt":"svg","hz-v":"span","hz-t":"table","u-s":"input","u-read":"span","u-bar":"svg","u-t":"table","q-u":"input","q-plot":"svg","q-read":"div","q-list":"ol","s-path":"section","p-s":"input","pathplot":"svg","p-read":"div","sum-path":"table","sc-t":"input","sc-read":"div","sc":"svg","t-d1":"span","t-T":"span","trajplot":"svg","t-read":"div","st-ex":"section","stx-plot":"svg","stx-tags":"ul","stx-v0":"input","stx-v1":"input","stx-t1":"input","stx-ss":"input","stx-t2":"input","stx-draw":"button","stx-reset":"button","stx-warn":"div","st-t":"input","st-plot":"svg","st-read":"div","t-check":"button","funnel":"svg","x-traj-live":"section","tl-gen":"button","tl-play":"button","tl-t":"input","tl-tv":"span","tl-road":"svg","tl-bv":"input","tl-bv-v":"span","tl-bg":"input","tl-bg-v":"span","tl-vd":"input","tl-vd-v":"span","tl-reset":"button","tl-count":"div","x-traj-pick":"section","tl-t2":"input","tl-tv2":"span","tl-road2":"svg","tl-d1":"span","tl-tl":"span","tl-v1":"span","tl-to":"span","tl-read":"div","cap-a":"input","cap-a-v":"span","cap-list":"ol","sp-a":"input","sp-a-v":"span","sp-s":"input","spplot":"svg","sp-read":"div","ak-r":"input","ak-a1":"button","ak-a2":"button","ak":"svg","ak-read":"div","ak-zoom":"svg","tr-d":"input","tr-v":"input","tr-read":"div","v-d":"input","v-a1":"button","v-a2":"button","v-lim":"button","v-v":"input","v-v-v":"span","vplot":"svg","v-read":"div","v-note":"div","lim-k":"span","lim-v":"input","lim-read":"div","lim-note":"div","x-steer-videos":"section","steer-video":"video","x-steer-runs":"section","law-a":"input","law-ld":"span","law-run":"button","law":"svg","law-read":"div","pp-table":"table","pp-fixed":"span","pp-scaled":"span","ppplot":"svg","pp-note":"p","hs-v":"input","hs-read":"div","hs-note":"div","pd-u":"input","pd-read":"div","lag-t":"input","lag":"svg","lag-read":"div","tyA":"marker","tyT":"marker","tyR":"marker","tyClip":"clipPath","air-svg":"svg","air-v":"input","air-read":"div","dr-v":"input","dr-read":"div","pidb":"svg","pb-v":"input","pb-s":"input","pb-d":"input","gh0-run":"span","gh0-t":"input","gh0":"svg","gh0-read":"div","gh0-why":"div","gh0-run2":"span","gh0-t2":"input","gh0-pid":"div","gh0-ped":"p","gh1-t":"input","gh1":"svg","gh1-read":"div","tw-pal":"table","gh2-t":"input","gh2":"svg","gh2-read":"div","tw-i8":"table","tw-ip":"table","s-pid":"section","pid-play":"button","g-kp":"span","g-ki":"span","g-kd":"span","g-cl":"span","pidplot":"svg","k-peak":"span","k-end":"span","k-settle":"span","gh3-t":"input","gh3":"svg","gh3-read":"div","tw-d":"table","cstep":"section","c-run":"button","c-back":"button","c-next":"button","c-loop":"ol","c-stage":"svg","c-cap":"div","nav":"div","nav-prev":"button","where":"span","nav-next":"button","nav-home":"button","nav-theme":"button","hotspot":"div","ph-prev":"button","ph-next":"button","ph-turn":"div","corner":"div","c-prev":"button","c-home":"button","c-theme":"button","c-full":"button","c-help":"button","help":"div","bibpop":"div","ink":"canvas","laser":"div","modebadge":"div","pa":"marker","fa":"marker","ffo":"marker","ffb":"marker"}, SVGT = {"path":1,"marker":1,"polygon":1,"image":1,"stop":1,"ellipse":1,"rect":1,"polyline":1,"pattern":1,"svg":1,"symbol":1,"line":1,"tspan":1,"circle":1,"clipPath":1,"linearGradient":1,"defs":1,"foreignObject":1,"text":1,"g":1,"use":1,"mask":1};
+var TAGS = {"icons":"svg","ico-av":"path","ico-car":"path","viewport":"div","world":"div","title":"div","t-help":"button","deck":"div","fb-table":"table","fb-note":"div","clk-t-table":"table","clk-play":"button","clk-t":"span","clk":"svg","ff-b":"span","ff-m":"span","ff":"svg","ff-t1":"span","ff-t2":"span","ff-issue":"div","fsm-flat":"button","fsm-super":"button","fsm":"svg","fsm-note":"div","tk-seq":"button","tk-fb":"button","tk":"svg","tk-note":"div","btroad":"svg","bt-t1":"button","bt-t2":"button","bt-why":"div","bt-conds":"div","bt":"svg","hz-v":"span","hz-t":"table","u-s":"input","u-read":"span","u-bar":"svg","u-t":"table","q-u":"input","q-plot":"svg","q-read":"div","q-list":"ol","s-path":"section","p-s":"input","pathplot":"svg","p-read":"div","sum-path":"table","sc-t":"input","sc-read":"div","sc":"svg","t-d1":"span","t-T":"span","trajplot":"svg","t-read":"div","st-ex":"section","stx-plot":"svg","stx-tags":"ul","stx-v0":"input","stx-v1":"input","stx-t1":"input","stx-ss":"input","stx-t2":"input","stx-draw":"button","stx-reset":"button","stx-warn":"div","st-t":"input","st-plot":"svg","st-read":"div","t-check":"button","funnel":"svg","x-traj-live":"section","tl-gen":"button","tl-play":"button","tl-t":"input","tl-tv":"span","tl-road":"svg","tl-bv":"input","tl-bv-v":"span","tl-bg":"input","tl-bg-v":"span","tl-vd":"input","tl-vd-v":"span","tl-reset":"button","tl-count":"div","x-traj-pick":"section","tl-t2":"input","tl-tv2":"span","tl-road2":"svg","tl-d1":"span","tl-tl":"span","tl-v1":"span","tl-to":"span","tl-read":"div","cap-a":"input","cap-a-v":"span","cap-list":"ol","sp-a":"input","sp-a-v":"span","sp-s":"input","spplot":"svg","sp-read":"div","ak-r":"input","ak-a1":"button","ak-a2":"button","ak":"svg","ak-read":"div","ak-zoom":"svg","tr-d":"input","tr-v":"input","tr-read":"div","v-d":"input","v-a1":"button","v-a2":"button","v-lim":"button","v-v":"input","v-v-v":"span","vplot":"svg","v-read":"div","v-note":"div","lim-k":"span","lim-v":"input","lim-read":"div","lim-note":"div","x-steer-videos":"section","steer-video":"video","x-steer-runs":"section","law-a":"input","law-ld":"span","law-run":"button","law":"svg","law-read":"div","pp-table":"table","pp-fixed":"span","pp-scaled":"span","ppplot":"svg","pp-note":"p","hs-v":"input","hs-read":"div","hs-note":"div","pd-u":"input","pd-read":"div","lag-t":"input","lag":"svg","lag-read":"div","tyA":"marker","tyT":"marker","tyR":"marker","tyClip":"clipPath","air-svg":"svg","air-v":"input","air-read":"div","dr-v":"input","dr-read":"div","pidb":"svg","pb-v":"input","pb-s":"input","pb-d":"input","gh0-run":"span","gh0-t":"input","gh0":"svg","gh0-read":"div","gh0-why":"div","gh0-run2":"span","gh0-t2":"input","gh0-pid":"div","gh0-ped":"p","gh1-t":"input","gh1":"svg","gh1-read":"div","tw-pal":"table","gh2-t":"input","gh2":"svg","gh2-read":"div","tw-i8":"table","tw-ip":"table","s-pid":"section","pid-play":"button","g-kp":"span","g-ki":"span","g-kd":"span","g-cl":"span","pidplot":"svg","k-peak":"span","k-end":"span","k-settle":"span","gh3-t":"input","gh3":"svg","gh3-read":"div","tw-d":"table","cstep":"section","c-run":"button","c-back":"button","c-next":"button","c-loop":"ol","c-stage":"svg","c-cap":"div","cio":"section","io-svg":"svg","io-run":"button","io-back":"button","io-next":"button","io-cap":"span","nav":"div","nav-prev":"button","where":"span","nav-next":"button","nav-home":"button","nav-theme":"button","hotspot":"div","ph-prev":"button","ph-next":"button","ph-turn":"div","corner":"div","c-prev":"button","c-home":"button","c-theme":"button","c-full":"button","c-help":"button","help":"div","bibpop":"div","ink":"canvas","laser":"div","modebadge":"div","pa":"marker","fa":"marker","ffo":"marker","ffb":"marker"}, SVGT = {"tspan":1,"circle":1,"ellipse":1,"text":1,"rect":1,"marker":1,"svg":1,"symbol":1,"path":1,"polygon":1,"stop":1,"defs":1,"image":1,"clipPath":1,"use":1,"polyline":1,"pattern":1,"g":1,"linearGradient":1,"line":1,"mask":1,"foreignObject":1};
 /* an element a widget asks for: the page's, or a detached one when its panel is not on this page */
 function $id(id){ var e = document.getElementById(id); if (e) return e; var t = TAGS[id] || "div";
   e = SVGT[t] ? document.createElementNS(NS, t) : document.createElement(t); e.id = id; return e; }
@@ -1573,6 +1573,139 @@ function makeTraj(R){
     li.addEventListener("click", function(e){ if (false) return; e.stopPropagation(); stop(); show(j); });
     li.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " "){ e.preventDefault(); e.stopPropagation(); stop(); show(j); } }); });
   show(0);
+})();
+
+
+/* ---------- Slide 96: the controller node's inputs and output, live. The wiring is the course node's
+   (enpm818z-fall-2026-carla-ros, gp4_starter/ads_pipeline/controller_node.py, given code): Pure Pursuit uses the path, the
+   pose moved rear_offset (1.4 m) back to the rear axle, a heading the gyro's turn rate turns (smooth_heading), and the
+   speed (lookahead = max(lookahead_distance, lookahead_time x v)); the PID uses the target speed, the speedometer, and the
+   path (curve_speed lowers the target before a sharp curve). Each /behavior/target_speed starts one step and gets one
+   /control/vehicle_cmd stamped with its stamp, which the node that steps CARLA waits for. The numbers in steps 4 to 6 are
+   slide 95's moment: delta = 0.211 rad, steer -0.173, 5.22 m/s, the target from the lecture's speed profile at 82.7 m. ---------- */
+(function(){
+  var svg = $id("io-svg"), cap = $id("io-cap"), frame = $id("cio");
+  var BOXW = 380, NX = 440, NW = 300, PX = 516, PW = 200, OX = 800, OW = 356;
+  var IN = [
+    {k:"path", t:"/planning/path", b:["the route planner\u2019s lane path"], y:2, h:56},
+    {k:"odom", t:"/localization/odom", b:["the pose; the node moves it 1.4 m", "back to the rear axle"], y:64, h:82},
+    {k:"imu", t:"/carla/imu/data", b:["the turn rate, for the heading"], y:152, h:56},
+    {k:"spd", t:"/carla/speedometer", b:["the speed the PID uses"], y:214, h:56},
+    {k:"tgt", t:"/behavior/target_speed", b:["the speed to hold"], y:276, h:56}];
+  var PART = {steer:{y:70, h:92, t:"steering", s:"Pure Pursuit"}, speed:{y:184, h:92, t:"speed", s:"PID"}};
+  var USE = {steer:{path:"the lookahead point lies on the path", odom:"the pose, moved 1.4 m back to the rear axle",
+                    imu:"the turn rate turns the heading it steers by", spd:"a longer lookahead at speed"},
+             speed:{tgt:"the speed to hold", spd:"the speed it compares with the target", path:"the target drops before a sharp curve"}};
+  /* what a click on each part or topic says (two lines at most: the caption has a fixed height, so nothing moves) */
+  var CAPK = {
+    steer:"Pure Pursuit uses the path, the pose (at the rear axle), the turn rate (for the heading) and the speed (a longer lookahead at speed).",
+    speed:"The PID uses the target speed, the measured speed it compares with the target, and the path (the target drops before a sharp curve).",
+    path:"/planning/path feeds both parts: Pure Pursuit finds its lookahead point on it; the PID slows the AV before a sharp curve.",
+    odom:"/localization/odom feeds the steering: Pure Pursuit uses the pose, moved 1.4 m back to the rear axle.",
+    imu:"/carla/imu/data feeds the steering: the turn rate keeps the heading smooth when the pose\u2019s heading jumps.",
+    spd:"/carla/speedometer feeds both parts: the PID compares it with the target; Pure Pursuit looks farther ahead at speed.",
+    tgt:"/behavior/target_speed feeds the speed: the PID drives toward it, lowered before a sharp curve. Each one starts a control step."};
+  var vref = null;
+  try { var prof = speedProfile(2.0), jj = 0; while (jj < cs.length - 1 && cs[jj] < 82.7) jj++; vref = prof[jj]; } catch (e) {}
+  var sel = null, phase = -1, steps = 0, timer = null, raf = null, dots = [];
+  function cy(i){ return IN[i].y + IN[i].h / 2; }
+  function partOf(k){ return k === "steer" || k === "speed"; }
+  function feeds(part, k){ return !!USE[part][k]; }
+  /* what is lit: a part (its inputs), an input (the parts it feeds), or a step of the run */
+  function litIn(k){ if (sel == null) return phase === 1 || (phase === 2 && k === "tgt") || (phase === 3 && feeds("steer", k)) || (phase === 4 && feeds("speed", k));
+    return partOf(sel) ? feeds(sel, k) : sel === k; }
+  function litPart(p){ if (sel == null) return (phase === 3 && p === "steer") || (phase === 4 && p === "speed");
+    return partOf(sel) ? sel === p : feeds(p, sel); }
+  function dimmed(){ return sel != null || phase >= 2; }
+  function arrow(x1, y1, x2, y2, col, w, op){ var a = Math.atan2(y2 - y1, x2 - x1), h = 12;
+    el(svg, "line", {x1:x1, y1:y1, x2:x2 - h * 0.8 * Math.cos(a), y2:y2 - h * 0.8 * Math.sin(a), stroke:col, "stroke-width":w, opacity:op});
+    el(svg, "path", {d:"M" + x2 + "," + y2 + " L" + (x2 - h * Math.cos(a - 0.42)) + "," + (y2 - h * Math.sin(a - 0.42)) + " L" + (x2 - h * Math.cos(a + 0.42)) + "," + (y2 - h * Math.sin(a + 0.42)) + "z", fill:col, opacity:op}); }
+  function live(t){ t.setAttribute("style", "fill:var(--livetext)"); t.setAttribute("font-weight", 700); return t; }
+  function hit(g, key, label){ g.dataset.key = key; g.setAttribute("tabindex", "0"); g.setAttribute("role", "button"); g.setAttribute("aria-label", label); g.style.cursor = "pointer";
+    g.addEventListener("click", function(e){ if (false) return; e.stopPropagation(); pick(key); });
+    g.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " "){ e.preventDefault(); e.stopPropagation(); pick(key); } }); }
+  function draw(){
+    var fk = svg.contains(document.activeElement) && document.activeElement.dataset ? document.activeElement.dataset.key : null;
+    svg.innerHTML = ""; var dim = dimmed();
+    /* the node */
+    el(svg, "rect", {x:NX, y:2, width:NW, height:330, rx:10, fill:"#EEF3EE", stroke:C.ok, "stroke-width":3});
+    txt(svg, NX + NW / 2, 36, "controller_node", 24, C.ink, "middle", {"font-weight":700});
+    /* the wires inside the node, from each input to the parts it feeds, when lit */
+    ["steer", "speed"].forEach(function(p){ if (!litPart(p)) return; var P = PART[p];
+      IN.forEach(function(r, i){ if (!feeds(p, r.k) || !litIn(r.k)) return;
+        var y2 = P.y + 18 + (P.h - 36) * ["path", "odom", "imu", "spd", "tgt"].indexOf(r.k) / 4;
+        el(svg, "path", {d:"M" + NX + "," + cy(i) + " C" + (NX + 44) + "," + cy(i) + " " + (PX - 40) + "," + y2 + " " + (PX - 2) + "," + y2, fill:"none", stroke:C.follow, "stroke-width":3}); }); });
+    /* the two parts */
+    ["steer", "speed"].forEach(function(p){ var P = PART[p], on = litPart(p), g = el(svg, "g", {});
+      el(g, "rect", {x:PX, y:P.y, width:PW, height:P.h, rx:8, fill:on ? "#FBE4CF" : "#fff", stroke:on ? C.follow : "#B9C4CF", "stroke-width":on ? 3 : 2, opacity:dim && !on ? 0.45 : 1});
+      txt(g, PX + PW / 2, P.y + 32, P.t, 22, C.ink, "middle", {"font-weight":700});
+      txt(g, PX + PW / 2, P.y + 60, P.s, 22, C.ink, "middle");
+      if (p === "steer" && phase >= 3 && sel == null) live(txt(g, PX + PW / 2, P.y + 82, "\u03b4 = 0.211 rad, right", 21, C.ink, "middle"));
+      if (p === "speed" && phase >= 4 && sel == null && vref != null) live(txt(g, PX + PW / 2, P.y + 82, f(vref, 2) + " vs 5.22 m/s", 21, C.ink, "middle"));
+      hit(g, p, P.t + ", " + P.s + ": show its inputs"); });
+    if (phase >= 3 && sel == null) txt(svg, NX + NW / 2, 316, "numbers: slide 95\u2019s moment", 20, C.muted, "middle");
+    /* the five inputs */
+    IN.forEach(function(r, i){ var on = litIn(r.k), g = el(svg, "g", {}), op = dim && !on ? 0.4 : 1;
+      el(g, "rect", {x:2, y:r.y, width:BOXW, height:r.h, rx:6, fill:on && dim ? "#FBE4CF" : "#F2F4F6", stroke:on && dim ? C.follow : "#B9C4CF", "stroke-width":on && dim ? 3 : 1.5, opacity:op});
+      txt(g, 14, r.y + 25, r.t, 21, C.ink, "start", {"font-family":"Fira Mono, monospace", opacity:op});
+      r.b.forEach(function(b, j){ txt(g, 14, r.y + 50 + 25 * j, b, 21, C.ink, "start", {opacity:op}); });
+      arrow(BOXW + 4, cy(i), NX - 2, cy(i), on && dim ? C.follow : C.muted, on && dim ? 3 : 2, op);
+      hit(g, r.k, r.t + ": show which part uses it"); });
+    /* the output and the node that steps CARLA */
+    var outOn = phase === 5 && sel == null, oy = 22, oh = 124;
+    arrow(NX + NW + 2, oy + oh / 2, OX - 2, oy + oh / 2, outOn ? C.follow : C.muted, outOn ? 3 : 2, dim && !outOn ? 0.4 : 1);
+    el(svg, "rect", {x:OX, y:oy, width:OW, height:oh, rx:6, fill:outOn ? "#FBE4CF" : "#F2F4F6", stroke:outOn ? C.follow : "#B9C4CF", "stroke-width":outOn ? 3 : 1.5, opacity:dim && !outOn ? 0.4 : 1});
+    txt(svg, OX + 12, oy + 28, "/control/vehicle_cmd", 21, C.ink, "start", {"font-family":"Fira Mono, monospace"});
+    txt(svg, OX + 12, oy + 55, "steer, \u22121 to 1, positive left;", 21, C.ink, "start");
+    txt(svg, OX + 12, oy + 81, "throttle; brake", 21, C.ink, "start");
+    if (phase === 5 && sel == null) live(txt(svg, OX + 12, oy + 108, "steer \u22120.173, sent", 21, C.ink, "start"));
+    var sy = 196, sh = 120, stepOn = (phase === 0 || phase === 5) && sel == null;
+    arrow(OX + OW / 2, oy + oh + 2, OX + OW / 2, sy - 2, outOn ? C.follow : C.muted, outOn ? 3 : 2, dim && !outOn ? 0.4 : 1);
+    el(svg, "rect", {x:OX, y:sy, width:OW, height:sh, rx:8, fill:stepOn ? "#D6EEF1" : "#fff", stroke:stepOn ? C.live : "#B9C4CF", "stroke-width":stepOn ? 3 : 2, opacity:dim && !stepOn ? 0.45 : 1});
+    txt(svg, OX + OW / 2, sy + 32, "the node that steps CARLA", 21, C.ink, "middle", {"font-weight":700});
+    txt(svg, OX + OW / 2, sy + 60, "one step: 0.05 s, then it waits", 21, C.ink, "middle");
+    var clock = txt(svg, OX + OW / 2, sy + 92, "t = " + (steps * 0.05).toFixed(2) + " s, step " + steps, 21, C.ink, "middle");
+    if (steps > 0) live(clock);
+    dots.forEach(function(d){ el(svg, "circle", {cx:d.x, cy:d.y, r:9, fill:C.follow, stroke:"#fff", "stroke-width":2}); });
+    if (fk){ var g = svg.querySelector('[data-key="' + fk + '"]'); if (g) g.focus({preventScroll:true}); }
+  }
+  var VR = vref != null ? f(vref, 2) + "\u00a0m/s" : "the profile\u2019s";
+  var CAPS = [
+    "Step 1: the node that steps CARLA moves the world one control step, 0.05\u00a0s.",
+    "Step 2: messages arrive. The node keeps the latest path and turn rate, and a short history of poses and speeds.",
+    "Step 3: this step\u2019s target speed arrives. Its arrival starts the node\u2019s work.",
+    "Step 4: Pure Pursuit turns the path, the pose, the heading and the speed into \u03b4 = 0.211\u00a0rad to the right.",
+    "Step 5: the PID compares the speed, 5.22\u00a0m/s, with the target, " + VR + " (the speed profile at 82.7\u00a0m), and sets throttle or brake.",
+    "Step 6: the command goes out: steer \u22120.173 (left is positive). The node that steps CARLA was waiting for it: it steps again."];
+  function capFor(key){ return CAPK[key]; }
+  function pick(key){ stop(); phase = -1; dots = []; sel = sel === key ? null : key;
+    cap.innerHTML = ""; var s = document.createElement("span"); s.className = "live-val"; s.textContent = sel == null ? "Click a topic or a part to see what feeds what." : capFor(sel);
+    if (sel == null) s.className = ""; cap.appendChild(s); draw(); }
+  /* a step of the run; the messages of steps 2, 3 and 6 travel along their arrows */
+  function move(paths, D, done){ cancelAnimationFrame(raf);
+    if (reduce){ dots = []; draw(); if (done) done(); return; }
+    var t0 = performance.now();
+    (function run(){ var q = Math.min(1, (performance.now() - t0) / D), e = q < 0.5 ? 2 * q * q : 1 - 2 * (1 - q) * (1 - q);
+      dots = q >= 1 ? [] : paths.map(function(p){ var n = p.length - 1, u = e * n, j = Math.min(n - 1, Math.floor(u)), r = u - j;
+        return {x:p[j][0] + (p[j + 1][0] - p[j][0]) * r, y:p[j][1] + (p[j + 1][1] - p[j][1]) * r}; });
+      draw(); if (q < 1) raf = requestAnimationFrame(run); else if (done) done(); })(); }
+  function show(k, count){ sel = null; phase = Math.max(0, Math.min(5, k)); dots = []; cancelAnimationFrame(raf);
+    cap.innerHTML = ""; var s = document.createElement("span"); s.className = "live-val"; s.textContent = CAPS[phase]; cap.appendChild(s);
+    if (phase === 0){ if (count) steps += 1; draw(); return; }
+    if (phase === 1) move([0, 1, 2, 3].map(function(i){ return [[BOXW - 10, cy(i)], [NX + 8, cy(i)]]; }), 900);
+    else if (phase === 2) move([[[BOXW - 10, cy(4)], [NX + 8, cy(4)]]], 900);
+    else if (phase === 5) move([[[NX + NW - 8, 84], [OX - 2, 84]], [[OX + OW / 2, 148], [OX + OW / 2, 194]]], 1400);
+    else draw(); }
+  function stop(){ clearTimeout(timer); timer = null; cancelAnimationFrame(raf); dots = []; $id("io-run").textContent = "Run one control step"; }
+  $id("io-run").onclick = function(e){ e.stopPropagation();
+    if (timer){ stop(); return; }
+    show(0, true); this.textContent = "Pause";
+    (function tick(){ timer = setTimeout(function(){
+        if (phase >= 5 || false){ stop(); return; }
+        show(phase + 1); if (phase >= 5) stop(); else tick(); }, reduce ? 1500 : 2800); })(); };
+  $id("io-next").onclick = function(e){ e.stopPropagation(); stop(); show(phase < 0 ? 0 : (phase + 1) % 6, true); };
+  $id("io-back").onclick = function(e){ e.stopPropagation(); stop(); show(phase <= 0 ? 0 : phase - 1); };
+  draw();
 })();
 
 

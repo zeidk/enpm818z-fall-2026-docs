@@ -354,6 +354,7 @@ def build_js(main, page, names):
     # the widget code: slide scenes do not exist here
     widgets = re.sub(r'\w+\.closest\("\.plate"\)\.dataset\.scene !== current', "false", widgets)
     widgets = widgets.replace('document.getElementById("cstep").dataset.scene !== current', "false")
+    widgets = widgets.replace('frame.dataset.scene !== current', "false")   # slide 96 (#cio)
     widgets = widgets.replace('document.querySelectorAll(".tile")', 'document.querySelectorAll(".l10w .tile")')
     widgets = widgets.replace("document.querySelectorAll('input[type=\"range\"]')", "document.querySelectorAll('.l10w input[type=\"range\"]')")
     widgets = re.sub(r'"L10_interactive_(assets|media)/', r'"interactive/L10_interactive_\1/', widgets)
