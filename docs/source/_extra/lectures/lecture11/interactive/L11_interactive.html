@@ -571,6 +571,9 @@ pre code{background:none;padding:0}
 .box.concl{border-left-color:var(--slate);background:var(--hover)} .box.concl .bt{color:var(--slate)}
 .box.concl:not(:has(> .bt))::before{content:"";float:left;width:1em;height:1em;margin:.12em 10px 0 0;background:var(--slate);
   -webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}   /* a conclusion with no title: the icon starts the text */
+/* a conclusion that opens with a list: the floated icon covered the first bullet, so the icon gets its own column left of the bullets */
+.box.concl:not(:has(> .bt)):has(> :is(ul,ol):first-child){position:relative;padding-left:calc(28px + 1em)}
+.box.concl:not(:has(> .bt)):has(> :is(ul,ol):first-child)::before{position:absolute;left:14px;top:calc(8px + .28em);float:none;margin:0}
 /* the slide number top right is a button: a click opens the jump box */
 .frame .fhead .slno{cursor:pointer;border-radius:6px;padding:0 6px} .frame .fhead .slno:hover{background:var(--hover);color:var(--ink)}
 .frame .fhead .slno:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
@@ -1259,7 +1262,6 @@ svg g[role="button"]:focus-visible{outline:4px solid var(--focus);outline-offset
 <!-- in-class check (from the lecture's quiz page) -->
 <section class="plate frame s2 ckq" data-scene="behavior-cloning-21" data-name="Slide 29 · Behavior Cloning" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Behavior Cloning</span><span class="slno" role="button" tabindex="0" title="Go to a slide (click, or G)" aria-label="Slide 29 of 106. Go to a slide">Slide 29 / 106</span></div>
   <h2>Check: what behavior cloning adds to supervised learning</h2><div class="fit"><div class="fitin">
-  <p class="goal" style="margin:0 0 8px">A question from the lecture's quiz: pick an answer, then check it.</p>
   <p class="ckq-q">Steps 1 to 3 of behavior cloning are the same as training a detector: inputs, labels and a loss. What is new in step 4?</p>
   <div class="ckq-grid">
     <div class="ckq-opts" role="group" aria-label="Answers">
@@ -1493,7 +1495,7 @@ table.t tr[data-case]{cursor:pointer}
 #dgcard .dgc-name{font-size:52px;font-weight:700;letter-spacing:-.01em;line-height:1.05;margin-top:8px}
 #dgcard .dgc-maker{font-size:24px;opacity:.95} #dgcard .dgc-maker a{color:#fff}
 #dgcard .dgc-tag{font-size:22px;opacity:.92;margin-bottom:10px}
-#dgcard .dgc-loop{width:100%;height:auto;border-radius:10px;background:#fff;margin-top:auto;display:block}
+#dgcard .dgc-loop{width:100%;height:auto;margin-top:auto;display:block}   /* on the panel's green, no backing (user, 2026-11-22) */
 #dgcard .dgc-right{padding:14px 24px;display:flex;flex-direction:column;justify-content:center}
 #dgcard .dgc-row{display:grid;grid-template-columns:150px 1fr;gap:12px;padding:4px 0;border-bottom:1px solid var(--plate-edge);font-size:22px;line-height:1.25}
 #dgcard .dgc-row:last-child{border-bottom:0}
@@ -1513,8 +1515,7 @@ table.t tr[data-case]{cursor:pointer}
   </div>
 </section>
 
-<section class="plate frame s4" data-scene="dagger-2" data-name="Slide 48 · DAgger" tabindex="0"><span class="bolt"></span><div class="fhead"><span>DAgger</span><span class="slno" role="button" tabindex="0" title="Go to a slide (click, or G)" aria-label="Slide 48 of 106. Go to a slide">Slide 48 / 106</span></div>
-  <h2>DAgger, at a glance</h2><div class="fit"><div class="fitin">
+<section class="plate frame s4" data-notitle aria-label="DAgger, at a glance" data-scene="dagger-2" data-name="Slide 48 · DAgger" tabindex="0"><span class="bolt"></span><div class="fhead"><span>DAgger</span><span class="slno" role="button" tabindex="0" title="Go to a slide (click, or G)" aria-label="Slide 48 of 106. Go to a slide">Slide 48 / 106</span></div><div class="fit"><div class="fitin">
   <div id="dgcard">
     <div class="dgc-left">
       <div class="dgc-logo"><svg viewBox="0 0 64 64" width="56" height="56" aria-hidden="true" fill="none" stroke="#2A7F62" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
@@ -1522,15 +1523,15 @@ table.t tr[data-case]{cursor:pointer}
       <div class="dgc-name">DAgger</div>
       <div class="dgc-maker">by <a href="https://arxiv.org/abs/1011.0686" target="_blank" rel="noopener">Ross, Gordon and Bagnell</a>, 2011</div>
       <div class="dgc-tag">Let the clone drive, ask the expert</div>
-      <svg class="dgc-loop" viewBox="0 0 460 190" role="img" aria-label="The DAgger loop, four steps in a circle: the clone drives a lap; the expert labels every state it reached; the pairs are added to all the data; the clone is trained again on all of it, and drives the next lap.">
-        <defs><marker id="dgc-ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#5B6B7C"/></marker></defs>
+      <svg class="dgc-loop" viewBox="0 0 460 190" role="img" aria-label="The DAgger loop, four white boxes in a circle joined by white arrows: the clone drives a lap; the expert labels every state it reached; the pairs are added to all the data; the clone is trained again on all of it, and drives the next lap.">
+        <defs><marker id="dgc-ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#FFFFFF"/></marker></defs>
         <g font-family="Fira Sans, sans-serif" font-size="23" text-anchor="middle">
-          <rect x="12" y="14" width="200" height="56" rx="12" fill="#FBE9E3" stroke="#D9694A" stroke-width="2.5"/><text x="112" y="50" fill="#1E2939">the clone drives</text>
-          <rect x="248" y="14" width="200" height="56" rx="12" fill="#E8ECF1" stroke="#1E2939" stroke-width="2.5"/><text x="348" y="50" fill="#1E2939">the expert labels</text>
-          <rect x="248" y="120" width="200" height="56" rx="12" fill="#DDF3EA" stroke="#1E9E74" stroke-width="2.5"/><text x="348" y="156" fill="#1E2939">add to all data</text>
-          <rect x="12" y="120" width="200" height="56" rx="12" fill="#DDF3EA" stroke="#1E9E74" stroke-width="2.5"/><text x="112" y="156" fill="#1E2939">train again</text>
+          <rect x="12" y="14" width="200" height="56" rx="12" fill="#FFFFFF" fill-opacity="0.92"/><text x="112" y="50" fill="#1E2939">the clone drives</text>
+          <rect x="248" y="14" width="200" height="56" rx="12" fill="#FFFFFF" fill-opacity="0.92"/><text x="348" y="50" fill="#1E2939">the expert labels</text>
+          <rect x="248" y="120" width="200" height="56" rx="12" fill="#FFFFFF" fill-opacity="0.92"/><text x="348" y="156" fill="#1E2939">add to all data</text>
+          <rect x="12" y="120" width="200" height="56" rx="12" fill="#FFFFFF" fill-opacity="0.92"/><text x="112" y="156" fill="#1E2939">train again</text>
         </g>
-        <g stroke="#5B6B7C" stroke-width="2.5" fill="none" marker-end="url(#dgc-ah)">
+        <g stroke="#FFFFFF" stroke-width="2.5" fill="none" marker-end="url(#dgc-ah)">
           <path d="M214 42H244"/><path d="M348 72V116"/><path d="M246 148H216"/><path d="M112 118V74"/></g>
       </svg>
     </div>
@@ -1652,7 +1653,6 @@ python3 l11_handson.py --part eval     # open vs closed loop</pre>
 <!-- in-class check (from the lecture's quiz page) -->
 <section class="plate frame s4 ckq" data-scene="dagger-12" data-name="Slide 58 · DAgger" tabindex="0"><span class="bolt"></span><div class="fhead"><span>DAgger</span><span class="slno" role="button" tabindex="0" title="Go to a slide (click, or G)" aria-label="Slide 58 of 106. Go to a slide">Slide 58 / 106</span></div>
   <h2>Check: who labels the states in DAgger</h2><div class="fit"><div class="fitin">
-  <p class="goal" style="margin:0 0 8px">A question from the lecture's quiz: pick an answer, then check it.</p>
   <p class="ckq-q">In DAgger, the clone drives a lap. Who gives the labels for the states it reached?</p>
   <div class="ckq-grid">
     <div class="ckq-opts" role="group" aria-label="Answers">
@@ -1732,7 +1732,6 @@ python3 l11_handson.py --part eval     # open vs closed loop</pre>
 <!-- in-class check (from the lecture's quiz page) -->
 <section class="plate frame s5 ckq" data-scene="commands-5" data-name="Slide 63 · Commands" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Commands</span><span class="slno" role="button" tabindex="0" title="Go to a slide (click, or G)" aria-label="Slide 63 of 106. Go to a slide">Slide 63 / 106</span></div>
   <h2>Check: why a junction needs the route's command</h2><div class="fit"><div class="fitin">
-  <p class="goal" style="margin:0 0 8px">A question from the lecture's quiz: pick an answer, then check it.</p>
   <p class="ckq-q">Why does a learned driver need the route's command at a junction?</p>
   <div class="ckq-grid">
     <div class="ckq-opts" role="group" aria-label="Answers">
@@ -2056,7 +2055,6 @@ python3 l11_handson.py --part eval     # open vs closed loop</pre>
 <!-- in-class check (from the lecture's quiz page) -->
 <section class="plate frame s8 ckq" data-scene="evaluation-16" data-name="Slide 89 · Evaluation" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Evaluation</span><span class="slno" role="button" tabindex="0" title="Go to a slide (click, or G)" aria-label="Slide 89 of 106. Go to a slide">Slide 89 / 106</span></div>
   <h2>Check: what NAVSIM can show about compounding error</h2><div class="fit"><div class="fitin">
-  <p class="goal" style="margin:0 0 8px">A question from the lecture's quiz: pick an answer, then check it.</p>
   <p class="ckq-q">NAVSIM scores a plan on real recorded drives, and the planner is queried only in the first frame of each scene. What does that mean for compounding error?</p>
   <div class="ckq-grid">
     <div class="ckq-opts" role="group" aria-label="Answers">
