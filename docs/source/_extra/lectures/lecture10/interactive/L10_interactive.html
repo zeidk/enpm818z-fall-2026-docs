@@ -136,6 +136,12 @@ body.zoomed #title:hover{outline:none}
 .av-drive .av-sig path{fill:none;stroke:var(--live,#16798A);stroke-width:2.2;stroke-linecap:round}
 .av-drive .av-lead path{fill:var(--muted,#5B6B7C)}
 .av-drive{--lidar:#D62828} :root[data-theme="dark"] .av-drive{--lidar:#FF6B6B}   /* the lidar is red, the camera teal (user, 2026-11-21) */
+.av-drive{--radar:#2E9E4A} :root[data-theme="dark"] .av-drive{--radar:#5FD38A}   /* the radar is green (user, 2026-11-21) */
+.av-drive .av-radar-box{fill:var(--ink,#1E2935)}
+.av-drive .av-radar{fill:none;stroke:var(--radar);stroke-width:2.2;vector-effect:non-scaling-stroke;transform-box:view-box;transform-origin:0 0;animation:av-radar 1.2s ease-out infinite}
+@keyframes av-radar{from{transform:scale(1);opacity:.95}to{transform:scale(7);opacity:0}}
+.av-drive{--seat:#A9B3BE;--driver:#2F6FB3} :root[data-theme="dark"] .av-drive{--seat:#5E6A77;--driver:#7FB2EC}
+.av-drive .av-lead .av-driver .seat{fill:var(--seat)} .av-drive .av-lead .av-driver .person{fill:var(--driver)}
 .av-drive .av-pts circle{fill:var(--lidar)} .av-drive .av-pts line{stroke:var(--lidar);stroke-width:1;opacity:.3}
 .av-drive .av-gnss{font:600 22px var(--sans);fill:var(--live,#16798A)}
 @keyframes av-fov{from{opacity:.12}to{opacity:.26}}
@@ -241,6 +247,40 @@ body.phone.portrait.turnok #ph-turn{display:none}
 body.phone #corner button{font-size:15px;min-height:36px}
 #help{position:fixed;inset:0;z-index:1100;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.4)}
 #help.on{display:flex}
+/* in-class checks (planned feature the user picked, 2026-11-21): one question from the lecture's quiz; a click on an answer marks
+   it (red: not this one, try again; green: right, with the quiz's explanation); "Show the answer" reveals it. The explanation's
+   room is kept from the start (visibility), so nothing moves when it shows; leaving the slide resets it. */
+.ckq .ckq-q{font-size:27px;line-height:1.3;margin:0 0 14px}
+.ckq-grid{display:grid;grid-template-columns:1.08fr 1fr;gap:24px;align-items:start}
+.ckq-opts{display:flex;flex-direction:column;gap:10px}
+.ckq-o{position:relative;display:flex;gap:12px;align-items:baseline;text-align:left;font:inherit;font-size:25px;line-height:1.25;padding:10px 96px 10px 14px;
+  border:2px solid var(--plate-edge);border-radius:10px;background:var(--card);color:var(--ink);cursor:pointer}
+.ckq-o > b{flex:none;color:var(--slate)}
+.ckq-o:hover{border-color:var(--slate)} .ckq-o:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.ckq-o::after{position:absolute;right:12px;top:50%;transform:translateY(-50%);font:600 20px var(--sans)}
+.ckq-o.wrong{border-color:var(--bad);box-shadow:inset 6px 0 0 var(--bad)} .ckq-o.wrong::after{content:"not this";color:var(--bad)}
+.ckq-o.right{border-color:var(--ok);box-shadow:inset 6px 0 0 var(--ok)} .ckq-o.right::after{content:"right";color:var(--ok)}
+.ckq-side{display:flex;flex-direction:column;gap:12px}
+.ckq-why{visibility:hidden;background:var(--card);border:2px solid var(--plate-edge);border-left:8px solid var(--ok);border-radius:10px;padding:12px 16px;font-size:25px;line-height:1.3}
+.ckq-why p{margin:0 0 6px} .ckq-why p:last-child{margin:0} .ckq-why ol{margin:0 0 6px;padding-left:28px}
+.ckq.done .ckq-why{visibility:visible}
+.ckq-show{align-self:flex-start;font:600 22px var(--sans);padding:8px 16px;border-radius:9px;border:2px solid var(--live);background:var(--card);color:var(--ink);cursor:pointer}
+.ckq-show:disabled{opacity:.45;cursor:default}
+/* Ctrl+K search (planned feature the user picked, 2026-11-21): a window like the help window; every word typed must be on the
+   slide (title, text, figure labels, panels a control shows); arrows pick a result, Enter or a click goes, Esc closes */
+#search{position:fixed;inset:0;z-index:1100;display:none;align-items:flex-start;justify-content:center;padding-top:9vh;background:rgba(0,0,0,.4)}
+#search.on{display:flex}
+#search .sc{background:var(--card);color:var(--ink);border:2px solid var(--live);border-radius:12px;padding:16px 20px 12px;width:min(900px,92vw);max-height:78vh;display:flex;flex-direction:column;font-size:19px;line-height:1.35}
+#search label{font:600 18px var(--sans);color:var(--slate);margin-bottom:6px}
+#search input{font:400 24px var(--sans);padding:8px 12px;border:2px solid var(--plate-edge);border-radius:8px;background:var(--plate);color:var(--ink)}
+#search input:focus{outline:none;border-color:var(--live);box-shadow:0 0 0 3px var(--focus)}
+#search ol{list-style:none;margin:10px 0 0;padding:0;overflow:auto}
+#search li{padding:7px 10px;border-radius:8px;cursor:pointer;border-left:4px solid transparent}
+#search li .st{font-weight:600}
+#search li .sn{display:block;color:var(--muted);font-size:17px}
+#search li mark{background:var(--hl);color:inherit;border-radius:3px;padding:0 2px}
+#search li.on{background:var(--hover);border-left-color:var(--live)}
+#search .smsg{color:var(--muted);font-size:17px;margin:8px 2px 0}
 #help .hc{background:var(--card);color:var(--ink);border:2px solid var(--live);border-radius:12px;padding:20px 30px 22px;width:min(860px,92vw);max-height:90vh;overflow:auto;font-size:19px;line-height:1.45;position:relative}
 #help h3{margin:0 0 10px;font-size:24px;color:var(--slate)}
 #help table{border-collapse:collapse;width:100%} #help td{padding:3px 10px 3px 0;vertical-align:top}
@@ -329,6 +369,22 @@ body.indeck .secblock{background:transparent;border-color:transparent}
 .box.def{border-left-color:var(--plan)} .box.def .bt{color:var(--plan)}
 .box.issue{border-left-color:var(--bad)} .box.issue .bt{color:var(--bad)}
 .box.keyb{border-left-color:var(--ok)} .box.keyb .bt{color:var(--ok)}
+.box.sum{border-left-color:var(--ok)} .box.sum .bt{color:var(--ok)}
+/* box icons, as in the PDF decks (latex-common import.tex; user, 2026-11-21: "for definition boxes, use an icon ... Apply icons
+   to multiple box types, like we did in the PDF deck"): definition a book (MyBoxDefinition \faBook), conclusion a check in
+   a circle (MyBoxConclusion \faCheckCircle), summary a list (MyBoxSummary \faListUl), important an exclamation in a circle
+   (MyBoxImportant \faExclamationCircle). A plain .box is a note and has none, as MyBox. The icon takes the title's colour.
+   Icons: Font Awesome Free 6.7.2 by @fontawesome, https://fontawesome.com, License https://fontawesome.com/license/free
+   (Icons: CC BY 4.0), copyright 2024 Fonticons, Inc. */
+.box.def{--ic:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 448 512%22%3E%3Cpath d=%22M96 0C43 0 0 43 0 96v320c0 53 43 96 96 96h320c17.7 0 32-14.3 32-32s-14.3-32-32-32v-64c17.7 0 32-14.3 32-32V32c0-17.7-14.3-32-32-32H96m0 384h256v64H96c-17.7 0-32-14.3-32-32s14.3-32 32-32m32-240c0-8.8 7.2-16 16-16h192c8.8 0 16 7.2 16 16s-7.2 16-16 16H144c-8.8 0-16-7.2-16-16m16 48h192c8.8 0 16 7.2 16 16s-7.2 16-16 16H144c-8.8 0-16-7.2-16-16s7.2-16 16-16%22/%3E%3C/svg%3E")}
+.box.concl{--ic:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 512 512%22%3E%3Cpath d=%22M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512m113-303L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z%22/%3E%3C/svg%3E")}
+.box.sum{--ic:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 512 512%22%3E%3Cpath d=%22M64 144a48 48 0 1 0 0-96 48 48 0 1 0 0 96m128-80c-17.7 0-32 14.3-32 32s14.3 32 32 32h288c17.7 0 32-14.3 32-32s-14.3-32-32-32zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32h288c17.7 0 32-14.3 32-32s-14.3-32-32-32zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32h288c17.7 0 32-14.3 32-32s-14.3-32-32-32zM64 464a48 48 0 1 0 0-96 48 48 0 1 0 0 96m48-208a48 48 0 1 0-96 0 48 48 0 1 0 96 0%22/%3E%3C/svg%3E")}
+.box.issue{--ic:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 512 512%22%3E%3Cpath d=%22M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512m0-384c13.3 0 24 10.7 24 24v112c0 13.3-10.7 24-24 24s-24-10.7-24-24V152c0-13.3 10.7-24 24-24m-32 224a32 32 0 1 1 64 0 32 32 0 1 1-64 0%22/%3E%3C/svg%3E")}
+.box.def .bt::before,.box.concl .bt::before,.box.sum .bt::before,.box.issue .bt::before{content:"";display:inline-block;width:.95em;height:.95em;
+  margin-right:.4em;vertical-align:-.1em;background:currentColor;-webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
+.box.concl{border-left-color:var(--slate);background:var(--hover)} .box.concl .bt{color:var(--slate)}
+.box.concl:not(:has(> .bt))::before{content:"";float:left;width:1em;height:1em;margin:.12em 10px 0 0;background:var(--slate);
+  -webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}   /* a conclusion with no title: the icon starts the text */
 .box.quote{font-style:italic}
 .tg{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:var(--tagbg);color:var(--tagfg);font-size:20px;font-weight:600;font-style:normal;vertical-align:2px;margin-right:6px;flex:none}
 .tags{list-style:none;padding-left:0} .tags li{display:flex;gap:10px;align-items:flex-start}
@@ -610,7 +666,7 @@ tr[data-why]:hover td:first-child::before,tr[data-why]:focus td:first-child::bef
 :root[data-theme="dark"] #io-svg [fill="#fbe4cf" i]{fill:var(--now)}
 :root[data-theme="dark"] #io-svg [fill="#b5622a" i]{fill:var(--nowedge)}
 :root[data-theme="dark"] #io-svg [stroke="#b5622a" i]{stroke:var(--nowedge)}
-:root[data-theme="dark"] code{color:#F0C88A}
+:root[data-theme="dark"] code{color:#C9D1D9}   /* neutral grey, not amber: amber read as an orange live value (planned feature, user 2026-11-21) */
 </style>
 </head>
 <body>
@@ -642,7 +698,7 @@ tr[data-why]:hover td:first-child::before,tr[data-why]:focus td:first-child::bef
     </div>
   </div>
   <div class="strip">
-    <svg class="av-drive" viewBox="0 -80 1248 230" width="1248" height="230" role="img" aria-label="An animated side view of the AV driving on a road: its wheels turn, a satellite passes now and then and sends its signal to the GNSS antenna on the roof, a camera behind the windshield looks far ahead, a gray hatchback drives ahead of it and then speeds away, the lidar on its roof marks red points on that car and on the road, and lane marks and roadside posts slide past, and a lidar on its roof sends out scan pulses.">
+    <svg class="av-drive" viewBox="0 -80 1248 230" width="1248" height="230" role="img" aria-label="An animated side view of the AV driving on a road: its wheels turn, a satellite passes now and then and sends its signal to the GNSS antenna on the roof, a camera behind the windshield looks far ahead, a radar on its front bumper sends green waves, a gray hatchback with a driver drives ahead of it, its wheels turning faster as it speeds away, and then speeds away, the lidar on its roof marks red points on that car and on the road, and lane marks and roadside posts slide past, and a lidar on its roof sends out scan pulses.">
   <g class="av-posts"><rect x="30" y="70" width="5" height="40" rx="2"/><rect x="24" y="66" width="17" height="6" rx="2"/><rect x="270" y="70" width="5" height="40" rx="2"/><rect x="264" y="66" width="17" height="6" rx="2"/><rect x="510" y="70" width="5" height="40" rx="2"/><rect x="504" y="66" width="17" height="6" rx="2"/><rect x="750" y="70" width="5" height="40" rx="2"/><rect x="744" y="66" width="17" height="6" rx="2"/><rect x="990" y="70" width="5" height="40" rx="2"/><rect x="984" y="66" width="17" height="6" rx="2"/><rect x="1230" y="70" width="5" height="40" rx="2"/><rect x="1224" y="66" width="17" height="6" rx="2"/><rect x="1470" y="70" width="5" height="40" rx="2"/><rect x="1464" y="66" width="17" height="6" rx="2"/></g>
   <rect x="0" y="112" width="1248" height="38" class="av-road"/>
   <rect x="0" y="112" width="1248" height="3" class="av-edge"/>
@@ -661,6 +717,7 @@ tr[data-why]:hover td:first-child::before,tr[data-why]:focus td:first-child::bef
       <circle class="av-ping" cx="47.5" cy="38.6" r="2" style="animation-delay:.6s"/>
       <path class="av-wheel" d="m23.496 52c-0.76562 2.8555 0.91016 5.7969 3.7617 6.5859 2.8711 0.78906 5.8359-0.89063 6.6289-3.75 0.79297-2.8711-0.89062-5.8359-3.7539-6.6289-2.8594-0.79297-5.8125 0.87891-6.6211 3.7266l1.0273 0.28125 0.25-0.90625 1.5547 0.42969c0.21875-0.31641 0.5-0.57812 0.8125-0.77344l-0.41406-1.5859 1.8203-0.46875 0.41797 1.625c0.35156 0.03125 0.69531 0.12891 1.0156 0.28906l1.2031-1.1836 1.3164 1.3398-1.2148 1.207c0.070313 0.14062 0.12891 0.29688 0.17188 0.44922l-0.35938 0.078125c-0.027343-0.097656-0.0625-0.19922-0.10156-0.30078-0.49609 0.35156-1.3906 0.83594-1.625 0.60156l-0.26172-0.26562c-0.23047-0.23438 0.27344-1.125 0.63672-1.625-0.22656-0.10938-0.46484-0.17578-0.71094-0.21484 0.058594 0.60156 0.039063 1.6562-0.29297 1.7422l-0.35937 0.097656c-0.33594 0.078125-0.875-0.86719-1.1172-1.4297-0.23047 0.15625-0.42188 0.33594-0.57812 0.53906 0.53906 0.23047 1.5156 0.80859 1.418 1.1484l-0.10156 0.36328c-0.089843 0.33203-1.2188 0.32812-1.8203 0.24609 0.027343 0.27344 0.089843 0.53516 0.19531 0.78906 0.46875-0.35156 1.4727-0.92188 1.7188-0.66406l0.26172 0.26562c0.24219 0.24219-0.32031 1.2031-0.6875 1.6914 0.10938 0.042969 0.21484 0.082031 0.33203 0.11328 0.14844 0.042969 0.28906 0.070312 0.43359 0.085938-0.0625-0.58984-0.046875-1.7031 0.28906-1.793l0.36328-0.09375c0.32031-0.085938 0.84375 0.82031 1.0977 1.3867 0.19922-0.15625 0.37109-0.33594 0.51953-0.53516-0.55078-0.25-1.4375-0.79297-1.3477-1.1172l0.10156-0.36328c0.085938-0.3125 1.0977-0.32031 1.7148-0.25781-0.011718-0.10938-0.027344-0.21094-0.054687-0.3125l0.35156-0.082031c0.039063 0.14844 0.0625 0.30469 0.074219 0.45312h0.011719l1.6328 0.45312-0.50391 1.8125-1.6328-0.45312c-0.19922 0.29688-0.44922 0.55078-0.73828 0.75781l0.41797 1.6172-1.8125 0.46875-0.41406-1.5742c-0.19141-0.015625-0.39453-0.046875-0.59766-0.10156-0.17188-0.046874-0.33203-0.10937-0.48828-0.17969l-1.1445 1.1289-1.3164-1.3438 1.1328-1.1133c-0.16406-0.34375-0.26562-0.72266-0.28906-1.1133l-1.5391-0.42188 0.23047-0.83594z"/>
       <path class="av-wheel" d="m74.945 56.039c0.94531-2.7461-0.5-5.75-3.2422-6.7266-2.7617-0.97656-5.793 0.46875-6.7656 3.2344-0.97266 2.7578 0.47266 5.7891 3.2344 6.7617 2.7461 0.97656 5.7656-0.46094 6.75-3.2031l-0.98438-0.35156-0.3125 0.875-1.4922-0.53125c-0.24219 0.29688-0.53125 0.53125-0.85156 0.70312l0.29297 1.5781-1.8164 0.33594-0.30469-1.625c-0.34375-0.054688-0.67578-0.17188-0.97266-0.35156l-1.2695 1.082-1.1992-1.4023 1.2852-1.0977c-0.0625-0.14844-0.10938-0.30469-0.14062-0.45312l0.35547-0.058594c0.019531 0.10156 0.054687 0.20312 0.085937 0.30469 0.50781-0.3125 1.4258-0.72266 1.6367-0.47656l0.24219 0.28125c0.21094 0.24609-0.34766 1.082-0.74219 1.5547 0.21484 0.11719 0.44922 0.20312 0.6875 0.25781-0.015625-0.59375 0.078125-1.625 0.40625-1.6875l0.36719-0.070313c0.32813-0.058594 0.79688 0.90625 0.99609 1.4688 0.23438-0.13281 0.43359-0.29688 0.60156-0.48438-0.50781-0.26562-1.4219-0.89844-1.3125-1.2266l0.125-0.34766c0.11328-0.32031 1.2188-0.23437 1.8047-0.11719-0.019531-0.26562-0.0625-0.52734-0.15234-0.78125-0.48047 0.3125-1.5039 0.79688-1.7344 0.53125l-0.23438-0.28125c-0.21875-0.25781 0.39844-1.1602 0.78906-1.6172-0.09375-0.046876-0.20312-0.097657-0.31641-0.13281-0.14453-0.054687-0.28516-0.085937-0.41797-0.11328 0.023438 0.58594-0.070312 1.6758-0.40625 1.7422l-0.36328 0.0625c-0.32031 0.058594-0.77734-0.85938-0.98047-1.4336-0.21094 0.13281-0.39062 0.29687-0.55078 0.48437 0.52344 0.28125 1.3594 0.875 1.2461 1.1953l-0.125 0.35156c-0.10547 0.29687-1.1016 0.24219-1.7031 0.13281 0.007812 0.10938 0.015624 0.21094 0.03125 0.3125l-0.35156 0.058594c-0.027344-0.14844-0.039063-0.29688-0.039063-0.44922l-0.015624-0.007813-1.5703-0.55469 0.61719-1.7422 1.5742 0.55469c0.21484-0.27734 0.47656-0.51562 0.77734-0.69531l-0.30078-1.6172 1.8203-0.33594 0.28906 1.5703c0.19141 0.027344 0.38672 0.078125 0.58203 0.14844 0.16016 0.058593 0.31641 0.125 0.46484 0.21094l1.2031-1.0312 1.1992 1.4062-1.1953 1.0156c0.14453 0.34766 0.21484 0.72656 0.21094 1.1094l1.4766 0.52344-0.28125 0.80469z"/>
+      <g transform="translate(80.2 51.4)"><rect class="av-radar-box" x="-1.1" y="-0.7" width="1.3" height="1.4" rx="0.3"/><path class="av-radar" d="M0.6 -1.3 A1.4 1.4 0 0 1 0.6 1.3"/><path class="av-radar" d="M0.6 -1.3 A1.4 1.4 0 0 1 0.6 1.3" style="animation-delay:.4s"/><path class="av-radar" d="M0.6 -1.3 A1.4 1.4 0 0 1 0.6 1.3" style="animation-delay:.8s"/></g>
     </g>
    </g>
   </g>
@@ -961,6 +1018,27 @@ tr[data-why]:hover td:first-child::before,tr[data-why]:focus td:first-child::bef
   </div>
   <div class="box" style="margin-top:30px">The behavior layer says <b>what</b> to do; the local planner works out <b>where</b> the AV goes.</div>
 </div></div></section>
+
+<!-- in-class check (from the lecture's quiz page) -->
+<section class="plate frame plan ckq extra" data-scene="x8-1" data-name="Extra · Scaling the Behavior Layer" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Scaling the Behavior Layer</span><span>Extra</span></div>
+  <h2>Check: when a Fallback node fails</h2><div class="fit"><div class="fitin">
+  <p class="goal" style="margin:0 0 8px">A question from the lecture's quiz: pick an answer, then check it.</p>
+  <p class="ckq-q">In a behavior tree, when does a Fallback node return Failure?</p>
+  <div class="ckq-grid">
+    <div class="ckq-opts" role="group" aria-label="Answers">
+      <button class="ckq-o"><b>A.</b><span>When its first child returns Failure.</span></button>
+      <button class="ckq-o"><b>B.</b><span>When any one of its children returns Failure.</span></button>
+      <button class="ckq-o" data-ok><b>C.</b><span>Only when all its children return Failure.</span></button>
+      <button class="ckq-o"><b>D.</b><span>Never: a Fallback always returns Running.</span></button>
+    </div>
+    <div class="ckq-side">
+      <div class="ckq-why"><p>A Fallback tries its children in order and stops at the first that succeeds or runs. In Colledanchise and &Ouml;gren's words, &ldquo;It returns Failure if and only if all its children return Failure&rdquo;.</p><p>A Sequence is the node that stops at the first child that fails (A).</p></div>
+      <button class="ckq-show" type="button">Show the answer</button>
+      <span class="sr ckq-say" aria-live="polite"></span>
+    </div>
+  </div>
+</div></div></section>
+
 
 
 
@@ -1679,6 +1757,27 @@ tr[data-why]:hover td:first-child::before,tr[data-why]:focus td:first-child::bef
   <div class="box" style="margin-top:26px">The path says what to follow; the model says how steering makes the AV follow it.</div>
 </div></div></section>
 
+<!-- in-class check (from the lecture's quiz page) -->
+<section class="plate frame follow ckq extra" data-scene="x46-1" data-name="Extra · Test Curve and Speed Profile" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Test Curve and Speed Profile</span><span>Extra</span></div>
+  <h2>Check: the highest speed a curve allows</h2><div class="fit"><div class="fitin">
+  <p class="goal" style="margin:0 0 8px">A question from the lecture's quiz: pick an answer, then check it.</p>
+  <p class="ckq-q">A curve has radius 12.5&nbsp;m (chosen for this question). With the lecture's cap on the sideways acceleration, 2.0&nbsp;m/s&sup2;, what is the highest speed in the curve?</p>
+  <div class="ckq-grid">
+    <div class="ckq-opts" role="group" aria-label="Answers">
+      <button class="ckq-o"><b>A.</b><span>3.54 m/s</span></button>
+      <button class="ckq-o" data-ok><b>B.</b><span>5.0 m/s</span></button>
+      <button class="ckq-o"><b>C.</b><span>6.25 m/s</span></button>
+      <button class="ckq-o"><b>D.</b><span>25 m/s</span></button>
+    </div>
+    <div class="ckq-side">
+      <div class="ckq-why"><p>On a circle of radius \(R\) at speed \(v\), the sideways acceleration is \(v^2/R\). From \(v^2/R \le 2.0\), the highest speed is \(v = \sqrt{2.0 \times 12.5} = \sqrt{25}\) = 5.0&nbsp;m/s.</p><p>A is \(\sqrt{12.5}\), without the 2.0; C is 12.5 / 2.0; D is 2.0 &times; 12.5 before the square root.</p></div>
+      <button class="ckq-show" type="button">Show the answer</button>
+      <span class="sr ckq-say" aria-live="polite"></span>
+    </div>
+  </div>
+</div></div></section>
+
+
 
 </div></section>
 <section class="secblock follow" data-scene="sec-6" data-name="6 Vehicle Modeling" tabindex="0"><div class="sechead"><span class="num">6</span><span>Vehicle Modeling</span><span class="meta">slides 53 to 60</span></div><div class="grid" style="grid-template-columns:repeat(3,1280px)"><!-- Facts from the deck's Vehicle Modeling section (slides 52 to 59). The circle plot of slide 57
@@ -1859,6 +1958,27 @@ tr[data-why]:hover td:first-child::before,tr[data-why]:focus td:first-child::bef
   </div>
   <div class="box" style="margin-top:26px">The model links \(\delta\) to the motion; the steering controller picks \(\delta\).</div>
 </div></div></section>
+
+<!-- in-class check (from the lecture's quiz page) -->
+<section class="plate frame follow ckq extra" data-scene="x55-1" data-name="Extra · Vehicle Modeling" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Vehicle Modeling</span><span>Extra</span></div>
+  <h2>Check: where steering enters the bicycle model</h2><div class="fit"><div class="fitin">
+  <p class="goal" style="margin:0 0 8px">A question from the lecture's quiz: pick an answer, then check it.</p>
+  <p class="ckq-q">In the kinematic bicycle model, which equation is where the steering angle \(\delta\) enters?</p>
+  <div class="ckq-grid">
+    <div class="ckq-opts" role="group" aria-label="Answers">
+      <button class="ckq-o"><b>A.</b><span>\(\dot x = v\cos\theta\)</span></button>
+      <button class="ckq-o"><b>B.</b><span>\(\dot y = v\sin\theta\)</span></button>
+      <button class="ckq-o" data-ok><b>C.</b><span>\(\dot\theta = \frac{v}{L}\tan\delta\)</span></button>
+      <button class="ckq-o"><b>D.</b><span>\(\dot v = a\)</span></button>
+    </div>
+    <div class="ckq-side">
+      <div class="ckq-why"><p>The first two equations move the rear axle along the heading (A, B); the fourth changes the speed (D).</p><p>The turn rate grows with speed and with steering: \(\dot\theta = v\tan\delta / L\). A controller chooses \(\delta\), so here the turn rate comes from it.</p></div>
+      <button class="ckq-show" type="button">Show the answer</button>
+      <span class="sr ckq-say" aria-live="polite"></span>
+    </div>
+  </div>
+</div></div></section>
+
 
 
 </div></section>
@@ -2530,6 +2650,27 @@ tr[data-why]:hover td:first-child::before,tr[data-why]:focus td:first-child::bef
     <a href="https://enpm818z-fall-2026-docs.readthedocs.io/en/latest/lectures/lecture10/l10_lecture.html#l10-lec-actuators" target="_blank" rel="noopener">drive-by-wire, in the docs</a>.</div>
 </div></div></section>
 
+<!-- in-class check (from the lecture's quiz page) -->
+<section class="plate frame follow ckq extra" data-scene="x72-1" data-name="Extra · Longitudinal Control" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Longitudinal Control</span><span>Extra</span></div>
+  <h2>Check: why a P controller alone leaves a gap</h2><div class="fit"><div class="fitin">
+  <p class="goal" style="margin:0 0 8px">A question from the lecture's quiz: pick an answer, then check it.</p>
+  <p class="ckq-q">In the lecture's speed test, a P controller alone with \(K_p\) = 0.5 settles at 7.58&nbsp;m/s for an 8&nbsp;m/s target. Why does a gap stay?</p>
+  <div class="ckq-grid">
+    <div class="ckq-opts" role="group" aria-label="Answers">
+      <button class="ckq-o"><b>A.</b><span>The throttle sits at its 0.75 limit the whole time.</span></button>
+      <button class="ckq-o" data-ok><b>B.</b><span>P makes throttle only from an error, and holding the speed against drag needs some throttle.</span></button>
+      <button class="ckq-o"><b>C.</b><span>The engine lag of 0.3 s never ends.</span></button>
+      <button class="ckq-o"><b>D.</b><span>The I term winds up.</span></button>
+    </div>
+    <div class="ckq-side">
+      <div class="ckq-why"><ol><li>At 7.58&nbsp;m/s the drag is 0.15 + 0.012 &times; 7.58&sup2; = 0.84&nbsp;m/s&sup2;, so holding the speed needs throttle 0.84 / 4 = 0.21.</li><li>P gives \(u = 0.5\,e\), so 0.5 &times; \(e\) = 0.21 needs \(e\) = 0.42&nbsp;m/s.</li></ol><p>With no error, P gives no throttle, and drag slows the AV. P alone has no I term to wind up (D).</p></div>
+      <button class="ckq-show" type="button">Show the answer</button>
+      <span class="sr ckq-say" aria-live="polite"></span>
+    </div>
+  </div>
+</div></div></section>
+
+
 
 
 
@@ -2760,6 +2901,12 @@ tr[data-why]:hover td:first-child::before,tr[data-why]:focus td:first-child::bef
   <button id="nav-theme" aria-label="Switch between the light and dark theme">Dark</button>
 </div>
 <div id="hotspot" aria-hidden="true"></div>
+<div id="search" role="dialog" aria-modal="true" aria-label="Search the slides"><div class="sc">
+  <label for="search-in">Search the slides (every word must be on the slide)</label>
+  <input id="search-in" type="search" autocomplete="off" spellcheck="false" aria-controls="search-list">
+  <ol id="search-list" role="listbox" aria-label="Slides found"></ol>
+  <p class="smsg" id="search-msg"><kbd>&#8593;</kbd> <kbd>&#8595;</kbd> pick, <kbd>Enter</kbd> go, <kbd>Esc</kbd> close</p>
+</div></div>
 <div id="jump" role="dialog" aria-label="Go to a slide"><label for="jump-in">Go to slide</label><input id="jump-in" type="text" inputmode="numeric" autocomplete="off" size="3"><span id="jump-of"></span><span id="jump-msg"></span></div>
 <button id="ph-prev" class="ph-nav" aria-label="Previous slide">&#8249;</button>
 <button id="ph-next" class="ph-nav" aria-label="Next slide">&#8250;</button>
@@ -2780,6 +2927,7 @@ tr[data-why]:hover td:first-child::before,tr[data-why]:focus td:first-child::bef
     <tr><td><kbd>&#8592;</kbd> <kbd>PgUp</kbd></td><td>back</td></tr>
     <tr><td><kbd>&#8593;</kbd></td><td>the whole section; <kbd>Esc</kbd> the overview of the lecture</td></tr>
     <tr><td><kbd>H</kbd> <kbd>?</kbd></td><td>this window, on or off (<kbd>Esc</kbd> closes it too)</td></tr>
+    <tr><td><kbd>Ctrl</kbd> <kbd>K</kbd></td><td>search the slides by their words (a term, a number, a name); <kbd>&#8593;</kbd> <kbd>&#8595;</kbd> pick a slide, <kbd>Enter</kbd> goes, <kbd>Esc</kbd> closes</td></tr>
     <tr><td><kbd>T</kbd></td><td>light or dark theme</td></tr>
     <tr><td><kbd>F</kbd></td><td>full screen on or off</td></tr>
     <tr><td><kbd>D</kbd> <kbd>C</kbd></td><td>pen on or off; clear the drawing (it also clears when the slide changes)</td></tr>
@@ -2886,6 +3034,59 @@ var SLIDENO = {}, SLIDEMAX = 0;
 document.querySelectorAll("#deck [data-name]").forEach(function(e){ var m = /^Slide (\d+)(?! \((?:[2-9]|\d\d) of)/.exec(e.dataset.name || "");
   if (m && !SLIDENO[m[1]]){ SLIDENO[m[1]] = e.dataset.scene; SLIDEMAX = Math.max(SLIDEMAX, +m[1]); }
   if (/^Contents/.test(e.dataset.name || "") && !SLIDENO["0"]) SLIDENO["0"] = e.dataset.scene; });
+/* ---------- Ctrl+K search: find a slide by its words. The index is read from the frames the first time the window opens
+   (so the text the frame scripts wrote is in it); KaTeX's hidden MathML copy is left out. */
+var searchBox = document.getElementById("search"), searchIn = document.getElementById("search-in"),
+    searchList = document.getElementById("search-list"), searchIdx = null, searchHits = [], searchSel = 0, searchFrom = null;
+function searchNorm(s){ return s.toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " "); }
+function searchBuild(){ searchIdx = [];
+  document.querySelectorAll("#deck .frame[data-scene]").forEach(function(f){
+    var c = f.cloneNode(true); c.querySelectorAll(".katex-mathml,script,style,.cardnum,.fhead,.ckq-why,.ckq-say").forEach(function(n){ n.remove(); });
+    var h = c.querySelector("h2,h1"), title = h ? h.textContent.replace(/\s+/g, " ").trim() : (f.getAttribute("aria-label") || "");
+    if (h) h.remove(); c.querySelectorAll(".try").forEach(function(n){ n.remove(); });
+    var parts = [], tw = document.createTreeWalker(c, NodeFilter.SHOW_TEXT), nd;   /* text pieces joined by a space: blocks do not run together */
+    while ((nd = tw.nextNode())) parts.push(nd.nodeValue);
+    var text = parts.join(" ").replace(/\s+/g, " ").replace(/ ([,.;:)])/g, "$1").trim();
+    searchIdx.push({scene:f.dataset.scene, name:f.dataset.name || "", title:title, text:text, nt:searchNorm(title), nx:searchNorm(text)}); }); }
+function searchEsc(s){ return s.replace(/[&<>"]/g, function(c){ return {"&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;"}[c]; }); }
+function searchMark(s, words){ var ws = words.filter(Boolean).map(function(w){ return w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); });
+  if (!ws.length) return searchEsc(s);
+  return s.split(new RegExp("(" + ws.join("|") + ")", "ig")).map(function(part, i){ return i % 2 ? "<mark>" + searchEsc(part) + "</mark>" : searchEsc(part); }).join(""); }
+function searchRun(){
+  var q = searchNorm(searchIn.value).trim(), words = q ? q.split(" ") : [];
+  searchHits = []; searchSel = 0;
+  if (words.length) searchIdx.forEach(function(r){
+    if (!words.every(function(w){ return r.nt.indexOf(w) >= 0 || r.nx.indexOf(w) >= 0; })) return;
+    var score = 0; words.forEach(function(w){ if (r.nt.indexOf(w) >= 0) score += 5; score += Math.min(4, r.nx.split(w).length - 1); });
+    searchHits.push({r:r, score:score}); });
+  searchHits.sort(function(a, b){ return b.score - a.score; }); searchHits = searchHits.slice(0, 30);
+  searchList.innerHTML = "";
+  searchHits.forEach(function(hit, i){ var r = hit.r, li = document.createElement("li"), at = r.nx.indexOf(words[0]), a = Math.max(0, at - 50);
+    var snip = (a > 0 ? "…" : "") + r.text.slice(a, a + 140) + (a + 140 < r.text.length ? "…" : "");
+    var head = r.name.replace(" · ", ", ") + (r.title ? ": " + r.title : "");
+    li.id = "search-r" + i; li.setAttribute("role", "option");
+    li.innerHTML = '<span class="st">' + searchMark(head, words) + '</span><span class="sn">' + searchMark(snip, words) + "</span>";
+    li.addEventListener("click", function(e){ e.stopPropagation(); searchGo(i); });
+    li.addEventListener("mousemove", function(){ if (searchSel !== i){ searchSel = i; searchPaint(); } });
+    searchList.appendChild(li); });
+  document.getElementById("search-msg").textContent = !words.length ? "Type a word: a term, a number, a name." :
+    searchHits.length ? searchHits.length + (searchHits.length === 30 ? "+" : "") + " slide" + (searchHits.length === 1 ? "" : "s") + ". ↑ ↓ pick, Enter go, Esc close" : "No slide has every word.";
+  searchPaint(); }
+function searchPaint(){ [].forEach.call(searchList.children, function(li, i){ var on = i === searchSel; li.classList.toggle("on", on); li.setAttribute("aria-selected", on ? "true" : "false");
+    if (on) li.scrollIntoView({block:"nearest"}); });
+  if (searchHits.length) searchIn.setAttribute("aria-activedescendant", "search-r" + searchSel); else searchIn.removeAttribute("aria-activedescendant"); }
+function searchShow(on){
+  if (on){ if (!searchIdx) searchBuild(); searchFrom = document.activeElement; searchBox.classList.add("on"); searchIn.focus({preventScroll:true}); searchIn.select(); searchRun(); }
+  else { searchBox.classList.remove("on"); searchIn.blur(); if (searchFrom && searchFrom.focus) try { searchFrom.focus({preventScroll:true}); } catch (e) {} } }
+function searchGo(i){ var hit = searchHits[i]; if (!hit) return; searchShow(false); goDir = 0; go(hit.r.scene); }
+searchIn.addEventListener("input", searchRun);
+searchIn.addEventListener("keydown", function(e){ e.stopPropagation();   /* no deck key acts while typing */
+  if (e.key === "Escape" || ((e.ctrlKey || e.metaKey) && (e.key === "k" || e.key === "K"))){ e.preventDefault(); searchShow(false); return; }
+  if (e.key === "ArrowDown"){ e.preventDefault(); if (searchSel < searchHits.length - 1){ searchSel++; searchPaint(); } return; }
+  if (e.key === "ArrowUp"){ e.preventDefault(); if (searchSel > 0){ searchSel--; searchPaint(); } return; }
+  if (e.key === "Enter"){ e.preventDefault(); searchGo(searchSel); } });
+searchBox.addEventListener("click", function(e){ if (e.target === searchBox) searchShow(false); });
+["pointerdown", "wheel"].forEach(function(t){ searchBox.addEventListener(t, function(e){ e.stopPropagation(); }); });
 var jumpBox = document.getElementById("jump"), jumpIn = document.getElementById("jump-in");
 document.getElementById("jump-of").textContent = "/ " + SLIDEMAX;
 /* the floating box is for the overview, where no slide shows its number */
@@ -3043,6 +3244,8 @@ document.getElementById("nav-next").onclick = function(){ step(1); };
 document.getElementById("nav-home").onclick = function(){ go("overview"); };
 document.addEventListener("keydown", function(e){
   var tg = e.target.tagName;
+  if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === "k" || e.key === "K")){ e.preventDefault(); searchShow(!searchBox.classList.contains("on")); return; }   /* Ctrl+K search */
+  if (searchBox.classList.contains("on")){ if (e.key === "Escape"){ e.preventDefault(); searchShow(false); } else searchIn.focus({preventScroll:true}); return; }   /* the open window takes every key */
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   if (document.getElementById("help").classList.contains("on")){ if (e.key === "Escape" || e.key === "?" || e.key === "h" || e.key === "H"){ e.preventDefault(); helpShow(false); } return; }
   if (tg === "INPUT" && /^(text|number|search)$/.test(e.target.type)) return;   /* a text box (the slide number, a frame's own box) keeps its keys */
@@ -3255,6 +3458,17 @@ function halo(t){ t.style.stroke = "var(--card)"; t.setAttribute("stroke-width",
 var resetFns = [];
 function onReset(el, fn, key){ if (key) resetFns = resetFns.filter(function(r){ return !(r.el === el && r.key === key); });   /* a rebuilt control replaces its old entry */
   resetFns.push({el:el, fn:fn, key:key}); }
+/* in-class checks: .frame.ckq holds .ckq-o answers (the right one has data-ok), a .ckq-why explanation and a .ckq-show button */
+document.querySelectorAll(".frame.ckq").forEach(function(f){
+  var opts = [].slice.call(f.querySelectorAll(".ckq-o")), show = f.querySelector(".ckq-show"), say = f.querySelector(".ckq-say");
+  function reveal(){ opts.forEach(function(o){ if (o.hasAttribute("data-ok")) o.classList.add("right"); }); f.classList.add("done"); if (show) show.disabled = true; }
+  opts.forEach(function(o){ o.type = "button"; o.setAttribute("aria-pressed", "false");
+    o.addEventListener("click", function(e){ e.stopPropagation(); o.setAttribute("aria-pressed", "true");
+      if (o.hasAttribute("data-ok")){ reveal(); if (say) say.textContent = "Right. The explanation is shown."; }
+      else { o.classList.add("wrong"); if (say) say.textContent = f.classList.contains("done") ? "Not this one. The right answer is marked." : "Not this one. Try another answer."; } }); });
+  if (show) show.addEventListener("click", function(e){ e.stopPropagation(); reveal(); if (say) say.textContent = "The answer and its explanation are shown."; });
+  onReset(f, function(){ opts.forEach(function(o){ o.classList.remove("right", "wrong"); o.setAttribute("aria-pressed", "false"); });
+    f.classList.remove("done"); if (show) show.disabled = false; if (say) say.textContent = ""; }); });
 /* reserveWidth(btn, labels): a button whose label changes ("Run ..." / "Pause") keeps the width of its longest label, so the controls beside it do not move */
 function reserveWidth(btn, labels){ function go_(){ var keep = btn.textContent, w = 0; btn.style.minWidth = "";
     labels.forEach(function(l){ btn.textContent = l; w = Math.max(w, btn.offsetWidth); });   /* layout px: the camera and the fit scale do not count */
@@ -4474,7 +4688,7 @@ function makeTraj(R){
     [0.3, 0.6, 0.9].forEach(function(x){ el(s,"circle",{cx:F.X(x),cy:F.Y(3 * (1 - Math.exp(-x / 0.3))),r:5,fill:C.slate}); });
     var a = 3 * (1 - Math.exp(-t / 0.3));
     el(s,"circle",{cx:F.X(t),cy:F.Y(a),r:8,fill:C.live,stroke:"#fff","stroke-width":2});
-    tex("lag-read", "a(" + nt(t, 2) + ") = 3\\,(1 - e^{-" + nt(t, 2) + "/0.3}) = " + nt(a, 2) + "\\text{ m/s}^2,\\quad \\text{gap } " + nt(3 - a, 2));
+    tex("lag-read", "\\begin{gathered}a(" + nt(t, 2) + ") = 3\\,(1 - e^{-" + nt(t, 2) + "/0.3}) = " + nt(a, 2) + "\\text{ m/s}^2\\\\ \\text{gap } " + nt(3 - a, 2) + "\\text{ m/s}^2\\end{gathered}");   /* two lines: on one the box ran 14 px past its column */
     document.querySelectorAll("[data-t]").forEach(function(r){ r.querySelectorAll("td").forEach(function(td){ td.classList.toggle("hl", Math.abs(+r.dataset.t - t) < 0.005); }); }); }
   lt.oninput = lag; lag();
 
@@ -5138,7 +5352,14 @@ document.querySelectorAll('input[type="range"]').forEach(function(inp){
   var still = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
   var lead = document.createElementNS(NS, "g"); lead.setAttribute("class", "av-lead");
   var inner = document.createElementNS(NS, "g"); inner.setAttribute("transform", "translate(-45.243767 -121.13971)");
+  /* the driver: head and shoulders behind the body, so only the front side window shows them (car2's units, x 4.3 to 7.3 is that window) */
+  var drv = document.createElementNS(NS, "g"); drv.setAttribute("class", "av-driver"); drv.setAttribute("transform", "translate(45.243767 121.13971)");
+  /* the driver's seat behind the driver (a back and a headrest, its own gray), then the driver in blue (user, 2026-11-21) */
+  drv.innerHTML = '<rect class="seat" x="5.08" y="0.8" width="0.3" height="0.74" rx="0.1"/><rect class="seat" x="5.06" y="0.6" width="0.34" height="0.26" rx="0.08"/>' +
+    '<circle class="person" cx="5.75" cy="0.78" r="0.28"/><path class="person" d="M5.3 1.5 Q5.33 1.08 5.78 1.08 Q6.22 1.08 6.26 1.5 Z"/>'; inner.appendChild(drv);
   var shapes = CAR2.map(function(d){ var p = document.createElementNS(NS, "path"); p.setAttribute("d", d); p.setAttribute("fill-rule", "evenodd"); inner.appendChild(p); return p; });
+  /* its two wheels (car2's second and third paths) turn about their centers: at the AV's speed when it keeps pace, faster when it speeds up */
+  var wheels = shapes.slice(1).map(function(p){ return {p:p, cx:0, cy:0, r:0, a:0}; }), lastX = null, lastT = null;   /* sizes read once the car is on the page */
   lead.appendChild(inner);
   var pts = document.createElementNS(NS, "g"); pts.setAttribute("class", "av-pts");
   var before = sv.querySelector(".av-sat"); [lead, pts].forEach(function(e){ if (before) sv.insertBefore(e, before); else sv.appendChild(e); });
@@ -5155,11 +5376,12 @@ document.querySelectorAll('input[type="range"]').forEach(function(inp){
   function hit(g, x0, y0, w, h, cell, m, x, y){ var u = m.a * x + m.c * y + m.e, v = m.b * x + m.d * y + m.f, gx = Math.floor((u - x0) / cell), gy = Math.floor((v - y0) / cell);
     return gx >= 0 && gy >= 0 && gx < w && gy < h && g[gy * w + gx] === 1; }
   function leadX(t){ var c = t % PERIOD, u;
-    if (c < 2500){ u = c / 2500; return REST + 430 * (1 - u) * (1 - u); }   /* the AV closes in on it */
-    if (c < 7000) return REST + 5 * Math.sin((c - 2500) / 700);           /* it drives ahead at the AV's speed */
-    if (c < 9500){ u = (c - 7000) / 2500; return REST + 640 * u * u; }    /* it speeds up and leaves */
+    /* it closes in over 4 s, never faster than 210 units/s against the road's 300, so it always drives forward */
+    if (c < 4000){ u = c / 4000; return REST + 420 * (1 - u) * (1 - u); }   /* the AV closes in on it */
+    if (c < 7500) return REST + 5 * Math.sin((c - 4000) / 700);           /* it drives ahead at the AV's speed */
+    if (c < 9800){ u = (c - 7500) / 2300; return REST + 640 * u * u; }    /* it speeds up and leaves */
     return null; }
-  var scans = [], lastScan = -1e9, t0 = performance.now() - 3200;
+  var scans = [], lastScan = -1e9, t0 = performance.now() - 4600;
   function scan(){ var lm = lid.getScreenCTM(), rm = sv.getScreenCTM(); if (!lm || !rm) return [];
     var o = new DOMPoint(+lid.getAttribute("x") + 3, +lid.getAttribute("y") + 1.15).matrixTransform(rm.inverse().multiply(lm));
     var cm = lead.style.display === "none" ? null : rm.inverse().multiply(shapes[0].getScreenCTM()).inverse();
@@ -5176,11 +5398,18 @@ document.querySelectorAll('input[type="range"]').forEach(function(inp){
         if (age === 0 && p.car){ var l = document.createElementNS(NS, "line"); l.setAttribute("x1", p.ox); l.setAttribute("y1", p.oy); l.setAttribute("x2", p.x); l.setAttribute("y2", p.y); pts.appendChild(l); }
         var c = document.createElementNS(NS, "circle"); c.setAttribute("cx", p.x.toFixed(1)); c.setAttribute("cy", p.y.toFixed(1)); c.setAttribute("r", p.car ? 3 : 2.2);
         c.style.opacity = ((p.car ? .95 : .45) * op).toFixed(2); pts.appendChild(c); }); }); }
-  function frame(now){ var x = leadX(still ? 3200 : now - t0);
+  var GROUND = 300;   /* the road's speed past the AV, in drawing units per second: the lane marks move 96 units in 0.32 s */
+  function frame(now){ var x = leadX(still ? 4600 : now - t0);
     if (x == null) lead.style.display = "none"; else { lead.style.display = ""; lead.setAttribute("transform", "translate(" + x.toFixed(1) + " " + Y.toFixed(1) + ") scale(" + K.toFixed(3) + ")"); }
+    if (!still && x != null && lastX != null && now > lastT){ var v = GROUND + (x - lastX) / ((now - lastT) / 1000);   /* its speed over the road */
+      wheels.forEach(function(w){ if (!w.r){ var bb = w.p.getBBox(); w.cx = bb.x + bb.width / 2; w.cy = bb.y + bb.height / 2; w.r = bb.height / 2; if (!w.r) return; }
+        /* deg/s from the speed, capped at 1450 (about twice the AV's wheels): faster still would advance a blade more than half the gap
+           between blades per frame and look like a wheel turning backward */
+        w.a = (w.a + Math.min(1450, v / (w.r * K) * 180 / Math.PI) * (now - lastT) / 1000) % 360; w.p.setAttribute("transform", "rotate(" + w.a.toFixed(1) + " " + w.cx.toFixed(3) + " " + w.cy.toFixed(3) + ")"); }); }
+    lastX = x; lastT = now;
     if (now - lastScan >= 100){ lastScan = now; scans.push(scan()); if (scans.length > 3) scans.shift(); draw(); } }
   if (still){ frame(performance.now()); return; }
-  setInterval(function(){ frame(performance.now()); }, 33);   /* a timer, as for the satellite: it runs in headless checks too */
+  setInterval(function(){ frame(performance.now()); }, 16);   /* a timer, as for the satellite: it runs in headless checks too; 60 a second for the wheels */
 })();
 
 /* ---------- grow each frame's content to fill its room (user, 2026-11-20: "make the fonts much bigger,
@@ -5327,8 +5556,10 @@ window.addEventListener("hashchange", function(){ var h = location.hash.slice(1)
     pop.querySelector(".bx").onclick = function(e){ e.stopPropagation(); unpin(); };
     pop.style.display = "block"; place(el); requestAnimationFrame(function(){ pop.classList.add("show"); }); }
   function hide(){ if (pinned) return; pop.classList.remove("show"); hideT = setTimeout(function(){ if (!pinned) pop.style.display = "none"; }, 170); }
-  function pin(el){ if (pinned) pinned.classList.remove("on"); pinned = el; el.classList.add("on"); pop.classList.add("pinned"); show(el); }
-  function unpin(){ if (pinned) pinned.classList.remove("on"); pinned = null; pop.classList.remove("pinned"); hide(); }
+  /* a mark goes back exactly as it was: no empty class attribute left behind (the reset check compares the markup) */
+  function off(el){ el.classList.remove("on"); if (!el.getAttribute("class")) el.removeAttribute("class"); }
+  function pin(el){ if (pinned) off(pinned); pinned = el; el.classList.add("on"); pop.classList.add("pinned"); show(el); }
+  function unpin(){ if (pinned) off(pinned); pinned = null; pop.classList.remove("pinned"); hide(); }
   document.querySelectorAll("#deck .cite").forEach(function(el){
     el.addEventListener("mouseenter", function(){ if (!pinned) show(el); });
     el.addEventListener("mouseleave", hide);

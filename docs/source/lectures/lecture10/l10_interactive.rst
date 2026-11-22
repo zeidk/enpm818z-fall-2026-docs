@@ -16,3 +16,5 @@ yourself. It runs in your browser, with nothing to install.
   as a map.
 - F goes full screen, T switches between light and dark, and ? lists every
   key.
+- Ctrl+K searches the slides by their words. Four "Check" slides ask a
+  question from the quiz: click an answer to see whether it is right.

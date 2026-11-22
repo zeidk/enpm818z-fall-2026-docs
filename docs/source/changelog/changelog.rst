@@ -5,10 +5,25 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.43.0: L11 Interactive Slides Reworked, Not Yet Published (2026-11-21)
+.. dropdown:: v2.44.0: Search and Quiz Checks in the L10 and L11 Interactive Slides (2026-11-21)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10 interactive slides:** Ctrl+K searches the slides by their words.
+     Four "Check" slides each ask a question from the L10 quiz; click an
+     answer to see whether it is right and why. Definition, conclusion and
+     warning boxes carry the same icons as the PDF slides, and code in the
+     dark theme is grey instead of amber.
+   - **L11 interactive slides (not yet published):** the same search, checks
+     and icons. The gains slide is split in two, each gain drawn as a
+     modular stack above an end-to-end driver.
+
+.. dropdown:: v2.43.0: L11 Interactive Slides Reworked, Not Yet Published (2026-11-21)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 
