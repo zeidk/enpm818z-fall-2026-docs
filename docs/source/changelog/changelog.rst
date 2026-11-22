@@ -5,10 +5,21 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.47.0: Shorter Text on Six L11 Interactive Slides, Not Yet Published (2026-11-22)
+.. dropdown:: v2.48.0: Every L10 Interactive Slide Has a Number (2026-11-22)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10 interactive slides:** every slide now shows its own number, from 1
+     to 148, including the four quiz checks and the demo slides, so typing a
+     slide number reaches any of them. These numbers no longer match the PDF's
+     page numbers.
+
+.. dropdown:: v2.47.0: Shorter Text on Six L11 Interactive Slides, Not Yet Published (2026-11-22)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 
