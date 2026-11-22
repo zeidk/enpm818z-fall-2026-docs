@@ -5,10 +5,21 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.44.0: Search and Quiz Checks in the L10 and L11 Interactive Slides (2026-11-21)
+.. dropdown:: v2.45.0: L11 Interactive Slides Gain a DAgger Card, Not Yet Published (2026-11-22)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L11 interactive slides (not yet published):** a new slide opens the
+     DAgger section with DAgger at a glance: what it fixes, who drives, who
+     labels, how the data grows, and how many test laps the clone finishes
+     before and after DAgger.
+
+.. dropdown:: v2.44.0: Search and Quiz Checks in the L10 and L11 Interactive Slides (2026-11-21)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 
