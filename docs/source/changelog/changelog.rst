@@ -5,10 +5,22 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.46.0: Cleaner Quiz Checks in the L10 and L11 Interactive Slides (2026-11-22)
+.. dropdown:: v2.47.0: Shorter Text on Six L11 Interactive Slides, Not Yet Published (2026-11-22)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L11 interactive slides (not yet published):** six of the wordiest slides
+     say the same with fewer words: the expert's rule, how a small error
+     compounds, why the offset weight is too small, the general result, a slow
+     model needs a fast partner, and how GP4 scores your stack. Every number
+     stays the same.
+
+.. dropdown:: v2.46.0: Cleaner Quiz Checks in the L10 and L11 Interactive Slides (2026-11-22)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

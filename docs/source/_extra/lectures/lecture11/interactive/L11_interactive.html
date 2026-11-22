@@ -1097,13 +1097,12 @@ svg g[role="button"]:focus-visible{outline:4px solid var(--focus);outline-offset
   <h2>The expert steers for the curve, then back to the center</h2><div class="fit"><div class="fitin">
   <div class="two" style="grid-template-columns:500px 1fr;gap:20px;align-items:start">
     <div style="font-size:25px;line-height:1.32">
-      <p style="margin:0 0 4px"><b>Offset:</b> how far the AV&rsquo;s center is from the lane center, left positive. <b>Heading error:</b> the angle between the AV and the lane. The expert&rsquo;s rule (all three numbers chosen):</p>
+      <p style="margin:0 0 4px"><b>Offset:</b> how far the AV&rsquo;s center is from the lane center, left positive. <b>Heading error:</b> the AV&rsquo;s angle to the lane. The expert&rsquo;s rule (all three numbers chosen):</p>
       <ol class="steps" style="margin:2px 0 4px">
         <li><i class="sw2" style="background:var(--plan)"></i>steer for the curve 2.4&nbsp;m ahead (0.3&nbsp;s at 8&nbsp;m/s), as the road&rsquo;s curvature asks;</li>
         <li><i class="sw2" style="background:var(--s4)"></i>steer back <span id="ex-ke"></span>&deg; for every meter of offset;</li>
         <li><i class="sw2" style="background:var(--s3)"></i>steer back <span id="ex-kp"></span>&deg; for every degree of heading error.</li>
       </ol>
-      <p style="margin:0;color:var(--muted)">A random push on the steering (wind gusts and the road&rsquo;s slope; chosen: 0.4&deg;) acts on every driver.</p>
     </div>
     <div>
       <svg id="ex-svg" class="plot" viewBox="0 0 580 330" width="580" height="330" role="img" aria-label="The AV on a lane that goes straight and then turns left. A blue dot marks the lane center 2.4 meters ahead of the AV, a magenta bar behind the AV shows its offset from the lane center, and the AV's front wheels are turned by the sum of the three terms. The sliders change the turn's radius, the offset and the heading error; the zoom button enlarges the AV to show the heading error and the wheel angle."></svg>
@@ -1336,10 +1335,10 @@ table.t tr[data-case]{cursor:pointer}
   <div class="two" style="grid-template-columns:1fr 560px;gap:26px;align-items:center">
     <div>
       <ol class="loop" id="p21-steps" style="font-size:25px;line-height:1.3">
-        <li>Near the center the clone is off by 0.44°: it steers back too little, so a gust or a turn pushes it a little farther out than the expert.</li>
-        <li>Farther out, the expert would steer back harder (3.44° per meter); the clone adds only 0.38° per meter. Its error grows: 1.09° between 0.25 and 0.50&nbsp;m.</li>
-        <li>A larger error pushes it farther out, where the error is larger again: 1.78°, then 2.41°.</li>
-        <li>Each step starts from where the last one left the AV, so the errors add up instead of averaging out. A wheel leaves the lane.</li>
+        <li>Near the center the clone is off by 0.44°: it steers back too little, so a gust or a turn sends it farther out than the expert.</li>
+        <li>Farther out, the expert would steer back 3.44° per meter, the clone only 0.38°: the error grows to 1.09° (0.25 to 0.50&nbsp;m).</li>
+        <li>Farther out still, it grows again: 1.78°, then 2.41°.</li>
+        <li>Each step starts where the last one left the AV, so the errors add up instead of averaging out. A wheel leaves the lane.</li>
       </ol>
     </div>
     <div>
@@ -1441,7 +1440,7 @@ table.t tr[data-case]{cursor:pointer}
 
 <section class="plate frame s3" data-scene="p45" data-name="Slide 43 · Compounding Error" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Compounding Error</span><span class="slno" role="button" tabindex="0" title="Go to a slide (click, or G)" aria-label="Slide 43 of 106. Go to a slide">Slide 43 / 106</span></div>
   <h2>The general result: mistakes can grow with the square of the time</h2><div class="fit"><div class="fitin">
-  <p class="goal" style="margin-bottom:4px">Ross and Bagnell bound behavior cloning's total cost over a drive of <i>T</i> steps <span class="cite" data-key="ross2010efficient">[2]</span>. <i>&epsilon;</i> is how often the policy makes a mistake on states the <b>expert</b> visits (the open-loop error rate).</p>
+  <p class="goal" style="margin-bottom:4px">Ross and Bagnell bound behavior cloning's cost <span class="cite" data-key="ross2010efficient">[2]</span>: if the policy makes mistakes at rate <i>&epsilon;</i> on the states the <b>expert</b> visits (the open-loop error rate), its cost over a drive of <i>T</i> steps can grow up to <i>T</i><sup>2</sup><i>&epsilon;</i>, not <i>T&epsilon;</i>.</p>
   <div class="two" style="grid-template-columns:640px 1fr;gap:20px;align-items:start">
     <div>
       <svg id="p26-svg" class="plot" viewBox="0 0 640 262" width="640" height="262" role="img" aria-label="Log-log plot of cost against the horizon T in steps. Tag 1, rust: T squared times epsilon, a line with slope 2. Tag 2, dark: T times epsilon, a line with slope 1. Both lines move with the sliders."></svg>
@@ -1449,7 +1448,6 @@ table.t tr[data-case]{cursor:pointer}
     </div>
     <div>
       <ul class="pl" style="font-size:25px;line-height:1.25;margin:0 0 4px">
-        <li>The bound: a cost that "grows quadratically <i>O</i>(<i>T</i><sup>2</sup>) in the task horizon <i>T</i> rather than as <i>O</i>(<i>T</i>)".</li>
         <li>One mistake can take the policy off the expert's states, and from there it may keep making mistakes for the rest of the drive.</li>
       </ul>
       <div class="ce-ro" id="p26-ro" style="font-size:25px"></div>
@@ -1869,12 +1867,12 @@ python3 l11_handson.py --part eval     # open vs closed loop</pre>
   <svg id="sp-svg" class="plot" viewBox="0 0 1168 224" style="width:100%;height:auto" role="img" aria-label="Camera images and text, route and question, go into a Vision-language model. A progress bar in the model fills slowly: about 0.4 seconds per answer. The model writes text, what it sees and plans, and a coarse trajectory written as numbers. A fast planner refines the coarse trajectory, and a row of eight lights ticks once per control step."></svg>
   <div class="row" style="margin:0 0 2px"><button id="sp-play">Play</button><span class="try">try it</span><span class="small" style="font-size:22px;margin-left:12px">Drawn 10 times slower than real time.</span></div>
   <ol style="font-size:25px;line-height:1.2;margin:0 0 4px;padding-left:34px">
-    <li>DriveVLM's vision-language model, on an NVIDIA OrinX chip in the car: &ldquo;an average inference speed of 410&nbsp;ms&rdquo; <span class="cite" data-key="tian2024drivevlm">[22]</span>. At our 8&nbsp;m/s: 0.41 &times; 8 = 3.3&nbsp;m driven per answer.</li>
-    <li>Alpamayo 1: 99&nbsp;ms on an NVIDIA RTX 6000 Pro Blackwell <span class="cite" data-key="nvidia2025alpamayo">[21]</span>: 0.099 &times; 8 = 0.8&nbsp;m.</li>
-    <li>Alpamayo 2 Edge, on NVIDIA DRIVE AGX Thor-X, a chip for cars: &ldquo;160 ms to 190 ms depending on the amount of reasoning&rdquo; <span class="cite" data-key="pavone2026onboard">[23]</span>: 0.16 &times; 8 = 1.3&nbsp;m to 0.19 &times; 8 = 1.5&nbsp;m.</li>
+    <li>DriveVLM's vision-language model, 410&nbsp;ms on average on an NVIDIA OrinX in the car <span class="cite" data-key="tian2024drivevlm">[22]</span>: at our 8&nbsp;m/s, 0.41 &times; 8 = 3.3&nbsp;m driven per answer.</li>
+    <li>Alpamayo 1, 99&nbsp;ms on an NVIDIA RTX 6000 Pro Blackwell <span class="cite" data-key="nvidia2025alpamayo">[21]</span>: 0.099 &times; 8 = 0.8&nbsp;m.</li>
+    <li>Alpamayo 2 Edge, 160 to 190&nbsp;ms depending on how much it reasons, on an NVIDIA DRIVE AGX Thor-X, a chip for cars <span class="cite" data-key="pavone2026onboard">[23]</span>: 0.16 &times; 8 = 1.3&nbsp;m to 0.19 &times; 8 = 1.5&nbsp;m.</li>
     <li>Our lane keeper steers every 0.05&nbsp;s: 0.05 &times; 8 = 0.4&nbsp;m.</li>
   </ol>
-  <p style="margin:0;font-size:23px">These times are the authors' reports, on different chips, not a comparison of the models. DriveVLM-Dual hands its trajectory to &ldquo;a classical planner for high-frequency trajectory refinement&rdquo; <span class="cite" data-key="tian2024drivevlm">[22]</span>.</p>
+  <p style="margin:0;font-size:23px">Times from the authors, on different chips: not a model comparison. DriveVLM-Dual hands its trajectory to a classical planner that refines it at high frequency <span class="cite" data-key="tian2024drivevlm">[22]</span>.</p>
 </div></div></section>
 
 <section class="plate frame s7" data-scene="p71" data-name="Slide 73 · VLA" tabindex="0"><span class="bolt"></span><div class="fhead"><span>VLA</span><span class="slno" role="button" tabindex="0" title="Go to a slide (click, or G)" aria-label="Slide 73 of 106. Go to a slide">Slide 73 / 106</span></div>
@@ -2016,15 +2014,15 @@ python3 l11_handson.py --part eval     # open vs closed loop</pre>
 
 <section class="plate frame s8" data-scene="p82" data-name="Slide 86 · Evaluation" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Evaluation</span><span class="slno" role="button" tabindex="0" title="Go to a slide (click, or G)" aria-label="Slide 86 of 106. Go to a slide">Slide 86 / 106</span></div>
   <h2>GP4 scores your stack in closed loop</h2><div class="fit"><div class="fitin">
-  <p style="margin:0 0 4px">GP4 scores your stack by running it: your commands decide where the AV goes next. You run your route twice, once with your EKF pose and once with the true pose, with 40 vehicles and 80 walkers.</p>
+  <p style="margin:0 0 4px">GP4 runs your stack: your commands decide where the AV goes next. You run your route twice, with your EKF pose and with the true pose, among 40 vehicles and 80 walkers.</p>
   <p style="margin:0 0 2px"><code>tools/evaluate_run.py</code> scores each drive until the AV first comes within 2&nbsp;m of the goal, and reports:</p>
   <ul class="pl" style="font-size:25px">
-    <li>route completion: 1 at arrival; otherwise 1 minus the road distance still left to the goal over the route's length;</li>
+    <li>route completion: 1 at arrival, else 1 minus the road distance left over the route&rsquo;s length;</li>
     <li>collisions and pedestrian hits;</li>
     <li>red-light violations: crossing a stop line on red faster than 1&nbsp;m/s;</li>
     <li>cross-track error and mean speed.</li>
   </ul>
-  <div class="box" style="margin-top:6px">The grader runs your code on a held-out route, and compares with the reference solution: route completion at least 0.8 times the reference's, no more red-light violations or pedestrian hits than the reference.</div>
+  <div class="box" style="margin-top:6px">Grading, on a held-out route: points for route completion at least 0.8 of the reference solution's, and for no more red-light violations or pedestrian hits than it.</div>
 </div></div></section>
 
 <section class="plate frame s8" data-scene="p83" data-name="Slide 87 · Evaluation" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Evaluation</span><span class="slno" role="button" tabindex="0" title="Go to a slide (click, or G)" aria-label="Slide 87 of 106. Go to a slide">Slide 87 / 106</span></div>
@@ -4276,11 +4274,10 @@ function lapPlayer(root, cfg){ cfg = cfg || {};
         var t2 = freeSpot(svg, box, e2[0], dots, [e1, e2], tags); tags.push(t2);
         var t3 = freeSpot(svg, box, [X(0.9), Y(1.2)], dots, [e1, e2], tags);
         tag(g, t1[0], t1[1], 1); tag(g, t2[0], t2[1], 2); tag(g, t3[0], t3[1], 3); } }
-    function words(){ var s = SW[+inp.value], sd = DATA.measured.dilution.true_std_m, by = EXP * sd * sd / (sd * sd + s.sigma * s.sigma);
+    function words(){ var s = SW[+inp.value], sd = DATA.measured.dilution.true_std_m;
       document.getElementById("p24-n1").textContent = f(s.sigma, s.sigma === 0.117 || s.sigma === 0.075 ? 3 : 2); document.getElementById("p24-n2").textContent = f(s.sigma / sd, 1);
       document.getElementById("p24-ro").innerHTML = "Spread of the true offset: <b>" + f(sd, 3) + "&nbsp;m</b>. Noise over spread: " + f(s.sigma, s.sigma === 0.117 || s.sigma === 0.075 ? 3 : 2) + " / " + f(sd, 3) + " = <b>" + f(s.sigma / sd, 1) +
-        "</b>.<br>Fitted weight: <b>" + f(s.deg_per_m, 2) + "°</b> per m (expert " + f(EXP, 2) + "); laps finished: <b>" + s.finished + "</b> of 20.<br>By hand: " + f(EXP, 2) + " &times; " + f(sd * sd, 4) + " / (" + f(sd * sd, 4) + " + " + f(s.sigma * s.sigma, 4) + ") = <b>" + f(by, 2) +
-        "°</b>. It is a one-input rule of thumb; the fit uses four inputs, so the two need not match."; }
+        "</b>.<br>Fitted weight: <b>" + f(s.deg_per_m, 2) + "°</b> per m (expert " + f(EXP, 2) + "); laps finished: <b>" + s.finished + "</b> of 20."; }
     draw(1); words();
     inp.addEventListener("input", function(){ draw(1); words(); });
     document.getElementById("p24-again").onclick = function(e){ e.stopPropagation(); grow(draw, 900); };
