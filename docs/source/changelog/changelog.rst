@@ -5,10 +5,22 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.48.0: Every L10 Interactive Slide Has a Number (2026-11-22)
+.. dropdown:: v2.49.0: Shorter Text on Six L10 Interactive Slides (2026-11-22)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L10 interactive slides:** six of the wordiest slides say the same with
+     fewer words: the conditions on the distance along the road, Werling's
+     cost, the two "Try it" slides on the 324 candidates, holding a speed
+     against drag, and the ghost car. Every number stays the same. Zooming is
+     turned off in full screen.
+
+.. dropdown:: v2.48.0: Every L10 Interactive Slide Has a Number (2026-11-22)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

@@ -1381,7 +1381,7 @@ tr[data-why]:hover td:first-child::before,tr[data-why]:focus td:first-child::bef
   <h2>Plan along the road in time: what the distance \(s(t)\) must do</h2><div class="fit"><div class="fitin">
   <ul class="goal" style="margin:0 0 10px">
     <li>\(s(t)\): how far along the road the AV is at each time; with \(d(t)\), it makes one trajectory.</li>
-    <li>Werling et al. plan two kinds of move along the road (Werling et al., 2010), each with its own conditions.</li></ul>
+    <li>Two kinds of move along the road, each with its own conditions (Werling et al., 2010).</li></ul>
   <div class="two" style="font-size:25px">
     <div class="box" style="font-size:25px;margin:0"><span class="bt">Keep a speed: five conditions</span>
       <ol style="margin:4px 0 6px"><li>\(s\)(0) = the AV's position now</li><li>\(\dot{s}\)(0) = its speed now</li><li>\(\ddot{s}\)(0) = its acceleration now</li>
@@ -1393,9 +1393,9 @@ tr[data-why]:hover td:first-child::before,tr[data-why]:focus td:first-child::bef
 </div>
   </div>
   <ul style="font-size:25px;margin:12px 0 0">
-    <li>Keeping a speed asks no end position (no \(s(T)\)): a car that keeps 6 m/s may be anywhere along the road at time \(T\).
-      So it has five conditions, one fewer than \(d(t)\).</li>
-    <li>A stop asks where, so it has six. <span class="cond-new">Highlighted</span>: condition 4, the end position \(s(T)\), which only a stop has.</li></ul>
+    <li>Keeping a speed needs no end position \(s(T)\): at 6 m/s the AV may be anywhere along the road at time \(T\).
+      So five conditions, one fewer than \(d(t)\).</li>
+    <li>A stop needs one: condition 4 (<span class="cond-new">highlighted</span>), so six.</li></ul>
 </div></div></section>
 
 <section class="plate frame plan extra" data-part="2" data-scene="p35-2" data-name="Slide 44 · Trajectory Generation" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Trajectory Generation</span><span class="slno" role="button" tabindex="0" title="Go to a slide (click, or G)" aria-label="Slide 44 of 148. Go to a slide">Slide 44 / 148</span></div>
@@ -1494,10 +1494,10 @@ tr[data-why]:hover td:first-child::before,tr[data-why]:focus td:first-child::bef
     <div>\[ C_s = k_j \int_0^{T} \dddot s^{\,2}\, \mathrm{d}t + k_t\, T + k_{\dot s}\, (\dot s_1 - \dot s_{\text{d}})^2 \]</div>
   </div>
   <ul style="font-size:25px;margin:2px 0 4px">
-    <li><b>\(C_{d}\), across:</b> how much the AV jerks sideways, plus how long the move takes, plus how far it ends from the center of the lane the behavior layer picked.</li>
+    <li><b>\(C_{d}\), across:</b> sideways jerk, plus the move's time, plus how far it ends from the center of the lane the behavior layer picked.</li>
     <li><b>\(C_{s}\), along:</b> the same jerk and time along the road, plus how far the end speed misses the speed the behavior layer asked for.</li>
   </ul>
-  <p style="font-size:25px">Each penalty has a weight \(k\) (all 1 here, chosen). The total is \(C_{d} + C_{s}\); the cheapest candidate that passes the checks wins.</p>
+  <p style="font-size:25px">Each weight \(k\) is 1 here (chosen). The total is \(C_{d} + C_{s}\); the cheapest candidate that passes the checks wins.</p>
 </div></div></section>
 
 <section class="plate frame plan" data-scene="p41" data-name="Slide 51 · Trajectory Generation" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Trajectory Generation</span><span class="slno" role="button" tabindex="0" title="Go to a slide (click, or G)" aria-label="Slide 51 of 148. Go to a slide">Slide 51 / 148</span></div>
@@ -1528,7 +1528,6 @@ tr[data-why]:hover td:first-child::before,tr[data-why]:focus td:first-child::bef
 <section class="plate frame plan extra tlf" id="x-traj-live" data-scene="x-traj-live" data-name="Slide 53 · Trajectory Generation" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Trajectory Generation</span><span class="slno" role="button" tabindex="0" title="Go to a slide (click, or G)" aria-label="Slide 53 of 148. Go to a slide">Slide 53 / 148</span></div>
   <style>.tlf button{font-size:20px;padding:3px 10px;margin-right:5px} .tlf .row{gap:8px} .tlf .lbl{font-size:20px;min-width:118px}</style>
   <h2>Try it: generate the 324 candidates, check each at its own time</h2><div class="fit"><div class="fitin">
-  <p class="goal" style="margin:0 0 4px">Each dot is one candidate's AV at time \(t\); car B is where prediction puts it then.</p>
   <div class="row" style="margin:0 0 4px">
     <button id="tl-gen">Generate all 324</button><button id="tl-play">Play 7 s</button>
     <span class="lbl" style="min-width:0">time</span><input type="range" id="tl-t" min="0" max="7" step="0.1" value="0" aria-label="time into the plan, seconds" style="width:300px">
@@ -2331,10 +2330,7 @@ tr[data-why]:hover td:first-child::before,tr[data-why]:focus td:first-child::bef
 <section class="plate frame follow extra" data-part="2" data-scene="p77-2" data-name="Slide 107 · Longitudinal Control" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Longitudinal Control</span><span class="slno" role="button" tabindex="0" title="Go to a slide (click, or G)" aria-label="Slide 107 of 148. Go to a slide">Slide 107 / 148</span></div>
   <h2>Hold a speed against drag: it sets the throttle needed and the top speed</h2><div class="fit"><div class="fitin">
   <div class="box" style="font-size:27px;margin:16px 0 0;line-height:1.4;padding:10px 20px"><span class="bt">What this slide says</span>
-    <ul class="pl" data-pl="55"><li>For each speed of the AV, the graph shows how hard drag slows it and how hard the engine can push it, both in m/s<sup>2</sup>.</li><li>The dark curve is drag.</li><li>The red dashed line is the most the engine can push, 3 m/s<sup>2</sup>, because the throttle is capped at 0.75 <span style="white-space:nowrap">(\(0.75 \times 4 = 3\))</span>.</li><li>Where the engine pushes exactly as hard as drag pulls, the speed stops changing.</li><li>Below 15.4 m/s the engine can out-push drag, so the AV can still
-    speed up; above it, drag wins even at the most throttle, so 15.4 m/s is the top speed.</li><li>At the 8 m/s target, drag is 0.92 m/s<sup>2</sup>, so the
-    controller must keep pressing the throttle at 0.23 just to hold 8 m/s.</li><li>A controller that pushes only in proportion to the error gives no throttle
-    when the error is 0, so it cannot hold that 0.23: this is why P alone stays 0.42 m/s short, a few slides on.</li></ul></div>
+    <ul class="pl" data-pl="55"><li>The graph shows, for each speed, drag's pull (dark curve) and the engine's most push (red dashed line), both in m/s<sup>2</sup>.</li><li>The most push is 3 m/s<sup>2</sup>, because the throttle is capped at 0.75 <span style="white-space:nowrap">(\(0.75 \times 4 = 3\))</span>.</li><li>Where the engine's push equals drag, the speed stops changing. Below 15.4 m/s the engine can still speed the AV up; above it drag wins even at the most throttle, so 15.4 m/s is the top speed.</li><li>At the 8 m/s target, drag is 0.92 m/s<sup>2</sup>, so the controller must keep pressing the throttle at 0.23 to hold 8 m/s.</li><li>A controller that pushes only in proportion to the error (P alone) gives no throttle at zero error, so it cannot hold that 0.23. That is why P alone stays 0.42 m/s short, a few slides on.</li></ul></div>
 </div></div></section>
 
 <section class="plate frame follow" data-scene="p78" data-name="Slide 108 · Longitudinal Control" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Longitudinal Control</span><span class="slno" role="button" tabindex="0" title="Go to a slide (click, or G)" aria-label="Slide 108 of 148. Go to a slide">Slide 108 / 148</span></div>
@@ -2377,10 +2373,10 @@ tr[data-why]:hover td:first-child::before,tr[data-why]:focus td:first-child::bef
   <h2>Compare the AV with a ghost car: where a perfect AV would be</h2><div class="fit"><div class="fitin">
   <div class="row" style="margin:6px 0"><span class="lbl" style="min-width:0">controller</span><span id="gh0-run2"></span><span class="lbl" style="min-width:0;margin-left:8px">time</span><input type="range" id="gh0-t2" min="0" max="10" step="0.05" value="3" style="width:230px" aria-label="time since the light turned green"></div>
   <div class="box" style="margin:4px 0 6px;padding:6px 18px"><span class="bt">The PID at this moment</span><div id="gh0-pid" style="font-size:25px"></div><p id="gh0-ped" style="font-size:25px;margin:2px 0 0"></p></div>
-  <p style="font-size:25px;margin:6px 0 0;line-height:1.28">No real car keeps up. With the most push, 3 m/s<sup>2</sup>, from the first instant and no drag, the AV would need \(8/3 = 2.7\) s to reach 8 m/s:
-    that is the fastest any run could be. Ours are slower, because the engine lags 0.3 s and drag takes part of the push: at 2.7 s, all four runs are still at full
-    allowed throttle and the AV is at 6.42 m/s. The target is a speed only, never a place;
-    the gap is the speed error added up over time. The deck's moment: PID + clamp at 3.0 s, the AV at 7.09 m/s, 13.9 m behind the ghost's 24 m.</p>
+  <ul class="pl" style="font-size:25px;margin:6px 0 0;line-height:1.28"><li>The fastest any run could be, at the most push (3 m/s<sup>2</sup>) with no lag or drag: 8 m/s in \(8/3 = 2.7\) s.</li>
+    <li>Ours are slower: the engine lags 0.3 s and drag takes part of the push. At 2.7 s, all four runs are still at full allowed throttle, at 6.42 m/s.</li>
+    <li>The target is a speed, never a place; the gap is the speed error added up over time.</li>
+    <li>The moment shown: PID + clamp at 3.0 s, the AV at 7.09 m/s, 13.9 m behind the ghost's 24 m.</li></ul>
 </div></div></section>
 
 <section class="plate frame follow" data-scene="p80" data-name="Slide 112 · Longitudinal Control" tabindex="0"><span class="bolt"></span><div class="fhead"><span>Longitudinal Control</span><span class="slno" role="button" tabindex="0" title="Go to a slide (click, or G)" aria-label="Slide 112 of 148. Go to a slide">Slide 112 / 148</span></div>
@@ -2928,7 +2924,7 @@ tr[data-why]:hover td:first-child::before,tr[data-why]:focus td:first-child::bef
     <tr><td><kbd>F</kbd></td><td>full screen on or off</td></tr>
     <tr><td><kbd>D</kbd> <kbd>C</kbd></td><td>pen on or off; clear the drawing (it also clears when the slide changes)</td></tr>
     <tr><td><kbd>L</kbd></td><td>laser pointer on or off</td></tr>
-    <tr><td><kbd>+</kbd> <kbd>&#8722;</kbd></td><td>zoom; scroll or pinch zooms too, and a drag moves the overview</td></tr>
+    <tr><td><kbd>+</kbd> <kbd>&#8722;</kbd></td><td>zoom; scroll or pinch zooms too, and a drag moves the overview (no zoom in full screen)</td></tr>
     <tr><td>a number, <kbd>Enter</kbd></td><td>go to that slide: type its number (shown top right as slide / total), then <kbd>Enter</kbd>; <kbd>G</kbd> opens the same field</td></tr>
     <tr><td>Click the slide number</td><td>go to a slide: the number becomes a field; type a slide number, <kbd>Enter</kbd> goes, <kbd>Esc</kbd> cancels</td></tr>
     <tr><td>a slider</td><td>drag it, or click it and use <kbd>&#8593;</kbd> <kbd>&#8595;</kbd>; <kbd>&#8592;</kbd> <kbd>&#8594;</kbd> always change the slide; <kbd>Esc</kbd> gives <kbd>&#8593;</kbd> <kbd>&#8595;</kbd> back to the slides</td></tr>
@@ -3277,8 +3273,11 @@ function setView(tx, ty, s){ view = {tx:tx, ty:ty, s:s}; world.style.transitionD
   viewport.style.setProperty("--grid", Math.max(8, 32 * s * 3) + "px"); }
 function zoomAt(mx, my, k){ var s2 = Math.min(10, Math.max(0.04, view.s * k)), r = s2 / view.s;
   setView(mx - (mx - view.tx) * r, my - (my - view.ty) * r, s2); }
-viewport.addEventListener("wheel", function(e){ e.preventDefault();
+/* no zoom in full screen (user, 2026-11-22: "remove the ability to zoom in out when in full screen"): the wheel, a pinch,
+   + and -, and the browser's own Ctrl + and Ctrl - leave the slide as it is */
+viewport.addEventListener("wheel", function(e){ e.preventDefault(); if (document.fullscreenElement) return;
   zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0015))); }, {passive:false});
+window.addEventListener("keydown", function(e){ if (document.fullscreenElement && (e.ctrlKey || e.metaKey) && /^[+=\-_0]$/.test(e.key)) e.preventDefault(); }, true);
 var drag = null, dragged = false;
 viewport.addEventListener("pointerdown", function(e){
   if (e.button !== 0 || /^(INPUT|BUTTON|VIDEO|A|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
@@ -3316,7 +3315,7 @@ window.addEventListener("keydown", function(e){ var w = document.getElementById(
   if (!w || !w.classList.contains("on")) return;
   if (e.key === "Escape") whyClose();
   if (e.key !== "Tab"){ e.stopPropagation(); if (e.key !== "Enter") e.preventDefault(); } }, true);
-document.addEventListener("keydown", function(e){ var tg = e.target.tagName; if (tg === "INPUT" || tg === "TEXTAREA") return;
+document.addEventListener("keydown", function(e){ var tg = e.target.tagName; if (tg === "INPUT" || tg === "TEXTAREA" || document.fullscreenElement) return;
   if (e.key === "+" || e.key === "=") zoomAt(innerWidth / 2, innerHeight / 2, 1.25);
   else if (e.key === "-" || e.key === "_") zoomAt(innerWidth / 2, innerHeight / 2, 0.8); });
 
@@ -4362,11 +4361,11 @@ function makeTraj(R){
     }
     /* the key under each road, from the drawing's own scales */
     function sw(col, ch){ return "<span class='swatch' aria-hidden='true' style='color:" + col + "'>" + ch + "</span>"; }
-    document.querySelectorAll(".tl-key").forEach(function(p){ p.innerHTML = "Each dot is one candidate's AV at time \\(t\\), colored by its verdict (" +
-      sw(COL.kept, "&#9679;") + " gray kept, " + sw(COL.coll, "&#9679;") + " orange-red collides, " + sw(COL.hard, "&#9679;") + " purple too hard); a dot turns into a cross " +
-      sw(COL.coll, "&#215;") + " from the moment that candidate hits car B or the parked car. Cars: " + sw(COL.ink, "&#9632;") + " AV, " +
+    document.querySelectorAll(".tl-key").forEach(function(p){ p.innerHTML = "Dot: one candidate's AV at time \\(t\\); car B is where prediction puts it then. " +
+      sw(COL.kept, "&#9679;") + " gray kept, " + sw(COL.coll, "&#9679;") + " orange-red collides, " + sw(COL.hard, "&#9679;") + " purple too hard; a cross " +
+      sw(COL.coll, "&#215;") + " from the moment it hits car B or the parked car. Cars: " + sw(COL.ink, "&#9632;") + " AV, " +
       sw(COL.park, "&#9632;") + " parked, " + sw(COL.b, "&#9632;") + " car B.<br>" + "Road straightened and drawn " + nt(ky / kx, 1) +
-      " times larger across than along, so each 4.5 m &#215; 1.9 m car shows as a tall block, and its three collision circles (radius " + nt(T.rad, 2) + " m) show as ovals. Circles that touch turn orange."; if (window.mathIn) mathIn(p); else if (typeof mathIn === "function") mathIn(p); });
+      " times larger across than along, so the 4.5 m &#215; 1.9 m cars and their three collision circles each (radius " + nt(T.rad, 2) + " m) show as tall blocks and ovals; circles that touch turn orange."; if (window.mathIn) mathIn(p); else if (typeof mathIn === "function") mathIn(p); });
     function counts(){
       var list = genOrder().slice(0, shown), n = {kept:0, park:0, b:0, hard:0};
       list.forEach(function(c){ if (!c.dropped) n.kept++; else if (c.dropped === "collides (parked car)") n.park++; else if (c.dropped === "collides (car B)") n.b++; else n.hard++; });
