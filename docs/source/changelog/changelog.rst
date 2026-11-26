@@ -5,10 +5,24 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.49.0: Shorter Text on Six L10 Interactive Slides (2026-11-22)
+.. dropdown:: v2.50.0: Parts and Section Banners in the L11 Interactive Slides, Not Yet Published (2026-11-25)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L11 interactive slides (not yet published):** the four long sections
+     (Introduction, Behavior Cloning, DAgger, and Modular or End-to-End) are
+     split into parts, each opened by its own slide, and every slide names its
+     section and part at the top left. Section and part slides carry a banner.
+     The four quiz checks left the slides; their questions are in the L11 quiz.
+     In full screen on a wide screen, the slide fills the screen from edge to
+     edge, and pressing the up arrow twice opens the contents. 114 slides.
+
+.. dropdown:: v2.49.0: Shorter Text on Six L10 Interactive Slides (2026-11-22)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 
