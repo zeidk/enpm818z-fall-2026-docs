@@ -347,6 +347,12 @@ with a visit date was read on that date.
 
     Cited in: Introduction.
 
+49. Takayuki Osa et al. “An Algorithmic Perspective on Imitation Learning”. In:
+    *Foundations and Trends in Robotics* 7.1 and 2 (2018), pp. 1 to 179. DOI:
+    `10.1561/2300000053 <https://doi.org/10.1561/2300000053>`__.
+
+    Cited in: Introduction.
+
 
 Also quoted in a "More detail" box
 ----------------------------------

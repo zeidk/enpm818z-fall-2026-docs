@@ -5,10 +5,21 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.51.0: L11 Follows the Map of the Field, Not Yet Published (2026-11-27)
+.. dropdown:: v2.51.1: L11 Defines the Expert, Not Yet Published (2026-11-27)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L11 lecture (not yet published):** "Ways to Learn a Driver" opens with
+     a definition of the expert, the three kinds the lecture uses (a person, a
+     program that reads the true state, a trained driver) and what an expert
+     gives. The references add Osa et al. (2018).
+
+.. dropdown:: v2.51.0: L11 Follows the Map of the Field, Not Yet Published (2026-11-27)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

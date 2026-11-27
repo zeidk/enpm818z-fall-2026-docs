@@ -330,6 +330,37 @@ Ways to Learn a Driver
 
 A network that drives has to be trained. It can copy an expert's driving, or learn by trial from a reward, and the field sorts its methods into these two branches.
 
+Expert, defined
+^^^^^^^^^^^^^^^
+
+.. admonition:: Definition: Expert
+   :class: note
+
+   The driver whose behavior a learner imitates: its demonstrations show the
+   desired behavior. "The purpose of imitation learning is to efficiently
+   learn a desired behavior by imitating an expert's behavior" (Osa et al.,
+   2018).
+
+Three kinds of expert appear in this lecture:
+
+- **A person.** "In many cases, the experts are human operators" (Osa et
+  al., 2018). NVIDIA recorded its human drivers on a real car (Bojarski et
+  al., 2016).
+- **A program.** Our lap's expert is a controller that reads the true
+  offset: privileged information, known only to the simulator.
+- **A trained driver.** Roach's expert is "a reinforcement learning expert
+  that maps bird's-eye view images to continuous low-level actions" (Zhang et
+  al., 2021).
+
+What an expert gives:
+
+- **It drives well.** Methods that learn a cost assume "the demonstrations
+  are (approximately) optimal" (Osa et al., 2018).
+- **Its demonstrations never cover everything:** "collecting expert
+  demonstrations to cover all situations is usually too expensive and
+  time-consuming" (Osa et al., 2018). Section "Imitation Learning" shows what
+  that gap does to the clone.
+
 Two ways to learn a driver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
