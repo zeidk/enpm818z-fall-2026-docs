@@ -2044,30 +2044,88 @@ cost, or learn a model of the world with the policy.
 Reinforcement Learning
 ----------------------
 
-Imitation learning needs an expert to copy. The map's second branch,
-reinforcement learning, drops the expert: the driver learns from a reward, by
-trial. This section sets the clone and the lap aside and shows the first car
-that learned to drive this way.
+Imitation learning needs an expert to copy. Reinforcement learning, the map's
+second branch, drops the expert: the driver learns by trial, from a reward. It
+needs room to fail, which is why it has mostly stayed in simulation.
 
-Reinforcement learning
-~~~~~~~~~~~~~~~~~~~~~~
+Reinforcement learning, defined
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Reinforcement learning (RL): the driver learns from a reward, by trial, with
-no expert's actions to copy. A real car learned to follow its lane in under 30
-minutes.
+.. admonition:: Definition: Reinforcement learning
+   :class: note
 
-- "We demonstrate the first application of deep reinforcement learning to
-  autonomous driving" (Kendall et al., 2018).
-- "From randomly initialised parameters, our model is able to learn a policy
-  for lane following in a handful of training episodes using a single
-  monocular image as input".
-- On a 250 m road, one version drove the route "after only 11 training
-  episodes"; the task took "under thirty minutes of training", "all done on
-  on-board computers".
+   Learning a policy by trial and error, from a reward instead of an expert.
+   "Reinforcement learning (RL) is a field of learning by trial and error"
+   (Chen et al., 2024); it "tries to obtain a policy that maximizes an
+   expected reward" (Osa et al., 2018).
 
-RL needs no expert. It needs a reward and room to try and fail. Roach, the
-teacher of the part "A Privileged Teacher", was trained this way.
+The loop has three parts. On our lap, they are:
 
+- **The policy**, three weights on the clone's three inputs (offset, heading,
+  curvature), searched from 0. It maps what the AV senses to a steering command.
+- **The car and road**, our lap in the hands-on model. It carries out the
+  command and gives the next state, 0.05 s later.
+- **The reward**: the AV drives 0.4 m in each step (8 m/s for 0.05 s), so each
+  step adds 0.4 m. An episode, one try, ends when a wheel leaves the lane.
+
+After each round of episodes, the search learns: it keeps the best weights and
+tries new ones around them. No expert says what the right action was.
+
+A reward for lane keeping
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+On our lap, the reward is the distance driven before a wheel leaves the lane.
+Kendall et al. used the same idea on a real car: "the distance travelled by the
+vehicle without the safety driver taking control" (Kendall et al., 2018).
+
+- **Round 1's best try** drove 134.4 m. Turn 1 runs from about 110 m to 134 m,
+  and a wheel left the lane at its end: the episode ended there, with a reward
+  of 134.4 m.
+- **The learned policy** drove the whole lap (1442.6 m long) with no wheel out
+  of the lane: a reward of 1442.8 m, the distance its 0.05 s steps covered.
+
+No one labels an action: the reward only says how far the AV got.
+
+Learning by trial, episode by episode
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The search drove 450 episodes on our lap, 15 rounds of 30, with no expert. It
+started from weights of 0; each round kept its 6 best tries and drew new
+weights around them (a cross-entropy search; these settings were chosen for
+this example).
+
+- In round 1, 25 of the 30 tries left the lane before turn 1, and none got
+  past its end.
+- The first whole lap came at episode 36, in round 2.
+- The learned weights finish **20 of 20** test laps; the clone finished 5 of
+  20.
+- They are not the expert's weights: the offset weight is 5.1 deg/m, against
+  the expert's 3.4 deg/m.
+
+Kendall et al.'s real car learned the same task the same way. On a 250 m road,
+one version drove the route "after only 11 training episodes"; the task took
+"under thirty minutes of training", "all done on on-board computers" (Kendall
+et al., 2018). "We demonstrate the first application of deep reinforcement
+learning to autonomous driving".
+
+Why imitation leads in driving
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+RL learned to follow a lane on a real car, but imitation learning still leads
+end-to-end driving. The survey gives the reasons (Chen et al., 2024):
+
+- **Room to fail:** "RL requires an environment that allows potentially unsafe
+  actions to be executed".
+- **Data:** "RL requires significantly more data to train than IL", so "almost
+  all papers that use RL in driving have only investigated the technique in
+  simulation".
+- **A reward to design:** behavior cloning "does not require hand-crafted
+  reward design, which is crucial for RL".
+- **The result so far:** "To date, no report has shown results for end-to-end
+  training with RL that are competitive with IL".
+
+Where a simulator can absorb the failures, RL works: Roach's expert, the
+teacher of the part "A Privileged Teacher", was trained with RL.
 
 .. _l11-lec-inside-the-networks:
 
@@ -2790,6 +2848,8 @@ signs, found in parking lots in Hawaii.
 
 "You haven't changed the need to handle the exceptions, but you've converted it
 from a programming job of a few lines of code into a data collection job".
+
+.. _l11-lec-gp5:
 
 GP5: An Optional Project
 ~~~~~~~~~~~~~~~~~~~~~~~~

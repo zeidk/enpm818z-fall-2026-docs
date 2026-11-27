@@ -5,10 +5,24 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.51.1: L11 Defines the Expert, Not Yet Published (2026-11-27)
+.. dropdown:: v2.52.0: L11 Reinforcement Learning on Our Lap, Not Yet Published (2026-11-27)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L11 lecture (not yet published):** the Reinforcement Learning section
+     now runs reinforcement learning on the lecture's lap: the loop, a reward
+     for lane keeping (the distance driven before a wheel leaves the lane), and
+     450 tries in which a policy with the clone's three inputs learns, with no
+     expert, to finish every test lap. It ends with why imitation learning still leads in
+     driving. The interactive slides were shortened; GP4 and GP5 stay on this
+     page.
+
+.. dropdown:: v2.51.1: L11 Defines the Expert, Not Yet Published (2026-11-27)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 
