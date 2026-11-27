@@ -4,15 +4,19 @@ Lecture
 
 .. note::
 
-   These notes follow the **main deck** of L11, the slides shown in class,
-   in the same order and with the same sections. You can read them at home.
-   The deck links some slides to a **"More detail"** box on this page: a
-   closed box right after the part it explains. Click its title to open it.
-   Nothing in a "More detail" box is on the quiz.
+   These notes follow the **interactive deck** of L11, the slides shown in
+   class, with the same seven sections, the same parts and the same slide
+   titles. You can read them at home. The deck links some slides to a
+   **"More detail"** box on this page: a closed box right after the part it
+   explains. Click its title to open it. Nothing in a "More detail" box is on
+   the quiz.
 
-   The hands-on commands are in the section "Hands-on: clone the expert,
-   then run DAgger" below. The papers and pages behind these notes are on
-   :doc:`the References page <l11_references>`.
+   The hands-on commands are in the part "Hands-on code" of the section
+   "Imitation Learning". The papers and pages behind these notes are on
+   :doc:`the References page <l11_references>`, numbered as in the deck.
+
+   You can also try the slides: :doc:`the interactive slides <l11_interactive>`
+   run in your browser.
 
 
 .. _l11-lec-introduction:
@@ -20,39 +24,75 @@ Lecture
 Introduction
 ------------
 
-Every earlier lecture built a driver from parts that people design, tune and
-test one at a time: the stack of GP1 to GP4. Today builds a driver that
-**learns from an expert**, and then asks how to compare the two.
+An automated driving system (ADS) is built in one of two ways: a modular stack
+of parts that people design and test one at a time, like your GP1 to GP4
+stack, or one end-to-end network trained from data. Companies use one, the
+other, or a hybrid of both. This lecture shows how an end-to-end driver
+learns, why it fails, and how to compare the two designs.
 
-Two ways to build a driver
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Who builds which design
+~~~~~~~~~~~~~~~~~~~~~~~
 
-.. figure:: /_static/images/L11/stack_e2e.png
-   :class: dark-light themed-L11
-   :alt: Two rows of boxes. Top row, titled Modular: the stack you built in GP1 to GP4: Sensors (L2), Perception (L4, L5), Localization (L6), Planning (L7, L8, L9), Control (L10), then Steering, throttle, brake, joined by arrows numbered 1 to 5. Bottom row, titled End-to-end: one network, learned from driving data: Sensors, one long blue box labeled One neural network, then Trajectory or steering, throttle, with the last arrow numbered 6.
-   :width: 100%
-   :align: center
+An ADS is built as a modular stack, as one end-to-end network, or as a hybrid
+of the two. Companies have chosen differently.
 
-   A modular stack and an end-to-end driver.
+- **Modular stack.** People design each part and test it on its own:
+  perception, localization, planning, control. Your GP1 to GP4 stack is one.
+- **Hybrid.** Large learned models inside a structure that people designed.
+  Waymo builds its driver this way, with a few specialized models instead of
+  one network (Waymo, 2026).
+- **End-to-end.** One network from sensors to driving. Tesla says it uses
+  "end-to-end neural networks" (Tesla, 2024). Wayve, led by Alex Kendall,
+  sells end-to-end driving (Kendall, 2025).
 
-.. admonition:: Reading the figure
-   :class: tip
+This lecture builds the end-to-end side, then compares it with the stack you
+know.
 
-   The top row is the stack you built, drawn as a chain to keep the picture
-   simple. Each arrow carries something a person chose:
+The Modular and the End-to-End Driver
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   - **Arrow 1:** images and LiDAR points.
-   - **Arrow 2:** objects with tracks.
-   - **Arrow 3:** the AV's pose and the objects on the map.
-   - **Arrow 4:** a trajectory.
-   - **Arrow 5:** the commands to the car.
+A modular driver splits driving into parts that people design and test one at a time: perception, localization, planning, control. An end-to-end driver gives the whole job to one neural network trained from data, from the sensors to a trajectory or to commands. The difference is who decides what passes between the steps: people, or the training.
 
-   The bottom row is one network, learned from driving data. **Arrow 6**
-   carries a trajectory or the commands, straight from the sensors, with no
-   parts you can open one by one. Today is about the bottom row.
+End-to-end learning
+^^^^^^^^^^^^^^^^^^^
+
+.. admonition:: Definition: End-to-end learning
+   :class: note
+
+   "End-to-end learning refers to training a possibly complex learning system
+   by applying gradient-based learning to the system as a whole" (Glasmachers,
+   2017).
+
+Four fields use it. In each, one neural network goes from the raw input to
+the final output and skips a step that people used to design:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 16 10 74
+   :class: compact-table
+
+   * - Field
+     - Year
+     - What the one network does
+   * - Speech
+     - 2014
+     - Audio to text, "without requiring an intermediate phonetic
+       representation" (Graves and Jaitly, 2014).
+   * - Translation
+     - 2014
+     - An English sentence to a French one: "a general end-to-end approach to
+       sequence learning" (Sutskever, Vinyals and Le, 2014).
+   * - Robot arms
+     - 2016
+     - Camera images to motor torques, such as "screwing a cap onto a
+       bottle" (Levine et al., 2016).
+   * - Driving
+     - 2016
+     - Camera pixels to steering commands (NVIDIA; Bojarski et al., 2016).
+       This is today's topic.
 
 End-to-end driving, defined
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. admonition:: Definition: End-to-end driving
    :class: note
@@ -70,54 +110,364 @@ End-to-end driving, defined
 - **In an end-to-end driver,** the network chooses what flows inside it, and
   one score at the output trains it all.
 
-One lap, one expert, one clone: today's running example
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. dropdown:: More detail: the modular pipeline each field used before
+   :class-container: more-detail
+   :icon: info
+   :name: l11-more-modular-before
 
-The example is small on purpose, so that everything in it can be measured.
+   In each of the four fields, a chain of designed steps came first. The
+   slide's hover cards draw the chain and quote the paper that names it.
+
+   - **Speech.** Audio, then feature extraction (mel-scale filterbanks), then a
+     neural network that classifies each frame, then a hidden Markov model with
+     a pronunciation dictionary (words to phonemes), then text. Before
+     end-to-end learning, the neural network was "only a single component in a
+     complex pipeline" (Graves and Jaitly, 2014).
+   - **Translation.** A sentence in one language, split into phrases, each
+     phrase translated (a phrase table), the phrases reordered, then a language
+     model and a decoder pick the best sentence in the other language.
+     Sutskever et al. compare with "a phrase-based SMT system" (Sutskever,
+     Vinyals and Le, 2014). In such a system, "the foreign input sentence is
+     segmented into a sequence of phrases"; "Each foreign phrase is translated
+     into an English phrase. The English phrases may be reordered" (Koehn, Och
+     and Marcu, 2003).
+   - **Robot arms.** Camera images, then perception (a vision pipeline), state
+     estimation, the policy, and a hand-designed controller such as a PD
+     controller, then motor torques. Practical policy search "often
+     require[s] hand-engineered components for perception, state estimation,
+     and low-level control" (Levine et al., 2016).
+   - **Driving.** A camera image, then lane marking detection, path planning
+     and control, then steering. NVIDIA contrasts its network with an
+     "explicit decomposition of the problem, such as lane marking detection,
+     path planning, and control" (Bojarski et al., 2016). Your GP1 to GP4
+     stack is a larger one.
+
+The modular driver
+^^^^^^^^^^^^^^^^^^
+
+People build and test each of the five steps one at a time:
+
+1. **Image and points:** the camera image and the LiDAR points.
+2. **Objects:** what the detector and the tracker find.
+3. **Pose and map:** where the AV is, and the objects on the map.
+4. **Trajectory:** the path the planner chooses.
+5. **Commands:** steering, throttle and brake.
+
+You built this stack in GP1 to GP4. Each arrow between two steps carries
+something that a person chose.
+
+The end-to-end driver
+^^^^^^^^^^^^^^^^^^^^^
+
+
+.. figure:: /_static/images/L11/l11_nvidia_network.png
+   :class: white-figure
+   :alt: NVIDIA's network from left to right, with steering as its only output. A camera image of 3 planes of 66 by 200, a sketch of a road seen from a front camera: sky, green grass, trees and a building at the side, a gray road with white lane lines, two vehicles ahead with red rear lights and a small person near the road; the next plane covers part of it. A normalization layer. Five convolutional layers, drawn as shrinking green blocks: 5 by 5 with 24@31 by 98, 5 by 5 with 36@14 by 47, 5 by 5 with 48@5 by 22, 3 by 3 with 64@3 by 20, and 3 by 3 with 64@1 by 18. A flatten layer of 1164 numbers. Three fully connected layers, drawn as thin blue slabs: 100, 50 and 10. One output value in red, steering: 1 divided by the turning radius.
+   :width: 85%
+   :align: center
+
+   NVIDIA's network of 2016: camera pixels in, steering out.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   - **Camera image and normalization:** the input, 3 planes of 66 by 200 pixels, drawn as a sketch of the lecture's road seen from the AV's front camera (the same scene as the slide's top view: a car ahead, a car in the left lane, a pedestrian on the right sidewalk), and its normalization layer. The next plane covers part of the sketch.
+   - **Five convolutional layers (green):** they find features. Each block is smaller than the one before.
+   - **Flatten, then three fully connected layers (blue):** 1164 numbers, then 100, 50 and 10.
+   - **Output (red):** one value, the steering, written as 1 divided by the turning radius.
+   - The blocks are drawn to show the trend in layer size, not to scale.
+
+One neural network goes from the sensors to a trajectory or to commands, with
+no designed step between. Each new camera image goes into the one neural
+network, and a new trajectory or new commands come out. No step in between
+was designed by people.
+
+The slide also shows a road scene with a pedestrian. In its third step, when
+the one network's commands come out, the AV steers 0.7 m to the left, and it
+stays there until the camera no longer sees the pedestrian. In the Sensors
+step the slide shows the camera image.
+
+NVIDIA's network of 2016 is an example: camera pixels in, steering out. It
+has 9 layers: a normalization layer, 5 convolutional layers and 3 fully
+connected layers. The authors give "about 27 million connections and 250
+thousand parameters" (Bojarski et al., 2016). The slide draws each layer as a
+box sized by the layer's size, to show the trend and not to scale.
+
+Inside a Tesla Model 3
+^^^^^^^^^^^^^^^^^^^^^^
+
+
+.. figure:: /_static/images/L11/l11_tesla_inside.png
+   :class: white-figure
+   :alt: A see-through 3D Tesla Model 3 seen from a three-quarter view, at rest. Teal blocks mark the sensors: three at the top of the windshield, one in each door pillar and each front fender, one at the rear and one behind the front bumper. Dark numbered tags stand on gray blocks inside the car: 2 on the computer behind the glovebox, 3 on the high voltage battery under the floor, 4 on the rear drive unit, 5 on the front drive unit and 6 on the 12 V battery under the hood. At the bottom left, a label reads 1 Sensors.
+   :width: 80%
+   :align: center
+
+   A Tesla Model 3 seen from inside.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   - **Teal blocks:** the sensors, tag 1 below.
+   - **Tags 2 to 6:** the car computer, the high voltage battery, the rear drive unit, the front drive unit and the 12 V battery, as the list below names them.
+   - The slide is a 3D view you can turn. This picture is its first view, before any click.
+
+Tesla says it uses "end-to-end neural networks" (Tesla, 2024). Waymo sits
+between the two designs: it describes "fewer, high-capacity, specialized
+foundation models", not "a single, black box" (Waymo, 2026).
+
+The slide shows a see-through 3D Model 3 that you can turn, seen from the
+side, from above or from three quarters. It is scaled to Tesla's wheelbase
+(Tesla, Model 3 Owner's Manual); the places of the parts are drawn by eye.
+Six tags mark what is inside:
+
+1. **The sensors:** eight cameras, and a radar on some cars (Tesla, Model 3
+   Owner's Manual). Three cameras "are mounted to the windshield above the
+   rear view mirror", "a camera is mounted in each door pillar" and "to each
+   front fender", one "above the rear license plate". The radar ("if
+   equipped") "is mounted behind the front bumper".
+2. **The car computer,** bolted to the bulkhead behind the glovebox (Tesla,
+   Model 3 Service Manual). Tesla, 2019: the onboard computer "runs the new
+   Tesla-developed neural net for vision, sonar and radar processing
+   software" (Tesla, Autopilot, 2019).
+3. **The high voltage battery** "is located under the floor pan. A large
+   section of the undercarriage houses the high voltage battery" (Tesla,
+   Emergency Response Guide).
+4. **The rear drive unit** "is located between the rear wheels". It turns the
+   battery's direct current into the alternating current "that the drive
+   units use to power the wheels" (Tesla, Emergency Response Guide).
+5. **The front drive unit, on dual motor cars.** It ("if equipped- Dual Motor
+   vehicles only") "is located between the front wheels" (Tesla, Emergency
+   Response Guide).
+6. **The 12 V battery** "is located under the hood and the plastic access
+   panel". It runs the airbags, windows, door locks, touchscreen and lights
+   (Tesla, Emergency Response Guide).
+
+The Model 3's eight cameras
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Each camera looks its own way and reaches its own distance. The table gives
+the maximum distance as Tesla's 2019 page lists it, and the field of view
+(FOV) when that page gives one: it gives two angles only. "n/a" means the
+page gives none.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 40 30 30
+   :class: compact-table
+
+   * - Camera or sensor
+     - Max. distance (m)
+     - FOV
+   * - Narrow forward
+     - 250
+     - n/a
+   * - Main forward
+     - 150
+     - n/a
+   * - Wide forward
+     - 60
+     - 120°
+   * - Forward looking side
+     - 80
+     - 90°
+   * - Rearward looking side
+     - 100
+     - n/a
+   * - Rear
+     - 50
+     - n/a
+   * - Radar (some cars)
+     - 160
+     - n/a
+
+The places come from the owner's manual (Tesla, Model 3 Owner's Manual) and
+the distances and the two angles from Tesla's 2019 page (Tesla, Autopilot,
+2019). The slide draws the directions, the camera order and the other angles
+by eye, and its arrows and wedges are not to scale.
+
+What End-to-End Gains
+~~~~~~~~~~~~~~~~~~~~~
+
+An end-to-end driver is trained as a whole, from the sensors to the output. A 2024 survey lists what that gains over a modular stack; each gain has a price, which the lecture weighs once the clone has shown it.
+
+Gain 1: one goal for all parts
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In a modular stack, each part is trained for its own goal: the detector is
+scored on mAP, and the planner aims for safe, comfortable driving.
+End-to-end, every part, including the features it passes on, is trained for
+one goal: driving well. NVIDIA saw it: trained on steering alone, its network
+found road features, though "We never explicitly trained it to detect, for
+example, the outline of roads" (Bojarski et al., 2016).
+
+Gain 2: no information lost
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In a modular stack, each part passes on only the few things it chose, so a
+mistake early on carries through every later part. An object the detector
+misses never reaches the planner. Inside a neural network, the next layer
+gets the learned features, not only a chosen list.
+
+Gain 3: less computing
+^^^^^^^^^^^^^^^^^^^^^^
+
+In a modular stack, each task has its own feature extractor, so the work of
+finding features is done several times. End-to-end, one shared extractor
+finds the features once and every task uses them, so the car computes less.
+
+Gain 4: better with more data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The whole system learns from driving data, so training it on more data may
+make it better. This is a possibility, not a measured result. Even Alex
+Kendall, CEO of Wayve, gives its limit: with unlimited data, "this is really
+just a lookup data table", and "that's not economically or technically
+feasible" (Kendall, 2025).
+
+Ways to Learn a Driver
+~~~~~~~~~~~~~~~~~~~~~~
+
+A network that drives has to be trained. It can copy an expert's driving, or learn by trial from a reward, and the field sorts its methods into these two branches.
+
+Two ways to learn a driver
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A driver can copy an expert, or learn from a reward. Chen et al. sort more
+than 270 papers into imitation learning (IL) and reinforcement learning (RL)
+(Chen et al., 2024). The map has two branches, and each points to the
+section that covers it. A box on the slide takes you to that section:
+
+- **Imitation learning (IL):** learn from an expert's demonstrations.
+
+  - **Behavior cloning** "reduces the problem to supervised learning" (Chen
+    et al., 2024). Section "Imitation Learning".
+  - **Inverse optimal control** uses "expert demonstrations to learn a reward
+    function" (Chen et al., 2024). Section "Imitation Learning", Part 7.
+
+- **Reinforcement learning (RL):** learn from a reward, by trial, with no
+  expert to copy. An RL driver has run on a real car. Section
+  "Reinforcement Learning".
+
+What the network outputs: "planned trajectories or control signals" (Chen et
+al., 2024). A trajectory still has to become steering and throttle: that
+"needs additional controllers" (Chen et al., 2024).
+
+The Running Example
+~~~~~~~~~~~~~~~~~~~
+
+Ideas about learning to drive are easiest to test on a small case where everything is known: one lap of Town01, an expert that keeps the AV in its lane, and a clone that learns from the expert's recording.
+
+One lap, one expert, one clone
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Today's running example is small on purpose, so that everything in it can be
+measured. It is one lap of CARLA's Town01, driven by an expert and by a
+clone.
 
 1. **The road:** one lap of CARLA's Town01, read from its map. GP4 drives
    Town01 too.
 2. **The expert:** keeps the AV in its lane. It sees where the AV really is.
 3. **The clone:** learns from a recording of the expert, then drives alone.
-   It sees only what a noisy lane detector reports. That difference matters
-   later.
-4. **We measure:** how often each one finishes the lap on 20 test laps, and
-   why the clone does not. A **training run** is one recording of the expert
-   and the clone trained on it. We follow run 6, and compare it with nine
-   other runs near the end of the DAgger section.
+   It sees what a noisy lane detector reports.
+4. **What is measured:** how often each one finishes the lap on 20 test laps, and
+   why the clone does not.
+
+A **training run** is one recording of the expert and the clone trained on it.
+The notes follow run 6, and compare it with nine other runs in the part
+"DAgger" of "Fixing the Clone". Test lap 18 shows the failure: 649 m after
+the start, the clone's right wheels reach the lane line. From there the lap counts
+as not finished (red ring on the slide). Why it drifts is the subject of "Why the
+Clone Fails".
 
 Everything runs in numpy on a laptop, with no CARLA server: the hands-on
-script ``l11_handson.py`` reproduces the lap, fit, error and DAgger figures
+script ``l11_handson.py`` reproduces the lap, fit, error and DAgger numbers
 on this page.
 
+Terms used in this lecture
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+   :widths: 24 76
+   :class: compact-table
+
+   * - Term
+     - Meaning
+   * - Policy
+     - A rule from what the car senses (its observation) to what it does (its
+       action).
+   * - Expert
+     - The driver whose actions are copied: a person, or a program that reads
+       the true state from the simulator (the ground truth).
+   * - Clone
+     - The learned policy, trained to copy the expert.
+   * - State
+     - Where the car is and how it moves: on our lap, its place on the lap
+       (which sets the curve ahead), its offset from the lane center, its
+       heading error.
+   * - Open loop
+     - Scoring on recorded inputs: the policy's output never moves the car.
+   * - Closed loop
+     - Scoring by driving: the policy's output moves the car, and the new
+       state is its next input.
+   * - Waypoints
+     - A few future positions of the car, which a controller then follows.
+   * - Privileged information
+     - What only the simulator knows, such as the true state of every car and
+       lane.
+
 Learning objectives
-~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^
 
-After this lecture, you can:
+Six steps tell one story: the two designs, how to learn one, what is inside
+it, how to score it, and how to choose. After this lecture, you can:
 
-- write **behavior cloning** as supervised learning and fit a small policy;
-- explain, with measured numbers, why a clone with a small error on the
-  expert's data leaves its lane: **compounding error**;
-- run **DAgger**'s loop and say what it costs;
-- say why a learned driver needs the route's **command** at a junction;
-- place **TransFuser**, **UniAD** and driving **VLA models**: inputs,
-  outputs, what is learned;
-- tell an **open-loop** result from a **closed-loop** one;
-- compare a **modular** stack with an **end-to-end** driver fairly.
+1. **Introduction.** Compare a **modular** driver, built from parts that
+   people design, with an **end-to-end** driver, one network trained from
+   data, and say which companies use which.
+2. **Imitation learning.** Train a network by **behavior cloning**, which is
+   supervised learning on an expert's driving, then score it, see why it
+   fails and fix it. Then place cost learning and a model of the world beside
+   it. Four steps:
+
+   - **Train the clone.** Fit it to one recorded lap of the expert's driving.
+   - **Score the clone.** On recorded data (**open loop**), and by letting it
+     drive (**closed loop**).
+   - **Why the clone fails.** Three reasons: **compounding error**,
+     **causal confusion** and **averaging**.
+   - **Fixing the clone.** The fixes, mainly **DAgger** and the route's
+     **command** at a junction.
+
+3. **Reinforcement learning.** Place **reinforcement learning**, learning from
+   a reward with no expert to copy, beside imitation.
+4. **Inside the networks.** Read published drivers such as **TransFuser** and
+   **UniAD**, and driving **VLA models**.
+5. **Scoring a driver.** Tell **open-loop** from **closed-loop** evaluation,
+   and read the benchmarks that score drivers in closed loop.
+6. **Modular or end-to-end?** Weigh what end-to-end costs, and compare the two
+   kinds of driver fairly.
 
 
-.. _l11-lec-behavior-cloning:
+.. _l11-lec-imitation-learning:
 
-Behavior Cloning
-----------------
+Imitation Learning
+------------------
 
-The Introduction gave two ways to build a driver, and today's lap, expert and
-clone. This section builds on them: it trains the clone. Behavior cloning is
-the simplest way to train an end-to-end driver, and every later method today
-starts from it.
+The last section gave two ways to build a driver, the map of the field and
+today's lap, expert and clone. This section takes the map's first branch,
+**imitation learning**: learning to drive from an expert's demonstrations. It
+trains the clone by **behavior cloning**, copying the expert's actions, then
+scores it, shows why it fails and how to fix it, and ends with two other ways
+to learn from the same demonstrations.
 
-Behavior cloning, defined
-~~~~~~~~~~~~~~~~~~~~~~~~~
+The Expert and Its Recording
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Behavior cloning learns a driving policy from an expert's recorded examples. Who the expert is, and what each recorded example holds, decide what the clone can learn.
+
+Behavior cloning
+^^^^^^^^^^^^^^^^
 
 .. admonition:: Definition: Behavior cloning
    :class: note
@@ -129,15 +479,129 @@ Behavior cloning, defined
 
 The idea is old:
 
-- **1988, ALVINN:** a network that "takes images from a camera and a laser
-  range finder as input and produces as output the direction the vehicle
-  should travel". It was trained on simulated road images (Pomerleau, 1988).
+- **1988, ALVINN:** a neural network that "takes images from a camera and a
+  laser range finder as input and produces as output the direction the
+  vehicle should travel". It was trained on simulated road images (Pomerleau,
+  1988).
 - **2016, NVIDIA:** "We trained a convolutional neural network (CNN) to map
   raw pixels from a single front-facing camera directly to steering
   commands", from about 72 hours of driving (Bojarski et al., 2016).
 
+On our lap, one example looks like this. The expert saw an offset of −0.27 m
+and a heading of +0.5°. It turned the wheel −0.15°. The clone trains on that
+same pair: for the same input, it learns to turn the wheel −0.15°.
+
+Who the expert is
+^^^^^^^^^^^^^^^^^
+
+In our example the expert is a program. On real roads, as in NVIDIA's 2016
+work, it is a human driver. The table compares the two.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 38 42
+   :class: compact-table
+
+   * -
+     - Our example
+     - NVIDIA, 2016 (Bojarski et al., 2016)
+   * - Who drives
+     - a program: steer for the curve, then back to the center
+     - human drivers, told to "drive as they usually do"
+   * - What it reads
+     - the true offset and heading (simulator only)
+     - the road, through the windshield
+   * - Which car
+     - the same simulated AV
+     - "a 2016 Lincoln MKZ" or "a 2013 Ford Focus with cameras placed in
+       similar positions"
+   * - How its action is kept
+     - stored at every step
+     - steering from the CAN bus, "captured simultaneously" with time-stamped
+       video
+
+The expert need not drive the AV itself. Another car works when its sensors
+see the same view. NVIDIA stores the steering as 1/r, where r is the turning
+radius, "to make our system independent of the car geometry".
+
+Recording a human expert
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+.. figure:: /_static/images/L11/l11_nvidia_collect.png
+   :class: white-figure
+   :alt: A block diagram. A steering wheel box, human driver, points down to a box CAN bus: steering as 1/r. Three camera boxes in a row, left, center and right, point down to a wide box NVIDIA DRIVE PX: video and steering, time-stamped. The CAN bus box points right into the DRIVE PX box, and the DRIVE PX box points right to a small box, solid-state drive.
+   :width: 90%
+   :align: center
+
+   NVIDIA's recording setup.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   - **Top row:** the human driver's steering wheel and the left, center and right cameras.
+   - **CAN bus:** carries the steering, stored as 1/r.
+   - **NVIDIA DRIVE PX:** stores the time-stamped video and steering on a solid-state drive.
+
+NVIDIA recorded its human drivers on a real car. Three cameras (left, center
+and right) and the steering all feed one recorder, so the video and the
+steering are captured together (Bojarski et al., 2016). The steering comes
+from the CAN bus as 1/r, and the NVIDIA DRIVE PX stores the time-stamped video
+and steering on a solid-state drive.
+
+NVIDIA's expert is a human driver, so its recording pairs the camera video
+with the driver's steering. Our lap's expert is a program, and its recording
+is a table.
+
+What the recording holds
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+The recording holds one row every 0.05 s. The full lap has 3607 rows. Here are
+three rows of run 6's recording (offset: plus is to the left):
+
+.. list-table::
+   :header-rows: 1
+   :class: compact-table
+
+   * - Time (s)
+     - Along the lap (m)
+     - Offset seen (m)
+     - Heading seen (°)
+     - Curvature ahead (1/m)
+     - Expert's steering (°)
+   * - 13.40
+     - 107.2
+     - −0.147
+     - −0.02
+     - 0.0020
+     - 0.30
+   * - 15.20
+     - 121.9
+     - 0.762
+     - −0.91
+     - 0.0969
+     - 14.89
+   * - 25.00
+     - 200.5
+     - −0.267
+     - 0.50
+     - 0.0000
+     - −0.15
+
+- **Input:** the three numbers the detector and the map give (offset seen,
+  heading seen, curvature ahead).
+- **Label:** the expert's steering. Time and distance only say where the row
+  is.
+- In the hands-on code, each column is one numpy array. Nothing is written to a
+  file.
+
+NVIDIA's rows are "single images sampled from the video, paired with the
+corresponding steering command (1/r)", sampled at 10 frames per second. Views
+from a left and a right camera, with labels changed to "steer the vehicle
+back", show the neural network off-center states (Bojarski et al., 2016).
+
 Behavior cloning in four steps
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L11/bc_steps.png
    :class: dark-light themed-L11
@@ -150,20 +614,43 @@ Behavior cloning in four steps
 .. admonition:: Reading the figure
    :class: tip
 
-   - **Step 1:** the expert drives and we record.
-   - **Step 2:** we build pairs: what the AV saw, and the steering the expert
-     gave.
-   - **Step 3:** we fit a policy to those pairs, by supervised learning.
+   - **Step 1:** the expert drives and the drive is recorded.
+   - **Step 2:** each observation is paired with the steering the expert gave.
+   - **Step 3:** a policy is fitted to those pairs, by supervised learning.
    - **Step 4:** the clone drives alone.
 
-Steps 1 to 3 are the same as training a detector: inputs, labels, a loss.
+1. **Record the expert.** Every 0.05 s, it stores the observation and the
+   expert's steering. Snapshot at 200 m: offset −0.27 m, heading +0.5°,
+   curvature 0; steering −0.15°.
+2. **Form the pairs.** Each sample becomes one row of the array X (offset,
+   heading, curvature ahead, 1) and one entry of y (the expert's steering).
+3. **Fit a policy.** The clone steers by
 
+   .. math::
+
+      \text{steering} = w_1 \cdot \text{offset} + w_2 \cdot \text{heading}
+      + w_3 \cdot \text{curvature} + w_4 \cdot 1
+
+   Least squares picks the weights closest to the expert's steering. The
+   weight :math:`w_4` (the column of 1s) is a fixed offset.
+4. **Deploy the clone.** It steers with no expert, so its own steering decides
+   what it observes next.
+
+Steps 1 to 3 are the same as training a detector: inputs, labels, a loss.
 Step 4 is new. The trained policy's outputs move the AV, and the AV's new
 position decides the next input. A detector's outputs never change its next
-image. The whole lecture comes from this one difference.
+image.
 
-The road: one lap of Town01
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The Lap and the Expert
+~~~~~~~~~~~~~~~~~~~~~~
+
+The expert is a controller with three terms: it steers for the curve ahead, then back to the lane center. Its road is one lap of Town01, read from the town's map.
+
+One lap of Town01 is our road
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Every drive in this lecture, the expert's and the clone's, is one lap of
+CARLA's Town01.
 
 .. figure:: /_static/images/L11/l11_lap.png
    :class: dark-light themed-L11
@@ -181,57 +668,65 @@ The road: one lap of Town01
    - **The thick dark line** is the lap. **S** is the start, and the arrow
      shows the direction: counterclockwise.
    - **Tags 1 to 4** are the four left turns, starting at the top left.
-   - **J** is a junction on the lap that the Commands section uses.
+   - **J** is a junction on the lap that the part "Route Commands" uses.
    - **The light gray dots** are the other lanes of the town.
 
-The lap is read from ``Town01.xodr``, the town's map, every 0.5 m:
+The lap is read from the town's map:
 
-- one lap, counterclockwise from S: **1442.6 m**;
-- four left turns; the sharpest has a radius of 9.8 m;
+- one lap, counterclockwise from S, measured on the town's map: **1442.6 m**;
+- four left turns, tagged 1 to 4; the sharpest has a radius of 9.8 m;
+- at junction J, 769 m along the lap, the route can go left or straight;
 - the lane is 4.0 m wide.
 
 **Chosen for this example:** 8 m/s (about 29 km/h), 20 steps per second, an
 AV 2.0 m wide with a 2.9 m wheelbase. Nothing here is measured from a real
 car.
 
-A wheel leaves the lane when the AV's center is more than
-(4.0 − 2.0) / 2 = 1.0 m from the lane center.
+The lane and the sharpest turn, to scale
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The expert steers for the curve, then back to the center
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A wheel leaves the lane when the AV's center is 1.0 m from the lane center,
+and turn 1 needs 16.5° of steering.
+
+1. The lane is 4.0 m wide and the AV 2.0 m wide (chosen), so a wheel leaves
+   the lane when the AV's center is more than (4.0 − 2.0) / 2 = 1.0 m from
+   the lane center.
+2. Turn 1, the sharpest, has a radius of 9.8 m. The front wheels turn
+   arctan(2.9 / 9.8) = 16.5°. The AV is 4.5 m long (chosen).
+
+The expert's steering rule
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Two terms first. The **offset** is how far the AV's center is from the lane
-center, with left positive. The **heading error** is the angle between the
-AV and the lane. The expert's rule has three numbers, all chosen for this
-example:
+center, with left positive. The **heading error** is the AV's angle to the
+lane. The expert steers for the curve, then back to the lane center. Its rule
+has three terms, with three numbers, all chosen for this example:
 
 1. steer for the curve 2.4 m ahead (0.3 s at 8 m/s), as the road's curvature
    asks;
 2. steer back 3.44° for every meter of offset;
-3. steer back 0.8° for every degree of heading error.
+3. steer back 0.80° for every degree of heading error.
 
-.. figure:: /_static/images/L11/expert_drive.png
-   :class: dark-light themed-L11
-   :alt: The expert's offset in meters against the distance along the lap, 0 to 1443 m. Dashed gray lines at plus and minus 1.0 m mark where a wheel leaves the lane. The dark line stays between about minus 0.5 and plus 0.5 m, with a short swing at each of the four turns, tagged 1 to 4 above the plot.
-   :width: 95%
-   :align: center
+The slide has sliders for the curve radius, the offset and the heading error.
+In its example the road curves left at the sharpest turn, the AV is 0.5 m
+left of the lane center and its heading error is 2°, so the wheel turns (left
+positive) 16.5° − 1.72° − 1.60° = 13.17°. The slide adds the unrounded
+values.
 
-   The expert's offset along the lap.
+The expert's three terms, one at a time
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. admonition:: Reading the figure
-   :class: tip
+Each of the expert's three terms is drawn on its own. With the slide's chosen
+values, a radius of 9.8 m, an offset of 1.0 m and a heading error of 5°:
 
-   The horizontal axis is the distance driven along the lap. The vertical
-   axis is the offset, left positive.
+1. **The curve term,** read 2.4 m ahead: arctan(2.9 / 9.8) = 16.5° left.
+2. **The offset term,** 1.00 m left of the center: 3.44 × offset = 3.44°
+   back to the right.
+3. **The heading term,** 5.0° of heading error: 0.8 × error = 4.0° back to
+   the right.
 
-   - **The dark line** is the expert. It stays within about half a meter and
-     swings a little at each turn, tagged **1** to **4** above the plot.
-   - **The dashed gray lines** at plus and minus 1.0 m are where a wheel
-     leaves the lane.
-
-Every driver also gets a random push on the steering, like wind gusts or the
-slope of the road (chosen: 0.4°). Measured on 20 test laps, the expert
-finishes **all 20**, and its largest offset is 0.75 m.
+The slide's dashed line shows where the AV goes if it holds that steering for
+13 m.
 
 .. dropdown:: More detail: the AV's motion and the expert, as equations
    :class-container: more-detail
@@ -277,12 +772,45 @@ finishes **all 20**, and its largest offset is 0.75 m.
    **Two limits.** Steering is limited to ±30°, and a drive stops if the
    offset passes 1.6 m in either direction.
 
-What the clone sees: a noisy lane detector
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The expert drives a test lap
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. figure:: /_static/images/L11/expert_drive.png
+   :class: dark-light themed-L11
+   :alt: The expert's offset in meters against the distance along the lap, 0 to 1443 m. Dashed gray lines at plus and minus 1.0 m mark where a wheel leaves the lane. The dark line stays between about minus 0.5 and plus 0.5 m, with a short swing at each of the four turns, tagged 1 to 4 above the plot.
+   :width: 95%
+   :align: center
+
+   The expert's offset along the lap.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   The horizontal axis is the distance driven along the lap. The vertical
+   axis is the offset, left positive.
+
+   - **The dark line** is the expert. It stays within about half a meter and
+     swings a little at each turn, tagged **1** to **4** above the plot.
+   - **The dashed gray lines** at plus and minus 1.0 m are where a wheel
+     leaves the lane.
+
+Every driver also gets a random push on the steering, like wind gusts or the
+slope of the road (chosen: 0.4°). Measured on 20 test laps, the expert
+finishes **all 20**, and its largest offset is 0.75 m. The slide has a player
+that shows the expert's path on each test lap.
+
+Training the Clone
+~~~~~~~~~~~~~~~~~~
+
+The clone sees the lane only through a noisy detector, never the true state. Training it is supervised learning: a least-squares fit on one recorded lap, whose weights can be set beside the expert's.
+
+What the clone sees
+^^^^^^^^^^^^^^^^^^^
 
 The expert reads the true offset and heading, as a simulator's autopilot can.
 This is **privileged information**: a state only the simulator knows. The
-clone gets what a camera's lane detector reports, with noise (chosen):
+clone sees the lane through a noisy lane detector. The recorded noise is
+scaled by σ, and 0.35 m is chosen:
 
 .. list-table::
    :header-rows: 1
@@ -302,28 +830,64 @@ clone gets what a camera's lane detector reports, with noise (chosen):
      - the map
      - the map
 
-The sign ± is the noise's standard deviation, drawn again at every step.
+The sign ± is the noise's standard deviation, drawn again at every step. The
+noise σ = 0.35 m is 2.3 times the 0.154 m spread of the true offset on the
+whole lap (0.35 / 0.154 = 2.27).
 
-.. admonition:: The clone's policy
-   :class: note
+Five readings of one true offset
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   Steering = :math:`w_1` × offset seen + :math:`w_2` × heading seen +
-   :math:`w_3` × curvature + :math:`w_4`. Four weights, set by training.
+The detector gives a different number on each of five steps in a row, for one
+true offset. The noise slider sets how far the readings spread.
 
-Training: least squares on one recorded lap
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1. The expert reads the true offset, about −0.05 m.
+2. The clone's detector reported −0.27, −0.06, 0.28, −0.23 and −0.05 m on
+   five steps in a row (0.05 s apart, run 6, 200 m along the lap). The pale
+   band on the slide is ± 0.35 m of the 1.0 m of room: 0.35 / 1.0 = 0.35.
+
+Training the clone
+^^^^^^^^^^^^^^^^^^
+
+The clone is trained by least squares on one recorded lap: four weights
+fitted to all the pairs.
 
 1. **Record:** the expert drives one lap: 1442.6 / 8 = 180.33 s. At 20 steps
    per second, 180.33 × 20 = 3606.6, so the recording holds 3607 pairs.
 2. **Each pair:** the three numbers the detector reported, and the steering
    the expert gave.
-3. **Fit:** choose :math:`w_1` to :math:`w_4` so that the policy's steering is
-   as close as possible to the expert's, summed over the 3607 pairs: the
-   smallest sum of squared differences (least squares).
+3. **Fit:** the policy is steering = :math:`w_1` · offset + :math:`w_2` ·
+   heading + :math:`w_3` · curvature + :math:`w_4`. Choose the four weights
+   so its steering is closest to the expert's over all pairs (least squares).
 
-This is supervised learning with a squared loss, the same kind of training as
-a detector's box regression. Here the solution has a closed form, so there is
-no gradient descent.
+Three of the pairs:
+
+.. list-table::
+   :header-rows: 1
+   :class: compact-table
+
+   * - Pair
+     - Offset seen (m)
+     - Heading seen (°)
+     - Curvature (1/m)
+     - Steering (°)
+   * - 1: a straight stretch, 200 m
+     - −0.27
+     - 0.50
+     - 0.0000
+     - −0.15
+   * - 2: entering turn 1, 107 m
+     - −0.15
+     - −0.02
+     - 0.0020
+     - 0.30
+   * - 3: in the middle of turn 1, 122 m
+     - 0.76
+     - −0.91
+     - 0.0969
+     - 14.89
+
+This is supervised learning with a squared loss, like a detector's box
+regression, but the solution has a closed form: no gradient descent.
 
 .. dropdown:: More detail: the least-squares solution
    :class-container: more-detail
@@ -352,8 +916,12 @@ no gradient descent.
    - **A neural network** replaces :math:`x^\top w` with a deeper function,
      and the closed form with gradient descent. The loss is the same.
 
-The clone's weights, next to the expert's
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The clone's and expert's weights
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The clone's weights next to the expert's show what the fit learned. Each noise
+level on the slide is its own training run, with the same seed. The deck's
+clone has σ = 0.35.
 
 .. list-table::
    :header-rows: 1
@@ -378,14 +946,42 @@ The clone's weights, next to the expert's
      - 0.89
 
 The ratio is the clone's weight divided by the expert's. For the offset,
-0.38 / 3.44 = 0.11. The weights are those of training run 6.
+0.38 / 3.44 = 0.11. The weights are those of training run 6, trained at
+detector noise 0.35 m. In the four-step equation they have signs and degrees:
+:math:`w_3 = 2.58\,\text{m} \times 57.3 = 148^\circ\!\cdot\text{m}`.
 
 The clone learned the curve and the heading nearly right, and the offset
-about **9 times too weak** (3.44 / 0.38 = 9.05): it barely steers back toward
-the center. The next section says why.
+**9 times too weak** (3.44 / 0.38 = 9.05): it barely steers back toward the
+center. The part "Why the Weight Is Small" says why.
 
-Scored on the expert's data, the clone looks good
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+One state, two drivers
+^^^^^^^^^^^^^^^^^^^^^^
+
+Both drivers start in the same state, 0.50 m left of the lane center (chosen),
+with no gusts and no detector noise, and drive 4 s. The expert steers back to
+the center, and the clone's smaller offset weight leaves it off to the side.
+
+1. **The expert** steers 0.50 × 3.44 = 1.72° right at the start, and is 0.02 m
+   off the center after 4 s.
+2. **The clone's** offset weight gives 0.19° (0.50 × 0.38), and its constant
+   weight 0.12° the other way: 0.188° − 0.125° = 0.063°, about 0.06° right at
+   the start. After 4 s it is 0.46 m off the center.
+
+Scoring the Clone
+~~~~~~~~~~~~~~~~~
+
+Scored on the expert's recorded data, the clone looks good. Then it drives
+alone, and a wheel leaves the lane.
+
+Scored on Recorded Data
+^^^^^^^^^^^^^^^^^^^^^^^
+
+The clone is trained. First it is scored the way a detector is: on recorded
+data, where its outputs never move the AV. Scored this way, open loop, the
+clone looks good.
+
+Scored on recorded data
+"""""""""""""""""""""""
 
 .. admonition:: Definition: Open-loop error
    :class: note
@@ -397,12 +993,86 @@ On a second recorded expert lap, not used for training:
 
 - the clone's steering differs from the expert's by **0.37°** on average;
 - the steering the AV needs in a turn of radius 9.8 m is about
-  arctan(2.9 / 9.8) = 16.5°, and 0.37° is 2% of that (0.37 / 16.5 = 0.022).
+  arctan(2.9 / 9.8) = 16.5°, and 0.37° is 2.2% of that (0.37 / 16.5 = 0.022).
 
-That looks like a very good clone.
+The slide has a slider for the turn radius, which is chosen for this example.
+The sharpest turn of the lap is 9.8 m.
 
-The clone drives: a wheel leaves the lane after 649 m
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Open loop on turn 1
+"""""""""""""""""""
+
+In open loop on turn 1, the clone's steering differs from the expert's by at
+most 0.46° in each of four recorded states. On a second expert lap, not used
+for training, in four recorded states on turn 1:
+
+- the clone's steering differs from the expert's by 0.46°, 0.20°, 0.31° and
+  0.36°: 0.33° on average. The whole lap averages 0.37°;
+- the turn needs up to arctan(2.9 / 9.8) = 16.5° of steering;
+- each AV on the slide is a recorded state: the clone's steering never moves
+  it, and the next state is the recorded one.
+
+The Clone Drives
+^^^^^^^^^^^^^^^^
+
+Open loop said the clone steers almost as the expert does. Now the clone
+drives alone, closed loop, on the 20 test laps.
+
+Closed-loop evaluation
+""""""""""""""""""""""
+
+.. admonition:: Definition: Closed-loop evaluation
+   :class: note
+
+   The policy drives: its outputs move the AV, and the AV's new state gives the
+   next input. It is scored on what happens: route completed, collisions,
+   rules broken.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 40 40
+   :class: compact-table
+
+   * -
+     - Open loop
+     - Closed loop
+   * - Next input
+     - the recorded one
+     - the result of the policy's own action
+   * - Score
+     - average error against the expert's output (steering in degrees, or
+       distance in meters)
+     - share of the route completed, infractions
+   * - Needs
+     - a dataset
+     - a simulator, or a car
+   * - Our clone
+     - 0.37°
+     - 5 laps of 20
+
+Where the next input comes from
+"""""""""""""""""""""""""""""""
+
+Open loop and closed loop differ in one thing: where the policy's next input
+comes from. In open loop the recorded input arrives whatever the policy said.
+The policy's output is only compared with the expert's output, and it never
+moves the AV. In closed loop the policy's output moves the AV, and the new
+state is the next input.
+
+Open loop and closed loop on turn 1
+"""""""""""""""""""""""""""""""""""
+
+An open-loop test never moves the AV; a closed-loop test does.
+
+1. **Open loop:** each AV is a recorded state, and the clone's steering never
+   moves it. The next state is the recorded one.
+2. **Closed loop:** the clone's steering moves the AV, and where it ends up is
+   the next input.
+
+The slide draws the road straight, with offsets stretched two times and
+vehicles to scale.
+
+The clone drives
+""""""""""""""""
 
 .. figure:: /_static/images/L11/bc_drive.png
    :class: dark-light themed-L11
@@ -424,36 +1094,45 @@ The clone drives: a wheel leaves the lane after 649 m
    - **Tag 4:** the dark circle near 649 m, the first time a wheel leaves the
      lane (the offset reaches minus 1.0 m).
 
-**Measured on 20 test laps** (new gusts and new detector noise on each), the
-clone finishes **5**. On average it drives 56% of the lap before a wheel
-leaves (a lap that finishes counts as 100%). The lap in the figure is the
-median of the 15 failures.
+The clone drives alone, and a wheel leaves the lane after 649 m.
+
+Where the clone's wheel leaves the lane
+"""""""""""""""""""""""""""""""""""""""
+
+The wheel leaves the lane on a straight road, 649 m after the start. Stepping
+back along the clone's path to that place:
+
+- at 0 m before the place, the clone is 1.00 m right of the lane center
+  (offset −1.00 m): its right wheels are on the lane line;
+- the slide's rust line is its path over the 12 m before that place.
+
+The clone on the 20 test laps
+"""""""""""""""""""""""""""""
+
+The clone drives all 20 test laps, and 15 of them end with a wheel leaving the
+lane. It finishes **5**. On average it drives 56% of the lap before a wheel
+leaves (a lap that finishes counts as 100%). Each test lap has new gusts and
+new detector noise. Test lap 18, the lap on the earlier slides, is the median
+of the 15 failures.
 
 This is one training run, one recorded lap. Another recording gives another
-count, and the DAgger section shows ten of them: they finish 2 to 9 laps of
+count, and the part "DAgger" shows ten of them: they finish 2 to 9 laps of
 20. A clone that was within 0.37° of the expert on recorded data finishes 5
-laps of 20. That gap is what the next section explains.
+laps of 20. That gap is what the next part explains.
 
 
-.. _l11-lec-compounding-error:
+Why the Clone Fails
+~~~~~~~~~~~~~~~~~~~
 
-Compounding Error
------------------
+Scoring the clone gave a driver that copies the expert within 0.37° and finishes only 5 of 20 laps. A clone that scores well on recorded data can fail on the road in three ways: its small errors compound, it learns the wrong cause, or it averages two right answers.
 
-Behavior Cloning gave a clone that copies the expert within 0.37° and
-finishes 5 of 20 laps. This section builds on that clone and the same 20 test
-laps. It measures why small errors grow once the clone drives. What it shows
-is what a good score on recorded data does not show.
+Where the Error Grows
+^^^^^^^^^^^^^^^^^^^^^
 
-Where the error grows
-~~~~~~~~~~~~~~~~~~~~~
-
-The clone's steering error is not the same everywhere: it depends on how far
-the AV is from the lane center. This part measures that, and shows where the
-clone drives.
+The clone's steering error is not the same everywhere: it depends on how far the AV is from the lane center. Where the expert never drove, the recording has nothing to teach.
 
 The clone's error grows with the offset
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+"""""""""""""""""""""""""""""""""""""""
 
 .. figure:: /_static/images/L11/error_vs_offset.png
    :class: dark-light themed-L11
@@ -470,39 +1149,59 @@ The clone's error grows with the offset
    really was from the lane center. Its height is the average size of the
    clone's steering error in those steps, in degrees.
 
-   - **0.00 to 0.25 m:** 0.44°.
-   - **0.25 to 0.50 m:** 1.09°.
-   - **0.50 to 0.75 m:** 1.78°.
-   - **0.75 to 1.00 m:** 2.41°.
+   - **0.00 to 0.25 m:** 0.44°, over 27,755 steps.
+   - **0.25 to 0.50 m:** 1.09°, over 22,078 steps.
+   - **0.50 to 0.75 m:** 1.78°, over 14,719 steps.
+   - **0.75 to 1.00 m:** 2.41°, over 5,884 steps.
 
-We took the clone's 20 test laps and, at every step, compared the
-clone's steering with what the expert would have steered in that same state. Near the
-center the clone is off by 0.44°. At 0.75 m to 1.00 m, it is off by 2.41°,
-5.5 times more (2.41 / 0.44 = 5.48). The clone is worst exactly where it
-needs to be best.
+The error is measured on the clone's 20 test laps. At every step, the
+clone's steering is compared with what the expert would have steered in that
+same state. Near the center the clone is off by 0.44°. At 0.75 m to 1.00 m,
+it is off by 2.41°, 5.5 times more (2.41 / 0.44 = 5.48). The slide adds a
+fifth bar, 3.16° for 1.00 m to 1.60 m (1,704 steps), as extra: beyond 1.0 m a
+wheel is out of the lane.
 
-Step by step: how a small error compounds
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+How a small error compounds, drawn
+""""""""""""""""""""""""""""""""""
+
+Four starting offsets show the same result. If the AV holds the expert's
+steering for 18 m, it comes back more than if it holds the clone's, which
+steers back less. The slide draws four offsets, the middle of each range of
+the last chart. The first: the AV is 0.125 m left of the center. The expert
+steers 0.43° toward the center, the clone 0.01° away from the center: it
+steers back less by the average error, 0.44°. Held for 18 m, the two paths end
+0.43 m apart. These are four offsets, not one drive.
+
+A small error, step by step
+"""""""""""""""""""""""""""
 
 1. Near the center the clone is off by 0.44°: it steers back too little, so a
-   gust or a turn pushes it a little farther out than the expert.
-2. Farther out, the expert would steer back harder (3.44° per meter). The
-   clone adds only 0.38° per meter. Its error grows: 1.09° between 0.25 and
-   0.50 m.
-3. A larger error pushes it farther out, where the error is larger again:
-   1.78°, then 2.41°.
-4. Each step starts from where the last one left the AV, so the errors add up
+   gust or a turn sends it farther out than the expert.
+2. Farther out, the expert would steer back 3.44° per meter, the clone only
+   0.38°: the error grows to 1.09° (0.25 to 0.50 m).
+3. Farther out still, it grows again: 1.78°, then 2.41°.
+4. Each step starts where the last one left the AV, so the errors add up
    instead of averaging out. A wheel leaves the lane.
+
+The offsets on the slide are the middle of each range (chosen for this
+sketch), along the road and not to scale.
+
+Compounding error
+"""""""""""""""""
 
 .. admonition:: Definition: Compounding error
    :class: note
 
    The policy's own mistakes take it to states its training data did not
-   cover, where it makes larger mistakes. In open loop this cannot happen: the
-   next input is the recorded one, whatever the policy said.
+   cover, where it makes larger mistakes.
 
-The clone drives where the expert never was
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+In open loop this cannot happen: the next input is the recorded one, whatever
+the policy said. Closed loop, each step starts from where the last one left
+the AV, so the errors add up. The errors on the last slide came from the
+clone's own 20 test laps, not from the expert's recording.
+
+Where the expert never drove
+""""""""""""""""""""""""""""
 
 .. figure:: /_static/images/L11/coverage.png
    :class: dark-light themed-L11
@@ -522,18 +1221,42 @@ The clone drives where the expert never was
      It is a narrow peak around zero.
    - **Tag 2, rust:** the clone on its 20 test laps. It is wide and flat.
 
-In the training data the true offset has a standard deviation of 0.15 m and
-never passes 0.61 m. The clone spends **20%** of its time beyond 0.61 m. For
-those states the clone has no example at all.
+The clone's test laps reach wide offsets, but the expert's recording stays
+near the center. The slide's limit slider shows which offsets lie beyond a
+limit. The expert's recording has a spread of 0.154 m and never passes 0.61 m.
+Beyond ±0.6 m: the recording has 0.2% of its steps, the clone's test laps
+21.5%. At 0.61 m the clone is at 20%: states with no example at all.
 
-Why the weight is small
-~~~~~~~~~~~~~~~~~~~~~~~
+Where the expert's recording ends
+"""""""""""""""""""""""""""""""""
 
-The clone's weight on the offset is 9 times too weak. This part finds the
-cause, tests whether more data fixes it, and states the general result.
+The expert's recording covers only offsets within ±0.61 m of the lane center.
+The clone drives at offsets the recording never shows, up to the 1.0 m where
+a wheel leaves the lane. On the clone's 20 test laps it spends 20% of its
+steps beyond 0.61 m. Inside the range the clone has examples; outside it, none.
 
-Why the offset weight is too small: the noise hides the offset
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Why the Weight Is Small
+^^^^^^^^^^^^^^^^^^^^^^^
+
+The clone's weight on the offset is 9 times too weak. The cause is the detector's noise, and more data does not remove it.
+
+How big the noise is next to the lane
+"""""""""""""""""""""""""""""""""""""
+
+The detector's noise is wider than the spread of the real offset, so most of
+what the detector reports is noise. Two spreads, in the recording of run 6:
+
+1. the spread of the true offset in the recording: ±0.154 m;
+2. the spread of the offset the detector reports: ±0.389 m.
+
+The slide's bar compares the squares: 0.154 × 0.154 / (0.389 × 0.389) =
+0.0237 / 0.1513 = 0.16, so about 16% of the spread the clone sees is real
+offset, and 84% is everything else. The slider sets the noise; the deck's clone
+has σ = 0.35 (chosen for this example), and each noise level is its own
+training run.
+
+Why the offset weight is small
+""""""""""""""""""""""""""""""
 
 .. figure:: /_static/images/L11/bc_fit.png
    :class: dark-light themed-L11
@@ -553,16 +1276,17 @@ Why the offset weight is too small: the noise hides the offset
    - **Tag 2, rust:** the clone's fit, 0.38° per meter. It is almost flat.
    - **Tag 3:** the recorded pairs. They form a flat cloud.
 
-Why is the fit flat?
+The noise hides the offset, so the fit gives the offset a small weight.
 
-1. The expert stays near the center: its true offset varies by 0.15 m.
-2. The detector adds noise of 0.35 m, more than twice that
-   (0.35 / 0.15 = 2.3).
+1. The expert stays near the center: its true offset varies by 0.15 m
+   (0.154 m).
+2. The detector adds noise: 0.35 m is 2.3 times that (0.35 / 0.154 = 2.3).
 3. So most of the spread in "offset seen" is noise, and the expert's steering
    does not follow noise. The cloud is flat, and a line fit to a flat cloud
    is flat.
 
-The clone is not at fault. Given these pairs, a flat line is the best fit.
+The fitted weight is 0.38° per meter (the expert's is 3.44), and the clone
+finishes 5 of 20 laps. Given these pairs, a flat line is the best fit.
 
 .. dropdown:: More detail: how much the noise shrinks the weight, by hand
    :class-container: more-detail
@@ -594,11 +1318,12 @@ The clone is not at fault. Given these pairs, a flat line is the best fit.
    example): :math:`0.0237 / (0.0237 + 0.0137) = 0.63`. Predicted weight:
    3.44 × 0.63 = 2.2° per meter. Fitted weight: 1.85°.
 
-More of the same data does not fix it; a quieter detector does
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+More data does not help
+"""""""""""""""""""""""
 
-Each clone is trained on the same recorded lap (training run 6) and tested on
-the same 20 laps:
+Five times the data barely changes the weight or the laps finished, but a
+detector three times quieter does. Each clone is trained on the same recorded
+lap (training run 6) and tested on the same 20 laps:
 
 .. list-table::
    :header-rows: 1
@@ -623,12 +1348,11 @@ the same 20 laps:
      - 20 of 20
 
 - Five times the data moves the weight from 0.38 to 0.42, and the laps from 5
-  to 6. The ten runs in the DAgger section show that a new recording alone
-  moves the count by several laps (2 to 9), so 5 to 6 is not a change we can
-  read. The extra laps stay near the center too, so they add more of the same
-  states.
+  to 6. Ten training runs show that a new recording alone moves the count by
+  several laps: 2 to 9 of 20. So 5 to 6 is not a change you can read.
 - A detector three times quieter (0.35 / 3 = 0.117) lets the fit see the
-  offset.
+  offset: the weight is 1.85° per meter (0.38 before) and 20 of 20 laps
+  finish.
 
 .. dropdown:: More detail: an early fix, add recoveries to the data
    :class-container: more-detail
@@ -650,28 +1374,32 @@ the same 20 laps:
 
    Both make up off-center states from the expert's own drive. The label for
    a shifted view must be made up too (how hard to steer back): the expert
-   never gave it. DAgger, below, takes another way: it records the states the
+   never gave it. DAgger, in the part before this one, takes another way: it records the states the
    clone really reaches, and asks the expert for the label.
 
-The general result: mistakes can grow with the square of the time
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   The part "Recovery Data" shows how NVIDIA's network and ChauffeurNet make
+   such views today.
 
-Ross and Bagnell (2010) bound behavior cloning's total cost over a drive of
-:math:`T` steps:
+The general result
+""""""""""""""""""
 
-- :math:`\varepsilon` is how often the policy makes a mistake on states the
-  **expert** visits (the open-loop error rate).
-- The bound is a cost that "grows quadratically :math:`O(T^2)` in the task
-  horizon :math:`T` rather than as :math:`O(T)`".
+Mistakes can grow with the square of the time. Ross and Bagnell bound behavior
+cloning's cost (Ross and Bagnell, 2010):
+
+- :math:`\varepsilon` is how often the policy makes a mistake on the states
+  the **expert** visits (the open-loop error rate).
+- Its cost over a drive of :math:`T` steps can grow up to :math:`T^2\varepsilon`,
+  not :math:`T\varepsilon`. The paper says the cost "grows quadratically
+  :math:`O(T^2)` in the task horizon :math:`T` rather than as :math:`O(T)`".
 - In words: one mistake can take the policy off the expert's states, and from
   there it may keep making mistakes for the rest of the drive.
 
-.. admonition:: A worst case
-   :class: note
+The slide plots both curves on logarithmic axes (the left gridlines are 100
+times apart, the bottom ones 10 times). For our lap, with :math:`T` = 3,607
+steps (1442.6 / 8 × 20) and :math:`\varepsilon` = 0.01 (chosen):
 
-   **The bound is a worst case,** not a curve our lap must follow. What our
-   lap shows is the mechanism: a 0.37° open-loop error, and 15 of 20 test
-   laps lost.
+1. The bound: 3,607² × 0.01 = 130,104.
+2. If mistakes did not compound: 3,607 × 0.01 = 36.07.
 
 .. dropdown:: More detail: behavior cloning's bound, as the paper states it
    :class-container: more-detail
@@ -702,35 +1430,114 @@ Ross and Bagnell (2010) bound behavior cloning's total cost over a drive of
    many as :math:`T^2\varepsilon` mistakes in expectation" (Ross, Gordon and
    Bagnell, 2011).
 
-Check: compounding error
-^^^^^^^^^^^^^^^^^^^^^^^^
+The bound is a worst case
+"""""""""""""""""""""""""
 
-**Question.** A team trains a lane-keeping clone. On a held-out recorded lap
-its steering is within 0.2° of the human driver's. They propose to skip
-closed-loop testing. What do you tell them?
+The bound says what can happen, not a curve our lap must follow. It says what
+can happen when one mistake sends the policy to states it never saw. Our lap
+measures the same mechanism: 0.37° on the expert's states, and 15 of 20 test
+laps lost once the clone drives.
 
-.. dropdown:: Answer
-   :class-container: sd-border-success
+Causal Confusion
+^^^^^^^^^^^^^^^^
 
-   The 0.2° is measured on the human's states only. Once the clone drives, it
-   reaches states the recording does not have, where its error is unknown.
-   Our clone had 0.37° open loop and finished 5 laps of 20. Only a
-   closed-loop test measures that.
+Our clone failed through what it could see: the detector's noise hid the offset. A clone can also fail through what it chooses to look at, a cue that comes with the right action in the recording without causing it.
 
+Causal confusion
+""""""""""""""""
 
-.. _l11-lec-dagger:
+Causal confusion makes the clone brake for the brake light. De Haan et al.
+trained two clones with the same network on the same driving, with one
+difference in the image (de Haan, Jayaraman and Levine, 2019).
+
+- **Clone A** sees the windshield and the dashboard. Training loss: low. On
+  the road: it does not drive well.
+- **Clone B** sees the same image with the dashboard masked out. Training
+  loss: low. On the road: it drives well.
+
+The reason: "the dashboard has an indicator light that comes on immediately
+when the brake is applied, and model A wrongly learns to apply the brake only
+when the brake light is on". "Even though the brake light is the effect of
+braking, model A could achieve low training error by misidentifying it as the
+cause instead". More inputs can make a clone worse: "access to more
+information can yield worse performance".
+
+The inertia problem
+"""""""""""""""""""
+
+A stopped car learns to stay stopped. Codevilla et al. trained behavior
+cloning in CARLA and found a failure that comes from the recording itself
+(Codevilla et al., 2019).
+
+- In the recording, a stopped car nearly always stays stopped: "When the ego
+  vehicle is stopped (e.g., at a red traffic light), the probability it stays
+  static is indeed overwhelming in the training data".
+- The clone learns "a spurious correlation between low speed and no
+  acceleration".
+- On the road, this gives "excessive stopping and difficult restarting".
+- The authors trace it to the same cause: "the inertia problem stemming from
+  causal confusion".
+
+In both cases the clone fits its recording, and the failure shows only when it
+drives.
+
+Averaging
+^^^^^^^^^
+
+At junction J the route can go left or straight, and the camera image is the same for both. From a recording that holds both answers for one image, the clone learns their average, which is neither.
+
+The image does not say which way
+""""""""""""""""""""""""""""""""
+
+Junction J is on our lap, but our lap only goes straight through it. Suppose
+the recording held expert drives both ways through J, half going straight and
+half turning left. The camera sees the same junction each time.
+
+.. figure:: /_static/images/L11/junction.png
+   :class: dark-light themed-L11
+   :alt: Top view of junction J in Town01, about 60 m across. The AV, drawn as a car facing right, sits in a gray lane coming from the left. The lane goes straight on to the right, its centerline a solid dark line tagged 1, and also turns left and up, its centerline a dashed dark line tagged 2. A rust arc, tagged 3, starts where the lanes split and curves up between them, through the corner, missing both lanes.
+   :width: 60%
+   :align: center
+
+   Junction J: straight on, left, and the average of the two.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   The axes are the map's x (east) and y (north), in meters. The AV comes
+   from the left.
+
+   - **Tag 1, solid dark line:** the center line of the lane that goes
+     straight on.
+   - **Tag 2, dashed dark line:** the center line of the lane that turns left.
+   - **Tag 3, rust arc:** the path of a clone fit to both drives. It starts
+     where the lanes split and curves up between them, through the corner,
+     and misses both lanes.
+
+1. **Straight:** the expert steers 0°.
+2. **Left:** the turn's radius is 10.9 m (17.1 m of arc for 90°), so the
+   expert steers arctan(2.9 / 10.9) = 14.9°.
+3. **A clone fit to both** by least squares gives about the average:
+   14.9 / 2 = 7.45°, a circle of radius 2.9 / tan(7.45°) = 22.2 m. After 34 m
+   (a length chosen for this example) it is 9.1 m from the nearest point of
+   the left lane's center line, measured on the map.
+
+Codevilla et al. say it the same way: "when a car approaches an intersection,
+the camera input is not sufficient to predict whether the car should turn
+left, right, or go straight" (Codevilla et al., 2018).
+
+Fixing the Clone
+~~~~~~~~~~~~~~~~
+
+The last part gave three causes: the clone drives where the recording never was, learns the wrong cause, and averages two right answers. Each fix targets one cause: data from the states where the clone drifts, or an input that tells two answers apart. Causal confusion has no fix that works on real driving yet.
 
 DAgger
-------
+^^^^^^
 
-Compounding Error gave the cause: the clone fails in states the expert's
-recording never shows. This section uses that cause: it adds those states to
-the data. DAgger records the states the clone reaches, and asks the expert
-what to do there. The result is a training loop whose data covers the states
-the clone will drive in.
+DAgger lets the clone drive and asks the expert what it would steer in each state the clone reaches. The training data then covers the states the clone really visits.
 
-DAgger: let the clone drive, ask the expert
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DAgger
+""""""
 
 .. figure:: /_static/images/L11/dagger_loop.png
    :class: dark-light themed-L11
@@ -747,20 +1554,39 @@ DAgger: let the clone drive, ask the expert
 
    - **Step 1, rust:** the newest clone drives one lap.
    - **Step 2, dark:** the expert labels every state the clone reached.
-   - **Step 3:** we add those pairs to all the data so far.
-   - **Step 4, green:** we refit the clone on all of it, and go back to
-     step 1.
+   - **Step 3:** those pairs are added to all the data so far.
+   - **Step 4, green:** the clone is refit on all of it, and the loop goes
+     back to step 1.
 
-DAgger ("dataset aggregation") is from Ross, Gordon and Bagnell (2011). The
+DAgger ("dataset aggregation") is from Ross, Gordon and Bagnell, 2011. Its
+card on the slide:
+
+- **Fixes:** compounding error: the clone fails in states the expert's
+  recording never shows.
+- **Who drives:** the newest clone. The expert drives the first lap only.
+- **Who labels:** the expert, in every state the clone reaches.
+- **The data:** every labeled pair so far, :math:`D \leftarrow D \cup D_i`.
+  The clone is trained again on all of it.
+- **Our clone:** finishes 5 of 20 test laps; 16 after one DAgger lap, 19
+  after two (training run 6).
+- **Ten runs:** DAgger finishes 19 of 20 in 10 of 10 training runs.
+- **Costs:** an expert who can label any state, and a safe place for a bad
+  clone to drive.
+- **Hands-on:** ``python3 l11_handson.py --part dagger``.
+
+Laps and runs are from the hands-on model (numpy, test laps 100 to 119). The
 paper's algorithm has two key lines: "Aggregate datasets: :math:`D \leftarrow
 D \cup D_i`" and "Train classifier :math:`\hat\pi_{i+1}` on :math:`D`".
 :math:`D` is all the labeled pairs so far, and :math:`D_i` the pairs from
-iteration :math:`i`.
+iteration :math:`i`. The slide shows the four steps on a straight stretch of
+the first DAgger lap in run 6, from 1,092 to 1,148 m, where the newest clone
+drifts left of the lane center.
 
-Who drives and who labels, in each iteration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Who drives, who labels
+""""""""""""""""""""""
 
-In iteration :math:`i` the paper drives with a mix: "Let :math:`\pi_i =
+The clone steers the AV, and the expert's label for each state goes into the
+data. In iteration :math:`i` the paper drives with a mix: "Let :math:`\pi_i =
 \beta_i \pi^* + (1 - \beta_i)\hat\pi_i`" (Ross, Gordon and Bagnell, 2011).
 
 - :math:`\pi_i` is the driver in iteration :math:`i`, :math:`\pi^*` is the
@@ -768,14 +1594,17 @@ In iteration :math:`i` the paper drives with a mix: "Let :math:`\pi_i =
   :math:`\beta_i` is the share of steps the expert drives.
 - **Our choice:** :math:`\beta_1 = 1` (iteration 1 is the expert's lap:
   behavior cloning), then :math:`\beta_i = 0` (the clone drives alone).
-- **Labels:** always the expert's, whoever drove. The AV executes the clone's
-  steering, and the data stores the expert's.
+- **Labels:** always the expert's, whoever drove.
+
+For example, at 640 m on a test lap the AV executes the clone's steering,
+−0.5°, and the data stores the expert's label for that state, −2.5°. The AV is
+0.71 m left of the lane center there.
 
 So the data now holds the states the clone itself reaches. The next fit is
 judged on the states where the last clone made its mistakes.
 
-After five DAgger laps, the data covers the drift
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Data after five DAgger laps
+"""""""""""""""""""""""""""
 
 .. figure:: /_static/images/L11/dagger_coverage.png
    :class: dark-light themed-L11
@@ -796,16 +1625,17 @@ After five DAgger laps, the data covers the drift
    - **Tag 2, green:** all the data after iteration 6, which is the expert's
      lap and five DAgger laps. It is taller and wider.
 
-- Labeled states: 3607 × 6 = 21,642 (each lap is 3607 steps: a wheel left the lane
-  on two of the five DAgger laps, at 112.8 m and 860.4 m, but no lap reached
-  1.6 m off center, where a lap stops early).
+Five DAgger laps add states the expert's own lap never reached. The data now
+covers the drift away from the lane center.
+
+- Labeled states: 3607 × 6 = 21,642 (each lap is 3607 steps: a wheel left the
+  lane on two DAgger laps, but no lap reached 1.6 m off center, where a lap
+  stops).
 - True offset beyond 0.5 m: 2.0% of the expert's lap, 10.8% of all the data.
-  The spread grows from 0.15 m to 0.29 m.
+  The spread (standard deviation) goes from 0.154 m to 0.293 m.
 
-Now the training data contains the drift.
-
-Iteration by iteration: laps finished and the offset weight
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Laps finished and offset weight
+"""""""""""""""""""""""""""""""
 
 .. figure:: /_static/images/L11/dagger_iters.png
    :class: dark-light themed-L11
@@ -827,14 +1657,27 @@ Iteration by iteration: laps finished and the offset weight
    - **Right plot:** the weight on the offset, in degrees of steering back
      per meter. Tag **2** is the expert, at 3.44.
 
-One DAgger lap lifts the clone from 5 to 16 finished laps, and the second to
-19, where it stays. The offset weight goes from 0.38° per meter to 1.44 after
-one lap, peaks at 1.54, and ends at 1.32. It stays well below the expert's
-3.44: the detector's noise still hides part of the offset. But the weight is
+Each DAgger iteration changes how many test laps the clone finishes and its
+offset weight, the degrees it steers back per meter of offset. One DAgger lap
+lifts the clone from 5 to 16 finished laps, and the second to 19, where it
+stays. At iteration 6: 19 of 20 laps finished, offset weight 1.32 degrees per
+meter.
+
+The weight goes from 0.38° per meter to 1.44 after one lap, peaks at 1.54,
+and ends at 1.32. It stays below the expert's (1.32° against 3.44° per
+meter): the detector's noise still hides part of the offset, but the weight is
 now strong enough to keep the lane.
 
-Ten training runs: the result is not luck
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Drive each clone
+""""""""""""""""
+
+The slide lets you pick an iteration and a test lap, and watch that clone
+drive the lap. A plot compares its offset from the lane center with the
+expert's. Behavior cloning (iteration 1) finishes 5 of 20 test laps. On test
+lap 18, a wheel leaves the lane at 649 m.
+
+Ten training runs
+"""""""""""""""""
 
 .. figure:: /_static/images/L11/seeds.png
    :class: dark-light themed-L11
@@ -853,19 +1696,22 @@ Ten training runs: the result is not luck
    - **Tag 1, rust circles:** behavior cloning, from 2 to 9 laps of 20.
    - **Tag 2, green squares:** DAgger after iteration 6, 19 laps in every run.
 
-Run 6, the one we followed, finished 5 with behavior cloning and 19 with
-DAgger.
+The result is not luck: behavior cloning's lap count varies by run, and
+DAgger's does not. Run 6, the one the notes follow, finished 5 with behavior
+cloning and 19 with DAgger.
 
 - Behavior cloning finishes 2 to 9 laps of 20 over the ten runs (the median
   is 5). DAgger finishes 19 in every run.
 - DAgger always misses test lap 8. The expert's own largest offset, 0.75 m
   (the limit is 1.0 m), is on that lap, so it is the hardest lap.
 
-So the gap between behavior cloning and DAgger is not luck. The spread among
-behavior cloning runs is large, which is why one run alone says little.
+The spread among behavior cloning runs is large, which is why one run alone
+says little.
 
 What DAgger costs
-~~~~~~~~~~~~~~~~~
+"""""""""""""""""
+
+DAgger fixes the drift, but it has three costs:
 
 1. **An expert who can label any state.** A program that reads the
    simulator's state can. A human must say what they would steer in a state
@@ -906,13 +1752,142 @@ What DAgger costs
    the offset weight, which stopped at 1.32° per meter against the expert's
    3.44°.
 
-Hands-on: clone the expert, then run DAgger
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A bad clone needs a safe place to drive
+"""""""""""""""""""""""""""""""""""""""
 
-In the course's Python repo, folder ``lecture11``
-(`README <https://github.com/rubixcubic/enpm818z-fall-2026-carla-python/tree/main/lecture11>`__),
-five parts. Everything runs on a laptop with numpy and matplotlib, without
-CARLA:
+The first DAgger lap is driven by a bad clone, which can drift toward the next
+lane. The slide's AV offset slider shows how close it gets to another car. The
+run stops when the AV is 1.6 m off the center (chosen). The AV's left side is
+then 1.6 + 1.0 = 2.6 m from the lane center. A 2.0 m wide car in the middle of
+the next lane has its near side 4.0 − 1.0 = 3.0 m from it. The gap: 3.0 − 2.6 =
+0.40 m. The other car and the next lane (4.0 m wide) are chosen for this
+example, not measured.
+
+DAgger's idea at fleet scale
+""""""""""""""""""""""""""""
+
+A company with a fleet uses the same idea as DAgger: find where the learned
+driver does poorly, and train more there.
+
+- **DAgger, on our lap.** The clone drives; the expert labels every state the
+  clone reaches; those states join the training data.
+- **Wayve, on a fleet.** Alex Kendall, its CEO: they use unsupervised learning
+  "to be able to cluster and find unusual or anomaly […] experiences", then
+  "find the scenarios that our system is […] performing poorly at and then
+  drive the learning curriculum on those" (Kendall, 2025).
+
+Both put the training data where the learned driver fails.
+
+Recovery Data
+^^^^^^^^^^^^^
+
+DAgger adds the states the clone reaches, but it needs an expert who can label any state. Recovery data adds off-center states to the recording itself, each labeled with the way back.
+
+Recovery data
+"""""""""""""
+
+Recovery data shows the clone off-center views, each labeled with the way back
+to the lane. "The network must learn how to recover from mistakes" (Bojarski
+et al., 2016), but a careful driver rarely leaves the lane and real mistakes
+are unsafe on a public road, so the views are made.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 40 40
+   :class: compact-table
+
+   * - Who
+     - How the off-center states are made
+     - The label
+   * - NVIDIA, 2016 (Bojarski et al., 2016)
+     - Two side cameras give two off-center views; the other shifts and all
+       rotations are made from the nearest camera's image.
+     - The steering "back to the desired location and orientation in two
+       seconds".
+   * - ChauffeurNet, 2018 (Bansal, Krizhevsky and Ogale, 2018)
+     - The expert's path is jittered: its midpoint up to 0.5 m in each axis,
+       its heading up to π/3 rad (60°). A smooth path through the moved point.
+     - Moves that collide or leave the road are kept, so the model "can then
+       experience and avoid such behaviors".
+
+Like DAgger, both add states the expert never drove. Unlike DAgger, no expert
+labels them: the label comes from geometry.
+
+Training on off-center views
+""""""""""""""""""""""""""""
+
+
+.. figure:: /_static/images/L11/l11_nvidia_train.png
+   :class: white-figure
+   :alt: A block diagram of NVIDIA's training loop. A box Recorded steering angle points to a box Adjust for the shift and rotation, whose output, desired steering, runs along the top to a circle with a minus sign. Three camera boxes of equal width, left, center and right, feed a box Random shift and rotation, which feeds an orange box CNN. The CNN's output, proposed, goes to the same circle. The circle's output, error, goes to a box Backpropagation: adjust the weights, which points up to the CNN.
+   :width: 85%
+   :align: center
+
+   NVIDIA's training loop on off-center views.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   - **Cameras and random shift:** the three cameras give the images, and a random shift and rotation makes more off-center views.
+   - **Recorded steering angle:** adjusted for the shift and rotation, which gives the desired steering.
+   - **CNN (orange):** proposes a steering. The circle subtracts it from the desired steering, which gives the error.
+   - **Backpropagation:** the error adjusts the CNN's weights.
+
+NVIDIA's loop trains on off-center views, each labeled with the way back
+(Bojarski et al., 2016). Its parts, as the slide draws them:
+
+1. The **left, center and right cameras** give the images.
+2. A **random shift and rotation** makes more off-center views.
+3. The recorded steering angle is adjusted for the shift and rotation, which
+   gives the desired steering.
+4. The **CNN** proposes a steering. The error against the desired steering
+   goes back through the network, and backpropagation adjusts the weights.
+
+Real side views and made shifts give the network off-center states; each one is
+labeled with the steering that leads back to the lane.
+
+A Privileged Teacher
+^^^^^^^^^^^^^^^^^^^^
+
+Our expert already reads privileged information: the true offset, which only the simulator knows. A teacher that sees the true state can train a student that sees only the cameras.
+
+A privileged teacher
+""""""""""""""""""""
+
+A driver that cheats by seeing the true state trains a student that sees only
+the cameras. Training happens in two stages. The first stage is the teacher,
+the second the student.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 24 38 38
+   :class: compact-table
+
+   * -
+     - The teacher
+     - The student
+   * - Learning by Cheating, 2019 (Chen et al., 2019)
+     - It "cheats by observing the ground-truth layout of the environment and
+       the positions of all traffic participants".
+     - The teacher "trains a purely vision-based sensorimotor agent". Result:
+       "100% success rate on all tasks in the original CARLA benchmark".
+   * - Roach, 2021 (Zhang et al., 2021)
+     - "a reinforcement learning expert that maps bird's-eye view images to
+       continuous low-level actions".
+     - "a baseline end-to-end agent with monocular camera-input achieves
+       expert-level performance".
+
+Our lap has the same split: the expert reads the true offset, the clone a noisy
+lane detector.
+
+Hands-on code
+"""""""""""""
+
+Clone the expert, then run DAgger, in the course's Python repo, folder
+``lecture11``
+(`README <https://github.com/rubixcubic/enpm818z-fall-2026-carla-python/tree/main/lecture11>`__).
+It has five parts. Everything runs on a laptop with numpy and matplotlib,
+without CARLA:
 
 .. code-block:: bash
 
@@ -937,62 +1912,27 @@ Try three things:
 3. Change ``--seed`` (the default is 6). Which numbers move, and by how much?
    This is how you see the spread for yourself.
 
+Route Commands
+^^^^^^^^^^^^^^
 
-.. _l11-lec-commands:
+The fixes so far add states near the drift. Averaging needs another fix: its recording holds two answers for one image. The input that tells them apart is the route's command, which picks one head of the network.
 
-Commands
---------
+Three commands at junction J
+""""""""""""""""""""""""""""
 
-DAgger gave a lane keeper that finishes 19 of 20 laps. This section keeps the
-same road and sets the four weights aside: they see only the offset and the
-curve, and at a junction the image cannot say which way to turn. So it adds an
-input the clone lacks. The question is what a learned driver needs at a
-junction, so that it follows the route your planner chose.
+At junction J, the route gives the AV one of three commands, and each command
+picks one path. The network has four heads: follow lane, left, straight and right. The map
+has no right turn at J, so the data has no path for the right head.
 
-At junction J, the image does not say which way to go
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1. **Follow lane:** stay in the lane.
+2. **Left:** take the left branch (a 90° turn).
+3. **Straight:** take the straight branch.
 
-Junction J is on our lap, but our lap only goes straight through it. So
-suppose the recording held expert drives both ways through J, half going
-straight and half turning left. The camera sees the same junction each time.
+Conditional imitation
+"""""""""""""""""""""
 
-.. figure:: /_static/images/L11/junction.png
-   :class: dark-light themed-L11
-   :alt: Top view of junction J in Town01, about 60 m across. The AV, drawn as a car facing right, sits in a gray lane coming from the left. The lane goes straight on to the right, its centerline a solid dark line tagged 1, and also turns left and up, its centerline a dashed dark line tagged 2. A rust arc, tagged 3, starts where the lanes split and curves up between them, through the corner, missing both lanes.
-   :width: 60%
-   :align: center
-
-   Junction J: straight on, left, and the average of the two.
-
-.. admonition:: Reading the figure
-   :class: tip
-
-   The axes are the map's x (east) and y (north), in meters. The AV comes
-   from the left.
-
-   - **Tag 1, solid dark line:** the center line of the lane that goes
-     straight on.
-   - **Tag 2, dashed dark line:** the center line of the lane that turns left.
-   - **Tag 3, rust arc:** the path of a clone fit to both drives. It starts
-     where the lanes split and curves up between them, through the corner,
-     and misses both lanes.
-
-1. **Straight:** the expert steers 0°.
-2. **Left:** the turn's radius is 10.9 m (17.1 m of arc for 90°), so the
-   expert steers arctan(2.9 / 10.9) = 14.9°.
-3. **A clone fit to both** by least squares gives about the average:
-   14.9 / 2 = 7.45°, a circle of radius 2.9 / tan(7.45°) = 22.2 m. After 34 m
-   (a length chosen for this example) it is 9.1 m from the nearest point of
-   the left lane's center line, measured on the map.
-
-Codevilla et al. (2018) say it the same way: "when a car approaches an
-intersection, the camera input is not sufficient to predict whether the car
-should turn left, right, or go straight".
-
-Conditional imitation: the route's command picks the head
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The fix is to tell the network which way to go.
+The route's command picks which head of the network gives the steering,
+throttle and brake.
 
 .. figure:: /_static/images/L11/cil_branches.png
    :class: dark-light themed-L11
@@ -1014,56 +1954,111 @@ The fix is to tell the network which way to go.
      which head connects to the output. The other three heads are not used at
      that moment.
 
-Codevilla et al. (2018) use "a set of four commands: continue (follow the
-road), left (turn left at the next intersection), straight (go straight at the
-next intersection), and right". The command "acts as a switch that selects
-between specialized sub-modules". The route planner supplies the command, and
-that is how a learned driver follows the route your planner chose.
+With the command "straight", the Straight head outputs 0° at J, the expert's
+steering when it goes straight.
 
-CARLA's Leaderboard, which has since closed (CARLA Team, 2026), gave every
-agent its route with these commands. For example, ``RoadOption.LEFT`` means
-"Turn left at the intersection" (CARLA Team, 2026).
+Codevilla et al. use "a set of four commands: continue (follow the road), left
+(turn left at the next intersection), straight (go straight at the next
+intersection), and right" (Codevilla et al., 2018). The command "acts as a
+switch that selects between specialized sub-modules". The route planner
+supplies the command, and that is how a learned driver follows the route your
+planner chose.
 
-.. dropdown:: More detail: other shortcuts a clone can learn
-   :class-container: more-detail
-   :icon: info
-   :name: l11-more-shortcuts
+CARLA's Leaderboard, which has since closed (CARLA Team, Leaderboard), gave
+every agent its route with these commands. For example, ``RoadOption.LEFT``
+means "Turn left at the intersection" (CARLA Team, Leaderboard 2.1 criteria).
 
-   A clone can learn a shortcut that works on the recording and fails on the
-   road. Two published cases:
+Beyond Behavior Cloning
+~~~~~~~~~~~~~~~~~~~~~~~
 
-   - **Causal confusion** (de Haan, Jayaraman and Levine, 2019). With more
-     inputs, the clone can learn the wrong cause. Their example: the
-     dashboard has a light that comes on as soon as the brake is pressed. A
-     model that sees the light learns to brake only when the light is on,
-     which gets the cause backward. The light follows the braking and does not
-     cause it. They found that "access to more information can yield worse
-     performance".
-   - **Behavior cloning in CARLA** (Codevilla et al., 2019). The authors
-     confirm known limits of behavior cloning (the data is biased, and the
-     network fits it too closely), new problems that come from moving objects
-     and from having no model of cause and effect, and training that is
-     unstable. One failure is "the inertia problem": cars that are stopped in
-     the data stay stopped, so the clone stops too often and has trouble
-     starting again.
+Behavior cloning copies the expert's actions. The same demonstrations can teach other things: a cost that makes the expert's path the cheapest (inverse optimal control, on the map), or a model of the world learned with the policy.
 
-   Our clone's weakness was in what it could see (the detector's noise).
-   These two are in what it chose to look at. Both pass an open-loop test.
+Cost learning
+^^^^^^^^^^^^^
+
+Cost learning learns a cost from the expert, then drives the cheapest
+trajectory. The survey's definition: "end-to-end approaches learn a reasonable
+cost c(·) and use algorithmic trajectory samplers to select the trajectory τ*
+with the minimum cost" (Chen et al., 2024).
+
+1. **Learn the cost:** a loss that makes "the expert demonstration to have a
+   minimal cost while others have high costs".
+2. **Sample** candidate trajectories with an algorithm, not with the network.
+3. **Drive** the one with the lowest learned cost.
+
+Example: the Neural Motion Planner outputs "a cost volume defining the
+goodness of each position that the self-driving car can take within the
+planning horizon", then it samples trajectories "and choose[s] the one with
+the minimum learned cost" (Zeng et al., 2019).
+
+A model of the world
+^^^^^^^^^^^^^^^^^^^^
+
+MILE learns a model of the world together with the driving policy. It is still
+imitation learning, with a second thing learned beside the policy.
+
+- MILE is "a Model-based Imitation LEarning approach to jointly learn a model
+  of the world and a policy for autonomous driving" (Hu et al., 2022).
+- Result: "MILE improves upon prior state-of-the-art by 31% in driving score
+  on the CARLA simulator when deployed in a completely new town and new
+  weather conditions". The score is measured while the car drives: closed
+  loop.
+
+Two ways to learn from demonstrations beyond copying the actions: learn a
+cost, or learn a model of the world with the policy.
 
 
-.. _l11-lec-architectures:
+.. _l11-lec-reinforcement-learning:
 
-Architectures
--------------
+Reinforcement Learning
+----------------------
 
-Commands gave a learned driver that follows the route. This section keeps the
-idea, imitation with a command, and sets aside the four-weight clone and the
-lap. Two published drivers are far bigger than that. We look at TransFuser and
-UniAD at the level of their blocks, to see which parts of your stack such a
-network replaces, and which it keeps.
+Imitation learning needs an expert to copy. The map's second branch,
+reinforcement learning, drops the expert: the driver learns from a reward, by
+trial. This section sets the clone and the lap aside and shows the first car
+that learned to drive this way.
 
-TransFuser: camera and LiDAR fused by attention, then waypoints
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Reinforcement learning
+~~~~~~~~~~~~~~~~~~~~~~
+
+Reinforcement learning (RL): the driver learns from a reward, by trial, with
+no expert's actions to copy. A real car learned to follow its lane in under 30
+minutes.
+
+- "We demonstrate the first application of deep reinforcement learning to
+  autonomous driving" (Kendall et al., 2018).
+- "From randomly initialised parameters, our model is able to learn a policy
+  for lane following in a handful of training episodes using a single
+  monocular image as input".
+- On a 250 m road, one version drove the route "after only 11 training
+  episodes"; the task took "under thirty minutes of training", "all done on
+  on-board computers".
+
+RL needs no expert. It needs a reward and room to try and fail. Roach, the
+teacher of the part "A Privileged Teacher", was trained this way.
+
+
+.. _l11-lec-inside-the-networks:
+
+Inside the Networks
+-------------------
+
+The last two sections gave ways to train a driver; this one opens the networks
+they train. It sets aside the four-weight clone and the lap. It covers two
+published end-to-end drivers, TransFuser and UniAD, then the models that also
+read and write text. You see which parts of your stack such a network
+replaces, and which it keeps.
+
+Fusion and the Stack in One Network
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+An end-to-end network can keep the stack's ideas inside it. TransFuser fuses a camera and a LiDAR, and UniAD puts the stack's tasks inside one network.
+
+TransFuser
+^^^^^^^^^^
+
+TransFuser fuses a camera image and a LiDAR grid with attention, then
+predicts waypoints.
 
 .. figure:: /_static/images/L11/transfuser.png
    :class: dark-light themed-L11
@@ -1082,42 +2077,44 @@ TransFuser: camera and LiDAR fused by attention, then waypoints
      pair of conv boxes it lets the two branches exchange features. The
      figure shows four pairs, at four resolutions.
    - **Waypoint predictor:** both branches end in it. Everything in blue is
-     trained by imitation.
+     trained by imitation; the gray dashed part is not learned.
    - **Two PID controllers (gray):** they turn the waypoints into steering,
      throttle and brake. This last step is not learned.
 
 The authors' aim is "to integrate image and LiDAR representations using
-attention", in "an auto-regressive waypoint prediction framework" (Prakash
-et al., 2021). They also write: "We use two PID controllers for lateral and
-longitudinal control". A PID controller turns a target into steering or
-throttle by feedback on its error. They are the same kind of controllers you
-built.
+attention" (Prakash, Chitta and Geiger, 2021). The predictor works in "an
+auto-regressive waypoint prediction framework". They also write: "We use two
+PID controllers for lateral and longitudinal control". A PID controller turns
+a target into steering or throttle by feedback on its error. They are the same
+kind of controllers you built.
 
 TransFuser was tested closed loop in CARLA, on the CARLA Leaderboard, which
-has since closed (Chitta et al., 2023).
+has since closed (Chitta et al., 2023; CARLA Team, Leaderboard).
 
-UniAD: the stack's modules, inside one network
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+TransFuser's inputs in 3D
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. figure:: /_static/images/L11/uniad.png
-   :class: dark-light themed-L11
-   :alt: A diagram. Several cameras feed a blue box, Bird's-eye features, then a row of blue boxes joined by blue arrows: Track (L5), Map, Motion (L8), Occupancy (L5), Planner (L9), then the output AV's future waypoints. A brace above the five modules reads one network: every part trained together, toward planning.
-   :width: 100%
-   :align: center
+TransFuser takes one front camera and a LiDAR grid. The slide shows both in
+3D, and you can turn the scene and show the camera's view, the points, or the
+grid.
 
-   UniAD, at the level of its blocks.
+- **The camera:** "the front camera with a FOV of 100°" (Prakash, Chitta and
+  Geiger, 2021).
+- **The points:** one CARLA sweep in Town01 with the course's LiDAR, 32
+  channels, 50 m.
+- **The grid:** "the points within 32m in front of the ego-vehicle and 16m to
+  each of the sides", in 0.125 m cells.
+- **Two bins,** "on/below and above the ground plane": gray and teal on the
+  slide, split at 0.2 m (chosen).
 
-.. admonition:: Reading the figure
-   :class: tip
+UniAD
+^^^^^
 
-   - **Several cameras** give bird's-eye features: a top-down grid of what the
-     cameras saw.
-   - **The five blue modules** do the jobs of your stack: tracking, mapping,
-     motion forecasting, occupancy and planning. The labels under four of
-     them name the lecture that covered the same job in your stack.
-   - **The brace** says all five are one network, trained together, toward
-     planning.
-   - **The output** is the AV's future waypoints.
+UniAD puts the stack's modules inside one neural network, trained together
+toward planning. The slide draws the chain: several cameras, bird's-eye
+features, then five modules (Track, Map, Motion, Occupancy and Planner), and
+the output, the AV's future waypoints. A click on a module's button tells you
+what it does.
 
 UniAD "incorporates full-stack driving tasks in one network". "Tasks are
 communicated with unified query interfaces to facilitate each other toward
@@ -1125,12 +2122,45 @@ planning" (Hu et al., 2023). A **query** is a learned vector that collects
 what one module needs from the bird's-eye features. It replaces the
 hand-designed message between two parts.
 
+For example, Track tracks the objects around the AV. It has its own queries,
+learned vectors that collect what it needs from the bird's-eye features. Its
+output can be read out, as the output of the matching part of your stack can.
+
 UniAD won Best Paper at CVPR 2023 (CVPR 2023). Its planning is scored open
-loop, on recorded nuScenes drives (Zhai et al., 2023). The Evaluation section
-comes back to this.
+loop, on recorded nuScenes drives (Zhai et al., 2023). The section "Scoring a
+Driver" comes back to this.
+
+UniAD's input in 3D
+^^^^^^^^^^^^^^^^^^^
+
+UniAD sees the road with six cameras and turns what they see into one
+bird's-eye grid. You can pick a camera to light the cells it sees.
+
+- **The cameras,** from nuScenes, UniAD's data: "Front and side cameras have a
+  70° FOV and are offset by 55°. The rear camera has a FOV of 110°" (Caesar et
+  al., 2020).
+- **The grid** comes from "an off-the-shelf BEV encoder in BEVFormer" (Hu et
+  al., 2023): 200 × 200 cells of 0.512 m (Li et al., 2022). The slide shades
+  the cells that two cameras see darker.
+
+What each of UniAD's tasks outputs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Each of UniAD's five tasks gives its own output (Hu et al., 2023). The slide
+draws each output on one road scene, as a sketch and not as UniAD's output:
+
+1. **Track:** agents tracked with the same id over time.
+2. **Map:** lanes and dividers.
+3. **Motion:** each agent's future path.
+4. **Occupancy:** which cells will be taken.
+5. **Planner:** the AV's waypoints.
 
 Your stack and UniAD, part by part
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+UniAD does the tasks your stack does. The table compares the two part by part:
+what passes between parts, how each is trained, how you find a failure, and
+what data each needs.
 
 .. list-table::
    :header-rows: 1
@@ -1157,19 +2187,13 @@ Your stack and UniAD, part by part
 UniAD keeps your stack's tasks and their names. What it removes is the
 hand-designed message between them.
 
+Vision-Language-Action Models
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. _l11-lec-vla:
+The last part gave end-to-end networks that output waypoints. Vision-language-action (VLA) models add language, in and out: they also read and write text. They are the newest driving models, and they add time to every decision.
 
-VLA
----
-
-Architectures gave end-to-end networks that output waypoints. This section
-builds on them: it adds language, in and out. These are models that also read
-and write text: vision-language-action (VLA) models. We see what they add, and
-what they cost in time.
-
-Vision-language-action models, defined
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Vision-language-action model (VLA)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. admonition:: Definition: Vision-language-action model (VLA)
    :class: note
@@ -1183,12 +2207,18 @@ Vision-language-action models, defined
 - The term comes from RT-2, a robot manipulation model (2023).
 - For driving, the action is a trajectory, written as numbers in text, and the
   model can also write why.
+- Koopman warns that such reasons may not be the real cause: "a lot of the
+  explanations are just sort of telling a story" (Koopman, 2025).
 
-Four driving VLAs, from their papers and pages
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+For example, the model writes the next waypoints as text: (8, 0), (16, 0),
+(24, 0), (32, 0), each in meters ahead of the AV and meters to its left. The
+example is chosen: waypoints 1 s apart at 8 m/s, on a straight lane.
+
+Four driving VLAs
+^^^^^^^^^^^^^^^^^
 
 These are claims by the makers, so the table quotes their words instead of
-describing the models.
+describing the models. On the slide, a click on a row shows the quotes.
 
 .. list-table::
    :header-rows: 1
@@ -1212,13 +2242,14 @@ describing the models.
    * - Alpamayo 1 (NVIDIA)
      - named Alpamayo-R1 in its paper: "integrates Chain of Causation
        reasoning with trajectory planning" (NVIDIA, 2025); open weights,
-       "ready for non-commercial use" (NVIDIA, model card). Newer: Alpamayo 2
-       Super, with its own model card, and Alpamayo 2 Edge, "a 2B-parameter
-       reasoning vision-language-action model" with "64 waypoints spanning 0.1
-       through 6.4 seconds" (NVIDIA, model card).
+       "ready for non-commercial use" (NVIDIA, Alpamayo-R1-10B model card).
+       Newer: Alpamayo 2 Super, with its own model card, and Alpamayo 2 Edge,
+       "a 2B-parameter reasoning vision-language-action model" with "64
+       waypoints spanning 0.1 through 6.4 seconds" (NVIDIA, Alpamayo 2 Edge
+       model card).
 
 A slow model needs a fast partner
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L11/vla.png
    :class: dark-light themed-L11
@@ -1239,8 +2270,11 @@ A slow model needs a fast partner
    - **Coarse trajectory:** a rough path, written as numbers. A **fast
      planner** refines it at every control step.
 
-A VLA writes text, and writing is slow. Four numbers show what that costs at
-our 8 m/s:
+A slow model answers late, so DriveVLM-Dual hands its coarse trajectory to "a
+classical planner for high-frequency trajectory refinement" (Tian et al.,
+2025). The slide draws the animation 10 times slower than real time.
+
+How far does the AV drive during one answer? At our 8 m/s:
 
 1. DriveVLM's vision-language model, on an NVIDIA OrinX chip in the car, has
    "an average inference speed of 410 ms" (Tian et al., 2025). The AV drives
@@ -1253,60 +2287,27 @@ our 8 m/s:
 4. Our lane keeper steers every 0.05 s: 0.05 × 8 = 0.4 m.
 
 These times are the authors' reports, on different chips, not a comparison of
-the models. DriveVLM-Dual hands its trajectory to "a classical planner for
-high-frequency trajectory refinement" (Tian et al., 2025).
+the models. The slide has a speed slider, and its speed of 8 m/s is chosen for
+this example. A slower answer means more road driven before the next one.
 
 
-.. _l11-lec-evaluation:
+.. _l11-lec-scoring:
 
-Evaluation
-----------
+Scoring a Driver
+----------------
 
-VLA gave the newest models. This section uses our lap's numbers again, and
-applies what they show to published results. It covers how learned drivers are
-scored: open loop against closed loop, and two benchmarks. That is what you
-need to read any result, and to score your own GP4 drives.
+The last section gave the newest models, and "Scoring the Clone" showed open
+loop and closed loop on our lap. This section applies that lesson to published
+results. It covers why open loop misleads, the benchmarks and NVIDIA's
+simulator that score in closed loop, and how GP4 scores your own stack.
 
-Open loop and closed loop
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Benchmarks and NVIDIA's Simulator
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The same driver can score well in one and badly in the other. This part
-defines both, shows it on our lap, and shows it on a published benchmark.
+A better open-loop score can lose in closed loop, on our lap and on a published benchmark. Only a closed-loop score, where the driver's actions move the car, can judge a driver.
 
-Closed-loop evaluation, defined
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. admonition:: Definition: Closed-loop evaluation
-   :class: note
-
-   The policy drives: its outputs move the AV, and the AV's new state gives the
-   next input. It is scored on what happens: route completed, collisions,
-   rules broken.
-
-.. list-table::
-   :header-rows: 1
-   :widths: 20 40 40
-   :class: compact-table
-
-   * -
-     - Open loop
-     - Closed loop
-   * - Next input
-     - the recorded one
-     - the result of the policy's own action
-   * - Score
-     - average error against the expert's output (steering in degrees, or
-       distance in meters)
-     - share of the route completed, infractions
-   * - Needs
-     - a dataset
-     - a simulator, or a car
-   * - Our clone
-     - 0.37°
-     - 5 laps of 20
-
-Our lap: the better open-loop score loses in closed loop
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Open loop against closed loop on our lap
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_static/images/L11/open_closed.png
    :class: dark-light themed-L11
@@ -1328,18 +2329,77 @@ Our lap: the better open-loop score loses in closed loop
    - **Right, closed loop:** test laps finished, out of 20: behavior cloning
      5, DAgger 19, the expert 20. Behavior cloning is much worse.
 
+On our lap, the clone has the lower open-loop error but finishes fewer laps
+than DAgger. In run 6 the clone has the lower open-loop error (0.37° against
+0.47°) and finishes 5 laps of 20; DAgger finishes 19. The expert has no
+open-loop error: it is the source of the labels.
+
 Behavior cloning has the **lower** open-loop error in all 10 training runs,
 and the fewer finished laps in all 10. It fits the expert's own states best.
 DAgger's fit also covers the states where the AV drifts, so on the expert's
 states alone it fits slightly worse.
 
-nuScenes: a model without cameras scores as well
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Drive our lap
+^^^^^^^^^^^^^
 
-The same effect appears in a published benchmark. AD-MLP (Zhai et al., 2023)
-plans from the AV's own past motion and the route command, "without using any
-perception or prediction information such as camera images or LiDAR". Their
-Table 1, nuScenes, open loop, averaged over 1, 2 and 3 s:
+The slide lets you drive our lap yourself, in closed loop, with the clone
+(behavior cloning), DAgger at iteration 6, or the expert, on any test lap.
+With the clone on test lap 18, a wheel leaves the lane at 649 m along the lap.
+
+Closed loop on recorded video
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+.. figure:: /_static/images/L11/l11_nvidia_closed_loop.png
+   :class: white-figure
+   :alt: A block diagram of a loop. A box Recorded video, with the human's steering, sends a frame to a box Shift and rotate the frame, which sends an image to an orange box CNN. The CNN sends steering down to a box Vehicle model: update position and heading. That box sends the new pose back up to the shift and rotate box. It also points right to a box: off center by more than 1 m, an intervention, reset to the lane.
+   :width: 90%
+   :align: center
+
+   NVIDIA's closed loop on recorded video.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   - **Recorded video:** gives a frame.
+   - **Shift and rotate the frame:** moves the frame to the pose the car now has.
+   - **CNN (orange):** reads the image and gives a steering.
+   - **Vehicle model:** updates the position and heading, which gives the new pose that goes back to the frame step.
+   - **Intervention:** counted when the car is off center by more than 1 m, then the car is reset to the lane.
+
+NVIDIA tested its network in closed loop before the road, with no simulated
+world: it shifts each recorded frame to the new pose (Bojarski et al., 2016).
+The loop, as the slide draws it:
+
+1. **Recorded video,** with the human's steering, gives a frame.
+2. The frame is **shifted and rotated** to the pose the car now has.
+3. The **CNN** reads the image and gives a steering.
+4. A **vehicle model** updates the position and the heading, which gives the
+   new pose.
+5. An **intervention** is counted when the car is off center by more than 1 m,
+   and the car is reset to the lane.
+
+NVIDIA's closed loop needs no simulated world: it moves the recorded video to
+where the network's steering would have put the car. On our lap, the simulator
+plays this role.
+
+What AD-MLP is given
+^^^^^^^^^^^^^^^^^^^^
+
+AD-MLP plans from the AV's own past motion and the route command, with no
+camera. It gets the AV's past positions (4 frames), its velocity and
+acceleration, and the route command (left, straight or right), and outputs the
+future positions (6 frames) (Zhai et al., 2023). "73.9% of the nuScenes data
+involve scenarios of driving straightforwardly" (Li et al., 2024). The dots on
+the slide are not to scale.
+
+A model without cameras scores as well
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+AD-MLP (Zhai et al., 2023) plans from the AV's own past motion and the route
+command, "without using any perception or prediction information such as
+camera images or LiDAR". Their Table 1, nuScenes, open loop, averaged over 1,
+2 and 3 s:
 
 .. list-table::
    :header-rows: 1
@@ -1363,28 +2423,26 @@ Table 1, nuScenes, open loop, averaged over 1, 2 and 3 s:
      - 0.29
      - 0.19
 
-AD-MLP, with no cameras at all, has the lowest distance error. Its collision
-rate is between the two. So an open-loop score on nuScenes does not show that
-a model sees the road. Li et al. (2024) give a reason: "73.9% of the nuScenes
-data involve scenarios of driving straightforwardly", and models given the
-AV's speed "tend to rely predominantly on the ego vehicle's status". Nothing
-here is closed loop. It tells us how little this open-loop score measures.
-
-Benchmarks and GP4
-~~~~~~~~~~~~~~~~~~
-
-Two benchmarks try to score a plan better than an open-loop error does. Then
-we see how GP4 scores your own stack, in closed loop.
+AD-MLP, with no cameras at all, has the lowest distance error: 0.29 m. Its
+collision rate is between the two. So an open-loop score on nuScenes does not
+show that a model sees the road. Li et al. (2024) give a reason: "73.9% of the
+nuScenes data involve scenarios of driving straightforwardly", and models
+given the AV's speed "tend to rely predominantly on the ego vehicle's status".
+Nothing here is closed loop. It tells you how little this open-loop score
+measures.
 
 Two benchmarks that score a plan
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+NAVSIM and Bench2Drive both score a plan, but they test it in different ways.
+
 - **NAVSIM** (2024) uses real recorded drives. Its authors say: "Our
   simulation is non-reactive, i.e., the evaluated policy and environment do
-  not influence each other." The planner is "only queried in the initial
-  frame of each scene", and its 4 s plan gets the PDM Score: collisions and
-  leaving the drivable area cancel the score, and progress, time to collision
-  and comfort are averaged (Dauner et al., 2024).
+  not influence each other". The planner is "only queried in the initial frame
+  of each scene", and its 4 s plan gets the PDM Score: collisions and leaving
+  the drivable area cancel the score, and progress, time to collision and
+  comfort are averaged (Dauner et al., 2024). The plan never moves the AV, so
+  compounding error cannot show.
 - **Bench2Drive** (2024) runs in CARLA: "the first benchmark for evaluating
   E2E-AD systems' multiple abilities in a closed-loop manner", with "44
   interactive scenarios" over "220 routes" (Jia et al., 2024).
@@ -1392,17 +2450,33 @@ Two benchmarks that score a plan
 NAVSIM is a middle ground: real sensor data and a score that checks the plan,
 but the plan never moves the AV. Only a closed loop shows compounding error.
 
+NAVSIM replays, Bench2Drive reacts
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+NAVSIM replays the other car's recorded motion, and Bench2Drive lets the other
+vehicles react to the AV. The slide sketches both.
+
+1. **NAVSIM:** the planner is queried once, at the start. Its 4 s plan stays
+   fixed, and the other car's recorded motion is replayed (Dauner et al.,
+   2024).
+2. **Bench2Drive:** the other vehicles react to the AV, as in a car cutting in
+   (Jia et al., 2024).
+
+GP4
+~~~
+
+The benchmarks score published drivers in closed loop. GP4 does the same for your own stack: its script scores a drive.
+
 GP4 scores your stack in closed loop
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-GP4 scores your stack by running it: your commands decide where the AV goes
-next. You run your route twice, once with your EKF pose and once with the true
-pose, with 40 vehicles and 80 walkers. The script ``tools/evaluate_run.py``
-scores each drive until the AV first comes within 2 m of the goal, and
-reports:
+GP4 runs your stack: your commands decide where the AV goes next. You run your
+route twice, once with your EKF pose and once with the true pose, among 40
+vehicles and 80 walkers. The script ``tools/evaluate_run.py`` scores each
+drive until the AV first comes within 2 m of the goal, and reports:
 
-- route completion: 1 at arrival; otherwise 1 minus the road distance still
-  left to the goal over the route's length;
+- route completion: 1 at arrival; otherwise 1 minus the road distance left
+  over the route's length;
 - collisions and pedestrian hits;
 - red-light violations: crossing a stop line on red faster than 1 m/s;
 - cross-track error and mean speed.
@@ -1412,19 +2486,146 @@ the reference solution: route completion at least 0.8 times the reference's,
 and no more red-light violations or pedestrian hits than the reference. The
 :doc:`GP4 page </assignments/gp4>` has the full rubric.
 
+What GP4's script measures on a drive
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The script measures five things on each drive. From ``tools/evaluate_run.py``:
+
+1. the road distance left to the goal (a 2 m circle) over the route's length;
+2. a collision;
+3. a person inside the box 2.5 m ahead and behind and 1.1 m to each side, with
+   the AV above 0.5 m/s;
+4. the stop line crossed on red above 1 m/s;
+5. the distance to the planned path.
+
+The slide's picture is a sketch.
+
+GP4 route completion
+^^^^^^^^^^^^^^^^^^^^
+
+Route completion has three values. All three values on the slide are chosen
+for this example, and the slide has a slider for each: the route's length, the
+road distance left, and the reference's completion. For example, with a route
+of 1200 m, 300 m left, and a reference completion of 1.00:
+
+1. Route completion = 1 − 300 / 1200 = 0.75.
+2. Needed: 0.8 × 1.00 = 0.80. The AV fails this part of the rule.
+
+The rule also needs no more red-light violations or pedestrian hits than the
+reference.
+
 
 .. _l11-lec-modular-or-e2e:
 
-Modular or End-to-End
----------------------
+Modular or End-to-End?
+----------------------
 
-Evaluation gave closed-loop scores and showed why open-loop ones mislead. This
-section uses them to compare the two designs: the designs side by side, how to
-compare them fairly, and GP5. Your final report evaluates your modular
-pipeline. End-to-end driving is the optional GP5.
+Scoring a Driver gave closed-loop scores and showed why open-loop ones
+mislead. This section uses them to compare the two designs: first what
+end-to-end costs, then the two designs side by side and how to compare them
+fairly, then GP5. Your final report evaluates your modular pipeline, and
+end-to-end driving is the optional GP5.
+
+What End-to-End Costs
+~~~~~~~~~~~~~~~~~~~~~
+
+The four gains of the first section come with costs, and the same survey lists four. The last is the problem the clone showed on our lap: it drives into states the expert never showed.
+
+Cost 1: hard to open, a black box
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In your stack, you read each topic and find the part that failed. An
+end-to-end network has no topics inside to read, so people call it a black
+box. Alex Kendall, CEO of Wayve, replies that it is "naive" to expect a
+complex intelligent machine to be "strictly interpretable to the point where
+you can point to a single line of code" (Kendall, 2025).
+
+Cost 2: no proof of safety
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+An end-to-end network learns how to drive from data, so no math proves that it
+always drives safely. Tests cover only the states someone tried.
+
+Why testing cannot prove safety
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Phil Koopman, who studies the safety of self-driving cars, gives two reasons
+why testing alone cannot show that a learned driver is safe (Koopman, 2025).
+
+1. **Covering every neuron.** A chip test can exercise every gate and show that
+   it is there. A network is different: "if you exercise all the neurons in an
+   artificial neural network, it doesn't prove anything".
+2. **Driving more miles.** Brute-force testing takes about a billion miles,
+   "and you've probably retrained the machine learning 100 times in that
+   billion miles. So none of it counts".
+
+The design and the result come apart: "Did the machine learning learn what I
+wanted to? I don't know. Let's drive it around and find out".
+
+Two views on proving safety
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The skeptic and the advocate agree on the problem: training data alone does
+not make a learned driver safe.
+
+- **Phil Koopman,** who studies the safety of self-driving cars: testing a
+  learned driver proves little, since over a billion test miles "none of it
+  counts" (Koopman, 2025).
+- **Alex Kendall,** CEO of Wayve, which sells end-to-end driving: "we can't
+  just pump more data in" and "hope that hallucinations go away". The design
+  must be "functionally safe", with "a […] robust […] behavioral safety case"
+  (Kendall, 2025).
+
+Both say a learned driver needs a safety argument beyond its data. Kendall
+calls building one a matter of "architectural challenges".
+
+Cost 3: rare cases, the long tail
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A long tail means many rare situations, each with few examples in the driving
+data. A network that learns only from data learns those cases poorly, and for
+end-to-end driving this problem is especially serious. The slide's example is a
+stopped car in the lane: one rare situation among many, each with few examples.
+
+A heavy tail, not only a long one
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Koopman separates two problems: a long tail is rare events, and a heavy tail
+is a great many different rare events (Koopman, 2025). His words: "Long tail is
+rare events, but a heavy tail means there's a lot of things. So maybe this is
+once per billion miles, but if you have a billion of them, you're going to see
+one every mile. And if you fix it, that doesn't help you".
+
+His example, worked out (the arithmetic is ours, if sightings come
+independently, as a Poisson count): an event that happens once per billion
+miles, and 100 million miles of driving data.
+
+1. Expected sightings: 100,000,000 / 1,000,000,000 = 0.1.
+2. Chance of never seeing it: :math:`e^{-0.1}` = 0.90.
+
+So the data most likely holds no example of it at all; in his words, "you've
+never seen it probably".
+
+Cost 4: states the expert never showed
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The network learns from the states the expert drove through, but when it
+drives, the states it reaches differ from the expert's. Today's running example
+measures what that does. The slide shows a straight stretch of test lap 18,
+from 558 to 652 m, from the lap data and not as a sketch. The expert stays
+within the band its recording covers (0.61 m). The clone drifts out of the
+band to the lane limit (1.0 m), where its right wheels reach the line. Offsets
+are stretched three times and vehicles are to scale.
+
+Comparing the Designs
+~~~~~~~~~~~~~~~~~~~~~
+
+The modular stack and the end-to-end driver can be set side by side, even inside one car. A fair comparison scores both the same way.
 
 The two designs, side by side
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The two designs differ in what they are built from and what they need.
 
 .. list-table::
    :header-rows: 1
@@ -1436,10 +2637,10 @@ The two designs, side by side
      - End-to-end
    * - Built from
      - parts people design, each with its own test
-     - one network trained on driving data
+     - one neural network trained on driving data
    * - Between parts
      - messages people chose: boxes, a pose, a path
-     - whatever the network learned
+     - whatever the neural network learned
    * - Trained for
      - each part's own score
      - the driving output
@@ -1480,11 +2681,55 @@ scenarios that matter.
      objects, semantic attributes, and roadgraph elements", which are readable
      objects and roads inside the network (Waymo, 2025).
 
-   Waymo's description sits between the two rows of the first figure on this
-   page: trained end to end, with readable objects and roads inside.
+   - **Waymo, "10 AI Lessons from Driving 200+ Million Fully Autonomous
+     Miles" (August 26, 2026):** it describes "fewer, high-capacity,
+     specialized foundation models", not "a single, black box" (Waymo, 2026).
+
+   Waymo's description sits between the modular stack and the end-to-end
+   driver: trained end to end, with readable objects and roads inside.
+
+Where the line between them blurs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Real systems are not purely one design or the other, even in the words of an
+end-to-end advocate.
+
+- **Modular stacks learn too.** Alex Kendall, CEO of Wayve: "anyone who's
+  worth a grain of salt will use deep learning in various parts of the stack"
+  (Kendall, 2025).
+- **Some sit in between.** Waymo describes "fewer, high-capacity, specialized
+  foundation models", not "a single, black box" (Waymo, 2026).
+- **Mixing is not free.** In Kendall's view, hybrid approaches "can get the
+  worst of both worlds or just add cost and complexity" (Kendall, 2025).
+
+The question is less "which design" than where to draw the line between
+learned parts and written rules.
+
+One car, two designs
+^^^^^^^^^^^^^^^^^^^^
+
+Either design runs on this car; only the program changes. The slide shows the
+Model 3 again, with a switch between "Your stack" and "End-to-end", and
+underlined words that you can click. Koopman calls sensors a data choice:
+"lots and lots of lower quality data", or "a much smaller amount of very high
+quality data" (Koopman, 2025).
+
+Either way, the commands reach the drive units, which "power the wheels"
+(Tesla, Emergency Response Guide), and the "electronically-assisted braking and
+steering systems" (Tesla, Model 3 Owner's Manual).
+
+If this car ran your stack (a hypothetical):
+
+1. The cameras send their images to the computer.
+2. Your parts run there in a chain: perception, then localization, then
+   planning, then control.
+3. Each part is tuned on its own score.
+4. People chose the messages between the parts.
 
 A fair comparison, in four steps
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A fair comparison of two drivers needs four steps:
 
 1. **Same routes and scenarios,** none used in training or tuning. Your final
    report does this for your modular pipeline: three scenarios the instructor
@@ -1496,14 +2741,42 @@ A fair comparison, in four steps
 4. **Say what each one was given:** sensors, the map, the route, privileged
    information (a state only the simulator knows, like the expert's true
    offset). CARLA's Leaderboard banned "any privilege information offered by
-   the CARLA simulator" (CARLA Team, 2026).
+   the CARLA simulator" (CARLA Team, Leaderboard 2.1 criteria).
 
-GP5: an optional end-to-end project
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Handling a new exception
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+In Koopman's view, a new exception costs the two designs different work: a few
+lines of code, or a data collection job (Koopman, 2025). His example: blue stop
+signs, found in parking lots in Hawaii.
+
+- **Modular stack.** "if you notice something weird, it's not so bad writing a
+  manual rule to handle it": blue stop signs go into the detector's training
+  data, and the planner stays as it is, "because a stop sign's a stop sign".
+- **End-to-end.** "if you discover […] an exception, you have to retrain the
+  whole thing": the network must learn that blue stop signs are stop signs
+  "without it necessarily knowing what a stop sign really is".
+
+"You haven't changed the need to handle the exceptions, but you've converted it
+from a programming job of a few lines of code into a data collection job".
+
+GP5: An Optional Project
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+GP5 is optional and not graded: it keeps your GP1 to GP3 nodes and GP4's planner, and replaces GP4's behavior and controller nodes with a learned model.
+
+The Project
+^^^^^^^^^^^
+
+GP5 is an optional end-to-end project on your own stack. It keeps most of your nodes and puts one learned node in place of two.
+
+GP5, an optional project
+""""""""""""""""""""""""
 
 **GP5 is optional and not graded:** no points, no bonus, nothing due and
 nothing submitted. It does not count toward the group-project grade or the
-final report. The full description is on :doc:`the GP5 page </assignments/gp5>`.
+final report. The full description is on :doc:`the GP5 page
+</assignments/gp5>`.
 
 - **What you do:** keep your GP1 to GP3 nodes and GP4's planner, remove GP4's
   behavior and controller nodes, and add one learned model in their place. It
@@ -1517,23 +2790,112 @@ final report. The full description is on :doc:`the GP5 page </assignments/gp5>`.
 Today's lecture gives the ideas behind GP5, and GP4's closed loop and scoring
 script test your model.
 
-GP5's model: three parts, six commands
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+GP5 in the node graph
+"""""""""""""""""""""
+
+
+.. figure:: /_static/images/L11/l11_gp5_nodes.png
+   :class: white-figure
+   :alt: A node graph. A large rounded box tagged 1, GP1 to GP3, holds five boxes: sensor_manager, detector_node, localization_node, fusion_node and tracker_node. An arrow labeled tracks, pose goes from it to planner_node. From planner_node, a dashed arrow goes to two crossed-out dashed boxes, behavior_node then controller_node, tagged 2. A solid arrow from planner_node and an arrow labeled camera image, speed from the GP1 to GP3 box both go to a blue box, vla_node, tagged 3. The label route command sits beside these arrows. An arrow labeled vehicle command leaves vla_node.
+   :width: 95%
+   :align: center
+
+   GP5 replaces two nodes with one.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   - **Tag 1:** your GP1 to GP3 nodes, kept, and GP4's planner_node.
+   - **Tag 2:** behavior_node and controller_node, crossed out: removed.
+   - **Tag 3:** vla_node, added. It reads the camera image and the speed, takes the route command, and publishes the vehicle command.
+
+GP5 replaces two nodes with one learned model:
+
+1. **Kept:** your GP1 to GP3 nodes (``sensor_manager``, ``detector_node``,
+   ``localization_node``, ``fusion_node``, ``tracker_node``) and GP4's
+   ``planner_node``.
+2. **Removed:** GP4's ``behavior_node`` and ``controller_node``.
+3. **Added:** ``vla_node``.
+
+The GP1 to GP3 nodes send tracks and the pose to the planner. ``vla_node``
+reads the camera image and the speed, takes the text command from the route,
+and publishes the vehicle command.
+
+GP5's Model
+^^^^^^^^^^^
+
+The project adds one node, ``vla_node``, in place of your behavior and controller nodes. Inside it is a model of which you train only one part.
+
+GP5's model in three parts
+""""""""""""""""""""""""""
+
+
+.. figure:: /_static/images/L11/l11_gp5_model_parts.png
+   :class: white-figure
+   :alt: A block diagram. A box Front camera image feeds a dashed box CLIP image encoder (frozen), which gives a box 512. A box follow the road feeds a dashed box CLIP text encoder (frozen), which gives a box 512. Under the text encoder, six small squares in a row, the first one filled orange, are labeled six constant vectors. A box Speed gives a box 1. The three boxes 512, 512 and 1 feed a box Joined input: 512 + 512 + 1 = 1,025. It feeds a blue box Small decoder (trained), and a label says 3 numbers: steering, throttle, brake.
+   :width: 95%
+   :align: center
+
+   GP5's model: two frozen encoders, one trained decoder.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   - **Dashed boxes:** the two CLIP encoders, frozen. You do not train them.
+   - **Six squares:** the six constant vectors, one for each fixed command. One is chosen (orange).
+   - **Joined input:** the two 512-number vectors and the speed, 1,025 numbers.
+   - **Blue box:** the small decoder, the part you train. It gives steering, throttle and brake.
+
+GP5's model has two frozen encoders, one trained decoder and six fixed
+commands.
 
 - **Two frozen CLIP encoders** (CLIP is a pre-trained image and text model),
   one for the image and one for the text command, each giving 512 numbers.
   You do not train them.
 - **One input:** the two vectors and the speed, 512 + 512 + 1 = 1,025 numbers.
 - **A small decoder** that you train, a multi-layer perceptron (a few fully
-  connected layers). It gives three numbers, kept in the ranges of the
-  vehicle command.
+  connected layers). It gives three numbers (steering, throttle and brake),
+  kept in the ranges of the vehicle command.
 - **Six fixed commands,** such as "follow the road" and "turn left at the
   intersection". With six phrases, the text input is a choice among six
   constant vectors.
 
-So GP5's model is close to conditional imitation: a camera-driven policy with
-a six-way command. It is much smaller than DriveVLM or Alpamayo, and it does
-not write text.
+GP5's model, drawn
+""""""""""""""""""
+
+
+.. figure:: /_static/images/L11/l11_gp5_model_drawn.png
+   :class: white-figure
+   :alt: A block diagram with three numbered tags. Three input boxes, image, command and speed. Image goes to a box CLIP image and command goes to a box CLIP text; a circled tag 1 sits between these two boxes. Arrows labeled 512 from each CLIP box, and an arrow labeled 1 from speed, go to a dashed box 1,025, tagged 2. An arrow leads to a blue box decoder, tagged 3, and then to an output box: steer, throttle, brake.
+   :width: 95%
+   :align: center
+
+   GP5's model, drawn.
+
+.. admonition:: Reading the figure
+   :class: tip
+
+   - **Tag 1:** two frozen CLIP encoders, 512 numbers each.
+   - **Tag 2:** with the speed, one input of 512 + 512 + 1 = 1,025 numbers.
+   - **Tag 3:** the decoder, the only part you train.
+
+The slide draws how the image, the command and the speed become one input and
+then a vehicle command. Its three tags:
+
+1. two frozen CLIP encoders, 512 numbers each;
+2. with the speed, one input of 512 + 512 + 1 = 1,025 numbers;
+3. the decoder is the only part you train.
+
+Where GP5's model sits
+""""""""""""""""""""""
+
+GP5's model fits into the family of end-to-end drivers from this lecture. It
+is close to conditional imitation: a camera-driven policy with a six-way
+command. It is much smaller than DriveVLM or Alpamayo, and it does not write
+text.
+
+Where that leaves us
+^^^^^^^^^^^^^^^^^^^^
 
 .. admonition:: Where that leaves us
    :class: tip
@@ -1545,8 +2907,28 @@ not write text.
      compounding error, in states the recording never showed.
    - DAgger adds those states, labeled by the expert: 19 of 20 laps, in 10 of
      10 training runs.
-   - Junctions need the route's command. End-to-end networks range from
+   - Junctions need the route's command. End-to-end neural networks range from
      TransFuser to UniAD to VLAs; their authors report 0.41 s (DriveVLM) and
      0.099 s (Alpamayo 1), on different chips.
    - Judge any driver in closed loop: open-loop scores favored the clone that
      failed.
+
+
+.. _l11-lec-next-class:
+
+Next Class
+----------
+
+L12, Thursday, December 10, 2026: Simulation, Scenario-Based Testing and World
+Models. It covers where closed-loop tests like today's come from, and how to
+choose them. L11 trained a driver from an expert: three ways it fails, four
+fixes, the other ways to learn a driver, and why only a closed-loop test can
+judge one.
+
+- **Before then:** run the five hands-on parts: ``road``, ``bc``, ``shift``,
+  ``dagger`` and ``eval``.
+- **December 10 and after:** Quiz 5 is that day, and GP4 is due at L12. The
+  final report is due on December 17; it was posted with GP4 on November 19.
+  GP5, the end-to-end project, is optional and not graded: nothing is due.
+
+

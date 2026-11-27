@@ -13,14 +13,16 @@ Quiz
    through this page is good preparation for one. Memorizing the answers
    below is not.
 
-This quiz covers Lecture 11: end-to-end driving, defined; behavior cloning on
-one lap of Town01 and why a clone that looks good on recorded data leaves its
-lane (compounding error); DAgger and what it costs; commands for a learned
-driver at a junction; TransFuser, UniAD and driving VLA models; open-loop and
-closed-loop evaluation; and how to compare a modular stack with an end-to-end
-driver. Every question can be answered from the lecture notes,
-:doc:`l11_lecture`. This quiz tests only what the deck teaches in class:
-nothing on this page needs the lecture's "More detail" boxes.
+This quiz covers Lecture 11: the modular and the end-to-end driver, and what
+end-to-end gains and costs; behavior cloning on one lap of Town01 and why a
+clone that looks good on recorded data leaves its lane (compounding error,
+causal confusion, averaging); DAgger, recovery data and what they cost; the
+other ways to learn a driver; commands for a learned driver at a junction;
+TransFuser, UniAD and driving VLA models; open-loop and closed-loop
+evaluation; and how to compare a modular stack with an end-to-end driver.
+Every question can be answered from the lecture notes, :doc:`l11_lecture`.
+This quiz tests only what the deck teaches in class: nothing on this page
+needs the lecture's "More detail" boxes.
 
 .. note::
 
@@ -40,7 +42,7 @@ nothing on this page needs the lecture's "More detail" boxes.
 ----
 
 
-Multiple Choice (Questions 1 to 15)
+Multiple Choice (Questions 1 to 19)
 ===================================
 
 .. admonition:: Question 1
@@ -423,13 +425,113 @@ Multiple Choice (Questions 1 to 15)
    loop shows compounding error. Bench2Drive is the one that runs in CARLA.
 
 
+.. admonition:: Question 16
+   :class: hint
+
+   Which of these is one of the four costs of an end-to-end driver that the lecture
+   lists, as opposed to one of its four gains?
+
+   A. One goal for all parts.
+
+   B. It is hard to open: it is a black box.
+
+   C. Less computing, because one shared extractor finds the features once.
+
+   D. It may get better with more data.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **B**.
+
+   The four costs are: hard to open (a black box), no proof of safety, rare cases (the
+   long tail), and states the expert never showed. The other three choices are
+   gains: one goal for all parts, less computing and (possibly) better with more
+   data.
+
+
+.. admonition:: Question 17
+   :class: hint
+
+   De Haan et al. trained two clones with the same network on the same driving.
+   Clone A sees the windshield and the dashboard. Clone B sees the same image
+   with the dashboard masked out. What happened?
+
+   A. Both drive well, because both have low training loss.
+
+   B. Clone A drives better, because it has more information.
+
+   C. Clone A does not drive well and clone B does: A learned to brake only when the brake light on the dashboard is on.
+
+   D. Clone B does not drive well, because it lacks the dashboard.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **C**.
+
+   This is causal confusion. The brake light is the effect of braking, but clone A
+   can reach a low training loss by treating it as the cause. On the road the
+   light is not on yet, so A does not brake. The authors write that "access to
+   more information can yield worse performance".
+
+
+.. admonition:: Question 18
+   :class: hint
+
+   Which way of learning a driver needs no expert's actions to copy, and learns
+   from a reward by trial?
+
+   A. Behavior cloning.
+
+   B. Reinforcement learning.
+
+   C. Cost learning.
+
+   D. DAgger.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **B**.
+
+   Reinforcement learning learns from a reward, by trial. Behavior cloning and
+   DAgger copy an expert, and cost learning learns a cost from the expert's
+   demonstrations, then drives the cheapest trajectory.
+
+
+.. admonition:: Question 19
+   :class: hint
+
+   NVIDIA's network and ChauffeurNet both train on off-center views that the
+   expert never drove. Where does the label of such a view come from?
+
+   A. An expert labels each view after the drive, as in DAgger.
+
+   B. The label comes from geometry: the steering that leads back to the lane.
+
+   C. The clone labels its own views.
+
+   D. The label is random.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **B**.
+
+   Like DAgger, both add states the expert never drove. Unlike DAgger, no expert
+   labels them. NVIDIA labels each view with the steering that returns the car
+   "to the desired location and orientation in two seconds", and ChauffeurNet
+   jitters the expert's path and draws a smooth path through the moved point.
+
+
 ----
 
 
-True or False (Questions 16 to 22)
+True or False (Questions 20 to 28)
 ==================================
 
-.. admonition:: Question 16
+.. admonition:: Question 20
    :class: hint
 
    True or false: a clone whose steering is within 0.2° of the human driver's
@@ -446,7 +548,7 @@ True or False (Questions 16 to 22)
    laps of 20.
 
 
-.. admonition:: Question 17
+.. admonition:: Question 21
    :class: hint
 
    True or false: in all ten training runs, behavior cloning has the lower
@@ -463,7 +565,7 @@ True or False (Questions 16 to 22)
    (19 laps against 5).
 
 
-.. admonition:: Question 18
+.. admonition:: Question 22
    :class: hint
 
    True or false: the bound of Ross and Bagnell says behavior cloning's total
@@ -481,7 +583,7 @@ True or False (Questions 16 to 22)
    follow.
 
 
-.. admonition:: Question 19
+.. admonition:: Question 23
    :class: hint
 
    True or false: the CARLA Leaderboard, where TransFuser was tested in closed
@@ -496,7 +598,7 @@ True or False (Questions 16 to 22)
    Leaderboard, which has since closed.
 
 
-.. admonition:: Question 20
+.. admonition:: Question 24
    :class: hint
 
    True or false: GP5, the end-to-end project, is part of the group-project
@@ -512,7 +614,7 @@ True or False (Questions 16 to 22)
    final report.
 
 
-.. admonition:: Question 21
+.. admonition:: Question 25
    :class: hint
 
    True or false: your final report evaluates your modular pipeline.
@@ -526,7 +628,7 @@ True or False (Questions 16 to 22)
    the instructor provides. End-to-end driving is the optional GP5.
 
 
-.. admonition:: Question 22
+.. admonition:: Question 26
    :class: hint
 
    True or false: in the lecture's ten training runs, DAgger finishes 19 of
@@ -543,13 +645,48 @@ True or False (Questions 16 to 22)
    laps of 20 over the ten runs.
 
 
+.. admonition:: Question 27
+   :class: hint
+
+   True or false: on nuScenes, open loop, a model that uses no camera images can
+   have a lower average distance error than models that use cameras.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **True.**
+
+   AD-MLP plans from the AV's own past motion and the route command, with no
+   camera, and has the lowest average distance error in its Table 1: 0.29 m,
+   against 1.03 m for UniAD and 0.37 m for VAD-Base. An open-loop score on
+   nuScenes does not show that a model sees the road: 73.9% of the nuScenes data
+   involve driving straightforwardly.
+
+
+.. admonition:: Question 28
+   :class: hint
+
+   True or false: an event that happens once per billion miles, and 100 million
+   miles of driving data (the numbers of Koopman's example), leave about a 90%
+   chance that the data holds no example of it.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   **True.**
+
+   Expected sightings: 100,000,000 / 1,000,000,000 = 0.1. If sightings come
+   independently (a Poisson count), the chance of never seeing the event is
+   e\ :sup:`-0.1` = 0.90.
+
+
 ----
 
 
-Short Answer (Questions 23 to 25)
+Short Answer (Questions 29 to 32)
 =================================
 
-.. admonition:: Question 23
+.. admonition:: Question 29
    :class: hint
 
    Explain compounding error with the lecture's numbers: where does the
@@ -566,10 +703,10 @@ Short Answer (Questions 23 to 25)
    the errors add up instead of averaging out. The training data cannot help
    in those states: the expert's true offset has a standard deviation of
    0.15 m and never passes 0.61 m, while the clone spends 20% of its time
-   beyond 0.61 m. See "Compounding Error" in :doc:`l11_lecture`.
+   beyond 0.61 m. See "Why the Clone Fails" in :doc:`l11_lecture`.
 
 
-.. admonition:: Question 24
+.. admonition:: Question 30
    :class: hint
 
    DAgger raised the lecture's clone from 5 finished laps to 19. Name what
@@ -588,7 +725,7 @@ Short Answer (Questions 23 to 25)
    class of policies. See "What DAgger costs" in :doc:`l11_lecture`.
 
 
-.. admonition:: Question 25
+.. admonition:: Question 31
    :class: hint
 
    A team says its end-to-end model beats a modular stack, based on one run of
@@ -607,3 +744,22 @@ Short Answer (Questions 23 to 25)
    finished 2 to 9 laps of 20 depending only on the training run, so a single
    run can make a worse design look better. See "A fair comparison, in four
    steps" in :doc:`l11_lecture`.
+
+
+.. admonition:: Question 32
+   :class: hint
+
+   Phil Koopman gives two reasons why testing alone cannot show that a learned
+   driver is safe. Give them.
+
+.. dropdown:: Answer
+   :class-container: sd-border-success
+
+   Covering every neuron does not help: a chip test can exercise every gate and
+   show that it is there, but "if you exercise all the neurons in an artificial
+   neural network, it doesn't prove anything". Driving more miles does not help
+   either: brute-force testing takes about a billion miles, and the machine
+   learning has probably been retrained 100 times in that billion miles, so none
+   of it counts. See "Why testing cannot prove safety" in :doc:`l11_lecture`.
+
+

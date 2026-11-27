@@ -11,12 +11,13 @@ Exercises
    work, which is the five in-class quizzes and the four group projects
    listed in the :doc:`syllabus </syllabus/index>`.
 
-Five take-home exercises, built on the Lecture 11 notes, :doc:`l11_lecture`.
+Six take-home exercises, built on the Lecture 11 notes, :doc:`l11_lecture`.
 They use only what the lecture teaches in class, with new numbers. Exercise 1
 compares an open-loop score with a closed-loop one. Exercise 2 asks how a
 noisy detector changes what a clone learns. Exercise 3 counts the data of a
 DAgger run. Exercise 4 works a junction with a tighter left turn. Exercise 5
 turns a model's answer time into meters and checks a comparison for fairness.
+Exercise 6 asks how likely a rare event is to appear in driving data.
 
 .. note::
 
@@ -397,3 +398,66 @@ turns a model's answer time into meters and checks a comparison for fairness.
         run.
       - **Say what each one was given:** broken. Team A used the true pose,
         which is privileged information, and Team B used camera images only.
+
+
+.. dropdown:: Exercise 6. A Rare Event in the Driving Data
+   :icon: number
+   :class-container: sd-border-primary
+   :class-title: sd-font-weight-bold
+
+   **Goal**
+
+   Work out the chance that a rare event has no example in the training data,
+   and say why a heavy tail makes this a problem for a learned driver.
+
+   .. raw:: html
+
+      <hr>
+
+   **Specification**
+
+   An event happens once per 500 million miles of driving (chosen for this
+   exercise). A company has 250 million miles of driving data. Treat the
+   sightings as independent, as a Poisson count, as the lecture does.
+
+   .. raw:: html
+
+      <hr>
+
+   **Part A. The chance of no example**
+
+   1. How many sightings does the data hold on average?
+   2. What is the chance that the data holds no example of the event? Use
+      :math:`e^{-x}`, where :math:`x` is your answer to question 1.
+
+   .. raw:: html
+
+      <hr>
+
+   **Part B. Many events**
+
+   3. In Koopman's words, a long tail is rare events, and a heavy tail is "a
+      lot of things". Why does fixing one rare event not solve the problem
+      when there are a billion different ones?
+
+   .. raw:: html
+
+      <hr>
+
+   **Deliverable**
+
+   The answers to questions 1 to 3, each with its arithmetic.
+
+   .. dropdown:: Guidance
+      :color: success
+
+      Question 1: 250,000,000 / 500,000,000 = 0.5 sightings.
+
+      Question 2: :math:`e^{-0.5}` = 0.61. The data holds no example of the
+      event with a chance of about 61%.
+
+      Question 3: each of the billion events is rare, so each is likely to
+      have few examples or none in the data, as in question 2. Fixing one
+      event leaves the others. In Koopman's words, if you have a billion of
+      them "you're going to see one every mile. And if you fix it, that
+      doesn't help you".

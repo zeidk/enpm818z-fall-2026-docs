@@ -58,7 +58,7 @@ slides are finished; the table shows the plan.
      - The controller's five input topics, seen live in Town03; the behavior layer beyond one FSM for road driving (why a flat FSM grows too fast, a superstate, behavior trees, built and run in Python); trajectory generation (a quintic offset in time, checked against a moving car and scored for jerk); drive-by-wire actuators and the steering chain's 0.2 s delay; the kinematic bicycle model and Ackermann steering; a speed profile with a quintic slow-down; PID speed control, windup and clamping; Pure Pursuit and its lookahead distance; the Stanley controller; what MPC adds (a model, a horizon, limits, and only the first input applied); on one Town03 right turn
    * - L11
      - End-to-End Driving, VLA & Imitation Learning
-     - Behavior cloning, open-loop error, compounding error, DAgger, conditional imitation, TransFuser and UniAD, vision-language-action (VLA) models, open-loop vs. closed-loop evaluation, modular vs. end-to-end
+     - Behavior cloning, open-loop error, compounding error, causal confusion, DAgger, recovery data, conditional imitation, reinforcement learning and cost learning, TransFuser and UniAD, vision-language-action (VLA) models, open-loop vs. closed-loop evaluation, modular vs. end-to-end
    * - L12
      - Simulation, Scenario-Based Testing & World Models
      - Scenario-based testing, functional/logical/concrete scenarios, OpenSCENARIO, ISO 34500 series, test pyramid (MIL/SIL/HIL/VIL), open vs. closed loop, re-simulation, CARLA driving score, world models (GAIA-1 to GAIA-4, Cosmos, Vista)

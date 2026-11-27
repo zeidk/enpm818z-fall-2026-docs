@@ -3298,6 +3298,13 @@ L11 (not yet published)
       for the expert's input. It can score well on recorded data and still
       leave the lane: see :term:`Compounding Error`. L11
 
+   Causal Confusion
+      A clone treats an effect as the cause. In the example of de Haan et al.,
+      the dashboard has a brake light that comes on when the brake is applied,
+      and the clone learns to brake only when the light is on. It reaches a low
+      training error this way and still drives badly. More inputs can make a
+      clone worse. L11
+
    Compounding Error
       The policy's own mistakes take it to states its training data did not
       cover, where it makes larger mistakes. It happens only when the policy
@@ -3308,6 +3315,12 @@ L11 (not yet published)
       Imitation learning with a route command as an input (follow the lane,
       left, straight, right): the command picks which output head steers, so
       the policy knows which way to go at a junction. L11
+
+   Cost Learning
+      Learning a cost from the expert, then driving the cheapest trajectory:
+      the loss makes the expert's demonstration cost little and others cost
+      more, an algorithm samples candidate trajectories, and the car drives
+      the one with the lowest learned cost. L11
 
    DAgger
       Dataset aggregation (Ross, Gordon and Bagnell, 2011). The policy drives,
@@ -3324,6 +3337,11 @@ L11 (not yet published)
       pairs them with a classical planner and runs on a production vehicle.
       L11
 
+   MILE
+      Model-based Imitation LEarning: it learns a model of the world together
+      with the driving :term:`Policy` (Hu et al., 2022). It is still imitation
+      learning, with a second thing learned beside the policy. L11
+
    Open-Loop Error
       A policy's error on recorded inputs: it reads each recorded input and
       its output is compared with the expert's; its outputs never move the
@@ -3336,6 +3354,23 @@ L11 (not yet published)
       A state only the simulator knows, such as the true offset from the lane
       center. An expert that reads it (like a simulator's autopilot) can label
       any state; the AV's own policy gets only what its sensors report. L11
+
+   Recovery Data
+      Off-center views that are added to a recording, each labeled with the
+      way back to the lane. They are made, because a careful driver rarely
+      leaves the lane and a real mistake is unsafe on a public road. Unlike
+      :term:`DAgger`, no expert labels them: the label comes from geometry. L11
+
+   Reinforcement Learning
+      Learning from a reward, by trial, with no expert's actions to copy. It
+      needs a reward and room to try and fail. A real car learned to follow its
+      lane this way in under 30 minutes. L11
+
+   TransFuser
+      A driving network that fuses a camera image and a LiDAR grid with
+      attention, then predicts waypoints. It is trained by imitation, and two
+      PID controllers turn the waypoints into steering, throttle and brake:
+      that last step is not learned. L11
 
    UniAD
       Unified Autonomous Driving (CVPR 2023 Best Paper). One network that runs

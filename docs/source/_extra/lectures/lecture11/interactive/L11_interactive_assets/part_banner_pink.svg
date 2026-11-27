@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1248 300" width="1248" height="300">
+  <title>part divider banner</title>
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B44BE1"/><stop offset="1" stop-color="#F28AD8"/></linearGradient>
+    <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#D45FD0"/><stop offset="1" stop-color="#F7B0E6"/></linearGradient>
+    <linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9B5CF0"/><stop offset="1" stop-color="#E07AD6"/></linearGradient>
+    <linearGradient id="g4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E86AC4"/><stop offset="1" stop-color="#B07CF2"/></linearGradient>
+    <linearGradient id="gridfade" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1248" y2="0"><stop offset="0" stop-color="#C77DC0" stop-opacity="0"/><stop offset="1" stop-color="#C77DC0" stop-opacity="0.35"/></linearGradient>
+  </defs>
+  <g stroke="url(#gridfade)" stroke-width="1.5">
+    <line x1="-600" y1="0" x2="-300" y2="300"/>
+    <line x1="-600" y1="300" x2="-300" y2="0"/>
+    <line x1="-480" y1="0" x2="-180" y2="300"/>
+    <line x1="-480" y1="300" x2="-180" y2="0"/>
+    <line x1="-360" y1="0" x2="-60" y2="300"/>
+    <line x1="-360" y1="300" x2="-60" y2="0"/>
+    <line x1="-240" y1="0" x2="60" y2="300"/>
+    <line x1="-240" y1="300" x2="60" y2="0"/>
+    <line x1="-120" y1="0" x2="180" y2="300"/>
+    <line x1="-120" y1="300" x2="180" y2="0"/>
+    <line x1="0" y1="0" x2="300" y2="300"/>
+    <line x1="0" y1="300" x2="300" y2="0"/>
+    <line x1="120" y1="0" x2="420" y2="300"/>
+    <line x1="120" y1="300" x2="420" y2="0"/>
+    <line x1="240" y1="0" x2="540" y2="300"/>
+    <line x1="240" y1="300" x2="540" y2="0"/>
+    <line x1="360" y1="0" x2="660" y2="300"/>
+    <line x1="360" y1="300" x2="660" y2="0"/>
+    <line x1="480" y1="0" x2="780" y2="300"/>
+    <line x1="480" y1="300" x2="780" y2="0"/>
+    <line x1="600" y1="0" x2="900" y2="300"/>
+    <line x1="600" y1="300" x2="900" y2="0"/>
+    <line x1="720" y1="0" x2="1020" y2="300"/>
+    <line x1="720" y1="300" x2="1020" y2="0"/>
+    <line x1="840" y1="0" x2="1140" y2="300"/>
+    <line x1="840" y1="300" x2="1140" y2="0"/>
+    <line x1="960" y1="0" x2="1260" y2="300"/>
+    <line x1="960" y1="300" x2="1260" y2="0"/>
+    <line x1="1080" y1="0" x2="1380" y2="300"/>
+    <line x1="1080" y1="300" x2="1380" y2="0"/>
+    <line x1="1200" y1="0" x2="1500" y2="300"/>
+    <line x1="1200" y1="300" x2="1500" y2="0"/>
+    <line x1="1320" y1="0" x2="1620" y2="300"/>
+    <line x1="1320" y1="300" x2="1620" y2="0"/>
+    <line x1="1440" y1="0" x2="1740" y2="300"/>
+    <line x1="1440" y1="300" x2="1740" y2="0"/>
+    <line x1="1560" y1="0" x2="1860" y2="300"/>
+    <line x1="1560" y1="300" x2="1860" y2="0"/>
+  </g>
+    <rect x="1105.0" y="-45.0" width="210" height="210" rx="25.2" fill="url(#g1)" opacity="0.55" transform="rotate(45 1210 60)"/>
+  <rect x="945.0" y="60.0" width="230" height="230" rx="27.6" fill="url(#g2)" opacity="0.6" transform="rotate(45 1060 175)"/>
+  <rect x="1140.0" y="150.0" width="200" height="200" rx="24.0" fill="url(#g3)" opacity="0.7" transform="rotate(45 1240 250)"/>
+  <rect x="795.0" y="195.0" width="210" height="210" rx="25.2" fill="url(#g1)" opacity="0.55" transform="rotate(45 900 300)"/>
+  <rect x="1035.0" y="235.0" width="190" height="190" rx="22.8" fill="url(#g4)" opacity="0.75" transform="rotate(45 1130 330)"/>
+  <rect x="920.0" y="-20.0" width="120" height="120" rx="14.4" fill="url(#g3)" opacity="0.45" transform="rotate(45 980 40)"/>
+  <rect x="685.0" y="255.0" width="150" height="150" rx="18.0" fill="url(#g2)" opacity="0.45" transform="rotate(45 760 330)"/>
+  <rect x="1125.0" y="105.0" width="110" height="110" rx="13.2" fill="url(#g4)" opacity="0.65" transform="rotate(45 1180 160)"/>
+  <rect x="785.0" y="125.0" width="90" height="90" rx="10.8" fill="url(#g4)" opacity="0.4" transform="rotate(45 830 170)"/>
+  <rect x="595.0" y="275.0" width="90" height="90" rx="10.8" fill="url(#g3)" opacity="0.3" transform="rotate(45 640 320)"/>
+</svg>

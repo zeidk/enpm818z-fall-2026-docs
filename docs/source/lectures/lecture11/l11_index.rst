@@ -15,32 +15,35 @@ clone that learns to copy a recording of the expert and then drives alone. The
 clone sees what a noisy lane detector reports. No CARLA server is needed:
 everything runs in numpy on a laptop.
 
-- **Behavior cloning.** Supervised learning on the expert's recorded drive.
-  The clone's steering differs from the expert's by 0.37° on average, which
-  is 2% of the 16.5° a sharp turn needs, yet it finishes only 5 of 20 test
-  laps.
-- **Compounding error.** The clone's error grows from 0.44° near the lane
-  center to 2.41° near its edge, in states the recording never showed: 20% of
-  its time is beyond the 0.61 m the expert ever reached. Its weight on the
-  offset is 9 times too weak (0.38 against 3.44° per meter), because the
-  detector's noise of 0.35 m hides an offset that varies by only 0.15 m.
-- **DAgger.** The clone drives, the expert labels every state it reaches, and
-  the clone is refit on all the data. One DAgger lap lifts it from 5 to 16
-  finished laps, and it reaches 19 in all ten training runs. It costs an
-  expert that can label any state, a safe place for a bad clone to drive, and
-  a guarantee that holds only under conditions.
-- **Commands.** At a junction the image does not say which way to go, and a
-  clone fit to both ways steers about the average, which fits neither lane. A
-  command from the route picks one head of the network.
-- **Architectures and VLA models.** TransFuser (camera and LiDAR fused by
-  attention, then waypoints), UniAD (the stack's modules inside one network),
-  and vision-language-action models, whose answers take about 0.4 s: 3.3 m
-  driven at 8 m/s.
-- **Evaluation.** The clone with the better open-loop score (0.37° against
-  0.47°) finishes fewer laps (5 against 19). Two benchmarks, NAVSIM and
-  Bench2Drive, and the way GP4 scores your own stack in closed loop.
-- **Modular or end-to-end.** The two designs side by side, four steps to
-  compare them fairly, and GP5, an optional end-to-end project.
+- **Introduction.** A modular driver, built from parts that people design,
+  against an end-to-end driver, one neural network trained from data, and
+  which companies use which design. Four gains of end-to-end, and the running
+  example.
+- **Imitation learning.** Behavior cloning, supervised learning on the
+  expert's recorded drive. The clone's steering differs from the expert's by
+  0.37° on average, which is 2% of the 16.5° a sharp turn needs, yet it
+  finishes only 5 of 20 test laps. Why: compounding error (its error grows
+  from 0.44° near the lane center to 2.41° near its edge, in states the
+  recording never showed), causal confusion, and averaging at a junction. Its
+  weight on the offset is 9 times too weak (0.38 against 3.44° per meter),
+  because the detector's noise of 0.35 m hides an offset that varies by only
+  0.15 m. The fixes: DAgger (19 of 20 laps in all ten training runs, at the
+  cost of an expert that can label any state and a safe place for a bad clone
+  to drive), recovery data, a privileged teacher, and the route's command. Two other ways to learn from the same
+  demonstrations: cost learning and a model of the world.
+- **Reinforcement learning.** Learning from a reward, by trial, with no expert
+  to copy, placed beside imitation.
+- **Inside the networks.** TransFuser (camera and LiDAR fused by attention,
+  then waypoints), UniAD (the stack's modules inside one network), and
+  vision-language-action models, whose answers take about 0.4 s: 3.3 m driven
+  at 8 m/s.
+- **Scoring a driver.** The clone with the better open-loop score (0.37°
+  against 0.47°) finishes fewer laps (5 against 19). NVIDIA's closed loop on
+  recorded video, two benchmarks (NAVSIM and Bench2Drive), and the way GP4
+  scores your own stack in closed loop.
+- **Modular or end-to-end?** What end-to-end costs, the two designs side by
+  side, four steps to compare them fairly, and GP5, an optional end-to-end
+  project.
 
 
 Learning Objectives
@@ -48,15 +51,22 @@ Learning Objectives
 
 After this lecture, you can:
 
-- Write **behavior cloning** as supervised learning and fit a small policy.
-- Explain, with measured numbers, why a clone with a small error on the
-  expert's data leaves its lane: **compounding error**.
-- Run **DAgger**'s loop and say what it costs.
-- Say why a learned driver needs the route's **command** at a junction.
-- Place **TransFuser**, **UniAD** and driving **VLA models**: inputs, outputs,
-  what is learned.
-- Tell an **open-loop** result from a **closed-loop** one.
-- Compare a **modular** stack with an **end-to-end** driver fairly.
+- **Compare** a **modular** driver with an **end-to-end** driver, and say which
+  companies use which.
+- Train a network by **behavior cloning**, which is supervised learning on an
+  expert's driving, then score it, see why it fails and fix it. That means:
+  fit the clone to one recorded lap; score it on recorded data (**open
+  loop**) and by letting it drive (**closed loop**); explain its failures with
+  **compounding error**, **causal confusion** and **averaging**; and name the
+  fixes, mainly **DAgger** and the route's **command** at a junction.
+- Place cost learning and a model of the world beside behavior cloning, and
+  **reinforcement learning**, learning from a reward with no expert to copy,
+  beside imitation.
+- Read published drivers such as **TransFuser** and **UniAD**, and driving
+  **VLA models**.
+- Tell **open-loop** from **closed-loop** evaluation, and read the benchmarks
+  that score drivers in closed loop.
+- Weigh what end-to-end costs, and compare the two kinds of driver fairly.
 
 
 Lecture Materials
@@ -64,13 +74,13 @@ Lecture Materials
 
 - :doc:`l11_lecture`: the notes, following the slides shown in class.
   Material cut from class sits in closed "More detail" boxes, right after the
-  part it explains. The hands-on commands are in the section "Hands-on: clone
-  the expert, then run DAgger".
+  part it explains. The hands-on commands are in the part "Hands-on code" of
+  "Imitation Learning".
 - :doc:`l11_interactive`: the slides as a web page you can try.
-- :doc:`l11_exercises`: five take-home exercises, not graded: an open-loop
+- :doc:`l11_exercises`: six take-home exercises, not graded: an open-loop
   score against a closed-loop one, noise and the offset weight, the data of a
-  DAgger run, a junction with a tighter left turn, and a slow model with a
-  fair comparison.
+  DAgger run, a junction with a tighter left turn, a slow model with a fair
+  comparison, and a rare event in the driving data.
 - :doc:`l11_quiz` and :doc:`l11_references`.
 
 .. toctree::

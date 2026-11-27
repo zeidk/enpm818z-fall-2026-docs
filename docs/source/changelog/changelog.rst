@@ -5,10 +5,33 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.50.0: Parts and Section Banners in the L11 Interactive Slides, Not Yet Published (2026-11-25)
+.. dropdown:: v2.51.0: L11 Follows the Map of the Field, Not Yet Published (2026-11-27)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L11 lecture (not yet published):** the page follows the interactive
+     slides: Introduction (who builds which design), Imitation Learning (six
+     parts on behavior cloning, then cost learning and a model of the world),
+     and Reinforcement Learning. Each part opens with what it is about. New
+     figures of NVIDIA's network and diagrams, the Tesla Model 3 and GP5, and
+     a "More detail" box with the modular pipeline each field used before
+     end-to-end learning.
+   - **L11 quiz and exercises:** seven new quiz questions (32 in all) and a
+     sixth exercise.
+   - **L11 references:** the slides' 48 numbered references, each with the
+     sections that cite it.
+
+   .. rubric:: Glossary
+
+   - Six L11 terms: causal confusion, cost learning, MILE, recovery data,
+     reinforcement learning and TransFuser.
+
+.. dropdown:: v2.50.0: Parts and Section Banners in the L11 Interactive Slides, Not Yet Published (2026-11-25)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

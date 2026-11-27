@@ -2,504 +2,388 @@
 References
 ====================================================
 
-These are the sources of the L11 deck and of its "More detail" boxes,
-grouped by the lecture's sections, in the order the lecture first uses each
-one. Authors, titles, venues and years are those of the deck's bibliography
-file. A source used in several sections is listed once, where the lecture
-first uses it. Several sources are quoted only in a "More detail" box of the
-lecture; their cards say so. A source with no link has no web address in the
-bibliography file.
+These are the sources of the L11 interactive deck, in the deck's own numbered
+list: the number in front of each entry is the number the slides cite, as in
+"[6]". The lecture notes name a source by its authors and year. Authors,
+titles, venues, years and links are those of the deck's bibliography file. Under
+each entry, "Cited in" lists the sections of the lecture that cite it. A page
+with a visit date was read on that date.
 
+1. Dean A. Pomerleau. “ALVINN: An Autonomous Land Vehicle in a Neural Network”.
+   In: Advances in Neural Information Processing Systems. Ed. by D.
+   Touretzky. Vol. 1. Morgan-Kaufmann, 1988, pp. 305 to 313.
 
-.. dropdown:: Introduction
-   :class-container: sd-border-secondary
-   :open:
+   Cited in: Imitation Learning.
 
-   The definition of end-to-end driving.
+2. Stéphane Ross and J. Andrew Bagnell. “Efficient Reductions for Imitation
+   Learning”. In: Proceedings of the Thirteenth International Conference on
+   Artificial Intelligence and Statistics (AISTATS). Vol. 9. JMLR Workshop
+   and Conference Proceedings. 2010, pp. 661 to 668.
 
-   .. grid:: 1 1 2 2
-      :gutter: 2
+   Cited in: Imitation Learning.
 
-      .. grid-item-card:: End-to-end driving: challenges and frontiers
-         :link: https://arxiv.org/abs/2306.16927
-         :class-card: sd-border-secondary
+3. Stéphane Ross, Geoffrey J. Gordon, and J. Andrew Bagnell. “A Reduction of
+   Imitation Learning and Structured Prediction to No-Regret Online
+   Learning”. In: Proceedings of the Fourteenth International Conference on
+   Artificial Intelligence and Statistics (AISTATS). Vol. 15. JMLR Workshop
+   and Conference Proceedings. 2011, pp. 627 to 635. arXiv: `1011.0686
+   <https://arxiv.org/abs/1011.0686>`__.
 
-         **Chen, L., Wu, P., Chitta, K., Jaeger, B., Geiger, A. and Li, H.
-         (2024)**
+   Cited in: Imitation Learning.
 
-         *End-to-End Autonomous Driving: Challenges and Frontiers.* IEEE
-         Transactions on Pattern Analysis and Machine Intelligence, 46(12),
-         10164 to 10183. DOI 10.1109/TPAMI.2024.3435937.
+4. Alex Graves and Navdeep Jaitly. “Towards End-to-End Speech Recognition with
+   Recurrent Neural Networks”. In: Proceedings of the 31st International
+   Conference on Machine Learning (ICML). Vol. 32. Proceedings of Machine
+   Learning Research 2. PMLR, 2014, pp. 1764 to 1772.
 
-         Quoted for the definition of end-to-end driving: "fully
-         differentiable programs that take raw sensor data as input and
-         produce a plan and/or low-level control actions as output".
+   Cited in: Introduction.
 
+5. Ilya Sutskever, Oriol Vinyals, and Quoc V. Le. Sequence to Sequence Learning
+   with Neural Networks. 2014. arXiv: `1409.3215
+   <https://arxiv.org/abs/1409.3215>`__.
 
-.. dropdown:: Behavior Cloning
-   :class-container: sd-border-secondary
-   :open:
+   Cited in: Introduction.
 
-   The first and the best known cases of learning to drive from an expert's
-   recorded examples.
+6. Mariusz Bojarski et al. End to End Learning for Self-Driving Cars. 2016.
+   arXiv: `1604.07316 <https://arxiv.org/abs/1604.07316>`__.
 
-   .. grid:: 1 1 2 2
-      :gutter: 2
+   Cited in: Introduction; Imitation Learning; Scoring a Driver.
 
-      .. grid-item-card:: ALVINN
-         :class-card: sd-border-secondary
+7. Sergey Levine et al. “End-to-End Training of Deep Visuomotor Policies”. In:
+   Journal of Machine Learning Research 17.39 (2016), pp. 1 to 40.
 
-         **Pomerleau, D. A. (1988)**
+   Cited in: Introduction.
 
-         *ALVINN: An Autonomous Land Vehicle in a Neural Network.* In
-         Touretzky, D. (ed.), Advances in Neural Information Processing
-         Systems, volume 1, pages 305 to 313. Morgan-Kaufmann.
+8. Tobias Glasmachers. Limits of End-to-End Learning. 2017. arXiv: `1704.08305
+   <https://arxiv.org/abs/1704.08305>`__.
 
-         Quoted for the 1988 network that took images from a camera and a
-         laser range finder and gave the direction to travel. It was trained
-         on simulated road images.
+   Cited in: Introduction.
 
-      .. grid-item-card:: End to end learning for self-driving cars
-         :link: https://arxiv.org/abs/1604.07316
-         :class-card: sd-border-secondary
+9. Felipe Codevilla et al. “End-to-end Driving via Conditional Imitation
+   Learning”. In: 2018 IEEE International Conference on Robotics and
+   Automation (ICRA). 2018, pp. 4693 to 4700. DOI: `10.1109/ICRA
+   <https://doi.org/10.1109/ICRA>`__.2018.8460487. arXiv: `1710.02410
+   <https://arxiv.org/abs/1710.02410>`__.
 
-         **Bojarski, M. et al. (2016)**
+   Cited in: Imitation Learning.
 
-         *End to End Learning for Self-Driving Cars.* arXiv:1604.07316.
+10. Aditya Prakash, Kashyap Chitta, and Andreas Geiger. “Multi-Modal Fusion
+    Transformer for End-to-End Autonomous Driving”. In: Proceedings of the
+    IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR).
+    2021, pp. 7077 to 7087. DOI: `10.1109/CVPR46437
+    <https://doi.org/10.1109/CVPR46437>`__.2021.00700. arXiv: `2104.09224
+    <https://arxiv.org/abs/2104.09224>`__.
 
-         Quoted for the convolutional network that maps raw pixels from one
-         front-facing camera directly to steering commands, trained on about
-         72 hours of driving. Quoted again, in a "More detail" box, for its
-         off-center views from the left and right cameras.
+    Cited in: Inside the Networks.
 
-      .. grid-item-card:: Rapidly adapting neural networks
-         :class-card: sd-border-secondary
+11. Anthony Brohan et al. “RT-2: Vision-Language-Action Models Transfer Web
+    Knowledge to Robotic Control”. In: Proceedings of The 7th Conference on
+    Robot Learning. Vol. 229. Proceedings of Machine Learning Research.
+    2023, pp. 2165 to 2183. arXiv: `2307.15818
+    <https://arxiv.org/abs/2307.15818>`__.
 
-         **Pomerleau, D. A. (1990)**
+    Cited in: Inside the Networks.
 
-         *Rapidly Adapting Artificial Neural Networks for Autonomous
-         Navigation.* In Advances in Neural Information Processing Systems,
-         volume 3, pages 429 to 435. Morgan-Kaufmann.
+12. Kashyap Chitta et al. “TransFuser: Imitation With Transformer-Based Sensor
+    Fusion for Autonomous Driving”. In: IEEE Transactions on Pattern
+    Analysis and Machine Intelligence 45.11 (2023), pp. 12878 to 12895. DOI:
+    `10.1109/TPAMI <https://doi.org/10.1109/TPAMI>`__.2022.3200245. arXiv:
+    `2205.15997 <https://arxiv.org/abs/2205.15997>`__.
 
-         Quoted in a "More detail" box for shifting and rotating each image
-         to create extra training images, so the network learns to recover.
+    Cited in: Inside the Networks.
 
+13. Yihan Hu et al. “Planning-oriented Autonomous Driving”. In: Proceedings of
+    the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+    (CVPR). 2023, pp. 17853 to 17862. DOI: `10.1109/CVPR52729
+    <https://doi.org/10.1109/CVPR52729>`__.2023.01712. arXiv: `2212.10156
+    <https://arxiv.org/abs/2212.10156>`__.
 
-.. dropdown:: Compounding Error
-   :class-container: sd-border-secondary
-   :open:
+    Cited in: Inside the Networks.
 
-   Why small mistakes grow when the policy drives.
+14. Jiang-Tian Zhai et al. Rethinking the Open-Loop Evaluation of End-to-End
+    Autonomous Driving in nuScenes. Technical report. 2023. arXiv:
+    `2305.10430 <https://arxiv.org/abs/2305.10430>`__.
 
-   .. grid:: 1 1 2 2
-      :gutter: 2
+    Cited in: Inside the Networks; Scoring a Driver.
 
-      .. grid-item-card:: Efficient reductions for imitation learning
-         :class-card: sd-border-secondary
+15. Li Chen et al. “End-to-End Autonomous Driving: Challenges and Frontiers”.
+    In: IEEE Transactions on Pattern Analysis and Machine Intelligence 46.12
+    (2024), pp. 10164 to 10183. DOI: `10.1109/TPAMI
+    <https://doi.org/10.1109/TPAMI>`__.2024.3435937. arXiv: `2306.16927
+    <https://arxiv.org/abs/2306.16927>`__.
 
-         **Ross, S. and Bagnell, J. A. (2010)**
+    Cited in: Introduction; Imitation Learning.
 
-         *Efficient Reductions for Imitation Learning.* Proceedings of the
-         Thirteenth International Conference on Artificial Intelligence and
-         Statistics (AISTATS), JMLR Workshop and Conference Proceedings,
-         volume 9, pages 661 to 668.
+16. Daniel Dauner et al. “NAVSIM: Data-Driven Non-Reactive Autonomous Vehicle
+    Simulation and Benchmarking”. In: Advances in Neural Information
+    Processing Systems (Datasets and Benchmarks Track). Vol. 37. 2024, pp.
+    28706 to 28719. DOI: `10.52202/079017-0902
+    <https://doi.org/10.52202/079017-0902>`__. arXiv: `2406.15349
+    <https://arxiv.org/abs/2406.15349>`__.
 
-         Quoted for the bound on behavior cloning's total cost, which grows
-         as :math:`O(T^2)` in the horizon :math:`T`. Its theorem is stated in
-         a "More detail" box.
+    Cited in: Scoring a Driver.
 
+17. Xiaosong Jia et al. “Bench2Drive: Towards Multi-Ability Benchmarking of
+    Closed-Loop End-To-End Autonomous Driving”. In: Advances in Neural
+    Information Processing Systems (Datasets and Benchmarks Track). Vol. 37.
+    2024, pp. 819 to 844. DOI: `10.52202/079017-0025
+    <https://doi.org/10.52202/079017-0025>`__. arXiv: `2406.03877
+    <https://arxiv.org/abs/2406.03877>`__.
 
-.. dropdown:: DAgger
-   :class-container: sd-border-secondary
-   :open:
+    Cited in: Scoring a Driver.
 
-   The training loop that adds the states the clone reaches.
+18. Zhiqi Li et al. “Is Ego Status All You Need for Open-Loop End-to-End
+    Autonomous Driving?” In: Proceedings of the IEEE/CVF Conference on
+    Computer Vision and Pattern Recognition (CVPR). 2024, pp. 14864 to
+    14873. DOI: `10.1109/CVPR52733
+    <https://doi.org/10.1109/CVPR52733>`__.2024.01408. arXiv: `2312.03031
+    <https://arxiv.org/abs/2312.03031>`__.
 
-   .. grid:: 1 1 2 2
-      :gutter: 2
+    Cited in: Scoring a Driver.
 
-      .. grid-item-card:: DAgger
-         :link: https://arxiv.org/abs/1011.0686
-         :class-card: sd-border-secondary
+19. Wayve. LINGO-2: Driving with Natural Language. Apr. 17, 2024. URL:
+    `https://wayve.ai/thinking/lingo-2-driving-with-language/
+    <https://wayve.ai/thinking/lingo-2-driving-with-language/>`__ (visited
+    on 10/14/2026).
 
-         **Ross, S., Gordon, G. J. and Bagnell, J. A. (2011)**
+    Cited in: Inside the Networks.
 
-         *A Reduction of Imitation Learning and Structured Prediction to
-         No-Regret Online Learning.* Proceedings of the Fourteenth
-         International Conference on Artificial Intelligence and Statistics
-         (AISTATS), JMLR Workshop and Conference Proceedings, volume 15,
-         pages 627 to 635. arXiv:1011.0686.
+20. Jyh-Jing Hwang et al. “EMMA: End-to-End Multimodal Model for Autonomous
+    Driving”. In: Transactions on Machine Learning Research (2025). arXiv:
+    `2410.23262 <https://arxiv.org/abs/2410.23262>`__.
 
-         Quoted for the algorithm (aggregate the datasets, train on the
-         union), the mix of expert and clone that drives in each iteration,
-         and, in a "More detail" box, the theorem that bounds DAgger's cost.
+    Cited in: Inside the Networks.
 
+21. NVIDIA. Alpamayo-R1: Bridging Reasoning and Action Prediction for
+    Generalizable Autonomous Driving in the Long Tail. 2025. arXiv:
+    `2511.00088 <https://arxiv.org/abs/2511.00088>`__.
 
-.. dropdown:: Commands
-   :class-container: sd-border-secondary
-   :open:
+    Cited in: Inside the Networks.
 
-   A learned driver that follows the route, and the shortcuts a clone can
-   learn instead of the task.
+22. Xiaoyu Tian et al. “DriveVLM: The Convergence of Autonomous Driving and
+    Large Vision-Language Models”. In: Proceedings of The 8th Conference on
+    Robot Learning (CoRL 2024). Vol. 270. Proceedings of Machine Learning
+    Research. 2025, pp. 4698 to 4726. arXiv: `2402.12289
+    <https://arxiv.org/abs/2402.12289>`__.
 
-   .. grid:: 1 1 2 2
-      :gutter: 2
+    Cited in: Inside the Networks.
 
-      .. grid-item-card:: Conditional imitation learning
-         :link: https://arxiv.org/abs/1710.02410
-         :class-card: sd-border-secondary
+23. Marco Pavone and Boris Ivanovic. Running AV Reasoning Models Within Onboard
+    Compute and Latency Limits. Nov. 10, 2026. URL:
+    `https://developer.nvidia.com/blog/running-av-reasoning-models-within-onboard-compute-and-latency-limits/
+    <https://developer.nvidia.com/blog/running-av-reasoning-models-within-onboard-compute-and-latency-limits/>`__
+    (visited on 11/21/2026).
 
-         **Codevilla, F., Müller, M., López, A., Koltun, V. and Dosovitskiy,
-         A. (2018)**
+    Cited in: Inside the Networks.
 
-         *End-to-end Driving via Conditional Imitation Learning.* 2018 IEEE
-         International Conference on Robotics and Automation (ICRA), pages
-         4693 to 4700. DOI 10.1109/ICRA.2018.8460487.
+24. CARLA Team. CARLA Autonomous Driving Leaderboard. URL:
+    `https://leaderboard.carla.org/ <https://leaderboard.carla.org/>`__
+    (visited on 11/20/2026).
 
-         Quoted for why the camera input is not enough at an intersection, for
-         the four commands, and for the command that acts as a switch between
-         specialized sub-modules.
+    Cited in: Imitation Learning.
 
-      .. grid-item-card:: Limits of behavior cloning
-         :link: https://arxiv.org/abs/1904.08980
-         :class-card: sd-border-secondary
+25. CARLA Team. Evaluation Criteria for the Leaderboard 2.1. URL:
+    `https://leaderboard.carla.org/evaluation_v2_1/
+    <https://leaderboard.carla.org/evaluation_v2_1/>`__ (visited on
+    10/14/2026).
 
-         **Codevilla, F., Santana, E., López, A. M. and Gaidon, A. (2019)**
+    Cited in: Imitation Learning; Modular or End-to-End?.
 
-         *Exploring the Limitations of Behavior Cloning for Autonomous
-         Driving.* Proceedings of the IEEE/CVF International Conference on
-         Computer Vision (ICCV), pages 9328 to 9337. DOI
-         10.1109/ICCV.2019.00942.
+26. CVPR 2023. CVPR 2023 Awards. URL:
+    `https://cvpr.thecvf.com/Conferences/2023/Awards
+    <https://cvpr.thecvf.com/Conferences/2023/Awards>`__ (visited on
+    10/14/2026).
 
-         Quoted in a "More detail" box for the limits of behavior cloning in
-         CARLA, including "the inertia problem".
+    Cited in: Inside the Networks.
 
-      .. grid-item-card:: Causal confusion
-         :link: https://arxiv.org/abs/1905.11979
-         :class-card: sd-border-secondary
+27. NVIDIA. Alpamayo 2 Edge model card. URL:
+    `https://huggingface.co/nvidia/Alpamayo2-Edge
+    <https://huggingface.co/nvidia/Alpamayo2-Edge>`__ (visited on
+    11/21/2026).
 
-         **de Haan, P., Jayaraman, D. and Levine, S. (2019)**
+    Cited in: Inside the Networks.
 
-         *Causal Confusion in Imitation Learning.* Advances in Neural
-         Information Processing Systems, volume 32. Curran Associates, Inc.
+28. NVIDIA. Alpamayo 2 Super model card. URL:
+    `https://huggingface.co/nvidia/Alpamayo2-Super
+    <https://huggingface.co/nvidia/Alpamayo2-Super>`__ (visited on
+    11/20/2026).
 
-         Quoted in a "More detail" box for the brake-light example and the
-         finding that "access to more information can yield worse
-         performance".
+    Cited in: Inside the Networks.
 
+29. NVIDIA. Alpamayo-R1-10B model card (renamed Alpamayo 1). URL:
+    `https://huggingface.co/nvidia/Alpamayo-R1-10B
+    <https://huggingface.co/nvidia/Alpamayo-R1-10B>`__ (visited on
+    11/20/2026).
 
-.. dropdown:: Architectures
-   :class-container: sd-border-secondary
-   :open:
+    Cited in: Inside the Networks.
 
-   TransFuser and UniAD.
+30. Tesla, Inc. Model 3 (2017 to 2023) Owner's Manual. Dimensions and Cameras
+    sections. URL:
+    `https://www.tesla.com/ownersmanual/2017_2023_model3/en_us/Owners_Manual.pdf
+    <https://www.tesla.com/ownersmanual/2017_2023_model3/en_us/Owners_Manual.pdf>`__
+    (visited on 11/25/2026).
 
-   .. grid:: 1 1 2 2
-      :gutter: 2
+    Cited in: Introduction; Modular or End-to-End?.
 
-      .. grid-item-card:: TransFuser (CVPR 2021)
-         :link: https://arxiv.org/abs/2104.09224
-         :class-card: sd-border-secondary
+31. Tesla, Inc. Model 3 Emergency Response Guide. 2021. URL:
+    `https://www.tesla.com/sites/default/files/downloads/Model_3_Emergency_Response_Guide_en.pdf
+    <https://www.tesla.com/sites/default/files/downloads/Model_3_Emergency_Response_Guide_en.pdf>`__
+    (visited on 11/25/2026).
 
-         **Prakash, A., Chitta, K. and Geiger, A. (2021)**
+    Cited in: Modular or End-to-End?.
 
-         *Multi-Modal Fusion Transformer for End-to-End Autonomous Driving.*
-         Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern
-         Recognition (CVPR), pages 7077 to 7087. DOI
-         10.1109/CVPR46437.2021.00700.
+32. Tesla, Inc. Autopilot. 2019. Archived copy of June 1, 2019. URL:
+    `https://web.archive.org/web/20190601072744/https://www.tesla.com/autopilot
+    <https://web.archive.org/web/20190601072744/https://www.tesla.com/autopilot>`__
+    (visited on 11/25/2026).
 
-         Quoted for the aim of fusing image and LiDAR features with attention,
-         the auto-regressive waypoint prediction framework, and the two PID
-         controllers.
+    Cited in: Introduction.
 
-      .. grid-item-card:: TransFuser (TPAMI 2023)
-         :link: https://arxiv.org/abs/2205.15997
-         :class-card: sd-border-secondary
+33. Tesla, Inc. Model 3 Service Manual: Car Computer (Info-Ryzen) (Remove and
+    Install). URL:
+    `https://service.tesla.com/docs/Model3/ServiceManual/en-us/GUID-DAB73CE8-E5B6-4B59-BC90-4C636608A6B4.html
+    <https://service.tesla.com/docs/Model3/ServiceManual/en-us/GUID-DAB73CE8-E5B6-4B59-BC90-4C636608A6B4.html>`__
+    (visited on 11/25/2026).
 
-         **Chitta, K., Prakash, A., Jaeger, B., Yu, Z., Renz, K. and Geiger, A.
-         (2023)**
+    Cited in: Introduction.
 
-         *TransFuser: Imitation With Transformer-Based Sensor Fusion for
-         Autonomous Driving.* IEEE Transactions on Pattern Analysis and
-         Machine Intelligence, 45(11), 12878 to 12895. DOI
-         10.1109/TPAMI.2022.3200245.
+34. Tesla, Inc. Q1 2024 Update. 2024. URL:
+    `https://digitalassets.tesla.com/tesla-contents/image/upload/IR/TSLA-Q1-2024-Update.pdf
+    <https://digitalassets.tesla.com/tesla-contents/image/upload/IR/TSLA-Q1-2024-Update.pdf>`__
+    (visited on 10/14/2026).
 
-         Cited for the closed-loop test of TransFuser in CARLA.
+    Cited in: Introduction.
 
-      .. grid-item-card:: UniAD (CVPR 2023)
-         :link: https://arxiv.org/abs/2212.10156
-         :class-card: sd-border-secondary
+35. Holger Caesar et al. “nuScenes: A Multimodal Dataset for Autonomous
+    Driving”. In: Proceedings of the IEEE/CVF Conference on Computer Vision
+    and Pattern Recognition (CVPR). 2020. URL:
+    `https://arxiv.org/abs/1903.11027 <https://arxiv.org/abs/1903.11027>`__.
 
-         **Hu, Y. et al. (2023)**
+    Cited in: Inside the Networks.
 
-         *Planning-oriented Autonomous Driving.* Proceedings of the IEEE/CVF
-         Conference on Computer Vision and Pattern Recognition (CVPR), pages
-         17853 to 17862. DOI 10.1109/CVPR52729.2023.01712.
+36. Zhiqi Li et al. “BEVFormer: Learning Bird's-Eye-View Representation from
+    Multi-Camera Images via Spatiotemporal Transformers”. In: European
+    Conference on Computer Vision (ECCV). 2022. URL:
+    `https://arxiv.org/abs/2203.17270 <https://arxiv.org/abs/2203.17270>`__.
 
-         Quoted for the full-stack driving tasks in one network and the
-         unified query interfaces.
+    Cited in: Inside the Networks.
 
-      .. grid-item-card:: CVPR 2023 awards
-         :link: https://cvpr.thecvf.com/Conferences/2023/Awards
-         :class-card: sd-border-secondary
+37. Pim de Haan, Dinesh Jayaraman, and Sergey Levine. “Causal Confusion in
+    Imitation Learning”. In: Advances in Neural Information Processing
+    Systems. Vol. 32. Curran Associates, Inc., 2019. arXiv: `1905.11979
+    <https://arxiv.org/abs/1905.11979>`__.
 
-         **CVPR 2023**
+    Cited in: Imitation Learning.
 
-         *CVPR 2023 Awards.* Web page, accessed 2026-10-14.
+38. Felipe Codevilla et al. “Exploring the Limitations of Behavior Cloning for
+    Autonomous Driving”. In: Proceedings of the IEEE/CVF International
+    Conference on Computer Vision (ICCV). 2019, pp. 9328 to 9337. DOI:
+    `10.1109/ICCV.2019.00942 <https://doi.org/10.1109/ICCV.2019.00942>`__.
+    arXiv: `1904.08980 <https://arxiv.org/abs/1904.08980>`__.
 
-         Cited for UniAD's Best Paper award.
+    Cited in: Imitation Learning.
 
+39. Mayank Bansal, Alex Krizhevsky, and Abhijit Ogale. ChauffeurNet: Learning to
+    Drive by Imitating the Best and Synthesizing the Worst. 2018. arXiv:
+    `1812.03079 <https://arxiv.org/abs/1812.03079>`__.
 
-.. dropdown:: VLA
-   :class-container: sd-border-secondary
-   :open:
+    Cited in: Imitation Learning.
 
-   Vision-language-action models, and four driving models from their makers.
+40. Dian Chen et al. “Learning by Cheating”. In: Conference on Robot Learning
+    (CoRL). 2019. arXiv: `1912.12294 <https://arxiv.org/abs/1912.12294>`__.
 
-   .. grid:: 1 1 2 2
-      :gutter: 2
+    Cited in: Imitation Learning.
 
-      .. grid-item-card:: RT-2
-         :link: https://arxiv.org/abs/2307.15818
-         :class-card: sd-border-secondary
+41. Zhejun Zhang et al. “End-to-End Urban Driving by Imitating a Reinforcement
+    Learning Coach”. In: Proceedings of the IEEE/CVF International
+    Conference on Computer Vision (ICCV). 2021. arXiv: `2108.08265
+    <https://arxiv.org/abs/2108.08265>`__.
 
-         **Brohan, A. et al. (2023)**
+    Cited in: Imitation Learning.
 
-         *RT-2: Vision-Language-Action Models Transfer Web Knowledge to
-         Robotic Control.* Proceedings of The 7th Conference on Robot Learning,
-         Proceedings of Machine Learning Research, volume 229, pages 2165 to
-         2183.
+42. Alex Kendall et al. Learning to Drive in a Day. 2018. arXiv: `1807.00412
+    <https://arxiv.org/abs/1807.00412>`__.
 
-         Quoted for the definition of a vision-language-action model.
+    Cited in: Reinforcement Learning.
 
-      .. grid-item-card:: DriveVLM
-         :link: https://arxiv.org/abs/2402.12289
-         :class-card: sd-border-secondary
+43. Wenyuan Zeng et al. “End-to-end Interpretable Neural Motion Planner”. In:
+    Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern
+    Recognition (CVPR). 2019. arXiv: `2101.06679
+    <https://arxiv.org/abs/2101.06679>`__.
 
-         **Tian, X. et al. (2025)**
+    Cited in: Imitation Learning.
 
-         *DriveVLM: The Convergence of Autonomous Driving and Large
-         Vision-Language Models.* Proceedings of The 8th Conference on Robot
-         Learning (CoRL 2024), Proceedings of Machine Learning Research,
-         volume 270, pages 4698 to 4726.
+44. Anthony Hu et al. “Model-Based Imitation Learning for Urban Driving”. In:
+    Advances in Neural Information Processing Systems. 2022. arXiv:
+    `2210.07729 <https://arxiv.org/abs/2210.07729>`__.
 
-         Quoted for the reasoning modules, the dual version on a production
-         vehicle, the average inference speed of 410 ms on an NVIDIA OrinX
-         chip, and the hand-over to a classical planner.
+    Cited in: Imitation Learning.
 
-      .. grid-item-card:: EMMA (Waymo)
-         :link: https://arxiv.org/abs/2410.23262
-         :class-card: sd-border-secondary
+45. Waymo. 10 AI Lessons from Driving 200+ Million Fully Autonomous Miles.
+    August 26, 2026. URL: `https://waymo.com/blog/2026/08/10ailessons/
+    <https://waymo.com/blog/2026/08/10ailessons/>`__ (visited on November
+    26, 2026).
 
-         **Hwang, J.-J. et al. (2025)**
+    Cited in: Introduction; Modular or End-to-End?.
 
-         *EMMA: End-to-End Multimodal Model for Autonomous Driving.*
-         Transactions on Machine Learning Research.
+46. Phil Koopman, interviewed by Junko Yoshida. “AI: What does ‘end-to-end’
+    learning entail?” Junko's Talk To Us (YouTube). October 9, 2025. URL:
+    `https://youtu.be/X0HI_TQRjqA <https://youtu.be/X0HI_TQRjqA>`__ (visited
+    on November 26, 2026). Quotes from the automatic captions.
 
-         Quoted for the multi-modal large language model foundation, the text
-         outputs, and the limits its authors list.
+    Cited in: Inside the Networks; Modular or End-to-End?.
 
-      .. grid-item-card:: Alpamayo-R1 (NVIDIA)
-         :link: https://arxiv.org/abs/2511.00088
-         :class-card: sd-border-secondary
+47. Alex Kendall (Wayve), interviewed by Sequoia Capital. “How End-to-End
+    Learning Created Autonomous Driving 2.0”. Sequoia Capital (YouTube).
+    November 18, 2025. URL: `https://youtu.be/8x_O8BeGNTw
+    <https://youtu.be/8x_O8BeGNTw>`__ (visited on November 26, 2026). Quotes
+    from the automatic captions.
 
-         **NVIDIA (2025)**
+    Cited in: Introduction; Imitation Learning; Modular or End-to-End?.
 
-         *Alpamayo-R1: Bridging Reasoning and Action Prediction for
-         Generalizable Autonomous Driving in the Long Tail.* arXiv:2511.00088.
+48. Philipp Koehn, Franz Josef Och, and Daniel Marcu. “Statistical Phrase-Based
+    Translation”. In: *Proceedings of HLT-NAACL 2003*. 2003, pp. 48 to 54. URL:
+    `https://aclanthology.org/N03-1017/ <https://aclanthology.org/N03-1017/>`__.
 
-         Quoted for Chain of Causation reasoning with trajectory planning, and
-         for the 99 ms on an NVIDIA RTX 6000 Pro Blackwell.
+    Cited in: Introduction.
 
-      .. grid-item-card:: Alpamayo-R1-10B model card
-         :link: https://huggingface.co/nvidia/Alpamayo-R1-10B
-         :class-card: sd-border-secondary
 
-         **NVIDIA**
+Also quoted in a "More detail" box
+----------------------------------
 
-         *Alpamayo-R1-10B model card (renamed Alpamayo 1).* Web page,
-         accessed 2026-11-20.
+These three sources are in the deck's bibliography file, but the numbered list
+does not carry them. The lecture page quotes them only in "More detail" boxes.
 
-         Cited for the open weights, "ready for non-commercial use".
-
-      .. grid-item-card:: Alpamayo 2 Super model card
-         :link: https://huggingface.co/nvidia/Alpamayo2-Super
-         :class-card: sd-border-secondary
-
-         **NVIDIA**
-
-         *Alpamayo 2 Super model card.* Web page, accessed 2026-11-20.
-
-         Cited as NVIDIA's newer model, with its own model card.
-
-      .. grid-item-card:: Alpamayo 2 Edge model card
-         :link: https://huggingface.co/nvidia/Alpamayo2-Edge
-         :class-card: sd-border-secondary
-
-         **NVIDIA**
-
-         *Alpamayo 2 Edge model card.* Web page, accessed 2026-11-21.
-
-         Quoted for its size, 2B parameters, and its 64 waypoints from 0.1 to
-         6.4 seconds.
-
-      .. grid-item-card:: Running AV Reasoning Models Within Onboard Compute and Latency Limits
-         :link: https://developer.nvidia.com/blog/running-av-reasoning-models-within-onboard-compute-and-latency-limits/
-         :class-card: sd-border-secondary
-
-         **Marco Pavone and Boris Ivanovic (NVIDIA, November 10, 2026)**
-
-         *Running AV Reasoning Models Within Onboard Compute and Latency
-         Limits.* NVIDIA Technical Blog, accessed 2026-11-21.
-
-         Quoted for Alpamayo 2 Edge's 160 ms to 190 ms on NVIDIA DRIVE AGX
-         Thor-X.
-
-      .. grid-item-card:: LINGO-2
-         :link: https://wayve.ai/thinking/lingo-2-driving-with-language/
-         :class-card: sd-border-secondary
-
-         **Wayve (2024)**
-
-         *LINGO-2: Driving with Natural Language.* Web page, April 17, 2024,
-         accessed 2026-10-14.
-
-         Quoted for "the first closed-loop vision-language-action driving
-         model (VLAM) tested on public roads".
-
-
-.. dropdown:: Evaluation
-   :class-container: sd-border-secondary
-   :open:
-
-   Open loop against closed loop, and two benchmarks.
-
-   .. grid:: 1 1 2 2
-      :gutter: 2
-
-      .. grid-item-card:: Open-loop evaluation in nuScenes
-         :link: https://arxiv.org/abs/2305.10430
-         :class-card: sd-border-secondary
-
-         **Zhai, J.-T. et al. (2023)**
-
-         *Rethinking the Open-Loop Evaluation of End-to-End Autonomous Driving
-         in nuScenes.* Technical report, arXiv:2305.10430.
-
-         Quoted for AD-MLP, which plans without cameras, and used for its
-         Table 1.
-
-      .. grid-item-card:: Ego status in open-loop driving
-         :link: https://arxiv.org/abs/2312.03031
-         :class-card: sd-border-secondary
-
-         **Li, Z. et al. (2024)**
-
-         *Is Ego Status All You Need for Open-Loop End-to-End Autonomous
-         Driving?* Proceedings of the IEEE/CVF Conference on Computer Vision
-         and Pattern Recognition (CVPR), pages 14864 to 14873. DOI
-         10.1109/CVPR52733.2024.01408.
-
-         Quoted for the share of nuScenes data that is straight driving, and
-         for models that rely on the AV's own status.
-
-      .. grid-item-card:: NAVSIM
-         :link: https://arxiv.org/abs/2406.15349
-         :class-card: sd-border-secondary
-
-         **Dauner, D. et al. (2024)**
-
-         *NAVSIM: Data-Driven Non-Reactive Autonomous Vehicle Simulation and
-         Benchmarking.* Advances in Neural Information Processing Systems
-         (Datasets and Benchmarks Track), volume 37, pages 28706 to 28719. DOI
-         10.52202/079017-0902.
-
-         Quoted for the non-reactive simulation and the PDM Score.
-
-      .. grid-item-card:: Bench2Drive
-         :link: https://arxiv.org/abs/2406.03877
-         :class-card: sd-border-secondary
-
-         **Jia, X., Yang, Z., Li, Q., Zhang, Z. and Yan, J. (2024)**
-
-         *Bench2Drive: Towards Multi-Ability Benchmarking of Closed-Loop
-         End-To-End Autonomous Driving.* Advances in Neural Information
-         Processing Systems (Datasets and Benchmarks Track), volume 37, pages
-         819 to 844. DOI 10.52202/079017-0025.
-
-         Quoted for the closed-loop benchmark in CARLA, with 44 interactive
-         scenarios over 220 routes.
-
-
-.. dropdown:: Modular or End-to-End
-   :class-container: sd-border-secondary
-   :open:
-
-   The CARLA Leaderboard's rules, and what two companies say about their own
-   systems.
-
-   .. grid:: 1 1 2 2
-      :gutter: 2
-
-      .. grid-item-card:: CARLA Leaderboard
-         :link: https://leaderboard.carla.org/
-         :class-card: sd-border-secondary
-
-         **CARLA Team**
-
-         *CARLA Autonomous Driving Leaderboard.* Web page, accessed
-         2026-11-20.
-
-         Cited for the statement that the Leaderboard has since closed.
-
-      .. grid-item-card:: Leaderboard 2.1 evaluation criteria
-         :link: https://leaderboard.carla.org/evaluation_v2_1/
-         :class-card: sd-border-secondary
-
-         **CARLA Team**
-
-         *Evaluation Criteria for the Leaderboard 2.1.* Web page, accessed
-         2026-10-14.
-
-         Quoted for the route commands (``RoadOption.LEFT``) and for the ban
-         on "any privilege information offered by the CARLA simulator".
-
-      .. grid-item-card:: Tesla Q4 and FY 2023 update
-         :link: https://digitalassets.tesla.com/tesla-contents/image/upload/IR/TSLA-Q4-2023-Update.pdf
-         :class-card: sd-border-secondary
-
-         **Tesla, Inc. (2024)**
-
-         *Q4 and FY 2023 Update.* Online document, accessed 2026-10-14.
-
-         Quoted in a "More detail" box: "V12 utilizes end-to-end training".
-
-      .. grid-item-card:: Tesla Q1 2024 update
-         :link: https://digitalassets.tesla.com/tesla-contents/image/upload/IR/TSLA-Q1-2024-Update.pdf
-         :class-card: sd-border-secondary
-
-         **Tesla, Inc. (2024)**
-
-         *Q1 2024 Update.* Online document, accessed 2026-10-14.
-
-         Quoted in a "More detail" box for the vision-only architecture with
-         end-to-end neural networks.
-
-      .. grid-item-card:: Waymo, demonstrably safe AI
-         :link: https://waymo.com/blog/2025/12/demonstrably-safe-ai-for-autonomous-driving/
-         :class-card: sd-border-secondary
-
-         **Waymo (December 9, 2025)**
-
-         *Demonstrably Safe AI For Autonomous Driving.* Web page, accessed
-         2026-10-14.
-
-         Quoted in a "More detail" box for Waymo's description of its
-         architecture.
+- Dean A. Pomerleau. "Rapidly Adapting Artificial Neural Networks for
+  Autonomous Navigation". In: Advances in Neural Information Processing
+  Systems. Vol. 3. Morgan-Kaufmann, 1990, pp. 429 to 435. Quoted in "More
+  detail: an early fix, add recoveries to the data".
+- Tesla, Inc. Q4 and FY 2023 Update. 2024. `Link
+  <https://digitalassets.tesla.com/tesla-contents/image/upload/IR/TSLA-Q4-2023-Update.pdf>`__
+  (visited on 10/14/2026). Quoted in "More detail: what two companies say about
+  their own systems".
+- Waymo. Demonstrably Safe AI For Autonomous Driving. December 9, 2025.
+  `Link
+  <https://waymo.com/blog/2025/12/demonstrably-safe-ai-for-autonomous-driving/>`__
+  (visited on 10/14/2026). Quoted in the same box.
 
 
 Image credits
 -------------
 
-The vehicle icon in the figures was created by Stone from the Noun Project
-(https://thenounproject.com).
+The pictures of the interactive slides:
+
+- **Vehicle icons,** by Stone, from `the Noun Project
+  <https://thenounproject.com>`__.
+- **Box icons,** Font Awesome Free 6.7.2, `CC BY 4.0
+  <https://creativecommons.org/licenses/by/4.0/>`__.
+- **3D models,** Sketchfab, `CC BY 4.0
+  <https://creativecommons.org/licenses/by/4.0/>`__: "VEHICLE - TESLA MODEL 3"
+  by Thcyrax (modified), and the pedestrian "Low Poly Male" by Loves_Art
+  (modified).
+- **Icons,** the Noun Project, `CC BY 3.0
+  <https://creativecommons.org/licenses/by/3.0/>`__: Camera by Sergey
+  Demushkin, Robot arm by Pekosman, and Steering wheel by kareemov1000.
+
+The vehicle icon in the figures on the lecture page was created by Stone from
+the Noun Project (https://thenounproject.com).
