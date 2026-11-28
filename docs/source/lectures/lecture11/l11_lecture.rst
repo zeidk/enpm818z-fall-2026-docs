@@ -38,12 +38,43 @@ of the two. Companies have chosen differently.
 
 - **Modular stack.** People design each part and test it on its own:
   perception, localization, planning, control. Your GP1 to GP4 stack is one.
-- **Hybrid.** Large learned models inside a structure that people designed.
-  Waymo builds its driver this way, with a few specialized models instead of
-  one network (Waymo, 2026).
+  Two open-source stacks: Autoware, "a layered architecture that clarifies
+  the role of each module" (Autoware Foundation, Architecture 1.0), and Baidu's
+  Apollo, which documents each module, from perception to control (Baidu
+  Apollo, README).
 - **End-to-end.** One network from sensors to driving. Tesla says it uses
   "end-to-end neural networks" (Tesla, 2024). Wayve, led by Alex Kendall,
   sells end-to-end driving (Kendall, 2025).
+- **Hybrid.** Large learned models inside a structure that people designed.
+  Waymo builds its driver this way, with a few specialized models instead of
+  one network (Waymo, 2026).
+
+.. dropdown:: More detail: Waymo's driver, box by box
+   :class-container: more-detail
+   :icon: info
+   :name: l11-more-waymo-hybrid
+
+   All quotes are from Waymo's post (Waymo, 2026).
+
+   - **Cameras, lidar, radar, HD map:** what the driver reads; the HD map
+     counts as one more input.
+   - **Waymo Foundation Model** (learned): one large model that drives,
+     "thinking fast and slow".
+
+     - **Fast:** turns the sensor data into "instantaneous, real-time
+       control".
+     - **Slow:** a vision-language model (VLM), a network that reads images
+       and answers in words. It reasons about rare scenes, such as a police
+       officer's hand signals, but is "too slow for real-time control".
+
+   - **A proposed trajectory:** the path the AV plans to drive.
+   - **Validation layer:** a separate, AI-based system that checks every
+     proposed path "against hard physics-based constraints and traffic laws".
+     It is "a hard backstop".
+   - **Driving decisions:** what the car does.
+
+   Waymo adds the check because a pure end-to-end network risks "black box
+   failures".
 
 This lecture builds the end-to-end side, then compares it with the stack you
 know.
@@ -306,24 +337,32 @@ Gain 2: no information lost
 
 In a modular stack, each part passes on only the few things it chose, so a
 mistake early on carries through every later part. An object the detector
-misses never reaches the planner. Inside a neural network, the next layer
-gets the learned features, not only a chosen list.
+misses never reaches the planner. End-to-end, no person picks what passes
+between the steps. Each layer hands the next one all its learned features:
+many numbers that describe the whole scene, not a short list of objects. A
+pedestrian that a separate detector would miss is still in those numbers, so
+it can still shape the plan.
 
 Gain 3: less computing
 ^^^^^^^^^^^^^^^^^^^^^^
 
-In a modular stack, each task has its own feature extractor, so the work of
-finding features is done several times. End-to-end, one shared extractor
-finds the features once and every task uses them, so the car computes less.
+In a modular stack, each task, for example finding cars, finding lanes and
+reading signs, has its own feature extractor: the part of a network that
+turns the camera image into features, patterns such as edges and shapes.
+Three tasks run three extractors on the same image, so the same kind of work
+is done three times. End-to-end, one shared extractor turns the camera image
+into features once, and all three tasks read those same features. The
+extractor runs one time instead of three, so the car computes less.
 
 Gain 4: better with more data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The whole system learns from driving data, so training it on more data may
-make it better. This is a possibility, not a measured result. Even Alex
-Kendall, CEO of Wayve, gives its limit: with unlimited data, "this is really
-just a lookup data table", and "that's not economically or technically
-feasible" (Kendall, 2025).
+The whole driver is one network trained on driving data. Training it on more
+driving, on more roads and in more weather and traffic, may make it drive
+better. This is a hope, not a measured result: no amount of data covers every
+situation, and collecting it costs time and money. Alex Kendall, CEO of Wayve,
+makes the same point: with unlimited data, "this is really just a lookup data
+table", and "that's not economically or technically feasible" (Kendall, 2025).
 
 Ways to Learn a Driver
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -485,12 +524,69 @@ it, how to score it, and how to choose. After this lecture, you can:
 Imitation Learning
 ------------------
 
-The last section gave two ways to build a driver, the map of the field and
-today's lap, expert and clone. This section takes the map's first branch,
-**imitation learning**: learning to drive from an expert's demonstrations. It
-trains the clone by **behavior cloning**, copying the expert's actions, then
-scores it, shows why it fails and how to fix it, and ends with two other ways
-to learn from the same demonstrations.
+Imitation learning trains a driver from an expert's demonstrations. This
+section trains the clone by **behavior cloning**, copying the expert's actions,
+then scores it, shows why it fails and how to fix it, and ends with two other
+ways to learn from the same demonstrations.
+
+.. admonition:: Definition: Imitation learning
+   :class: note
+
+   Learning a policy from an expert's demonstrations, the recorded examples of
+   the expert doing the task. Osa et al.: "Imitation learning is a class of
+   methods that reproduces desired behavior based on expert demonstrations"
+   (Osa et al., 2018).
+
+- **Behavior cloning is one kind of imitation learning.** It copies the
+  expert's actions by supervised learning: each recorded input is paired with
+  the expert's action.
+- **The other kind learns the reward first.** "BC and IRL form two major
+  classes of imitation learning methods" (Osa et al., 2018); IRL is inverse
+  reinforcement learning.
+- **This section uses behavior cloning** to train the clone on our lap.
+
+The imitation learning family
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Osa et al. split imitation learning into two branches, then split each branch
+by whether it uses a model of the dynamics, how the state changes after an
+action (Osa et al., 2018). The quotes in this list are
+from that survey unless another source is named.
+
+- **Imitation learning:** learn from an expert. It "reproduces desired
+  behavior based on expert demonstrations". Its two branches: copy the
+  expert's actions, or recover the reward behind them.
+
+  - **Behavior cloning:** learn the action directly. It learns "a policy that
+    directly maps from the input to the action/trajectory", by supervised
+    learning. The survey says behavioral cloning. Our clone learns this way.
+
+    - **Model-free:** no model of the dynamics. These methods learn the policy
+      "without learning/estimating system dynamics nor recovering the reward
+      function". The survey lists the ALVINN (1988) and DAgger (2011) papers
+      here. Our clone and DAgger (:ref:`l11-lec-fixing`) are model-free.
+    - **Model-based:** uses the dynamics. These methods "learn a policy using
+      information about the system dynamics": how the state changes after an
+      action. MILE (:ref:`l11-lec-beyond-bc`) is "a Model-based Imitation
+      LEarning approach" (Hu et al., 2022).
+
+  - **Inverse reinforcement learning:** learn the reward, then the action. It
+    recovers the reward from demonstrations assumed "(approximately) optimal",
+    then finds the policy that maximizes it. It is also called inverse optimal
+    control; cost learning (:ref:`l11-lec-beyond-bc`) is on this branch (Chen et
+    al., 2024).
+
+    - **Model-free:** these methods "do not require prior knowledge of the
+      system dynamics". They update the reward and the policy "using
+      sampling-based methods".
+    - **Model-based:** these methods "assume that the dynamics of the system,
+      e.g. state transition probabilities, are known". The survey's Table 2.2:
+      "model-based methods are dominant in inverse reinforcement learning".
+
+**To learn more:** Osa et al., *An Algorithmic Perspective on Imitation
+Learning*, 2018, free on `arXiv <https://arxiv.org/abs/1811.06711>`__. Chapter
+2 sorts the methods as this tree does; Chapter 3 covers behavior cloning,
+DAgger included.
 
 The Expert and Its Recording
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -518,9 +614,35 @@ The idea is old:
   raw pixels from a single front-facing camera directly to steering
   commands", from about 72 hours of driving (Bojarski et al., 2016).
 
-On our lap, one example looks like this. The expert saw an offset of −0.27 m
-and a heading of +0.5°. It turned the wheel −0.15°. The clone trains on that
-same pair: for the same input, it learns to turn the wheel −0.15°.
+ALVINN, NVIDIA's network and our clone all learn the same way: record an
+expert, then fit a policy from what it saw to what it did. Our clone trains in
+simulation, as ALVINN did, and outputs a steering command, as NVIDIA's network
+does.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 14 22 22 20 22
+
+   * -
+     - Training data
+     - Input
+     - Policy
+     - Output
+   * - ALVINN, 1988
+     - simulated road images
+     - a camera and a laser range finder
+     - a neural network
+     - the direction to travel
+   * - Our clone
+     - a simulated lap, with a program as the expert
+     - offset, heading and curvature ahead
+     - a linear policy with four weights
+     - a steering angle
+   * - NVIDIA, 2016
+     - human drivers, about 72 hours
+     - one front camera
+     - a convolutional neural network
+     - a steering command (1/r)
 
 Who the expert is
 ^^^^^^^^^^^^^^^^^
@@ -537,7 +659,7 @@ work, it is a human driver. The table compares the two.
      - Our example
      - NVIDIA, 2016 (Bojarski et al., 2016)
    * - Who drives
-     - a program: steer for the curve, then back to the center
+     - a program we wrote, not CARLA's autopilot
      - human drivers, told to "drive as they usually do"
    * - What it reads
      - the true offset and heading (simulator only)
@@ -551,9 +673,26 @@ work, it is a human driver. The table compares the two.
      - steering from the CAN bus, "captured simultaneously" with time-stamped
        video
 
-The expert need not drive the AV itself. Another car works when its sensors
-see the same view. NVIDIA stores the steering as 1/r, where r is the turning
-radius, "to make our system independent of the car geometry".
+One dataset from two cars
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+NVIDIA recorded its drivers on a Lincoln MKZ and a Ford Focus. One network
+learned from both, so neither its input nor its label may depend on which car
+recorded it (Bojarski et al., 2016).
+
+- **The input, the camera image.** The Focus had "cameras placed in similar
+  positions to those in the Lincoln", so both cars record the same view of the
+  road.
+- **The label, the steering.** It is stored "as 1/r where r is the turning
+  radius in meters": how tightly the path curves, not how far the wheels turn.
+  On the same curve, two cars turn their wheels by different angles, but r is
+  the same. NVIDIA: "to make our system independent of the car geometry".
+- **Why 1/r, not r.** Driving straight, r is infinite and 1/r is 0: "to
+  prevent a singularity when driving straight".
+
+For example, on a curve of radius 20 m, a car with a 2.6 m wheelbase turns its
+wheels atan(2.6 / 20) = 7.4° and a car with a 3.0 m wheelbase atan(3.0 / 20) =
+8.5° (wheelbases chosen for this example). Both record 1/r = 0.050 per meter.
 
 Recording a human expert
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1557,6 +1696,8 @@ Codevilla et al. say it the same way: "when a car approaches an intersection,
 the camera input is not sufficient to predict whether the car should turn
 left, right, or go straight" (Codevilla et al., 2018).
 
+.. _l11-lec-fixing:
+
 Fixing the Clone
 ~~~~~~~~~~~~~~~~
 
@@ -1565,7 +1706,27 @@ The last part gave three causes: the clone drives where the recording never was,
 DAgger
 ^^^^^^
 
-DAgger lets the clone drive and asks the expert what it would steer in each state the clone reaches. The training data then covers the states the clone really visits.
+DAgger is not a network: it is a way to train one. It lets the clone drive and asks the expert what it would steer in each state the clone reaches, so the training data covers the states the clone really visits.
+
+.. admonition:: Definition: DAgger (dataset aggregation)
+   :class: note
+
+   A way to train a behavior cloning policy, not a network. It repeats: the
+   current policy drives, the expert labels every state it reached, those pairs
+   join all the data so far, and the policy is trained again on all of it. Ross
+   et al.: "an iterative algorithm that trains a deterministic policy" (Ross,
+   Gordon and Bagnell, 2011).
+
+Where it sits: among the ways to train an end-to-end driver, imitation learning
+holds behavior cloning, and DAgger is a loop around behavior cloning's training.
+
+- **The network does not change.** DAgger starts from "any policy in Π", Π
+  being the kind of policy chosen: here the clone's four weights; it could be
+  NVIDIA's network, with about 250 thousand.
+- **The training step does not change.** "Train classifier π̂\ :sub:`i+1` on
+  D", the next policy on all the pairs: the same least squares as the clone.
+- **The data changes.** It keeps "building up the set of inputs that the
+  learned policy is likely to encounter during its execution".
 
 DAgger
 """"""
@@ -1999,6 +2160,8 @@ CARLA's Leaderboard, which has since closed (CARLA Team, Leaderboard), gave
 every agent its route with these commands. For example, ``RoadOption.LEFT``
 means "Turn left at the intersection" (CARLA Team, Leaderboard 2.1 criteria).
 
+.. _l11-lec-beyond-bc:
+
 Beyond Behavior Cloning
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -2059,17 +2222,39 @@ Reinforcement learning, defined
    (Chen et al., 2024); it "tries to obtain a policy that maximizes an
    expected reward" (Osa et al., 2018).
 
-The loop has three parts. On our lap, they are:
+The loop, step by step
+~~~~~~~~~~~~~~~~~~~~~~
 
-- **The policy**, three weights on the clone's three inputs (offset, heading,
-  curvature), searched from 0. It maps what the AV senses to a steering command.
-- **The car and road**, our lap in the hands-on model. It carries out the
-  command and gives the next state, 0.05 s later.
-- **The reward**: the AV drives 0.4 m in each step (8 m/s for 0.05 s), so each
-  step adds 0.4 m. An episode, one try, ends when a wheel leaves the lane.
+The loop has four parts. The deck takes them one per slide, on one try of the
+search: round 1's best, whose weights the search drew at random.
 
-After each round of episodes, the search learns: it keeps the best weights and
-tries new ones around them. No expert says what the right action was.
+1. **The policy steers.** It is the clone's rule: each thing the AV sees times
+   a weight, added up. Round 1's best weights are +3.45° per meter of offset,
+   −2.65° per degree of heading and +79.53° per unit of curvature (1/m). At
+   step 5 the detector reads an offset of −0.41 m and a heading of +0.89°, so
+   the terms are −1.42° and −2.36° (the curvature term is 0) and the policy
+   steers −3.78°. The offset
+   weight is positive: the farther left the AV sits, the more it steers left, a
+   rule no expert uses.
+2. **The car moves one step.** The simulator turns the wheels for 0.05 s; at 8
+   m/s the AV moves 0.4 m. The detector then reads the new offset and heading,
+   with noise: that reading is the next state. Over the first 12 steps the AV
+   stays within 1.7 cm of the lane center, while the detector puts it anywhere
+   from 0.93 m right to 0.64 m left of it, and the steering follows the
+   readings.
+3. **The reward.** Each step in the lane adds +0.4 m. A wheel leaves the lane at
+   the end of turn 1, 134.4 m after the start, about 336 steps: the try ends,
+   with a reward of 134.4 m. A try that finishes the lap earns the whole lap.
+4. **Learn from the round.** A round is 30 tries, each with weights drawn
+   at random around the current guess. The 6 with the largest reward set the
+   next guess, their average, and how far around it the next 30 are drawn, as
+   far as the 6 lie apart. Round 1 draws around weights
+   of 0; in round 3, 19 of 30 tries finish the lap; after 15 rounds (450 tries)
+   the guess is −5.1° per meter of offset and −2.20° per degree of heading, not
+   the expert's −3.44 and −0.80, and it finishes every test lap.
+
+No expert says what the right action was: the reward alone decides which
+weights survive.
 
 A reward for lane keeping
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2133,15 +2318,142 @@ Inside the Networks
 -------------------
 
 The last two sections gave ways to train a driver; this one opens the networks
-they train. It sets aside the four-weight clone and the lap. It covers two
-published end-to-end drivers, TransFuser and UniAD, then the models that also
-read and write text. You see which parts of your stack such a network
+they train. It first opens NVIDIA's network to show how its features are
+learned, then covers two published end-to-end drivers, TransFuser and UniAD,
+then the models that also read and write text. You see which parts of your stack such a network
 replaces, and which it keeps.
+
+How a Network Learns Its Features
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Behavior cloning trains an end-to-end network only on the expert's steering,
+yet inside it the network learns features such as lane lines.
+
+PilotNet, layer by layer
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+NVIDIA's network has "9 layers, including a normalization layer, 5
+convolutional layers and 3 fully connected layers" (Bojarski et al., 2016).
+The learned weights of each layer are counted from its sizes: filters times
+kernel times input planes, plus one bias per filter; or inputs times outputs,
+plus one bias per output.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 40 38
+
+   * - Layer
+     - What it holds
+     - Learned weights
+   * - Input
+     - 3 YUV planes of 66 by 200 pixels (Y is brightness, U and V are color)
+     - none
+   * - Normalization
+     - "hard-coded and is not adjusted in the learning process"
+     - none
+   * - Convolution 1
+     - 24 filters, 5 by 5, stride 2: maps of 31 by 98
+     - 24 × (5×5×3) + 24 = 1,824
+   * - Convolution 2
+     - 36 filters, 5 by 5, stride 2: maps of 14 by 47
+     - 36 × (5×5×24) + 36 = 21,636
+   * - Convolution 3
+     - 48 filters, 5 by 5, stride 2: maps of 5 by 22
+     - 48 × (5×5×36) + 48 = 43,248
+   * - Convolution 4
+     - 64 filters, 3 by 3: maps of 3 by 20
+     - 64 × (3×3×48) + 64 = 27,712
+   * - Convolution 5
+     - 64 filters, 3 by 3: maps of 1 by 18
+     - 64 × (3×3×64) + 64 = 36,928
+   * - Flatten
+     - 1,164 numbers, as the paper's figure gives them (its 64 maps of 1 by 18
+       make 64 × 18 = 1,152)
+     - none
+   * - Fully connected
+     - 100, then 50, then 10 neurons
+     - 116,500 + 5,050 + 510
+   * - Output
+     - "the inverse turning radius"
+     - 11
+
+They add up to 253,419, the paper's "250 thousand parameters". Training sets
+them all "to minimize the mean squared error" between the network's steering
+and the human's.
+
+A small network learns a feature
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The deck trains a tiny version of the same idea in the page, live. The setup
+is chosen for the example:
+
+- **The input:** one camera row across the road ahead, 48 pixels of 0.2 m:
+  grass, the gray road and two bright lane lines 2 m either side of the lane
+  center, with a little noise. The AV's offset shifts the lines.
+- **The label:** the expert's steering on a straight road, −3.44° per meter of
+  offset.
+- **The network:** a filter of 5 weights slid along the row gives 44 values;
+  negatives are set to 0 (ReLU), which makes the feature map. A readout, 44
+  more weights, adds the map into a steering. With 2 biases, 51 weights in all;
+  the filter and readout weights start random, the biases at 0.
+- **The training:** 4,000 steps of gradient descent on the squared error, each
+  on one of 400 recorded rows: every weight moves a little in the direction
+  that shrinks the error on that row.
+
+At the start, the feature map is near zero almost everywhere. After training,
+it peaks at the lane lines, is lower and flat on the road and zero on the
+grass: the filter learned to find the lines from the steering label alone.
+Each step does the same thing: a forward pass gives a steering, the error is
+predicted minus label, and the chain rule (the derivative of the error through
+each layer) says how each weight should move to shrink it.
+
+What PilotNet's features show
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+NVIDIA looked at the first two layers of feature maps for two images
+(Bojarski et al., 2016):
+
+- **An unpaved road:** "the feature map activations clearly show the outline
+  of the road".
+- **A forest, no road:** "the feature maps contain mostly noise, i. e., the CNN
+  finds no useful information in this image".
+- **What it means:** "the CNN learned to detect useful road features on its
+  own, i. e., with only the human steering angle as training signal".
+- **No clean line inside:** "it is not possible to make a clean break between
+  which parts of the network function primarily as feature extractor and which
+  serve as controller".
 
 Fusion and the Stack in One Network
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-An end-to-end network can keep the stack's ideas inside it. TransFuser fuses a camera and a LiDAR, and UniAD puts the stack's tasks inside one network.
+NVIDIA's end-to-end network of 2016 (:ref:`l11-lec-introduction`) has one
+camera image in and a steering command out. TransFuser and UniAD are end-to-end
+networks of the same kind, built later. They read more sensors, keep parts of
+the stack inside the network, and output a trajectory. All three follow the
+same chain: sensors, one neural network, then a trajectory or a steering
+command.
+
+.. list-table:: Three networks, one chain
+   :header-rows: 1
+   :widths: 16 22 34 28
+
+   * - Network
+     - Sensors
+     - One neural network
+     - Trajectory or steering
+   * - NVIDIA (Bojarski et al., 2016)
+     - One front camera
+     - Convolution layers, then fully connected layers
+     - A steering command, "the inverse turning radius"
+   * - TransFuser (Prakash et al., 2021)
+     - Camera and LiDAR
+     - Two branches, fused "using attention"
+     - Waypoints, then two PID controllers (not learned)
+   * - UniAD (Hu et al., 2023)
+     - Several cameras
+     - The stack's tasks (track, map, motion, occupancy, planner) as modules
+       of the network
+     - The AV's future waypoints
 
 TransFuser
 ^^^^^^^^^^

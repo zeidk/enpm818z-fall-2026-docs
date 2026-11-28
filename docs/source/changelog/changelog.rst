@@ -5,10 +5,34 @@ Changelog
 All notable changes to the ENPM818Z Fall 2026 course documentation are recorded here.
 
 
-.. dropdown:: v2.52.0: L11 Reinforcement Learning on Our Lap, Not Yet Published (2026-11-27)
+.. dropdown:: v2.53.0: L11 Explains Imitation Learning, DAgger and Learned Features, Not Yet Published (2026-11-28)
    :icon: tag
    :class-container: sd-border-success
    :open:
+
+   .. rubric:: Lectures
+
+   - **L11 lecture (not yet published):** Imitation Learning opens with a
+     definition of imitation learning and its family of methods, sorted as
+     Osa et al. sort them. Behavior cloning compares ALVINN, NVIDIA and the
+     clone. A new part explains how NVIDIA's data comes from two cars, with
+     the steering stored as 1/r. DAgger gets a definition: a way to train a
+     network, not a network. The Reinforcement Learning section walks through
+     its loop in four steps on the lap. A new part of Inside the Networks
+     shows how a network learns its features: PilotNet layer by layer with its
+     weight counts, a small network that learns to find the lane lines from the
+     steering label alone, and what NVIDIA found inside its network. Who builds
+     which design now names Autoware and Apollo as modular stacks and explains
+     Waymo's hybrid driver part by part. The interactive slides were updated.
+
+   .. rubric:: References
+
+   - **L11 references:** add the Autoware architecture page and Apollo's
+     README.
+
+.. dropdown:: v2.52.0: L11 Reinforcement Learning on Our Lap, Not Yet Published (2026-11-27)
+   :icon: tag
+   :class-container: sd-border-success
 
    .. rubric:: Lectures
 

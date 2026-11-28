@@ -351,6 +351,19 @@ with a visit date was read on that date.
     *Foundations and Trends in Robotics* 7.1 and 2 (2018), pp. 1 to 179. DOI:
     `10.1561/2300000053 <https://doi.org/10.1561/2300000053>`__.
 
+    Cited in: Introduction; Imitation Learning.
+
+50. Autoware Foundation. "Architecture 1.0". Autoware Documentation. URL:
+    `https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture-v1/
+    <https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture-v1/>`__
+    (visited on November 27, 2026).
+
+    Cited in: Introduction.
+
+51. Baidu Apollo. "Apollo" (README of the ApolloAuto/apollo repository).
+    GitHub. URL: `https://github.com/ApolloAuto/apollo
+    <https://github.com/ApolloAuto/apollo>`__ (visited on November 27, 2026).
+
     Cited in: Introduction.
 
 
